@@ -7,7 +7,7 @@ using ordinary controls and original quest progression. Include equipment/loot,
 combat/traversal, escort reunion, Emperor death/Amulet, character choices,
 MQ01 stage 88 exit and fresh-process save/load outdoors. No console progression,
 injected completion state or skipped required encounters qualifies.
-**The full escape is incomplete.** Remaining: healing supplies and rest of
+**The full escape is incomplete.** Remaining: eastern cavern encounters and rest of
 the caverns, reunion, Emperor/Amulet, character choices, final exit/outdoor reload,
 and the continuous prison-to-outdoors acceptance run. Goblin corpses still
 appear upright; dead-actor physical pushback/presentation needs follow-up.
@@ -59,20 +59,42 @@ log body=2b means 43; earlier mace body=38 means 56, not decimal 38.
 `cavern-log-goblin-01` defeats surviving goblin 03b518 through ordinary melee,
 with Player-owned death. `cavern-healing-approach-01` traverses six original pathgrid
 nodes down the log slope. Captures inspected; corpses still appear upright.
+The rolling-log continuation and hashes remain in its verification index.
+
+## Current continuation — healing and northern patrol verified, 2026-11-04
+
+Ordinary Space activation loots chest 051d72: three healing potions and one
+respite potion transfer, leaving the source chest empty in the save. Two inventory
+doses restore health from 12.16 to 52.16. Fresh-process continuation preserves
+Player, chest, life and script state exactly. Seven original pathgrid waypoints
+reach the northern patrol. Goblin 03b543 dies in ordinary melee; goblin 03b541
+joins from the next chamber. The remaining healing dose restores 20 health,
+and a second ordinary melee course defeats that reinforcement. Both deaths
+are Player-owned. Captures and saves inspected; corpses still appear upright.
+
+Evidence and retained observer failure:
+[SEWER-CAVERN-HEALING-VERIFICATION.json](SEWER-CAVERN-HEALING-VERIFICATION.json).
+No engine changes or additional broad builds were needed. Container activation
+currently takes all contents with a notification; selective browsing and Lua
+Container.content support for TES4 containers remain separate limitations.
+
 Current genuine continuation save:
-`build/oblivion-compat/sewer-escape/cavern-healing-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256:`d428dd117f1eb4514a7b5d20798006f16818e9d5c57cb5bd95de92dfa28c9feb`.
-Player (4551.829,1563.679,-469.257), health 12.159996. Both log goblins dead.
+`build/oblivion-compat/sewer-escape/cavern-arena-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256:`bd016069aa8a8b0331917358352ca2402cf10609524100a7348bbdd4aacfc0cd`.
+Player (4468.253,2764.886,-481.258), health 29.620010; no healing potions left.
+The chest and all six encountered cavern goblin deaths remain consumed.
 
-## Next bounded chunk — healing supplies, remaining caverns and reunion
+## Next bounded chunk — eastern cavern encounters and reunion
 
-Open healing chest 051d72 at (4645,1510,-464), loot its three 009310 healing
-potions and one 00930e potion, heal through inventory, then continue the caverns.
-Chest contents are verified in the current save, not yet looted.
-Remaining caverns/goblins lead to door 03816c at (4384,6144,64), connecting to
-026c36 in ImperialDungeon02 / Imperial Subterrane cell 022288, near (3200,3203,-761).
-The reunion destination is original-record inspection, not traversal acceptance.
-The route is advancing again; remaining full-course requirements above are open.
+Continue from pathgrid node 240 toward eastern goblin 03b52f near (5865,3543,-454),
+then shaman 03b52e near (5508,4520,-401), remaining cavern traversal and exit.
+Prepared ordinary-input approach (not yet run):
+`build/oblivion-compat/sewer-escape/cavern-eastern-approach-prepared.json`.
+Audited path: `cavern-patrol-to-eastern-goblin-path.json` in the same evidence root.
+Remaining rats 047b65/66/67 and any original triggers must be checked as encountered.
+Door 03816c at (4384,6144,64) connects to 026c36 in ImperialDungeon02 /
+Imperial Subterrane cell 022288, near (3200,3203,-761). Reunion remains original-record
+inspection, not traversal acceptance. Full-course requirements above remain open.
 
 Historical implementation details and retained failures:
 [SEWER-ESCAPE-HISTORY.md](SEWER-ESCAPE-HISTORY.md). The earlier accepted tutorial
