@@ -25,6 +25,11 @@ namespace MWMechanics
     /// @param carrier The disease carrier.
     inline void diseaseContact(const MWWorld::Ptr& actor, const MWWorld::Ptr& carrier)
     {
+        // This routine consumes TES3 disease spells, resistances and GMSTs.
+        // Shared container activation must not run it against TES4 content.
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return;
+
         if (!carrier.getClass().isActor() || carrier == getPlayer())
             return;
 

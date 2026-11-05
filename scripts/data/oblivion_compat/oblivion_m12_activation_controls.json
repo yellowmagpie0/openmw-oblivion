@@ -8,6 +8,7 @@
   ],
   "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--no-sound=1", "--no-grab"],
   "xvfb": true,
+  "sdl_xvfb_input": true,
   "virtual_gamepad": true,
   "width": 1280,
   "height": 720,

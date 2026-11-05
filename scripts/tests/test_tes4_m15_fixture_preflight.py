@@ -4,14 +4,311 @@ from pathlib import Path
 import subprocess
 import unittest
 
-from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_stage, pending_npc_power_source
+from scripts.tes4_m15_fixture_preflight import blocking_dodge_source, approach_witness, forward_source_stage, pending_npc_power_source
 from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_power_spacing_setup
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
-from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits
+from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup, recovery_query_setup
+from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs, regenerated_fatigue_endpoint, is_current_fixture_schema, creature_disease_course_state
+from scripts.tes4_m15_fixture_preflight import creature_gamepad_recovery_setup, creature_gamepad_setup_only
+from scripts.tes4_m15_fixture_preflight import gamepad_controller_ready_actions
+from scripts.tes4_m15_fixture_preflight import creature_gamepad_reference_tail
+from scripts.tes4_m15_fixture_preflight import gamepad_view_ready_actions
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_creature_passive_sources_distinguish_cold_pending_and_applied_ownership(self):
+        from tes4_m15_fixture_preflight import creature_passive_course_state
+        actor = 'content:fixture.esp:000802'
+        effects = [dict(spell='content:oblivion.esm:000100', spell_type=4,
+                        effects=[[0, int.from_bytes(b'WKSH', 'little'), 68, -20, 20],
+                                 [1, int.from_bytes(b'RSFI', 'little'), 61, 33, 33]])]
+        state = dict(native_actor_values=[])
+        self.assertTrue(creature_passive_course_state(state, actor, effects, stage='cold')['passed'])
+        bad_effects = copy.deepcopy(effects); bad_effects[0]['effects'][0][4] = None
+        with self.assertRaises(ValueError):
+            creature_passive_course_state(state, actor, bad_effects, stage='cold')
+        values = [[0, None, None, None] for _ in range(72)]
+        state['native_actor_values'] = [dict(actor=actor, owner=1, process=0, values=values,
+                                           passive_abilities=[])]
+        self.assertTrue(creature_passive_course_state(state, actor, effects, stage='pending')['passed'])
+        row = state['native_actor_values'][0]
+        row.update(process=1, passive_abilities=copy.deepcopy(effects))
+        values[68][1], values[61][1] = -20, 33
+        before = copy.deepcopy(state)
+        self.assertTrue(creature_passive_course_state(state, actor, effects, stage='applied')['passed'])
+        self.assertEqual(state, before)
+        for fault in ['unknown', 'quantity', 'duplicate', 'wrong_channel', 'missing', 'low', 'extra']:
+            bad = copy.deepcopy(state); target = bad['native_actor_values'][0]
+            if fault == 'unknown': target['passive_abilities'] = None
+            if fault == 'quantity': target['passive_abilities'][0]['effects'][0][4] = None
+            if fault == 'duplicate': target['values'][61][1] = 66
+            if fault == 'wrong_channel': target['values'][61] = [33, None, None, None]
+            if fault == 'missing': target['values'][61][1] = None
+            if fault == 'low': target['process'] = 0
+            if fault == 'extra': target['passive_abilities'] += copy.deepcopy(effects)
+            with self.subTest(fault=fault), self.assertRaises(ValueError):
+                creature_passive_course_state(bad, actor, effects, stage='applied')
+        for stage in ['cold', 'pending', 'invalid']:
+            with self.subTest(stage=stage), self.assertRaises(ValueError):
+                creature_passive_course_state(state, actor, effects, stage=stage)
+
+    def test_gamepad_view_waits_for_rendered_world_and_aborts_failed_prerequisite(self):
+        source = [dict(type='gamepad_button', value='rightstick', hold_seconds=.08),
+                  dict(type='wait_log', pattern='M15 course view: thirdPerson=true')]
+        before = copy.deepcopy(source)
+        result = gamepad_view_ready_actions(source)
+        self.assertEqual(source, before)
+        self.assertEqual(result[1], source[0])
+        self.assertTrue(result[0]['after_start'])
+        self.assertIn('visible=true', result[0]['pattern'])
+        self.assertTrue(result[2]['abort_on_failure'])
+        self.assertEqual(gamepad_view_ready_actions(result), result)
+        # An actual saved third-person continuation must never toggle again.
+        fresh = gamepad_view_ready_actions(source[1:])
+        self.assertEqual(len(fresh), 1)
+        self.assertTrue(fresh[0]['abort_on_failure'])
+        self.assertEqual(gamepad_view_ready_actions([]), [])
+
+    def gamepad_tail_manifests(self):
+        fresh = dict(virtual_gamepad=True, files=[dict(path='observer.lua', content='same actor/geometry')],
+            actions=[dict(type='gamepad_axis', axis='left_trigger', value=0),
+                     dict(type='screenshot', name='combined-target-hit.png')]
+                    + [dict(type='key_held', value='F5') for _ in range(5)])
+        reference = copy.deepcopy(fresh)
+        reference['actions'][2:2] = [dict(type='gamepad_axis', axis='right_x', value=-.24),
+            dict(type='wait_log', pattern='M15 course geometry:.*farFacing=true', after_start=True),
+            dict(type='gamepad_axis', axis='right_x', value=0),
+            dict(type='wait_log', pattern='M15 course geometry:.*nearWall=true', after_start=True)]
+        return fresh, reference
+
+    def test_gamepad_continuation_reuses_reference_heading_without_replaying_recovery(self):
+        fresh, reference = self.gamepad_tail_manifests(); before = copy.deepcopy((fresh, reference))
+        result = creature_gamepad_reference_tail(fresh, reference)
+        self.assertEqual((fresh, reference), before)
+        self.assertEqual(result['actions'][:2], fresh['actions'][:2])
+        self.assertEqual(result['actions'][2:], reference['actions'][2:])
+        self.assertEqual(sum(a.get('value') == 'F5' for a in result['actions']), 5)
+        self.assertEqual(creature_gamepad_reference_tail(result, reference), result)
+
+    def test_gamepad_reference_tail_rejects_mismatched_or_unguarded_sources(self):
+        for fault in range(5):
+            fresh, reference = self.gamepad_tail_manifests()
+            if fault == 0: reference['virtual_gamepad'] = False
+            if fault == 1: reference['files'][0]['content'] = 'different actor/geometry'
+            if fault == 2: reference['actions'].pop()
+            if fault == 3: reference['actions'].insert(2, dict(type='mouse_move', x=1600, y=0))
+            if fault == 4:
+                reference['actions'] = [a for a in reference['actions'] if 'nearWall' not in a.get('pattern', '')]
+            with self.subTest(fault=fault), self.assertRaises(ValueError):
+                creature_gamepad_reference_tail(fresh, reference)
+
+    def test_held_gamepad_waits_for_open_before_pressure_and_world_load(self):
+        source = [dict(type='gamepad_axis', axis='left_trigger', value=1),
+                  dict(type='wait_log', pattern='Applied TES4 runtime state:')]
+        original = copy.deepcopy(source)
+        result = gamepad_controller_ready_actions(source)
+        self.assertEqual(source, original)
+        self.assertEqual(result[1:], source)
+        self.assertEqual(result[0]['pattern'], 'Detected game controller: Xbox 360 Controller')
+        self.assertTrue(result[0]['abort_on_failure'])
+        self.assertEqual(gamepad_controller_ready_actions(result), result)
+
+    def test_ready_gamepad_and_keyboard_courses_keep_their_controls(self):
+        ready = [dict(type='wait_log', pattern='Detected game controller: Xbox 360 Controller'),
+                 dict(type='gamepad_button', value='rightstick')]
+        keyboard = [dict(type='key_held', value='F5')]
+        self.assertEqual(gamepad_controller_ready_actions(ready), ready)
+        self.assertEqual(gamepad_controller_ready_actions(keyboard), keyboard)
+
+    def creature_recovery_manifest(self):
+        return dict(name='Creature course', virtual_gamepad=True, expected_log=['contact'], forbidden_log=[],
+            files=[dict(path='scripts/m15_course_observer.lua', content='''
+local activationDistance=(t+util.vector3(0,0,40)-camera.getPosition()):length()
+local viewEnd=camera.getViewTransform():inverse():apply(util.vector3(0,0,-150))
+local faced=nearby.castRenderingRay(camera.getPosition(),viewEnd,{{ignore=self}})
+return activationDistance
+''')], actions=[dict(type='mouse_move', x=0, y=-1760),
+                dict(type='wait_log', pattern='M15 course activation preflight: reachable=true'),
+                dict(type='gamepad_button', value='a'), dict(type='mouse_move', x=0, y=1760)])
+
+    def test_creature_gamepad_aim_is_observed_and_sticks_release_without_mutation(self):
+        manifest = self.creature_recovery_manifest(); original = copy.deepcopy(manifest)
+        result = creature_gamepad_recovery_setup(manifest, baseline_pitch=.9, recovery_look=-1760)
+        self.assertEqual(manifest, original)
+        self.assertEqual(validate_gamepad_stick_inputs(result, .1), 2)
+        sticks = [a['value'] for a in result['actions'] if a['type'] == 'gamepad_axis']
+        self.assertEqual(sticks, [-.22, 0, .22, 0])
+        waits = [a for a in result['actions'] if a['type'] == 'wait_log' and a.get('after_start')]
+        self.assertEqual(len(waits), 2)
+        self.assertIn('M15 Creature gamepad aim: target=true', [a['pattern'] for a in waits])
+        prefix = creature_gamepad_setup_only(result)
+        self.assertFalse(any(a['type'] == 'gamepad_button' for a in prefix['actions']))
+        self.assertIn('M15 melee hit committed:', prefix['forbidden_log'])
+        self.assertNotIn('contact', prefix['expected_log'])
+
+    def test_creature_gamepad_focus_uses_production_camera_boom_distance(self):
+        result = creature_gamepad_recovery_setup(self.creature_recovery_manifest(),
+            baseline_pitch=.9, recovery_look=-1760)
+        observer = result['files'][0]['content'].replace('{{', '{').replace('}}', '}')
+        setup = '''
+local boom,hitDistance=0,0
+local function vector(z) return setmetatable({z=z},{__sub=function(a,b) return vector(a.z-b.z) end,
+ __index={length=function(a) return math.abs(a.z) end}}) end
+target={};self={}
+camera={MODE={ThirdPerson=2},getMode=function() return boom>0 and 2 or 1 end,
+ getThirdPersonDistance=function() return boom end,getPitch=function() return .9 end,
+ getPosition=function() return vector(0) end,
+ getViewTransform=function() return {inverse=function() return {apply=function(_,v) return v end} end} end}
+util={vector3=function(_,_,z) return vector(z) end}
+nearby={castRenderingRay=function(_,to,options)
+ assert(options.ignore==self and -to.z==150+boom)
+ return {hitObject=hitDistance<=150+boom and target or nil,hitPos=vector(-hitDistance)} end}
+local function inspect()
+'''
+        # Lua local function recursion needs its name in scope before the initializer.
+        setup = setup.replace('local function vector(z)', 'function vector(z)')
+        checks = '''
+end
+for _,offset in ipairs({0,240}) do
+ boom=offset
+ hitDistance=offset+149;assert(inspect()==149)
+ hitDistance=offset+150;assert(inspect()==150)
+ hitDistance=offset+151;assert(inspect()==math.huge)
+end
+'''
+        run = subprocess.run(['luajit', '-'], input=setup + observer + checks,
+                             text=True, capture_output=True)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertEqual(run.stdout.count('aim: target=true'), 2)
+        self.assertEqual(run.stdout.count('aim: target=false'), 4)
+
+    def test_creature_gamepad_preflight_rejects_unknown_controls_or_partial_aim(self):
+        for pitch in [float('nan'), 2, True]:
+            with self.assertRaises(ValueError):
+                creature_gamepad_recovery_setup(self.creature_recovery_manifest(),
+                    baseline_pitch=pitch, recovery_look=-1760)
+        for fault in range(3):
+            manifest = self.creature_recovery_manifest()
+            if fault == 0: manifest['virtual_gamepad'] = False
+            if fault == 1: manifest['actions'].pop()
+            if fault == 2: manifest['files'][0]['content'] = ''
+            with self.assertRaises(ValueError):
+                creature_gamepad_recovery_setup(manifest, baseline_pitch=.9, recovery_look=-1760)
+        with self.assertRaises(ValueError): creature_gamepad_setup_only(dict(actions=[]))
+
+    def test_disease_course_distinguishes_cold_selected_none_and_applied_owners(self):
+        player, actor, spell = 'dynamic:player:0000000000000001', 'content:test.esp:000802', 'content:oblivion.esm:098416'
+        row = dict(actor=player, owner=0, passive_abilities=[], values=[[40, 0, 0, 0] for _ in range(72)])
+        state = dict(player=dict(reference=player), native_actor_values=[row])
+        self.assertEqual(creature_disease_course_state(state, actor, spell, cold=True)['source'], 'cold-pending')
+        carrier = dict(actor=actor, owner=1, process=1, leveled_contact_spells=[])
+        state['native_actor_values'].append(carrier)
+        self.assertEqual(creature_disease_course_state(state, actor, spell, selected=False)['source'], 'none')
+        carrier['leveled_contact_spells'] = [spell]
+        self.assertEqual(creature_disease_course_state(state, actor, spell, selected=True)['source'], 'selected')
+        row['passive_abilities'] = [dict(spell=spell, spell_type=1,
+            effects=[[0, int.from_bytes(b'DRAT', 'little'), 1, -5, 5]])]
+        row['values'][1][1] = -5
+        original = copy.deepcopy(state)
+        self.assertTrue(creature_disease_course_state(state, actor, spell, selected=True, applied=True)['applied'])
+        self.assertEqual(state, original)
+        for mutation in (lambda x: x['native_actor_values'][0].update(passive_abilities=None),
+                         lambda x: x['native_actor_values'][0]['passive_abilities'][0].update(spell_type=4),
+                         lambda x: x['native_actor_values'][0]['values'][1].__setitem__(1, 0),
+                         lambda x: x['native_actor_values'][1].update(leveled_contact_spells=[]),
+                         lambda x: x['native_actor_values'][1].update(leveled_contact_spells=None)):
+            bad = copy.deepcopy(state); mutation(bad)
+            with self.assertRaises(ValueError): creature_disease_course_state(bad, actor, spell, applied=True)
+        with self.assertRaises(ValueError): creature_disease_course_state(state, actor, spell, applied=False)
+        with self.assertRaises(ValueError): creature_disease_course_state(state, actor, spell, cold=True)
+        with self.assertRaises(ValueError): creature_disease_course_state(state, actor, spell, selected=False, applied=True)
+
+    def test_regenerated_npc_fatigue_comparison_preserves_raw_state_and_other_fields(self):
+        actor = 'content:test.esm:000001'
+        row = dict(actor=actor, owner=1, process=1, process_action=-1, process_knocked_state=0,
+                   values=[[0, 0, 0, 0] for _ in range(72)])
+        row['values'][8] = [73, 0, 0, -7]
+        row['values'][10] = [160, 0, 0, -4.76837158203125e-6]
+        state = dict(native_actor_values=[row], physical_actions=dict(next=6, pending=[]), physical_action_owners=[])
+        original = copy.deepcopy(state)
+        compared, witness = regenerated_fatigue_endpoint(state, actor)
+        self.assertEqual(state, original)
+        self.assertEqual(witness['active_query'], 160)
+        self.assertEqual(witness['low_query'], 160)
+        self.assertLess(abs(witness['damage']), witness['maximum_absolute_residue'])
+        expected = copy.deepcopy(state['native_actor_values']); expected[0]['values'][10][3] = 0
+        self.assertEqual(compared, expected)
+        self.assertEqual(compared[0]['values'][8], row['values'][8])
+        row['values'][10][3] = 0
+        self.assertEqual(regenerated_fatigue_endpoint(state, actor)[0], state['native_actor_values'])
+
+    def test_regenerated_fatigue_rejects_observable_or_active_debt(self):
+        actor = 'content:test.esm:000001'
+        row = dict(actor=actor, owner=1, process=1, process_action=-1, process_knocked_state=0,
+                   values=[[0, 0, 0, 0] for _ in range(72)])
+        row['values'][10] = [160, 0, 0, 0]
+        state = dict(native_actor_values=[row], physical_actions=dict(next=6, pending=[]), physical_action_owners=[])
+        for debt in [-.001, -1e-5, 1e-7, None, True, float('nan'), float('inf')]:
+            changed = copy.deepcopy(state); changed['native_actor_values'][0]['values'][10][3] = debt
+            with self.subTest(debt=debt), self.assertRaises(ValueError):
+                regenerated_fatigue_endpoint(changed, actor)
+        for base in [0, 160.5]:
+            changed = copy.deepcopy(state); changed['native_actor_values'][0]['values'][10][0] = base
+            with self.subTest(base=base), self.assertRaises(ValueError):
+                regenerated_fatigue_endpoint(changed, actor)
+        for key, value in [('owner', 0), ('process', 0), ('process_action', 6), ('process_knocked_state', 1)]:
+            changed = copy.deepcopy(state); changed['native_actor_values'][0][key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                regenerated_fatigue_endpoint(changed, actor)
+        for field, value in [('native_actor_values', []), ('physical_action_owners', [dict(id=5, actor=actor)]),
+                             ('physical_actions', dict(next=6, pending=[5]))]:
+            changed = copy.deepcopy(state); changed[field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                regenerated_fatigue_endpoint(changed, actor)
+
+    def test_stick_guard_preserves_valid_commands_releases_and_trigger_policy(self):
+        manifest = dict(actions=[dict(type='gamepad_axis', axis=axis, value=value)
+            for axis, value in [('left_x', -.35), ('right_x', .22), ('right_y', .35),
+                                ('right_y', 0), ('left_trigger', .05)]])
+        original = copy.deepcopy(manifest)
+        self.assertEqual(validate_gamepad_stick_inputs(manifest, .1), 3)
+        self.assertEqual(manifest, original)
+
+    def test_stick_guard_rejects_retained_pitch_failure_before_runtime(self):
+        for value in [.1, -.1, .05, -.05]:
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'dead zone'):
+                validate_gamepad_stick_inputs(dict(actions=[
+                    dict(type='gamepad_axis', axis='right_y', value=value)]), .1)
+
+    def test_stick_guard_rejects_malformed_values_and_dead_zones(self):
+        for value in [None, True, float('nan'), float('inf'), -1.1, 1.1]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                validate_gamepad_stick_inputs(dict(actions=[
+                    dict(type='gamepad_axis', axis='left_y', value=value)]), .1)
+        for dead_zone in [None, True, float('nan'), float('inf'), -.1, 1]:
+            with self.subTest(dead_zone=dead_zone), self.assertRaises(ValueError):
+                validate_gamepad_stick_inputs(dict(actions=[]), dead_zone)
+
+    def test_dodge_source_requires_actual_consumed_in_flight_action(self):
+        from scripts.tests.test_tes4_runtime_state import Tes4RuntimeStateTests
+        state = Tes4RuntimeStateTests().dodge_state()
+        # The codec fixture also carries unrelated old pending actions; a
+        # normal-input continuation course must start with a quiet ledger.
+        state['physical_actions']['pending'] = []
+        state['physical_action_owners'] = []
+        self.assertEqual(blocking_dodge_source(state)['group'], 11)
+        for fault in range(6):
+            broken = copy.deepcopy(state); row = broken['native_melee_states'][0]
+            if fault == 0: row.pop('dodge')
+            if fault == 1: row['dodge']['body']['time'] = row['dodge']['body']['begin']
+            if fault == 2: row['dodge']['body']['time'] = row['dodge']['body']['end']
+            if fault == 3: row['dodge']['first_person'] = None
+            if fault == 4: broken['physical_actions']['pending'] = [row['dodge']['action']]
+            if fault == 5: next(v for v in broken['native_actor_values']
+                if v['actor'] == broken['player']['reference'])['process_action'] = 6
+            with self.subTest(fault=fault), self.assertRaises(ValueError): blocking_dodge_source(broken)
+
     def test_recoil_wait_guard_accepts_recovery_and_preserves_manifest(self):
         manifest = dict(recoil_contact_waits=[dict(actor='player', cause=3)], actions=[
             dict(type='wait_log', pattern='M15 reaction recovered: actor=player cause=3 action=-1'),
@@ -53,6 +350,103 @@ class FixturePreflightTests(unittest.TestCase):
         with self.assertRaises((ValueError, StopIteration)):
             joined_power_capture_setup(broken, recipe, '')
 
+    def test_active_forward_capture_preserves_gameplay_and_requires_applied_whole_body(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        original = copy.deepcopy(manifest)
+        spaced = right_power_spacing_setup(manifest,
+            json.loads((data / 'm15_right_power_setup.json').read_text()))
+        recipe = json.loads((data / 'm15_forward_capture.json').read_text())['joined_course']
+        recipe.pop('settled_capture')
+        recipe['active_forward_capture'] = True
+        framed = joined_power_capture_setup(spaced, recipe, '')
+        self.assertEqual(manifest, original)
+        saves = lambda value: [a for a in value['actions'] if a.get('value') == 'F5']
+        self.assertEqual(saves(framed), saves(original))
+        self.assertEqual(framed['forbidden_log'], original['forbidden_log'])
+        self.assertTrue(set(original['expected_log']).issubset(framed['expected_log']))
+        i = next(i for i, a in enumerate(framed['actions'])
+                 if a.get('name') == 'combined-forward-power.png')
+        self.assertEqual(framed['actions'][i-1]['pattern'],
+                         'M15 joined forward frame: applied=true visible=true')
+        self.assertTrue(framed['actions'][i-1]['after_start'])
+        self.assertEqual(framed['actions'][i+1]['value'], 'F5')
+        observer = next(f['content'] for f in framed['files']
+                        if f['path'].endswith('m15_course_observer.lua'))
+        self.assertIn('joinedCameraProbe.framedVisible(target,screen)', observer)
+        self.assertNotIn('newSettled', observer)
+        for invalid in [1, None, 'true']:
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                joined_power_capture_setup(spaced, dict(recipe, active_forward_capture=invalid), '')
+        with self.assertRaises(ValueError):
+            joined_power_capture_setup(spaced, dict(recipe, settled_capture={}), '')
+
+    def test_joined_settled_capture_keeps_gameplay_gates_and_photographs_before_save_io(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        original = copy.deepcopy(manifest)
+        recipe = json.loads((data / 'm15_forward_capture.json').read_text())['joined_course']
+        limits = dict(window_seconds=9.75, minimum_seconds=1.5, quiet_seconds=.5,
+                      maximum_bounds_speed=5, retreat_distance=150, body_clearance=60)
+        recipe = dict(recipe, settled_capture=limits)
+        spaced = right_power_spacing_setup(manifest, json.loads((data / 'm15_right_power_setup.json').read_text()))
+        framed = joined_power_capture_setup(spaced, recipe, '')
+        self.assertEqual(manifest, original)
+        saves = lambda value: [a for a in value['actions'] if a.get('value') == 'F5']
+        self.assertEqual(saves(framed), saves(original))
+        self.assertEqual(framed['forbidden_log'], original['forbidden_log'])
+        self.assertTrue(set(original['expected_log']).issubset(framed['expected_log']))
+        i = next(i for i,a in enumerate(framed['actions']) if a.get('name') == 'combined-forward-power.png')
+        self.assertEqual(framed['actions'][i-1]['pattern'],
+                         'M15 joined settled: ready=true window=true visible=true')
+        self.assertEqual(framed['actions'][i+1]['value'], 'F5')
+        self.assertIn('M15 joined settled retreat: ready=true',
+                      [a.get('pattern') for a in framed['actions'][:i]])
+        for key,value in [('quiet_seconds', 0), ('window_seconds', 2),
+                          ('body_clearance', float('nan')), ('maximum_bounds_speed', True)]:
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                joined_power_capture_setup(manifest,
+                    dict(recipe, settled_capture=dict(limits, **{key:value})), '')
+
+    def recovery_manifest(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        course = json.loads((data / 'm15_essential_recovery_course.json').read_text())
+        manifest['actions'] = course['resume_actions']
+        return manifest, course['recovery_query_observation']
+
+    def test_recovery_queries_are_read_only_and_preserve_original_return(self):
+        manifest, recipe = self.recovery_manifest()
+        original = copy.deepcopy(manifest)
+        observed = recovery_query_setup(manifest, recipe)
+        self.assertEqual(manifest, original)
+        events = next(f['content'] for f in observed['files'] if f['path'] == 'test-data/events.txt')
+        self.assertIn('at 0.1 command content:oblivion.esm:01fc43 GetKnockedState', events)
+        self.assertIn('at 60 command player GetWeaponAnimType', events)
+        added = [a for a in observed['actions'] if a not in original['actions']]
+        self.assertEqual(len(added), 1)
+        self.assertEqual(added[0]['type'], 'wait_log')
+        self.assertIn('result=1', added[0]['pattern'])
+        self.assertIn('result=0', added[0]['pattern'])
+        self.assertEqual([a for a in observed['actions'] if a not in added], original['actions'])
+        self.assertEqual(observed['forbidden_log'], original['forbidden_log'])
+        self.assertTrue(set(original['expected_log']).issubset(observed['expected_log']))
+
+    def test_recovery_query_setup_rejects_mutations_and_invalid_windows(self):
+        manifest, recipe = self.recovery_manifest()
+        for command in ['DamageAV', 'SetAV', 'Kill', 'StartCombat', 'SetPos']:
+            invalid = copy.deepcopy(recipe)
+            invalid['queries'][1]['command'] = command
+            with self.subTest(command=command), self.assertRaises(ValueError):
+                recovery_query_setup(manifest, invalid)
+        for times in [[0,60], [.1,2], [.1,float('inf')], [True,60]]:
+            with self.subTest(times=times), self.assertRaises(ValueError):
+                recovery_query_setup(manifest, dict(recipe, times=times))
+        invalid = copy.deepcopy(recipe)
+        invalid['queries'][0]['expected'] = [0,0]
+        with self.assertRaises(ValueError):
+            recovery_query_setup(manifest, invalid)
+
     def camera_guard(self, checks):
         module = Path(__file__).resolve().parents[1] / 'data/oblivion_compat/m15_forward_capture_guard.lua'
         setup = r'''
@@ -61,10 +455,11 @@ local vectorMeta = {}
 local function vector(x,y,z) return setmetatable({x=x,y=y,z=z},vectorMeta) end
 vectorMeta.__add=function(a,b) return vector(a.x+b.x,a.y+b.y,a.z+b.z) end
 local self = {}
+local boundsCenter, boundsHalf = vector(4,5,6), vector(20,30,70)
 local target = setmetatable({}, {
  __index=function(_,k)
   if k=='id' then return 42
-  elseif k=='getBoundingBox' then return function() return {center=vector(4,5,6),halfSize=vector(20,30,70)} end
+  elseif k=='getBoundingBox' then return function() return {center=boundsCenter,halfSize=boundsHalf} end
   elseif k=='position' then error('Visibility must follow rendered bounds, not the actor foot anchor') end
  end,
  __newindex=function() error('Camera probe must not mutate the actor') end})
@@ -109,6 +504,95 @@ assert(not visible and not active and calls==0)
 assert(module.visible(target,screen)) -- Recovery visibility is independent of effect lifetime.
 now=-1;visible,active=guard(target,screen);assert(not visible and not active)
 ''')
+
+    def test_settled_camera_waits_for_continuous_quiet_rendered_bounds(self):
+        self.camera_guard(r'''
+local guard=module.newSettled(5,1,.5,5)
+assert(not guard(target))
+now=1;boundsCenter=vector(40,5,6);assert(not guard(target))
+now=1.25;assert(not guard(target))
+now=1.5;assert(not guard(target))
+now=1.75;assert(guard(target))
+now=2;boundsHalf=vector(20,30,90);assert(not guard(target))
+now=2.25;assert(not guard(target))
+now=2.75;assert(guard(target))
+now=5;local ready,active=guard(target);assert(not ready and not active)
+''')
+
+    def test_settled_camera_rejects_bad_windows_and_a_reversed_clock(self):
+        self.camera_guard(r'''
+for _,args in ipairs({{0,0,.5,5},{2,1,1,5},{5,-1,.5,5},{5,1,0,5},
+ {5,1,.5,0},{5,1,.5,math.huge},{5,1,.5,0/0},{'5',1,.5,5}}) do
+ assert(not pcall(module.newSettled,unpack(args)))
+end
+local guard=module.newSettled(5,1,.5,5)
+guard(target);now=1;guard(target);now=1.5;assert(guard(target))
+now=1.25;assert(not guard(target))
+now=-1;local ready,active=guard(target);assert(not ready and not active)
+''')
+
+    def test_full_body_camera_rejects_a_cropped_corner_and_occlusion(self):
+        self.camera_guard(r'''
+assert(module.framedVisible(target,screen))
+package.loaded['openmw.camera'].worldToViewportVector=function(anchor)
+ return {x=20,y=anchor.z<0 and -1 or 20}
+end
+assert(module.visible(target,screen))
+assert(not module.framedVisible(target,screen))
+package.loaded['openmw.camera'].worldToViewportVector=function() return {x=20,y=20} end
+blocked=true;assert(not module.framedVisible(target,screen))
+''')
+
+    def test_standing_guard_rejects_cropped_head_even_with_visible_torso(self):
+        self.camera_guard(r'''
+assert(module.upperVisible(target,screen))
+pixelY=15;assert(not module.upperVisible(target,screen))
+pixelY=20
+local api=package.loaded['openmw.camera']
+api.worldToViewportVector=function(anchor) return {x=20,y=anchor.z>50 and -1 or 20} end
+assert(not module.upperVisible(target,screen))
+api.worldToViewportVector=function() return {x=20,y=20} end
+blocked=true;assert(not module.upperVisible(target,screen))
+blocked=false;hitId=43;assert(not module.upperVisible(target,screen))
+''')
+
+    def test_standing_guard_handles_an_arm_shifted_box_without_accepting_missing_head(self):
+        self.camera_guard(r'''
+local api=package.loaded['openmw.nearby']
+api.castRenderingRay=function(_,anchor,options)
+ assert(options.ignore==self)
+ return {hitObject=anchor.x>12 and anchor.x<16 and {id=42} or nil}
+end
+assert(module.upperVisible(target,screen)) -- Centre rays miss the head and torso.
+api.castRenderingRay=function(_,anchor)
+ return {hitObject=anchor.x>12 and anchor.x<16 and anchor.z<40 and {id=42} or nil}
+end
+assert(not module.upperVisible(target,screen)) -- A visible chest cannot replace the head band.
+''')
+
+    def test_standing_capture_preserves_contacts_saves_and_restores_pitch(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        course = json.loads((data / 'm15_essential_recovery_course.json').read_text())
+        manifest['actions'] = course['reference_actions']
+        original = copy.deepcopy(manifest)
+        recipe = dict(mouse_radians_per_unit=1/5120, restore_pitch=.4203128516674042,
+                      captures=['essential-before.png', 'essential-recovered.png', 'essential-return.png'])
+        framed = standing_capture_setup(manifest, recipe, (data / 'm15_forward_capture_guard.lua').read_text())
+        self.assertEqual(manifest, original)
+        original_actions = iter(original['actions'])
+        for expected in original_actions:
+            self.assertIn(expected, framed['actions'])
+        self.assertEqual([a for a in framed['actions'] if a.get('value') == 'F5'],
+                         [a for a in original['actions'] if a.get('value') == 'F5'])
+        self.assertEqual(framed['expected_log'], original['expected_log'])
+        self.assertEqual(framed['forbidden_log'], original['forbidden_log'])
+        for name in recipe['captures']:
+            i = next(i for i,a in enumerate(framed['actions']) if a.get('name') == name)
+            self.assertEqual(framed['actions'][i-1]['pattern'], 'M15 standing camera: visible=true')
+            self.assertIn('standing restore:', framed['actions'][i+3]['pattern'])
+        with self.assertRaises(ValueError):
+            standing_capture_setup(manifest, dict(recipe, restore_pitch=float('nan')), '')
 
     def test_forward_camera_rejects_nonfinite_or_empty_source_windows(self):
         self.camera_guard(r'''
@@ -430,3 +914,20 @@ assert(not pcall(module.motion,target,'unknown',1/5120))
         trace += self.geometry(680, 92, distance=70, blocked='false')
         with self.assertRaises(ValueError):
             approach_witness(trace, wall_x=785, wall_y=92, close_range=110)
+
+
+class CurrentFixtureSchemaTests(unittest.TestCase):
+    def test_reviewed_current_schema_preserves_minimum_and_rejects_future_or_stale_targets(self):
+        for minimum in (59, 74):
+            self.assertTrue(is_current_fixture_schema(80, 80, minimum))
+            self.assertTrue(is_current_fixture_schema(81, 81, minimum))
+            self.assertTrue(is_current_fixture_schema(82, 82, minimum))
+            self.assertTrue(is_current_fixture_schema(83, 83, minimum))
+            self.assertTrue(is_current_fixture_schema(84, 84, minimum))
+            self.assertTrue(is_current_fixture_schema(85, 85, minimum))
+            self.assertTrue(is_current_fixture_schema(79, 79, minimum))
+            self.assertTrue(is_current_fixture_schema(78, 78, minimum))
+            self.assertTrue(is_current_fixture_schema(77, 77, minimum))
+            for target, current in ((77, 78), (78, 77), (86, 86), (minimum - 1, minimum - 1),
+                                    (True, 1), (78., 78), (78, 78.)):
+                self.assertFalse(is_current_fixture_schema(target, current, minimum))

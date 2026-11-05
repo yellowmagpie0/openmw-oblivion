@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "name": "Fresh original ambush checkpoint through Renault death",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01fc44 GetOpenState\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local nearby=require('openmw.nearby')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal self=require('openmw.self')\nlocal west=false\nlocal north=false\nlocal seen={{}}\nlocal ids={{0x032a15,0x014a2c,0x014a30,0x0178c3,0x0178c4}}\nreturn {{engineHandlers={{onFrame=function()\n local p=self.position\n if not west and p.x<=90 then west=true print('Fresh room entry west reached') end\n if not north and p.y>=2100 then north=true print('Fresh room entry north reached') end\n for _,id in ipairs(ids) do\n  local actor=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n  if actor and actor:isValid() then\n   local dead=Actor.isDead(actor)\n   if seen[id]~=dead then seen[id]=dead print(string.format('Fresh ambush actor %06x dead=%s',id,tostring(dead))) end\n  end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:01fc44 name=GetOpenState result=3(?:\\s|$)",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Fresh ambush actor 032a15 dead=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=24",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 6
+    },
+    {
+      "type": "screenshot",
+      "name": "renault-death.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1800,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "Fresh ambush actor 032a15 dead=true",
+    "setstage quest=content:oblivion.esm:02466e stage=24"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "enableplayercontrols movement="
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  }
+}

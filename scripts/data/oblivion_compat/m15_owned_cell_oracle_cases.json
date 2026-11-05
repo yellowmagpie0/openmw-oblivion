@@ -1,0 +1,93 @@
+{
+  "source_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x4f53d0",
+  "scope": "Original IsInMyOwnedCell, parent-cell getter6ECC80 and ownership helper4CAAC0. Original null, identity and rank comparisons execute.",
+  "boundary_stubs": [
+    "virtual190 actor predicate",
+    "virtual170 base getter",
+    "41e7b0 owner and41e7f0 required-rank extras",
+    "4d7f80 NPC predicate",
+    "9832e6 RTTI casts",
+    "467510 faction rank getter"
+  ],
+  "case_count": 11,
+  "cases": [
+    {
+      "name": "no-actor",
+      "kind": "none",
+      "required": 0,
+      "rank": 0,
+      "expected": 0
+    },
+    {
+      "name": "no-cell",
+      "kind": "none",
+      "required": 0,
+      "rank": 0,
+      "expected": 0
+    },
+    {
+      "name": "unowned",
+      "kind": "none",
+      "required": 0,
+      "rank": 0,
+      "expected": 0
+    },
+    {
+      "name": "npc-owner",
+      "kind": "npc",
+      "required": 0,
+      "rank": 0,
+      "expected": 1
+    },
+    {
+      "name": "other-npc-owner",
+      "kind": "other",
+      "required": 0,
+      "rank": 0,
+      "expected": 0
+    },
+    {
+      "name": "creature",
+      "kind": "npc",
+      "required": 0,
+      "rank": 0,
+      "expected": 0
+    },
+    {
+      "name": "faction-default-member",
+      "kind": "faction",
+      "required": -1,
+      "rank": 0,
+      "expected": 1
+    },
+    {
+      "name": "faction-default-nonmember",
+      "kind": "faction",
+      "required": -1,
+      "rank": -1,
+      "expected": 0
+    },
+    {
+      "name": "faction-below",
+      "kind": "faction",
+      "required": 2,
+      "rank": 1,
+      "expected": 0
+    },
+    {
+      "name": "faction-equal",
+      "kind": "faction",
+      "required": 2,
+      "rank": 2,
+      "expected": 1
+    },
+    {
+      "name": "faction-above",
+      "kind": "faction",
+      "required": 2,
+      "rank": 3,
+      "expected": 1
+    }
+  ]
+}

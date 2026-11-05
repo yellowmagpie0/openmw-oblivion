@@ -1,0 +1,410 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "passed": true,
+  "cases": 52,
+  "boundaries": [
+    "Faction heap allocation/free and list append/remove use fixture memory; native target lookup, int32 write/zero-removal decision, facade ownership and modified-flag call execute.",
+    "SetAlert argument extraction and Actor RTTI are supplied; original wrapper, signed-positive conversion, absent-process path and process setter execute.",
+    "No renderer, serialization or live-game acceptance is established."
+  ],
+  "rows": [
+    {
+      "kind": "faction",
+      "prior": null,
+      "value": -2147483648,
+      "result": -2147483648,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": null,
+      "value": -101,
+      "result": -101,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": null,
+      "value": -1,
+      "result": -1,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": null,
+      "value": 0,
+      "result": null,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": null,
+      "value": 1,
+      "result": 1,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": null,
+      "value": 30,
+      "result": 30,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": null,
+      "value": 101,
+      "result": 101,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": null,
+      "value": 2147483647,
+      "result": 2147483647,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": -40,
+      "value": -2147483648,
+      "result": -2147483648,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": -40,
+      "value": -101,
+      "result": -101,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": -40,
+      "value": -1,
+      "result": -1,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": -40,
+      "value": 0,
+      "result": null,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": -40,
+      "value": 1,
+      "result": 1,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": -40,
+      "value": 30,
+      "result": 30,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": -40,
+      "value": 101,
+      "result": 101,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": -40,
+      "value": 2147483647,
+      "result": 2147483647,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": 30,
+      "value": -2147483648,
+      "result": -2147483648,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": 30,
+      "value": -101,
+      "result": -101,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": 30,
+      "value": -1,
+      "result": -1,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": 30,
+      "value": 0,
+      "result": null,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": 30,
+      "value": 1,
+      "result": 1,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": 30,
+      "value": 30,
+      "result": 30,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": 30,
+      "value": 101,
+      "result": 101,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "faction",
+      "prior": 30,
+      "value": 2147483647,
+      "result": 2147483647,
+      "reverse": 17,
+      "modified_flag": 8
+    },
+    {
+      "kind": "alert",
+      "value": -2147483648,
+      "actor": false,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": -2147483648,
+      "actor": true,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": -2147483648,
+      "actor": false,
+      "process": true,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": -2147483648,
+      "actor": true,
+      "process": true,
+      "result": 0
+    },
+    {
+      "kind": "alert",
+      "value": -1,
+      "actor": false,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": -1,
+      "actor": true,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": -1,
+      "actor": false,
+      "process": true,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": -1,
+      "actor": true,
+      "process": true,
+      "result": 0
+    },
+    {
+      "kind": "alert",
+      "value": 0,
+      "actor": false,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 0,
+      "actor": true,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 0,
+      "actor": false,
+      "process": true,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 0,
+      "actor": true,
+      "process": true,
+      "result": 0
+    },
+    {
+      "kind": "alert",
+      "value": 1,
+      "actor": false,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 1,
+      "actor": true,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 1,
+      "actor": false,
+      "process": true,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 1,
+      "actor": true,
+      "process": true,
+      "result": 1
+    },
+    {
+      "kind": "alert",
+      "value": 2,
+      "actor": false,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 2,
+      "actor": true,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 2,
+      "actor": false,
+      "process": true,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 2,
+      "actor": true,
+      "process": true,
+      "result": 1
+    },
+    {
+      "kind": "alert",
+      "value": 255,
+      "actor": false,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 255,
+      "actor": true,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 255,
+      "actor": false,
+      "process": true,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 255,
+      "actor": true,
+      "process": true,
+      "result": 1
+    },
+    {
+      "kind": "alert",
+      "value": 2147483647,
+      "actor": false,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 2147483647,
+      "actor": true,
+      "process": false,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 2147483647,
+      "actor": false,
+      "process": true,
+      "result": 123
+    },
+    {
+      "kind": "alert",
+      "value": 2147483647,
+      "actor": true,
+      "process": true,
+      "result": 1
+    }
+  ],
+  "schema_version": 1,
+  "evidence": "build/oblivion-compat/tutorial-melee/ambush-command-oracle.json",
+  "addresses": {
+    "set_faction_reaction_command": "0x503810",
+    "faction_set_facade": "0x51f0c0",
+    "faction_storage": "0x46e900",
+    "set_alert_command": "0x503bc0",
+    "alert_actor_dispatch": "0x5e0e10",
+    "alert_process_store": "0x629310"
+  }
+}

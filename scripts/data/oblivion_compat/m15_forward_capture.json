@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "First-person keyboard/mouse Forward9 photo continuation from a genuine pending/applied Club contact. Read-only visibility guards and normal camera/movement input; no gameplay outcome substitution. Joined-course capture integration remains separate.",
+  "scope": "First-person keyboard/mouse Forward9 physical-collapse feedback from a genuine pending/applied contact. Quiet rendered bounds and normal camera input are capture prerequisites; saved physical state and direct photographs establish the named phase. Full S4/view/device/timing gates remain required.",
   "stock_player_weapon": "content:oblivion.esm:03b375",
   "probe_module": "scripts/data/oblivion_compat/m15_forward_capture_guard.lua",
   "minimum_source_remaining": 3,
@@ -58,6 +58,16 @@
         13
       ]
     ],
-    "mouse_radians_per_unit": 0.0001953125
+    "mouse_radians_per_unit": 0.0001953125,
+    "settled_capture": {
+      "minimum_seconds": 1.5,
+      "quiet_seconds": 0.5,
+      "maximum_bounds_speed": 5,
+      "mouse_radians_per_unit": 0.0001953125,
+      "scope": "Rendered center and extent stability is a cheap prerequisite. Retain actual physical-body state and directly review the whole fallen target; a quiet box alone is not settled-pose acceptance.",
+      "window_seconds": 9.75,
+      "retreat_distance": 150,
+      "body_clearance": 60
+    }
   }
 }

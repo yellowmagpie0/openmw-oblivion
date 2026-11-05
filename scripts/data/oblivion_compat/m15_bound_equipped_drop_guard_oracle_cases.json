@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "cases": 4,
+  "rows": [
+    {
+      "extra_count_before": 3,
+      "cannot_wear": true,
+      "dead": false,
+      "ordinary_unequip_body": 0,
+      "recursive_drop": 0,
+      "entry_count": 1,
+      "stop": "0x4911c5"
+    },
+    {
+      "extra_count_before": 2,
+      "cannot_wear": false,
+      "dead": false,
+      "ordinary_unequip_body": 1,
+      "recursive_drop": 1,
+      "entry_count": 1,
+      "stop": "0x48fbc0"
+    },
+    {
+      "extra_count_before": 3,
+      "cannot_wear": true,
+      "dead": true,
+      "ordinary_unequip_body": 1,
+      "recursive_drop": 1,
+      "entry_count": 1,
+      "stop": "0x48fbc0"
+    },
+    {
+      "extra_count_before": 2,
+      "cannot_wear": false,
+      "dead": true,
+      "ordinary_unequip_body": 1,
+      "recursive_drop": 1,
+      "entry_count": 1,
+      "stop": "0x48fbc0"
+    }
+  ],
+  "boundaries": [
+    "Execute equipped DropItem branch49108B..4911C5, real unequip5F2E70 admission/early rejection, actual ExtraDataList count41E060 and worn query484E80/41DF10.",
+    "Actor virtual is-actor/dead queries, RTTI, exact inventory entry lookup and uncontended lock enter/leave are supplied.",
+    "Ordinary admitted unequip body beyond5F2ECE is supplied for controls; actual removal/world creation beyond recursive DropItem request is not executed.",
+    "Initial caller selection of equipped worn entry is a declared precondition. This is not full disarm mastery/RNG or rendered acceptance."
+  ],
+  "native_path": "Equipped worn-instance DropItem branch49108B..4911C5, unequip5F2E70 guard, count41E060, worn lookup484E80/41DF10.",
+  "provenance": "Ignored harness bound-disarm-guard-oracle-05.py verifies the executable SHA before execution. Materialization690D86 adds CannotWear47 and BoundArmor50 to the bound instance. This table does not establish a full disarm command or rendered outcome."
+}

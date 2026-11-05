@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "objective": "finish a melee-focused significant tutorial slice with mechanical and visual functionality",
+  "scope": "normal prison progression through first assassin ambush and escort departure into tunnels; Player melee/block; original Renault death; fresh combat and low-process save/load",
+  "accepted": true,
+  "excluded": [
+    "audio",
+    "projectiles",
+    "general loot",
+    "full M15/S7/E1 acceptance",
+    "complete tutorial/sewer exit"
+  ],
+  "requirements": [
+    {
+      "requirement": "Normal prison progression and original dialogue/switch/door results",
+      "status": "proven",
+      "evidence": "opening-course-audit.json; original passing receipts and provenance retained"
+    },
+    {
+      "requirement": "Equipped autonomous assassin/Blades melee, actual contact/damage and Player punch/retaliation/block",
+      "status": "proven",
+      "evidence": "player-intervention-live-12; native hits/newcallbacks in normal04 and sanitized02; normal/SAN actual-contact engine cases"
+    },
+    {
+      "requirement": "Original Renault mortal death, essential override ownership and persistence",
+      "status": "proven",
+      "evidence": "essential-stage20-01; quest-stage-renault-death-01; both composite verifiers show overridefalse and deathcount1; fresh normal/SANengine cases"
+    },
+    {
+      "requirement": "Bound assassin armor/helmet/mace lifecycle, save ownership and death removal",
+      "status": "proven",
+      "evidence": "initialmidcombat state and actual rendered models; both final composites assert no deadbounditems/abilities; lifecycle tests in reused component and fresh engine gates"
+    },
+    {
+      "requirement": "Separate-process genuine midcombat restart with no consumed contact or death replay",
+      "status": "proven",
+      "evidence": "normal and sanitized composite verifiers compare whole independent live snapshots; actionpending17/new>=18; onlynewcallbacks2..5"
+    },
+    {
+      "requirement": "Postfight original stages27/28/29, NPC Find approach and Player control release",
+      "status": "proven",
+      "evidence": "normal and sanitized runtime traces; realPhysics/LOS approach tests; ordinary80/90unitmovement; finalblock/engagement release assertions"
+    },
+    {
+      "requirement": "Physical gate and authorized locked XTEL transition",
+      "status": "proven",
+      "evidence": "actualnormal/SANdoor events; installed record audit; owned-lock engine regression; all3actualnextcells in both final saves"
+    },
+    {
+      "requirement": "Noncombat low-process continuation, exact low save/load and original arrival callback to stage30",
+      "status": "proven",
+      "evidence": "sanitized low continuation epoch6 matches entire savedlive state, resumes9noderoute; both verifiers assert GlenroyComplete atmarker, originalcallbackonce and no pending package completion"
+    },
+    {
+      "requirement": "Player alive, three escorts alive, persistent dead targets and empty action/death queues",
+      "status": "proven",
+      "evidence": "both strengthened composite final-state verifiers"
+    },
+    {
+      "requirement": "Mechanical and visual functionality with audio/projectiles/general loot excluded",
+      "status": "proven",
+      "evidence": "inspected live12 combatcapture, normal endcapture, sanitized02 and finalcontinuation captures; visual-inspection records; actualnormalinputs and read-only observer/event audits"
+    },
+    {
+      "requirement": "Thorough efficient verification and reviewable editable source/handoff",
+      "status": "proven",
+      "evidence": "fullnormal2142 + fullSAN2142 exact inventories/0fail/0skip; reusedcomponent3241/Python549 with original provenance; publicnormal/SAN/continuation manifests, retained failures and scratchuserdata playrecipe"
+    }
+  ],
+  "remaining_acceptance": [],
+  "normal_engine": {
+    "tests": 2142,
+    "inventory_matches": true,
+    "failed": 0,
+    "skipped": 0,
+    "source": {
+      "head": "5ef6ef42c5056d6f6843260d6361323a3a1a0add",
+      "source_fingerprint": "b35ed0dcec748fe142b7355cc5b2d80acd58a1d17e6d952610ae63db4ea71649"
+    },
+    "evidence": "build/oblivion-compat/tutorial-melee/find-conversation-range-integration-01/verification.json",
+    "test_binary_sha256": "69a83270103748761a3a7604285b352b810da3747dcafb10995b822a4278705d"
+  },
+  "sanitizer_engine": {
+    "tests": 2142,
+    "inventory_matches": true,
+    "failed": 0,
+    "skipped": 0,
+    "source": {
+      "head": "5ef6ef42c5056d6f6843260d6361323a3a1a0add",
+      "source_fingerprint": "26c30cb6332836d01bfa411250f7b80ca5629d443cff1747f992421d336e660e"
+    },
+    "configuration": {
+      "CMAKE_BUILD_TYPE": "Debug",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+    },
+    "leak_checking": true,
+    "evidence": "build/oblivion-compat/tutorial-melee/player-course-sanitize-engine-02/verification.json",
+    "test_binary_sha256": "b4ce1a771a660d099606d1763cba54e176e007dfdcdc8bc91ebc7df49653925c"
+  },
+  "reused_components": {
+    "tests": 3241,
+    "source": {
+      "head": "5ef6ef42c5056d6f6843260d6361323a3a1a0add",
+      "source_fingerprint": "4c6c90a6a05928dad07ce73e2bc35bf13d2040ab4eaa8daad84d249efa119af8"
+    },
+    "evidence": "build/oblivion-compat/tutorial-melee/essential-base-integration-01/verification.json",
+    "note": "original provenance; unchanged component code not relabeled as a current-source rerun"
+  },
+  "reused_python": {
+    "tests": 549,
+    "source": {
+      "head": "5ef6ef42c5056d6f6843260d6361323a3a1a0add",
+      "source_fingerprint": "c1d68f7cd0d94932d4e6da6fcfc157ed6b1db24f7fbbfec481299c6c31865782"
+    },
+    "evidence": "build/oblivion-compat/tutorial-melee/escort-door-integration-01/verification.json",
+    "note": "original provenance; unchanged Python code not relabeled as a current-source rerun"
+  },
+  "normal_runtime": {
+    "passed": true,
+    "scope": "normal Player punch/block from live12, exact fresh midcombat restart in04, legitimate normal-save continuation to original stage30; interrupted04 node gate is not a whole-course pass",
+    "processes": [
+      3821804,
+      3829654,
+      3830123
+    ],
+    "source_midcombat_save_sha256": "d4a0e70047e2f0389c14570e6a66b1badd348cf9b82534a92be9475ea98db01f",
+    "continuation_save_sha256": "e4f009a4536399cf294c953922e509577e9fe2fb69d8c709072a8d20d53832f9",
+    "restart_live_snapshots_identical": true,
+    "consumed_contacts_not_replayed": true,
+    "new_death_callbacks": [
+      [
+        "2",
+        "content:oblivion.esm:0178c3"
+      ],
+      [
+        "3",
+        "content:oblivion.esm:014a30"
+      ],
+      [
+        "4",
+        "content:oblivion.esm:0178c4"
+      ],
+      [
+        "5",
+        "content:oblivion.esm:014a2c"
+      ]
+    ],
+    "renault_death_count": 1,
+    "renault_authored_mortal_override": true,
+    "all_three_escorts_in_next_cell": true,
+    "bound_equipment_removed_on_death": true,
+    "final_stage": 30,
+    "glenroy_completed_at_marker": true,
+    "original_departure_callback_count": 1,
+    "pending_package_done": [],
+    "pending_physical_actions": [],
+    "pending_death_events": [],
+    "player_alive": true,
+    "player_combat_and_block_released": true,
+    "final_save_sha256": "e233d69cba63b35e7b38125eb8da833d094d366005737395f7486f05706f388a",
+    "remaining": []
+  },
+  "sanitized_runtime": {
+    "passed": true,
+    "scope": "normal Player punch/block source, exact fresh sanitized midcombat restart through original stage29 and all3 tunnel entries, exact fresh sanitized low-process continuation to original stage30; parent02 timed out only on stage30 and remains a failed whole course",
+    "processes": [
+      3821804,
+      3836736,
+      3838794
+    ],
+    "source_midcombat_save_sha256": "d4a0e70047e2f0389c14570e6a66b1badd348cf9b82534a92be9475ea98db01f",
+    "continuation_save_sha256": "449ca8f807728b5af022e0483a7618b9133fd2b585c89c70478ec5ee627d6904",
+    "restart_live_snapshots_identical": true,
+    "consumed_contacts_not_replayed": true,
+    "new_death_callbacks": [
+      [
+        "2",
+        "content:oblivion.esm:0178c3"
+      ],
+      [
+        "3",
+        "content:oblivion.esm:014a30"
+      ],
+      [
+        "4",
+        "content:oblivion.esm:0178c4"
+      ],
+      [
+        "5",
+        "content:oblivion.esm:014a2c"
+      ]
+    ],
+    "renault_death_count": 1,
+    "renault_authored_mortal_override": true,
+    "all_three_escorts_in_next_cell": true,
+    "bound_equipment_removed_on_death": true,
+    "final_stage": 30,
+    "glenroy_completed_at_marker": true,
+    "original_departure_callback_count": 1,
+    "pending_package_done": [],
+    "pending_physical_actions": [],
+    "pending_death_events": [],
+    "player_alive": true,
+    "player_combat_and_block_released": true,
+    "final_save_sha256": "987bb1c811fa031230793c51de232282f1eadaa2b6f0e9522289b43d8039f7a0",
+    "remaining": []
+  },
+  "runtime_leak_checking": false,
+  "sanitized_final_visual": {
+    "evidence": "build/oblivion-compat/tutorial-melee/player-sanitized-low-continuation-01/visual-inspection.json",
+    "capture_sha256": "8d62a40db30103e3dd3b3a87e820e2ece5f2e5bc40dcf782ff6589813c4c1dc0"
+  },
+  "timing_failures_retained": {
+    "normal04": "extra node-arrival gate failed; legitimate normal F5 continuation supplied the completed proof",
+    "sanitized01": "startup90-second gate expired; no combat acceptance",
+    "sanitized02": "only2400-second stage30 wait failed; gameexit0/noerrors, all3in nextcell and healthy lowprocess progress; genuine F5 resumed in fresh sanitized process"
+  },
+  "recipe_note": "public full sanitizer manifest stage30 allowance increased from2400 to3600 based on observed completed composite timing. This timing-only edit was not rerun as a single process. Accepted evidence is the explicitly recorded composite; failed whole-course receipts remain failed.",
+  "source_note": "C++ and Python implementation unchanged after full engine checks. Later changes are documentation, editable manifests and ignored verification helpers only.",
+  "final_saves": {
+    "normal_sha256": "e233d69cba63b35e7b38125eb8da833d094d366005737395f7486f05706f388a",
+    "sanitized_sha256": "987bb1c811fa031230793c51de232282f1eadaa2b6f0e9522289b43d8039f7a0"
+  },
+  "reviewed_utc": "2026-11-04T12:35:22.643256+00:00",
+  "evidence_root": "build/oblivion-compat/tutorial-melee",
+  "game_binaries": {
+    "normal_sha256": "efa6f5af0f76c0203ce0f2178dcc26d218b5805484872c4d4b8007f723100f83",
+    "sanitized_sha256": "349e4d7eafb02a5c634c5aeed0d7f6a12d73b849be46301c97806d556e954c74"
+  },
+  "completion_implementation_hashes": {
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "fa2b926738fb7cdf0586c2c106213a6a81bdd2a1b3f030b69f5ecab026ac3d3e",
+    "apps/openmw/mwmechanics/oblivionai.cpp": "5cb357b1ae34b42dbfbb75af966082deb88ad64d7073d21703334e0f33915211",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "fe8776a377cf76bdc300d4c54e9a0d35e9424937a142c3f7620e746d1f4d73f2",
+    "apps/openmw/mwworld/oblivionbounditems.cpp": "6690dcb98abb9e6270a528e2be62680291c9c783fe046fc211df7d5f7058cfc4",
+    "apps/openmw/mwworld/oblivioncharactergen.cpp": "1328bb8c95457c545d1564c3e57097d57539601846ef579e97d0c89d5ee82535",
+    "apps/openmw/mwworld/worldimp.cpp": "59b1e34405283a03a751f0c19f6f4dd0642f8021a2df87de69d9ac5986de9fbb",
+    "components/esm4/runtimestate.cpp": "297a38828be0c8b6640dc7d2506014d6d43cd0d9a1d3ddcfa491f80aa509ca78",
+    "components/esm4/runtimestate.hpp": "0a673838ba103e242b35eb14b7a8308ccb3e93b164e3d6515b0c0ae995f6f4df",
+    "scripts/tes4_runtime_state.py": "ef496accd9037319d679154e79075d50db185bb744324b8d666f1c4de72af842",
+    "apps/openmw_tests/mwworld/testobliviondialogue.cpp": "e05c98ef60fea8bd89c8448ebe7c5539848c9a417450574e6811eb18b1c7c6a1"
+  },
+  "independent_content_audit": "post-fight-dialogue-audit.json",
+  "installed_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "editable_manifests": {
+    "scripts/data/oblivion_compat/oblivion_m15_tutorial_player_melee_block.json": "e20b398ddc615249be33033c780747dd81b3fd7a2444117b3b8a8ded7e263ddc",
+    "scripts/data/oblivion_compat/oblivion_m15_tutorial_player_combat_restart_departure.json": "4711fdc8c965b0042e83a34b7f041679c945c60e3aa09ba50619803149f993ff",
+    "scripts/data/oblivion_compat/oblivion_m15_tutorial_player_stage27_departure.json": "65ee60a8d24625ce5092bf9e9bff7be544d660a61c553c3d2dbedb9e6b914990",
+    "scripts/data/oblivion_compat/oblivion_m15_tutorial_player_combat_restart_departure_sanitized.json": "e957e7f35998993dcb815ab8d2326796fd141caddab7967178ed02e00ff2fe09",
+    "scripts/data/oblivion_compat/oblivion_m15_tutorial_player_low_departure_sanitized.json": "2f7796a7a6d01ec2d7b7b0a9b80e26c7562aeb77474ab2429e0f696b4a262d4f"
+  }
+}

@@ -1596,7 +1596,13 @@ class OblivionCompatTests(unittest.TestCase):
                 "remaining_usage_time": 900.0 if local == "02cf9f" else -1.0,
             })
         state = {"schema_version": 4, "player": {"inventory": inventory}}
-        self.assertTrue(MODULE.validate_m13_runtime_state(state)["passed"])
+        for version in (4, MODULE.tes4_state.CURRENT_VERSION):
+            state["schema_version"] = version
+            self.assertTrue(MODULE.validate_m13_runtime_state(state)["passed"])
+        for version in (3, MODULE.tes4_state.CURRENT_VERSION + 1, True, 4.0):
+            state["schema_version"] = version
+            self.assertFalse(MODULE.validate_m13_runtime_state(state)["passed"])
+        state["schema_version"] = MODULE.tes4_state.CURRENT_VERSION
 
         inventory[0]["count"] -= 1
         inventory[5]["equipped_slots"] = 1 << 2

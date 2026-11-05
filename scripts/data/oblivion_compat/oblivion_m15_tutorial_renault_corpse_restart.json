@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "name": "tutorial fresh-process Renault corpse and stage24 continuation without event replay",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:014a30 IsInCombat\nat 0 command content:oblivion.esm:014a2c IsInCombat\nat 0 command content:oblivion.esm:0178c3 IsInCombat\nat 0 command content:oblivion.esm:0178c4 IsInCombat\nat 0 command content:oblivion.esm:032a18 GetIsAlerted\nat 0 command content:oblivion.esm:032a15 GetIsAlerted\nat 0 command content:oblivion.esm:032a16 GetIsAlerted\nat 0 command content:oblivion.esm:032a17 GetIsAlerted\nat 0 command content:oblivion.esm:02466e GetStage\nat 0 command content:oblivion.esm:032a15 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self = require('openmw.self')\nreturn {{engineHandlers={{onFrame=function() end}}}}\n"
+    }
+  ],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "fixed_seed": 1414,
+    "required_events": []
+  },
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:02466e name=GetStage result=24(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:032a15 name=GetDead result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:014a30 name=IsInCombat result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:014a2c name=IsInCombat result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:0178c3 name=IsInCombat result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:0178c4 name=IsInCombat result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:032a18 name=GetIsAlerted result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:032a15 name=GetIsAlerted result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:032a16 name=GetIsAlerted result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:032a17 name=GetIsAlerted result=1(?:\\s|$)",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "renault-corpse-restart.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "m14_checkpoint",
+      "name": "renault-corpse-restart",
+      "save_name": "Quicksave",
+      "minimum_actor_count": 3000
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 140,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "acceptance-command actor=content:oblivion.esm:014a30 name=IsInCombat result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:014a2c name=IsInCombat result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0178c3 name=IsInCombat result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0178c4 name=IsInCombat result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:032a18 name=GetIsAlerted result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:032a15 name=GetIsAlerted result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:032a16 name=GetIsAlerted result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:032a17 name=GetIsAlerted result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:02466e name=GetStage result=24(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:032a15 name=GetDead result=1(?:\\s|$)"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "enableplayercontrols movement=",
+    "setstage quest=content:oblivion.esm:02466e stage=23(?:\\s|$)",
+    "M7 ObScript: setalert",
+    "M7 ObScript: (?:enable|disable) ref=",
+    "M7 ObScript: startcombat",
+    "M15 native death callback: .*actor=content:oblivion.esm:032a15",
+    "event=onhit unit=content:oblivion.esm:032ae1(?:@[^ ]+)? instance=content:oblivion.esm:032a15",
+    "event=__result unit=content:oblivion.esm:02466e(?:@[^ ]+)?/quest-result/stage=24/entry="
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  }
+}

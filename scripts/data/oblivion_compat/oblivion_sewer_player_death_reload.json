@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "name": "Original rat combat Player death and normal quicksave reload",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal core=require('openmw.core')\nlocal alive=false\nlocal dead=false\nlocal expectedHealth=16.599990844726562\nlocal restored=false\nreturn {{engineHandlers={{\nonSave=function()\n local health=Actor.stats.dynamic.health(self).current\n print('Sewer death course checkpoint health='..health)\n return {{health=health}}\nend,\nonLoad=function(data)\n restored=data and data.health~=nil\n expectedHealth=(data and data.health) or 16.599990844726562\n alive=false dead=false\nend,\nonFrame=function(dt)\n local health=Actor.stats.dynamic.health(self).current\n if not alive and health>0 then\n  assert(math.abs(health-expectedHealth)<0.001,'Checkpoint health not restored')\n  local equipped=0\n  for _,item in pairs(Actor.getEquipment(self)) do\n   if item.recordId==core.getFormId('Oblivion.esm',0x159829) or item.recordId==core.getFormId('Oblivion.esm',0x661c1) or item.recordId==core.getFormId('Oblivion.esm',0x661c3) then equipped=equipped+1 end\n  end\n  assert(equipped==3,'Checkpoint equipment not restored')\n  alive=true print('Sewer death course '..(restored and 'reloaded' or 'initial')..' checkpoint health='..health)\n end\n if not dead and Actor.isDead(self) then dead=true print('Sewer death course Player dead') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Sewer death course initial checkpoint",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Sewer death course Player dead",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "player-dead-reload-prompt.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Sewer death course reloaded checkpoint",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "Escape"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "player-reloaded-paused.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 240,
+  "expected_exit": 0,
+  "expected_log": [
+    "Sewer death course Player dead",
+    "Sewer death course reloaded checkpoint"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

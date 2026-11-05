@@ -79,12 +79,12 @@ add_openmw_dir (mwsound
 add_openmw_dir (mwworld
     refdata worldimp worldbackend scene globals class action nullaction actionteleport
     containerstore preparedinitialinventory preparedsaverecords actiontalk actiontake actionhorse manualref player cellvisitors failedaction
-    worldmodel sharedactorinitialization oblivionlooseweapon oblivionweapondrop obliviondynamicreference oblivionownership localscripts customdata inventorystore ptr actionopen actionread actionharvest
+    worldmodel sharedactorinitialization oblivionanimatedreference oblivionlooseweapon oblivionweapondrop obliviondynamicreference oblivionownership localscripts customdata inventorystore ptr actionopen actionread actionharvest
     actionequip timestamp actionalchemy cellstore actionapply actioneat
     store esmstore fallback actionrepair actionsoulgem livecellref actiondoor
     contentloader esmloader actiontrap cellreflist cellref weather projectilemanager
     cellpreloader datetimemanager groundcoverstore magiceffects cell ptrregistry
-    positioncellgrid oblivionactorstats oblivioncombatmagic oblivioncombatdata oblivionnativeidle oblivionprofileservices oblivioninteraction oblivionphysicalpose oblivionscriptmanager worldspaceutils
+    positioncellgrid oblivionbounditems oblivionenablestate oblivionactorstats obliviondooranimation oblivioncharactergen oblivioncombatmagic oblivioncombatdata oblivionnativeidle oblivionprofileservices oblivioninteraction oblivionphysicalpose oblivionscriptmanager worldspaceutils
     )
 
 add_openmw_dir (mwphysics

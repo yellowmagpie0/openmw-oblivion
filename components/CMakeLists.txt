@@ -252,6 +252,7 @@ add_component_dir (esm4
     loadcsty
     loadmgef
     loadspel
+    loadlvsp
     loadench
     weaponenchantment
     loadskil
@@ -307,6 +308,7 @@ add_component_dir (esm4
     loadinfo
     loadingr
     inventorymechanics
+    boundequipment
     loadkeym
     loadland
     loadlgtm

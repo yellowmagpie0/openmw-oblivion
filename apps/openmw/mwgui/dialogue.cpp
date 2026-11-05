@@ -524,6 +524,10 @@ namespace MWGui
 
     void DialogueWindow::restock()
     {
+        // Native linked dialogue does not offer TES3 merchant services.
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return;
+
         MWMechanics::CreatureStats& sellerStats = mPtr.getClass().getCreatureStats(mPtr);
         float delay = MWBase::Environment::get()
                           .getESMStore()
@@ -789,7 +793,8 @@ namespace MWGui
     void DialogueWindow::updateDisposition()
     {
         bool dispositionVisible = false;
-        if (!mPtr.isEmpty() && mPtr.getClass().isNpc())
+        if (!mPtr.isEmpty() && mPtr.getClass().isNpc()
+            && MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
         {
             // If actor was a witness to a crime which was payed off,
             // restore original disposition immediately.
@@ -887,7 +892,10 @@ namespace MWGui
 
     bool DialogueWindow::isCompanion(const MWWorld::Ptr& actor)
     {
-        if (actor.isEmpty())
+        // The companion local belongs to TES3 scripts; native scripts have
+        // separate storage and do not expose that companion-service contract.
+        if (actor.isEmpty()
+            || MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
             return false;
 
         return !actor.getClass().getScript(actor).empty()

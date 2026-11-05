@@ -1,0 +1,51 @@
+{
+  "source_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x4f7b90",
+  "scope": "Original IsGuard evaluator and class flag accessor51BEF0; NPC type, class presence and bit1.",
+  "boundary_stubs": [
+    "virtual170 subject base getter; supplied typed NPC/creature base and class layout"
+  ],
+  "case_count": 8,
+  "cases": [
+    {
+      "subject": "null",
+      "flags": 2,
+      "expected": 0
+    },
+    {
+      "subject": "creature",
+      "flags": 2,
+      "expected": 0
+    },
+    {
+      "subject": "no-class",
+      "flags": 2,
+      "expected": 0
+    },
+    {
+      "subject": "npc",
+      "flags": 0,
+      "expected": 0
+    },
+    {
+      "subject": "npc",
+      "flags": 1,
+      "expected": 0
+    },
+    {
+      "subject": "npc",
+      "flags": 2,
+      "expected": 1
+    },
+    {
+      "subject": "npc",
+      "flags": 3,
+      "expected": 1
+    },
+    {
+      "subject": "npc",
+      "flags": 4,
+      "expected": 0
+    }
+  ]
+}

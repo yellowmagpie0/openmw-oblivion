@@ -398,13 +398,13 @@ namespace ESM4
             case 110: return "GetCurrentAIPackage";
             case 111: return "IsWaiting";
             case 112: return "IsIdlePlaying";
-            case 116: return "GetMinorCrimeCount";
+            case 116: return "GetCrimeGold";
             case 117: return "GetMajorCrimeCount";
             case 118: return "GetActorAggroRadiusViolated";
             case 122: return "GetCrime";
             case 123: return "IsGreetingPlayer";
-            case 125: return "GetIsGuard";
-            case 127: return "HasBeenEaten";
+            case 125: return "IsGuard";
+            case 127: return "CanPayCrimeGold";
             case 128: return "GetFatiguePercentage";
             case 129: return "GetPCIsClass";
             case 130: return "GetPCIsRace";
@@ -488,6 +488,7 @@ namespace ESM4
             case 306: return "IsActorUsingATorch";
             case 310: return "GetInWorldspace";
             case 327: return "IsRidingHorse";
+            case 329: return "IsTurnArrest";
             case 338: return "GetIgnoreFriendlyHits";
             case 339: return "IsPlayersLastRiddenHorse";
             case 353: return "IsActor";

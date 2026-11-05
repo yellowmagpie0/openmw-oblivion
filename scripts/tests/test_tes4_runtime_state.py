@@ -151,6 +151,30 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+    def test_chargen80_owner_roundtrip_and_validation(self):
+        state = make_state()
+        state["ai_rng_state"] = 1
+        state["schema_version"] = 80
+        owner = {"tracking": True, "skill_uses": [0.] * 21,
+                 "recommended_class": "content:oblivion.esm:0237a7"}
+        owner["skill_uses"][5] = .25
+        state["player"]["character_generation"] = owner
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["player"]["character_generation"], owner)
+        old = copy.deepcopy(state)
+        old["schema_version"] = 79
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(old)
+        del old["player"]["character_generation"]
+        self.assertNotIn("character_generation", state_io.decode_payload(state_io.encode_payload(old))["player"])
+        for uses in (None, [0.] * 20, [float("nan")] * 21, [float("inf")] * 21):
+            malformed = copy.deepcopy(state)
+            malformed["player"]["character_generation"]["skill_uses"] = uses
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(malformed)
+        owner["tracking"] = False
+        owner["skill_uses"] = None
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["player"]["character_generation"], owner)
+
 
     @classmethod
     def getup_idle_state(cls):
@@ -241,11 +265,14 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(state_io.encode_payload(loaded), wire)
         legacy = self.getup_graph_state(); legacy_wire = state_io.encode_payload(legacy)
         self.assertNotIn("request_selections", state_io.decode_payload(legacy_wire)["native_getup_playback"][0])
-        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = state_io.CURRENT_VERSION
+        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = 78
         self.assertEqual(legacy["native_getup_playback"][0]["request_selections"], [])
         self.assertEqual(legacy["native_getup_playback"][0]["pending_requests"], [])
         self.assertIsNone(legacy["native_getup_playback"][0]["physical_hit"])
         self.assertEqual(len(state_io.encode_payload(legacy)), len(legacy_wire) + 9)
+        legacy["schema_version"] = 79
+        self.assertEqual(len(state_io.encode_payload(legacy)),
+                         len(legacy_wire) + 9 + len(legacy["native_actor_values"]))
 
     def test_getup_graph73_rejects_invalid_selection_and_legacy_reinterpretation(self):
         changes = [lambda g: g["request_selections"][0].update(request=99),
@@ -1321,6 +1348,79 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
         del state["native_player_bow_timer"]
         state_io.encode_payload(state)
+
+    def test_leveled_contact_spells79_keep_known_none_and_reject_rerolling_legacy_history(self):
+        state = self.ownership_state(); state["schema_version"] = 78; state["ai_rng_state"] = 1
+        actor = {"actor": state["references"][0]["key"], "base": state["references"][0]["base"],
+                 "owner": 1, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "player_form_values": None, "nonplayer_form_health": 1234567, "passive_abilities": None}
+        actor["values"][8][0] = 1234567.
+        state["native_actor_values"] = [actor]
+        legacy = state_io.encode_payload(state)
+        self.assertNotIn("leveled_contact_spells", state_io.decode_payload(legacy)["native_actor_values"][0])
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 79)
+        marker = struct.pack("<BiB", 1, 1234567, 0)
+        offset = legacy.index(marker) + len(marker)
+        expected[offset:offset] = b"\0"
+        state["schema_version"] = 79
+        self.assertEqual(state_io.encode_payload(state), bytes(expected))
+        self.assertNotIn("leveled_contact_spells", state_io.decode_payload(bytes(expected))["native_actor_values"][0])
+        actor["leveled_contact_spells"] = []
+        expected[offset:offset + 1] = b"\1" + struct.pack("<I", 0)
+        self.assertEqual(state_io.encode_payload(state), bytes(expected))
+        self.assertEqual(state_io.decode_payload(bytes(expected))["native_actor_values"][0]["leveled_contact_spells"], [])
+        spell = "content:oblivion.esm:098416"
+        actor["leveled_contact_spells"] = [spell]
+        expected[offset + 1:offset + 5] = struct.pack("<I", 1)
+        expected[offset + 5:offset + 5] = struct.pack("<I", len(spell)) + spell.encode("ascii")
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, bytes(expected))
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+        state["schema_version"] = 78
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["schema_version"] = 79
+        for bad in ([spell, spell], ["null"]):
+            actor["leveled_contact_spells"] = bad
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        expected[offset] = 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(expected))
+
+    def test_disease78_preserves_writer_identity_and_rejects_lossy_downgrade(self):
+        state = make_state()
+        state["schema_version"] = 77
+        state["ai_rng_state"] = 1
+        spell = "content:oblivion.esm:098416"
+        ability = {"spell": spell, "effects": [[0, int.from_bytes(b"DRAT", "little"), 1, -3., 5.]]}
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "player_form_values": None, "nonplayer_form_health": None, "passive_abilities": [ability]}
+        state["native_actor_values"] = [actor]
+        legacy = state_io.encode_payload(state)
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(legacy)), legacy)
+        self.assertNotIn("spell_type", state_io.decode_payload(legacy)["native_actor_values"][0]["passive_abilities"][0])
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 78)
+        offset = legacy.index(spell.encode("ascii")) + len(spell)
+        expected[offset:offset] = struct.pack("<I", 4)
+        state["schema_version"] = 78
+        self.assertEqual(state_io.encode_payload(state), bytes(expected))
+        ability["spell_type"] = 1
+        struct.pack_into("<I", expected, offset, 1)
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, bytes(expected))
+        restored = state_io.decode_payload(payload)
+        self.assertEqual(restored["native_actor_values"][0]["passive_abilities"], [ability])
+        self.assertEqual(state_io.encode_payload(restored), payload)
+        state["schema_version"] = 77
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["schema_version"] = 78
+        for kind in (0, 2, 3, 5, 0xffffffff, True, 1.0):
+            ability["spell_type"] = kind
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        for kind in (0, 2, 3, 5, 0xffffffff):
+            struct.pack_into("<I", expected, offset, kind)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(expected))
 
     def test_passive_initial_magnitude_v19_wire_and_v18_unknown(self):
         state = make_state()
@@ -2549,6 +2649,81 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 "animation_time": .5, "contact_committed": False}}]
         return state
 
+    def dodge_state(self):
+        old = self.first_person_strike_state()
+        payload = state_io.encode_payload(old)
+        body = struct.pack("<4sII", b"VERS", 4, old["schema_version"]) + struct.pack("<4sI", b"DATA", len(payload)) + payload
+        with tempfile.TemporaryDirectory() as directory:
+            source, target = Path(directory) / "old.omwsave", Path(directory) / "new.omwsave"
+            source.write_bytes(struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
+            state_io.write_save(source, target, old)
+            state = state_io.load_save(target)
+        melee = state["native_melee_states"][0]
+        for view in (melee, melee["first_person"]):
+            view["strike"] = None
+        identity = state["physical_actions"]["next"]
+        state["physical_actions"]["next"] += 1
+        melee["dodge"] = {"action": identity, "group": 11,
+            "body": {"group": "dodgeforward", "time": .25, "begin": 0., "end": 1., "rate": 1.5},
+            "first_person": {"group": "dodgeforward", "time": .125, "begin": 0., "end": .75, "rate": .75}}
+        next(x for x in state["native_actor_values"] if x["actor"] == melee["actor"]).update(process_action=9, process_knocked_state=0)
+        return state
+
+    def test_dodge77_preserves_both_samples_and_directions_without_legacy_invention(self):
+        for group, name in enumerate(("dodgeforward", "dodgeback", "dodgeleft", "dodgeright"), 11):
+            state = self.dodge_state()
+            dodge = state["native_melee_states"][0]["dodge"]
+            dodge["group"] = group
+            for view in (dodge["body"], dodge["first_person"]): view["group"] = name
+            payload = state_io.encode_payload(state)
+            self.assertEqual(state_io.decode_payload(payload), state)
+            self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+        state = self.dodge_state()
+        melee = state["native_melee_states"][0]
+        melee.pop("dodge")
+        next(x for x in state["native_actor_values"] if x["actor"] == melee["actor"])["process_action"] = -1
+        state["schema_version"] = 76
+        self.assertNotIn("dodge", state_io.decode_payload(state_io.encode_payload(state))["native_melee_states"][0])
+
+    def test_dodge77_rejects_lost_owner_replay_bad_views_and_legacy_payload(self):
+        for fault in range(13):
+            with self.subTest(fault=fault):
+                state = self.dodge_state(); melee = state["native_melee_states"][0]; dodge = melee["dodge"]
+                values = next(x for x in state["native_actor_values"] if x["actor"] == melee["actor"])
+                if fault == 0: values["process_action"] = 6
+                if fault == 1: values["process_knocked_state"] = 1
+                if fault == 2: state["physical_actions"]["pending"].append(dodge["action"])
+                if fault == 3: dodge["action"] = state["physical_actions"]["next"]
+                if fault == 4: dodge["group"] = 10
+                if fault == 5: dodge["body"]["group"] = "dodgeright"
+                if fault == 6: dodge["body"]["rate"] = 0
+                if fault == 7: dodge["first_person"]["time"] = 1
+                if fault == 8: dodge["body"]["end"] = 0
+                if fault == 9: dodge["first_person"]["rate"] = float("nan")
+                if fault == 10: state["native_animation_clocks"] = []
+                if fault == 11: state["schema_version"] = 76
+                if fault == 12: melee["dodge"] = None
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_dodge77_retains_fading_block_history_but_rejects_resident_block(self):
+        state = self.dodge_state()
+        melee = state["native_melee_states"][0]
+        fading = dict(animation_group="handtohandblockidle", animation_time=0.,
+            sequence_timing=dict(easing=False, offset=None, ease_start=None, last_input=None,
+                ease_end=0., weighted_time=0., output_time=0.),
+            retirement=dict(duration=.5, start_clock=None), inactive=False, pose_snapshot=None)
+        for view in (melee, melee["first_person"]):
+            view["held_blocks"] = [copy.deepcopy(fading)]
+        wire = state_io.encode_payload(state)
+        self.assertEqual(state_io.decode_payload(wire), state)
+        for first in (False, True):
+            broken = copy.deepcopy(state)
+            view = broken["native_melee_states"][0]
+            if first: view = view["first_person"]
+            view["held_blocks"][0]["retirement"] = None
+            with self.subTest(first=first), self.assertRaisesRegex(state_io.RuntimeStateError, "Conflicting"):
+                state_io.encode_payload(broken)
+
     def test_melee_v76_release_requirement_roundtrip_and_legacy_promotion(self):
         old = self.melee_state()
         entry = old["native_melee_states"][0]
@@ -2561,7 +2736,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             source.write_bytes(struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
             state_io.write_save(source, target, old)
             promoted = state_io.load_save(target)
-        self.assertEqual(promoted["schema_version"], 76)
+        self.assertEqual(promoted["schema_version"], state_io.CURRENT_VERSION)
         control = promoted["native_melee_states"][0]["input"]
         self.assertFalse(control["require_release"])
         control["require_release"] = True
@@ -3124,7 +3299,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         for changes in [
                 lambda x: x["native_melee_states"][0]["ai_intent"].update(target=entry["actor"]),
                 lambda x: x["native_melee_states"][0]["ai_intent"].update(target="content:missing.esm:000001"),
-                lambda x: x["native_melee_states"][0]["ai_intent"].update(style="null"),
+                lambda x: x["native_melee_states"][0]["ai_intent"].update(style="missing"),
                 lambda x: x["native_melee_states"][0]["ai_intent"].update(extra=1),
                 lambda x: x["native_melee_states"][0].update(ai_intent=False),
                 lambda x: x.update(native_combat_engagements=[]),
@@ -3134,6 +3309,10 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             with self.assertRaises(state_io.RuntimeStateError):
                 state_io.encode_payload(invalid)
         downgrade = copy.deepcopy(state); downgrade["schema_version"] = 27
+        default_style = copy.deepcopy(state)
+        default_style["native_melee_states"][0]["ai_intent"]["style"] = "null"
+        default_decoded = state_io.decode_payload(state_io.encode_payload(default_style))
+        self.assertEqual(default_decoded["native_melee_states"], default_style["native_melee_states"])
         with self.assertRaises(state_io.RuntimeStateError):
             state_io._upgrade_melee_ai(downgrade)
         for version in range(21, 28):
@@ -4496,5 +4675,220 @@ class SaveEnvelopeAdmissionTests(unittest.TestCase):
 
 
 
+
+
+
+class FactionReaction81Tests(unittest.TestCase):
+    def state(self):
+        state = make_state()
+        state["schema_version"] = 81
+        state["ai_rng_state"] = 1
+        return state
+
+    def test_directed_zero_and_signed_values_round_trip(self):
+        state = self.state()
+        for value in (0, -100, 30, -(1 << 31), (1 << 31) - 1):
+            state["faction_reactions"] = [
+                {"from": "content:oblivion.esm:000600", "to": "content:oblivion.esm:000601", "value": value},
+                {"from": "content:oblivion.esm:000601", "to": "content:oblivion.esm:000600", "value": 17}]
+            wire = state_io.encode_payload(state)
+            restored = state_io.decode_payload(wire)
+            self.assertEqual(restored["faction_reactions"], state["faction_reactions"])
+            self.assertEqual(state_io.encode_payload(restored), wire)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(wire[:-1])
+        state["schema_version"] = 80
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state.pop("faction_reactions")
+        self.assertNotIn("faction_reactions",state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_invalid_faction_pair_or_duplicate_rejects(self):
+        state = self.state()
+        good = {"from": "content:oblivion.esm:000600", "to": "content:oblivion.esm:000601", "value": 30}
+        for rows in ([good, good], [dict(good, to="dynamic:faction:0000000000000001")],
+                     [dict(good, value=True)], [dict(good, value=1 << 31)]):
+            state["faction_reactions"] = rows
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+
+
+
+class ProcessAlert82Tests(unittest.TestCase):
+    def state(self):
+        state = make_state(); state["schema_version"] = 82; state["ai_rng_state"] = 1
+        state["native_actor_values"] = [{"actor": state["player"]["reference"],
+            "base": "content:oblivion.esm:000007", "owner": 0, "process": 0,
+            "values": [[0., None, None, None] for _ in range(72)]}]
+        return state
+
+    def test_alert_round_trip_and_legacy_absence(self):
+        for process in (0,1):
+            for alerted in (None,False,True):
+                state = self.state(); owner=state["native_actor_values"][0]
+                owner.update(process=process,process_alerted=alerted)
+                wire=state_io.encode_payload(state); restored=state_io.decode_payload(wire)
+                self.assertEqual(restored["native_actor_values"][0]["process_alerted"],alerted)
+                self.assertEqual(state_io.encode_payload(restored),wire)
+                state["schema_version"]=81
+                if alerted is not None:
+                    with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+                else:
+                    self.assertNotIn("process_alerted",state_io.decode_payload(state_io.encode_payload(state))["native_actor_values"][0])
+
+    def test_invalid_alert_value_or_presence_rejects(self):
+        state=self.state();owner=state["native_actor_values"][0]
+        for invalid in (0,1,-1,"true"):
+            owner["process_alerted"]=invalid
+            with self.assertRaises(state_io.RuntimeStateError):state_io.encode_payload(state)
+        owner["process_alerted"]=None; absent=state_io.encode_payload(state)
+        owner["process_alerted"]=False; present=state_io.encode_payload(state)
+        offset=next(i for i,(a,b) in enumerate(zip(absent,present)) if a!=b)
+        for at in (offset,offset+1):
+            bad=bytearray(present);bad[at]=2
+            with self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(bad)
+
+
+class BoundEquipment83Tests(unittest.TestCase):
+    def state(self):
+        state = make_state(); state["schema_version"] = 83; state["ai_rng_state"] = 1
+        actor = "content:oblivion.esm:000a00"
+        spell = "content:oblivion.esm:03e91b"
+        item = dict(state["player"]["inventory"][0], base="content:oblivion.esm:026274",
+                    condition=4190.5, hotkey=-1, equipped_slots=1 << 16,
+                    bound_source={"spell": spell, "effect_index": 2})
+        displaced = dict(state["player"]["inventory"][0], hotkey=-1, ownership_rank=None,
+                         ownership_global="null", extra_scale=None)
+        state["references"] = [{"key": actor, "base": "content:oblivion.esm:000800",
+            "cell": state["player"]["cell"], "position": [0.] * 6, "enabled": True,
+            "deleted": False, "lock_level": 0, "owner": None, "inventory": [item], "custom_state": {}}]
+        state["native_bound_abilities"] = [{"actor": actor, "abilities": [
+            {"spell": spell, "displaced_inventory": [displaced]}]}]
+        return state
+
+    def test_owned_bound_instance_and_displaced_metadata_round_trip(self):
+        state = self.state(); wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(restored["references"][0]["inventory"][0]["bound_source"],
+                         state["references"][0]["inventory"][0]["bound_source"])
+        self.assertEqual(restored["references"][0]["inventory"][0]["condition"], 4190.5)
+        self.assertEqual(restored["native_bound_abilities"], state["native_bound_abilities"])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        state["schema_version"] = 82
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["references"][0]["inventory"][0].pop("bound_source")
+        state.pop("native_bound_abilities")
+        restored = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("native_bound_abilities", restored)
+        self.assertNotIn("bound_source", restored["references"][0]["inventory"][0])
+
+    def test_cpp_bound_owner_fixture_has_independent_wire_tail(self):
+        state=self.state(); actor="content:oblivion.esm:000100"
+        state["references"][0]["key"]=actor
+        state["native_bound_abilities"][0]["actor"]=actor
+        displaced={"base":"content:oblivion.esm:026274","count":1,"condition":4190.5,
+            "charge":-1.,"equipped_slots":1<<16,"hotkey":-1,"owner":"content:oblivion.esm:000600",
+            "remaining_usage_time":-1.,"ownership_rank":None,"ownership_global":"null","extra_scale":None}
+        state["native_bound_abilities"][0]["abilities"][0]["displaced_inventory"]=[displaced]
+        wire=state_io.encode_payload(state)
+        self.assertTrue(wire.endswith(bytes.fromhex("010000001b000000636f6e74656e743a6f626c6976696f6e2e65736d3a303030313030010000001b000000636f6e74656e743a6f626c6976696f6e2e65736d3a303365393162010000001b000000636f6e74656e743a6f626c6976696f6e2e65736d3a3032363237340100000000f48245000080bf00000100ff1b000000636f6e74656e743a6f626c6976696f6e2e65736d3a303030363030000080bf00040000006e756c6c00")))
+        self.assertIn(bytes.fromhex("011b000000636f6e74656e743a6f626c6976696f6e2e65736d3a30336539316202000000"),wire)
+
+    def test_bound_source_corruption_or_orphan_ownership_rejected(self):
+        for case in range(8):
+            with self.subTest(case=case):
+                state = self.state(); item=state["references"][0]["inventory"][0]
+                owners=state["native_bound_abilities"]
+                if case==0: item["count"]=2
+                if case==1: item["bound_source"]["effect_index"]=-1
+                if case==2: item["bound_source"]["spell"]="dynamic:spell:0000000000000001"
+                if case==3: owners.clear()
+                if case==4: state["references"][0]["inventory"].append(dict(item, equipped_slots=0))
+                if case==5: owners[0]["abilities"].append(copy.deepcopy(owners[0]["abilities"][0]))
+                if case==6: owners[0]["abilities"][0]["displaced_inventory"]=[item]
+                if case==7: owners[0]["actor"]="content:oblivion.esm:00dead"
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        wire=state_io.encode_payload(self.state())
+        for n in [1,4,10]:
+            with self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(wire[:-n])
+
+
 if __name__ == "__main__":
     unittest.main()
+
+
+class EssentialBase84Tests(unittest.TestCase):
+    def test_flag_only_and_combined_base_state_round_trip_and_reject_downgrade(self):
+        for kind in (0, 1):
+            for essential in (False, True):
+                for values in ([], [[8, 0, 100]]):
+                    state = make_state()
+                    state.update(schema_version=84, ai_rng_state=1)
+                    base = dict(base="content:oblivion.esm:000800", kind=kind,
+                                values=values, essential=essential)
+                    state["native_actor_bases"] = [base]
+                    wire = state_io.encode_payload(state)
+                    restored = state_io.decode_payload(wire)
+                    self.assertEqual(restored["native_actor_bases"], [base])
+                    self.assertEqual(state_io.encode_payload(restored), wire)
+                    state["schema_version"] = 83
+                    with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+                    base.pop("essential")
+                    if values:
+                        legacy = state_io.decode_payload(state_io.encode_payload(state))
+                        self.assertNotIn("essential", legacy["native_actor_bases"][0])
+                    else:
+                        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_invalid_flag_and_corrupt_wire_reject_without_accepting_integer_bool(self):
+        state = make_state(); state.update(schema_version=84, ai_rng_state=1)
+        base = dict(base="content:oblivion.esm:000800", kind=0, values=[], essential=False)
+        state["native_actor_bases"] = [base]
+        for invalid in (0, 1, "true", -1):
+            base["essential"] = invalid
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        base["essential"] = False
+        wire = state_io.encode_payload(state)
+        key = base["base"].encode()
+        offset = wire.index(key) + len(key) + 5
+        for invalid in (3, 255):
+            corrupt = bytearray(wire); corrupt[offset] = invalid
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(corrupt))
+
+
+class AnimatedReference85Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_state()
+        state.update(schema_version=85, ai_rng_state=1)
+        reference = {"key": "content:oblivion.esm:03e31c", "base": "content:oblivion.esm:026bf4",
+                     "cell": state["player"]["cell"], "enabled": True, "deleted": False,
+                     "position": [0.] * 6, "owner": None, "lock_level": 0, "inventory": [], "custom_state": {}}
+        state["references"].append(reference)
+        state["native_animated_references"] = [{"reference": reference["key"], "base": reference["base"],
+            "model": "dungeons/chargen/wall.nif", "asset_hash": "00112233445566778899aabbccddeeff",
+            "bodies": [{"record": 12+i, "node_record": 8+i,
+                "rotation": [1., 0., 0., 0., 1., 0., 0., 0., 1.], "position": [float(i), -0., -800.],
+                "linear_velocity": [1., 2., -3.], "angular_velocity": [0., 0., 0.]} for i in range(2)]}]
+        return state
+
+    def test_roundtrip_and_legacy_absence(self):
+        state = self.make_state()
+        encoded = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(encoded)
+        self.assertEqual(decoded["native_animated_references"], state["native_animated_references"])
+        self.assertEqual(decoded["native_actor_ragdolls"], [])
+        self.assertEqual(math.copysign(1., decoded["native_animated_references"][0]["bodies"][0]["position"][1]), -1.)
+        self.assertEqual(state_io.encode_payload(decoded), encoded)
+        state["schema_version"] = 84
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state["native_animated_references"]
+        self.assertNotIn("native_animated_references", state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_missing_mismatched_duplicate_and_actor_owners(self):
+        state = self.make_state()
+        edits = [lambda s: s["references"].clear(),
+                 lambda s: s["native_animated_references"][0].update(base="content:oblivion.esm:000999"),
+                 lambda s: s["native_animated_references"].append(copy.deepcopy(s["native_animated_references"][0])),
+                 lambda s: s["native_animated_references"][0].update(reference=s["player"]["reference"]),
+                 lambda s: s["native_animated_references"][0]["bodies"][1].update(record=12)]
+        for edit in edits:
+            invalid = copy.deepcopy(state); edit(invalid)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)

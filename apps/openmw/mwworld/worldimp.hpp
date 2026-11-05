@@ -100,6 +100,7 @@ namespace MWPhysics
 namespace MWMechanics
 {
     class OblivionAiService;
+    class OblivionSavedReferenceIndex;
     class OblivionCombatService;
 }
 
@@ -206,6 +207,15 @@ namespace MWWorld
         ESM::GameProfile mRequestedGameProfile;
         ESM::GameProfile mGameProfile = ESM::GameProfile::Auto;
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
+        bool mUpdatingOblivionBoundEquipment = false;
+        bool mSynchronizingOblivionEnableParents = false;
+        void normalizeOblivionEnableParents(ESM4::RuntimeState& state) const;
+        using NativeAnimatedReferenceStates = std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll>;
+        std::shared_ptr<const NativeAnimatedReferenceStates> mOblivionAnimatedReferenceStates;
+        void captureOblivionAnimatedReferenceState(ESM4::RuntimeState& state) const;
+        void validateOblivionAnimatedReferenceState(const ESM4::RuntimeState& state) const;
+        void updateOblivionAnimatedReference(const Ptr& ptr);
+        void synchronizeOblivionAnimatedReferencePoses();
         using NativeLooseWeaponStates = std::map<ESM::FormKey, ESM4::RuntimeLooseWeapon>;
         // Immutable retained projection also identifies the cache version to
         // detached scene admissions across reentrant callbacks.
@@ -391,6 +401,7 @@ namespace MWWorld
         float getOblivionPlayerInventoryWeight() const override;
         bool updateOblivionBreath(const Ptr& actor, float duration) override;
         std::optional<std::pair<float, float>> getOblivionBreath(const Ptr& actor) const override;
+        bool consumeOblivionPotion(const Ptr& item, const Ptr& actor) override;
         bool requestOblivionResourceCurrent(const Ptr& actor, std::uint8_t value, float requested) override;
         bool requestOblivionStatModifier(const Ptr& actor, std::uint8_t value, bool damage, float requested) override;
         bool requestOblivionStatBase(const Ptr& actor, std::uint8_t value, float requested) override;
@@ -455,6 +466,13 @@ namespace MWWorld
         // nullopt only while this actor has not entered native AV authority.
         // Reads resident or saved references without loading a cell.
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
+        std::optional<std::int32_t> getOblivionFactionReaction(
+            const ESM::FormKey& from, const ESM::FormKey& to) const;
+        bool setOblivionFactionReaction(const ESM::FormKey& from, const ESM::FormKey& to, std::int32_t value);
+        bool setOblivionEssential(const ESM::FormKey& base, bool essential);
+        std::optional<bool> getOblivionEssentialOverride(const ESM::FormKey& base) const;
+        bool setOblivionAlerted(const ESM::FormKey& actor, std::int32_t value);
+        bool getOblivionAlerted(const ESM::FormKey& actor) const;
         std::optional<bool> getOblivionVampire(const ESM::FormKey& actor) const;
         std::optional<double> getOblivionScriptKnockedState(const ESM::FormKey& actor) const;
         std::optional<bool> getOblivionIgnoreFriendlyHits(const ESM::FormKey& reference) const;
@@ -612,6 +630,8 @@ namespace MWWorld
         int oblivionAddActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
         int oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
         std::vector<ESM4::RuntimeInventoryItem> captureOblivionActorInventory(const Ptr& actor) const;
+        void updateOblivionBoundEquipment(const Ptr& actor);
+        void removeOblivionDeadBoundEquipment();
         std::unique_ptr<InventoryStore> prepareOblivionSavedActorInventory(const Ptr& actor) const;
         bool oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const;
         std::uint32_t oblivionEquipmentSlots(const Ptr& item, int sharedSlot) const;
@@ -736,6 +756,9 @@ namespace MWWorld
         void fixPosition() override;
         ///< Attempt to fix position so that the player is not stuck inside the geometry.
 
+        std::optional<bool> getOblivionReferenceEnabled(const ESM::FormKey& key,
+            const MWMechanics::OblivionSavedReferenceIndex* references = nullptr) const;
+        void synchronizeOblivionEnableParents(CellStore* loadingCell = nullptr);
         void enable(const Ptr& ptr) override;
 
         void disable(const Ptr& ptr) override;
@@ -958,6 +981,7 @@ namespace MWWorld
         bool restoreOblivionLooseWeaponScene(const Ptr& ptr, MWRender::Objects& objects,
             MWPhysics::PhysicsSystem& physics, const VFS::Path::Normalized& model,
             const osg::Quat& rotation) const;
+        bool restoreOblivionAnimatedReferenceScene(const Ptr& ptr) const;
         void renderPlayer() override;
 
         /// open or close a non-teleport door (depending on current state)

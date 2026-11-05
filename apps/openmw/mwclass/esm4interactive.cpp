@@ -289,6 +289,9 @@ namespace MWClass
 
     bool ESM4Creature::isEssential(const MWWorld::ConstPtr& ptr) const
     {
+        if (const auto* world = dynamic_cast<const MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+            if (const auto essential = world->getOblivionEssentialOverride(ptr.get<ESM4::Creature>()->mBase->mFormKey))
+                return *essential;
         return (ptr.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_Essential) != 0;
     }
 

@@ -1,6 +1,7 @@
-"""Exercise input replay against real SDL, without an engine or display socket."""
+"""Exercise input replay against real SDL, without an engine, including a private Xvfb display."""
 
 import os
+import sys
 from pathlib import Path
 import shlex
 import subprocess
@@ -110,6 +111,7 @@ int main() {
         self.input = self.root / f"{self._testMethodName}.txt"
         self.input.write_text("")
         self.processes = []
+        self.servers = []
 
     def tearDown(self):
         for process in self.processes:
@@ -119,9 +121,22 @@ int main() {
             process.stderr.close()
             self.assertEqual(process.returncode, 0)
 
-    def launch(self, *, enabled=True, driver="offscreen"):
+        for server in self.servers:
+            server.terminate()
+            server.wait(timeout=10)
+
+    def private_display(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from oblivion_compat import _start_xvfb
+        process, display = _start_xvfb(self.root, 320, 240)
+        self.servers.append(process)
+        return display
+
+    def launch(self, *, enabled=True, driver="offscreen", replay_environment=None):
         env = dict(os.environ, SDL_VIDEODRIVER=driver, LD_PRELOAD=str(self.library))
-        env.pop("OPENMW_SDL_INPUT", None)
+        for key in ("OPENMW_SDL_INPUT", "OPENMW_SDL_REPLAY_VIDEO_DRIVER", "OPENMW_SDL_REPLAY_XVFB_DISPLAY"):
+            env.pop(key, None)
+        env.update(replay_environment or {})
         if enabled:
             env["OPENMW_SDL_INPUT"] = str(self.input)
         process = subprocess.Popen([str(self.driver)], env=env, text=True,
@@ -141,6 +156,30 @@ int main() {
 
     def event(self, process):
         return list(map(int, self.command(process).split()))
+
+    def test_private_xvfb_delivers_keys_and_receipts(self):
+        display = self.private_display()
+        process = self.launch(driver="x11", replay_environment=dict(DISPLAY=display,
+            OPENMW_SDL_REPLAY_VIDEO_DRIVER="x11", OPENMW_SDL_REPLAY_XVFB_DISPLAY=display))
+        self.append("1 down 4\n2 up 4\n")
+        self.assertEqual(self.event(process)[1:7], [768, 4, 97, 0, 1, 0])
+        self.assertEqual(self.event(process)[1:7], [769, 4, 97, 0, 0, 0])
+        self.assertEqual(Path(str(self.input) + ".delivered").read_text(), self.input.read_text())
+
+    def test_xvfb_requires_matching_private_display_and_driver_declaration(self):
+        display = self.private_display()
+        for index, binding in enumerate([
+                dict(OPENMW_SDL_REPLAY_VIDEO_DRIVER="x11"),
+                dict(OPENMW_SDL_REPLAY_XVFB_DISPLAY=display),
+                dict(OPENMW_SDL_REPLAY_VIDEO_DRIVER="x11", OPENMW_SDL_REPLAY_XVFB_DISPLAY=display + "9"),
+                dict(OPENMW_SDL_REPLAY_VIDEO_DRIVER="offscreen", OPENMW_SDL_REPLAY_XVFB_DISPLAY=display)]):
+            with self.subTest(binding=binding):
+                self.input = self.root / f"{self._testMethodName}-{index}.txt"
+                self.input.write_text("")
+                process = self.launch(driver="x11", replay_environment=dict(DISPLAY=display, **binding))
+                self.append("1 down 4\n")
+                self.assertEqual(self.event(process)[1], 256)
+                self.assertFalse(Path(str(self.input) + ".delivered").exists())
 
     def test_keyboard_state_modifiers_and_release(self):
         process = self.launch()

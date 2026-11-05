@@ -22,7 +22,7 @@ namespace ESM4
         std::uint32_t mData;
     };
 
-    // Verified compiled inputs for the fourteen racial/birthsign VMOD codes.
+    // Verified compiled inputs for racial/birthsign VMOD codes and Witbane DRAT.
     // Other codes remain unadmitted; this is not a complete magic registry.
     std::optional<LoadedEffectSetting> compiledPassiveValueModifierDefinition(std::uint32_t code);
 
@@ -37,6 +37,18 @@ namespace ESM4
     // either resistance >=100 returns zero. Preserve the original intermediate
     // rounding, including cancellation to zero below100. No RNG is consumed.
     float nativeEffectResistanceMultiplier(float generalResistance, float effectResistance);
+
+    // Original6171F0/5490C0 physical-contact Disease1 transfer. Its percentile
+    // comparison is inclusive: draw0 can pass a zero threshold, even at100
+    // resistance. Caller owns Player/unarmed/carrier admission, the RNG draw,
+    // duplicate ownership, grant transaction and presentation.
+    bool diseaseTransferSucceeds(std::int32_t resistance, float base, float multiplier,
+        std::uint8_t percentile);
+    struct DiseaseTransferSettings
+    {
+        float mBase;
+        float mMultiplier;
+    };
 
     // Narrow owned lifecycle for the verified recoverable, NoMagnitude PARA
     // effect. Actor preparation, modifier writes and collection ownership stay
@@ -104,12 +116,13 @@ namespace ESM4
         ValueModifierEffectInputs mValues;
     };
 
-    // Resolved self Ability4 constructor inputs. These are not saved applied
+    // Resolved self Ability4/Disease1 constructor inputs. These are not saved applied
     // magnitudes. The winning-record adapter owns class/range admission.
     struct PassiveAbilityInput
     {
         ESM::FormKey mSpell;
         std::vector<PassiveValueModifierInput> mEffects;
+        std::uint32_t mSpellType = 4;
     };
 
     // Constructor inputs only. Caller verifies native effect class/admission;

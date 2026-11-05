@@ -402,6 +402,9 @@ namespace MWMechanics
         // Only the committed Backward prefix may originate this saved request.
         std::optional<ESM4::RuntimePhysicalHit> mVictimPhysicalHit{};
         std::vector<OblivionPhysicalEnchantmentChargeChange> mEnchantmentChargeChanges{};
+        // A selected carrier's Disease1 grant joins the same once-only contact.
+        // This is constructor input; the receiving actor saves applied ownership.
+        std::shared_ptr<const ESM4::PassiveAbilityInput> mVictimDisease{};
     };
 
     struct OblivionPassiveEffectIdentity
@@ -437,6 +440,10 @@ namespace MWMechanics
         // Process-frame flag B333B8: consumed by the next frame clock, then
         // cleared before global scripts and actor updates. Never saved.
         bool mSceneIsComplex = false;
+        // Native global B3BB18 is a one-shot arrest-dialogue signal. It
+        // survives actor frames, is not saved, and is consumed by its query.
+        // The later arrest dialogue producer must explicitly arm it.
+        bool mTurnArrest = false;
         std::optional<std::pair<ESM::FormKey, ESM::FormKey>> mScriptDispositionPair;
         std::int32_t mScriptDispositionValue = 0;
         ESM4::CrimeStateContracts mCrimeContracts;
@@ -626,6 +633,13 @@ namespace MWMechanics
         std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
         bool sceneIsComplex() const noexcept { return mSceneIsComplex; }
         void setSceneIsComplex(bool value) noexcept { mSceneIsComplex = value; }
+        void requestTurnArrest() noexcept { mTurnArrest = true; }
+        bool consumeTurnArrest() noexcept
+        {
+            const bool result = mTurnArrest;
+            mTurnArrest = false;
+            return result;
+        }
         void beginScriptActorFrame() noexcept { mSceneIsComplex = false; mScriptDispositionPair.reset(); }
         std::optional<std::int32_t> cachedScriptDisposition(
             const ESM::FormKey& actor, const ESM::FormKey& target) const
@@ -939,6 +953,8 @@ namespace MWMechanics
         // published reference of this base, including actor. Unloaded saved
         // actors change too; newly published references inherit the override.
         // No pointers survive the call. Event/cache policy remains caller-owned.
+        std::optional<bool> getBaseEssential(const ESM::FormKey& base) const;
+        void setBaseEssential(const ESM::FormKey& base, ESM4::ActorBaseKind kind, bool essential);
         void setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,
             std::int32_t requested, std::span<const MWWorld::Ptr> residents);
         // Batch native attribute/skill form writes. Resource form inputs,
@@ -1048,6 +1064,8 @@ namespace MWMechanics
             const ESM4::PlayerDynamicBaseSettings& baseSettings);
         // Prepare Health, Magicka, then Fatigue and publish once. Callers own
         // rest/wait/jail eligibility and active-item/effect lifecycle.
+        bool restorePotionResources(const MWWorld::Ptr& actor, MWWorld::Player* player,
+            const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings);
         void restoreNonPlayerResources(const MWWorld::Ptr& actor, const OblivionRestorationUpdate& input,
             const OblivionRestorationSettings& settings);
         void restorePlayerResources(MWWorld::Player& player, const OblivionRestorationUpdate& input,
@@ -1141,6 +1159,12 @@ namespace MWMechanics
         void setProcessAction(const ESM::FormKey& actor, std::int16_t action);
         // Renderer validates the concrete block group before admission. Held
         // intent is transient; only the accepted native posture is persisted.
+        // Jump/ground/interface and resource admission belongs to the controller.
+        // This transaction owns the Player action and withdraws held mitigation.
+        bool beginBlockingDodge(const ESM::FormKey& actor, ESM4::RuntimeBlockingDodge dodge,
+            const ESM4::CombatMasterySettings& mastery,
+            std::span<const OblivionMeleeSequenceMetadata> heldSources);
+        bool endBlockingDodge(const ESM::FormKey& actor) noexcept;
         bool beginBlocking(const ESM::FormKey& actor);
         bool endBlocking(const ESM::FormKey& actor);
         // Resource-prepared native slot1 activation. No contact is allocated.
@@ -1161,6 +1185,9 @@ namespace MWMechanics
         // native defaults only where an older save has no restored field.
         // Headless restore and same-process activation must not call this.
         void initializeConstructedActorProcess(const ESM::FormKey& actor);
+        // No actor-value/process owner means no native process: do not create one.
+        bool setProcessAlerted(const ESM::FormKey& actor, bool alerted);
+        bool getProcessAlerted(const ESM::FormKey& actor) const;
         std::int8_t getProcessKnockedState(const ESM::FormKey& actor) const;
         void setProcessKnockedState(const ESM::FormKey& actor, std::int8_t state);
         const ESM4::RuntimeActorLife* findActorLife(const ESM::FormKey& actor) const;

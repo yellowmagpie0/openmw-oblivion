@@ -4,6 +4,7 @@
 #include "oblivionai.hpp"
 #include "creaturestats.hpp"
 #include "movement.hpp"
+#include "steering.hpp"
 #include "../mwworld/oblivioncombatdata.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwbase/environment.hpp"
@@ -19,12 +20,16 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivionscriptmanager.hpp"
 #include <components/esm3/loadarmo.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/loadmgef.hpp>
+#include <components/esm4/loadspel.hpp>
+#include <components/esm4/loadlvsp.hpp>
+#include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/weaponenchantment.hpp>
 #include "../mwworld/worldimp.hpp"
 #include "../mwrender/animation.hpp"
@@ -44,6 +49,69 @@
 
 namespace MWMechanics
 {
+    namespace
+    {
+        // A bounded physical damage-rate policy shared with the existing
+        // disarm fallback. Combat melee excludes staves, bows and ammunition.
+        MWWorld::Ptr selectUsablePhysicalWeapon(MWBase::World& world, const MWWorld::Ptr& actor,
+            const MWWorld::Ptr& removed, std::uint32_t maximumType)
+        {
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            MWWorld::Ptr selected;
+            double best = -1;
+            for (auto item = inventory.begin(); item != inventory.end(); ++item)
+            {
+                if (*item == removed || item->getType() != ESM::REC_WEAP
+                    || item->getCellRef().getCount() <= 0) continue;
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                    world.getStore(), item->getCellRef().getRefId());
+                const auto* weapon = world.getStore().get<ESM4::Weapon>().search(id);
+                if (!weapon || weapon->mData.type > maximumType) continue;
+                const auto& ref = item->getCellRef();
+                const double condition = ref.getNativeItemCondition().value_or(
+                    ref.getCharge() < 0 ? float(weapon->mData.health)
+                                        : float(ref.getCharge()) + ref.getChargeIntRemainder());
+                if (!std::isfinite(condition) || condition < 0 || !std::isfinite(weapon->mData.speed)
+                    || weapon->mData.speed <= 0 || (weapon->mData.health && condition == 0)) continue;
+                const double ratio = weapon->mData.health ? condition / weapon->mData.health : 1;
+                const double rating = weapon->mData.damage * ratio * weapon->mData.speed;
+                if (rating > best)
+                {
+                    best = rating;
+                    selected = *item;
+                }
+            }
+            return selected;
+        }
+
+        void equipOwnedMeleeWeapon(MWWorld::World& world, const MWWorld::Ptr& actor,
+            OblivionCombatService& combat)
+        {
+            if (actor.getType() != ESM::REC_NPC_4) return;
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            if (inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight) != inventory.end()) return;
+            const auto selected = selectUsablePhysicalWeapon(world, actor, {}, 3);
+            if (selected.isEmpty()) return;
+            const auto key = actor.getCellRef().getFormKey();
+            auto* mechanics = MWBase::Environment::get().getMechanicsManagerOrNull();
+            if (!mechanics || !mechanics->cancelOblivionCombatInput(actor))
+            {
+                combat.endBlocking(key);
+                combat.clearMeleeInput(key);
+            }
+            // Cancellation observers may change the inventory. Re-find the
+            // exact physical stack; never substitute another same-base unit.
+            const auto found = std::find(inventory.begin(), inventory.end(), selected);
+            if (found == inventory.end()
+                || inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight) != inventory.end()
+                || selectUsablePhysicalWeapon(world, actor, {}, 3) != selected)
+                return;
+            inventory.equip(MWWorld::InventoryStore::Slot_CarriedRight, found);
+            Log(Debug::Info) << "M15 combat melee weapon equipped: actor=" << key.serialize()
+                             << " item=" << selected.getCellRef().getRefId();
+        }
+    }
+
     MWWorld::Ptr selectOblivionDisarmReplacement(
         MWBase::World& world, const MWWorld::Ptr& actor, const MWWorld::Ptr& removed)
     {
@@ -57,32 +125,7 @@ namespace MWMechanics
         // combat package. An active combat controller owns its later choice.
         if (!life || life->mPhase != ESM4::ActorLifePhase::Alive
             || nativeWorld->hasOblivionCombatController(key).value_or(false)) return {};
-        auto& inventory = actor.getClass().getInventoryStore(actor);
-        MWWorld::Ptr selected;
-        double best = -1;
-        for (auto item = inventory.begin(); item != inventory.end(); ++item)
-        {
-            if (*item == removed || item->getType() != ESM::REC_WEAP
-                || item->getCellRef().getCount() <= 0) continue;
-            const auto id = MWWorld::OblivionProfileServices::nativeItemId(
-                world.getStore(), item->getCellRef().getRefId());
-            const auto* weapon = world.getStore().get<ESM4::Weapon>().search(id);
-            if (!weapon || weapon->mData.type > 5) continue; // Includes projected ammunition.
-            const auto& ref = item->getCellRef();
-            const double condition = ref.getNativeItemCondition().value_or(
-                ref.getCharge() < 0 ? float(weapon->mData.health)
-                                    : float(ref.getCharge()) + ref.getChargeIntRemainder());
-            if (!std::isfinite(condition) || condition < 0 || !std::isfinite(weapon->mData.speed)
-                || weapon->mData.speed <= 0 || (weapon->mData.health && condition == 0)) continue;
-            const double ratio = weapon->mData.health ? condition / weapon->mData.health : 1;
-            const double rating = weapon->mData.damage * ratio * weapon->mData.speed;
-            if (rating > best)
-            {
-                best = rating;
-                selected = *item;
-            }
-        }
-        return selected;
+        return selectUsablePhysicalWeapon(world, actor, removed, 5);
     }
 
     bool isOblivionStationaryMeleeStyle(const ESM4::CombatStyleStandard& style)
@@ -285,7 +328,62 @@ namespace MWMechanics
         return result && *result == target;
     }
 
-    bool updateOblivionStationaryMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled)
+    bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* combat = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        auto* ai = nativeWorld ? nativeWorld->getOblivionAiService() : nullptr;
+        if (!combat || !ai || actor.isEmpty()
+            || (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
+            return false;
+        const auto player = world.getPlayerPtr();
+        if (player.isEmpty() || actor == player || !actor.isInCell() || !player.isInCell()
+            || !actor.getRefData().isEnabled() || !player.getRefData().isEnabled()
+            || (actor.getCell() != player.getCell()
+                && (!actor.getCell()->isExterior() || !player.getCell()->isExterior())))
+            return false;
+        const auto key = actor.getCellRef().getFormKey();
+        if (nativeWorld->hasOblivionCombatController(key).value_or(false))
+            return false;
+        const auto* values = combat->findActorValues(key);
+        const auto* life = combat->findActorLife(key);
+        const auto* playerLife = combat->findActorLife(ESM::FormKey::dynamic("player", 1));
+        if (!values || values->mProcess != ESM4::ActorValueProcess::Active
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || !playerLife || playerLife->mPhase != ESM4::ActorLifePhase::Alive
+            || ai->isRestrained(actor) || ai->isRidingHorse(actor)
+            || oblivionParalyzed(world, actor) || oblivionKnockedState(world, actor) != 0)
+            return false;
+        if (const auto* state = ai->state(actor); state && state->mPackageType == ESM4::AIPackageType::Sleep
+            && (state->mPhase == ESM4::PackagePhase::Act || state->mPhase == ESM4::PackagePhase::Wait))
+            return false;
+        const auto aggression = combat->getNonPlayerIntegerValue(actor, 33);
+        if (aggression <= 0)
+            return false;
+        const auto disposition = nativeWorld->getOblivionDisposition(key, ESM::FormKey::dynamic("player", 1));
+        if (!disposition)
+            return false;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+        const auto distance = (actor.getRefData().getPosition().asVec3()
+            - player.getRefData().getPosition().asVec3()).length();
+        // Original 524AD4/5EA187 only admit positive 546190 fight scores.
+        // This ordinary Player encounter has no ally incident/friend term.
+        // Use the existing detector; exact native scan cadence and general
+        // multi-target/ally selection are separate from this admission path.
+        const ESM4::FightScoreInput input{*disposition, 0, aggression, distance,
+            false, false, combat->getNonPlayerIntegerValue(actor, 36)};
+        if (ESM4::fightScore(input, ESM4::buildFightScoreSettings(settings)) <= 0
+            || !ai->detection(actor, player).mDetected)
+            return false;
+        return nativeWorld->executeOblivionStartCombat(actor, player);
+    }
+
+    bool updateOblivionMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled, float duration)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
@@ -301,6 +399,12 @@ namespace MWMechanics
         stats.setAttackingOrSpell(false);
         const auto currentTarget = nativeWorld->getOblivionCombatTarget(key);
         const bool engaged = currentTarget.has_value();
+        auto& movement = actor.getClass().getMovementSettings(actor);
+        if (engaged)
+        {
+            std::fill(std::begin(movement.mPosition), std::end(movement.mPosition), 0.f);
+            std::fill(std::begin(movement.mRotation), std::end(movement.mRotation), 0.f);
+        }
         const auto* values = combat->findActorValues(key);
         const auto* life = combat->findActorLife(key);
         if (!enabled || !engaged || !values || !life || life->mPhase != ESM4::ActorLifePhase::Alive
@@ -308,6 +412,7 @@ namespace MWMechanics
             || ai->isRidingHorse(actor) || oblivionParalyzed(world, actor) || oblivionKnockedState(world, actor) != 0)
         {
             combat->clearMeleeAiIntent(key);
+            ai->clearCombatRoute(actor);
             return engaged;
         }
         // The current base combat package supersedes the authored coordinator's
@@ -318,16 +423,13 @@ namespace MWMechanics
         if (currentTarget->isNull())
         {
             combat->clearMeleeAiIntent(key);
+            ai->clearCombatRoute(actor);
             return true; // An allocated-empty controller has no attack target.
         }
         const auto policy = MWWorld::resolveOblivionCombatPolicy(world.getStore(), values->mBase,
             MWWorld::buildOblivionCombatDefaults(world.getStore()));
         const auto& style = policy.mStandard;
-        if (policy.mStyle.isNull() || !isOblivionStationaryMeleeStyle(style))
-        {
-            combat->clearMeleeAiIntent(key);
-            throw std::runtime_error("native stationary melee requires the explicit S4 deterministic CSTY profile");
-        }
+        const bool stationary = isOblivionStationaryMeleeStyle(style);
         const auto target = *currentTarget == ESM::FormKey::dynamic("player", 1)
             ? world.getPlayerPtr() : ai->resolveReference(*currentTarget);
         const auto* targetLife = combat->findActorLife(*currentTarget);
@@ -335,18 +437,31 @@ namespace MWMechanics
             || !targetLife || targetLife->mPhase != ESM4::ActorLifePhase::Alive)
         {
             combat->clearMeleeAiIntent(key);
+            ai->clearCombatRoute(actor);
             return true;
         }
         const auto* physics = dynamic_cast<const MWPhysics::PhysicsSystem*>(world.getRayCasting());
         if (!physics || !physics->getActor(actor) || !physics->getActor(target))
         {
             combat->clearMeleeAiIntent(key);
+            ai->clearCombatRoute(actor);
             return true; // Lost collision residence cannot turn into a substituted hit or cost.
         }
+        const auto* priorMelee = combat->findMeleeState(key);
+        if (!priorMelee || !priorMelee->mStrike)
+            equipOwnedMeleeWeapon(*nativeWorld, actor, *combat);
+        // Equipment observers can stop combat or replace its target.
+        if (nativeWorld->getOblivionCombatTarget(key) != currentTarget)
+        {
+            combat->clearMeleeAiIntent(key);
+            ai->clearCombatRoute(actor);
+            return nativeWorld->hasOblivionCombatController(key).value_or(false);
+        }
+        // StopCombat on the other actor clears symmetric bookkeeping, not
+        // this actor's directed controller. Reconcile the live owned edge
+        // before publishing an intent whose persistence requires that edge.
+        combat->engage(key, *currentTarget);
         combat->setMeleeAiIntent(key, {*currentTarget, policy.mStyle}, world.getStore());
-        auto& movement = actor.getClass().getMovementSettings(actor);
-        std::fill(std::begin(movement.mPosition), std::end(movement.mPosition), 0.f);
-        std::fill(std::begin(movement.mRotation), std::end(movement.mRotation), 0.f);
         stats.setDrawState(DrawState::Weapon);
         const auto* melee = combat->findMeleeState(key);
         if (melee && melee->mStrike)
@@ -381,7 +496,18 @@ namespace MWMechanics
             }
             reach = ESM4::weaponMeleeReach(weapon->mData.reach, scale.z(), reachSettings);
         }
-        stats.setAttackingOrSpell(canReachOblivionMeleeTarget(world, actor, target, reach));
+        if (!stationary)
+        {
+            const auto delta = target.getRefData().getPosition().asVec3()
+                - actor.getRefData().getPosition().asVec3();
+            static_cast<void>(zTurn(actor, std::atan2(delta.x(), delta.y())));
+        }
+        const bool reachable = canReachOblivionMeleeTarget(world, actor, target, reach);
+        if (!stationary && !reachable)
+            ai->approachCombatTarget(actor, target, duration);
+        else
+            ai->clearCombatRoute(actor);
+        stats.setAttackingOrSpell(reachable && style.mAttackChance != 0);
         return true;
     }
 
@@ -644,6 +770,49 @@ namespace MWMechanics
         }
     }
 
+    namespace
+    {
+        void dispatchCommittedMeleeHit(MWWorld::World& world, const MWWorld::Ptr& attacker,
+            const MWWorld::Ptr& victim)
+        {
+            if (victim.isEmpty()) return;
+            if (auto* scripts = world.getOblivionScriptManager())
+                scripts->dispatchObjectEvent(victim, "onhit", attacker);
+
+            // A committed attack on the controller's intended opponent is a
+            // hostile act. Let a surviving native defender acquire that actor
+            // through the same production combat controller. Resolve this after
+            // OnHit: an authored Kill or StopCombat may change the live context.
+            // Player intervention in an existing fight is hostile as well;
+            // Player input never needs an AI controller. A scripted StopCombat
+            // still takes precedence. Graph membership alone is insufficient.
+            if (victim == world.getPlayerPtr() || attacker.isEmpty()
+                || !victim.getRefData().isEnabled() || !attacker.getRefData().isEnabled()
+                || victim.getCellRef().getCount() == 0 || attacker.getCellRef().getCount() == 0
+                || (victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4))
+                return;
+            auto* combat = world.getOblivionCombatService();
+            if (!combat) return;
+            const auto source = attacker == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                : ESM4::runtimeReferenceKey(attacker.getCellRef().getFormKey());
+            const auto target = ESM4::runtimeReferenceKey(victim.getCellRef().getFormKey());
+            const auto* sourceLife = combat->findActorLife(source);
+            const auto* targetLife = combat->findActorLife(target);
+            if (!sourceLife || !targetLife || sourceLife->mPhase != ESM4::ActorLifePhase::Alive
+                || targetLife->mPhase != ESM4::ActorLifePhase::Alive
+                || !(world.isOblivionCombatTarget(source, target).value_or(false)
+                    || (attacker == world.getPlayerPtr()
+                        && world.hasOblivionCombatController(target).value_or(false)))
+                || world.isOblivionCombatTarget(target, source).value_or(false)
+                || combat->getNonPlayerIntegerValue(victim, 34) <= 0) // Confidence: do not force a coward to fight.
+                return;
+            if (world.executeOblivionStartCombat(victim, attacker)
+                && world.isOblivionCombatTarget(target, source).value_or(false))
+                Log(Debug::Info) << "M15 hostile-hit combat response: actor=" << target.serialize()
+                                 << " target=" << source.serialize();
+        }
+    }
+
     std::optional<OblivionOrdinaryContactResult> commitOblivionMeleeContact(
         MWBase::World& world, std::uint64_t actionId,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
@@ -695,6 +864,7 @@ namespace MWMechanics
             auto prepared = nativeWorld->prepareOblivionPhysicalContact(actionId, attacker, *contact, *deltas);
             if (!prepared || !prepared->commit()) return std::nullopt;
             result.mRandomDraws = prepared->randomDraws();
+            dispatchCommittedMeleeHit(*nativeWorld, attacker, *contact);
             return result;
         }
         // Directional mastery contacts use the owned Player/NPC phase path.
@@ -946,6 +1116,10 @@ namespace MWMechanics
             if (!draws) return std::nullopt;
             result.mRandomDraws = *draws;
             observeCommittedEnchantment();
+            // All contact continuations have published before a script can
+            // Kill, change a quest, or save. The consumed strike owns once-only
+            // dispatch, including after restore; misses have no struck script.
+            dispatchCommittedMeleeHit(*nativeWorld, attacker, *contact);
             return result;
         }
         auto prepared = nativeWorld->prepareOblivionPhysicalContact(
@@ -954,6 +1128,7 @@ namespace MWMechanics
             return std::nullopt;
         result.mRandomDraws = prepared->randomDraws();
         observeCommittedEnchantment();
+        dispatchCommittedMeleeHit(*nativeWorld, attacker, *contact);
         return result;
     }
 
@@ -1119,14 +1294,46 @@ namespace MWMechanics
 
     namespace
     {
-        bool creatureHasSpells(const MWWorld::Ptr& actor)
+        bool creatureHasUnresolvedContactSpells(const MWWorld::ESMStore& store,
+            const OblivionCombatService& service, const MWWorld::Ptr& actor)
         {
             if (actor.isEmpty() || actor.getType() != ESM::REC_CREA4)
                 return false;
-            const auto& spells = actor.get<ESM4::Creature>()->mBase->mSpell;
-            return std::any_of(spells.begin(), spells.end(), [](ESM::FormId spell) {
-                return spell != ESM::FormId{};
-            });
+            const auto* values = service.findActorValues(actor.getCellRef().getFormKey());
+            if (!values) return true;
+            const auto sources = MWWorld::resolveOblivionCreatureContactSpellSources(store, values->mBase);
+            if (!sources) return true;
+            const auto abilities = MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, values->mBase);
+            if (!abilities) return true;
+            for (const auto& ability : *abilities)
+            {
+                if (!values->mPassiveAbilities) return true;
+                const auto owned = std::find_if(values->mPassiveAbilities->begin(), values->mPassiveAbilities->end(),
+                    [&](const auto& entry) { return entry.mSpell == ability.mSpell; });
+                if (owned == values->mPassiveAbilities->end() || owned->mSpellType != 4
+                    || owned->mEffects.size() != ability.mEffects.size()) return true;
+                for (std::size_t i = 0; i < ability.mEffects.size(); ++i)
+                {
+                    const auto& expected = ability.mEffects[i];
+                    const auto& applied = owned->mEffects[i];
+                    if (applied.mEffectIndex != expected.mEffectIndex || applied.mCode != expected.mCode
+                        || applied.mActorValue != expected.mValues.mActorValue
+                        || applied.mInitialMagnitude != expected.mValues.mMagnitude) return true;
+                    const float signedMagnitude = expected.mFlags & 4
+                        ? -expected.mValues.mMagnitude : expected.mValues.mMagnitude;
+                    if (!ESM4::valueModifierRequiresCurrent(static_cast<std::uint8_t>(applied.mActorValue),
+                            applied.mCode, signedMagnitude) && applied.mStoredMagnitude != signedMagnitude)
+                        return true;
+                }
+            }
+            if (sources->empty()) return false; // No leveled contact spell requires a selection snapshot.
+            if (!values->mLeveledContactSpells) return true; // Unknown legacy selection must not reroll here.
+            return std::any_of(values->mLeveledContactSpells->begin(), values->mLeveledContactSpells->end(),
+                [&](const auto& selected) {
+                    return std::none_of(sources->begin(), sources->end(), [&](const auto& source) {
+                        return source.mList->mEntries[0].mSpellKey == selected;
+                    });
+                });
         }
 
         bool creatureUsesDefaultWeaponHitSound(const MWWorld::ESMStore& store, const MWWorld::Ptr& actor)
@@ -1412,12 +1619,15 @@ namespace MWMechanics
             return std::nullopt;
         auto incoming = creature ? oblivionCreatureNaturalContactDamage(world, attacker)
             : oblivionHandToHandContactDamage(world, attacker, victim);
-        if (creatureHasSpells(attacker) || creatureHasSpells(victim))
-            return std::nullopt; // Creature spell/contact-effect resolution must join this transaction.
+        if (creatureHasUnresolvedContactSpells(world.getStore(), *service, attacker)
+            || creatureHasUnresolvedContactSpells(world.getStore(), *service, victim))
+            return std::nullopt; // Creature passive/contact effects must join this transaction.
         if (creature && !creatureUsesDefaultWeaponHitSound(world.getStore(), attacker))
             return std::nullopt;
-        if (creature && incoming.mHealth <= 0)
-            return std::nullopt; // The native nonpositive contact consequences remain unreviewed.
+        if (creature && incoming.mHealth < 0)
+            return std::nullopt; // Signed negative source damage remains outside the admitted sink domain.
+        // Zero natural damage still owns a real contact, attack expenditure,
+        // block/reaction and sound. The sink skips its zero Health/Fatigue writes.
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
@@ -1717,7 +1927,8 @@ namespace MWMechanics
             && kind != ESM4::MeleeStrikeKind::ForwardPower && kind != ESM4::MeleeStrikeKind::BackwardPower)
             return std::nullopt;
         const float rawIncoming = weaponContactDamage(world, attacker, item, kind);
-        if (creatureHasSpells(attacker) || creatureHasSpells(victim))
+        if (creatureHasUnresolvedContactSpells(world.getStore(), *service, attacker)
+            || creatureHasUnresolvedContactSpells(world.getStore(), *service, victim))
             return std::nullopt; // Do not omit Creature passive/contact-effect consequences.
         if (rawIncoming < 0)
             return std::nullopt; // Signed bonus/nonpositive sink policy needs its own branch.

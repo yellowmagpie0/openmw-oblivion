@@ -2071,13 +2071,14 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
         environment = m15_session.environment()
     environment.setdefault("OPENMW_SUPPRESS_ERROR_DIALOG", "1")
     offscreen_input = None
-    if manifest.get("sdl_offscreen_input", False):
+    if manifest.get("sdl_offscreen_input", False) or manifest.get("sdl_xvfb_input", False):
         config = (output / "config/openmw.cfg").read_text()
         userdata = re.findall(r'^user-data=(.*)$', config, re.MULTILINE)
         if userdata != ['"' + str(output.resolve() / "userdata") + '"']:
             raise ValueError("Offscreen scenarios require private output/userdata")
         offscreen_input = sdl_offscreen_replay.Replay(
-            output, environment, manifest.get("sdl_input_timeout_seconds", 10))
+            output, environment, manifest.get("sdl_input_timeout_seconds", 10),
+            video_driver='x11' if manifest.get('sdl_xvfb_input', False) else 'offscreen')
     m14_config = manifest.get("m14")
     if isinstance(m14_config, dict):
         event_path = _scenario_output_path(output, m14_config.get("event_file", "ai-events.jsonl"), "M14 event file")
@@ -2103,6 +2104,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
             )
             environment["DISPLAY"] = display
             environment.setdefault("SDL_VIDEODRIVER", "x11")
+            if manifest.get('sdl_xvfb_input', False):
+                offscreen_input.bind_xvfb_display(environment, display)
         command = [str(value) for value in manifest["command"]]
         if m15_session is not None:
             command = m15_session.command
@@ -2624,8 +2627,11 @@ def validate_m13_runtime_state(state: dict[str, Any]) -> dict[str, Any]:
     for item in inventory:
         by_base.setdefault(str(item.get("base")), []).append(item)
 
-    if state.get("schema_version") != 4:
-        failures.append(f"expected schema version 4, got {state.get('schema_version')}")
+    schema_version = state.get("schema_version")
+    if (type(schema_version) is not int
+            or not 4 <= schema_version <= tes4_state.CURRENT_VERSION):
+        failures.append(
+            f"expected inventory schema version 4 through {tes4_state.CURRENT_VERSION}, got {schema_version}")
     if set(by_base) != set(expected_counts):
         failures.append(
             "item identity set differs: "

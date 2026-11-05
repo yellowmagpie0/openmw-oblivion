@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "name": "tutorial authored gate closure, control release and player passage traversal",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01fc44 GetOpenState\nat 0 command content:oblivion.esm:032a16 GetDistance CGPlayerStartMarker\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self = require('openmw.self')\nlocal reported = false\nlocal aligned=false\nlocal frames=0\nprint('Tutorial passage observer loaded')\nreturn {{engineHandlers={{onFrame=function()\n frames=frames+1\n local p=self.position\n if frames%15==1 then print('Tutorial player position: x=' .. tostring(p.x) .. ' y=' .. tostring(p.y) .. ' z=' .. tostring(p.z)) end\n if not aligned and p.x<=710 then aligned=true; print('Tutorial player aligned with passage: x=' .. tostring(p.x)) end\n if not reported and p.y>=280 then\n  reported=true\n  print('Tutorial player entered passage: x=' .. tostring(p.x) .. ' y=' .. tostring(p.y) .. ' z=' .. tostring(p.z))\n end\nend}}}}\n"
+    }
+  ],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "fixed_seed": 1414,
+    "required_events": []
+  },
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "enableplayercontrols movement=true fighting=true view=true looking=true",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_x",
+      "value": -1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial player aligned with passage:",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_x",
+      "value": 0
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_y",
+      "value": -1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial player entered passage:",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_y",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "player-in-passage.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "m14_checkpoint",
+      "name": "player-in-passage",
+      "save_name": "Quicksave",
+      "minimum_actor_count": 3000
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 540,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "enableplayercontrols movement=true fighting=true view=true looking=true",
+    "Tutorial player entered passage:",
+    "setopenstate ref=content:oblivion.esm:01fc44 state=0"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  }
+}

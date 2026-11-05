@@ -13,6 +13,17 @@
 
 namespace ESM4
 {
+    bool diseaseTransferSucceeds(std::int32_t resistance, float base, float multiplier,
+        std::uint8_t percentile)
+    {
+        if (!std::isfinite(base) || !std::isfinite(multiplier) || percentile >= 100)
+            throw std::invalid_argument("invalid native disease transfer inputs");
+        const float chance = static_cast<float>(double(base) + (100. - std::min(resistance, 100)) * multiplier);
+        if (!std::isfinite(chance))
+            throw std::invalid_argument("native disease transfer chance overflow");
+        return percentile <= chance;
+    }
+
     void CombatParalysisState::validate() const
     {
         if (!std::isfinite(mDuration) || mDuration < 0 || !std::isfinite(mElapsed)
@@ -86,6 +97,7 @@ namespace ESM4
             std::pair{ESM::fourCC("STMA"), LoadedEffectSetting{0x1000112, 57}},
             std::pair{ESM::fourCC("SABS"), LoadedEffectSetting{0x1000072, 52}},
             std::pair{ESM::fourCC("FOAT"), LoadedEffectSetting{0x100072, 0}},
+            std::pair{ESM::fourCC("DRAT"), LoadedEffectSetting{0x100077, 0}},
             std::pair{ESM::fourCC("FOSP"), LoadedEffectSetting{0x1000072, 9}},
             std::pair{ESM::fourCC("RSFI"), LoadedEffectSetting{0x100007a, 61}},
             std::pair{ESM::fourCC("RSFR"), LoadedEffectSetting{0x100007a, 62}},

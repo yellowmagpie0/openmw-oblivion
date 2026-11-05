@@ -1,0 +1,205 @@
+--- build/oblivion-compat/m15/S4/combined-inflight-work-01/run.py
++++ build/oblivion-compat/m15/S4/combined-inflight-work-01/run.py
+@@ -2,8 +2,81 @@
+ import sys,json,subprocess,shutil,hashlib
+ root=Path.cwd();base=root/'build/oblivion-compat/m15/S4';work=base/'combined-inflight-work-01'
+ sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
++timing_mode=len(sys.argv)>1 and sys.argv[1] in ['--timing-preflight','--timing']
++def scenario_variables(out,binary):
++ values=dict(source=str(root),output=str(out),openmw=str(Path(binary).resolve()),resources=str(root/'build/resources'),stationary_fixture=str(base/'combined-wall-work-01/partition-fixture-02'),oblivion_data='/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data')
++ if timing_mode:values['mastery_fixture']=str(Path(timing['fixtures']['mastery']).resolve())
++ return values
++if timing_mode:
++ timing_path=Path(sys.argv[2]);timing=json.loads(timing_path.read_text());timing_work=base/'timing-campaign-work-01';timing_pref=timing_work/'fresh-window-preflight.json'
++ if sys.argv[1]=='--timing-preflight':
++  import copy,re
++  sys.path.insert(0,str(root/'scripts'));from tes4_runtime_state import load_save
++  from tes4_m15_fixture_preflight import approach_witness
++  from oblivion_compat import expand_value
++  checked={}
++  def pinned(ref):
++   path=Path(ref['path'])
++   if str(path) not in checked:checked[str(path)]=sha(path)
++   assert checked[str(path)]==ref['sha256'],str(path)
++   return path
++  def source_stage(state,phase):
++   player=state['player']['reference'];av=next(x for x in state['native_actor_values'] if x['actor']==player);m=next(x for x in state['native_melee_states'] if x['actor']==player)
++   assert not av.get('melee_paralysis') and not av['process_knocked_state']
++   if phase=='block':
++    assert av['process_action']==6 and state['physical_actions']==dict(next=2,pending=[]) and not state['physical_action_owners']
++    assert not m['strike'] and not m['reaction'] and any(not h['inactive'] for h in m['first_person']['held_blocks'])
++   elif phase=='windup':
++    assert av['process_action']==2 and state['physical_actions']==dict(next=4,pending=[3]) and state['physical_action_owners']==[dict(id=3,actor=player)]
++    assert m['strike']['id']==3 and not m['strike']['contact_committed'] and not m['reaction'] and not m['input']['input_held']
++   else:
++    assert phase=='recovery' and av['process_action']==8 and state['physical_actions']==dict(next=3,pending=[]) and not state['physical_action_owners']
++    assert not m['strike'] and m['reaction']['contact_id']==2 and m['reaction']['kind']==2 and m['reaction']['started'] and not m['reaction']['inactive']
++   return dict(action=av['process_action'],ledger=state['physical_actions'],phase=phase)
++  result={}
++  for fixture in timing['fixtures']['plugins']:pinned(fixture)
++  for case in timing['cases']:
++   for key in ['source','reference_manifest','endpoint','binary','reference_cell']:pinned(case[key])
++   reference=Path(case['reference']);assert json.loads((reference/'scenario.json').read_text())['passed']
++   state=load_save(Path(case['source']['path']));stage=source_stage(state,case['phase'])
++   bad=copy.deepcopy(state);player=bad['player']['reference'];row=next(x for x in bad['native_melee_states'] if x['actor']==player)
++   if case['phase']=='windup':row['strike']['contact_committed']=True
++   elif case['phase']=='recovery':row['reaction']['contact_id']=99
++   else:
++    for h in row['first_person']['held_blocks']:h['inactive']=True
++   try:source_stage(bad,case['phase'])
++   except AssertionError:pass
++   else:raise AssertionError('Source guard admitted incorrect stage')
++   log=(reference/'process.log').read_text();approach=approach_witness(log,wall_x=788,wall_y=65,close_range=110)
++   assert 'M15 course camera preflight: visible=true' in log
++   spec=json.loads(Path(case['reference_manifest']['path']).read_text());actions=spec['actions']
++   stop=next(i for i,a in enumerate(actions) if a.get('name')=='combined-wall-settled.png')+1
++   selector=('M15 melee hit committed: actor='+player+' id=3' if case['phase']=='windup' else 'M15 reaction recovered: actor='+player+' cause=2')
++   start=next(i for i,a in enumerate(actions) if a.get('pattern')==selector)
++   suffix=copy.deepcopy(actions[start:stop])
++   # Keep the original five core checkpoints; the pending windup source was
++   # already captured by the reference, not a second pending-source course.
++   bind=next((i for i,a in enumerate(suffix) if a.get('pattern','').startswith('M15 first-person strike bind:')),None)
++   if bind is not None:del suffix[bind:bind+3]
++   # Capture only after read-only current camera visibility has acknowledged.
++   for at in reversed([i for i,a in enumerate(suffix) if a.get('name') in ['combined-recovered.png','combined-target-hit.png','geometry-range.png','combined-settled.png']]):
++    suffix.insert(at,dict(type='wait_log',pattern='M15 course camera preflight: visible=true',after_start=True,timeout_seconds=30,abort_on_failure=True))
++   wait=dict(type='wait_log',pattern='Applied TES4 runtime state:',timeout_seconds=600,abort_on_failure=True)
++   prefix=([dict(type='key_down',value='b')] if case['phase']!='windup' else [])+[wait,dict(type='focus_window',name='OpenMW')]
++   if case['phase']=='block':
++    prefix += [copy.deepcopy(actions[13]),dict(type='wait_log',pattern='M15 Player reaction resources selected: actor='+player+' cause=2 kind=2',timeout_seconds=600,abort_on_failure=True),dict(type='wait_log',pattern='M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43',timeout_seconds=600,abort_on_failure=True)]
++   spec['actions']=prefix+suffix;spec['name']='S4 pairwise timing '+case['phase']+' fresh continuation; full acceptance remains open';spec['environment']['OPENMW_M15_RUN_ID']=case['name']
++   spec['command']=[x for x in spec['command'] if not x.startswith('--load-savegame')]+['--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave']
++   hits=[f'M15 melee hit committed: actor={actor} id={action}' for actor,action in case['expected_hits']]
++   spec['expected_log']=['Applied TES4 runtime state:','M15 course geometry:.*farFacing=true','M15 course geometry:.*nearWall=true.*obstacle=FormId:0x1024e74','M15 course fatigue settled:']+hits+['M15 melee miss committed: actor='+player+' id='+str(i) for i in [4,5]]
++   assert sum(a.get('value')=='F5' for a in spec['actions'])==5
++   expand_value(spec,scenario_variables(base/case['name'],case['binary']['path']))
++   manifest=timing_work/(case['name']+'.json');manifest.write_text(json.dumps(spec,indent=2)+'\n')
++   result[case['id']]=dict(name=case['name'],source=case['source']['path'],source_sha256=case['source']['sha256'],binary=case['binary']['path'],binary_sha256=case['binary']['sha256'],manifest=str(manifest),manifest_sha256=sha(manifest),source_sequence=case['source_sequence'],source_action=stage['action'],source_ledger=stage['ledger'],reference=case['reference'],source_negative_control_rejected=True,retained_approach=approach,retained_camera_visible=True)
++  timing_pref.write_text(json.dumps(dict(passed=True,plan=dict(path=str(timing_path),sha256=sha(timing_path)),cases=result),indent=2)+'\n');print(json.dumps(dict(passed=True,cases=len(result),source_negative_controls=len(result),runtime_runs=0)));sys.exit(0)
+ recipe_path=root/'scripts/data/oblivion_compat/m15_combined_melee_course.json';recipe=json.loads(recipe_path.read_text());plan=recipe['inflight_continuations'];cases=plan['cases']
+-base_manifest=root/plan['base_manifest'];resume=json.loads(base_manifest.read_text());reference_manifest=root/recipe['manifest'];reference=json.loads(reference_manifest.read_text());assert resume['files']==reference['files']
++if not timing_mode:
++ base_manifest=root/plan['base_manifest'];resume=json.loads(base_manifest.read_text());reference_manifest=root/recipe['manifest'];reference=json.loads(reference_manifest.read_text());assert resume['files']==reference['files']
+ if sys.argv[1:]==['--preflight']:
+  sys.path.insert(0,str(root/'scripts'));from tes4_runtime_state import load_save
+  result={};player='dynamic:player:0000000000000001'
+@@ -22,9 +95,21 @@
+    assert spec['files']==resume['files'];overlay=work/(name+'.json');overlay.write_text(json.dumps(spec,indent=2)+'\n')
+    result[key]=dict(name=name,source=str(source),source_sha256=row['sha256'],binary=str(binary),binary_sha256=binary_sha,manifest=str(overlay),manifest_sha256=sha(overlay),source_sequence=case['source_save_sequence'],source_action=av['process_action'],source_ledger=s['physical_actions'],source_fatigue=av['values'][10],reference=str(ref),base_manifest_sha256=sha(base_manifest))
+  (work/'preflight.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:{a:v[a] for a in ['source_sequence','source_action','source_ledger','source_fatigue']} for k,v in result.items()},indent=2));sys.exit(0)
+-kind,phase=sys.argv[1:];pin=json.loads((work/'preflight.json').read_text())[kind+'-'+phase];assert sha(pin['source'])==pin['source_sha256'] and sha(pin['binary'])==pin['binary_sha256'] and sha(pin['manifest'])==pin['manifest_sha256'];out=base/pin['name'];out.mkdir(exist_ok=False)
++if timing_mode:
++ assert sys.argv[1]=='--timing';kind,phase=sys.argv[3:];pref=json.loads(timing_pref.read_text());assert pref['passed'] and sha(timing_path)==pref['plan']['sha256'];pin=pref['cases'][kind+'-'+phase]
++else:
++ kind,phase=sys.argv[1:];pin=json.loads((work/'preflight.json').read_text())[kind+'-'+phase]
++assert sha(pin['source'])==pin['source_sha256'] and sha(pin['binary'])==pin['binary_sha256'] and sha(pin['manifest'])==pin['manifest_sha256'];out=base/pin['name']
++variables=scenario_variables(out,pin['binary'])
++if timing_mode:
++ sys.path.insert(0,str(root/'scripts'));from oblivion_compat import expand_value
++ expand_value(json.loads(Path(pin['manifest']).read_text()),variables)
++out.mkdir(exist_ok=False)
+ slot=out/'userdata/saves/M15Review/Quicksave.omwsave';slot.parent.mkdir(parents=True);shutil.copyfile(pin['source'],slot);shutil.copyfile(pin['source'],out/'input-pristine.omwsave');(out/'source-provenance.json').write_text(json.dumps(pin,indent=2)+'\n');(out/'binary-pin.json').write_text(json.dumps(dict(path=pin['binary'],sha256=pin['binary_sha256']),indent=2)+'\n')
+-monitor=base/'native-start-empty-tail-melee-runtime-01/monitor.py';cmd=[sys.executable,'scripts/oblivion_compat.py','scenario',pin['manifest'],'--output',str(out),'--variable','openmw='+pin['binary'],'--variable','resources='+str(root/'build/resources'),'--variable','stationary_fixture='+str(base/'combined-wall-work-01/partition-fixture-02'),'--variable','oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data']
++monitor=base/'native-start-empty-tail-melee-runtime-01/monitor.py';cmd=[sys.executable,'scripts/oblivion_compat.py','scenario',pin['manifest'],'--output',str(out)]
++for key,value in variables.items():cmd+=['--variable',key+'='+value]
+ with (work/(pin['name']+'-launcher.log')).open('w') as log,(work/(pin['name']+'-monitor.log')).open('w') as ml:
+- p=subprocess.Popen(cmd,stdout=log,stderr=subprocess.STDOUT);m=subprocess.Popen([sys.executable,str(monitor),str(out),pin['binary']],stdout=ml,stderr=subprocess.STDOUT);code=p.wait();mc=m.wait();assert code==mc==0,(code,mc)
++ p=subprocess.Popen(cmd,stdout=log,stderr=subprocess.STDOUT);m=subprocess.Popen([sys.executable,str(monitor),str(out),pin['binary']],stdout=ml,stderr=subprocess.STDOUT);code=p.wait()
++ if code and m.poll() is None:m.terminate()
++ mc=m.wait();assert code==mc==0,(code,mc)
+ assert sha(pin['binary'])==pin['binary_sha256'];(out/'launcher.json').write_text(json.dumps(dict(passed=True,scenario_returncode=code,monitor_returncode=mc,command=cmd,monitor=str(monitor),monitor_sha256=sha(monitor)),indent=2)+'\n');print(json.dumps(dict(passed=True,out=str(out))))
+--- build/oblivion-compat/m15/S4/combined-inflight-work-01/verify.py
++++ build/oblivion-compat/m15/S4/combined-inflight-work-01/verify.py
+@@ -1,5 +1,48 @@
+ from pathlib import Path
+ import sys,json,hashlib,re,math
++if len(sys.argv)>1 and sys.argv[1]=='--timing':
++ root=Path.cwd();base=Path('build/oblivion-compat/m15/S4');w=base/'timing-campaign-work-01';plan_path=Path(sys.argv[2]);kind,phase=sys.argv[3:];plan=json.loads(plan_path.read_text());case=next(c for c in plan['cases'] if c['id']==kind+'-'+phase)
++ digest=lambda f:hashlib.sha256(Path(f).read_bytes()).hexdigest()
++ pref=json.loads((w/'fresh-window-preflight.json').read_text());assert pref['passed'] and digest(plan_path)==pref['plan']['sha256'];pin=pref['cases'][case['id']]
++ assert digest(pin['manifest'])==pin['manifest_sha256'] and digest(pin['source'])==pin['source_sha256']
++ recipe=json.loads(Path(plan['reusable_evidence']['original_recipe']['path']).read_text());old=Path(recipe['verifier']['path']);assert digest(old)==recipe['verifier']['sha256'];source=old.read_text();prefix=source[:source.index('\na=inspect(')]
++ args=sys.argv;sys.argv=[str(old),kind];ns={}
++ try:exec(compile(prefix,str(old)+'#timing-core-unchanged','exec'),ns)
++ finally:sys.argv=args
++ out=base/case['name'];b=ns['inspect'](out,5,[tuple(x) for x in case['expected_hits']],[(ns['p'],'4'),(ns['p'],'5')],True)
++ ref=Path(case['reference']);reference_epoch=json.loads((ref/'process-epoch.json').read_text());assert (b['epoch']['pid'],b['epoch']['start_ticks'])!=(reference_epoch['pid'],reference_epoch['start_ticks'])
++ # The normal target was restored from the same production source; executable
++ # identity is pinned per run, not falsely equated with historical link output.
++ observed=json.loads((ref/'loaded-libraries.json').read_text());libraries={f:v['sha256'] for f,v in observed['libraries'].items()} if 'libraries' in observed else observed;assert b['libs']==libraries
++ assert digest(case['endpoint']['path'])==case['endpoint']['sha256'];endpoint=ns['load_save'](Path(case['endpoint']['path']));actual_source=ns['load_save'](Path(pin['source']));assert digest(out/'input-pristine.omwsave')==pin['source_sha256']
++ a=dict(states=[None,None,actual_source,endpoint],log=(ref/'process.log').read_text());ns.update(a=a,b=b)
++ # Existing policy excludes elapsed calendar time. The winning GameHour GLOB
++ # is a short, so its independently validated integer mirror must follow that
++ # same exclusion; never remove any other global or change saved/live state.
++ audit_path=w/'fresh-window-calendar-record-audit.json';audit=json.loads(audit_path.read_text());assert audit['passed'] and audit['master_sha256']=='a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70'
++ record=next(r for r in audit['records'] if r['form']=='000038');fields={s['tag']:bytes.fromhex(s['payload']) for s in record['subrecords']};assert fields['EDID']==b'GameHour\0' and fields['FNAM']==b's'
++ hour_key='content:oblivion.esm:000038'
++ def calendar_globals(state):
++  values=dict(state['globals']);hour=state['clock']['hour'];assert math.isfinite(hour) and 0<=hour<24 and values[hour_key]==math.trunc(hour),'GameHour global differs from authoritative calendar'
++  values.pop(hour_key);return values
++ calendar_checks=[]
++ import copy
++ for label,state in [('reference',endpoint),('continuation',b['states'][-1])]:
++  normalized=calendar_globals(state);bad=copy.deepcopy(state);bad['globals'][hour_key]+=1
++  try:calendar_globals(bad)
++  except AssertionError:pass
++  else:raise AssertionError('Calendar guard admitted inconsistent GameHour')
++  key=next(k for k in normalized if k=='content:oblivion.esm:0134d1');bad=copy.deepcopy(state);bad['globals'][key]+=1;assert calendar_globals(bad)!=normalized
++  calendar_checks.append(dict(state=label,hour=state['clock']['hour'],integer_game_hour=state['globals'][hour_key],negative_controls_rejected=['inconsistent_hour_mirror','noncalendar_global']))
++ ns['calendar_globals']=calendar_globals
++ comparison=source[source.index("x,y=a['states'][-1],b['states'][-1]"):source.index('# Compare all committed Player contact resources;')];before="assert x[key]==y[key],'endpoint differs: '+key";assert comparison.count(before)==1;comparison=comparison.replace(before,"assert (calendar_globals(x)==calendar_globals(y) if key=='globals' else x[key]==y[key]),'endpoint differs: '+key");exec(compile(comparison,str(old)+'#original-endpoint-calendar-mirror','exec'),ns)
++ for actor,action in [tuple(x) for x in case['expected_hits']]+[(ns['p'],'4'),(ns['p'],'5')]:
++  pattern=r'M15 melee (?:hit|miss) committed: actor='+re.escape(actor)+r' id='+action+r' (.*)';lines=[re.search(pattern,z['log']).group(1) for z in [a,b]]
++  for field in ['fatigue_cost','before','after','health_damage','fatigue_damage','block_fraction','block_fatigue','weapon_condition_write','combat_random_draws']:
++   vals=[float(re.search(r'(?:^| )'+field+r'=([^ ]+)',line).group(1)) for line in lines];assert math.isclose(*vals,rel_tol=0,abs_tol=1e-4),(case['id'],actor,action,field,vals)
++ def link(p):return dict(path=str(p),sha256=digest(p))
++ report=dict(passed=True,full_M15S4_acceptance=False,full_T7_acceptance=False,scope='One pairwise exact fresh timing continuation through original core contact/reach/wall/Fatigue gates; camera/PCM/direct capture review separately required.',case=case,source_whole_restored_exactly=True,exact_saved_live_pairs=b['checks'],epoch=b['epoch'],mapped_libraries=b['libs'],strict_endpoint_fields=ns['compared'],all_native_resources_and_combat_rng_equal=True,shared_inventories_compared=len(ns['shared']),original_inspector=link(old),adapter=link(__file__),manifest=link(pin['manifest']),plan=link(plan_path),scenario=link(out/'scenario.json'),calendar_global_projection=dict(scope='Only the independently validated integer GameHour mirror follows the preexisting elapsed-calendar exclusion. Whole source and all actual saved/live states remain exact; all other globals strict.',audit=link(audit_path),checks=calendar_checks))
++ dest=w/(case['name']+'-verification.json');assert not dest.exists();dest.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(dict(passed=True,case=case['id'],exact_pairs=5,strict_endpoint_fields=len(ns['compared']))));sys.exit(0)
+ root=Path.cwd();work=root/'build/oblivion-compat/m15/S4/combined-inflight-work-01';kind=sys.argv[1]
+ recipe=json.loads((root/'scripts/data/oblivion_compat/m15_combined_melee_course.json').read_text());old=root/recipe['verifier']['path'];digest=lambda f:hashlib.sha256(Path(f).read_bytes()).hexdigest();assert digest(old)==recipe['verifier']['sha256'];source=old.read_text()
+ # Reuse the pinned, accepted save/live/process inspector and exact endpoint
+--- build/oblivion-compat/m15/S4/combined-inflight-work-01/record-checkpoint.py
++++ build/oblivion-compat/m15/S4/combined-inflight-work-01/record-checkpoint.py
+@@ -1,5 +1,40 @@
+ from pathlib import Path
+-import json,hashlib,re
++import json,hashlib,re,sys
++if len(sys.argv)>1 and sys.argv[1].startswith('--timing-'):
++ import subprocess,os
++ b=Path('build/oblivion-compat/m15/S4');tw=b/'timing-campaign-work-01';plan_path=Path('scripts/data/oblivion_compat/m15_timing_fresh_windows.json');plan=json.loads(plan_path.read_text());digest=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest();link=lambda p:dict(path=str(p),sha256=digest(p))
++ if sys.argv[1]=='--timing-feedback':
++  kind,phase=sys.argv[2:];case=next(c for c in plan['cases'] if c['id']==kind+'-'+phase);name=case['name'];out=b/name;wave=tw/(name+'-pcm16.wav');audio=tw/(name+'-block-pcm.json');timing=tw/(name+'-timing.json')
++  assert json.loads((tw/(name+'-verification.json')).read_text())['passed']
++  if not audio.exists():
++   assert not wave.exists();subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-i',str(out/'mixed-output.wav'),'-c:a','pcm_s16le',str(wave)],check=True)
++   subprocess.run([sys.executable,'scripts/tes4_m15_block_audio.py','--wave',str(wave),'--recipe',str(b/'joined-camera-work-01/block-recipe.json'),'--clusters',str(case['expected_block_pcm_clusters']),'--output',str(audio)],env=dict(os.environ,OPENBLAS_NUM_THREADS='1'),check=True)
++  assert json.loads(audio.read_text())['passed']
++  if not timing.exists():
++   p=b/'course-throughput-work-01/analyse.py';code=p.read_text();scope={};args=sys.argv;sys.argv=[str(p),name]
++   try:exec(compile(code[:code.index("if name=='course-timing-normal-pilot-03':")],str(p)+'#existing-classifier-only','exec'),scope)
++   finally:sys.argv=args
++   timing.write_text(json.dumps(dict(passed=True,full_T7_acceptance=False,cap=case['cap'],seed=case['seed'],monotonic=scope['summary'],classifier=link(p),process_log_sha256=digest(out/'process.log')),indent=2)+'\n')
++  print(json.dumps(dict(passed=True,case=case['id'],audio=link(audio),timing=link(timing))));sys.exit(0)
++ assert sys.argv[1:]==['--timing-summary'];rows=[];epochs=set()
++ for case in plan['cases']:
++  paths={k:tw/(case['name']+suffix) for k,suffix in [('native','-verification.json'),('visual','-visual-review.json'),('audio','-block-pcm.json'),('timing','-timing.json')]}
++  if not all(p.exists() for p in paths.values()):rows.append(dict(id=case['id'],status='pending'));continue
++  reports={k:json.loads(p.read_text()) for k,p in paths.items()};assert all(r['passed'] for r in reports.values())
++  v=reports['native'];assert v['case']==case and v['plan']==link(plan_path) and v['source_whole_restored_exactly'] and len(v['exact_saved_live_pairs'])==case['expected_pairs']
++  adapter=Path(v['adapter']['path'])
++  if digest(adapter)!=v['adapter']['sha256']:adapter=tw/'inflight-verifier-before-calendar.py'
++  assert digest(adapter)==v['adapter']['sha256'],'verified adapter provenance missing'
++  captures=reports['visual']['captures'];assert len(captures)==len({c['path'] for c in captures})==case['expected_captures'] and all(c['passed'] and digest(c['path'])==c['sha256'] for c in captures)
++  assert len(reports['audio']['clusters'])==case['expected_block_pcm_clusters']
++  epoch=v['epoch'];key=(epoch['boot_id'],epoch['pid'],epoch['start_ticks']);assert key not in epochs;epochs.add(key)
++  rows.append(dict(id=case['id'],status='verified',receipts={k:link(p) for k,p in paths.items()},verified_adapter_source=link(adapter),pairs=len(v['exact_saved_live_pairs']),reviewed_captures=len(captures),configured_cap=case['cap'],seed=case['seed'],save_free_fps=reports['timing']['monotonic']['save_free']['fps']))
++ counts=dict(verified=sum(r['status']=='verified' for r in rows),pending=sum(r['status']=='pending' for r in rows),pairs=sum(r.get('pairs',0) for r in rows),reviewed_captures=sum(r.get('reviewed_captures',0) for r in rows))
++ report=dict(passed=True,full_M15S4_acceptance=False,full_T7_acceptance=False,fresh_timing_windows_complete=counts['pending']==0,scope='Pairwise fresh timing window verification only. Final independent clean campaigns, finite other acceptance reconciliation and Section10 gates remain.',plan=link(plan_path),cases=rows,counts=counts,preflight=link(tw/'fresh-window-preflight.json'),collector=link(__file__))
++ p=tw/'fresh-window-verification.json';p.write_text(json.dumps(report,indent=2)+'\n');archive=tw/'fresh-window-checkpoints';archive.mkdir(exist_ok=True);target=archive/(digest(p)+'.json')
++ if target.exists():assert target.read_bytes()==p.read_bytes()
++ else:target.write_bytes(p.read_bytes())
++ print(json.dumps(dict(passed=True,**counts,checkpoint=str(target))));sys.exit(0)
+ root=Path.cwd();r=Path('build/oblivion-compat/m15/S4');w=r/'combined-inflight-work-01';p=Path('scripts/data/oblivion_compat/m15_combined_melee_course.json');s=json.loads(p.read_text());sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest();receipts={};epochs=set();maximum_distance=0
+ for kind in ['normal','sanitize']:
+  vpath=w/f'inflight-{kind}-verification.json';v=json.loads(vpath.read_text());assert v['passed'];cases={}

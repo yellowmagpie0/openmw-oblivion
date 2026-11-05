@@ -12,7 +12,8 @@ namespace ESM4
     {
         bool sameStack(const RuntimeInventoryItem& left, const RuntimeInventoryItem& right)
         {
-            return left.mBase == right.mBase && left.mCondition == right.mCondition
+            return !left.mBoundSource && !right.mBoundSource
+                && left.mBase == right.mBase && left.mCondition == right.mCondition
                 && left.mCharge == right.mCharge && left.mRemainingUsageTime == right.mRemainingUsageTime
                 && left.mEquippedSlots == right.mEquippedSlots
                 && left.mHotkey == right.mHotkey && left.mOwner == right.mOwner

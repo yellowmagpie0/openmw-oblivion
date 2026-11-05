@@ -140,6 +140,12 @@ namespace MWMechanics
         // loaded ESM4 actors are addressable by their FormKey.
         MWWorld::Ptr resolveReference(const ESM::FormKey& key) const;
 
+        // Ephemeral resident combat navigation. It never replaces or advances
+        // the authored package/route; save restoration rebuilds it from the
+        // persisted combat target and current physical positions.
+        void approachCombatTarget(const MWWorld::Ptr& actor, const MWWorld::Ptr& target, float duration);
+        void clearCombatRoute(const MWWorld::Ptr& actor);
+
         void capture(ESM4::RuntimeState& state) const;
         class PreparedRestore
         {
@@ -162,6 +168,12 @@ namespace MWMechanics
     private:
         struct LiveActor
         {
+            std::vector<osg::Vec3f> mCombatRoute;
+            std::size_t mCombatRouteCursor = 0;
+            ESM::FormKey mCombatRouteTarget;
+            ESM::FormKey mCombatRouteCell;
+            osg::Vec3f mCombatRouteDestination;
+            float mCombatRepath = 0.f;
             ESM4::RuntimeActorAiState mState;
             std::optional<ESM4::PackageCandidate> mScriptPackage;
             std::optional<ESM4::AIPackage> mTransientPackage;

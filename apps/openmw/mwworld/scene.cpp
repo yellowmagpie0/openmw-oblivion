@@ -170,7 +170,8 @@ namespace
         // Restore effect particles
         world.applyLoopingParticles(ptr);
 
-        if (!model.empty() && !looseWeapon)
+        const bool animatedReference = !looseWeapon && world.restoreOblivionAnimatedReferenceScene(ptr);
+        if (!model.empty() && !looseWeapon && !animatedReference)
             ptr.getClass().insertObject(ptr, model, rotation, physics);
 
         MWBase::Environment::get().getLuaManager()->objectAddedToScene(ptr);
@@ -415,16 +416,18 @@ namespace MWWorld
             {
                 if (object->getShapeInstance()->mVisualCollisionType == Resource::VisualCollisionType::None)
                     mNavigator.removeObject(DetourNavigator::ObjectId(object), navigatorUpdateGuard);
-                mPhysics->remove(ptr);
             }
             else if (mPhysics->getActor(ptr))
             {
                 mNavigator.removeAgent(mWorld.getPathfindingAgentBounds(ptr));
                 mRendering.removeActorPath(ptr);
-                mPhysics->remove(ptr);
             }
             else
                 ptr.mRef->mData.mPhysicsPostponed = false;
+            // Released animated references and loose bodies can outlive their
+            // static Object. Remove all physical owners before their renderer
+            // disappears, even when neither an Object nor Actor remains.
+            mPhysics->remove(ptr);
             MWBase::Environment::get().getLuaManager()->objectRemovedFromScene(ptr);
         }
 
@@ -560,6 +563,9 @@ namespace MWWorld
         if (respawn)
             cell.respawn();
 
+        // Parent flags must reach RefData before insertion decides which
+        // references receive rendering, physics and mechanics owners.
+        mWorld.synchronizeOblivionEnableParents(&cell);
         insertCell(cell, loadingListener, navigatorUpdateGuard);
 
         mRendering.addCell(&cell);
@@ -1203,7 +1209,7 @@ namespace MWWorld
 
     void Scene::removeObjectFromScene(const Ptr& ptr, bool keepActive)
     {
-        if (mPhysics->hasActorRagdoll(ptr) || mPhysics->hasLooseObject(ptr))
+        if (mPhysics->hasActorRagdoll(ptr) || mPhysics->hasLooseObject(ptr) || mPhysics->hasAnimatedReferenceBodies(ptr))
             mWorld.retainOblivionPhysicalState();
         MWBase::Environment::get().getMechanicsManager()->remove(ptr, keepActive);
         // You'd expect the sounds attached to the object to be stopped here

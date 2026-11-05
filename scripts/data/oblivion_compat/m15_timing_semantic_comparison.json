@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "full_T7_acceptance": false,
+  "requirement": "Implementation plan4.5 outcome semantics across fixed seeds/caps, original joined-course optional ordinary6/8/10/12 policy; required powers/mastery, causal resources, ownership and exact save/live remain required.",
+  "retained_failure": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/first-SAN-endpoint-comparison-failure.json",
+    "sha256": "d973e8f7ceedd322e48229875b679a2627ce8eef9e84eff12e29790fb30ea1a2"
+  },
+  "native_input_classification": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/queued-power-selection-classification.json",
+    "sha256": "f8bc00ee5c77b320e4baafff6c3968f7d6f10be69e9292dbf877eaefbce7eb73"
+  },
+  "correction": "Do not require identical optional contact counts or resulting absolute Health/wear. From authentic saved wall checkpoint(next6/released), independently check every subsequent Club contact wears stockdamage7 * winning fDamageToWeaponPercentage, total logged damage equals actual target Health loss, and final condition equals cumulative wear. Rebase only victim Health damage channel and Club condition to wall values for endpoint comparison. Compare required powers condition-normalized damage within unchanged2e-4 log tolerance. All other endpoint fields remain under original comparator and strict release assertions. All14 exact pairs/mastery/camera/PCM/visual gates retained.",
+  "settings": {
+    "maximum_condition": 70,
+    "condition_base": 0.5,
+    "condition_multiplier": 0.5,
+    "wear_percentage": 0.05999999865889549,
+    "content": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/stock-condition-comparison-inputs.json",
+      "sha256": "d33d4725fb88a8dd478c448dbc30016d0966248e3e5d5de503014c2647d0aa3b"
+    },
+    "stock": {
+      "path": "build/oblivion-compat/m15/S4/blunt-course-work-01/stock-inputs.json",
+      "sha256": "9acd30d5da0249097d5355190a64cee4587555b48e1fc3731aedd2cd391f3a00"
+    },
+    "load_order": "Same frozen original master and two authored fixture plugins. Fixtures override no Club or these three GMSTs; frozen manifests/assets unchanged."
+  },
+  "helpers": {
+    "resources": {
+      "path": "scripts/tes4_m15_evidence.py",
+      "sha256": "ae58f54e75889a4f6b72d88af64be17bf9468c85c095db4e01974b3ae1342700"
+    },
+    "tests": {
+      "path": "scripts/tests/test_m15_evidence.py",
+      "sha256": "ed94a58f523d05b63a2fb250daeec0fe26462a46a68a32cef2a83820436d960a"
+    },
+    "adapter": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix.py",
+      "sha256": "faf83bf1b90ec71021632fe377215396b1accea302f209d679a13e23b1dd2ba7"
+    },
+    "portable_adapter_patch": {
+      "path": "scripts/data/oblivion_compat/m15_timing_semantic_comparison_shared.patch",
+      "sha256": "74f6b473603c7938f389976d975b9a4714e2e3a5671994fc0c49cf63a1e49700"
+    }
+  },
+  "evidence_plan": {
+    "focused": "47 test_m15_evidence cases, including missing/duplicate/wrong-victim/nonfinite/unexplained Health/wear mutations.",
+    "retained_raw": "Collect existing normal9 and correctedSANfull01; per-run negative controls plus original endpoint mutation controls. No runtime rerun for checker correction. A coherent log+Health mutation must also fail required-hit normalized damage comparison.",
+    "integration": "Full Python suite because shared evidence helper changed. No C++ implementation/dependency changed; existing broad C++ gates retained with provenance."
+  }
+}

@@ -9,6 +9,17 @@ import sdl_offscreen_replay as replay
 
 
 class SdlOffscreenReplayTest(unittest.TestCase):
+    def test_xvfb_replay_requires_exclusive_private_server(self):
+        replay.validate(dict(sdl_xvfb_input=True, xvfb=True,
+                             actions=[dict(type="keys_down", values=["u", "space"])]))
+        for options in [dict(sdl_xvfb_input=True), dict(sdl_xvfb_input=True, xvfb=False),
+                        dict(sdl_xvfb_input=True, xvfb=1), dict(sdl_xvfb_input="true", xvfb=True),
+                        dict(sdl_xvfb_input=True, xvfb=True, sdl_offscreen_input=True),
+                        dict(sdl_xvfb_input=True, xvfb=True, m15={}),
+                        dict(sdl_xvfb_input=True, xvfb=True, m14={})]:
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                replay.validate(options)
+
     def test_observed_motion_uses_latest_complete_bounded_sample(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
@@ -179,7 +190,7 @@ class SdlOffscreenReplayTest(unittest.TestCase):
     def test_key_map_and_rejection_of_chords_or_raw_codes(self):
         for name, code in [("a", 4), ("z", 29), ("1", 30), ("9", 38), ("0", 39),
                            ("F5", 62), ("F12", 69), ("Return", 40), ("grave", 53),
-                           ("Shift_L", 225), ("Control_L", 224)]:
+                           ("KP_2", 90), ("Shift_L", 225), ("Control_L", 224)]:
             self.assertEqual(replay.scancode(name), code)
         for name in [None, 62, "", "F13", "ctrl+a", "0x3e", "Return;quit"]:
             with self.subTest(name=name), self.assertRaises(ValueError):

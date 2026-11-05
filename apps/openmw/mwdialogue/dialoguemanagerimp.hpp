@@ -11,6 +11,7 @@
 
 #include <components/compiler/streamerrorhandler.hpp>
 #include <components/esm3/loadinfo.hpp>
+#include <components/esm/formkey.hpp>
 #include <components/interpreter/program.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/translation/translation.hpp>
@@ -85,6 +86,13 @@ namespace MWDialogue
         bool mGoodbye;
 
         std::vector<std::pair<std::string, int>> mChoices;
+
+        bool mNativeDialogue = false;
+        // IDs are never reused within a live UI runtime, so a stale choice
+        // callback cannot select the next response or replay its result.
+        int mNativeChoiceSerial = 0;
+        std::map<int, ESM::FormKey> mNativeChoiceInfos;
+        bool executeNativeDialogue(const ESM::FormKey& info, ResponseCallback* callback);
 
         int mOriginalDisposition;
         int mCurrentDisposition;

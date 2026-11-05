@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "name": "Fresh sewer escape passage traversal",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01fc44 GetOpenState\nat 0 command content:oblivion.esm:032a16 GetDistance CGPlayerStartMarker\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self = require('openmw.self')\nlocal Player=require('openmw.types').Player\nlocal controls=false\nlocal reported = false\nlocal aligned=false\nlocal frames=0\nprint('Tutorial passage observer loaded')\nreturn {{engineHandlers={{onFrame=function()\n frames=frames+1\n if not controls and Player.getControlSwitch(self,Player.CONTROL_SWITCH.Controls) then controls=true print('Fresh passage controls enabled') end\n local p=self.position\n if frames%15==1 then print('Tutorial player position: x=' .. tostring(p.x) .. ' y=' .. tostring(p.y) .. ' z=' .. tostring(p.z)) end\n if not aligned and p.x<=710 then aligned=true; print('Tutorial player aligned with passage: x=' .. tostring(p.x)) end\n if not reported and p.y>=280 then\n  reported=true\n  print('Tutorial player entered passage: x=' .. tostring(p.x) .. ' y=' .. tostring(p.y) .. ' z=' .. tostring(p.z))\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Fresh passage controls enabled",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_x",
+      "value": -1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial player aligned with passage:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_x",
+      "value": 0
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_y",
+      "value": -1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial player entered passage:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_y",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "player-in-passage.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1400,
+  "expected_exit": 0,
+  "expected_log": [
+    "Fresh passage controls enabled",
+    "Tutorial player entered passage:"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  }
+}

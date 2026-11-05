@@ -1,0 +1,71 @@
+--- build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py
++++ build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py
+@@ -366,9 +366,10 @@
+  items=lambda s:sorted(ref(s,n)['inventory'],key=lambda v:json.dumps(v,sort_keys=True))
+  worn=lambda s:{v['base']:v for v in ref(s,n)['inventory'] if v['equipped_slots']&0x3f}
+  expected={'content:oblivion.esm:'+i for i in ['024768','024766','024765','024764',('01c6cf' if profile['armor_variant']=='mixed' else '024767')]}
++ if profile.get('armor_wear'):expected=set(profile['armor_wear']['expected_worn'])
+  assert set(worn(initial))==expected and all(v['count']==1 and v['condition']>1 for v in worn(initial).values())
+  assert worn(initial)['content:oblivion.esm:024768']['equipped_slots']==2
+- assert av(initial,n)['values'][27][0]==100 and av(initial,n)['values'][18][0]==5
++ assert av(initial,n)['values'][27][0]==profile.get('armor_wear',{}).get('base_light',100) and av(initial,n)['values'][18][0]==profile.get('armor_wear',{}).get('base_heavy',5)
+  assert all(values(s,p,8)==values(initial,p,8) and values(s,n,10)==values(initial,n,10) for s in states)
+  for actor,allowed in [(p,{10}),(n,{8})]:
+   assert all(all(v==av(initial,actor)['values'][i] for i,v in enumerate(av(s,actor)['values']) if i not in allowed) for s in states)
+@@ -398,10 +399,15 @@
+    path=control/row['event']['live'];assert hashlib.sha256(path.read_bytes()).hexdigest()==row['event']['live_sha256'];control_states.append(json.loads(path.read_text()))
+   before_control,after_control=control_states
+   assert all(v==av(before_control,p)['values'][i] for i,v in enumerate(av(initial,p)['values']) if i not in {8,15})
+-  assert all(v==av(before_control,n)['values'][i] for i,v in enumerate(av(initial,n)['values']) if i not in {8,15,27})
++  assert all(v==av(before_control,n)['values'][i] for i,v in enumerate(av(initial,n)['values']) if i not in ({8,15,18,27} if profile.get('armor_wear') else {8,15,27}))
+   assert weapon(before_control)==weapon(initial)
+   raw=values(before_control,n,8)-values(after_control,n,8);expected_damage=raw*(1-profile['expected_armor_rating']/100)
+   assert math.isclose(damage,expected_damage,rel_tol=0,abs_tol=2e-4),(damage,expected_damage)
++  if profile.get('armor_wear'):
++   wear=profile['armor_wear'];assert changed[0]['base']==wear['selected']
++   expected_wear=(raw-expected_damage)*wear['damage_to_armor']*wear['factor']
++   assert expected_wear>0 and math.isclose(changed[0]['debit'],expected_wear,abs_tol=wear['tolerance'],rel_tol=0),(changed,expected_wear)
++   changed[0].update(expected_debit=expected_wear,mastery_factor=wear['factor'],non_saturating=True)
+   assert contact['combat_rng_state']!=initial['combat_rng_state']
+  else:changed=[];damage=None;raw=None;expected_damage=None
+  assert end['combat_rng_state']==contact['combat_rng_state'] and values(end,p,10)==140
+@@ -423,6 +429,7 @@
+   row=list(json.loads((out/'snapshot-index.json').read_text()).values())[1];proof=dict(passed=True,variant=profile['armor_variant'],source=row['snapshot'],source_sha256=row['sha256'],loaded_live=str(out/row['event']['live']),loaded_live_sha256=row['event']['live_sha256'],origin_run=name,game_sha256=a['epoch']['executable_sha256'])
+   (Path(profile_path).parent/(kind+'-postcontact-source-proof.json')).write_text(json.dumps(proof,indent=2)+'\n')
+  report=dict(passed=True,full_M15S4_acceptance=False,name=name,variant=profile['armor_variant'],fresh=fresh,fresh_before=before_fresh,exact_saved_live_pairs=a['checks'],epoch=a['epoch'],mapped_libraries=a['libs'],source_whole_restored_exactly=fresh,source_sha256=sha(out/'input-pristine.omwsave'),endpoint_force=forces[0],contact_health_damage=damage,expected_health_damage=expected_damage,unarmored_control_damage=raw,expected_armor_rating=profile['expected_armor_rating'],condition_writes=changed,scope='Stock five-piece Master Light Armor versus mixed heavy-boots control; actual normal-input contact, natural recovery and postcontact fresh when selected. Existing original rule and current World tests provide mathematical layer; retained equal-input unarmored runtime control supplies damage basis.',verifier=dict(path=str(Path(__file__)),sha256=sha(__file__)))
++ if profile.get('armor_wear'):report['scope']='Non-saturating armor-wear mastery; declared initial gear/skills, independent retained unarmored damage basis, actual contact/condition delta, natural recovery and exact source/fresh no replay. Pairwise armor/mastery coverage, not full S4.'
+  receipt_path.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(dict(passed=True,pairs=len(a['checks']),damage=damage)));sys.exit(0)
+ if '--player-shield-gamepad' in sys.argv:
+  fresh='--defender-held-fresh' in sys.argv
+--- build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
++++ build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
+@@ -1456,6 +1456,10 @@
+    if profile.get('armor_mastery'):
+     boot='1c6cf' if profile['armor_variant']=='mixed' else '24767'
+     armor_guard="   local wornArmor={{}}\n   for _,item in pairs(Actor.getEquipment(target)) do wornArmor[item.recordId:sub(-5):lower()]=true end\n   local armorReady=wornArmor['24768'] and wornArmor['24766'] and wornArmor['24765'] and wornArmor['24764'] and wornArmor['"+boot+"']\n   print('M15 armor fixture: worn=' .. tostring(armorReady==true))\n"
++    if profile.get('armor_wear'):
++     suffixes=[v.rsplit(':',1)[1][-5:] for v in profile['armor_wear']['expected_worn']]
++     assert len(suffixes)==5 and len(set(suffixes))==5
++     armor_guard="   local wornArmor={{}}\n   for _,item in pairs(Actor.getEquipment(target)) do wornArmor[item.recordId:sub(-5):lower()]=true end\n   local armorReady="+' and '.join("wornArmor['"+v+"']" for v in suffixes)+"\n   print('M15 armor fixture: worn=' .. tostring(armorReady==true))\n"
+     guard+=armor_guard
+    if profile.get('burden_probe'):
+     probe=profile['burden_probe']
+--- build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py
++++ build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py
+@@ -197,7 +197,7 @@
+  receipt_path.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(dict(passed=not differences,fields=len(x),observations=len(observation_fields),differences=differences)));assert not differences,differences;sys.exit(0)
+ if '--armor-mastery' in sys.argv:
+  before_fresh='--armor-before-fresh' in sys.argv
+- course_work=r/'light-armor-mastery-work-01/light';kind='sanitize' if 'sanitize' in name else 'normal'
++ course_work=Path(sys.argv[sys.argv.index('--course-work')+1]) if '--course-work' in sys.argv else r/'light-armor-mastery-work-01/light';kind='sanitize' if 'sanitize' in name else 'normal'
+  a=read(course_work/(kind+'-reference-verification.json'));b=read(course_work/(kind+('-before-fresh-verification.json' if before_fresh else '-fresh-verification.json')))
+  assert a['passed'] and b['passed'] and a['name']==name and b['name']==other and not a['fresh'] and b['fresh'] and b['source_whole_restored_exactly']
+  assert a['epoch']['executable_sha256']==b['epoch']['executable_sha256'] and a['mapped_libraries']==b['mapped_libraries']
+@@ -227,6 +227,7 @@
+  x,y=project(endpoint(name),name),project(endpoint(other),other);assert not before_fresh or math.isclose(force_checks[0]['magnitude'],force_checks[1]['magnitude'],rel_tol=0,abs_tol=1e-4);assert x.keys()==y.keys();differences=[k for k in x if x[k]!=y[k]]
+  report=dict(passed=not differences,full_M15S4_acceptance=False,reference=name,continuation=other,matched_source_sha256=b['source_sha256'],source_whole_restored_exactly=True,reference_epoch=a['epoch'],continuation_epoch=b['epoch'],same_game_and_mapped_libraries=True,compared_fields=list(x),differences=differences,fresh_before=before_fresh,endpoint_force_samples=force_samples,before_contact_force_checks=force_checks,force_policy='Same actual postcontact force vector and actor compare strictly after exact source restore. Positive remaining timers<=1 recorded; capture times differ, elapsed remaining excluded under existing endpoint policy. No matched physical timestep/trajectory claim; T7/F8 remain open.',scope='Five-piece stock Master Light Armor normal-input contact, natural recovery versus exact actual-postcontact fresh continuation; resources, all native armor masks/conditions and ownership strict.',reused_owned_projection=dict(path=str(accepted),sha256=sha(accepted)))
+  if before_fresh:report.update(scope='Five-piece stock Master Light Armor new contact/recovery from exact actual before-contact save.',force_policy='New force magnitudes match within1e-4, horizontal headings follow each saved pre-contact geometry within1e-4. Full vectors/positive remaining timers recorded; earlier saved vertical pose is not an exact3D contact witness. Source/save/live state exact; required physical timing campaigns remain open.')
++ if '--course-work' in sys.argv:report['scope']='Declared healthy-armor normal-input contact/recovery versus exact actual before/after fresh source; native masks/condition/resources/ownership strict under existing recorded force policy.'
+  receipt_path.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(dict(passed=not differences,fields=len(x),differences=differences)));assert not differences,differences
+  sys.exit(0)
+ if '--creature-defense' in sys.argv or '--shield-defense' in sys.argv or '--player-shield-gamepad' in sys.argv or '--player-disarm' in sys.argv:

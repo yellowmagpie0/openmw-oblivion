@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "scope": "Original-engine diagnostic of the tutorial wall; not full tutorial acceptance.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "mesh": "meshes/dungeons/chargen/idcrumblewall01.nif",
+  "mesh_sha256": "462522e2efd259abb9d8315443944fa87e542ca4688ecdbd0d01de263d212f41",
+  "reference": "Oblivion.esm:03e31c",
+  "commands": [
+    "coc ImperialDungeon01",
+    "player.setpos x 200",
+    "player.setpos y 3200",
+    "player.setpos z -830",
+    "player.setangle z 90",
+    "player.setangle x 0",
+    "prid 0003e31c",
+    "playgroup unequip 1"
+  ],
+  "observations": [
+    "Before playback, bricks occupy the opening.",
+    "Five seconds after unpausing playback, bricks lie on the floor and the opening is clear visually.",
+    "After two seconds of ordinary forward input, Player X is 352.47; full crossing beyond X550 was not measured.",
+    "GetDestroyed is still zero: collapse does not require SetDestroyed or the original quest script."
+  ],
+  "asset_findings": {
+    "clip_duration_seconds": 1,
+    "body_count": 13,
+    "body_mass": 100,
+    "authored_motion_type": 6,
+    "collision_flags": 41,
+    "physics_blend_controllers": 0,
+    "description": "Brick translations mainly shift sideways; rotation tracks turn around Z. Root and NonAccum transforms are identity. No authored collapse-to-floor transform track was found.",
+    "comparison": "Prison secret wall has mass-zero keyframed bodies with the same collision flags; do not release all keyframed objects indiscriminately."
+  },
+  "implementation_requirement": "Provide physical motion for the animated positive-mass wall bodies, preserve render/collision agreement and save/load state, and prove ordinary-input traversal. Do not replace collapse with disabled collision.",
+  "limits": [
+    "The exact native handoff frame and internal dispatch were not measured.",
+    "Native setup used console commands and a restored preexisting save.",
+    "Original-game screenshots are local proprietary-content evidence, not committed assets.",
+    "This observation does not prove fork traversal, combat, or full sewer escape."
+  ],
+  "evidence_directory": "build/oblivion-compat/sewer-escape/original-wall-01",
+  "captures": [
+    "wall-before.png",
+    "playgroup-command.png",
+    "playgroup-after.png",
+    "result.png"
+  ],
+  "cleanup": {
+    "original_game_exit": 0,
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "backups_restored": true,
+    "observed": "Direct PlayGroup Unequip 1 collapses bricks to floor. After ordinary forward input player X=352.47; GetDestroyed remains 0. Full crossing beyond x550 was not tested.",
+    "scope": "Console-positioned original-game diagnostic, not tutorial progression acceptance.",
+    "failed_attempts": [
+      "Initial launch lacked Linux Steam client",
+      "Initial coc/console focus state required capture and recovery",
+      "xset utility unavailable; existing ctypes no-repeat helper used instead"
+    ]
+  }
+}

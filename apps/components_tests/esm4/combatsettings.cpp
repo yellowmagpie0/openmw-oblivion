@@ -414,7 +414,8 @@ TEST(ESM4CombatSettings, NativeAirborneStartAndHeldPowerHaveDifferentMasteryGate
     // Original5F48D0/56A300 prefix and65EB57 held-input observations. Grounded
     // eligibility here is only these arithmetic gates, not all attack eligibility.
     constexpr Expected cases[] = {{-1, false, false}, {0, false, false}, {24, false, false},
-        {25, true, false}, {49, true, false}, {50, true, true}, {100, true, true}};
+        {25, true, false}, {26, true, false}, {49, true, false}, {50, true, true}, {51, true, true},
+        {100, true, true}};
     for (const auto& value : cases)
     {
         EXPECT_EQ(ESM4::airborneMeleeStartAllowed(value.mSkill, true, settings), value.mAirborneStart);
@@ -640,4 +641,18 @@ TEST(ESM4CombatSettings, WinningNameViewsRetainAsciiOnlyFoldingAndFirstInvalidIn
     {
         EXPECT_EQ(std::string(error.what()), "ambiguous winning native setting: " + second.mEditorId);
     }
+}
+
+TEST(ESM4CombatSettings, DiseaseTransferUsesNativeDefaultsAndTypedWinningOverrides)
+{
+    const auto defaults = ESM4::buildDiseaseTransferSettings({});
+    EXPECT_EQ(defaults.mBase, 0); EXPECT_EQ(defaults.mMultiplier, .25f);
+    ESM4::GameSetting base{}, multiplier{};
+    base.mEditorId = "fMagicDiseaseTransferBase"; base.mData = 10.f;
+    multiplier.mEditorId = "fMagicDiseaseTransferMult"; multiplier.mData = .5f;
+    const std::array<const ESM4::GameSetting*, 2> settings{&base, &multiplier};
+    const auto overridden = ESM4::buildDiseaseTransferSettings(settings);
+    EXPECT_EQ(overridden.mBase, 10); EXPECT_EQ(overridden.mMultiplier, .5f);
+    base.mData = std::int32_t{10};
+    EXPECT_THROW(ESM4::buildDiseaseTransferSettings(settings), std::invalid_argument);
 }

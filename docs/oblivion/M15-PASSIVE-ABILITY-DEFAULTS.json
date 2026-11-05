@@ -4,7 +4,7 @@
   "initializer": "00417420",
   "creator_boundary": "00417220",
   "source_report_sha256": "74e29aba76f4901ada4cdd2e2957eea6c2e44b23f71be53eb1400df16088aae7",
-  "scope": "Compiled flag/data/resistance facts for14 original-master racial/birthsign passive codes. Registry/factory and full apply/remove instruction checks are scoped separately in provenance; this manifest is not a gameplay acceptance result.",
+  "scope": "Compiled flag/data/resistance facts for14 original-master racial/birthsign passive codes and stock Dog Witbane DRAT. Registry/factory and apply/remove instruction checks are scoped separately; this manifest is not gameplay acceptance.",
   "records": [
     {
       "code": "WABR",
@@ -89,6 +89,27 @@
       "flags": 16777338,
       "data": 67,
       "resistance": 4294967295
+    },
+    {
+      "code": "DRAT",
+      "flags": 1048695,
+      "data": 0,
+      "resistance": 64
     }
-  ]
+  ],
+  "drat_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-work-01/stock-dog-disease-audit.json",
+      "sha256": "d1622c0bc292b588fd91cb23b611121decb58bbd69cc9683ebb6190028890acd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-work-01/drat-factory-oracle-01/report.json",
+      "sha256": "f0c7846c6eb81794ed25bcaac51e1ab6e4920122afe55ea6d692afab7edcaf8c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-work-01/drat-apply-remove-oracle-03/report.json",
+      "sha256": "cb6c6670832aba170d8151c9cf619091d19049f7eb94e77c3366a16d7aeaaeda"
+    }
+  ],
+  "drat_scope": "36 factory and48 apply/remove original-instruction cases; Player type1 Maximum versus type4 base writer selection. Actor reads/storage and Player notification are boundaries. No infection, NPC storage or normal-input acceptance."
 }

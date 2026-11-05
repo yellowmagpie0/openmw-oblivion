@@ -21,6 +21,44 @@ class CreatureMeleeFixtureTests(unittest.TestCase):
                        "cell": 0x1234, "template": 0x2345, "creature": 0x01000800,
                        "style": 0x01000801, "reference": 0x01000802, "position": [0, 40, 0, 0, 0, 0]}
 
+    def test_preserves_declared_source_spellbook_without_replacing_inputs(self):
+        recipe = dict(self.recipe, preserve_source_spells=True)
+        output, report = build(self.source, recipe)
+        creature = _subrecords(next(data for tag, _, data in records(output) if tag == "CREA"), "test", "CREA")
+        self.assertEqual([s["payload"] for s in creature if s["name"] == "SPLO"], [struct.pack("<I", 14)])
+        self.assertTrue(report["source_spellbook_preserved"])
+        self.assertEqual(report["preserved_source_spells"], [14])
+        self.assertNotIn("SPLO", report["creature_fields_changed"])
+        self.assertTrue(report["stats_and_assets_preserved"])
+        self.assertFalse(any(s["name"] in {"SCRI", "PKID"} for s in creature))
+        for value in (1, None, "true"):
+            with self.assertRaises(ValueError): build(self.source, dict(self.recipe, preserve_source_spells=value))
+        with self.assertRaises(ValueError): build(self.source, dict(recipe, castable_spells=[]))
+
+    def test_complete_direct_spellbook_donor_preserves_physical_template(self):
+        source = self.source + record("CREA", 0x4567, string("EDID", "Daedroth")
+            + sub("SPLO", struct.pack("<I", 0x3456)) + sub("SPLO", struct.pack("<I", 0x3457)))
+        source += record("SPEL", 0x3456, sub("SPIT", struct.pack("<4I", 4, 0, 0, 0)))
+        source += record("SPEL", 0x3457, sub("SPIT", struct.pack("<4I", 3, 0, 0, 0)))
+        recipe = dict(self.recipe, source_sha256=hashlib.sha256(source).hexdigest(), spellbook_template=0x4567)
+        output, report = build(source, recipe)
+        fields = _subrecords(next(p for t, _, p in records(output) if t == "CREA"), "test", "CREA")
+        self.assertEqual([s["payload"] for s in fields if s["name"] == "SPLO"],
+                         [struct.pack("<I", i) for i in [0x3456, 0x3457]])
+        self.assertEqual(next(s["payload"] for s in fields if s["name"] == "DATA"), bytes(range(20)))
+        self.assertTrue(report["stats_and_assets_preserved"])
+        self.assertEqual(report["spellbook_template"], 0x4567)
+        self.assertEqual([s["type"] for s in report["spellbook_inputs"]], [4, 3])
+        self.assertFalse(report["castable_spell_inputs"])
+        for bad in [dict(recipe, spellbook_template=v) for v in [None, True, 0, -1, 0x1000000, 0x4568]] + [
+                dict(recipe, castable_spells=[]), dict(recipe, preserve_source_spells=True)]:
+            with self.subTest(bad=bad), self.assertRaises(ValueError): build(source, bad)
+        # A leveled or missing link cannot be silently omitted from the book.
+        broken = source.replace(record("SPEL", 0x3457, sub("SPIT", struct.pack("<4I", 3, 0, 0, 0))),
+                                record("LVSP", 0x3457, b""))
+        with self.assertRaises(ValueError):
+            build(broken, dict(recipe, source_sha256=hashlib.sha256(broken).hexdigest()))
+
     def test_preserves_stats_and_assets_with_only_owned_style_and_placement(self):
         output, report = build(self.source, self.recipe)
         rows = list(records(output))
@@ -35,6 +73,43 @@ class CreatureMeleeFixtureTests(unittest.TestCase):
         self.assertTrue(report["stats_and_assets_preserved"])
         self.assertEqual(report["script_count"], 0)
         self.assertEqual(build(self.source, self.recipe)[0], output)
+
+    def test_explicit_zero_damage_preserves_other_native_fields(self):
+        output, report = build(self.source, dict(self.recipe, natural_damage=0))
+        fields = _subrecords(next(p for t, _, p in records(output) if t == "CREA"), "test", "CREA")
+        data = next(s["payload"] for s in fields if s["name"] == "DATA")
+        self.assertEqual(data[:10] + data[12:], bytes(range(20))[:10] + bytes(range(20))[12:])
+        self.assertEqual(struct.unpack_from("<H", data, 10)[0], 0)
+        self.assertEqual(next(s["payload"] for s in fields if s["name"] == "ACBS"), bytes(range(16)))
+        self.assertEqual(report["natural_damage_override"], 0)
+        self.assertFalse(report["stats_and_assets_preserved"])
+        self.assertIn("DATA.damage", report["creature_fields_changed"])
+        for invalid in [None, True, -1, 65536, 0.0, "0"]:
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                build(self.source, dict(self.recipe, natural_damage=invalid))
+        for payload in [b"", bytes(19), bytes(21)]:
+            source = self.source.replace(sub("DATA", bytes(range(20))), sub("DATA", payload))
+            recipe = dict(self.recipe, natural_damage=0, source_sha256=hashlib.sha256(source).hexdigest())
+            with self.subTest(size=len(payload)), self.assertRaises(ValueError):
+                build(source, recipe)
+
+    def test_castable_spellbook_requires_pinned_spell_and_power_types(self):
+        for kind in [0, 2, 3]:
+            source = self.source + record("SPEL", 0x3456, sub("SPIT", struct.pack("<4I", kind, 0, 0, 0)))
+            recipe = dict(self.recipe, source_sha256=hashlib.sha256(source).hexdigest(), castable_spells=[0x3456])
+            output, report = build(source, recipe)
+            fields = _subrecords(next(p for t, _, p in records(output) if t == "CREA"), "test", "CREA")
+            self.assertEqual([s["payload"] for s in fields if s["name"] == "SPLO"], [struct.pack("<I", 0x3456)])
+            self.assertEqual(report["castable_spell_inputs"][0]["type"], kind)
+            self.assertEqual(next(s["payload"] for s in fields if s["name"] == "DATA"), bytes(range(20)))
+        for kind in [1, 4, 5, 99]:
+            source = self.source + record("SPEL", 0x3456, sub("SPIT", struct.pack("<4I", kind, 0, 0, 0)))
+            recipe = dict(self.recipe, source_sha256=hashlib.sha256(source).hexdigest(), castable_spells=[0x3456])
+            with self.subTest(kind=kind), self.assertRaises(ValueError):
+                build(source, recipe)
+        for values in [None, True, "0x3456", [0x3456], [0], [True], [1.0], [0x1000000], [1, 1]]:
+            with self.subTest(values=values), self.assertRaises(ValueError):
+                build(self.source, dict(self.recipe, castable_spells=values))
 
     def test_rejects_unpinned_missing_invalid_or_colliding_identities(self):
         for change in ({"source_sha256": "0" * 64}, {"template": 0x9999}, {"creature": 0x800},

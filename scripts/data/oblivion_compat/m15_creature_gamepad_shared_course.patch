@@ -1,0 +1,124 @@
+--- a/build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
++++ b/build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
+@@ -387,2 +387,4 @@
+-  return actions
+- if '--reaction-course' not in sys.argv:spec['actions']=translate_gamepad_actions(spec['actions'])
++  from tes4_m15_fixture_preflight import gamepad_controller_ready_actions
++  return gamepad_controller_ready_actions(actions)
++ defer_creature_gamepad = bool(profile and profile.get('opponent_creature') and profile.get('natural_recoil_opponent') and '--reaction-course' not in sys.argv)
++ if '--reaction-course' not in sys.argv and not defer_creature_gamepad:spec['actions']=translate_gamepad_actions(spec['actions'])
+@@ -529 +531 @@
+- assert sensitivity==profile['recovery_activation_sensitivity'], 'Creature camera aim calibration/settings differ'
++ assert sensitivity==(1.0 if '--gamepad' in sys.argv else profile['recovery_activation_sensitivity']), 'Creature camera aim calibration/settings differ'
+@@ -532,2 +534,2 @@
+- assert o_bindings==[('45','DECREASE')], 'Creature course turn binding differs from reference'
+- if phase=='stagger':
++ if '--gamepad' not in sys.argv:assert o_bindings==[('45','DECREASE')], 'Creature course turn binding differs from reference'
++ if phase=='stagger' and '--gamepad' not in sys.argv:
+@@ -573,0 +576,22 @@
++if '--gamepad' in sys.argv and defer_creature_gamepad:
++ from tes4_m15_fixture_preflight import creature_gamepad_recovery_setup, creature_gamepad_setup_only, validate_gamepad_stick_inputs
++ from tes4_runtime_state import load_save
++ spec=creature_gamepad_recovery_setup(spec,baseline_pitch=load_save(source)['player']['position'][3],recovery_look=profile['recovery_activation_mouse_y'])
++ spec['actions']=translate_gamepad_actions(spec['actions'])
++ from tes4_m15_fixture_preflight import gamepad_view_ready_actions
++ spec['actions']=gamepad_view_ready_actions(spec['actions'])
++ if phase=='stagger':
++  from tes4_m15_fixture_preflight import creature_gamepad_reference_tail
++  spec=creature_gamepad_reference_tail(spec,json.loads((work/(reference.name+'.json')).read_text()))
++ for action in spec['actions']:
++  if action.get('pattern')=='M15 course table clearance: reachable=true':
++   assert action.get('after_start')
++   action.update(timeout_seconds=240 if kind=='sanitize' else 60,abort_on_failure=True)
++ import configparser
++ input_settings=configparser.RawConfigParser(strict=False)
++ input_settings.read_string((root/'files/settings-default.cfg').read_text())
++ input_settings.read_string(next(f['content'] for f in spec['files'] if f['path']=='config/settings.cfg'))
++ validate_gamepad_stick_inputs(spec,input_settings.getfloat('Input','joystick dead zone'))
++ if '--creature-setup-only' in sys.argv:
++  assert phase=='reference' and '--third-person' in sys.argv
++  spec=creature_gamepad_setup_only(spec)
+--- a/build/oblivion-compat/m15/S4/blocking-dodge-work-01/run-existing-course.py
++++ b/build/oblivion-compat/m15/S4/blocking-dodge-work-01/run-existing-course.py
+@@ -161 +161,2 @@
+- assert '--gamepad' not in sys.argv and '--third-person' not in sys.argv
++ if '--xvfb-sdl' not in sys.argv:assert '--gamepad' not in sys.argv and '--third-person' not in sys.argv
++ if '--gamepad' in sys.argv:assert spec.get('virtual_gamepad')
+--- a/build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py
++++ b/build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py
+@@ -117 +117,16 @@
+-args=sys.argv;sys.argv=[str(old),kind];ns={'source_state_equal':source_state_equal};exec(compile(prefix,str(old)+'#existing-exact-pair-invariants','exec'),ns);sys.argv=args
++third_body_guard = None
++if '--third-person' in sys.argv and ordinary and profile.get('opponent_creature'):
++ import ast
++ policy=work/'compare-pair.py'
++ fn=next(v for v in ast.parse(policy.read_text()).body if isinstance(v,ast.FunctionDef) and v.name=='inactive_held_endpoint')
++ policy_scope={'json':json,'math':math}
++ exec(compile(ast.Module(body=[fn],type_ignores=[]),str(policy)+'#existing-inactive-body-policy','exec'),policy_scope)
++ def third_body_guard(state,actor):
++  if actor!='dynamic:player:0000000000000001':return False
++  projection={'native_melee_owned':json.loads(json.dumps(state['native_melee_states']))}
++  policy_scope['inactive_held_endpoint'](state,projection,actor,True)
++  return True
++ marker="and not m['held_blocks'] and not m['retiring_sequences']"
++ assert prefix.count(marker)==1
++ prefix=prefix.replace(marker,"and (not m['held_blocks'] or third_body_guard(end,actor)) and not m['retiring_sequences']")
++args=sys.argv;sys.argv=[str(old),kind];ns={'source_state_equal':source_state_equal,'third_body_guard':third_body_guard};exec(compile(prefix,str(old)+'#existing-exact-pair-invariants','exec'),ns);sys.argv=args
+@@ -1439,0 +1455,5 @@
++ if '--third-person' in sys.argv:
++  assert 'M15 course view: thirdPerson=true' in log and 'M15 course view: left-third-person' not in log
++  if phase=='reference':
++   body=melee(a['states'][1],p)
++   assert any(not h['inactive'] and h['retirement'] is None and h['animation_group']=='handtohandblockidle' for h in body['held_blocks'])
+@@ -1468 +1488 @@
+-  assert f'M15 Creature recoil resource selected: actor={n} cause=2 native_group=30 group=recoil' in log
++  assert re.search(r'M15 Creature recoil resource selected: actor='+re.escape(n)+r' cause=2 native_group=(?:30|1e) group=recoil(?= |$)',log)
+--- a/build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py
++++ b/build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py
+@@ -616,3 +616,4 @@
+- if '--reference-fixture-review' in sys.argv:
+-  review=read(sys.argv[sys.argv.index('--reference-fixture-review')+1])
+-  assert review['passed'] and review['fixture_failure'] and not review['raw_scenario_passed'] and review['run']==name
++ if '--reference-fixture-review' in sys.argv or '--continuation-fixture-review' in sys.argv:
++  flag='--continuation-fixture-review' if '--continuation-fixture-review' in sys.argv else '--reference-fixture-review'
++  review=read(sys.argv[sys.argv.index(flag)+1])
++  assert review['passed'] and review['fixture_failure'] and not review['raw_scenario_passed'] and review['run']==(other if flag=='--continuation-fixture-review' else name)
+@@ -679,0 +681,22 @@
++ if '--third-person' in sys.argv:
++  assert selected.get('opponent_creature')
++  third_body_samples=[]
++  def admitted_third_cache(state,actor):
++   if actor!='dynamic:player:0000000000000001':return False
++   inactive_held_endpoint(state,{'native_melee_owned':json.loads(json.dumps(state['native_melee_states']))},actor,True)
++   return True
++  def compare_third_melee(left,right,owned):
++   values=[]
++   for state in [left,right]:
++    projection={'native_melee_owned':owned(state['native_melee_states'])}
++    projection,samples=inactive_held_endpoint(state,projection,'dynamic:player:0000000000000001',True)
++    third_body_samples.append(samples);values.append(projection['native_melee_owned'])
++   return values[0]==values[1]
++  marker="and not m['held_blocks'] and not m['retiring_sequences']";assert code.count(marker)==1
++  code=code.replace(marker,"and (not m['held_blocks'] or admitted_third_cache(end,actor)) and not m['retiring_sequences']")
++  marker="melee(block,p)['first_person']['held_blocks']";assert code.count(marker)==1
++  code=code.replace(marker,"melee(block,p)['held_blocks']")
++  marker="assert owned_melee(x['native_melee_states'])==owned_melee(y['native_melee_states']),'melee ownership/identity differs'";assert code.count(marker)==1
++  code=code.replace(marker,"assert compare_third_melee(x,y,owned_melee),'melee ownership/identity differs'")
++  marker="work=root/'combined-restart-work-01';";assert code.count(marker)==1
++  code=code.replace(marker,"report['inactive_third_body_policy']={'samples':third_body_samples,'guard':'Existing inactive_held_endpoint; released/unqueued input, no pending/action/strike/reaction/passive/retiring owner, inactive/no pose/no easing, retirement elapsed; identity/offset/retirement duration strict. No source or saved/live normalization.'};"+marker)
+@@ -681,0 +705 @@
++ if '--third-person' in argv:scope.update(admitted_third_cache=admitted_third_cache,compare_third_melee=compare_third_melee,third_body_samples=third_body_samples)
+@@ -693 +717 @@
+- if '--reference-fixture-review' in argv:scope['reference_review']=review
++ if '--reference-fixture-review' in argv or '--continuation-fixture-review' in argv:scope['reference_review']=review
+--- a/build/oblivion-compat/m15/S4/creature-disease-work-01/inspect-disease.py
++++ b/build/oblivion-compat/m15/S4/creature-disease-work-01/inspect-disease.py
+@@ -11 +11,7 @@
+-scenario=json.loads((out/'scenario.json').read_text());assert scenario['passed']
++scenario=json.loads((out/'scenario.json').read_text())
++if '--fixture-review' in sys.argv:
++ review=json.loads(Path(sys.argv[sys.argv.index('--fixture-review')+1]).read_text())
++ assert review['passed'] and review['fixture_failure'] and not review['raw_scenario_passed'] and review['run']==name
++ assert sha(out/'scenario.json')==review['scenario_sha256'] and sha(out/'process.log')==review['process_log_sha256']
++ assert not scenario['passed'] and scenario['actions_complete'] and scenario['exit_code']==0
++else:assert scenario['passed']

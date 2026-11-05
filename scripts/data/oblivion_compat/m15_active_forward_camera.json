@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "scope": "Opt-in whole-body framing for active Forward paralysis; fixture correction only. Frozen matrix recipe/default outputs stay unchanged; original failure retained, no blanket matrix cell closure.",
+  "requirement": "A useful active Forward physical-body photograph; one visible torso anchor does not prove full bounds fit.",
+  "recipe": {
+    "active_forward_capture": true,
+    "settled_capture": "omit",
+    "minimum_distance": "existing joined_course.right_capture_distance (160)",
+    "camera": "existing measured mouse input",
+    "window": "native paralysis must be applied and unexpired; no timer extension",
+    "capture_order": "applied + full bounds acknowledgement, photograph, original F5 and save acknowledgement"
+  },
+  "shared_constructor": {
+    "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py",
+    "before_sha256": "c3ef267790423762a670507b9cf2b31d7da8e4cd6aa175f222da5500b09e0f63",
+    "after_sha256": "30fd96dbaebba415f97fd0fc8202a3076de5e9dde44e58640423985477847ce8",
+    "patch": "scripts/data/oblivion_compat/m15_active_forward_camera_shared.patch",
+    "patch_sha256": "b12e8b2bbb7ab37185f09793f815003bed1c5c48915a036ccb36ab3bbc8e8354",
+    "flag": "--active-forward-framing"
+  },
+  "focused_prefix": {
+    "command": [
+      "/usr/bin/python3",
+      "build/oblivion-compat/m15/S4/blocking-dodge-work-01/run-existing-course.py",
+      "timing-forward-frame-focused-sanitize-01",
+      "sanitize",
+      "reference",
+      "--xvfb-sdl",
+      "--right-space",
+      "--joined-cameras",
+      "--skip-settled-diagnostic",
+      "--fps-cap",
+      "30",
+      "--course-preflight",
+      "build/oblivion-compat/m15/S4/timing-campaign-work-01/fixture-seed1/course-prerequisites.json",
+      "--profile",
+      "build/oblivion-compat/m15/S4/blunt-course-work-01/stock-club-profile-01.json",
+      "--fixture-dir",
+      "build/oblivion-compat/m15/S4/timing-campaign-work-01/fixture-seed1",
+      "--integration-receipt",
+      "build/oblivion-compat/m15/S4/creature-disease-contact-integration-sanitize-01/verification.json",
+      "--active-forward-framing",
+      "--joined-camera-prefix"
+    ],
+    "preflight": "build/oblivion-compat/m15/S4/timing-campaign-work-01/active-frame-focused-preflight.json",
+    "verification": "build/oblivion-compat/m15/S4/timing-campaign-work-01/active-frame-focused-verification.json",
+    "visual_review": "build/oblivion-compat/m15/S4/timing-campaign-work-01/active-frame-focused-visual-review.json",
+    "scope": "Development prefix throughLeft,12saves/11captures; no released endpoint or fullcourse claim."
+  },
+  "original_failure": "build/oblivion-compat/m15/S4/timing-campaign-work-01/timing-matrix-sanitize-cap30-seed1-01-visual-review-failure.json",
+  "reuse": "build/oblivion-compat/m15/S4/timing-campaign-work-01/default-camera-protocol-reuse.json"
+}

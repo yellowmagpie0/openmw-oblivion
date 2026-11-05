@@ -1,0 +1,43 @@
+--- a/build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix.py
++++ b/build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix.py
+@@ -5,11 +5,20 @@
+ correction_path=Path('scripts/data/oblivion_compat/m15_timing_sanitize_camera.json');assert sha(correction_path)==(w/'matrix-sanitize-framed-freeze-sha256.txt').read_text().strip();correction=json.loads(correction_path.read_text())
+ assert sha(correction['parent_recipe']['path'])==correction['parent_recipe']['sha256']
+ preflight=correction['case_preflight'];assert sha(preflight['path'])==preflight['sha256'];corrected_pref=json.loads(Path(preflight['path']).read_text());assert corrected_pref['passed']
++restoration_path=Path('scripts/data/oblivion_compat/m15_timing_binary_restore.json');restoration=json.loads(restoration_path.read_text());restore_pref=restoration['preflight'];assert sha(restore_pref['path'])==restore_pref['sha256'];restored=json.loads(Path(restore_pref['path']).read_text());assert restored['passed']
++restored_cases={x['id']:x for x in restored['cases']}
++for case in corrected_pref['cases']:
++ if case['id'] in restored_cases:
++  update=restored_cases[case['id']];assert case=={k:v for k,v in update.items() if k!='new_game_sha256'}
++  case['game_sha256']=update['new_game_sha256']
+ mode=sys.argv[1];assert mode in ['verify','collect'];legacy=w/('verify-cell.py' if mode=='verify' else 'collect-matrix.py');key='verifier' if mode=='verify' else 'collector';assert sha(legacy)==correction['verification_helpers'][key]['sha256'];code=legacy.read_text()
+ if mode=='verify':
+  assert len(sys.argv)==4 and sys.argv[3]=='sanitize'
+  before='r=json.loads(recipe.read_text());cell='
+  after="r=json.loads(recipe.read_text());r.update(cells=correction['cells'],case_preflight=correction['case_preflight']);cell="
++ assert code.count(before)==1;code=code.replace(before,after)
++ before=";pin=next(v for v in pref['cases'] if v['name']==name)"
++ after=";pref['cases']=corrected_pref['cases'];pin=next(v for v in pref['cases'] if v['name']==name)"
+  assert code.count(before)==1;code=code.replace(before,after)
+ else:
+  assert len(sys.argv)==2
+@@ -18,7 +27,7 @@
+ """
+  assert code.count(before)==1;code=code.replace(before,after)
+  before='frozen_recipe=link(recipe),cases=rows'
+- after='frozen_recipe=link(recipe),camera_correction=link(correction_path),retained_failure=correction["retained_failure"],cases=rows'
++ after='frozen_recipe=link(recipe),binary_restoration=link(restoration_path),camera_correction=link(correction_path),retained_failure=correction["retained_failure"],cases=rows'
+  assert code.count(before)==1;code=code.replace(before,after)
+ if mode=='collect':
+  sys.path.insert(0,'scripts')
+@@ -67,8 +76,8 @@
+  code=code.replace('camera_correction=link(correction_path),retained_failure=',"camera_correction=link(correction_path),semantic_correction=link('scripts/data/oblivion_compat/m15_timing_semantic_comparison.json'),retained_failure=")
+
+ argv=sys.argv;sys.argv=[str(legacy)]+argv[2:]
+-scope=dict(__file__=__file__,correction=correction,correction_path=correction_path,corrected_pref=corrected_pref,power_resources=power_resources if mode=='collect' else None)
++scope=dict(__file__=__file__,restoration_path=restoration_path,correction=correction,correction_path=correction_path,corrected_pref=corrected_pref,power_resources=power_resources if mode=='collect' else None)
+ try:exec(compile(code,str(legacy)+'#pinned-SAN-camera-appendix','exec'),scope)
+ finally:sys.argv=argv
+ if mode=='verify':
+- p=w/(argv[2]+'-cell-verification.json');report=json.loads(p.read_text());report.update(camera_correction=dict(path=str(correction_path),sha256=sha(correction_path)),legacy_verifier=correction['verification_helpers']['verifier']);p.write_text(json.dumps(report,indent=2)+'\n')
++ p=w/(argv[2]+'-cell-verification.json');report=json.loads(p.read_text());report.update(binary_restoration=dict(path=str(restoration_path),sha256=sha(restoration_path)),camera_correction=dict(path=str(correction_path),sha256=sha(correction_path)),legacy_verifier=correction['verification_helpers']['verifier']);p.write_text(json.dumps(report,indent=2)+'\n')

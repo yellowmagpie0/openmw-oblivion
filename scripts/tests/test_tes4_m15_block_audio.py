@@ -250,6 +250,23 @@ class NativeHitFingerprintAudioTest(unittest.TestCase):
                     self.assertGreaterEqual(len(cluster['matched_sections_seconds']), 3)
                 self.assertFalse(audio.analyse(path, recipe, 0)['passed'], 'Audible replay must fail absence')
 
+    def test_v3_credits_each_bank_when_companion_has_a_quiet_intro(self):
+        # The intrinsic stock waveform can start quietly. The capture has the
+        # same fixed gains/envelope as the sources; no fitted level or timing.
+        original = self.functions[1]
+        self.functions[1] = lambda t: original(t) * (.001 if t < .08 else 1)
+        path = self.write("quiet-intro.wav", [round(self.functions[1](i / 44100)) for i in range(17640)],
+                          rate=44100, channels=1)
+        recipe = copy.deepcopy(self.fingerprint_recipe)
+        recipe["assets"][1] = dict(path=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+        result = audio.analyse(self.analytic_capture([(0, 1, 0)]), recipe, 1)
+        self.assertTrue(result["passed"], result["clusters"])
+        self.assertGreaterEqual(min(result["clusters"][0]["per_bank_energy_coverage"]), .9)
+        self.assertGreaterEqual(len(result["clusters"][0]["matched_sections_seconds"]), 3)
+        for events in [[(0, 0, 0)], [(1, 2, 0)]]:
+            with self.subTest(missing_bank=events):
+                self.assertTrue(audio.analyse(self.analytic_capture(events), recipe, 0)["passed"])
+
     def test_v3_changing_relative_level_may_leave_insufficient_coverage(self):
         # A discontinuous envelope on independently delayed clips changes the
         # relative mixture inside fingerprint sections. Keep this limitation

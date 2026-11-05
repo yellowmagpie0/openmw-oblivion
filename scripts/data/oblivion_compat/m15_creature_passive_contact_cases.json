@@ -1,0 +1,50 @@
+{
+  "requirement": "S4 C1 Creature physical contacts with supported direct passive Ability4 spellbooks",
+  "fixture_recipe": "scripts/data/oblivion_compat/m15_creature_passive_melee_fixture.json",
+  "fixture_scope": "Synthetic stock Dog body/stats plus complete stock CreatureDaedroth direct spellbook. No Daedroth body/vanilla encounter or casting acceptance.",
+  "stock_creature": "content:oblivion.esm:02b19a",
+  "stock_spellbook": [
+    "content:oblivion.esm:03c17f",
+    "content:oblivion.esm:02b543",
+    "content:oblivion.esm:01ce5a"
+  ],
+  "expected_passive_abilities": [
+    {
+      "spell": "content:oblivion.esm:02b543",
+      "spell_type": 4,
+      "effects": [
+        [
+          0,
+          1213418327,
+          68,
+          -20,
+          20
+        ],
+        [
+          1,
+          1229345618,
+          61,
+          33,
+          33
+        ]
+      ]
+    }
+  ],
+  "native_dispatch": {
+    "path": "build/oblivion-compat/m15/S4/creature-passive-contact-work-01/nonplayer-passive-dispatch.json",
+    "sha256": "d03be2da68f71c35b027c6b677342ffcaa99b2a374d686607fb0bae0042ffe27",
+    "cases": 4,
+    "scope": "Original VMOD apply/remove:nonplayer Maximum versus Player base;storage/notifications are boundaries."
+  },
+  "content_audit": {
+    "path": "build/oblivion-compat/m15/S4/creature-passive-contact-work-01/selected-stock-spellbooks.json",
+    "sha256": "704377608745c1ff84edacf44ebbc6a10c2f0e7d8e0fe912ff6c06a9bde7687a"
+  },
+  "expectations": [
+    "Cold fixture authors no actor resources or passive outcome. Active construction owns exactly WKSH-20 and RSFI+33 in reference Maximum; shared base unchanged.",
+    "Repeated activation and exact fresh restoration cannot duplicate effects. Unknown legacy ownership/unresolved abilities remain rejected.",
+    "Existing joined positive contact/block/Recoil/recovery/return,range/wall misses,causal resources and no contact/sound replay remain required."
+  ],
+  "verification_plan": "Focused Creature World checks and fixture/preflight Python checks first. Then one coherent full normal/SAN engine+runtime and full Python checkpoint;unchanged component rules reuse prior provenance. Existing combined-mastery reference+active-recovery fresh per build,with cheap cold/applied effect,approach,camera and placeholder guards.",
+  "remaining": "Other required passive classes/books remain separate gaps;GoblinShamanA has unresolved LVSP. No new compiled effect classes or general spellcasting. Negative-Endurance lifecycle rejected(no installed Creature Ability4 case). No full Creature/S4 acceptance."
+}

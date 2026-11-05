@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 
 import tes4_runtime_state as runtime
+from tes4_m15_fixture_preflight import is_current_fixture_schema
 from tes4_m15_stationary_fixture import fields
 
 
@@ -21,7 +22,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (type(recipe['version']) is not int or recipe['version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] != 46
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76)):
+            or not is_current_fixture_schema(recipe['target_schema'], runtime.CURRENT_VERSION, 59)):
         raise ValueError('unsupported cached-block input recipe/schema')
     digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
     source_hash = digest(source)
@@ -49,10 +50,14 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     expected = copy.deepcopy(state)
     expected['schema_version'] = recipe['target_schema']
     expected.setdefault('native_loose_weapons', [])
+    expected.setdefault('native_animated_references', [])
     expected.setdefault('native_movement', None)
     expected.setdefault('spoken_dialogue_infos', [])
     expected.setdefault('ignore_friendly_hits', {})
     expected.setdefault('disposition_modifiers', [])
+    expected.setdefault('faction_reactions', [])
+    runtime._upgrade_process_alerts(expected)
+    runtime._upgrade_bound_ownership(expected)
     expected.setdefault('friend_hit_counters', {})
     expected.setdefault('combat_controllers', {})
     expected.setdefault('native_getup_idles', [])
@@ -86,10 +91,10 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                   original_reference_inventories_checked=len(original['references']),
                   state_other_than_declared_script_and_empty_schema_defaults_preserved=True,
                   schema_defaults={'reference.dropper': None, 'reference.dropped_items': None,
-                                   'inventory.extra_scale': None, 'melee.reaction': None,
+                                   'inventory.extra_scale': None, 'native_actor_values.process_alerted': None, 'melee.reaction': None,
                                    'melee.retiring_sequences': [], 'melee.first_person': None,
                                    'melee.passive_sequence': None, 'melee.held_blocks': [],
-                                   'native_loose_weapons': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': [], 'native_getup_playback.request_selections': [], 'native_getup_playback.pending_requests': [], 'native_getup_playback.physical_hit': None})
+                                   'native_loose_weapons': [], 'native_animated_references': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'faction_reactions': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': [], 'native_getup_playback.request_selections': [], 'native_getup_playback.pending_requests': [], 'native_getup_playback.physical_hit': None})
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')
     return report
 

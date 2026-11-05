@@ -1528,20 +1528,31 @@
     "full_M15S4_acceptance": false
   },
   "timing_baseline_verification": {
-    "checkpoint": "build/oblivion-compat/m15/S4/course-preflight-work-01/pilot03-checkpoint-verification.json",
-    "sha256": "a5074937f125492071339f24e57b79221eb58df62389253011db7b160b7fe024",
-    "scope": "Currentnormal cap30seed1 joinedsemantic/timingbaseline only; notfullFPS/seed/SANcampaign or fullvisualacceptance.",
+    "checkpoint": "build/oblivion-compat/m15/S4/timing-campaign-work-01/readiness-checkpoint-verification.json",
+    "sha256": "49516f842290e4efac960d18e014e7bba095099436745046007107acaa2e27c0",
+    "scope": "Current normal full Club cap30/seed1 readiness and scoped first timing cell: block/incoming/recovery/ordinary return/range/wall/fourpowers/settled ownership;14exactsave/livepairs,13reviewedcaptures,1blockPCMcluster. Not fullmatrix, cleanF8, fresh-process or listening acceptance.",
     "exact_pairs": 14,
     "epochs": 1,
     "reviewed_captures": 13,
     "block_audio_clusters": 1,
     "configured_fps_cap": 30,
     "seed": 1,
-    "measured_fps": 18.25311964708263,
-    "save_free_fps": 20.01114536211183,
+    "measured_fps": 15.988880667595696,
+    "save_free_fps": 17.458471173973994,
     "full_timing_campaign": false,
     "full_visual_acceptance": false,
-    "full_M15S4_acceptance": false
+    "full_M15S4_acceptance": false,
+    "previous_baseline": "build/oblivion-compat/m15/S4/course-preflight-work-01/pilot03-checkpoint-verification.json",
+    "reuse": "Current normal/SAN C++ gates and528 publicPython tests unchanged; only ignored existing-harness opt-in omits optional S6-style settled-body diagnostic. Exact227actions/14saves/expectedlogs match previously accepted fullcourse. Classifier reproduces prior timing receipt exactly; camera helper reused with output-only path redirection, historical receipts untouched.",
+    "shared_fixture_adapter": {
+      "patch": "scripts/data/oblivion_compat/m15_timing_course_shared.patch",
+      "sha256": "18ae6a4a99d88c686cc953a31e3693972a69b0c51f022cc052fc9a5c7194e821",
+      "target": "build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py",
+      "before_sha256": "a19c8328d9213eb3c9caec8946171e31ed07e3b59d1401e89deea8adf8b33d97",
+      "after_sha256": "c3ef267790423762a670507b9cf2b31d7da8e4cd6aa175f222da5500b09e0f63",
+      "policy": "Explicit --skip-settled-diagnostic omits optional later S6-style physical-rest photo; retains all full-course contact/recovery/activeForward+Left/Right feedback and14save assertions. Controlling S4/E6 requires useful knockdown, not a new settled-corpse gate. Default unchanged."
+    },
+    "next": "Freeze and validate three actual RNG input states and allowed branches, controls/step/deadlines, then30/60/120normal/SAN timing cells and required fresh sources. Reuse covered query/domain evidence; retain other applicableS4/V6 andF8gates."
   },
   "npc_spare_disarm_checkpoint": {
     "status": "NPC spare-weapon disarm demonstrated; fullS4 incomplete",

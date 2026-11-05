@@ -1,5 +1,9 @@
 #include <components/esm4/projectilerules.hpp>
 #include "oblivioncombat.hpp"
+
+#include <components/esm4/loadlvsp.hpp>
+
+#include <components/esm4/masteryrules.hpp>
 #include "oblivionranged.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwworld/worldimp.hpp"
@@ -728,6 +732,7 @@ namespace MWMechanics
         mActions = {};
         mCombatRngState = 1;
         mSceneIsComplex = false;
+        mTurnArrest = false;
         mScriptDispositionPair.reset();
         mCrimeContracts = {};
         mActionOwners.clear();
@@ -1476,6 +1481,8 @@ namespace MWMechanics
             throw std::invalid_argument("native counter requires a live active owner");
         const auto found = mMeleeStates.find(actor);
         const auto* previous = found == mMeleeStates.end() ? nullptr : &found->second;
+        if (previous && previous->mDodge)
+            throw std::invalid_argument("native melee strike cannot replace an owned blocking dodge");
         if (previous && ((previous->mReaction && (!counter || !views
                     || previous->mReaction->mKind != ESM4::MeleeReactionKind::BlockHit))
                 || (previous->mFirstPerson && previous->mFirstPerson->mReaction && (!counter || !views
@@ -2014,6 +2021,7 @@ namespace MWMechanics
             && std::bit_cast<std::uint32_t>(state->mFirstPerson->mClock)
                 != std::bit_cast<std::uint32_t>(data.mExpected.mFirstPerson->mClock))
             return false;
+        if (state->mDodge && !owner.isActionConsumed(state->mDodge->mActionId)) return false;
         if (state->mReaction && !owner.isActionConsumed(state->mReaction->mContactId)) return false;
         if (state->mFirstPerson && state->mFirstPerson->mReaction
             && !owner.isActionConsumed(state->mFirstPerson->mReaction->mContactId)) return false;
@@ -2056,7 +2064,7 @@ namespace MWMechanics
         const auto* state = findMeleeState(actor);
         const auto* values = findActorValues(actor);
         const auto* life = findActorLife(actor);
-        if (!state || (!state->mReaction && !state->mPassiveSequence
+        if (!state || (!state->mDodge && !state->mReaction && !state->mPassiveSequence
                 && !(state->mStrike && (state->mStrike->mPoseSnapshot
                     || state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)) && state->mRetiringSequences.empty() && !hasAdvancingHeldBlock(*state)
                 && (!state->mFirstPerson || (!state->mFirstPerson->mReaction
@@ -2334,6 +2342,18 @@ namespace MWMechanics
         };
         updateHeld(next, nextClock, false);
         if (next.mFirstPerson) updateHeld(*next.mFirstPerson, next.mFirstPerson->mClock, true);
+        if (next.mDodge)
+        {
+            const auto advance = [&](ESM4::RuntimeDodgeView& view, bool first) {
+                const auto& source = sourceFor(view.mGroup, first);
+                const double time = double(view.mTime) + (freezeClock ? 0.0 : double(duration) * view.mRate);
+                if (!std::isfinite(time) || source.mFrequency <= 0)
+                    throw std::invalid_argument("invalid blocking dodge frame");
+                view.mTime = static_cast<float>(std::min(time, double(view.mEnd)));
+            };
+            advance(next.mDodge->mBody, false);
+            if (next.mDodge->mFirstPerson) advance(*next.mDodge->mFirstPerson, true);
+        }
         next.validate();
         auto data = std::make_unique<PreparedMeleeReactionFrame::Data>();
         if (!mPreparedReleaseIdentity.mValue) mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
@@ -2379,6 +2399,7 @@ namespace MWMechanics
 
     void OblivionCombatService::clearMeleeVisualHistory(const ESM::FormKey& actor) noexcept
     {
+        endBlockingDodge(actor);
         const auto found = mMeleeStates.find(actor);
         if (found != mMeleeStates.end())
         {
@@ -2576,6 +2597,7 @@ namespace MWMechanics
             clearMeleePlaybackAction(actor);
         if (melee != mMeleeStates.end() && melee->second.mReaction)
             cancelMeleeReaction(melee->second.mReaction->mContactId, actor);
+        endBlockingDodge(actor);
         mMeleeStates.erase(actor);
         clearBowPlaybackAction(actor);
         mBowStates.erase(actor);
@@ -2899,6 +2921,7 @@ namespace MWMechanics
         // permission to publish more effects for an arbitrary consumed ID.
         if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0
             || deltas.mVictimBlockFatigue != 0 || !deltas.mConditionChanges.empty()
+            || deltas.mVictimDisease
             || !deltas.mEnchantmentChargeChanges.empty()
             || (deltas.mKnockback && mImpl->mKnockback) || deltas.mOrdinaryHitArguments
             || deltas.mVictimPhysicalHit)
@@ -3061,6 +3084,15 @@ namespace MWMechanics
                 throw std::invalid_argument("invalid or stale native physical contact random transition");
         }
         ESM4::validateEssentialRecoverySettings(recovery);
+        if (deltas.mVictimDisease)
+        {
+            const auto& disease = *deltas.mVictimDisease;
+            if (continuation || victim.isEmpty() || !player || victim != player->getPlayer()
+                || disease.mSpellType != 1 || disease.mEffects.size() != 1
+                || disease.mEffects[0].mCode != ESM::fourCC("DRAT")
+                || disease.mEffects[0].mValues.mActorValue != 1)
+                throw std::invalid_argument("unsupported native contact disease grant");
+        }
         const auto change = [&](ESM4::RuntimeActorValues& values, const MWWorld::Ptr& ptr,
                                 std::uint8_t av, float delta) {
             if (delta != 0 && ESM4::actorValueModifierRequestAllowed(values.mOwner, av, delta,
@@ -3103,6 +3135,16 @@ namespace MWMechanics
             receivingLife = *findActorLife(victimKey);
             if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead && !continuation)
                 return nullptr;
+            if (deltas.mVictimDisease)
+            {
+                // Reuse the established owner on a detached service. The narrow
+                // DRAT Intelligence grant changes no shared base or lifecycle;
+                // only the receiving candidate publishes with the contact.
+                auto diseaseOwner = *this;
+                const std::span disease(deltas.mVictimDisease.get(), std::size_t{1});
+                diseaseOwner.preparePlayerPassiveGrants(*receiving, disease, playerBase,
+                    false, {}, playerGodMode);
+            }
             spendFatigue(*receiving, victim, deltas.mVictimBlockFatigue);
             change(*receiving, victim, 8, deltas.mVictimHealth);
             change(*receiving, victim, 10, deltas.mVictimFatigue);
@@ -3600,6 +3642,7 @@ namespace MWMechanics
                 appendSlot0(candidate.mRetiringSequences, slot0, *request);
                 retainSlot3(candidate, true);
                 candidate.mInput = {};
+                candidate.mDodge.reset();
                 candidate.mReaction = *request;
                 if (firstPerson)
                 {
@@ -3702,6 +3745,7 @@ namespace MWMechanics
                 candidate.mStrike.reset();
                 candidate.mPassiveSequence.reset();
                 candidate.mInput = {};
+                candidate.mDodge.reset();
                 candidate.mReaction = *request;
                 mirror.mStrike.reset();
                 mirror.mPassiveSequence.reset();
@@ -3792,6 +3836,7 @@ namespace MWMechanics
             if (candidate.mAiIntent && receivingLife && receivingLife->mPhase != ESM4::ActorLifePhase::Alive
                 && candidate.mAiIntent->mTarget == victimKey)
                 candidate.mAiIntent.reset();
+            candidate.mDodge.reset();
             candidate.mReaction = *request;
             if (!firstPerson && candidate.mFirstPerson && candidate.mFirstPerson->mReaction)
                 throw std::invalid_argument("native body replacement requires its first-person mirror contract");
@@ -4232,6 +4277,36 @@ namespace MWMechanics
         values.validate();
         if (oldValues && values != *oldValues)
             throw std::logic_error("native construction snapshot disagrees with shared base authority");
+        const auto expectedSpellRandom = mCombatRngState;
+        std::optional<std::uint32_t> selectedSpellRandom;
+        if (!oldValues && actor.getType() == ESM::REC_CREA4)
+        {
+            const auto sources = MWWorld::resolveOblivionCreatureContactSpellSources(store, baseKey);
+            if (sources && !sources->empty())
+            {
+                values.mLeveledContactSpells.emplace();
+                std::array<std::int32_t, 6> skills;
+                skills.fill(nonPlayerInteger(values, 19, base)); // Creature magic-group alias.
+                auto cursor = expectedSpellRandom;
+                for (const auto& source : *sources)
+                {
+                    std::array<std::uint16_t, 7> words;
+                    auto preview = cursor;
+                    for (auto& word : words)
+                    {
+                        const auto draw = ESM4::combatRandomDraw(preview);
+                        preview = draw.mNextState; word = draw.mValue;
+                    }
+                    const auto selected = ESM4::selectSingleLevelledSpell(*source.mList, source.mSchool, skills, words);
+                    for (unsigned draw = 0; draw < selected.mDraws; ++draw)
+                        cursor = ESM4::combatRandomDraw(cursor).mNextState;
+                    if (selected.mSpell && std::find(values.mLeveledContactSpells->begin(),
+                            values.mLeveledContactSpells->end(), *selected.mSpell) == values.mLeveledContactSpells->end())
+                        values.mLeveledContactSpells->push_back(*selected.mSpell);
+                }
+                selectedSpellRandom = cursor;
+            }
+        }
         if (activate)
         {
             if (values.mProcess != process)
@@ -4263,6 +4338,46 @@ namespace MWMechanics
             life.mPhase = dead ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::Alive;
         }
         life.validate();
+        if (actor.getType() == ESM::REC_CREA4)
+        {
+            const auto abilities = MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, baseKey);
+            if (abilities && !abilities->empty())
+            {
+                // A fresh Low reference owns a known pending grant. Unknown
+                // legacy ownership stays unknown; activation must not invent it.
+                if (!oldValues) values.mPassiveAbilities.emplace();
+                if ((!oldValues || activate) && values.mPassiveAbilities
+                    && values.mProcess == ESM4::ActorValueProcess::Active
+                    && life.mPhase == ESM4::ActorLifePhase::Alive)
+                {
+                    for (const auto& ability : *abilities)
+                    {
+                        if (std::any_of(values.mPassiveAbilities->begin(), values.mPassiveAbilities->end(),
+                                [&](const auto& owned) { return owned.mSpell == ability.mSpell; }))
+                            continue;
+                        ESM4::RuntimePassiveAbility owned{ability.mSpell, {}};
+                        for (const auto& effect : ability.mEffects)
+                        {
+                            const auto av = static_cast<std::uint8_t>(effect.mValues.mActorValue);
+                            float magnitude = effect.mFlags & 4 ? -effect.mValues.mMagnitude : effect.mValues.mMagnitude;
+                            std::optional<float> current;
+                            if (ESM4::valueModifierRequiresCurrent(av, effect.mCode, magnitude))
+                                current = ESM4::composeActorValue(values.mValues[av], values.mOwner, values.mProcess);
+                            magnitude = ESM4::clampValueModifierDelta(av, effect.mCode, magnitude, current);
+                            // Original VMOD6A84D0 routes nonplayer Ability4 to
+                            // virtual294 (Maximum), not the Player base writer.
+                            values.mValues[av] = ESM4::changeActorValueModifier(values.mValues[av], values.mOwner,
+                                av, ESM4::ActorValueModifier::Maximum, magnitude);
+                            owned.mEffects.push_back({effect.mEffectIndex, effect.mCode, av, magnitude,
+                                effect.mValues.mMagnitude});
+                        }
+                        owned.validate();
+                        values.mPassiveAbilities->push_back(std::move(owned));
+                    }
+                }
+                values.validate();
+            }
+        }
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> preparedValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> preparedLife;
         if (!oldValues)
@@ -4270,6 +4385,8 @@ namespace MWMechanics
         if (!oldLife)
             preparedLife.emplace(key, life);
         PreparedNonPlayerView view(actor, values, base, &life);
+        if (selectedSpellRandom && mCombatRngState != expectedSpellRandom)
+            throw std::invalid_argument("native spellbook construction lost its random source");
         // All allocations and projection checks precede insertion of prepared
         // map nodes. No callbacks or fallible stat setters occur during commit.
         if (!oldValues)
@@ -4281,6 +4398,7 @@ namespace MWMechanics
         }
         if (!oldLife)
             mActorLife.insert(preparedLife.extract(preparedLife.begin()));
+        if (selectedSpellRandom) mCombatRngState = *selectedSpellRandom;
         if (resetPhysicalHit)
             if (const auto graph = mGetUpPlayback.find(key); graph != mGetUpPlayback.end())
                 graph->second.mPhysicalHit.reset();
@@ -4291,6 +4409,22 @@ namespace MWMechanics
     {
         const auto found = mActorBases.find(base);
         return found == mActorBases.end() ? nullptr : &found->second;
+    }
+
+    std::optional<bool> OblivionCombatService::getBaseEssential(const ESM::FormKey& base) const
+    {
+        const auto* saved = findActorBase(base);
+        return saved ? saved->mEssential : std::nullopt;
+    }
+
+    void OblivionCombatService::setBaseEssential(const ESM::FormKey& base, ESM4::ActorBaseKind kind, bool essential)
+    {
+        auto candidate = findActorBase(base) ? *findActorBase(base) : ESM4::RuntimeActorBaseOverride{base, kind, {}};
+        if (candidate.mKind != kind)
+            throw std::invalid_argument("native essential base kind mismatch");
+        candidate.mEssential = essential;
+        candidate.validate();
+        mActorBases.insert_or_assign(base, std::move(candidate));
     }
 
     void OblivionCombatService::setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,
@@ -4948,6 +5082,7 @@ namespace MWMechanics
         for (const auto& ability : abilities)
         {
             ESM4::RuntimePassiveAbility shape{ability.mSpell, {}};
+            shape.mSpellType = ability.mSpellType;
             if (!requested.insert(ability.mSpell).second)
                 throw std::invalid_argument("duplicate native passive grant request");
             for (const auto& effect : ability.mEffects)
@@ -4963,13 +5098,19 @@ namespace MWMechanics
         bool changed = false;
         for (const auto& ability : abilities)
         {
-            if (std::any_of(candidate.mPassiveAbilities->begin(), candidate.mPassiveAbilities->end(),
-                    [&](const auto& owned) { return owned.mSpell == ability.mSpell; }))
+            const auto existing = std::find_if(candidate.mPassiveAbilities->begin(), candidate.mPassiveAbilities->end(),
+                [&](const auto& owned) { return owned.mSpell == ability.mSpell; });
+            if (existing != candidate.mPassiveAbilities->end())
+            {
+                if (existing->mSpellType != ability.mSpellType)
+                    throw std::invalid_argument("native passive grant conflicts with saved spell type");
                 continue;
+            }
             if (life.mPhase != ESM4::ActorLifePhase::Alive)
                 throw std::invalid_argument("new native passive grants require an alive actor");
             changed = true;
             ESM4::RuntimePassiveAbility owned{ability.mSpell, {}};
+            owned.mSpellType = ability.mSpellType;
             for (const auto& effect : ability.mEffects)
             {
                 const auto av = static_cast<std::uint8_t>(effect.mValues.mActorValue);
@@ -4978,19 +5119,25 @@ namespace MWMechanics
                 if (ESM4::valueModifierRequiresCurrent(av, effect.mCode, magnitude))
                     current = ESM4::composeActorValue(candidate.mValues[av], candidate.mOwner, candidate.mProcess);
                 magnitude = ESM4::clampValueModifierDelta(av, effect.mCode, magnitude, current);
-                const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
-                    : integerBaseOverride(findActorBase(candidate.mBase), av).value_or(
-                        ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
-                const auto entry = ESM4::prepareActorBaseValueFloatMod(
-                    ESM4::ActorBaseKind::Npc, av, formCurrent, magnitude, ESM4::ActorValueConversionMode::Sse);
-                if (entry)
+                if (ability.mSpellType == 1)
+                    candidate.mValues[av] = ESM4::changeActorValueModifier(candidate.mValues[av], candidate.mOwner,
+                        av, ESM4::ActorValueModifier::Maximum, magnitude);
+                else
                 {
-                    auto [it, inserted] = mActorBases.try_emplace(candidate.mBase,
-                        ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
-                    if (it->second.mKind != ESM4::ActorBaseKind::Npc)
-                        throw std::invalid_argument("native passive Player base kind mismatch");
-                    setActorBaseEntry(it->second, *entry);
-                    applyActorBase(candidate, &it->second);
+                    const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
+                        : integerBaseOverride(findActorBase(candidate.mBase), av).value_or(
+                            ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
+                    const auto entry = ESM4::prepareActorBaseValueFloatMod(
+                        ESM4::ActorBaseKind::Npc, av, formCurrent, magnitude, ESM4::ActorValueConversionMode::Sse);
+                    if (entry)
+                    {
+                        auto [it, inserted] = mActorBases.try_emplace(candidate.mBase,
+                            ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
+                        if (it->second.mKind != ESM4::ActorBaseKind::Npc)
+                            throw std::invalid_argument("native passive Player base kind mismatch");
+                        setActorBaseEntry(it->second, *entry);
+                        applyActorBase(candidate, &it->second);
+                    }
                 }
                 preparePlayerValues(candidate, settings);
                 owned.mEffects.push_back({effect.mEffectIndex, effect.mCode, av, magnitude, effect.mValues.mMagnitude});
@@ -5073,19 +5220,25 @@ namespace MWMechanics
         if (damage && (!godMode || *damage >= 0))
             candidate.mValues[av] = ESM4::changeActorValueModifier(candidate.mValues[av], candidate.mOwner,
                 av, ESM4::ActorValueModifier::Damage, *damage);
-        const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
-            : integerBaseOverride(findActorBase(candidate.mBase), av).value_or(
-                ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
-        const auto entry = ESM4::prepareActorBaseValueFloatMod(
-            ESM4::ActorBaseKind::Npc, av, formCurrent, -magnitude, ESM4::ActorValueConversionMode::Sse);
-        if (entry)
+        if (ability->mSpellType == 1)
+            candidate.mValues[av] = ESM4::changeActorValueModifier(candidate.mValues[av], candidate.mOwner,
+                av, ESM4::ActorValueModifier::Maximum, -magnitude);
+        else
         {
-            auto [it, inserted] = mActorBases.try_emplace(candidate.mBase,
-                ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
-            if (it->second.mKind != ESM4::ActorBaseKind::Npc)
-                throw std::invalid_argument("native passive Player base kind mismatch");
-            setActorBaseEntry(it->second, *entry);
-            applyActorBase(candidate, &it->second);
+            const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
+                : integerBaseOverride(findActorBase(candidate.mBase), av).value_or(
+                    ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
+            const auto entry = ESM4::prepareActorBaseValueFloatMod(
+                ESM4::ActorBaseKind::Npc, av, formCurrent, -magnitude, ESM4::ActorValueConversionMode::Sse);
+            if (entry)
+            {
+                auto [it, inserted] = mActorBases.try_emplace(candidate.mBase,
+                    ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
+                if (it->second.mKind != ESM4::ActorBaseKind::Npc)
+                    throw std::invalid_argument("native passive Player base kind mismatch");
+                setActorBaseEntry(it->second, *entry);
+                applyActorBase(candidate, &it->second);
+            }
         }
         preparePlayerValues(candidate, settings);
         // Original6A88D0 queries5E33B0(false): states1/2/6. This is a
@@ -5150,8 +5303,12 @@ namespace MWMechanics
             throw std::invalid_argument("native character replacement requires initialized lifecycle");
         std::set<std::pair<ESM::FormKey, std::uint32_t>> remaining;
         for (const auto& ability : *candidate.mPassiveAbilities)
-            for (const auto& effect : ability.mEffects)
-                remaining.emplace(ability.mSpell, effect.mEffectIndex);
+            if (ability.mSpellType == 4)
+                for (const auto& effect : ability.mEffects)
+                    remaining.emplace(ability.mSpell, effect.mEffectIndex);
+        for (const auto& ability : abilities)
+            if (ability.mSpellType != 4)
+                throw std::invalid_argument("character selection grants require Ability4");
         for (const auto& effect : removalOrder)
             if (remaining.erase({effect.mSpell, effect.mEffectIndex}) != 1)
                 throw std::invalid_argument("invalid or duplicate native character removal identity");
@@ -5254,6 +5411,28 @@ namespace MWMechanics
                 candidate.mValues[9], candidate.mOwner, 9, ESM4::ActorValueModifier::Damage, delta);
         if (candidate != playerValues())
             publishPlayerValues(player, std::move(candidate), baseSettings);
+    }
+
+    bool OblivionCombatService::restorePotionResources(const MWWorld::Ptr& actor, MWWorld::Player* player,
+        const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        auto candidate = player ? playerValues() : nonPlayerValues(actor);
+        const auto* life = findActorLife(candidate.mActor);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
+            return false;
+        for (std::size_t i = 0; i < amounts.size(); ++i)
+        {
+            if (!std::isfinite(amounts[i]) || amounts[i] < 0.f)
+                throw std::invalid_argument("native potion restoration requires finite nonnegative magnitudes");
+            if (amounts[i] > 0.f)
+                candidate.mValues[8 + i] = ESM4::changeActorValueModifier(candidate.mValues[8 + i],
+                    candidate.mOwner, 8 + i, ESM4::ActorValueModifier::Damage, amounts[i]);
+        }
+        if (player)
+            publishPlayerValues(*player, std::move(candidate), settings);
+        else
+            publishNonPlayerValues(actor, std::move(candidate));
+        return true;
     }
 
     void OblivionCombatService::restoreNonPlayerResources(const MWWorld::Ptr& actor,
@@ -5610,7 +5789,69 @@ namespace MWMechanics
             melee->second.mReaction.reset();
             melee->second.mInput = {};
         }
+        if (action != 9) endBlockingDodge(actor);
         found->second.mProcessAction = action;
+    }
+
+    bool OblivionCombatService::beginBlockingDodge(const ESM::FormKey& actor,
+        ESM4::RuntimeBlockingDodge dodge, const ESM4::CombatMasterySettings& mastery,
+        std::span<const OblivionMeleeSequenceMetadata> heldSources)
+    {
+        const auto values = mActorValues.find(actor);
+        const auto* life = findActorLife(actor);
+        const auto found = mMeleeStates.find(actor);
+        if (values == mActorValues.end() || values->second.mOwner != ESM4::ActorValueOwner::Player
+            || values->second.mProcess != ESM4::ActorValueProcess::Active
+            || values->second.mProcessAction != 6 || values->second.mProcessKnockedState != 0
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || mBowStates.contains(actor) || getProcessParalysis(actor) != 0
+            || (found != mMeleeStates.end() && (found->second.mDodge || found->second.mStrike
+                || found->second.mReaction || (found->second.mFirstPerson
+                    && (found->second.mFirstPerson->mStrike || found->second.mFirstPerson->mReaction)))))
+            return false;
+        if (!ESM4::blockingDodgeAllowed({getPlayerBaseValue(26), dodge.mNativeGroup,
+                true, false, false, true, true}, mastery)) return false;
+        dodge.mActionId = 1; // Validate resources before allocating an identity.
+        dodge.validate();
+        if (dodge.mBody.mTime != dodge.mBody.mBegin
+            || (dodge.mFirstPerson && dodge.mFirstPerson->mTime != dodge.mFirstPerson->mBegin))
+            throw std::invalid_argument("new blocking dodge must start at its first sample");
+        auto candidate = found == mMeleeStates.end() ? ESM4::RuntimeMeleeState{} : found->second;
+        cancelHeldBlockResidents(candidate, heldSources);
+        candidate.mInput = {};
+        candidate.mPassiveSequence.reset();
+        if (candidate.mFirstPerson) candidate.mFirstPerson->mPassiveSequence.reset();
+        if (dodge.mFirstPerson && !candidate.mFirstPerson)
+        {
+            candidate.mFirstPerson.emplace();
+            candidate.mFirstPerson->mClock = animationClock(actor);
+        }
+        candidate.mDodge = std::move(dodge);
+        candidate.validate();
+        decltype(mMeleeStates) staged;
+        staged.emplace(actor, std::move(candidate));
+        auto node = staged.extract(staged.begin());
+        decltype(mAnimationClocks) clocks;
+        if (!mAnimationClocks.contains(actor)) clocks.emplace(actor, 0.f);
+        const auto id = allocateAction(actor);
+        consumeAction(id, actor); // No contact, pending effect or RNG draw.
+        node.mapped().mDodge->mActionId = id;
+        if (found == mMeleeStates.end()) mMeleeStates.insert(std::move(node));
+        else std::swap(found->second, node.mapped());
+        if (!clocks.empty()) mAnimationClocks.insert(clocks.extract(clocks.begin()));
+        values->second.mProcessAction = 9;
+        return true;
+    }
+
+    bool OblivionCombatService::endBlockingDodge(const ESM::FormKey& actor) noexcept
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mDodge) return false;
+        found->second.mDodge.reset();
+        const auto values = mActorValues.find(actor);
+        if (values != mActorValues.end() && values->second.mProcessAction == 9)
+            values->second.mProcessAction = -1;
+        return true;
     }
 
     bool OblivionCombatService::beginBlocking(const ESM::FormKey& actor)
@@ -5912,6 +6153,20 @@ namespace MWMechanics
             found->second.mProcessAction = -1;
     }
 
+    bool OblivionCombatService::setProcessAlerted(const ESM::FormKey& actor, bool alerted)
+    {
+        const auto found = mActorValues.find(actor);
+        if (found == mActorValues.end()) return false;
+        found->second.mProcessAlerted = alerted;
+        return true;
+    }
+
+    bool OblivionCombatService::getProcessAlerted(const ESM::FormKey& actor) const
+    {
+        const auto* values = findActorValues(actor);
+        return values && values->mProcessAlerted.value_or(false);
+    }
+
     std::int8_t OblivionCombatService::getProcessKnockedState(const ESM::FormKey& actor) const
     {
         const auto* values = findActorValues(actor);
@@ -5932,6 +6187,7 @@ namespace MWMechanics
         if (found->second.mProcess == ESM4::ActorValueProcess::Low)
             return; // Original Low/MiddleLow virtual68F970 is a no-op.
         mPreparedGetUpIdentity.mValue.reset();
+        if (state != 0) endBlockingDodge(actor);
         found->second.mProcessKnockedState = state;
         if (state == 0)
             if (const auto graph = mGetUpPlayback.find(actor); graph != mGetUpPlayback.end())
@@ -7081,6 +7337,9 @@ namespace MWMechanics
             throw std::invalid_argument("native physical action owners require an Oblivion v20+ save");
         if (state.mVersion < 9 && !mActorValues.empty())
             throw std::invalid_argument("native actor values require an Oblivion v9+ save");
+        if (state.mVersion < 84 && std::ranges::any_of(mActorBases,
+                [](const auto& entry) { return entry.second.mEssential.has_value(); }))
+            throw std::invalid_argument("native essential base overrides require an Oblivion v84+ save");
         if (state.mVersion < 11 && !mActorBases.empty())
             throw std::invalid_argument("native actor base overrides require an Oblivion v11+ save");
         if (state.mVersion < 12 && (!mActorLife.empty() || !mPendingDeathEvents.empty() || mNextDeathEvent != 1))
@@ -7126,6 +7385,12 @@ namespace MWMechanics
                 throw std::invalid_argument("native nonplayer form Health requires an Oblivion v17+ save");
             if (state.mVersion < 18 && actor.mPassiveAbilities)
                 throw std::invalid_argument("native passive ownership requires an Oblivion v18+ save");
+            if (state.mVersion < 79 && actor.mLeveledContactSpells)
+                throw std::invalid_argument("native leveled contact spells require an Oblivion v79+ save");
+            if (state.mVersion < 78 && actor.mPassiveAbilities)
+                for (const auto& ability : *actor.mPassiveAbilities)
+                    if (ability.mSpellType != 4)
+                        throw std::invalid_argument("native disease ownership requires an Oblivion v78+ save");
             if (state.mVersion < 19 && actor.mPassiveAbilities)
                 for (const auto& ability : *actor.mPassiveAbilities)
                     for (const auto& effect : ability.mEffects)
@@ -7135,6 +7400,9 @@ namespace MWMechanics
         }
         auto actions = mActions.capture();
         auto actionOwners = mActionOwners;
+        if (state.mVersion < 77 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(),
+                [](const auto& entry) { return entry.second.mDodge.has_value(); }))
+            throw std::invalid_argument("blocking dodge requires an Oblivion v77+ save");
         auto meleeStates = mMeleeStates;
         auto bowStates = mBowStates;
         auto animationClocks = mAnimationClocks;

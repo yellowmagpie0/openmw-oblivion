@@ -68,6 +68,10 @@ namespace MWWorld
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
         void dispatchDialogueResponseResult(const ESM::FormKey& info, const Ptr& actor);
+        // Shared native conditions/order/history selection for speech and
+        // interactive menus. Selection alone does not execute a response.
+        std::optional<ESM::FormKey> selectNativeDialogueInfo(
+            const ESM::FormKey& topic, const Ptr& actor, const Ptr& target) const;
         // Automatic616530 barks: select live conditions, play only the first
         // response, then run its response result even when audio is missing.
         // The caller owns movement/scene/process eligibility and topic identity.
@@ -192,8 +196,6 @@ namespace MWWorld
 
         void compileCorpus();
         void indexNativeVoices();
-        std::optional<ESM::FormKey> selectNativeDialogueInfo(
-            const ESM::FormKey& topic, const Ptr& actor, const Ptr& target) const;
         NativeVoice findNativeVoice(const ESM::FormKey& info, const Ptr& actor, const ESM::FormKey& voiceType,
             bool firstResponseOnly = false) const;
         void loadScheduledEvents();

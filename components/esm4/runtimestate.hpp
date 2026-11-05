@@ -1,6 +1,7 @@
 #ifndef OPENMW_COMPONENTS_ESM4_RUNTIMESTATE_H
 #define OPENMW_COMPONENTS_ESM4_RUNTIMESTATE_H
 
+#include "bounditemsource.hpp"
 #include <cstdint>
 #include <map>
 #include <optional>
@@ -17,6 +18,7 @@
 #include <components/esm/position.hpp>
 
 #include "aiphase.hpp"
+#include "charactergenstate.hpp"
 #include "ability.hpp"
 #include "actormovementstate.hpp"
 #include "actionledger.hpp"
@@ -59,7 +61,16 @@ namespace ESM4
     // v71 retains selected GetUp IDLE resource ownership before sequence start.
     // v74 retains pending GetUp request sources and outstanding load ownership.
     // v76 retains the Use release required after Player equipment cancellation.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 76;
+    // v77 retains blocking-dodge action ownership and both playback samples.
+    // v78 distinguishes Disease1 temporary modifiers from Ability4 base writes.
+    // v79 retains resolved leveled Creature contact spell sources, including none.
+    // v83 retains bound item sources and owned displaced equipment.
+    // v82 retains the process-owned alert flag independently of alarm/crime.
+    // v81 retains directed faction reaction changes, including zero overrides.
+    // v80 retains Player tutorial skill use, tracking and cached recommended CLAS.
+    // v84 retains shared NPC/creature essential flag overrides.
+    // v85 retains physical body graphs for animated placed references.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 85;
 
     struct RuntimeContentIdentity
     {
@@ -96,6 +107,8 @@ namespace ESM4
 
         // v48: inventory ExtraScale, distinct from world-reference mesh scale.
         std::optional<float> mExtraScale = std::nullopt;
+        // v83: exact associated-item effect identity, separate from crime owner.
+        std::optional<BoundItemSource> mBoundSource = std::nullopt;
 
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };
@@ -155,6 +168,8 @@ namespace ESM4
         ESM::FormKey mBirthSign;
         bool mFemale = false;
         std::uint8_t mCharacterGenerationFlags = 0;
+        // v80: absent older saves begin tracking at adoption, without inferred history.
+        std::optional<CharacterGenerationState> mCharacterGeneration;
 
         friend bool operator==(const RuntimePlayerState&, const RuntimePlayerState&) = default;
     };
@@ -290,6 +305,15 @@ namespace ESM4
         friend bool operator==(const RuntimePackageDoneEvent&, const RuntimePackageDoneEvent&) = default;
     };
 
+    struct RuntimeBoundAbility
+    {
+        ESM::FormKey mSpell;
+        // Equipment displaced on application; restore existing instances,
+        // never generate these ordinary items again during removal/reload.
+        std::vector<RuntimeInventoryItem> mDisplacedEquipment;
+        friend bool operator==(const RuntimeBoundAbility&, const RuntimeBoundAbility&) = default;
+    };
+
     struct RuntimePassiveValueModifier
     {
         std::uint32_t mEffectIndex = 0;
@@ -310,6 +334,9 @@ namespace ESM4
         ESM::FormKey mSpell;
         // Preserve application order; do not sort effects for serialization.
         std::vector<RuntimePassiveValueModifier> mEffects;
+        // Older owners were exclusively Ability4. Never infer this from an
+        // effect code or changed content when restoring an applied effect.
+        std::uint32_t mSpellType = 4;
         void validate() const;
         friend bool operator==(const RuntimePassiveAbility&, const RuntimePassiveAbility&) = default;
     };
@@ -352,6 +379,11 @@ namespace ESM4
         // no applied abilities; neither state permits guessing from AV bases.
         std::optional<std::vector<RuntimePassiveAbility>> mPassiveAbilities;
 
+        // v79: selected leveled contact sources. Absence means unconstructed or
+        // unknown legacy history; an empty vector is an owned chance-none result.
+        // These are carrier inputs, not effects applied to this Creature.
+        std::optional<std::vector<ESM::FormKey>> mLeveledContactSpells;
+
         // v70: application order and lifecycle of owned melee paralysis.
         // Earlier fork schemas never produced these effects: empty ownership
         // does not reinterpret an existing Script/Temporary AV48 modifier.
@@ -363,6 +395,9 @@ namespace ESM4
         // v26: signed High-process action code. Unknown legacy state remains
         // absent. Low queries return -1; action6 is the native blocking posture.
         std::optional<std::int16_t> mProcessAction;
+        // v82: explicit BaseProcess alert state; Low and Active both own it.
+        // Absence uses the native zero default, never the TES3 alarm flag.
+        std::optional<bool> mProcessAlerted;
 
         void validate() const;
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;
@@ -373,6 +408,8 @@ namespace ESM4
         ESM::FormKey mBase;
         ActorBaseKind mKind = ActorBaseKind::Npc;
         std::vector<ActorBaseValueSet> mValues;
+        // v84: shared base flag, independent of cached reference statistics.
+        std::optional<bool> mEssential;
 
         void validate() const;
         friend bool operator==(const RuntimeActorBaseOverride&, const RuntimeActorBaseOverride&) = default;
@@ -697,7 +734,7 @@ namespace ESM4
     struct RuntimeMeleeAiIntent
     {
         ESM::FormKey mTarget;
-        ESM::FormKey mStyle;
+        ESM::FormKey mStyle; // Null selects the native default CSTY policy.
         void validate() const;
         friend bool operator==(const RuntimeMeleeAiIntent&, const RuntimeMeleeAiIntent&) = default;
     };
@@ -776,6 +813,26 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeFirstPersonMeleeState&, const RuntimeFirstPersonMeleeState&) = default;
     };
+    // Native action9 owns locomotion without a damage/contact window. Times
+    // are renderer-track seconds; both views resume from their saved sample.
+    struct RuntimeDodgeView
+    {
+        std::string mGroup;
+        float mTime = 0, mBegin = 0, mEnd = 0, mRate = 1;
+        void validate(std::uint16_t group) const;
+        friend bool operator==(const RuntimeDodgeView&, const RuntimeDodgeView&) = default;
+    };
+
+    struct RuntimeBlockingDodge
+    {
+        std::uint64_t mActionId = 0;
+        std::uint16_t mNativeGroup = 11;
+        RuntimeDodgeView mBody;
+        std::optional<RuntimeDodgeView> mFirstPerson;
+        void validate() const;
+        friend bool operator==(const RuntimeBlockingDodge&, const RuntimeBlockingDodge&) = default;
+    };
+
     struct RuntimeMeleeState
     {
         RuntimeMeleeInput mInput;
@@ -791,6 +848,8 @@ namespace ESM4
         std::optional<RuntimeFirstPersonMeleeState> mFirstPerson = std::nullopt;
         std::optional<RuntimePassiveMeleeSequence> mPassiveSequence = std::nullopt;
         std::vector<RuntimeHeldBlockSequence> mHeldBlocks = {};
+        // v77: input-selected blocking dodge, separate from a damage strike.
+        std::optional<RuntimeBlockingDodge> mDodge;
         void validate() const;
         friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
     };
@@ -829,6 +888,9 @@ namespace ESM4
         // entries survive; absence is an absent native list entry. Older fork
         // schemas never implemented ModDisposition and have no stored history.
         std::map<std::pair<ESM::FormKey, ESM::FormKey>, std::int32_t> mDispositionModifiers;
+        // v81: changes to winning FACT relationships. An explicit zero shadows
+        // an authored entry removed by SetFactionReaction; absence uses content.
+        std::map<std::pair<ESM::FormKey, ESM::FormKey>, std::int32_t> mFactionReactions;
         // Presence is the allocated native extra0x4E; an empty vector is not
         // equivalent to an absent owner. Entry order and duplicates survive.
         std::map<ESM::FormKey, std::vector<FriendHitEntry>> mFriendHitCounters;
@@ -871,6 +933,8 @@ namespace ESM4
         std::map<ESM::FormKey, RuntimeGetUpPlayback> mNativeGetUpPlayback;
         // v31: persistent physical snapshots; old saves have no invented pose.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
+        // v85: independent placed-reference body graphs; never actor or item owners.
+        std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeAnimatedReferences;
         // Absent in older saves: never infer solver history or skip flags.
         std::optional<RuntimeMovementState> mNativeMovement = std::nullopt;
         // v53: retained loose weapons, including currently unloaded cells.
@@ -910,6 +974,10 @@ namespace ESM4
         std::map<ESM::FormKey, float> mNativeActorUpdateTimes;
         // v42: validated crime/custody contracts; older saves invent no incidents.
         CrimeStateContracts mNativeCrime;
+
+        // v83: reference-owned associated-item Ability effects. Inventory
+        // instances carry their exact spell/effect source independently.
+        std::map<ESM::FormKey, std::vector<RuntimeBoundAbility>> mNativeBoundAbilities;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "name": "Fresh sewer escape Emperor greeting and secret passage",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal expected=nil\nlocal done=false\nreturn {{engineHandlers={{onFrame=function(dt)\n local corpse=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x15985a))\n if not corpse or not corpse:isValid() then return end\n local source=Actor.inventory(corpse)\n local player=Actor.inventory(self)\n if not expected then\n  expected={{}}\n  for _,item in ipairs(source:getAll()) do\n   local id=item.recordId\n   expected[id]=player:countOf(id)+source:countOf(id)\n   local record=item.type.record and item.type.record(item)\n   print('Sewer corpse item '..id..' count '..source:countOf(id)..' name '..(record and record.name or '?'))\n  end\n  print('Sewer loot observer ready dead='..tostring(Actor.isDead(corpse)))\n end\n if done then return end\n local n=0\n for id,count in pairs(expected) do\n  n=n+1\n  if source:countOf(id)~=0 or player:countOf(id)~=count then return end\n end\n if n>0 then done=true print('Sewer corpse loot transferred types='..n) end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame",
+    "{input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:032a18 info=content:oblivion.esm:02ad84 choices=1",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "emperor-greeting.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:032a18 info=content:oblivion.esm:(?:053261|02ad12)",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "emperor-questions.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:032a18 info=content:oblivion.esm:02ad13.*choices=1",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "emperor-identity.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:032a18 info=content:oblivion.esm:02ad14",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "emperor-fate.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:032a18 info=content:oblivion.esm:02ad1b.*goodbye=1",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "emperor-goodbye.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
+      "value": "b",
+      "hold_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=18",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "after-greeting.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=19",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "secret-passage.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 6
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "setstage quest=content:oblivion.esm:02466e stage=18",
+    "setstage quest=content:oblivion.esm:02466e stage=19"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

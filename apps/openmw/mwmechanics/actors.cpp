@@ -1419,10 +1419,13 @@ namespace MWMechanics
         const float maxDistForPartialAvoiding = 200.f;
         const float maxDistForStrictAvoiding = 100.f;
         const float maxTimeToCheck = 2.0f;
-        const bool giveWayWhenIdle = Settings::game().mNPCsGiveWay;
-
         const MWWorld::Ptr player = getPlayer();
         const MWBase::World* const world = MWBase::Environment::get().getWorld();
+        // Native package navigation needs crowd yielding even with the legacy
+        // optional Morrowind avoidance setting disabled. In the prison the
+        // player is scripted immobile while the escorts pass each other.
+        const bool giveWayWhenIdle = Settings::game().mNPCsGiveWay
+            || world->getGameProfile() == ESM::GameProfile::Oblivion;
         const auto* nativeWorld = dynamic_cast<const MWWorld::World*>(world);
         const MWMechanics::OblivionAiService* const oblivionAi
             = nativeWorld == nullptr ? nullptr : nativeWorld->getOblivionAiService();
@@ -1472,6 +1475,8 @@ namespace MWMechanics
             const ESM4::RuntimeActorAiState* nativeState
                 = oblivionAi != nullptr && oblivionAi->handles(ptr) ? oblivionAi->state(ptr) : nullptr;
             const auto& aiSequence = ptr.getClass().getCreatureStats(ptr).getAiSequence();
+            const auto nativeCombatTarget = nativeWorld
+                ? nativeWorld->getOblivionCombatTarget(ptr.getCellRef().getFormKey()) : std::nullopt;
             if (!aiSequence.isEmpty())
             {
                 const auto& package = aiSequence.getActivePackage();
@@ -1492,7 +1497,14 @@ namespace MWMechanics
                     shouldTurnToApproachingActor = false;
                 }
             }
-            if (!isMoving && giveWayWhenIdle && nativeState != nullptr)
+            if (nativeCombatTarget)
+            {
+                currentTarget = *nativeCombatTarget == ESM::FormKey::dynamic("player", 1) ? player
+                    : oblivionAi ? oblivionAi->resolveReference(*nativeCombatTarget) : MWWorld::Ptr{};
+                shouldGiveWay = false;
+                shouldTurnToApproachingActor = false;
+            }
+            if (!nativeCombatTarget && !isMoving && giveWayWhenIdle && nativeState != nullptr)
             {
                 if (oblivionActorCanProactivelyYield(*nativeState))
                     shouldGiveWay = true;
@@ -1525,7 +1537,7 @@ namespace MWMechanics
                 const MWWorld::Ptr& otherPtr = otherCached.mPtr;
                 if (otherPtr == ptr || otherPtr == currentTarget)
                     continue;
-                if (nativeState != nullptr && nativeState->mPhase != ESM4::PackagePhase::Complete
+                if (!nativeCombatTarget && nativeState != nullptr && nativeState->mPhase != ESM4::PackagePhase::Complete
                     && !nativeState->mTarget.isNull()
                     && ((otherPtr == player
                             && nativeState->mTarget == ESM::FormKey::dynamic("player", 1))
@@ -1668,7 +1680,8 @@ namespace MWMechanics
                         for (auto& actor : mActors)
                         {
                             const auto ptr = actor.getPtr();
-                            if (actor.isInvalid() || ptr == player || ptr.getType() != ESM::REC_NPC_4)
+                            if (actor.isInvalid() || ptr == player
+                                || (ptr.getType() != ESM::REC_NPC_4 && ptr.getType() != ESM::REC_CREA4))
                                 continue;
                             const auto* melee = combat->findMeleeState(ptr.getCellRef().getFormKey());
                             if (melee && melee->mAiIntent)
@@ -1783,7 +1796,9 @@ namespace MWMechanics
                     {
                         try
                         {
-                            if (!updateOblivionStationaryMeleeAi(*world, actorPtr, inProcessingRange))
+                            if (inProcessingRange && engageCombatTimerStatus == Misc::TimerStatus::Elapsed)
+                                acquireOblivionPlayerCombat(*world, actorPtr);
+                            if (!updateOblivionMeleeAi(*world, actorPtr, inProcessingRange, duration))
                                 oblivionAi->update(actorPtr, duration, inProcessingRange);
                         }
                         catch (const std::exception& error)
@@ -1886,7 +1901,7 @@ namespace MWMechanics
                 if (MWMechanics::OblivionAiService* oblivionAi = nativeWorld->getOblivionAiService())
                     oblivionAi->commitPendingTransitions();
 
-            if (Settings::game().mNPCsAvoidCollisions)
+            if (Settings::game().mNPCsAvoidCollisions || world->getGameProfile() == ESM::GameProfile::Oblivion)
                 predictAndAvoidCollisions(duration);
 
             mTimerUpdateHeadTrack += duration;

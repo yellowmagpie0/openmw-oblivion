@@ -1,4 +1,6 @@
 #include <apps/openmw/mwphysics/physicssystem.hpp>
+#include <apps/openmw/mwworld/oblivionanimatedreference.hpp>
+#include <components/nif/physics.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/vfs/manager.hpp>
 #include <osg/Group>
@@ -75,6 +77,179 @@ namespace
             Settings::physics().mAsyncNumThreads.set(mPreviousThreadCount);
         }
     };
+
+    TEST(AnimatedReferenceAsset, RejectsMassZeroDoorsAndNonKeyframedBodies)
+    {
+        Nif::NIFFile file(VFS::Path::Normalized("wall.nif"));
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        auto first = std::make_unique<Nif::bhkRigidBody>();
+        first->mInfo.mMass = 100;
+        first->mInfo.mMotionType = Nif::HkMotionType::Motion_Keyframed;
+        file.mRecords.push_back(std::move(first));
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        auto second = std::make_unique<Nif::bhkRigidBody>();
+        second->mInfo.mMass = 100;
+        second->mInfo.mMotionType = Nif::HkMotionType::Motion_Keyframed;
+        auto* body = second.get();
+        file.mRecords.push_back(std::move(second));
+        EXPECT_TRUE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        body->mInfo.mMass = 0;
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        body->mInfo.mMass = 100;
+        body->mInfo.mMotionType = Nif::HkMotionType::Motion_Dynamic;
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+    }
+
+    TEST_P(RagdollSchedulerTest, AnimatedReferenceBodiesFallPersistAndRemainSeparateFromActors)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        mGraph.mSourceHash = std::string(16, 'a');
+        mGraph.mBodies[0].mNodeRecord = 7;
+        auto second = mGraph.mBodies[0];
+        second.mRecord = 24;
+        second.mNodeRecord = 8;
+        mGraph.mBodies.push_back(second);
+        mPoses[0].setOrigin(btVector3(-2, 0, 2));
+        mPoses.emplace_back(btQuaternion::getIdentity(), btVector3(2, 0, 4));
+        btStaticPlaneShape floorShape(btVector3(0, 0, 1), 0);
+        btCollisionObject floor;
+        floor.setCollisionShape(&floorShape);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        scheduler.addCollisionObject(&floor, 1, -1);
+        const auto removeFloor = [&](btCollisionObject* object) { scheduler.removeCollisionObject(object); };
+        std::unique_ptr<btCollisionObject, decltype(removeFloor)> floorGuard(&floor, removeFloor);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 2> motions{{
+            {12, NifBullet::RagdollNativeMotion::Dynamic}, {24, NifBullet::RagdollNativeMotion::Dynamic}}};
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, motions);
+        EXPECT_TRUE(scheduler.actorRagdollOwners().empty());
+        EXPECT_FALSE(scheduler.hasLooseObject(mPtr));
+        EXPECT_EQ(scheduler.animatedReferenceOwners(), std::vector<MWWorld::Ptr>{mPtr});
+        ASSERT_EQ(world.getNumCollisionObjects(), 3);
+        for (int i = 1; i < 3; ++i)
+            EXPECT_EQ(static_cast<MWPhysics::PtrHolder*>(scheduler.getUserPointer(
+                world.getCollisionObjectArray()[i]))->getPtr(), mPtr);
+        EXPECT_THROW(scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1), std::invalid_argument);
+        EXPECT_THROW(scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, motions),
+            std::invalid_argument);
+        const auto base = ESM::FormKey::content("props.esm", 100);
+        const std::string model = "test/wall.nif";
+        const auto initial = scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("animated reference fixture");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 0;
+        for (unsigned frame = 0; frame < 120; ++frame)
+        {
+            time += 1.f / 60.f;
+            scheduler.applyQueuedMovements(time, frames[frame % 2], osg::Timer::instance()->tick(), frame,
+                *stats, MWPhysics::WorldFrameData(false, {}));
+        }
+        const auto fallen = scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model);
+        const auto bodies = scheduler.captureAnimatedReferenceBodies(mPtr);
+        ASSERT_EQ(bodies.size(), 2u);
+        for (const auto& body : bodies) EXPECT_NEAR(body.mPose.getOrigin().z(), 0.5, 0.03);
+        EXPECT_NE(fallen, initial);
+        auto invalid = fallen;
+        invalid.mBodies.back().mRecord = 999;
+        EXPECT_THROW(scheduler.restoreAnimatedReferenceSnapshot(mPtr, invalid, base, model), std::runtime_error);
+        EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), fallen);
+        scheduler.removeAnimatedReferenceBodies(mPtr);
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, motions);
+        scheduler.restoreAnimatedReferenceSnapshot(mPtr, fallen, base, model);
+        EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), fallen);
+        MWWorld::LiveCellRef<ESM::Static> replacement(mReference, &mBase);
+        MWWorld::Ptr updated(&replacement);
+        scheduler.updateAnimatedReferencePtr(mPtr, updated);
+        EXPECT_EQ(scheduler.animatedReferenceOwners(), std::vector<MWWorld::Ptr>{updated});
+        EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(updated, base, model), fallen);
+        EXPECT_THROW(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), std::invalid_argument);
+        scheduler.removeAnimatedReferenceBodies(updated);
+        EXPECT_TRUE(scheduler.animatedReferenceOwners().empty());
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+    }
+
+    TEST_P(RagdollSchedulerTest, InvalidAnimatedReferenceHandoffPublishesNoBodies)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> invalid{{
+            {999, NifBullet::RagdollNativeMotion::Dynamic}}};
+        EXPECT_THROW(scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, invalid),
+            std::invalid_argument);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_TRUE(scheduler.animatedReferenceOwners().empty());
+        // A later valid owner remains admissible after the failed preparation.
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, {});
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        scheduler.releaseSharedStates();
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, AnimatedReferenceReplacementRetainsOldCollisionOnFailure)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        mGraph.mSourceHash = std::string(16, 'a');
+        btBoxShape shape(btVector3(1, 1, 1));
+        btCollisionObject original;
+        original.setCollisionShape(&shape);
+        scheduler.addCollisionObject(&original, 1, -1);
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> invalid{{
+            {999, NifBullet::RagdollNativeMotion::Dynamic}}};
+        EXPECT_THROW(scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1,
+            invalid, &original), std::invalid_argument);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(world.getCollisionObjectArray()[0], &original);
+        EXPECT_NE(original.getBroadphaseHandle(), nullptr);
+        EXPECT_FALSE(scheduler.hasAnimatedReferenceBodies(mPtr));
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, {}, &original);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_NE(world.getCollisionObjectArray()[0], &original);
+        EXPECT_EQ(original.getBroadphaseHandle(), nullptr);
+        EXPECT_TRUE(scheduler.hasAnimatedReferenceBodies(mPtr));
+        const auto base = ESM::FormKey::content("test.esm", 1);
+        const std::string model = "wall.nif";
+        const auto saved = scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model);
+        scheduler.removeAnimatedReferenceBodies(mPtr);
+        scheduler.addCollisionObject(&original, 1, -1);
+        auto corrupt = saved;
+        corrupt.mBodies.front().mRecord = 999;
+        EXPECT_THROW(scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1,
+            {}, &original, &corrupt, base, model), std::runtime_error);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(world.getCollisionObjectArray()[0], &original);
+        EXPECT_FALSE(scheduler.hasAnimatedReferenceBodies(mPtr));
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1,
+            {}, &original, &saved, base, model);
+        EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), saved);
+        scheduler.removeAnimatedReferenceBodies(mPtr);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, PhysicsSystemRoutesAnimatedReferenceQueriesTransferAndRemoval)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+        physics.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, {});
+        EXPECT_TRUE(physics.hasAnimatedReferenceBodies(mPtr));
+        EXPECT_EQ(physics.animatedReferenceOwners(), std::vector<MWWorld::Ptr>{mPtr});
+        const osg::Vec3f from(-2, 0, 2), to(2, 0, 2);
+        EXPECT_EQ(physics.castRay(from, to).mHitObject, mPtr);
+        const VFS::Path::Normalized missingModel("does-not-exist.nif");
+        EXPECT_THROW(physics.addObject(mPtr, missingModel, osg::Quat(), 1), std::invalid_argument);
+        EXPECT_THROW(physics.addActor(mPtr, missingModel), std::invalid_argument);
+        MWWorld::LiveCellRef<ESM::Static> replacement(mReference, &mBase);
+        MWWorld::Ptr updated(&replacement);
+        physics.updatePtr(mPtr, updated);
+        EXPECT_FALSE(physics.hasAnimatedReferenceBodies(mPtr));
+        EXPECT_TRUE(physics.hasAnimatedReferenceBodies(updated));
+        EXPECT_EQ(physics.castRay(from, to).mHitObject, updated);
+        EXPECT_EQ(physics.captureAnimatedReferenceBodies(updated).size(), 1u);
+        physics.remove(updated);
+        EXPECT_TRUE(physics.animatedReferenceOwners().empty());
+        EXPECT_FALSE(physics.castRay(from, to).mHit);
+    }
 
     TEST_P(RagdollSchedulerTest, AdvancesOwnedBodyThroughQueuedPhysicsAndPreservesStaticWorld)
     {

@@ -241,7 +241,7 @@ def analyse_landmarks(path, recipe, expected_clusters, bank):
     retains .75 per fingerprint, four acquisition phases, +/-one mixer period,
     >=three sections and >=.9 energy coverage in each bank. Scan the whole
     recording, including silent/restart regions; no event times are supplied.
-    Each section also requires .75 partial correlation for each present bank
+    Each bank earns section energy independently with .75 partial correlation
     after projecting out the other, with >1% residual signal energy to reject
     quantization-only residuals. This conservative criterion can reject changing
     relative gain within a section. V1/V2 reports remain unchanged.
@@ -320,6 +320,7 @@ def landmark_coverage(signal, offset, parts):
             continue
         total, squared = np.r_[0., np.cumsum(local)], np.r_[0., np.cumsum(local * local)]
         accepted = False
+        credited = np.zeros(2, dtype=bool)
         for sections in phases:
             template = sum(sections)
             template -= template.mean()
@@ -336,13 +337,11 @@ def landmark_coverage(signal, offset, parts):
             cross = np.dot(*centered)
             signal_energy = squared[480:] - squared[:-480] - (total[480:] - total[:-480]) ** 2 / 480
             dots = [np.correlate(local, y, mode='valid') for y in centered]
-            valid = np.ones(len(signal_energy), dtype=bool)
+            valid_banks = []
             for own, other in [(0, 1), (1, 0)]:
-                if energies[own] == 0:
-                    continue
                 if energies[own] <= 1e-12:
-                    valid[:] = False
-                    break
+                    valid_banks.append(np.zeros(len(signal_energy), dtype=bool))
+                    continue
                 if energies[other] <= 1e-12:
                     numerator = dots[own]
                     remaining = signal_energy
@@ -353,14 +352,19 @@ def landmark_coverage(signal, offset, parts):
                     target = energies[own] - cross ** 2 / energies[other]
                 norm = np.sqrt(np.maximum(remaining * target, 0))
                 partial = np.divide(numerator, norm, out=np.zeros_like(norm), where=norm > 0)
-                valid &= (remaining > .01 * signal_energy) & (partial >= .75)
-            if any(valid[int(i)] for i, _ in hits):
+                valid = (remaining > .01 * signal_energy) & (partial >= .75)
+                valid_banks.append(valid)
+                credited[own] |= any(valid[int(i)] for i, _ in hits)
+            if any((valid_banks[0] & valid_banks[1])[int(i)] for i, _ in hits):
                 accepted = True
+            if accepted and np.all(credited):
                 break
-        if accepted:
-            matched += section_energy
-            if min(section_energy) > 0:
-                landmarks.append(start / 12000)
+        # Each bank earns its own energy credit. A quiet companion must not
+        # discard the identifiable bank's section. Still require three joint
+        # landmarks, .75 partial correlation and >1% residual energy per bank.
+        matched += section_energy * credited
+        if accepted and min(section_energy) > 0:
+            landmarks.append(start / 12000)
     return np.divide(matched, energy, out=np.zeros(2), where=energy > 0).tolist(), landmarks
 
 

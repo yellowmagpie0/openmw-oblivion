@@ -4,6 +4,13 @@
 #include <MyGUI_UString.h>
 
 #include <components/esm3/loadarmo.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadgmst.hpp>
+#include <components/esm4/combatsettings.hpp>
+#include <components/esm4/physicalcombat.hpp>
+#include <cmath>
+#include <limits>
+#include <set>
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadrace.hpp>
@@ -22,6 +29,7 @@
 #include "../mwworld/ptr.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
+#include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/weapontype.hpp"
 #include "../mwrender/objects.hpp"
 #include "../mwrender/renderinginterface.hpp"
@@ -136,6 +144,12 @@ namespace MWClass
     {
         const MWWorld::LiveCellRef<ESM::Armor>* ref = ptr.get<ESM::Armor>();
 
+        const auto& store = dependencies ? *dependencies : *MWBase::Environment::get().getESMStore();
+        if (const auto* native = store.get<ESM4::Armor>().search(ref->mBase->mId);
+            native && (native->mGeneralFlags & 0xf000) == ESM4::Armor::TYPE_TES4)
+            return (native->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor)
+                ? ESM::Skill::HeavyArmor : ESM::Skill::LightArmor;
+
         std::string_view typeGmst;
 
         switch (ref->mBase->mData.mType)
@@ -172,7 +186,7 @@ namespace MWClass
         if (typeGmst.empty())
             return {};
 
-        const auto& gmst = (dependencies ? *dependencies : *MWBase::Environment::get().getESMStore()).get<ESM::GameSetting>();
+        const auto& gmst = store.get<ESM::GameSetting>();
 
         float iWeight = floor(gmst.find(typeGmst)->mValue.getFloat());
 
@@ -324,6 +338,28 @@ namespace MWClass
             const auto* ref = ptr.get<ESM::Armor>();
             const float armorSkill = actor.getClass().getSkill(actor, armorSkillType);
             const auto& store = dependencies ? *dependencies : *MWBase::Environment::get().getESMStore();
+            if (const auto* native = store.get<ESM4::Armor>().search(ref->mBase->mId);
+                native && (native->mGeneralFlags & 0xf000) == ESM4::Armor::TYPE_TES4)
+            {
+                const auto integer = [](float value) {
+                    const double result = std::trunc(double(value));
+                    if (!std::isfinite(result) || result < std::numeric_limits<std::int32_t>::min()
+                        || result > std::numeric_limits<std::int32_t>::max())
+                        throw std::invalid_argument("native armor item skill exceeds int32 domain");
+                    return static_cast<std::int32_t>(result);
+                };
+                std::vector<const ESM4::GameSetting*> settings;
+                std::set<ESM::FormId> seen;
+                for (const auto& setting : store.get<ESM4::GameSetting>())
+                    if (seen.insert(setting.mId).second)
+                        settings.push_back(store.get<ESM4::GameSetting>().search(setting.mId));
+                const float full = static_cast<float>(native->mData.health);
+                const float condition = ptr.getCellRef().getItemCondition(full);
+                const float ratio = full == 0.f ? 0.f : static_cast<float>(double(condition) / full);
+                const float luck = actor.getClass().getCreatureStats(actor).getAttribute(ESM::Attribute::Luck).getModified();
+                return ESM4::armorRating({native->mData.armor, integer(armorSkill), integer(luck), ratio},
+                    ESM4::buildArmorRatingSettings(settings), ESM4::buildPhysicalCombatSettings(settings));
+            }
             const int baseSkill = store.get<ESM::GameSetting>().find("iBaseArmorSkill")->mValue.getInteger();
             if (ref->mBase->mData.mWeight == 0)
                 return static_cast<float>(ref->mBase->mData.mArmor);

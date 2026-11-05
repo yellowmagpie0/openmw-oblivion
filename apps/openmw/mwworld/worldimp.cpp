@@ -4,6 +4,8 @@
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadgmst.hpp>
+#include <components/esm4/loadlvsp.hpp>
+#include <components/misc/strings/format.hpp>
 #include "worldimp.hpp"
 #include "oblivionnativeidle.hpp"
 #include <components/esm4/loadidle.hpp>
@@ -13,6 +15,10 @@
 #include "../mwclass/esm4npc.hpp"
 #include "oblivionweapondrop.hpp"
 #include "oblivionownership.hpp"
+#include "oblivioncharactergen.hpp"
+#include "obliviondooranimation.hpp"
+#include "oblivionbounditems.hpp"
+#include <components/esm4/loadclas.hpp>
 #include "oblivioncombatdata.hpp"
 #include "savedreference.hpp"
 #include "../mwphysics/oblivionragdoll.hpp"
@@ -255,6 +261,7 @@ namespace MWWorld
     {
         std::optional<MWMechanics::OblivionCombatService> mCombat;
         decltype(World::mOblivionLooseWeaponStates) mLooseWeapons;
+        decltype(World::mOblivionAnimatedReferenceStates) mAnimatedReferences;
         decltype(World::mOblivionGetUpResources) mGetUpResources;
         std::optional<OblivionScriptManager::PreparedRestore> mScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
@@ -284,6 +291,7 @@ namespace MWWorld
         {
             if (!definitions)
                 definitions = std::make_unique<ESMStore>();
+            if (mState) world.normalizeOblivionEnableParents(*mState);
             if (mState && mState->mVersion >= 3)
             {
                 const auto& state = *mState;
@@ -455,6 +463,7 @@ namespace MWWorld
         decltype(World::mPrng) mPrng{};
         decltype(World::mOblivionRuntimeState) mOblivionRuntimeState{};
         decltype(World::mOblivionLooseWeaponStates) mOblivionLooseWeaponStates{};
+        decltype(World::mOblivionAnimatedReferenceStates) mOblivionAnimatedReferenceStates{};
         decltype(World::mOblivionGetUpResources) mOblivionGetUpResources{};
         decltype(World::mOblivionGetUpLoads) mOblivionGetUpLoads{};
         decltype(World::mOblivionIdleResourceCache) mOblivionIdleResourceCache{};
@@ -528,6 +537,7 @@ namespace MWWorld
         swap(mOblivionRuntimeState, data.mOblivionRuntimeState);
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionLooseWeaponStates)>);
         swap(mOblivionLooseWeaponStates, data.mOblivionLooseWeaponStates);
+        swap(mOblivionAnimatedReferenceStates, data.mOblivionAnimatedReferenceStates);
         swap(mOblivionGetUpResources, data.mOblivionGetUpResources);
         swap(mOblivionGetUpLoads, data.mOblivionGetUpLoads);
         swap(mOblivionIdleResourceCache, data.mOblivionIdleResourceCache);
@@ -631,6 +641,7 @@ namespace MWWorld
         mPendingOblivionRuntimeState.reset();
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
+        mOblivionAnimatedReferenceStates.reset();
         mOblivionGetUpResources.reset();
         mOblivionGetUpLoads.reset();
         mOblivionIdleResourceCache.reset();
@@ -1386,6 +1397,16 @@ namespace MWWorld
             }
         }
 
+        // Actor insertion during the first cell load cannot publish bound
+        // inventory snapshots until changePlayerCell has placed the Player.
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            for (CellStore* cell : mWorldScene->getActiveCells())
+                cell->forEach([&](const Ptr& actor) {
+                    if (!actor.mRef->isDeleted() && actor.getRefData().isEnabled())
+                        updateOblivionBoundEquipment(actor);
+                    return true;
+                });
+
         if (!bypass)
         {
             const std::string_view video = mGameProfile == ESM::GameProfile::Oblivion
@@ -1453,6 +1474,7 @@ namespace MWWorld
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
+        mOblivionAnimatedReferenceStates.reset();
         mOblivionGetUpResources.reset();
         mOblivionGetUpLoads.reset();
         mOblivionIdleResourceCache.reset();
@@ -1719,6 +1741,7 @@ namespace MWWorld
                 if (const ESM::FormId* ownerId = itemOwner.getIf<ESM::FormId>())
                     item.mOwner = inventoryResolver.toFormKey(*ownerId);
                 item.mExtraScale = itemPtr.getCellRef().getNativeItemScale();
+                item.mBoundSource = itemPtr.getCellRef().getNativeBoundSource();
                 item.mOwnershipRank = itemPtr.getCellRef().getNativeOwnershipRank();
                 item.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
                     mStore, inventoryResolver, itemPtr.getCellRef());
@@ -1896,6 +1919,7 @@ namespace MWWorld
     void World::captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const
     {
         captureOblivionLooseWeaponState(state);
+        captureOblivionAnimatedReferenceState(state);
         if (!mPhysics)
         {
             // A retained save may be inspected without starting a scene/physics
@@ -1959,7 +1983,7 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion || !mPhysics)
             return;
         const auto owners = mPhysics->actorRagdollOwners();
-        if (owners.empty() && mPhysics->looseObjectOwners().empty())
+        if (owners.empty() && mPhysics->looseObjectOwners().empty() && mPhysics->animatedReferenceOwners().empty())
             return;
         if (!mOblivionCombat)
             throw std::logic_error("native physical retention requires combat authority");
@@ -1969,8 +1993,10 @@ namespace MWWorld
         const auto player = getPlayerPtr();
         // Capture validates every current asset/body binding before replacing
         // local projections. No authority or scene ownership changes on failure.
+        normalizeOblivionEnableParents(state);
         captureOblivionPhysicalState(state, player);
         auto looseWeapons = std::make_shared<const NativeLooseWeaponStates>(std::move(state.mNativeLooseWeapons));
+        auto animatedReferences = std::make_shared<const NativeAnimatedReferenceStates>(std::move(state.mNativeAnimatedReferences));
         MWMechanics::OblivionCombatService::PhysicalPoseUpdates updates;
         for (const auto& owner : owners)
         {
@@ -1984,6 +2010,7 @@ namespace MWWorld
         if (!mOblivionCombat->syncActorRagdolls(updates))
             throw std::runtime_error("native physical authority changed during scene retention");
         mOblivionLooseWeaponStates = std::move(looseWeapons);
+        mOblivionAnimatedReferenceStates = std::move(animatedReferences);
     }
 
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
@@ -1993,6 +2020,8 @@ namespace MWWorld
         {
             state.mIgnoreFriendlyHits = mOblivionRuntimeState->mIgnoreFriendlyHits;
             state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
+            state.mFactionReactions = mOblivionRuntimeState->mFactionReactions;
+            state.mNativeBoundAbilities = mOblivionRuntimeState->mNativeBoundAbilities;
             state.mFriendHitCounters = mOblivionRuntimeState->mFriendHitCounters;
             state.mCombatControllers = mOblivionRuntimeState->mCombatControllers;
         }
@@ -2086,6 +2115,7 @@ namespace MWWorld
             state.mPlayer.mBirthSign = resolver.toFormKey(*sign);
         state.mPlayer.mFemale = !playerBase->isMale();
         state.mPlayer.mCharacterGenerationFlags = mPlayer->getOblivionCharacterGenerationFlags();
+        state.mPlayer.mCharacterGeneration = mPlayer->getOblivionCharacterGenerationState();
 
         // Player and native actor transactions serialize the same live
         // metadata; preserve Player-only hotkey assignments in that adapter.
@@ -2530,6 +2560,11 @@ namespace MWWorld
             else if (const auto* creatureRef = mStore.search<ESM4::ActorCreature>(key))
                 disabled = (creatureRef->mFlags & ESM4::Rec_Disabled) != 0;
         }
+        // Current Encumbrance is an inventory query, not a scalar AV ledger
+        // entry. Preserve the separate base and disabled-reference dispatch.
+        // The native weight query also applies worn-armor mastery reductions.
+        if (value == 11 && !base && !disabled && !resident.isEmpty())
+            return MWMechanics::oblivionInventoryWeight(*this, resident);
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
@@ -2720,9 +2755,7 @@ namespace MWWorld
                 if ((targetFaction->mFactionFlags.value_or(0) & 8) && playerBase == targetBase) continue;
                 // FACT loading appends XNAM entries through 67B1E0; the
                 // lookup returns the first match, including an explicit zero.
-                const auto relationship = std::ranges::find(faction->mRelationships, toKey,
-                    &ESM4::FactionRelationship::mFaction);
-                const auto value = relationship == faction->mRelationships.end() ? 0 : relationship->mModifier;
+                const auto value = getOblivionFactionReaction(fromKey, toKey).value_or(0);
                 if (fromKey == toKey && value > sameReaction)
                 {
                     sameReaction = value; sameRank = to.rank;
@@ -2950,6 +2983,76 @@ namespace MWWorld
                 for (const auto& entry : found->second)
                     if (entry.mTarget == other) return entry.mCount;
         return 0;
+    }
+
+    std::optional<bool> World::getOblivionEssentialOverride(const ESM::FormKey& base) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
+        // During load, absent incoming flags must fall back to content rather
+        // than leaking a flag from the outgoing simulation.
+        if (mPendingOblivionRuntimeState)
+        {
+            const auto& bases = mPendingOblivionRuntimeState->mNativeActorBases;
+            const auto found = std::ranges::find(bases, base, &ESM4::RuntimeActorBaseOverride::mBase);
+            return found == bases.end() ? std::nullopt : found->mEssential;
+        }
+        return mOblivionCombat ? mOblivionCombat->getBaseEssential(base) : std::nullopt;
+    }
+
+    bool World::setOblivionEssential(const ESM::FormKey& base, bool essential)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !base.isContent()) return false;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        const auto* npc = mStore.get<ESM4::Npc>().searchStatic(base);
+        const auto* creature = mStore.get<ESM4::Creature>().searchStatic(base);
+        if ((!npc && !creature) || (npc && (npc->mFlags & ESM4::Rec_Deleted))
+            || (creature && (creature->mFlags & ESM4::Rec_Deleted))) return false;
+        mOblivionCombat->setBaseEssential(base,
+            creature ? ESM4::ActorBaseKind::Creature : ESM4::ActorBaseKind::Npc, essential);
+        return true;
+    }
+
+    bool World::setOblivionAlerted(const ESM::FormKey& actor, std::int32_t value)
+    {
+        return mGameProfile == ESM::GameProfile::Oblivion && mOblivionCombat
+            && mOblivionCombat->setProcessAlerted(ESM4::runtimeReferenceKey(actor), value > 0);
+    }
+
+    bool World::getOblivionAlerted(const ESM::FormKey& actor) const
+    {
+        return mGameProfile == ESM::GameProfile::Oblivion && mOblivionCombat
+            && mOblivionCombat->getProcessAlerted(ESM4::runtimeReferenceKey(actor));
+    }
+
+    std::optional<std::int32_t> World::getOblivionFactionReaction(
+        const ESM::FormKey& from, const ESM::FormKey& to) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !from.isContent() || !to.isContent())
+            return std::nullopt;
+        const auto* source = mStore.get<ESM4::Faction>().searchStatic(from);
+        const auto* target = mStore.get<ESM4::Faction>().searchStatic(to);
+        if (!source || !target || ((source->mFlags | target->mFlags) & ESM4::Rec_Deleted))
+            return std::nullopt;
+        if (mOblivionRuntimeState)
+            if (const auto found = mOblivionRuntimeState->mFactionReactions.find({from, to});
+                found != mOblivionRuntimeState->mFactionReactions.end()) return found->second;
+        const auto relationship = std::ranges::find(source->mRelationships, to, &ESM4::FactionRelationship::mFaction);
+        return relationship == source->mRelationships.end() ? 0 : relationship->mModifier;
+    }
+
+    bool World::setOblivionFactionReaction(
+        const ESM::FormKey& from, const ESM::FormKey& to, std::int32_t value)
+    {
+        if (!getOblivionFactionReaction(from, to)) return false;
+        if (mOblivionRuntimeState && !mOblivionRuntimeState->mFactionReactions.contains({from, to})
+            && mOblivionRuntimeState->mFactionReactions.size() >= 1'000'000)
+            throw std::length_error("Native faction reaction map exceeds the collection limit");
+        auto prepared = std::make_unique<ESM4::RuntimeState>(
+            mOblivionRuntimeState ? *mOblivionRuntimeState : captureOblivionRuntimeState());
+        prepared->mFactionReactions.insert_or_assign({from, to}, value);
+        mOblivionRuntimeState.swap(prepared);
+        return true;
     }
 
     std::optional<std::int32_t> World::modifyOblivionDisposition(
@@ -4290,6 +4393,7 @@ namespace MWWorld
         mOblivionCombat->initializeNonPlayerActor(actor, mStore, playerLevel, process, legacyDead, activate);
         if (marker)
             reference->mCustomState.erase(*marker);
+        updateOblivionBoundEquipment(actor);
         return true;
     }
 
@@ -5259,6 +5363,9 @@ namespace MWWorld
         bool mSidePowerDisarmed = false;
         std::shared_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
         std::vector<std::unique_ptr<PreparedOblivionEquipmentNotification>> mNotifications;
+        bool mHasCharacterGenerationChange = false;
+        std::optional<ESM4::CharacterGenerationState> mCharacterGenerationBefore, mCharacterGenerationAfter;
+        std::optional<std::string> mContractedDisease;
         std::unique_ptr<PreparedEquippedWeaponDrops> mDrops;
         std::optional<WorldModel::RegistryGuard> mRegistry;
         std::vector<ReactionBinding> mReactionBindings;
@@ -5289,6 +5396,8 @@ namespace MWWorld
             && world.mOblivionCombat.get() == mData->mCombat && world.mPlayer.get() == mData->mPlayer
             && world.mPhysics.get() == mData->mPhysics && world.mWorldScene.get() == mData->mScene
             && world.getGodModeState() == mData->mGodMode
+            && (!mData->mHasCharacterGenerationChange
+                || mData->mPlayer->getOblivionCharacterGenerationState() == mData->mCharacterGenerationBefore)
             && (!mData->mEquipmentFirstPerson || world.isFirstPerson() == *mData->mEquipmentFirstPerson)
             && (!world.mRetainedSimulation || world.mRetainedSimulation->mDetached);
     }
@@ -5378,16 +5487,22 @@ namespace MWWorld
         const auto publish = [](void* context) noexcept {
             auto& data = *static_cast<PreparedOblivionPhysicalContact*>(context)->mData;
             if (!data.mContact->commit()) std::terminate();
+            if (data.mHasCharacterGenerationChange)
+                data.mPlayer->swapOblivionCharacterGenerationState(data.mCharacterGenerationAfter);
             for (auto& notification : data.mNotifications)
                 if (!notification->commit()) std::terminate();
             data.mCommitted = true;
         };
         if (mData->mDrops)
-            return !mData->mDrops->commit({this,
+        {
+            if (mData->mDrops->commit({this,
                 [](void* context) noexcept {
                     return static_cast<PreparedOblivionPhysicalContact*>(context)->isValid();
-                }, publish}).isEmpty();
-        publish(this);
+                }, publish}).isEmpty()) return false;
+        }
+        else publish(this);
+        if (mData->mContractedDisease)
+            MWBase::Environment::get().getWindowManager()->messageBox(*mData->mContractedDisease);
         return true;
     }
 
@@ -5555,6 +5670,65 @@ namespace MWWorld
                 && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)))
             return nullptr;
         auto preparedDeltas = deltas;
+        std::optional<std::string> contractedDisease;
+        const auto* strike = mOblivionCombat->findMeleeState(key);
+        if (!previous && victim == getPlayerPtr() && attacker.getType() == ESM::REC_CREA4
+            && hasOblivionBaseCombatPackage(key).value_or(false) && strike && strike->mStrike
+            && strike->mStrike->mActionId == id && strike->mStrike->mWeaponBase.isNull())
+        {
+            const auto* carrier = mOblivionCombat->findActorValues(key);
+            if (carrier && carrier->mLeveledContactSpells && !carrier->mLeveledContactSpells->empty())
+            {
+                const auto sources = resolveOblivionCreatureContactSpellSources(mStore, carrier->mBase);
+                if (!sources) return nullptr;
+                for (const auto& selected : *carrier->mLeveledContactSpells)
+                    if (std::none_of(sources->begin(), sources->end(), [&](const auto& source) {
+                            return source.mList->mEntries[0].mSpellKey == selected;
+                        }))
+                        throw std::invalid_argument("native contact carrier lost its selected spell source");
+                const auto& spell = carrier->mLeveledContactSpells->back();
+                const std::array requested{spell};
+                const auto disease = resolveOblivionPassiveAbilityInputs(mStore, requested).front();
+                std::vector<const ESM4::GameSetting*> settings;
+                std::set<ESM::FormId> seen;
+                std::string message = "You have contracted %s.";
+                for (const auto& setting : mStore.get<ESM4::GameSetting>())
+                    if (seen.insert(setting.mId).second)
+                    {
+                        const auto* winning = mStore.get<ESM4::GameSetting>().search(setting.mId);
+                        settings.push_back(winning);
+                        if (Misc::StringUtils::ciEqual(winning->mEditorId, "sContractedDisease"))
+                        {
+                            const auto* text = std::get_if<std::string>(&winning->mData);
+                            if (!text) throw std::invalid_argument("incorrect native disease notification setting type");
+                            message = *text;
+                        }
+                    }
+                const auto policy = ESM4::buildDiseaseTransferSettings(settings);
+                // Draw placement is deliberately after prepared armor wear in
+                // this fork. Native6171F0 runs before mitigation. Probability,
+                // ownership and once-only RNG publication are preserved; an
+                // identical original random sequence is not claimed.
+                const auto state = preparedDeltas.mRandomTransition
+                    ? preparedDeltas.mRandomTransition->mNextState : mOblivionCombat->combatRandomState();
+                const auto draw = ESM4::combatRandomDraw(state);
+                const auto draws = preparedDeltas.mRandomTransition ? preparedDeltas.mRandomTransition->mDraws + 1 : 1;
+                preparedDeltas.mRandomTransition = MWMechanics::OblivionCombatRandomTransition{
+                    mOblivionCombat->combatRandomState(), draw.mNextState, draws};
+                const auto* receiving = mOblivionCombat->findActorValues(ESM::FormKey::dynamic("player", 1));
+                if (!receiving || !receiving->mPassiveAbilities) return nullptr;
+                if (ESM4::diseaseTransferSucceeds(mOblivionCombat->getPlayerIntegerValue(63),
+                        policy.mBase, policy.mMultiplier, draw.mValue % 100)
+                    && std::none_of(receiving->mPassiveAbilities->begin(), receiving->mPassiveAbilities->end(),
+                        [&](const auto& owned) { return owned.mSpell == spell; }))
+                {
+                    if (!MWBase::Environment::get().getWindowManagerOrNull()) return nullptr;
+                    preparedDeltas.mVictimDisease = std::make_shared<const ESM4::PassiveAbilityInput>(disease);
+                    const auto* definition = mStore.search<ESM4::Spell>(spell);
+                    contractedDisease = Misc::StringUtils::format(message, definition->mFullName);
+                }
+            }
+        }
         const auto prepareHeldCancellation = [&](const Ptr& actor, const auto& request, auto& sources) {
             if (!request || (request->mKind != ESM4::MeleeReactionKind::Recoil
                     && request->mKind != ESM4::MeleeReactionKind::Stagger) || !sources.empty()) return true;
@@ -5786,7 +5960,21 @@ namespace MWWorld
             if (condition.mBreakDisposition == MWMechanics::OblivionWeaponBreakDisposition::Unequip)
                 data->mNotifications.push_back(prepareOblivionEquipmentNotification(
                     [contact = data->mContact, item = condition.mItem] { contact->notifyEquipmentChange(item); }));
+        if (!previous && !victim.isEmpty() && deltas.mOrdinaryHitArguments
+            && deltas.mOrdinaryHitArguments->mDamagePath)
+        {
+            const auto& hit = *deltas.mOrdinaryHitArguments;
+            const unsigned skill = player ? hit.mUsedSkill : victim == getPlayerPtr() && hit.mActiveBlock ? 15 : 255;
+            if (skill != 255)
+                if (auto next = prepareOblivionCharacterGenerationSkillUse(*this, skill, 0, 1.f))
+                {
+                    data->mHasCharacterGenerationChange = true;
+                    data->mCharacterGenerationBefore = mPlayer->getOblivionCharacterGenerationState();
+                    data->mCharacterGenerationAfter = std::move(next);
+                }
+        }
         data->mRegistry.emplace(mWorldModel.prepareRegistryGuard());
+        data->mContractedDisease = std::move(contractedDisease);
         return std::unique_ptr<PreparedOblivionPhysicalContact>(new PreparedOblivionPhysicalContact(std::move(data)));
     }
 
@@ -6229,6 +6417,35 @@ namespace MWWorld
             ESM4::swimBreathMaximum(endurance, resolveOblivionSwimBreathSettings(mStore))};
     }
 
+    bool World::consumeOblivionPotion(const Ptr& item, const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty() || item.isEmpty() || item.getCellRef().getCount() < 1
+            || item.getCellRef().getNativeBoundSource()
+            || item.getContainerStore() != &actor.getClass().getContainerStore(actor))
+            return false;
+        const auto* potion = mStore.get<ESM4::Potion>().search(item.getCellRef().getRefId());
+        if (!potion) return false;
+        if (const auto identity = mStore.get<ESM4::Potion>().findFormKey(item.getCellRef().getRefId()))
+            if (const auto* winner = mStore.getFormKeyIndex().winner(*identity);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
+                return false;
+        const auto amounts = resolveOblivionPotionRestoration(mStore, *potion);
+        if (!amounts) return false;
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        if (!mOblivionCombat->findActorValues(key)) return false;
+        auto adoption = mOblivionCombat->guardLifeAdoption(actor, player ? mPlayer.get() : nullptr);
+        adoptOblivionActorLife(actor);
+        if (!mOblivionCombat->restorePotionResources(actor, player ? mPlayer.get() : nullptr, *amounts,
+                resolveOblivionPlayerDynamicBaseSettings(mStore)))
+            return false;
+        adoption.commit();
+        mWorldModel.registerPtr(item);
+        MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
+        actor.getClass().getContainerStore(actor).remove(item, 1);
+        return true;
+    }
+
     bool World::requestOblivionResourceCurrent(const Ptr& actor, std::uint8_t value, float requested)
     {
         if (!mOblivionCombat || actor.isEmpty())
@@ -6353,6 +6570,50 @@ namespace MWWorld
                 actor, movement, false, settings, prepareParalysis, processEffects);
         if (friendHits)
             mOblivionRuntimeState->mFriendHitCounters.at(key).swap(*friendHits);
+        // Terminal targets cannot keep a living native actor in its interrupted
+        // combat package forever. Essential knockout and an unknown/unloaded
+        // life state are not evidence of a terminal target.
+        const auto* currentLife = mOblivionCombat->findActorLife(key);
+        if (!player && currentLife && currentLife->mPhase == ESM4::ActorLifePhase::Alive
+            && mOblivionRuntimeState)
+        {
+            const auto controller = mOblivionRuntimeState->mCombatControllers.find(key);
+            if (controller != mOblivionRuntimeState->mCombatControllers.end() && !controller->second.empty())
+            {
+                auto remaining = controller->second;
+                std::erase_if(remaining, [&](const auto& target) {
+                    const auto* targetLife = mOblivionCombat->findActorLife(target.mTarget);
+                    return targetLife && targetLife->mPhase == ESM4::ActorLifePhase::Dead;
+                });
+                if (remaining.size() != controller->second.size())
+                {
+                    const bool retarget = remaining.empty()
+                        || remaining.front().mTarget != controller->second.front().mTarget;
+                    if (remaining.empty())
+                        executeOblivionStopCombat(actor);
+                    else
+                    {
+                        if (retarget)
+                        {
+                            mOblivionCombat->cancelActorActions(key);
+                            mOblivionCombat->clearMeleeAiIntent(key);
+                        }
+                        controller->second.swap(remaining);
+                    }
+                    if (retarget)
+                    {
+                        actor.getClass().getCreatureStats(actor).setAttackingOrSpell(false);
+                        auto& combatMovement = actor.getClass().getMovementSettings(actor);
+                        std::fill(std::begin(combatMovement.mPosition), std::end(combatMovement.mPosition), 0.f);
+                        std::fill(std::begin(combatMovement.mRotation), std::end(combatMovement.mRotation), 0.f);
+                        if (mOblivionAi) mOblivionAi->clearCombatRoute(actor);
+                    }
+                    Log(Debug::Info) << "M15 terminal combat targets retired: actor=" << key.serialize()
+                                     << " remaining=" << (getOblivionCombatTarget(key).has_value()
+                                             ? mOblivionRuntimeState->mCombatControllers.at(key).size() : 0);
+                }
+            }
+        }
         return true;
     }
 
@@ -6485,6 +6746,7 @@ namespace MWWorld
             MWBase::Environment::get().getLuaManager()->validateNativeState({});
             return;
         }
+        normalizeOblivionEnableParents(*mPendingOblivionRuntimeState);
         const ESM4::RuntimeState& state = *mPendingOblivionRuntimeState;
         // A live loose model/body is replaced through scene readmission. Reject
         // direct application before changing references or any native authority.
@@ -6493,6 +6755,7 @@ namespace MWWorld
                 if (mPhysics->captureLooseObjectSceneBinding(owner))
                     throw std::runtime_error("native loose weapon restore requires scene readmission");
         validateOblivionLooseWeaponState(state);
+        validateOblivionAnimatedReferenceState(state);
         validateNativeDropRelations(state, mStore, ESM::FormKeyResolver(mContentFiles));
         for (const auto& reference : state.mReferences)
             if (const auto marker = reference.mCustomState.find("obscript.dead");
@@ -6515,6 +6778,8 @@ namespace MWWorld
         auto retained = std::move(mPendingOblivionServices);
         auto preparedGetUpResources = retained && retained->mGetUpResources ? retained->mGetUpResources
             : prepareOblivionGetUpResources(state);
+        auto preparedAnimatedReferences = retained && retained->mAnimatedReferences ? retained->mAnimatedReferences
+            : std::make_shared<const NativeAnimatedReferenceStates>(state.mNativeAnimatedReferences);
         auto preparedLooseWeapons = retained && retained->mLooseWeapons ? retained->mLooseWeapons
             : std::make_shared<const NativeLooseWeaponStates>(state.mNativeLooseWeapons);
         if (retained)
@@ -6630,6 +6895,10 @@ namespace MWWorld
                 prepareDynamicStat("fatigue", current.getFatigue())});
         }
         const ESM::FormKeyResolver resolver(mContentFiles);
+        auto preparedCharacterGeneration = state.mPlayer.mCharacterGeneration;
+        if (preparedCharacterGeneration && !preparedCharacterGeneration->mRecommendedClass.isNull()
+            && !mStore.search<ESM4::Class>(preparedCharacterGeneration->mRecommendedClass))
+            throw std::runtime_error("native chargen recommendation has no winning CLAS definition");
         std::optional<ESMStore::PreparedPlayerRecord> preparedPlayerRecord;
         ESM::RefId preparedBirthSign = retained ? retained->mPlayerBirthSign : ESM::RefId{};
         if (state.mVersion >= 3 && (!retained || !retained->mPlayerMetadataPrepared))
@@ -7085,6 +7354,7 @@ namespace MWWorld
             throw std::logic_error("native cell movement preparation is stale");
         mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
         mOblivionLooseWeaponStates = std::move(preparedLooseWeapons);
+        mOblivionAnimatedReferenceStates = std::move(preparedAnimatedReferences);
         mOblivionIdleResourceCache = preparedGetUpResources ? preparedGetUpResources->mCache : nullptr;
         mOblivionGetUpResources = std::move(preparedGetUpResources);
         mOblivionGetUpLoads.reset();
@@ -7118,6 +7388,7 @@ namespace MWWorld
             mPlayer->setOblivionCharacterGenerationFlags(state.mPlayer.mCharacterGenerationFlags);
         }
 
+        mPlayer->swapOblivionCharacterGenerationState(preparedCharacterGeneration);
         mPlayer->setCell(&playerCell);
         const Ptr player = getPlayerPtr();
         player.getRefData().setPosition(state.mPlayer.mPosition);
@@ -7212,6 +7483,9 @@ namespace MWWorld
             if (ptr.getClass().getType() == ESM::REC_NPC_4 || ptr.getClass().getType() == ESM::REC_CREA4)
             {
                 restoreOblivionActorDrawState(ptr);
+                ptr.getClass().getInventoryStore(ptr).setPtr(ptr);
+                if (ptr.getClass().getType() == ESM::REC_NPC_4)
+                    MWClass::ESM4Npc::refreshNativeEquipment(ptr);
             }
 
             if (binding.mAnimation)
@@ -7242,6 +7516,7 @@ namespace MWWorld
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionScriptManager)
             return;
+        removeOblivionDeadBoundEquipment();
         mOblivionScriptManager->update(secondsPassed);
         if (mDispatchingOblivionDeathEvents)
             return;
@@ -7250,6 +7525,7 @@ namespace MWWorld
         {
             while (mOblivionCombat && mOblivionScriptManager)
             {
+                removeOblivionDeadBoundEquipment();
                 const auto event = mOblivionCombat->takeNextDeathEvent();
                 if (!event)
                     break;
@@ -7446,10 +7722,21 @@ namespace MWWorld
                 && !mStore.search<ESM4::ActorCreature>(key) && !mStore.search<ESM4::Reference>(key))
                 throw std::runtime_error("Friendly-hit flag owner is not a winning placed reference: " + key.serialize());
         const ESM::FormKeyResolver resolver(mContentFiles);
+        for (const auto& [pair, value] : state.mFactionReactions)
+            for (const auto& key : {pair.first, pair.second})
+            {
+                const auto* faction = mStore.get<ESM4::Faction>().searchStatic(key);
+                if (!faction || (faction->mFlags & ESM4::Rec_Deleted))
+                    throw std::runtime_error("Faction reaction requires a winning FACT: " + key.serialize());
+            }
+        validateOblivionBoundEquipment(state, mStore, resolver, incoming);
         validateNativeDropRelations(state, mStore, resolver, incoming);
         validateOblivionLooseWeaponState(state);
         if (prepared)
+        {
             prepared->mLooseWeapons = std::make_shared<const NativeLooseWeaponStates>(state.mNativeLooseWeapons);
+            prepared->mAnimatedReferences = std::make_shared<const NativeAnimatedReferenceStates>(state.mNativeAnimatedReferences);
+        }
 
         const auto validateFloat = [](double value, std::string_view name) {
             if (!std::isfinite(value) || value < -std::numeric_limits<float>::max()
@@ -8101,17 +8388,18 @@ namespace MWWorld
         {
             reference.getRefData().enable();
 
-            if (mWorldScene->getActiveCells().find(reference.getCell()) != mWorldScene->getActiveCells().end()
+            if (mWorldScene && mWorldScene->getActiveCells().find(reference.getCell()) != mWorldScene->getActiveCells().end()
                 && reference.getCellRef().getCount())
                 mWorldScene->addObjectToScene(reference);
 
-            if (reference.getCellRef().getRefNum().hasContentFile())
+            if (mRendering && mWorldScene && reference.getCellRef().getRefNum().hasContentFile())
             {
                 int type = mStore.find(reference.getCellRef().getRefId());
                 if (mRendering->pagingEnableObject(type, reference, true))
                     mWorldScene->reloadTerrain();
             }
         }
+        synchronizeOblivionEnableParents();
     }
 
     void World::removeContainerScripts(const Ptr& reference)
@@ -8134,31 +8422,24 @@ namespace MWWorld
 
     void World::disable(const Ptr& reference)
     {
-        if (!reference.getRefData().isEnabled())
+        if (!reference.getRefData().isEnabled() || !reference.isInCell())
             return;
-
-        // disable is a no-op for items in containers
-        if (!reference.isInCell())
-            return;
-
         if (reference == getPlayerPtr())
             throw std::runtime_error("can not disable player object");
-
         reference.getRefData().disable();
-
-        if (reference.getCellRef().getRefNum().hasContentFile())
+        if (mRendering && mWorldScene && reference.getCellRef().getRefNum().hasContentFile())
         {
             int type = mStore.find(reference.getCellRef().getRefId());
             if (mRendering->pagingEnableObject(type, reference, false))
                 mWorldScene->reloadTerrain();
         }
-
-        if (mWorldScene->getActiveCells().find(reference.getCell()) != mWorldScene->getActiveCells().end()
+        if (mWorldScene && mWorldScene->getActiveCells().find(reference.getCell()) != mWorldScene->getActiveCells().end()
             && reference.getCellRef().getCount())
         {
             mWorldScene->removeObjectFromScene(reference);
             mWorldScene->addPostponedPhysicsObjects();
         }
+        synchronizeOblivionEnableParents();
     }
 
     void World::advanceTime(double hours, bool incremental)
@@ -8748,6 +9029,7 @@ namespace MWWorld
 
     void World::updateAnimatedCollisionShape(const Ptr& ptr)
     {
+        updateOblivionAnimatedReference(ptr);
         mPhysics->updateAnimatedCollisionShape(ptr);
     }
 
@@ -8765,6 +9047,7 @@ namespace MWWorld
         mDiscardMovements = false;
         mPhysics->moveActors();
         synchronizeLooseWeaponPoses(*this,*mPhysics);
+        synchronizeOblivionAnimatedReferencePoses();
     }
 
     void World::updateNavigator()
@@ -9793,6 +10076,16 @@ namespace MWWorld
 
     void World::activateDoor(const MWWorld::Ptr& door)
     {
+        if (const auto animated = oblivionAnimatedDoorState(*this, door))
+        {
+            const auto next = *animated <= 2 ? DoorState::Closing : DoorState::Opening;
+            if (playOblivionDoorAnimation(*this, door, next))
+            {
+                door.getClass().setDoorState(door, DoorState::Idle);
+                mDoorStates.erase(door);
+                return;
+            }
+        }
         auto state = door.getClass().getDoorState(door);
         switch (state)
         {
@@ -9816,6 +10109,12 @@ namespace MWWorld
 
     void World::activateDoor(const Ptr& door, MWWorld::DoorState state)
     {
+        if (playOblivionDoorAnimation(*this, door, state))
+        {
+            door.getClass().setDoorState(door, DoorState::Idle);
+            mDoorStates.erase(door);
+            return;
+        }
         door.getClass().setDoorState(door, state);
         mDoorStates[door] = state;
         if (state == MWWorld::DoorState::Idle)

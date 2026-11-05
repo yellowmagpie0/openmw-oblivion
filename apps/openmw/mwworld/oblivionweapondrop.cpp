@@ -622,6 +622,8 @@ namespace MWWorld
             const auto& request = drops[i];
             const auto& actor = request.mActor;
             const auto& item = request.mItem;
+            if (!item.isEmpty() && item.getCellRef().getNativeBoundSource())
+                throw std::invalid_argument("bound equipment world drops require associated-effect ownership");
             const bool player = actor == world.getPlayerPtr();
             auto* equipmentAnimation = dynamic_cast<MWRender::ESM4EquipmentAnimation*>(&request.mAnimation);
             if (actor.isEmpty() || (!player && (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))

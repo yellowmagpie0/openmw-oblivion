@@ -83,6 +83,9 @@ namespace MWClass
 
     bool Actor::consume(const MWWorld::Ptr& consumable, const MWWorld::Ptr& actor) const
     {
+        if (auto* world = MWBase::Environment::get().getWorldOrNull();
+            world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+            return world->consumeOblivionPotion(consumable, actor);
         if (MWMechanics::rejectUnsupportedNativeMagic(actor))
             return false;
 

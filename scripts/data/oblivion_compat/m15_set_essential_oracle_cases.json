@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "command": "SetEssential",
+  "handler": "0x50b780",
+  "raw_flags": [
+    -2147483648,
+    -1,
+    0,
+    1,
+    2,
+    2147483647
+  ],
+  "initial_base_flags": [
+    257,
+    259
+  ],
+  "base_present": [
+    false,
+    true
+  ],
+  "expectation": "When a base is present, set ACBS bit 2 for raw > 0, clear it otherwise; preserve all other bits; request modified mask 16. Null base leaves flags unchanged.",
+  "boundaries": [
+    "Argument extraction supplies a resolved base and int32 input.",
+    "Modified virtual is observed at a supplied boundary.",
+    "No live-game, serialization, renderer or tutorial acceptance."
+  ]
+}

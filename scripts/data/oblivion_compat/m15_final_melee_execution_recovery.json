@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "parent": {
+    "path": "scripts/data/oblivion_compat/m15_final_melee_campaign.json",
+    "sha256": "1ae627790a3b1c220e41882da7461fd259b4f6f9682dce7b0b8a97fc2793e6c3"
+  },
+  "failure": {
+    "path": "build/oblivion-compat/m15/S4/final-course-work-01/normal-seed1b-termination.json",
+    "sha256": "a7b7f126ce659e6eca380253f2b94cd74647de50578228d3657eb8c6e63029cd"
+  },
+  "preflight": {
+    "path": "build/oblivion-compat/m15/S4/final-course-work-01/normal-seed1b-replacement-preflight.json",
+    "sha256": "e10987256394ea79d3421b410c103a1c84ee872c65923e4efc0a1202405d6b87"
+  },
+  "policy": "One independent replacement after session143 termination. Sender/cause unknown; not a gameplay fix. Retain/exclude original11save10capture prefix. Only run identity/output changes; all original acceptance gates remain. No automatic retry loop."
+}

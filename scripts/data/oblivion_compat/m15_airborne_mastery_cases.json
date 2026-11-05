@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "requirement": "M15-MASTERY-ACROBATICS-01",
+  "full_M15S4_acceptance": false,
+  "scope": "First-person keyboard stock jump: ordinary admission at25, rejection at24 despite+100 modifier, held ordinary at49 and standing power at50, exact actual pending-source fresh continuations. Existing production guards; no gameplay C++ change; existing test table adds required26/51 cases.",
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "fixture": {
+    "adapter": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/run-existing-course.py",
+    "shared_launcher": "build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py",
+    "shared_inspector": "build/oblivion-compat/m15/S4/combined-restart-work-01/verify-recovery-pair.py",
+    "staging": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-staging.json",
+    "scope": "Only base/modifier owner and legacy projections staged. Physical jump, attack, motion, contacts and damage arise from normal input. No injected outcomes.",
+    "preflight": "Hash-pinned source/declared camera; actual Lua compilation and observer execution against Actor/NPC namespace shape; runtime ground/floor then above-floor airborne acknowledgement. Static checks are not runtime proof."
+  },
+  "normal_input": {
+    "jump": "e",
+    "attack": "u",
+    "draw": "f",
+    "save": "F5",
+    "ordering": [
+      "draw; actual onehandidle; ground/floor acknowledgement; baseline save",
+      "jump held; actual above-floor airborne acknowledgement",
+      "press ordinary attack or hold through second attack; release attack and jump",
+      "pending/rejected save; wait contact if admitted and finish; actual landing/full-Fatigue acknowledgement; final save"
+    ],
+    "observer": "Read-only every-frame ground/floor/height/base/modified values. Attack admission is checked against preceding airborne sample and actual native strike kind."
+  },
+  "recipes": {
+    "air-normal25-course.json": {
+      "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-normal25-course.json",
+      "sha256": "fba3b729439963c81a520202632c75b0461ee47827c96905ec9f1575c44a3296"
+    },
+    "air-normal25-resume-course.json": {
+      "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-normal25-resume-course.json",
+      "sha256": "58523d3e073060a496c1df31faf0e5a2bc1f03c02bc84cfa2d16347577c76a96"
+    },
+    "air-reject24buff-course.json": {
+      "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-reject24buff-course.json",
+      "sha256": "91e4572f821666c22fc337186ef41bab359a80cca5a804aa792868e494b576bf"
+    },
+    "air-held49-course.json": {
+      "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-held49-course.json",
+      "sha256": "08667688bced63c92cb6d479cca1ba88989566267272ca66ff239631778c781c"
+    },
+    "air-power50-course.json": {
+      "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-power50-course.json",
+      "sha256": "90d2689379cd04830521a3300cd6cde6329a3111d1ee25d02df093ad6bb3c359"
+    },
+    "air-power50-resume-course.json": {
+      "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-power50-resume-course.json",
+      "sha256": "f8a198de1d466ca53ea978d0d36d723a0fba672a373c7b10a206a34829e021c4"
+    }
+  },
+  "verification": {
+    "inspector": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/inspect-air.py",
+    "shared_prefix": "Binary/live exact save pairs, whole source load, process epochs, current executable and mapped-library hashes.",
+    "continuation": "Actual pending ordinary2/kind0 or standingPower3/kind2, contactfalse and positive body/FP animation times; active airborne collision movement; fresh process has no new attack/jump input and commits the owned contact once.",
+    "strict": "Pending ledger/owner, no restart allocation, cost/condition/RNG, Player resources after regeneration and all shared inventories. Each run actual saved target Health delta matches its own logged hits within1e-4.",
+    "damage_tolerance": "Fatigue regenerates independently before fresh contact. Compare damage divided by(.5+.5*currentFatigue/140) within2e-4, using installed fFatigueBase1.0/fFatigueMult.5, not compiled fallback. Logged damage precision bounds tolerance; no exact cross-cadence target Health claim.",
+    "setting_provenance": [
+      "docs/oblivion/M15-PHYSICAL-RULE-INPUTS.json",
+      "docs/oblivion/M15-ORIGINAL-SETTING-PROBES.json"
+    ],
+    "reused_rule_evidence": "build/oblivion-compat/m15/S4/native-airborne-predicate-oracle-01/",
+    "reused_tests": [
+      "ESM4CombatSettings.NativeAirborneStartAndHeldPowerHaveDifferentMasteryGates",
+      "ESM4PhysicalCombat.NativeAttackAirborneRetainsAnimationPriorityAndMissingContext",
+      "OblivionWorldTest.MeleeInputResolvesActualWinningNativeSettingsWithoutCachingOrLegacyAliases"
+    ],
+    "focused_plus_one": "build/oblivion-compat/m15/S4/airborne-threshold-plusone-01/verification.json",
+    "contact_accounting": "Each final Health delta matches actual committed contact IDs exactly within tolerance. Ordinary-on-press2 can be superseded before contact by held power3 at SAN cadence; only owner3 remains in captured source. Reference may commit2+3 or only3; fresh must commit only3. No duplicate contact or old pending owner accepted."
+  },
+  "retained_failure": {
+    "run": "airborne-normal25-01",
+    "classification": "Fixture Actor.stats.skills namespace invalid; corrected to NPC.stats.skills. Preserve failed run; no gameplay outcome was obtained.",
+    "receipt": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-normal25-01-fixture-failure.json",
+    "prevention": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-observer-execution-preflight.lua",
+    "sanitizer_startup": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-SAN-fresh-startup-fixture-failure.json"
+  },
+  "integration_reuse": {
+    "reason": "Production code, public Python and runtime dependencies unchanged. Existing test table only adds26/51; focused normal/SAN components pass that changed test. Unchanged broad gates retain provenance; no full runtime rebuild for metadata.",
+    "source_map": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/final-cpp-source-map.json",
+    "normal_engine": "build/oblivion-compat/m15/S4/blocking-dodge-resume-engine-normal-01/verification.json",
+    "sanitize_engine": "build/oblivion-compat/m15/S4/blocking-dodge-resume-engine-sanitize-01/verification.json",
+    "normal_components_python": "build/oblivion-compat/m15/S4/blocking-dodge-final-normal-01/verification.json",
+    "sanitize_components": "build/oblivion-compat/m15/S4/blocking-dodge-final-sanitize-01/verification.json",
+    "current_python": "build/oblivion-compat/m15/S4/joined-dodge-stick-python-01/verification.json",
+    "receipt": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-reused-integration-evidence.json"
+  },
+  "limits": [
+    "Scoped airborne admission/continuation, not all views/devices or an FPS/seed campaign. Swimming guard/animation-context/malformed settings retain L1/L2 provenance; required threshold+1 has current focused normal/SAN test evidence, not a new swimming runtime claim.",
+    "Elevated pending FP captures may omit arms/weapon; state/log causality supports admission, without a useful full attack-pose claim. Prior bright cloth/torch material limits persist.",
+    "All remaining S4 requirements, required normal/sanitizer/regression integration gates and T7/F8 campaigns remain required.",
+    "Power-return captures show target feet clear of floor; record for later feedback review, without a settled-target-stance claim or expanding this airborne-admission chunk."
+  ],
+  "retained_checker_corrections": [
+    "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-held49-checker-failure.json",
+    "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-contact-accounting-correction.json"
+  ],
+  "checkpoint": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-checkpoint-verification.json",
+  "results": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-normal-verification.json",
+      "sha256": "f6b1d3ef36beb0913a5fb7a3d04715fb0cc3618a77f5c4e395766380cbf903f0",
+      "pairs": 14
+    },
+    "sanitize": {
+      "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/air-sanitize-verification.json",
+      "sha256": "b881a2b20190bf064fc6731c621730fc2fa85105458c3e8582725887206cdc79",
+      "pairs": 14
+    },
+    "successful_epochs": 12,
+    "reviewed_captures": 20
+  },
+  "verification_status": "bounded-world-runtime"
+}

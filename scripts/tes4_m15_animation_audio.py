@@ -1,19 +1,23 @@
 """Reproducible synthetic native animation-sound fixture and PCM evidence checks.
 
 This exercises a native SOUN/text-key dispatch, not stock attack audio or damage.
+The same tone fixture also calibrates near/far/beyond native 3D playback.
 Generated plugins, keyframes, tones and captured output belong in ignored evidence.
 """
 from __future__ import annotations
 
 import argparse
 import array
+import copy
 import hashlib
 import json
 import math
 from pathlib import Path
 import re
+import shutil
 import struct
 import sys
+import tempfile
 import wave
 
 DEFAULT_EXPECTATIONS = {
@@ -172,6 +176,179 @@ def analyse_audio(path: Path, expectations: dict, case: str) -> dict:
             "scope": "Synthetic native text-key routing and OpenAL mixing; not stock combat or creature sound acceptance."}
 
 
+def spatial_preflight(state: dict, recipe: dict) -> dict:
+    """Reject unsuitable saved scenes before generating or launching calibration."""
+    if recipe.get("schema_version") != 1 or state["physical_actions"]["pending"]:
+        raise ValueError("spatial calibration requires a released source")
+    if any(row.get("strike") for row in state["native_melee_states"]):
+        raise ValueError("spatial calibration source has a strike")
+    bounds = recipe["bounds"]
+    if (any(type(x) not in (int, float) or not math.isfinite(x) for x in bounds.values())
+            or not 0 < bounds["far_min"] < bounds["far_max"] < 1
+            or not 0 < bounds["repeat_min"] < 1 < bounds["repeat_max"]
+            or not 0 < bounds["silent_maximum_rms"] < .01
+            or not 0 < bounds["clock_tolerance_seconds"] < 1):
+        raise ValueError("invalid spatial measurement bounds")
+    player = state["player"]
+    vectors = [player["position"][:3], recipe["player_position"]]
+    vectors += [row["position"] for row in recipe["emitters"]]
+    if any(len(v) != 3 or any(type(x) not in (int, float) or not math.isfinite(x) for x in v) for v in vectors):
+        raise ValueError("invalid spatial position")
+    if player["cell"] != recipe["cell"] or math.dist(player["position"][:3], recipe["player_position"]) > .01:
+        raise ValueError("spatial source Player binding changed")
+    references = {row["key"]: row for row in state["references"]}
+    rows = []
+    if [row["phase"] for row in recipe["emitters"]] != ["near", "far", "beyond"]:
+        raise ValueError("spatial calibration requires near/far/beyond emitters")
+    for emitter in recipe["emitters"]:
+        ref = references[emitter["reference"]]
+        if any(type(x) not in (int, float) or not math.isfinite(x) for x in ref["position"][:3]):
+            raise ValueError("invalid emitter position")
+        if (not ref["enabled"] or ref["cell"] != player["cell"] or ref["base"] != emitter["base"]
+                or ref["key"] == player["reference"]
+                or math.dist(ref["position"][:3], emitter["position"]) > .01):
+            raise ValueError("spatial emitter binding changed")
+        rows.append(dict(phase=emitter["phase"], reference=ref["key"],
+                         distance_from_player_origin=math.dist(ref["position"][:3], player["position"][:3])))
+    if not (rows[0]["distance_from_player_origin"] < 100
+            and 300 < rows[1]["distance_from_player_origin"] < 800
+            and rows[2]["distance_from_player_origin"] > 2200):
+        raise ValueError("spatial distances do not separate the 100/2000 range")
+    return dict(passed=True, emitters=rows,
+                scope="Player-origin geometry and released ownership, not measured listener pose or an exact gain law")
+
+
+def prepare_spatial(repo: Path, data: Path, recipe: dict, output: Path, sanitizer: bool = False) -> dict:
+    try:
+        import tes4_runtime_state as runtime
+    except ModuleNotFoundError:
+        from scripts import tes4_runtime_state as runtime
+    source = repo / recipe["source"]
+    sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+    if sha(source) != recipe["source_sha256"]:
+        raise ValueError("spatial source hash changed")
+    state = runtime.load_save(source)
+    preflight = spatial_preflight(state, recipe)
+    directories = [data] + [repo / path for path in recipe["data_directories"]]
+    for item in state["content"]:
+        candidates = [p for directory in directories for p in directory.iterdir()
+                      if p.name.lower() == item["plugin"]]
+        if len(candidates) != 1 or "sha256:" + sha(candidates[0]) != item["fingerprint"]:
+            raise ValueError("spatial source plugin identity changed: " + item["plugin"])
+    base = repo / recipe["base_manifest"]
+    manifest = copy.deepcopy(json.loads(base.read_text()))
+    if sanitizer:
+        if not Path(recipe["sanitizer_environment"]["LD_PRELOAD"]).is_file():
+            raise ValueError("missing declared sanitizer runtime")
+        manifest["environment"].update(recipe["sanitizer_environment"])
+    output.mkdir(parents=True, exist_ok=False)
+    fixture = output / "audio-fixture"
+    write_fixture(fixture, "M15FixtureTone")
+    target = output / "userdata/saves/M15Review/Quicksave.omwsave"
+    target.parent.mkdir(parents=True)
+    shutil.copy2(source, target)
+    manifest.update(name="m15-spatial-audio-calibration", sdl_xvfb_input=True, xvfb=True,
+                    timeout_seconds=300)
+    manifest.pop("sdl_offscreen_input", None)
+    manifest["environment"]["ALSOFT_DRIVERS"] = "wave"
+    # This calibration consumes logs and the real F5 save. The legacy animation
+    # case's full-world JSON report is unused here and serializes on every frame.
+    manifest["environment"].pop("OPENMW_OBSCRIPT_REPORT", None)
+    phases = recipe["emitters"] + [recipe["emitters"][0]]
+    events = "".join(f"at {2 * (i + 1)} command {e['reference']} PlaySound3D M15FixtureTone\n"
+                     for i, e in enumerate(phases))
+    for file in manifest["files"]:
+        if file["path"] == "test-data/events.txt":
+            file["content"] = events
+        if file["path"] == "config/openmw.cfg":
+            lines = "".join(f'data="{directory.resolve()}"\n' for directory in directories[1:])
+            lines += "content=M15StationaryOpponent.esp\ncontent=M15CombinedMasteryChance.esp\n"
+            file["content"] = file["content"].replace("content=M15AudioFixture.esp", lines + "content=M15AudioFixture.esp")
+        file["content"] = file["content"].replace("{audio_fixture}", str(fixture.resolve()))
+    requests = [f"M7 ObScript: playsound3d sound=content:m15audiofixture.esp:000800 ref={e['reference']} played=true"
+                for e in phases]
+    manifest["actions"] = [dict(type="wait_log", pattern="Applied TES4 runtime state:", timeout_seconds=240, abort_on_failure=True),
+        dict(type="wait_log", pattern=r"[\s\S]*".join(re.escape(x) for x in requests), timeout_seconds=120, abort_on_failure=True),
+        dict(type="sleep", seconds=2), dict(type="focus_window", name="OpenMW"), dict(type="key", value="F5"),
+        dict(type="wait_log", pattern="Writing saved game 'Quicksave'", timeout_seconds=30, abort_on_failure=True),
+        dict(type="screenshot", name="spatial-scene.png", minimum_entropy=.03)]
+    manifest["expected_log"] = requests
+    manifest["forbidden_log"] += ["M15 melee (hit|miss) committed:"]
+    (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    preflight.update(source_sha256=sha(source), base_manifest_sha256=sha(base), helper_sha256=sha(Path(__file__)), recipe=recipe,
+                     source_copy_sha256=sha(target), scope="Synthetic spatial calibration, not stock combat or listening")
+    (output / "preflight.json").write_text(json.dumps(preflight, indent=2) + "\n")
+    return preflight
+
+
+def analyse_spatial(path: Path, log: str, recipe: dict) -> dict:
+    """Match native request timing to calibrated tone gains, retaining silence controls."""
+    with wave.open(str(path)) as stream:
+        rate, frames = stream.getframerate(), stream.getnframes()
+        if frames > rate * 300:
+            raise ValueError("spatial capture exceeds its bounded course")
+        if frames <= rate * DEFAULT_EXPECTATIONS["maximum_seconds"]:
+            audio = analyse_audio(path, DEFAULT_EXPECTATIONS, "positive")
+        else:
+            # Preserve the full raw recording and its clock, while reusing the
+            # existing bounded detector for slower rendered sanitizer cases.
+            windows = []
+            with tempfile.TemporaryDirectory() as directory:
+                offset = 0
+                while offset < frames:
+                    count = min(frames - offset, rate * DEFAULT_EXPECTATIONS["maximum_seconds"])
+                    data = stream.readframes(count)
+                    if len(data) != count * stream.getnchannels() * stream.getsampwidth():
+                        raise ValueError("truncated spatial PCM")
+                    if count < DEFAULT_EXPECTATIONS["window_frames"]:
+                        break
+                    chunk = Path(directory) / "chunk.wav"
+                    with wave.open(str(chunk), "wb") as target:
+                        target.setparams(stream.getparams())
+                        target.writeframes(data)
+                    result = analyse_audio(chunk, DEFAULT_EXPECTATIONS, "positive")
+                    windows.extend(dict(row, start_seconds=row["start_seconds"] + offset / rate)
+                                   for row in result["windows"])
+                    offset += count
+            audio = dict(windows=windows, wav_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+    emitters = recipe["emitters"] + [recipe["emitters"][0]]
+    pattern = (r"\[(\d\d):(\d\d):(\d\d\.\d+) [IV]\] M7 ObScript: playsound3d "
+               r"sound=content:m15audiofixture\.esp:000800 ref=(\S+) played=(true|false)")
+    requests = []
+    for match in re.finditer(pattern, log):
+        h, m, s, ref, played = match.groups()
+        stamp = int(h) * 3600 + int(m) * 60 + float(s)
+        if requests and stamp < requests[-1]["time"]:
+            stamp += 86400
+        requests.append(dict(time=stamp, reference=ref, played=played == "true"))
+    valid_requests = (len(requests) == 4 and all(row["played"] for row in requests)
+                      and [r["reference"] for r in requests] == [e["reference"] for e in emitters])
+    clusters = []
+    for window in audio["windows"]:
+        if window["tone_rms"] < .01 or window["tone_energy_fraction"] < .8:
+            continue
+        if not clusters or window["start_seconds"] - clusters[-1]["last"] > .11:
+            clusters.append(dict(start=window["start_seconds"], last=window["start_seconds"], peak=0))
+        clusters[-1].update(last=window["start_seconds"], peak=max(clusters[-1]["peak"], window["tone_rms"]))
+    checks = dict(requests=valid_requests, three_clusters=len(clusters) == 3)
+    measurements = {}
+    if valid_requests and len(clusters) == 3:
+        near, far, repeated = [row["peak"] for row in clusters]
+        bounds = recipe["bounds"]
+        expected = [clusters[0]["start"] + row["time"] - requests[0]["time"] for row in requests]
+        quiet = [w["tone_rms"] for w in audio["windows"] if expected[2] - .2 <= w["start_seconds"] <= expected[2] + .5]
+        measurements = dict(far_gain_ratio=far / ((near + repeated) / 2), repeat_gain_ratio=repeated / near,
+                            beyond_maximum_tone_rms=max(quiet) if quiet else None, expected_onsets=expected)
+        checks.update(near_audible=near > .05, far_attenuated=bounds["far_min"] <= measurements["far_gain_ratio"] <= bounds["far_max"],
+                      near_repeated=bounds["repeat_min"] <= measurements["repeat_gain_ratio"] <= bounds["repeat_max"],
+                      beyond_silent=bool(quiet) and max(quiet) <= bounds["silent_maximum_rms"],
+                      time_alignment=all(abs(clusters[j]["start"] - expected[i]) <= bounds["clock_tolerance_seconds"]
+                                         for j, i in enumerate((0, 1, 3))))
+    return dict(passed=all(checks.values()), checks=checks, measurements=measurements, clusters=clusters,
+                requests=requests, wav_sha256=audio["wav_sha256"],
+                scope="Rendered native SOUN spatial calibration; stock combat identity and listening remain separate")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -184,9 +361,32 @@ def main() -> int:
     check.add_argument("--expectations", type=Path, required=True)
     check.add_argument("--case", choices=("positive", "negative"), required=True)
     check.add_argument("--output", type=Path, required=True)
+    prepare = commands.add_parser("spatial-prepare")
+    prepare.add_argument("--repo", type=Path, default=Path.cwd())
+    prepare.add_argument("--oblivion-data", type=Path, required=True)
+    prepare.add_argument("--recipe", type=Path, required=True)
+    prepare.add_argument("--output", type=Path, required=True)
+    prepare.add_argument("--sanitize", action="store_true")
+    spatial = commands.add_parser("spatial-check")
+    spatial.add_argument("--scenario", type=Path, required=True)
+    spatial.add_argument("--recipe", type=Path, required=True)
+    spatial.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "fixture":
         result = write_fixture(args.output, args.key_editor_id, args.phase_keys)
+    elif args.command == "spatial-prepare":
+        result = prepare_spatial(args.repo, args.oblivion_data, json.loads(args.recipe.read_text()), args.output, args.sanitize)
+    elif args.command == "spatial-check":
+        import tes4_runtime_state as runtime
+        if args.output.exists():
+            raise FileExistsError(args.output)
+        recipe = json.loads(args.recipe.read_text())
+        result = analyse_spatial(args.scenario / "rendered-audio.wav", (args.scenario / "process.log").read_text(), recipe)
+        result["saved_scene"] = spatial_preflight(runtime.load_save(
+            args.scenario / "userdata/saves/M15Review/Quicksave.omwsave"), recipe)
+        result["scenario_passed"] = json.loads((args.scenario / "scenario.json").read_text())["passed"]
+        result["passed"] = result["passed"] and result["scenario_passed"]
+        args.output.write_text(json.dumps(result, indent=2) + "\n")
     else:
         if args.output.exists():
             raise FileExistsError(args.output)

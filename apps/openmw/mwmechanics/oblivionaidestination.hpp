@@ -43,6 +43,16 @@ namespace MWMechanics
             static_cast<float>(radius));
     }
 
+    // Resident fallback paths must reach the interior of a corner before
+    // turning toward its successor. Authored node Z can differ from the
+    // collision surface, so keep vertical tolerance separate from XY.
+    inline bool oblivionPathgridWaypointReached(const osg::Vec3f& position, const osg::Vec3f& waypoint)
+    {
+        const auto delta = position - waypoint;
+        return delta.x() * delta.x() + delta.y() * delta.y() <= 16.f * 16.f
+            && std::abs(delta.z()) <= 64.f;
+    }
+
     inline bool oblivionRouteTailWithinDirectApproach(
         const osg::Vec3f& position, const osg::Vec3f& destination, float maximumDistance)
     {

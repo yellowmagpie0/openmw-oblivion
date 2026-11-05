@@ -1,3 +1,4 @@
+#include "../mwworld/oblivioncharactergen.hpp"
 #include "luamanagerimp.hpp"
 
 #include <filesystem>
@@ -929,6 +930,7 @@ namespace MWLua
     void LuaManager::skillUse(const MWWorld::Ptr& actor, ESM::RefId skillId, int useType, float scale)
     {
         requireMutableRuntime();
+        MWWorld::recordOblivionCharacterGenerationSkillUse(actor, skillId, useType, scale);
         mEngineEvents.addToQueue(EngineEvents::OnSkillUse{ getId(actor), skillId.serializeText(), useType, scale });
     }
 
@@ -1229,6 +1231,19 @@ namespace MWLua
     void LuaManager::inputEvent(const InputEvent& event)
     {
         requireMutableRuntime();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            && (event.mType == InputEvent::Action || event.mType == InputEvent::ControllerPressed
+                || event.mType == InputEvent::KeyPressed))
+        {
+            MWBase::WindowManager* windows = MWBase::Environment::get().getWindowManager();
+            Log(Debug::Verbose) << "M15 input event admission: type=" << event.mType
+                << " action=" << (event.mType == InputEvent::Action ? std::get<int>(event.mValue) : -1)
+                << " modal=" << MyGUI::InputManager::getInstance().isModalAny()
+                << " console=" << windows->isConsoleMode()
+                << " main_menu=" << windows->containsMode(MWGui::GM_MainMenu)
+                << " player_scripts=" << (!mPlayer.isEmpty()
+                    && dynamic_cast<PlayerScripts*>(mPlayer.getRefData().getLuaScripts()) != nullptr);
+        }
         if (!MyGUI::InputManager::getInstance().isModalAny()
             && !MWBase::Environment::get().getWindowManager()->isConsoleMode())
         {

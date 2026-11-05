@@ -1,0 +1,631 @@
+{
+  "passed": true,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "cases": 79,
+  "boundaries": [
+    "Original already-applied ActiveEffect update68E670 runs through real BoundItemEffect update6918D0 and expiration/death decisions.",
+    "Target actor access, RTTI, enchantment exemption(false), dead-query and bound removal body are supplied. Actual inventory removal/restoration is not emulated.",
+    "Separate real BoundItemEffect initial update cases execute the threshold and once-applied latch; materialization body690AF0 is supplied and counted.",
+    "This is bounded native rule evidence, not rendered runtime or save acceptance."
+  ],
+  "rows": [
+    {
+      "spell_type": 0,
+      "elapsed": 0.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 0.25
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 0.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 0.25
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 0.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 2.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 0.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 2.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 0.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 0.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 999.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 999.25
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 999.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 999.25
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 999.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 999.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 999.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 999.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1000.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1000.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1000.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1000.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1000.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1000.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1500.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1500.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1500.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1500.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1500.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 0,
+      "elapsed": 1500.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 0.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 0.25
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 0.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 0.25
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 0.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 2.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 0.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 2.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 0.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 2000.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 0.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 2000.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 999.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 999.25
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 999.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 999.25
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 999.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1001.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 999.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1001.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 999.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 2999.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 999.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 2999.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1000.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1000.25
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1000.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.25
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1000.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1002.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1000.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1002.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1000.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 3000.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1000.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 3000.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1500.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1500.25
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1500.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1500.25
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1500.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1502.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1500.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1502.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1500.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 3500.0
+    },
+    {
+      "spell_type": 1,
+      "elapsed": 1500.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 3500.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 0.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 0.25
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 0.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 0.25
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 0.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 2.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 0.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 2.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 0.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 2000.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 0.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 2000.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 999.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 999.25
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 999.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 999.25
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 999.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1001.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 999.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1001.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 999.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 2999.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 999.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 2999.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1000.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1000.25
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1000.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1000.25
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1000.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1002.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1000.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1002.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1000.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 3000.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1000.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 3000.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1500.0,
+      "delta": 0.25,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1500.25
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1500.0,
+      "delta": 0.25,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1500.25
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1500.0,
+      "delta": 2.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 1502.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1500.0,
+      "delta": 2.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 1502.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1500.0,
+      "delta": 2000.0,
+      "target_dead": false,
+      "expired_or_removed": false,
+      "time_after": 3500.0
+    },
+    {
+      "spell_type": 4,
+      "elapsed": 1500.0,
+      "delta": 2000.0,
+      "target_dead": true,
+      "expired_or_removed": true,
+      "time_after": 3500.0
+    },
+    {
+      "kind": "initial-materialization",
+      "elapsed": 0,
+      "delay": 0,
+      "materialize": true
+    },
+    {
+      "kind": "initial-materialization",
+      "elapsed": 0,
+      "delay": 1,
+      "materialize": false
+    },
+    {
+      "kind": "initial-materialization",
+      "elapsed": 1,
+      "delay": 1,
+      "materialize": true
+    },
+    {
+      "kind": "initial-materialization",
+      "elapsed": 2,
+      "delay": 1,
+      "materialize": true
+    },
+    {
+      "kind": "initial-materialization",
+      "elapsed": 999,
+      "delay": 1000,
+      "materialize": false
+    },
+    {
+      "kind": "initial-materialization",
+      "elapsed": 1000,
+      "delay": 1000,
+      "materialize": true
+    },
+    {
+      "kind": "initial-materialization",
+      "elapsed": 1500,
+      "delay": 1000,
+      "materialize": true
+    }
+  ]
+}

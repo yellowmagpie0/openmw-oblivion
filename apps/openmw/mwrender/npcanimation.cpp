@@ -705,6 +705,8 @@ namespace MWRender
                 filterOblivionBodyParts(*node, mViewMode == VM_FirstPerson);
                 if (!texture.empty())
                     overrideAllTextures(VFS::Path::Normalized(texture), mResourceSystem, *node);
+                if (!faceGen && texture.empty())
+                    applyTes4ClothingSkin(*node, *player, *race, female, *mResourceSystem);
                 if (faceGen)
                     applyTes4FaceGen(path.value(), *node, *player, *race, female, texture, bodyTexture,
                         mResourceSystem, mOblivionFaceMorphs);

@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "name": "Original northern rat stationary Club defence",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal probe=require('scripts.tutorial_camera_probe')\nlocal util=require('openmw.util')\nlocal facing=false\nlocal ready,close,approached,dead=false,false,false,false\nlocal wasUse=false\nlocal strike=0\nlocal released=nil\nlocal timer=0\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1\n assert(Actor.stats.dynamic.health(self).current>0,'Player died fighting northern rat')\n if not ready and frames>=20 then\n  local club=core.getFormId('Oblivion.esm',0x159829)\n  local found=false\n  for _,item in pairs(Actor.getEquipment(self)) do if item.recordId==club then found=true end end\n  assert(found,'Club not equipped')\n  local armor=0\n  for _,item in pairs(Actor.getEquipment(self)) do if item.recordId==core.getFormId('Oblivion.esm',0x661c1) or item.recordId==core.getFormId('Oblivion.esm',0x661c3) then armor=armor+1 end end\n  assert(armor==2,'Armor not equipped')\n  ready=true print('Substructure Club combat ready')\n end\n local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x38173))\n if rat and rat:isValid() then\n  local delta=rat.position-self.position\n  local f=self.rotation:apply(util.vector3(0,1,0))\n  local angle=math.atan2(f.y*delta.x-f.x*delta.y,f.x*delta.x+f.y*delta.y)\n  if not facing and math.abs(angle)<.04 then facing=true print('Substructure facing northern rat') end\n  local distance=delta:length()\n  if self.controls.movement>0 and (distance<85 or Actor.isDead(rat)) then print('Substructure approach '..(strike+1)..' ready') end\n  if not close and distance<=100 then close=true print('Substructure northern rat in reach') end\n  if not dead and Actor.isDead(rat) then dead=true print('Substructure northern rat dead') end\n  local x,y=probe.motion(rat,'frame',1/5120)\n  print(string.format('Substructure aim x=%d y=%d distance=%.2f',x,y,distance))\n end\n if not approached and self.position.x>=800 then approached=true print('Substructure first room approach reached') end\n local use=self.controls.use~=0\n if use and not wasUse then released=nil strike=strike+1 print('Substructure strike '..strike..' armed') end\n if wasUse and not use then released=core.getSimulationTime() end\n if released and core.getSimulationTime()-released>=1 then print('Substructure strike '..strike..' settled') end\n wasUse=use\n timer=timer+dt\n if timer>.3 then timer=0 print('Substructure Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current) end\nend}}}}\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_camera_probe.lua",
+      "content": "-- Read-only camera prerequisite for the existing Forward-effect photo window.\nlocal camera = require('openmw.camera')\nlocal core = require('openmw.core')\nlocal nearby = require('openmw.nearby')\nlocal self = require('openmw.self')\nlocal util = require('openmw.util')\nlocal worldMask = nearby.COLLISION_TYPE.World + nearby.COLLISION_TYPE.HeightMap + nearby.COLLISION_TYPE.Door\n\nlocal function motion(target, mode, radiansPerUnit)\n    assert(type(radiansPerUnit) == 'number' and radiansPerUnit > 0 and radiansPerUnit < math.huge)\n    local function units(angle)\n        return math.max(-8192, math.min(8192, math.floor(angle / radiansPerUnit + 0.5)))\n    end\n    if mode == 'level' then return 0, units(-camera.getPitch()) end\n    if mode == 'upper' then\n        -- Standing transitions can retain the previous physical body's bounds\n        -- for a frame. Frame the upper body from the logical actor placement;\n        -- the separate rendered-mesh prerequisite still checks real visibility.\n        local p, t, c = self.position, target.position, camera.getPosition()\n        local dx, dy = t.x-p.x, t.y-p.y\n        local f = self.rotation:apply(util.vector3(0, 1, 0))\n        local x = units(math.atan2(f.y*dx-f.x*dy, f.x*dx+f.y*dy))\n        local pitch = math.atan2(c.z-t.z-100, math.sqrt(dx*dx+dy*dy))\n        return x, units(pitch-camera.getPitch())\n    end\n    assert(mode == 'frame' or mode == 'aim')\n    local anchor = mode == 'frame' and target:getBoundingBox().center\n        or target.position + util.vector3(0, 0, 100)\n    local p = camera.getViewTransform():apply(anchor)\n    local x = units(math.atan2(p.x, -p.z))\n    local y = mode == 'aim' and 0 or units(-math.atan2(p.y, math.sqrt(p.x*p.x + p.z*p.z)))\n    return x, y\nend\n\nlocal function visible(target, screen)\n    local bounds = target:getBoundingBox()\n    for _, x in ipairs({{0, -0.65, 0.65}}) do\n        for _, y in ipairs({{0, -0.65, 0.65}}) do\n            for _, z in ipairs({{0, -0.65, 0.65}}) do\n                local anchor = bounds.center + util.vector3(\n                    x * bounds.halfSize.x, y * bounds.halfSize.y, z * bounds.halfSize.z)\n                local pixel = camera.worldToViewportVector(anchor)\n                if camera.getViewTransform():apply(anchor).z < 0\n                    and pixel.x >= 0 and pixel.x < screen.x\n                    and pixel.y >= 0 and pixel.y < screen.y then\n                    if not nearby.castRay(camera.getPosition(), anchor, {{collisionType = worldMask}}).hit then\n                        local hit = nearby.castRenderingRay(camera.getPosition(), anchor, {{ignore = self}}).hitObject\n                        if hit and hit.id == target.id then return true end\n                    end\n                end\n            end\n        end\n    end\n    return false\nend\n\n-- Require both the head and upper torso inside the viewport, rather than\n-- accepting one low-body anchor while the head is cropped above the screen.\nlocal function upperVisible(target, screen)\n    local bounds = target:getBoundingBox()\n    local top = bounds.center + util.vector3(0, 0, 1.05 * bounds.halfSize.z)\n    local projectedTop = camera.worldToViewportVector(top)\n    if camera.getViewTransform():apply(top).z >= 0 or projectedTop.x < 16\n        or projectedTop.x >= screen.x - 16 or projectedTop.y < 16 or projectedTop.y >= screen.y - 16 then\n        return false\n    end\n    for _, height in ipairs({{0.85, 0.35}}) do\n        -- An extended arm/weapon shifts the box centre beside the head or\n        -- chest. Require a real target-mesh hit in each band, without assuming\n        -- that the centre line passes through the actor's skin.\n        local found = false\n        for _, x in ipairs({{0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75}}) do\n            for _, y in ipairs({{0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75}}) do\n                local anchor = bounds.center + util.vector3(\n                    x * bounds.halfSize.x, y * bounds.halfSize.y, height * bounds.halfSize.z)\n                local pixel = camera.worldToViewportVector(anchor)\n                if camera.getViewTransform():apply(anchor).z < 0\n                    and pixel.x >= 0 and pixel.x < screen.x and pixel.y >= 0 and pixel.y < screen.y\n                    and not nearby.castRay(camera.getPosition(), anchor, {{collisionType = worldMask}}).hit then\n                    local hit = nearby.castRenderingRay(camera.getPosition(), anchor, {{ignore = self}}).hitObject\n                    if hit and hit.id == target.id then found = true; break end\n                end\n            end\n            if found then break end\n        end\n        if not found then return false end\n    end\n    return true\nend\n\nlocal function new(window)\n    assert(type(window) == 'number' and window == window and window > 0 and window < math.huge,\n        'Forward capture needs a finite positive source window')\n    local started\n    return function(target, screen)\n        local now = core.getSimulationTime()\n        started = started or now\n        local elapsed = now - started\n        if elapsed < 0 or elapsed >= window then return false, false end\n        return visible(target, screen), true\n    end\nend\n\n-- A quiet rendered bounding box is a cheap capture prerequisite. The saved\n-- physical bodies and the photograph remain the evidence for the actual pose.\nlocal function newSettled(window, minimum, hold, maximumSpeed)\n    for _, value in ipairs({{window, minimum, hold, maximumSpeed}}) do\n        assert(type(value) == 'number' and value == value and value >= 0 and value < math.huge)\n    end\n    assert(hold > 0 and maximumSpeed > 0 and minimum + hold < window)\n    local started, previousTime, previousBounds, quietSince\n    local function distance(a, b)\n        return math.sqrt((a.x-b.x)^2 + (a.y-b.y)^2 + (a.z-b.z)^2)\n    end\n    return function(target)\n        local now = core.getSimulationTime()\n        started = started or now\n        local elapsed = now - started\n        if elapsed < 0 or elapsed >= window then return false, false, elapsed, math.huge end\n        local bounds = target:getBoundingBox()\n        local speed = math.huge\n        if previousTime and now > previousTime then\n            speed = math.max(distance(bounds.center, previousBounds.center),\n                distance(bounds.halfSize, previousBounds.halfSize)) / (now - previousTime)\n            if elapsed >= minimum and speed <= maximumSpeed then\n                quietSince = quietSince or now\n            else\n                quietSince = nil\n            end\n        elseif previousTime and now < previousTime then\n            quietSince = nil\n        end\n        previousTime, previousBounds = now, bounds\n        return quietSince ~= nil and now - quietSince >= hold, true, elapsed, speed\n    end\nend\n\nlocal function framedVisible(target, screen)\n    local bounds = target:getBoundingBox()\n    for _, x in ipairs({{-1, 1}}) do\n        for _, y in ipairs({{-1, 1}}) do\n            for _, z in ipairs({{-1, 1}}) do\n                local anchor = bounds.center + util.vector3(\n                    x * bounds.halfSize.x, y * bounds.halfSize.y, z * bounds.halfSize.z)\n                local pixel = camera.worldToViewportVector(anchor)\n                if camera.getViewTransform():apply(anchor).z >= 0 or pixel.x < 16\n                    or pixel.x >= screen.x - 16 or pixel.y < 16 or pixel.y >= screen.y - 16 then\n                    return false\n                end\n            end\n        end\n    end\n    return visible(target, screen)\nend\n\nreturn {{new = new, visible = visible, motion = motion, upperVisible = upperVisible,\n    newSettled = newSettled, framedVisible = framedVisible}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Substructure Club combat ready",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 1 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 1 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 2 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 2 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 3 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 3 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 4 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 4 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 5 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 5 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 6 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 6 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 7 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 7 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 8 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure strike 8 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure northern rat dead",
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "screenshot",
+      "name": "northern-rat-defeated.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 480,
+  "expected_exit": 0,
+  "expected_log": [
+    "Substructure northern rat dead"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

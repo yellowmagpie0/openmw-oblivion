@@ -25,7 +25,7 @@ namespace MWPhysics
         Stepper(const btCollisionWorld* colWorld, const btCollisionObject* colObj);
 
         bool step(osg::Vec3f& position, osg::Vec3f& velocity, float& remainingTime, const bool& onGround,
-            bool firstIteration);
+            bool firstIteration, bool trace = false);
     };
 }
 

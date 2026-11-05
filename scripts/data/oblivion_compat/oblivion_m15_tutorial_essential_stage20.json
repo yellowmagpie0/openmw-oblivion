@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "name": "tutorial original stage20 clears Renault essential flag from stage19 normal movement",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01fc44 GetOpenState\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self = require('openmw.self')\nlocal step=1\nlocal last=''\nlocal tests={{function(p) return p.x>=1010 end,function(p) return p.y<=1670 end,function(p) return p.x<=90 end,function(p) return p.y>=2100 end}}\nreturn {{engineHandlers={{onFrame=function()\n local p=self.position\n local band=tostring(math.floor(p.x/100)) .. ':' .. tostring(math.floor(p.y/100))\n if band~=last then last=band; print('Tutorial stairs position: x=' .. tostring(p.x) .. ' y=' .. tostring(p.y) .. ' z=' .. tostring(p.z)) end\n if tests[step] and tests[step](p) then print('Tutorial stairs waypoint ' .. tostring(step)); step=step+1 end\nend}}}}\n"
+    }
+  ],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "fixed_seed": 1414,
+    "required_events": []
+  },
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:01fc44 name=GetOpenState result=3(?:\\s|$)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_x",
+      "value": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial stairs waypoint 1(?:\\s|$)",
+      "timeout_seconds": 240,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_x",
+      "value": 0
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_y",
+      "value": 0.3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial stairs waypoint 2(?:\\s|$)",
+      "timeout_seconds": 240,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_y",
+      "value": 0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=20(?:\\s|$)",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setessential base=content:oblivion.esm:02349f value=0 applied=true",
+      "timeout_seconds": 20,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "before-ambush.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "m14_checkpoint",
+      "name": "before-ambush",
+      "save_name": "Quicksave",
+      "minimum_actor_count": 3000
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 470,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "Tutorial stairs waypoint 2",
+    "setstage quest=content:oblivion.esm:02466e stage=20(?:\\s|$)",
+    "setessential base=content:oblivion.esm:02349f value=0 applied=true"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:02466e stage=22(?:\\s|$)"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  }
+}

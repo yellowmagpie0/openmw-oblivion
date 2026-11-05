@@ -24,6 +24,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwworld/testoblivionnativeidle.cpp
     mwworld/testoblivioncombat.cpp
     mwworld/testoblivionai.cpp
+    mwworld/testobliviondialogue.cpp
     mwworld/testoblivionpathgridstore.cpp
     mwworld/testoblivionprofileservices.cpp
     mwworld/testtimestamp.cpp

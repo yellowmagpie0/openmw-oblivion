@@ -364,6 +364,23 @@ def _stable_key(plugin: str, ident: int, masters: list[str]) -> str:
     return binary._stable_key(plugin, ident, masters)
 
 
+def levelled_spell_definition(record: dict) -> dict:
+    """Independent TES4 LVSP wire decoder; does not select runtime spells."""
+    subs = record['subrecords']
+    chance, = _unpack(_one(subs, 'LVLD', True), '<B', 'LVSP LVLD')
+    flags, = _unpack(_one(subs, 'LVLF', True), '<B', 'LVSP LVLF')
+    if chance > 100 or flags & ~7:
+        raise M15AuditError('LVSP chance or flags outside TES4 domain')
+    entries = []
+    for subrecord in subs:
+        if subrecord['name'] == 'LVLO':
+            payload = subrecord['payload']
+            level, padding0, raw, count, padding1 = _unpack(payload, '<HHIHH', 'LVSP LVLO')
+            entries.append(dict(level=level, spell=_stable_key(record['plugin'], raw, record['masters']),
+                                count=count, padding=[padding0, padding1]))
+    return dict(chance_none=chance, flags=flags, entries=entries)
+
+
 def read_plugin(path: Path) -> tuple[dict, list[dict]]:
     """Read TES4 records with group containment and original owning-file keys."""
     data = path.read_bytes()
@@ -380,7 +397,7 @@ def read_plugin(path: Path) -> tuple[dict, list[dict]]:
     if len(set(masters)) != len(masters):
         raise M15AuditError(f'{path.name}: duplicate masters')
     records = []
-    wanted = {'CSTY', 'SKIL', 'SPEL', 'ENCH', 'MGEF', 'NPC_', 'CREA', 'GMST', 'FACT', 'WEAP', 'AMMO', 'ARMO', 'ACHR', 'ACRE', 'REFR', 'CONT', 'CELL'}
+    wanted = {'CSTY', 'SKIL', 'LVSP', 'SPEL', 'ENCH', 'MGEF', 'NPC_', 'CREA', 'GMST', 'FACT', 'WEAP', 'AMMO', 'ARMO', 'ACHR', 'ACRE', 'REFR', 'CONT', 'CELL'}
 
     def walk(start: int, end: int, cell: str | None = None, depth: int = 0):
         if depth > 64:
@@ -520,7 +537,7 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             winners[key] = record
     styles, actors, settings, factions, equipment = {}, {}, {}, {}, {}
     ownership, references = {}, {}
-    skills, spells, enchantments, effect_definitions = {}, {}, {}, {}
+    skills, spells, enchantments, effect_definitions, levelled_spells = {}, {}, {}, {}, {}
     failures = []
     for key, record in winners.items():
         if record['deleted'] or 'subrecords' not in record:
@@ -551,6 +568,8 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             elif record['type'] == 'SPEL':
                 spells[key] = dict(spell_definition(record), editor_id=edid,
                                    record_sha256=record['sha256'], plugin=record['plugin'])
+            elif record['type'] == 'LVSP':
+                levelled_spells[key] = dict(levelled_spell_definition(record), editor_id=edid)
             elif record['type'] == 'ENCH':
                 enchantments[key] = dict(enchantment_definition(record), editor_id=edid,
                                          record_sha256=record['sha256'], plugin=record['plugin'])
@@ -662,6 +681,9 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
         for effect in spell['effects']:
             if effect['script'] is not None:
                 check_link(key, effect['script']['key'], ('SCPT',))
+    for key, spell_list in levelled_spells.items():
+        for entry in spell_list['entries']:
+            check_link(key, entry['spell'], ('SPEL', 'LVSP'))
     for key, actor in actors.items():
         for entry in actor['inventory']:
             check_link(key, entry['item'], ('WEAP', 'ARMO', 'AMMO', 'MISC', 'KEYM', 'BOOK',
@@ -713,13 +735,13 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
         failures.append('ambiguous winning MGEF effect codes')
     unresolved = [key for key, actor in actors.items() if actor['style'] == 'null']
     return {'kind': 'm15-native-data-inventory', 'plugins': plugins, 'styles': styles, 'actors': actors,
-        'settings': settings, 'skills': skills, 'spells': spells, 'enchantments': enchantments, 'effect_definitions': effect_definitions, 'factions': factions, 'equipment': equipment,
+        'settings': settings, 'skills': skills, 'spells': spells, 'levelled_spells': levelled_spells, 'enchantments': enchantments, 'effect_definitions': effect_definitions, 'factions': factions, 'equipment': equipment,
         'ownership': ownership, 'references': references, 'prisons': prison_reports, 'failures': failures,
         'link_issues': link_issues, 'data_passed': not failures,
         'skill_inventory_complete': skill_counts == collections.Counter(range(12, 33)),
         'unresolved_default_actors': unresolved, 'runtime_rules_verified': False,
         'open_gates': ['original-game default policy verification', 'independent physical/crime rule matrix'],
-        'summary': {'styles': len(styles), 'skills': len(skills), 'spells': len(spells), 'enchantments': len(enchantments), 'effect_definitions': len(effect_definitions), 'actors': len(actors), 'settings': len(settings),
+        'summary': {'levelled_spells': len(levelled_spells), 'styles': len(styles), 'skills': len(skills), 'spells': len(spells), 'enchantments': len(enchantments), 'effect_definitions': len(effect_definitions), 'actors': len(actors), 'settings': len(settings),
                     'factions': len(factions), 'equipment': len(equipment), 'owned_forms': len(ownership), 'references': len(references), 'prisons': len(prison_reports), 'default_actors': len(unresolved),
                     'style_size_distribution': dict(sorted(collections.Counter(str(s['standard_size']) for s in styles.values()).items()))},
         'passed': False} # Data inventory alone never closes the M15 rule/oracle gate.

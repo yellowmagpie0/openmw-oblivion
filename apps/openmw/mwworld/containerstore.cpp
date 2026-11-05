@@ -465,6 +465,7 @@ bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2,
         && (MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion
             || (ptr1.getCellRef().getOwner() == ptr2.getCellRef().getOwner()
                 && ptr1.getCellRef().getNativeOwnershipRank() == ptr2.getCellRef().getNativeOwnershipRank()
+                && !ptr1.getCellRef().getNativeBoundSource() && !ptr2.getCellRef().getNativeBoundSource()
                 && ptr1.getCellRef().getNativeOwnershipGlobal() == ptr2.getCellRef().getNativeOwnershipGlobal()
                 && ptr1.getCellRef().getNativeItemScale() == ptr2.getCellRef().getNativeItemScale()))
         && ptr1.getCellRef().getSoul() == ptr2.getCellRef().getSoul()
@@ -519,6 +520,7 @@ struct MWWorld::ContainerStore::PreparedItemAddition::Impl
         return actual.getRefId() == expected.getRefId()
             && actual.getOwner() == expected.getOwner()
             && actual.getNativeOwnershipRank() == expected.getNativeOwnershipRank()
+            && actual.getNativeBoundSource() == expected.getNativeBoundSource()
             && actual.getNativeOwnershipGlobal() == expected.getNativeOwnershipGlobal()
             && actual.getFaction() == expected.getFaction()
             && actual.getFactionRank() == expected.getFactionRank()
@@ -951,6 +953,11 @@ int MWWorld::ContainerStore::remove(const ESM::RefId& itemId, int count, bool eq
 {
     if (resolveFirst)
         resolve();
+    // Generic transfers/removals have no associated-effect ownership
+    // transaction. Reject before consuming any ordinary stacks of this base.
+    for (auto it = begin(); it != end() && count > 0; ++it)
+        if (it->getCellRef().getRefId() == itemId && it->getCellRef().getNativeBoundSource())
+            throw std::invalid_argument("bound equipment removal requires its owning effect lifecycle");
     int toRemove = count;
 
     for (ContainerStoreIterator iter(begin()); iter != end() && toRemove > 0; ++iter)
@@ -977,6 +984,8 @@ bool MWWorld::ContainerStore::hasVisibleItems() const
 int MWWorld::ContainerStore::remove(const Ptr& item, int count, bool equipReplacement, bool resolveFirst)
 {
     assert(this == item.getContainerStore());
+    if (count > 0 && item.getCellRef().getNativeBoundSource())
+        throw std::invalid_argument("bound equipment removal requires its owning effect lifecycle");
     if (resolveFirst)
         resolve();
 

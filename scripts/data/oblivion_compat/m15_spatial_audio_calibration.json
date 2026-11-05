@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "scope": "S4/E6 rendered native SOUN spatial calibration. Synthetic tone measures shared M10 backend; retained stock melee PCM proves actual selection separately. No listening claim.",
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_animation_sound_positive.json",
+  "source": "build/oblivion-compat/m15/S4/timing-campaign-work-01/fixture-seed1/input.omwsave",
+  "source_sha256": "54009663a6dfd9e2d23990cda379ba30b63a82f3fad4f5ca6526e623ae981ce2",
+  "data_directories": [
+    "build/oblivion-compat/m15/S4/combined-wall-work-01/partition-fixture-02",
+    "build/oblivion-compat/m15/S4/timing-campaign-work-01/fixture-seed1"
+  ],
+  "cell": "content:oblivion.esm:01fbb9",
+  "player_position": [
+    672.0,
+    -40.0,
+    -109.68915557861328
+  ],
+  "emitters": [
+    {
+      "phase": "near",
+      "reference": "content:oblivion.esm:032b01",
+      "base": "content:oblivion.esm:000034",
+      "position": [
+        685.5530395507812,
+        -48.94010925292969,
+        -108.34068298339844
+      ]
+    },
+    {
+      "phase": "far",
+      "reference": "content:oblivion.esm:032ae4",
+      "base": "content:oblivion.esm:000034",
+      "position": [
+        206.58021545410156,
+        -8.53082275390625,
+        -32.359649658203125
+      ]
+    },
+    {
+      "phase": "beyond",
+      "reference": "content:oblivion.esm:0150c0",
+      "base": "content:oblivion.esm:000034",
+      "position": [
+        38.00507354736328,
+        2267.681884765625,
+        -640.02294921875
+      ]
+    }
+  ],
+  "bounds": {
+    "far_min": 0.1,
+    "far_max": 0.4,
+    "repeat_min": 0.9,
+    "repeat_max": 1.1,
+    "silent_maximum_rms": 0.001,
+    "clock_tolerance_seconds": 0.5
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  }
+}

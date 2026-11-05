@@ -12,11 +12,13 @@
 #include "actorstats.hpp"
 #include "actorvalues.hpp"
 #include "magiccaster.hpp"
+#include "ability.hpp"
 #include <span>
 
 namespace ESM4
 {
     struct GameSetting;
+    DiseaseTransferSettings buildDiseaseTransferSettings(std::span<const GameSetting* const> settings);
 
     struct CombatStyleDefaults
     {

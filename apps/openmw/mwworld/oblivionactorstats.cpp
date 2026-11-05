@@ -14,6 +14,7 @@
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadbsgn.hpp>
 #include <components/esm4/runtimereferences.hpp>
+#include <components/esm4/loadlvsp.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -455,6 +456,8 @@ namespace MWWorld
             ability.validate();
             if (!seen.insert(ability.mSpell).second)
                 throw std::invalid_argument("duplicate native passive removal spell identity");
+            if (ability.mSpellType != 4)
+                continue; // Character changes retain diseases and their applied modifiers.
             for (const auto& effect : ability.mEffects)
             {
                 const ESM4::EffectSetting* definition = nullptr;
@@ -500,9 +503,11 @@ namespace MWWorld
             if (!seen.insert(key).second)
                 continue; // Same spell granted by multiple selection sources.
             const auto* spell = store.get<ESM4::Spell>().searchStatic(key);
-            if (!spell || !spell->mData || spell->mData->mType != 4 || spell->mEffects.empty())
-                throw std::invalid_argument("native passive input requires a winning nonempty Ability4");
+            if (!spell || !spell->mData || (spell->mData->mType != 4 && spell->mData->mType != 1)
+                || spell->mEffects.empty())
+                throw std::invalid_argument("native passive input requires a winning nonempty Ability4 or Disease1");
             ESM4::PassiveAbilityInput ability{key, {}};
+            ability.mSpellType = spell->mData->mType;
             for (std::size_t index = 0; index < spell->mEffects.size(); ++index)
             {
                 const auto& effect = spell->mEffects[index];
@@ -526,6 +531,104 @@ namespace MWWorld
                 ability.mEffects.push_back({static_cast<std::uint32_t>(index), effect.mId, loaded.mFlags, inputs});
             }
             result.push_back(std::move(ability));
+        }
+        return result;
+    }
+
+    std::optional<std::vector<ESM4::PassiveAbilityInput>> resolveOblivionCreaturePassiveAbilityInputs(
+        const ESMStore& store, const ESM::FormKey& base)
+    {
+        const auto* creature = store.search<ESM4::Creature>(base);
+        if (!creature) return std::nullopt;
+        const auto& spells = store.get<ESM4::Spell>();
+        std::vector<ESM::FormKey> abilities;
+        for (const auto id : creature->mSpell)
+        {
+            if (id == ESM::FormId{}) continue;
+            const auto* spell = spells.search(id);
+            if (!spell)
+            {
+                if (!store.get<ESM4::LevelledSpell>().search(id)) return std::nullopt;
+                continue;
+            }
+            if (!spell->mData || (spell->mFlags & ESM4::Rec_Deleted)) return std::nullopt;
+            if (spell->mData->mType != 4) continue;
+            const auto key = spells.findFormKey(ESM::RefId(id));
+            if (!key || (spell->mFlags & ESM4::Rec_Deleted)) return std::nullopt;
+            if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))
+                return std::nullopt;
+            abilities.push_back(*key);
+        }
+        try
+        {
+            auto inputs = resolveOblivionPassiveAbilityInputs(store, abilities);
+            for (const auto& ability : inputs)
+                for (const auto& effect : ability.mEffects)
+                    // VMOD's negative Endurance path can also kill/unconscious
+                    // its owner. Do not admit that unimplemented lifecycle.
+                    if (effect.mValues.mActorValue == 5 && (effect.mFlags & 4)) return std::nullopt;
+            return inputs;
+        }
+        catch (const std::invalid_argument&) { return std::nullopt; }
+    }
+
+    std::optional<std::vector<OblivionCreatureContactSpellSource>> resolveOblivionCreatureContactSpellSources(
+        const ESMStore& store, const ESM::FormKey& base)
+    {
+        const auto* creature = store.search<ESM4::Creature>(base);
+        if (!creature) return std::nullopt;
+        if (!resolveOblivionCreaturePassiveAbilityInputs(store, base)) return std::nullopt;
+        std::vector<OblivionCreatureContactSpellSource> result;
+        const auto& spells = store.get<ESM4::Spell>();
+        const auto& lists = store.get<ESM4::LevelledSpell>();
+        std::set<ESM::FormKey> seen;
+        for (const auto id : creature->mSpell)
+        {
+            if (id == ESM::FormId{}) continue;
+            if (const auto* spell = spells.search(id))
+            {
+                if (!spell->mData || (spell->mFlags & ESM4::Rec_Deleted)) return std::nullopt;
+                const auto type = spell->mData->mType;
+                if (type != 0 && type != 2 && type != 3 && type != 4) return std::nullopt;
+                if (const auto key = spells.findFormKey(ESM::RefId(id)))
+                    if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                        winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))
+                        return std::nullopt;
+                continue;
+            }
+            const auto* list = lists.search(id);
+            if (!list || (list->mFlags & ESM4::Rec_Deleted) || list->mFormKey.isNull()
+                || !list->mChanceNone || *list->mChanceNone > 100 || !list->mListFlags
+                || (*list->mListFlags & ~3u) || list->mEntries.size() != 1
+                || list->mEntries[0].mCount != 1 || list->mEntries[0].mSpellKey.isNull())
+                return std::nullopt;
+            if (const auto* winner = store.getFormKeyIndex().winner(list->mFormKey);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_LVSP))
+                return std::nullopt;
+            const auto& key = list->mEntries[0].mSpellKey;
+            const auto* disease = spells.searchStatic(key);
+            if (!disease || (disease->mFlags & ESM4::Rec_Deleted) || !disease->mData
+                || disease->mData->mType != 1 || disease->mEffects.size() != 1
+                || disease->mEffects[0].mId != ESM::fourCC("DRAT") || disease->mEffects[0].mActorValue != 1)
+                return std::nullopt;
+            if (const auto* winner = store.getFormKeyIndex().winner(key);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))
+                return std::nullopt;
+            try
+            {
+                const std::array requested{key};
+                (void)resolveOblivionPassiveAbilityInputs(store, requested);
+            }
+            catch (const std::invalid_argument&) { return std::nullopt; }
+            const ESM4::EffectSetting* definition = nullptr;
+            for (const auto* candidate : winningRecords<ESM4::EffectSetting>(store))
+                if (candidate->mEffectCode == ESM::fourCC("DRAT"))
+                    definition = candidate; // Passive resolver already rejects ambiguous codes.
+            if (!definition || !definition->mData || definition->mData->mSchool >= 6)
+                return std::nullopt;
+            if (seen.insert(list->mFormKey).second)
+                result.push_back({list, definition->mData->mSchool});
         }
         return result;
     }

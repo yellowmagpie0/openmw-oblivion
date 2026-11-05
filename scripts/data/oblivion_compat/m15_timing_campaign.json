@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "status": "frozen_inputs_matrix_execution_pending",
+  "full_M15S4_acceptance": false,
+  "full_T7_acceptance": false,
+  "requirement": "M15implementation-plan4.5/S4: deterministic synthetic timing-sensitive melee at>=3fixedseeds and30/60/120caps, includingSAN. Achievedcadence reported; semanticoutcomes notbitwisephysics trajectories.",
+  "course": "Existing full stockClub firstperson keyboard/mouse joined course; real block/incomingStagger/recovery/ordinaryreturn/range+wallmisses andBackward/Forward/Left/Right mastery consequences, fullreleaseendpoint.",
+  "seeds": [
+    {
+      "seed": 1,
+      "fixture": "build/oblivion-compat/m15/S4/timing-campaign-work-01/fixture-seed1",
+      "source_sha256": "54009663a6dfd9e2d23990cda379ba30b63a82f3fad4f5ca6526e623ae981ce2",
+      "byte_differences": [],
+      "all_other_decoded_fields_equal": true,
+      "original_schema_preserved": true,
+      "first_four_raw": [
+        41,
+        18467,
+        6334,
+        26500
+      ],
+      "initial_damage_percentile": 0
+    },
+    {
+      "seed": 24,
+      "fixture": "build/oblivion-compat/m15/S4/timing-campaign-work-01/fixture-seed24",
+      "source_sha256": "5a8012b6a1a43e5b43a7519b9b6a0e3d8602e75d7538e541f8929d64baf2850a",
+      "byte_differences": [
+        10290490
+      ],
+      "all_other_decoded_fields_equal": true,
+      "original_schema_preserved": true,
+      "first_four_raw": [
+        116,
+        3537,
+        23994,
+        22900
+      ],
+      "initial_damage_percentile": 0
+    },
+    {
+      "seed": 47,
+      "fixture": "build/oblivion-compat/m15/S4/timing-campaign-work-01/fixture-seed47",
+      "source_sha256": "a6a6a8d308843dc686a9f47d709a87773438cd14bff618bbbf12ecc8810d3c39",
+      "byte_differences": [
+        10290490
+      ],
+      "all_other_decoded_fields_equal": true,
+      "original_schema_preserved": true,
+      "first_four_raw": [
+        192,
+        21374,
+        8886,
+        19300
+      ],
+      "initial_damage_percentile": 0
+    }
+  ],
+  "seed_policy": "Fixed1/24/47 before rendered matrix. Existing CRT stream and retained first-contact event show three initial policy/empty-selection draws before damage percentile. All fourth words modulo100 are0; same already-demonstrated inclusive positive branch. Directional mastery chances already100 in unchanged authored fixture. Other speech/reaction draws may vary and all actual course assertions remain required.",
+  "seed_stage": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/stage-seeds.py",
+    "sha256": "3dc5723a16cb828e1881198074ba9c06889169130035a63d0fe6462c3e26248a",
+    "preflight": "build/oblivion-compat/m15/S4/timing-campaign-work-01/seed-input-preflight.json",
+    "preflight_sha256": "8d856bf276f4d6e974280aee75db62d5d39f48d26036f8f32385efcaa5ccd88b",
+    "algorithm": "Same existing encode_payload/decode_payload schema75, exact originalpayloadroundtrip; replace only RNGword through originalDATAchunks. All other decodedfields and opaque savebytes remain identical. No gameplay/outcome authored."
+  },
+  "frozen": {
+    "resolution": [
+      1280,
+      720
+    ],
+    "backend": "PrivateXvfb with SDL-X11 normalinput,softwareMesa,ALSOFTwave soundenabled; no concurrent campaigns or competingCPUheavychecks.",
+    "camera": "Firstperson initialsavedcamera; same mousebindings, sensitivity.05 and measured read-only framing policy in everycell.",
+    "profile": {
+      "path": "build/oblivion-compat/m15/S4/blunt-course-work-01/stock-club-profile-01.json",
+      "sha256": "114893c5e913a85478f7264dfc497705729e1071d030ccaf535e7c25c35b8a00"
+    },
+    "initial_clock": {
+      "year": 433,
+      "month": 7,
+      "day": 27,
+      "hour": 1.0199999809265137,
+      "time_scale": 30
+    },
+    "weather": "Initialweather and other opaque save records byte-identical to source; interiorcourse.",
+    "physics": {
+      "fixed_substep": 0.0167,
+      "update_type": 0,
+      "chase_delta_mult": 0.05,
+      "defaults_path": "files/settings-default.cfg",
+      "defaults_sha256": "453a57bde37fa29e0fc34cba46eaa8349627edfa3c8603f8fb2da1dd91c85929",
+      "policy": "Production native host clock; fixedsubsteps/carry, scene-complexity admission unchanged. Do not fabricate achievedFPS or equalelapsed trajectories."
+    },
+    "reference_manifest": {
+      "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/timing-readiness-current-normal-cap30-seed1-03.json",
+      "sha256": "2496da6d0b99f86f7c011d21f3dfc816c2cb26e49afa963b44144dbff4dece35",
+      "actions": 227,
+      "saves": 14,
+      "captures": 13
+    },
+    "deadline_policy": "Use exact existing bounded waits from pinned baseline. Expected SAN scaling in existing wrapper is declared beforecase preflight. No afterfailure budget/threshold changes; preserve/classify everyfailure.",
+    "artifacts_and_harness": "Shared existing run/inspect, epoch/save monitor, PCM assay, camera-statehelper, monotonicclassifier. OptionalS6settled diagnostic omittedexplicitly; requiredactiveS4body proofs retained.",
+    "file_hashes": {
+      "config/openmw.cfg": "4e3faad86da0d5f71df1839a60c0d2a3559e2545072cec34412443bb8d98ce57",
+      "config/settings.cfg": "7f6b54a63f082724b0ccab66d0fd0a1a139885cabeb014c0a4d6fe2bdf3d2cf5",
+      "test-data/events.txt": "c367fd1f4a711d450b8708ddabb9fa016329632ee64ed6b24e1c68e6c73e31b3",
+      "config/input_v3.xml": "19411e9b88ee5e44e87ed175578d4bf1475e045348e4375d9d34814fb94c61a5",
+      "config/alsoft.conf": "0769d68d4be9129611431fe934f4036d0e9b638c3034f7ee79692c025b7ebdd2",
+      "test-data/m15-course-observer.omwscripts": "164446637fab857d4f5af22c1f261d9e138b3beb16318aabc1a6c4912c84e24b",
+      "test-data/scripts/m15_course_observer.lua": "610bbdaea7ba6049fd6e57329a6d7bcd55b7ddad18465fb7322c38cb5e5e28c2",
+      "test-data/scripts/m15_forward_capture_guard.lua": "c8a571a2d8eb45b953438cd6127b1fa7f77c0497c526996a222c7acf807d37a2"
+    }
+  },
+  "expected": {
+    "exact_save_live_pairs": 14,
+    "required_captures": 13,
+    "block_pcm_clusters": 1,
+    "native": "All original fullcourse contact/resource/condition/action/RNG/miss/mastery/retirement assertions unchanged. Threechances100alreadyfixed byauthoredfixture; initialincomingdamagewordpercentile0fixes requiredpositiveStaggerbranch. Other speech/reactiondraws mayvary; currentassertions remainrequired.",
+    "feedback": "SavedactiveForwardparalysis/body andLeftStagger; actualper-capture observations. No fullV6/listening/photometricclaim."
+  },
+  "current_gates": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-contact-integration-normal-01/verification.json",
+      "sha256": "3fb3d2c0708b2265a8ad939e6c2de68f25cef0bc13ef895d1992c6bf7caf67f5"
+    },
+    "sanitize": {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-contact-integration-sanitize-01/verification.json",
+      "sha256": "eaaa042048991d9e9760a48a1624d4fc1f438631fad1bad15763b8cadf1ae7b8"
+    }
+  },
+  "cells": [
+    {
+      "id": "normal-seed1-cap30",
+      "kind": "normal",
+      "seed": 1,
+      "cap": 30,
+      "run": "timing-matrix-normal-cap30-seed1-01",
+      "reuse_run": "timing-readiness-current-normal-cap30-seed1-03"
+    },
+    {
+      "id": "normal-seed1-cap60",
+      "kind": "normal",
+      "seed": 1,
+      "cap": 60,
+      "run": "timing-matrix-normal-cap60-seed1-01",
+      "reuse_run": null
+    },
+    {
+      "id": "normal-seed1-cap120",
+      "kind": "normal",
+      "seed": 1,
+      "cap": 120,
+      "run": "timing-matrix-normal-cap120-seed1-01",
+      "reuse_run": null
+    },
+    {
+      "id": "normal-seed24-cap30",
+      "kind": "normal",
+      "seed": 24,
+      "cap": 30,
+      "run": "timing-matrix-normal-cap30-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "normal-seed24-cap60",
+      "kind": "normal",
+      "seed": 24,
+      "cap": 60,
+      "run": "timing-matrix-normal-cap60-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "normal-seed24-cap120",
+      "kind": "normal",
+      "seed": 24,
+      "cap": 120,
+      "run": "timing-matrix-normal-cap120-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "normal-seed47-cap30",
+      "kind": "normal",
+      "seed": 47,
+      "cap": 30,
+      "run": "timing-matrix-normal-cap30-seed47-01",
+      "reuse_run": null
+    },
+    {
+      "id": "normal-seed47-cap60",
+      "kind": "normal",
+      "seed": 47,
+      "cap": 60,
+      "run": "timing-matrix-normal-cap60-seed47-01",
+      "reuse_run": null
+    },
+    {
+      "id": "normal-seed47-cap120",
+      "kind": "normal",
+      "seed": 47,
+      "cap": 120,
+      "run": "timing-matrix-normal-cap120-seed47-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed1-cap30",
+      "kind": "sanitize",
+      "seed": 1,
+      "cap": 30,
+      "run": "timing-matrix-sanitize-cap30-seed1-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed1-cap60",
+      "kind": "sanitize",
+      "seed": 1,
+      "cap": 60,
+      "run": "timing-matrix-sanitize-cap60-seed1-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed1-cap120",
+      "kind": "sanitize",
+      "seed": 1,
+      "cap": 120,
+      "run": "timing-matrix-sanitize-cap120-seed1-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed24-cap30",
+      "kind": "sanitize",
+      "seed": 24,
+      "cap": 30,
+      "run": "timing-matrix-sanitize-cap30-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed24-cap60",
+      "kind": "sanitize",
+      "seed": 24,
+      "cap": 60,
+      "run": "timing-matrix-sanitize-cap60-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed24-cap120",
+      "kind": "sanitize",
+      "seed": 24,
+      "cap": 120,
+      "run": "timing-matrix-sanitize-cap120-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed47-cap30",
+      "kind": "sanitize",
+      "seed": 47,
+      "cap": 30,
+      "run": "timing-matrix-sanitize-cap30-seed47-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed47-cap60",
+      "kind": "sanitize",
+      "seed": 47,
+      "cap": 60,
+      "run": "timing-matrix-sanitize-cap60-seed47-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed47-cap120",
+      "kind": "sanitize",
+      "seed": 47,
+      "cap": 120,
+      "run": "timing-matrix-sanitize-cap120-seed47-01",
+      "reuse_run": null
+    }
+  ],
+  "additional_required_gates": [
+    "Applicable exactfreshwindup/block/recovery highrisk timing cases; reuse originalscopes onlywhen inputs/dependenciesunchanged.",
+    "F8 independentclean2same-seed/1other-seed final campaigns plus allapplicableSection10build/sanitizer/regression gates.",
+    "FiniteotherC1/D2/R3/I4/Q5/V6reconciliation. E6listening remainsseparatetoolblocked; thismatrix neverclaims fullS4."
+  ],
+  "reuse": "Normalcap30seed1readiness predatesmatrixrecipe but identicalfrozeninputbytes/227actions/14saves/expectedassertions andcurrentbinaryverified; retainits originalreceiptprovenance. No rerunsolelyforformalmetadata. All other17cells pending.",
+  "case_preflight": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/matrix-case-preflight.json",
+    "sha256": "b44cf3e166ed7b3e15344da5414aedd6b9f033e090e0ecb526dd1349e581ed57"
+  },
+  "frozen_at_utc": "2026-11-02T18:25:51.755635+00:00",
+  "result_index": "build/oblivion-compat/m15/S4/timing-campaign-work-01/matrix-verification.json"
+}

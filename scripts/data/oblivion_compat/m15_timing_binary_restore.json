@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "full_T7_acceptance": false,
+  "scope": "Only the eight unexecuted SAN camera cases use the restored production binary. Original nine normal and first corrected SAN evidence/protocols remain unchanged. No restart or retrospective recipe editing.",
+  "reason": "Withdrawn clock/logging experiment had overwritten local game executable. Restore exact production source from7aa60301d5, same CMake cache as prior full gates; rebuilt game byte hash differs. No C++ implementation change; reuse full integration evidence via original commit-link.",
+  "preflight": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/remaining-sanitize-restoration-preflight.json",
+    "sha256": "c4485ceff0c99387a58f611c2ad642fd7b17ae74506add8ee91c830315ae5b1f"
+  },
+  "build": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/restore-production-sanitize-build.json",
+    "sha256": "d7942623bf8c1e7eb629ae79cc0d788944364aa7cef9877ee2d5c3d36288d8f4"
+  },
+  "preserved_semantic_adapter": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix-before-production-restore.py",
+    "sha256": "faf83bf1b90ec71021632fe377215396b1accea302f209d679a13e23b1dd2ba7"
+  },
+  "current_adapter": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix.py",
+    "sha256": "573cb41728e19f583a15d357c1cd74b69e8ad48726d12d02014ccecf8d960afd"
+  },
+  "portable_patch": {
+    "path": "scripts/data/oblivion_compat/m15_timing_binary_restore_shared.patch",
+    "sha256": "60f9ac827d3ad12f98d90c988f1d1adb5c736c74bbfc7f782ad8f2be309c2191"
+  },
+  "semantic_policy": {
+    "path": "scripts/data/oblivion_compat/m15_timing_semantic_comparison.json",
+    "sha256": "8166f43b345060c8c51a3717daf75813e4b0fa358890323ef952b171bea4897d"
+  },
+  "unchanged_cpp_reference_commit": "7aa60301d5f6bedda83920d9a4631feef2e50d16",
+  "case_count": 8,
+  "invariants": "Preflight asserts each manifest byte-identical to frozen SAN appendix, source identical, same230actions/14saves/13captures. Actual gameSHA and source bytes must match new pins before each execution. Required fullcourse/mastery/ownership/Health/wear/camera/PCM/visual assertions preserved. Focused development47 and fullPython532 pass; no additionalC++suite for checker/identitymetadata.",
+  "checker_correction": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/cap60-verifier-binary-pin-failure.json",
+    "sha256": "5362e3f0154d6e1d37a9ff178785e94c988407621db49901bc702f343eb921ca"
+  }
+}

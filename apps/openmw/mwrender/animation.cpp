@@ -16,6 +16,7 @@
 #include <limits>
 #include <mutex>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 
@@ -3253,6 +3254,7 @@ namespace MWRender
         MWWorld::Ptr mActor;
         std::uint64_t mGeneration;
         NativeSceneFrameSource mSource;
+        std::string mActorLabel;
         std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mDefaults;
         std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mBinding;
         std::unique_ptr<SceneUtil::NifSceneTraversal> mTraversal;
@@ -3326,6 +3328,7 @@ namespace MWRender
         auto state = std::make_shared<NativeSceneState>();
         state->mOwner = this; state->mIdentity = mNativePhysicalSourceIdentity;
         state->mRoot = mObjectRoot; state->mActor = mPtr; state->mGeneration = mPhysicalPoseGeneration;
+        state->mActorLabel = mPtr.isEmpty() ? "none" : mPtr.getCellRef().getFormKey().serialize();
         if (defaults) defaults->validate();
         state->mDefaults = std::move(defaults);
         state->mDrawingWorld = drawingWorld;
@@ -3401,7 +3404,18 @@ namespace MWRender
         const auto state = mNativeScene;
         const NativeSceneState::Frame frame(stamp);
         if (!state->current() || state->mUpdating || state->mPrePhysicsInProgress)
-            throw std::invalid_argument("stale or reentrant native renderer pre-physics owner");
+        {
+            std::ostringstream error;
+            error << "stale or reentrant native renderer pre-physics owner: actor=" << state->mActorLabel
+                << " updating=" << state->mUpdating << " pre_physics=" << state->mPrePhysicsInProgress
+                << " identity=" << !state->mIdentity.expired()
+                << " root=" << (mObjectRoot == state->mRoot) << " ptr=" << (mPtr == state->mActor)
+                << " generation=" << mPhysicalPoseGeneration << " expected_generation=" << state->mGeneration
+                << " callback=" << (state->mRoot->getUpdateCallback() == state->mCallback)
+                << " binding=" << state->mBinding->isValid() << " traversal=" << state->mTraversal->isValid()
+                << " physical_pose=" << (mPhysicalPose != nullptr);
+            throw std::invalid_argument(error.str());
+        }
         if (state->mBeforePhysics == frame) return false;
         osgUtil::UpdateVisitor visitor;
         visitor.setFrameStamp(new osg::FrameStamp(stamp));
