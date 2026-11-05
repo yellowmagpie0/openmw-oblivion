@@ -9,64 +9,66 @@ MQ01 stage88 exit and fresh-process save/load outdoors. No injected health,
 quest/completion state or skipped required encounters qualifies.
 **Full escape remains incomplete.**
 
-Remaining: Player entry into ImperialDungeon03 and original58 story gate,
-Emperor death/Amulet, class choice,
+Remaining: original59 onward conversations and Emperor death/Amulet, class choice,
 sewer exit88, outdoor reload and continuous
 prison-to-outdoors acceptance. Shaman encounter victory remains unaccepted;
 actual contact/staff behavior is implemented, but earlier fight attempts lost.
 Full2191 ASan/UBSan engine tests and a rendered moving-escort restart pass for
-1eb42debb1. New schema89/daily-package sanitizer integration remains due; preserve
+1eb42debb1. New schema89/daily-package/bound-dagger sanitizer integration remains due; preserve
 those earlier checks with their original provenance.
 
-## Current chunk — Baurus resumed Follow and entered ImperialDungeon03
+## Current chunk — Sanctum entry and original58 accepted
 
-OncePerDay completion history is now native AI state, keyed by actor/package
-and calendar date. Schema89 appends a canonical history map; loaded and unloaded
-selection skip completed daily packages and preserve the next package's original
-priority. History is recorded before package callbacks and retained through the
-existing transactional actor restore. Date/year rollover eligibility is unit-tested.
+Player follows ordinary observed waypoints to original unlocked0226a2 and uses
+Space to cross022812 into ImperialDungeon03/022282. All three escorts are there;
+the original party/proximity gate advances56→58. Native final assassin01e703
+(base01e6ff) originally failed to render because its ability06461c includes BWDA.
+Bound Dagger now resolves through winning MGEF001855 to weapon02627c, alongside
+existing MYTH/MYHL armor and helmet grants.
 
-Legacy schema88 lacks completion dates. Its still-completed daily package is
-retired on its first selection day without replaying its callback. Initial
-migration changes only version89 and empty history; all other state is exact.
-Baurus then selects original Follow017d7d instead of staying on Find04f201.
-He passes both doorways, genuinely saves while moving, reloads exactly, continues
-following and crosses original0226a2→022812 into ImperialDungeon03/022282.
-The completion record remains(032a17,04f201,433/7/28), with no old Find callback.
+An earlier actor01770c/base017623 has dagger-only0521ca before armor/mace03e91b.
+Admitting dagger exposed the shared weapon slot. A bounded last-authored-weapon
+policy preserves the later mace and earlier armor, with original source indices;
+within-ability and armor overlaps still reject. Both orders and invalid weapon
+associations are tested. This is not instruction-proven arbitrary stacking parity.
 
-Full3261 normal component tests,2191 engine tests and560 Python tests pass.
-The Python pass retains its original fingerprint before final C++ wire-test-only
-offset corrections. Current exact-wire assertions include the new four-byte tail;
-reviewed synthetic fixture migrations carry empty daily history and still reject
-future schemas. Captures inspected. Evidence and retained failures:
-[SEWER-DAILY-PACKAGE-VERIFICATION.json](SEWER-DAILY-PACKAGE-VERIFICATION.json).
+Clean door-entry rerun passes without render errors. Final assassin owns exactly
+one equipped dagger at condition2500, source(06461c,effect2), plus the authored
+armor/helmet. Fresh process reload restores the whole state exactly, keeps that
+single dagger and preserves older mace ownership. All2193 normal engine cases
+pass, including8 bound-item tests. Captures inspected. Evidence and failures:
+[SEWER-SANCTUM-ENTRY-VERIFICATION.json](SEWER-SANCTUM-ENTRY-VERIFICATION.json).
 
 Current input:
-`build/oblivion-compat/sewer-escape/baurus-marker-g-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Quest56; Player near(1292.136,7259.708,-1183) in022288, health71.19003, Warrior,
-axe and armor. All three escorts are now in022282. Baurus is at the real door
-landing(2812.340,7463.908,-1184.023), still following the Emperor. Glenroy is near
-(2827.590,7857.444,-1238.728); Emperor at(2847.786,7633.505,-1184.023).
+`build/oblivion-compat/sewer-escape/sanctum-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Quest58; Player and all three escorts in022282, Player at the real landing near
+(2812.340,7463.908,-1184), health71.19003, Warrior, axe and armor. Baurus is nearby;
+Emperor near(2847.786,7633.505,-1183), Glenroy near(2827.590,7857.444,-1247).
+Editable Sanctum approach/entry/reload recipes are under
+`scripts/data/oblivion_compat/oblivion_sewer_sanctum_*.json`.
 
 ## Next action
 
-Use ordinary Player movement through the original unlocked0226a2→022812 door.
-An ignored scout recipe is `build/oblivion-compat/sewer-escape/sanctum-door-approach.json`;
-its first run may still be active: inspect its actual process/session before reuse.
-Then reach the stage56 proximity/party gate and continue toward the Emperor
-death/Amulet sequence. Do not inject stages or relocate actors. Batch new daily
-state sanitizer integration at the next story checkpoint. Start/interruption
-parity for all daily package types and an actual24-hour runtime rollover are not
-established by the scoped daily-package proof.
+Inspect the actual status of the original conversation continuation before reuse:
+`build/oblivion-compat/sewer-escape/sanctum-conversation-01` may still be running.
+It waits for original59, then normally F5 saves. Follow original conversation,
+escort and ambush progression toward the Emperor death/Amulet, then class choice
+and sewer exit. No injected stages or relocation qualifies. Batch fresh sanitizer
+integration for schema89/daily-package/bound-dagger changes at the next story
+checkpoint; older sanitized gates do not cover these changes.
 
-Earlier route evidence:
-[Marker F](SEWER-ESCORT-MARKER-F-VERIFICATION.json) and
-[original54/56 progression](SEWER-MARKER-G-PROGRESSION-VERIFICATION.json).
-The rendered sanitizer original50→52 run reached its600-second limit while
-progressing; its retained F5 proves both doorway traversals and a fresh restart
-with exact state and25–28 further units of movement. It remains a failed whole
-stage52 scenario, and its compiled1eb42debb1 does not cover the daily-package
-change. Receipt is linked in the current verification artifact.
+Prior required dependency is committed asb841bd36a5: OncePerDay completion
+history keyed by actor/package/calendar day, schema89, loaded/unloaded selection,
+legacy completion retirement without callback replay, exact fresh restart and
+Baurus following through the original door. Normal3261 component/2191 engine and
+560 Python tests passed at recorded source fingerprints. Details:
+[SEWER-DAILY-PACKAGE-VERIFICATION.json](SEWER-DAILY-PACKAGE-VERIFICATION.json).
+Earlier [Marker F](SEWER-ESCORT-MARKER-F-VERIFICATION.json) and
+[original54/56](SEWER-MARKER-G-PROGRESSION-VERIFICATION.json) retain provenance.
+Rendered sanitized original50→52 exceeded600 seconds while progressing; its
+retained F5 proves doorway traversal and exact moving restart with25–28 further
+units. That full52 scenario remains failed and compiled1eb42debb1 predates the
+current changes. Its receipt is linked in the daily-package artifact.
 
 ## Reusable evidence and known limitations
 

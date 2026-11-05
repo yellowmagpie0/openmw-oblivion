@@ -23,9 +23,14 @@ namespace MWWorld
 {
     namespace
     {
+        bool boundWeaponEffect(std::uint32_t code)
+        {
+            return code == ESM4::EFI_BWMA || code == ESM4::EFI_BWDA;
+        }
+
         bool admittedBoundEffect(std::uint32_t code)
         {
-            return code == ESM4::EFI_MYTH || code == ESM4::EFI_MYHL || code == ESM4::EFI_BWMA;
+            return code == ESM4::EFI_MYTH || code == ESM4::EFI_MYHL || boundWeaponEffect(code);
         }
 
         std::vector<ESM4::BoundEquipmentGrant> grantsFor(const ESMStore& store, const ESM::FormKey& base)
@@ -49,6 +54,17 @@ namespace MWWorld
         std::vector<OblivionBoundAbilityInput> result;
         std::set<ESM::FormKey> seen;
         std::uint32_t occupiedSlots = 0;
+        std::optional<ESM::FormId> weaponSpell;
+        // Bound weapons share one equipped slot. Keep the last authored
+        // weapon ability, without discarding armor from earlier abilities.
+        for (const auto id : npc->mSpell)
+        {
+            const auto* spell = store.get<ESM4::Spell>().search(id);
+            if (spell && spell->mData && spell->mData->mType == 4
+                && std::any_of(spell->mEffects.begin(), spell->mEffects.end(),
+                    [](const auto& effect) { return boundWeaponEffect(effect.mId); }))
+                weaponSpell = id;
+        }
         for (const auto id : npc->mSpell)
         {
             const auto* spell = store.get<ESM4::Spell>().search(id);
@@ -76,7 +92,7 @@ namespace MWWorld
                     || definition->mFlags & ESM4::Rec_Deleted)
                     throw std::invalid_argument("native bound effect has no winning associated item");
                 const auto& itemKey = *definition->mData->mAssociatedForm;
-                const bool weapon = effect.mId == ESM4::EFI_BWMA;
+                const bool weapon = boundWeaponEffect(effect.mId);
                 std::optional<ESM4::InventoryItemDefinition> item;
                 if (weapon)
                 {
@@ -95,6 +111,8 @@ namespace MWWorld
                     || item->mType != (weapon ? ESM4::InventoryItemType::Weapon : ESM4::InventoryItemType::Armor)
                     || item->mSlots == 0 || item->mChooseOneSlot || item->mMaxCondition <= 0)
                     throw std::invalid_argument("native bound effect has an incompatible associated item");
+                if (weapon && weaponSpell && id != *weaponSpell)
+                    continue;
                 if (occupiedSlots & item->mSlots)
                     throw std::invalid_argument("overlapping native bound equipment abilities are not admitted");
                 occupiedSlots |= item->mSlots;
@@ -104,7 +122,8 @@ namespace MWWorld
                 grant.mBoundSource = ESM4::BoundItemSource{*key, static_cast<std::uint32_t>(index)};
                 ability.mEffects.push_back({static_cast<std::uint32_t>(index),effect.mId,std::move(grant)});
             }
-            result.push_back(std::move(ability));
+            if (!ability.mEffects.empty())
+                result.push_back(std::move(ability));
         }
         return result;
     }

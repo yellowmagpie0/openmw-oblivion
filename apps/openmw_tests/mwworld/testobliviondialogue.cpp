@@ -1509,7 +1509,8 @@ namespace
 {
     struct BoundDefinitionFixture : SwitchFixture
     {
-        explicit BoundDefinitionFixture(bool shifted) : SwitchFixture(shifted)
+        explicit BoundDefinitionFixture(bool shifted, std::uint32_t weaponEffect = ESM4::EFI_BWMA)
+            : SwitchFixture(shifted)
         {
             auto& store = mFixture.mWorld.getStore();
             auto npc = *store.search<ESM4::Npc>(key(0x800));
@@ -1520,7 +1521,7 @@ namespace
             store.getWritable<ESM4::Armor>().insertStatic(armor,key(0xe11));
             ESM4::Weapon weapon{}; weapon.mId = {0xe12,file}; weapon.mData.health = 4200;
             store.getWritable<ESM4::Weapon>().insertStatic(weapon,key(0xe12));
-            const std::array<std::uint32_t,3> codes{ESM4::EFI_MYTH,ESM4::EFI_MYHL,ESM4::EFI_BWMA};
+            const std::array<std::uint32_t,3> codes{ESM4::EFI_MYTH,ESM4::EFI_MYHL,weaponEffect};
             ESM4::Spell spell{}; spell.mId = {0xe00,file}; spell.mFormKey = key(0xe00);
             spell.mData = ESM4::SpellData{4,0,0,1,{}};
             for (unsigned i=0;i<3;++i)
@@ -1570,8 +1571,9 @@ namespace
 TEST(OblivionBoundItems, AbilityDefinitionsResolveItemsAndSlotsWithoutVmodOrDurationReinterpretation)
 {
     for (bool shifted : {false,true})
+    for (const auto weaponEffect : {ESM4::EFI_BWMA, ESM4::EFI_BWDA})
     {
-        BoundDefinitionFixture f(shifted); auto& store = f.mFixture.mWorld.getStore();
+        BoundDefinitionFixture f(shifted, weaponEffect); auto& store = f.mFixture.mWorld.getStore();
         const auto inputs = MWWorld::resolveOblivionNpcBoundAbilityInputs(store,key(0x800));
         ASSERT_EQ(inputs.size(),1u); EXPECT_EQ(inputs.front().mSpell,key(0xe00));
         ASSERT_EQ(inputs.front().mEffects.size(),3u);
@@ -2509,5 +2511,61 @@ TEST(OblivionTutorialAction, PackageDoneActorValueNameDoesNotResolveDialogueTopi
         ASSERT_TRUE(scripts.dispatchObjectEvent(f.mActor, "onpackagedone"));
         EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(f.mActor, 34), 50.f);
         EXPECT_EQ(scripts.scriptVariable(f.mActor.getCellRef().getFormKey(), 1), 50.f);
+    }
+}
+
+TEST(OblivionBoundItems, BoundDaggerRequiresWeaponAssociation)
+{
+    BoundDefinitionFixture f(false, ESM4::EFI_BWDA);
+    auto& store = f.mFixture.mWorld.getStore();
+    const auto inputs = MWWorld::resolveOblivionNpcBoundAbilityInputs(store, key(0x800));
+    ASSERT_EQ(inputs.size(), 1u);
+    ASSERT_EQ(inputs.front().mEffects.size(), 3u);
+    EXPECT_EQ(inputs.front().mEffects.back().mEffectCode, ESM4::EFI_BWDA);
+    EXPECT_EQ(inputs.front().mEffects.back().mItem.mEquippedSlots, ESM4::InventorySlotWeapon);
+    auto effect = *store.get<ESM4::EffectSetting>().searchStatic(key(0xe22));
+    effect.mData->mFlags = 0x22112; // An armor association cannot supply a dagger.
+    store.getWritable<ESM4::EffectSetting>().insertStatic(effect, key(0xe22));
+    EXPECT_THROW(MWWorld::resolveOblivionNpcBoundAbilityInputs(store, key(0x800)), std::invalid_argument);
+}
+
+TEST(OblivionBoundItems, LaterWeaponAbilityWinsWithoutDroppingEarlierArmorOrSourceIndices)
+{
+    for (const bool daggerLast : {false, true})
+    {
+        SCOPED_TRACE(daggerLast);
+        BoundDefinitionFixture f(false);
+        auto& store = f.mFixture.mWorld.getStore();
+        auto daggerEffect = *store.get<ESM4::EffectSetting>().searchStatic(key(0xe22));
+        daggerEffect.mId = {0xe30, daggerEffect.mId.mContentFile};
+        daggerEffect.mFormKey = key(0xe30);
+        daggerEffect.mEffectCode = ESM4::EFI_BWDA;
+        store.getWritable<ESM4::EffectSetting>().insertStatic(daggerEffect, key(0xe30));
+        auto daggerSpell = *store.get<ESM4::Spell>().searchStatic(key(0xe00));
+        daggerSpell.mId = {0xe01, daggerSpell.mId.mContentFile};
+        daggerSpell.mFormKey = key(0xe01);
+        daggerSpell.mEffects = {daggerSpell.mEffects.back()};
+        daggerSpell.mEffects.front().mId = ESM4::EFI_BWDA;
+        store.getWritable<ESM4::Spell>().insertStatic(daggerSpell, key(0xe01));
+        auto npc = *store.search<ESM4::Npc>(key(0x800));
+        const auto mace = store.get<ESM4::Spell>().searchStatic(key(0xe00))->mId;
+        npc.mSpell = daggerLast ? std::vector<ESM::FormId>{mace, daggerSpell.mId}
+                               : std::vector<ESM::FormId>{daggerSpell.mId, mace};
+        store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+        const auto inputs = MWWorld::resolveOblivionNpcBoundAbilityInputs(store, key(0x800));
+        ASSERT_EQ(inputs.size(), daggerLast ? 2u : 1u);
+        ASSERT_GE(inputs.front().mEffects.size(), 2u);
+        EXPECT_EQ(inputs.front().mEffects[0].mEffectCode, ESM4::EFI_MYTH);
+        EXPECT_EQ(inputs.front().mEffects[1].mEffectCode, ESM4::EFI_MYHL);
+        unsigned weapons = 0;
+        for (const auto& ability : inputs)
+            for (const auto& effect : ability.mEffects)
+                if (effect.mItem.mEquippedSlots == ESM4::InventorySlotWeapon)
+                {
+                    ++weapons;
+                    EXPECT_EQ(effect.mItem.mBoundSource, (ESM4::BoundItemSource{
+                        key(daggerLast ? 0xe01 : 0xe00), daggerLast ? 0u : 2u}));
+                }
+        EXPECT_EQ(weapons, 1u);
     }
 }
