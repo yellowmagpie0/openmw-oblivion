@@ -495,7 +495,10 @@ namespace NifBullet
     static ActorRagdollDefinition loadRagdollDefinition(
         Nif::FileView file, bool referencePlacement, bool weapon = false)
     {
-        require((file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)
+        // Stock Oblivion CTrapLogs01 uses 10.2.0.0. The NIF reader already
+        // decodes its rigid bodies and convex hulls into the same typed data.
+        const bool olderReference = referencePlacement && file.getVersion() == 0x0a020000;
+        require((olderReference || file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)
             && file.getBethVersion() <= 16, "unsupported NIF version");
         ActorRagdollDefinition result;
         result.mSourceHash = file.getHash();

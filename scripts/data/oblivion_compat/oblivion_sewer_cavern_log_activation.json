@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "name": "Original cavern rolling logs activation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal camera=require('openmw.camera')\nlocal frames=0\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1\n assert(Actor.stats.dynamic.health(self).current>0,'Player died at log encounter')\n if frames==5 then print('Cavern logs ready') end\n local target=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x3b49e))\n assert(target and target:isValid(),'Cavern logs missing')\n local center=target:getBoundingBox().center\n local p=camera.getViewTransform():apply(center)\n local x=math.max(-8192,math.min(8192,math.floor(math.atan2(p.x,-p.z)*5120+.5)))\n local y=math.max(-8192,math.min(8192,math.floor(-math.atan2(p.y,-p.z)*5120+.5)))\n print(string.format('Cavern logs aim x=%d y=%d',x,y))\n local rayEnd=camera.getViewTransform():inverse():apply(util.vector3(0,0,-150))\n local hit=nearby.castRenderingRay(camera.getPosition(),rayEnd,{{ignore=self}})\n if hit.hitObject==target then print('Cavern logs focused') end\n timer=timer+dt\n if timer>=1 then\n  timer=0 print('Cavern logs Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x3b518,0x3b51a}}) do\n   local goblin=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if goblin and goblin:isValid() then print('Cavern log goblin '..id..' dead='..tostring(Actor.isDead(goblin))..' pos='..tostring(goblin.position)) end\n  end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Cavern logs ready",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Cavern logs aim",
+      "after_start": true,
+      "timeout_seconds": 15,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Cavern logs aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Cavern logs aim",
+      "after_start": true,
+      "timeout_seconds": 15,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Cavern logs aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Cavern logs aim",
+      "after_start": true,
+      "timeout_seconds": 15,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Cavern logs aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Cavern logs aim",
+      "after_start": true,
+      "timeout_seconds": 15,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Cavern logs aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Cavern logs aim",
+      "after_start": true,
+      "timeout_seconds": 15,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Cavern logs aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Cavern logs focused",
+      "timeout_seconds": 8,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "TES4 animated reference released: content:oblivion.esm:03b49e",
+      "timeout_seconds": 12,
+      "abort_on_failure": false
+    },
+    {
+      "type": "sleep",
+      "seconds": 6
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 15,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "screenshot",
+      "name": "rolling-logs.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 150,
+  "expected_exit": 0,
+  "expected_log": [
+    "playgroup ref=content:oblivion.esm:03b49e group=unequip played=true",
+    "TES4 animated reference released: content:oblivion.esm:03b49e"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)",
+    "activate-script ref=content:oblivion.esm:051aca activator=content:oblivion.esm:051aca"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

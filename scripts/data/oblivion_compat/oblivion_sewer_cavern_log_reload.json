@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "name": "Rolling logs fresh process reload",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal checked=false\nreturn {{engineHandlers={{onFrame=function()\n if checked then return end\n assert(self.cell and self.cell.id==core.getFormId('Oblivion.esm',0x380bd),'Natural Caverns cell not restored')\n local inv=Actor.inventory(self)\n assert(inv:countOf(core.getFormId('Oblivion.esm',0x9310))==0,'Healing potion reappeared')\n assert(inv:countOf(core.getFormId('Oblivion.esm',0x931a))==1,'Other potion changed')\n local health=Actor.stats.dynamic.health(self).current\n assert(math.abs(health-29.079994201660156)<0.01,'Restored health changed: '..health)\n local goblin=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x3b51a))\n assert(goblin and Actor.isDead(goblin),'Log-killed goblin not restored')\n checked=true print('Rolling logs reload accepted health='..health)\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Rolling logs reload accepted",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "rolling-logs-reload.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 150,
+  "expected_exit": 0,
+  "expected_log": [
+    "Rolling logs reload accepted",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)",
+    "activate-script ref=content:oblivion.esm:051ac[abc]",
+    "playgroup ref=content:oblivion.esm:051ac[abc]",
+    "TES4 trap impact:",
+    "playgroup ref=content:oblivion.esm:03b49e",
+    "activate-script ref=content:oblivion.esm:03b49e",
+    "TES4 animated reference released: content:oblivion.esm:03b49e"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

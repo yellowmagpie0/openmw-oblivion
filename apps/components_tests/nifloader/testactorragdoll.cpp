@@ -724,6 +724,27 @@ namespace
         EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
     }
 
+    TEST_F(ActorRagdollTest, OlderOblivionLogVersionIsReferenceOnly)
+    {
+        mFile.mVersion = 0x0a020000;
+        mFile.mUserVersion = 10;
+        mFile.mBethVersion = 9;
+        const auto graph = NifBullet::loadReferenceRagdollDefinition(mFile);
+        ASSERT_EQ(graph.mBodies.size(), 2u);
+        EXPECT_FLOAT_EQ(graph.mBodies[0].mMass, 40.f);
+        EXPECT_FLOAT_EQ(graph.mBodies[1].mMass, 20.f);
+        EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+        mFile.mBethVersion = 17;
+        EXPECT_THROW(NifBullet::loadReferenceRagdollDefinition(mFile), std::runtime_error);
+        mFile.mBethVersion = 9;
+        for (const auto version : std::array<std::uint32_t, 3>{Nif::NIFFile::VER_MW, Nif::NIFFile::VER_OB_OLD,
+                 Nif::NIFStream::generateVersion(20, 2, 0, 7)})
+        {
+            mFile.mVersion = version;
+            EXPECT_THROW(NifBullet::loadReferenceRagdollDefinition(mFile), std::runtime_error);
+        }
+    }
+
     TEST_F(ActorRagdollTest, ResolvesSerializedBodyAndMalleableReferences)
     {
         auto& original = static_cast<Nif::bhkLimitedHingeConstraint&>(*mFile.mRecords[9]);
