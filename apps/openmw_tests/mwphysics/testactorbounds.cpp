@@ -1,3 +1,6 @@
+#include <apps/openmw/mwphysics/stepper.hpp>
+#include <apps/openmw/mwphysics/collisiontype.hpp>
+#include <BulletCollision/CollisionShapes/btCapsuleShape.h>
 #include <apps/openmw/mwmechanics/oblivionmelee.hpp>
 #include <apps/openmw/mwphysics/actor.hpp>
 #include <apps/openmw/mwphysics/trace.h>
@@ -476,5 +479,82 @@ namespace
             EXPECT_FALSE(scheduler.validatePreparedActorRagdoll(*stale));
             EXPECT_FALSE(scheduler.commitActorRagdoll(*stale));
         }
+    }
+}
+
+// Exercise real capsule sweeps, including rejection when headroom is insufficient.
+TEST(ActorBoundsTest, CapsuleStepsAcrossLowThresholdUnderOverhang)
+{
+    for (const float ceiling : {150.f, 136.f})
+    {
+        SCOPED_TRACE(ceiling);
+        btDefaultCollisionConfiguration configuration;
+        btCollisionDispatcher dispatcher(&configuration);
+        btDbvtBroadphase broadphase;
+        btCollisionWorld world(&dispatcher, &broadphase, &configuration);
+        btBoxShape floorShape(btVector3(100, 200, 10));
+        btBoxShape stepShape(btVector3(100, 100, 4));
+        btBoxShape roofShape(btVector3(100, 100, 10));
+        btCapsuleShapeZ capsule(29.28f, 2.f * (66.5f - 29.28f));
+        floorShape.setMargin(.001f);
+        stepShape.setMargin(.001f);
+        roofShape.setMargin(.001f);
+        capsule.setMargin(.001f);
+        btCollisionObject floor, threshold, roof, actor;
+        const auto add = [&](btCollisionObject& object, btCollisionShape& shape,
+                             const btVector3& origin, int group) {
+            object.setCollisionShape(&shape);
+            object.setWorldTransform(btTransform(btQuaternion::getIdentity(), origin));
+            world.addCollisionObject(&object, group, MWPhysics::CollisionType_World | MWPhysics::CollisionType_Actor);
+        };
+        add(floor, floorShape, btVector3(0, 0, -10), MWPhysics::CollisionType_World);
+        add(threshold, stepShape, btVector3(0, 100, 4), MWPhysics::CollisionType_World);
+        add(roof, roofShape, btVector3(0, 100, ceiling + 10), MWPhysics::CollisionType_World);
+        osg::Vec3f position(0, -21, 66.5f);
+        add(actor, capsule, btVector3(0, -21, 66.5f), MWPhysics::CollisionType_Actor);
+        MWPhysics::Stepper stepper(&world, &actor);
+        for (int tick = 0; tick < 150; ++tick)
+        {
+            osg::Vec3f velocity(0, 52, 0);
+            float remaining = 1.f / 60.f;
+            MWPhysics::ActorTracer trace;
+            const auto destination = position + velocity * remaining;
+            trace.doTrace(&actor, position, destination, &world, true);
+            if (trace.mFraction >= 1.f)
+                position = destination;
+            else
+                stepper.step(position, velocity, remaining, true, true);
+            actor.setWorldTransform(btTransform(btQuaternion::getIdentity(),
+                btVector3(position.x(), position.y(), position.z())));
+            world.updateSingleAabb(&actor);
+        }
+        if (ceiling == 150.f)
+        {
+            EXPECT_GT(position.y(), 50.f);
+            EXPECT_NEAR(position.z(), 74.5f, 1.f);
+        }
+        else
+        {
+            EXPECT_LT(position.y(), 0.f);
+            // The rounded cap can rise outside the lip of the overhang.
+            // Check actual overlap rather than its enclosing box's top.
+            struct Overlap : btCollisionWorld::ContactResultCallback
+            {
+                btScalar mDeepest = 0;
+                btScalar addSingleResult(btManifoldPoint& contact,
+                    const btCollisionObjectWrapper*, int, int,
+                    const btCollisionObjectWrapper*, int, int) override
+                {
+                    mDeepest = std::min(mDeepest, contact.getDistance());
+                    return 0;
+                }
+            } overlap;
+            world.contactPairTest(&actor, &roof, overlap);
+            EXPECT_GE(overlap.mDeepest, -.05f);
+        }
+        world.removeCollisionObject(&actor);
+        world.removeCollisionObject(&roof);
+        world.removeCollisionObject(&threshold);
+        world.removeCollisionObject(&floor);
     }
 }

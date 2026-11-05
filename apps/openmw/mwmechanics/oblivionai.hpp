@@ -166,14 +166,20 @@ namespace MWMechanics
         void restore(const ESM4::RuntimeState& state);
 
     private:
+        struct TargetRoute
+        {
+            std::vector<osg::Vec3f> mPoints;
+            std::size_t mCursor = 0;
+            ESM::FormKey mTarget;
+            ESM::FormKey mCell;
+            osg::Vec3f mDestination;
+            float mRepath = 0.f;
+        };
         struct LiveActor
         {
-            std::vector<osg::Vec3f> mCombatRoute;
-            std::size_t mCombatRouteCursor = 0;
-            ESM::FormKey mCombatRouteTarget;
-            ESM::FormKey mCombatRouteCell;
-            osg::Vec3f mCombatRouteDestination;
-            float mCombatRepath = 0.f;
+            TargetRoute mCombatRoute;
+            // Combat cleanup must not erase the peaceful recipient's cursor.
+            TargetRoute mEscortRoute;
             ESM4::RuntimeActorAiState mState;
             std::optional<ESM4::PackageCandidate> mScriptPackage;
             std::optional<ESM4::AIPackage> mTransientPackage;
@@ -345,6 +351,8 @@ namespace MWMechanics
         bool completeAction(const MWWorld::Ptr& actor, LiveActor& live);
         void releasePhysicalDoorCollision(const MWWorld::Ptr& actor, LiveActor& live) const;
         void stopMovement(const MWWorld::Ptr& actor) const;
+        void approachResidentTarget(const MWWorld::Ptr& actor, const MWWorld::Ptr& target,
+            float duration, bool escort);
         void faceAndMove(const MWWorld::Ptr& actor, const osg::Vec3f& destination, bool run, bool sneak = false) const;
         bool transitionPackage(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::PackagePhaseInput& input);
         void reportPhysicalDoorTransition(const LiveActor& initiator,

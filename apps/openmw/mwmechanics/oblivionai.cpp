@@ -1,4 +1,3 @@
-#include <components/esm4/loadbsgn.hpp>
 /*
   Copyright (C) 2026 OpenMW contributors
 
@@ -12,6 +11,9 @@
 #include "oblivioncombat.hpp"
 #include "oblivionaidestination.hpp"
 #include "oblivionaigait.hpp"
+#include "oblivionmelee.hpp"
+
+#include <components/esm4/loadbsgn.hpp>
 
 #include <algorithm>
 #include <array>
@@ -100,6 +102,10 @@ namespace MWMechanics
         constexpr float sArrivalTolerance = 64.f;
         constexpr float sDoorLookAheadDistance = 2.f * sArrivalTolerance;
         constexpr float sRouteTailApproachDistance = 2.f * sDoorLookAheadDistance;
+        // Physical doors can be opened up to 192 units ahead, and their
+        // authored origins can sit above the actor's feet. Keep the exception
+        // through that approach and release once clear of the doorway.
+        constexpr float sPhysicalDoorReleaseDistance = 2.f * sDoorLookAheadDistance;
         constexpr float sMaximumFrameCatchup = 8.f * sFixedStep;
 
         bool placedActivator(const MWWorld::Ptr& target)
@@ -4631,7 +4637,14 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Wait)
         {
-            if (followDestinationReached({}, *current, live, false))
+            // Escort has a fixed authored endpoint; unlike Follow, arrival
+            // completes it without waiting for the daily schedule to expire.
+            const bool escortArrived = live.mState.mPackageType == ESM4::AIPackageType::Escort
+                && live.mDestination && oblivionDestinationReached(live.mState.mCell,
+                    live.mState.mLastValidPosition.asVec3(),
+                    live.mDestinationCell, *live.mDestination, sArrivalTolerance,
+                    live.mState.mPackageType, travelArrivalRadius(live));
+            if (escortArrived || followDestinationReached({}, *current, live, false))
             {
                 transitionUnloaded(live,
                     { duration, true, true, true, false, true, false, false, true, false, false, true });
@@ -5647,15 +5660,17 @@ namespace MWMechanics
         requireMutableRuntime();
         const auto found = mActors.find(actorKey(actor));
         if (found == mActors.end()) return;
-        auto& live = found->second;
-        live.mCombatRoute.clear();
-        live.mCombatRouteCursor = 0;
-        live.mCombatRouteTarget = {};
-        live.mCombatRepath = 0.f;
+        found->second.mCombatRoute = {};
     }
 
     void OblivionAiService::approachCombatTarget(
         const MWWorld::Ptr& actor, const MWWorld::Ptr& target, float duration)
+    {
+        approachResidentTarget(actor, target, duration, false);
+    }
+
+    void OblivionAiService::approachResidentTarget(
+        const MWWorld::Ptr& actor, const MWWorld::Ptr& target, float duration, bool escort)
     {
         requireMutableRuntime();
         if (!std::isfinite(duration) || duration < 0.f)
@@ -5664,16 +5679,18 @@ namespace MWMechanics
         if (!handles(actor) || target.isEmpty() || !actor.isInCell() || !target.isInCell()
             || cellKey(actor) != cellKey(target))
         {
-            clearCombatRoute(actor);
+            if (const auto found = mActors.find(actorKey(actor)); found != mActors.end())
+                (escort ? found->second.mEscortRoute : found->second.mCombatRoute) = {};
             return; // Foreign-cell combat travel needs its own door policy.
         }
         auto& live = ensure(actor);
+        auto& navigation = escort ? live.mEscortRoute : live.mCombatRoute;
         const auto position = actor.getRefData().getPosition().asVec3();
         const auto destination = target.getRefData().getPosition().asVec3();
-        live.mCombatRepath = std::max(0.f, live.mCombatRepath - duration);
-        if (live.mCombatRouteTarget != actorKey(target) || live.mCombatRouteCell != cellKey(actor)
-            || live.mCombatRepath == 0.f
-            || distanceSquared(destination, live.mCombatRouteDestination) > 64.f * 64.f)
+        navigation.mRepath = std::max(0.f, navigation.mRepath - duration);
+        if (navigation.mTarget != actorKey(target) || navigation.mCell != cellKey(actor)
+            || navigation.mRepath == 0.f
+            || distanceSquared(destination, navigation.mDestination) > 64.f * 64.f)
         {
             std::vector<osg::Vec3f> route;
             auto* navigator = mWorld.getNavigator();
@@ -5700,10 +5717,10 @@ namespace MWMechanics
             // link's entrance. Keep the next shared waypoint when replanning
             // so crossing actors do not repeatedly return to that entrance.
             std::size_t cursor = 0;
-            if (live.mCombatRouteTarget == actorKey(target) && live.mCombatRouteCell == cellKey(actor)
-                && live.mCombatRouteCursor < live.mCombatRoute.size())
+            if (navigation.mTarget == actorKey(target) && navigation.mCell == cellKey(actor)
+                && navigation.mCursor < navigation.mPoints.size())
             {
-                const auto& next = live.mCombatRoute[live.mCombatRouteCursor];
+                const auto& next = navigation.mPoints[navigation.mCursor];
                 for (std::size_t i = 0; i < route.size(); ++i)
                     if (distanceSquared(next, route[i]) <= 1.f)
                     {
@@ -5711,25 +5728,25 @@ namespace MWMechanics
                         break;
                     }
             }
-            live.mCombatRoute.swap(route);
-            live.mCombatRouteCursor = cursor;
-            live.mCombatRouteTarget = actorKey(target);
-            live.mCombatRouteCell = cellKey(actor);
-            live.mCombatRouteDestination = destination;
-            live.mCombatRepath = .25f;
+            navigation.mPoints.swap(route);
+            navigation.mCursor = cursor;
+            navigation.mTarget = actorKey(target);
+            navigation.mCell = cellKey(actor);
+            navigation.mDestination = destination;
+            navigation.mRepath = .25f;
         }
         // Use a smaller tolerance than escort travel: its 64-unit arrival
         // radius can leave an unarmed fighter outside actual contact reach.
-        while (live.mCombatRouteCursor < live.mCombatRoute.size())
+        while (navigation.mCursor < navigation.mPoints.size())
         {
-            const auto delta = position - live.mCombatRoute[live.mCombatRouteCursor];
+            const auto delta = position - navigation.mPoints[navigation.mCursor];
             if (delta.x() * delta.x() + delta.y() * delta.y() >= 16.f * 16.f || std::abs(delta.z()) >= 64.f)
                 break;
-            ++live.mCombatRouteCursor;
+            ++navigation.mCursor;
         }
-        if (live.mCombatRouteCursor < live.mCombatRoute.size())
-            faceAndMove(actor, live.mCombatRoute[live.mCombatRouteCursor], true);
-        else if (!live.mCombatRoute.empty() && destination.z() < position.z() - 64.f)
+        if (navigation.mCursor < navigation.mPoints.size())
+            faceAndMove(actor, navigation.mPoints[navigation.mCursor], true);
+        else if (!navigation.mPoints.empty() && destination.z() < position.z() - 64.f)
         {
             const auto* authored = package(live.mState.mPackage);
             // An authored AllowFalls package can pursue a visible target
@@ -5938,7 +5955,7 @@ namespace MWMechanics
             if (!traversingDoor || ignoredDoor.isEmpty()
                 || distanceSquared(actor.getRefData().getPosition().asVec3(),
                        ignoredDoor.getRefData().getPosition().asVec3())
-                    > sDoorLookAheadDistance * sDoorLookAheadDistance)
+                    > sPhysicalDoorReleaseDistance * sPhysicalDoorReleaseDistance)
                 releasePhysicalDoorCollision(actor, live);
         }
         const osg::Vec3f observedPosition = actor.getRefData().getPosition().asVec3();
@@ -5990,6 +6007,64 @@ namespace MWMechanics
             fromPhaseState(live.mState, phase);
             return false;
         }
+
+        // Escort owns the leader's destination, but also supplies movement
+        // for an otherwise stationary NPC recipient. Derive that relationship
+        // from the saved package/target graph rather than replacing its package.
+        if (highProcess && !remainsMounted && !actor.getClass().getCreatureStats(actor).isDead()
+            && !oblivionParalyzed(mWorld, actor)
+            && !mWorld.hasOblivionCombatController(live.mState.mActor).value_or(false))
+        {
+            const auto* current = package(live.mState.mPackage);
+            if (current && live.mState.mPackageType == ESM4::AIPackageType::Escort)
+            {
+                const auto recipient = loadedPtrFor(live.mState.mTarget);
+                const float range = std::max(64.f, float(current->mTargetData.mDistance));
+                if (!recipient.isEmpty() && cellKey(recipient) == cellKey(actor)
+                    && !recipient.getClass().getCreatureStats(recipient).isDead()
+                    && distanceSquared(observedPosition, recipient.getRefData().getPosition().asVec3()) > range * range)
+                {
+                    stopMovement(actor);
+                    return true; // Wait for the escorted actor before advancing or completing.
+                }
+            }
+            if (current && actor.getType() == ESM::REC_NPC_4
+                && live.mState.mPackageType == ESM4::AIPackageType::Travel
+                && current->mLocationData.mKind == ESM4::PackageLocationKind::CurrentLocation)
+            {
+                for (const auto& [leaderKey, leader] : mActors)
+                {
+                    if (leaderKey == live.mState.mActor || leader.mState.mPackageType != ESM4::AIPackageType::Escort
+                        || leader.mState.mTarget != live.mState.mActor || leader.mState.mRestrained
+                        || leader.mState.mPhase == ESM4::PackagePhase::Stalled
+                        || leader.mState.mPhase == ESM4::PackagePhase::Interrupted)
+                        continue;
+                    const auto leaderPtr = loadedPtrFor(leaderKey);
+                    const auto* escort = package(leader.mState.mPackage);
+                    if (!escort || leaderPtr.isEmpty() || cellKey(leaderPtr) != cellKey(actor)
+                        || leaderPtr.getClass().getCreatureStats(leaderPtr).isDead()
+                        || mWorld.hasOblivionCombatController(leaderKey).value_or(false))
+                        continue;
+                    const float range = std::max(64.f, float(escort->mTargetData.mDistance));
+                    // A smaller receiver stop radius leaves room for the leader
+                    // to resume without both actors stopping at the same boundary.
+                    if (distanceSquared(observedPosition, leaderPtr.getRefData().getPosition().asVec3())
+                            <= range * range * .5625f && getLOS(actor, leaderPtr))
+                    {
+                        stopMovement(actor);
+                        live.mEscortRoute = {};
+                    }
+                    else
+                    {
+                        approachResidentTarget(actor, leaderPtr, duration, true);
+                        actor.getClass().getCreatureStats(actor).setMovementFlag(CreatureStats::Flag_Run, false);
+                    }
+                    return true;
+                }
+            }
+        }
+
+        live.mEscortRoute = {};
 
         // Ambush also supplies authored force-greetings (including the
         // Emperor in the prison). A zero-aggression NPC must not turn that
@@ -6290,7 +6365,14 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Wait)
         {
-            if (followDestinationReached(actor, *current, live, highProcess))
+            // Escort has a fixed authored endpoint; unlike Follow, arrival
+            // completes it without waiting for the daily schedule to expire.
+            const bool escortArrived = live.mState.mPackageType == ESM4::AIPackageType::Escort
+                && live.mDestination && oblivionDestinationReached(live.mState.mCell,
+                    highProcess ? actor.getRefData().getPosition().asVec3() : live.mState.mLastValidPosition.asVec3(),
+                    live.mDestinationCell, *live.mDestination, sArrivalTolerance,
+                    live.mState.mPackageType, travelArrivalRadius(live));
+            if (escortArrived || followDestinationReached(actor, *current, live, highProcess))
             {
                 transitionPackage(actor, live,
                     { duration, true, true, true, false, true, false, false, true, false, false, true });

@@ -808,3 +808,35 @@ namespace
         EXPECT_TRUE(nextPass.find(key(1))->mInventory.empty());
     }
 }
+
+TEST(OblivionAiTest, EscortArrivalCompletesBeforeScheduleExpiryAndDispatchesOnce)
+{
+    ESM4::PackageSelection selection;
+    selection.mSource = ESM4::PackageSource::Base;
+    selection.mPackage = key(10);
+    selection.mType = ESM4::AIPackageType::Escort;
+    auto state = ESM4::beginPackagePhase(selection, key(100), key(101));
+    state.mPhase = ESM4::PackagePhase::Wait;
+    state.mDurationRemaining = 24.f;
+    ESM4::PackagePhaseInput input;
+    input.mActionCompleted = false;
+    EXPECT_EQ(ESM4::advancePackagePhase(state, input).mTo, ESM4::PackagePhase::Wait);
+    input.mActionCompleted = MWMechanics::oblivionDestinationReached(
+        key(1), osg::Vec3f(40, 0, 0), key(1), osg::Vec3f{}, 64.f, selection.mType);
+    ASSERT_TRUE(input.mActionCompleted);
+    MWMechanics::OblivionPackageDoneQueue queue;
+    for (int tick = 0; tick < 3; ++tick)
+    {
+        const auto transition = ESM4::advancePackagePhase(state, input);
+        queue.record(transition.mFrom, transition.mTo, key(100), key(10));
+    }
+    EXPECT_EQ(state.mPhase, ESM4::PackagePhase::Complete);
+    int calls = 0;
+    queue.dispatch([&](const auto& event) {
+        ++calls;
+        EXPECT_EQ(event.mActor, key(100));
+        EXPECT_EQ(event.mPackage, key(10));
+    });
+    EXPECT_EQ(calls, 1);
+    queue.dispatch([&](const auto&) { ADD_FAILURE() << "arrival callback replayed"; });
+}

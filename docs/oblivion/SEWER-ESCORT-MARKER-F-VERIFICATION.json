@@ -1,0 +1,280 @@
+{
+  "scope": "Same-cell original Escort recipient movement, low-overhang threshold stepping, original Marker F completion and fresh restart",
+  "full_escape_complete": false,
+  "acceptance": "Composite normal-input proof: unchanged Path movement reaches Marker F in low-step-01; subsequent arrival-only correction completes the original callback in a fresh process. No quest, health, position or completion injection. Single final-source prison-to-outdoors course remains due.",
+  "checks": {
+    "escort-recipient-route-focused-01": {
+      "path": "build/oblivion-compat/sewer-escape/escort-recipient-route-focused-01/verification.json",
+      "source": {
+        "head": "673c8b8f3afd478749cc35382cb8e2f934949edb",
+        "source_fingerprint": "dbe96d50effc2be29d2cb86d6700b6fc0c1ef03f73bda3640409aa4618cd9056"
+      },
+      "results": {
+        "engine": {
+          "executed": 64,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "Oblivion*Ai*.*:OblivionDialogue*.*:OblivionWorldTest.*Combat*",
+          "binary_sha256": "89cd888cf322b4cbcb30f4e220adcad0f594001b80ee94a7ffb5d2c74b7c54b0",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e6825d4624f5d20c5af5f5f4acf01cb26821fc768c28c6d1dddb2baedb50c100",
+          "inventory_sha256": "500e51637b33f6e78609afbc21a40d93211b8060fa1f33b10bf081522b02fe3f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "escort-door-lifetime-focused-01": {
+      "path": "build/oblivion-compat/sewer-escape/escort-door-lifetime-focused-01/verification.json",
+      "source": {
+        "head": "673c8b8f3afd478749cc35382cb8e2f934949edb",
+        "source_fingerprint": "d8ced542c26582e958a5c3b441f4344fbd8c40062628d26a1be3e66053066835"
+      },
+      "results": {
+        "engine": {
+          "executed": 64,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "Oblivion*Ai*.*:OblivionDialogue*.*:OblivionWorldTest.*Combat*",
+          "binary_sha256": "4a5e107de78db74902fab445ee5e7706c042a26143fc0ac4a8d125b430ef7474",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "7101d2a228123118316ac1f8666baf052e217784d07c245f602d964afc66e902",
+          "inventory_sha256": "500e51637b33f6e78609afbc21a40d93211b8060fa1f33b10bf081522b02fe3f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "escort-threshold-regression-after-02": {
+      "path": "build/oblivion-compat/sewer-escape/escort-threshold-regression-after-02/verification.json",
+      "source": {
+        "head": "673c8b8f3afd478749cc35382cb8e2f934949edb",
+        "source_fingerprint": "6a5ae7ce20f804fc006d2a242bb5021cefef155953087f6e98b90be0d2faf87f"
+      },
+      "results": {
+        "engine": {
+          "executed": 56,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorBoundsTest.*:Oblivion*Ai*.*:OblivionWorldTest.*Combat*",
+          "binary_sha256": "33584859850d25157ff209ac69c69bfabc3661c2292eb30190c6e01f42187fb5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3be3f1bf529de6e5feb9ef739d69e13b9e76279bd5d8d100a034004ea2bbc7c3",
+          "inventory_sha256": "056dea53a3f7d13ff39c0e2de99ad7624bed26d38bdda8159b9e27d929980fd3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "escort-threshold-engine-regression-01": {
+      "path": "build/oblivion-compat/sewer-escape/escort-threshold-engine-regression-01/verification.json",
+      "source": {
+        "head": "673c8b8f3afd478749cc35382cb8e2f934949edb",
+        "source_fingerprint": "6a5ae7ce20f804fc006d2a242bb5021cefef155953087f6e98b90be0d2faf87f"
+      },
+      "results": {
+        "engine": {
+          "executed": 2190,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "33584859850d25157ff209ac69c69bfabc3661c2292eb30190c6e01f42187fb5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "683c77ddb847259e5f665bfeb2448084d59557f4fecc8f7e531376c48a1d1c53",
+          "inventory_sha256": "056dea53a3f7d13ff39c0e2de99ad7624bed26d38bdda8159b9e27d929980fd3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "escort-arrival-focused-01": {
+      "path": "build/oblivion-compat/sewer-escape/escort-arrival-focused-01/verification.json",
+      "source": {
+        "head": "673c8b8f3afd478749cc35382cb8e2f934949edb",
+        "source_fingerprint": "15413f7bf45a5561b15eb4e6eefd507926474a36703acc98fbe1d7e1e942d897"
+      },
+      "results": {
+        "engine": {
+          "executed": 43,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.*:ActorBoundsTest.*",
+          "binary_sha256": "004225975e9428455a0397b99ac915c35a642fa124cdaf996409b3a946e5ed1a",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "508ce11a42ed051573ff17b9472b28443c5db6d42e7d8d141f115ec831b96d4b",
+          "inventory_sha256": "a1f509b0264185b4f03d0c999b5e1595600ad104bdf3dd85c6b57cc5ce17afca",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "escort-arrival-engine-regression-01": {
+      "path": "build/oblivion-compat/sewer-escape/escort-arrival-engine-regression-01/verification.json",
+      "source": {
+        "head": "673c8b8f3afd478749cc35382cb8e2f934949edb",
+        "source_fingerprint": "15413f7bf45a5561b15eb4e6eefd507926474a36703acc98fbe1d7e1e942d897"
+      },
+      "results": {
+        "engine": {
+          "executed": 2191,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "004225975e9428455a0397b99ac915c35a642fa124cdaf996409b3a946e5ed1a",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6b8abe0029f2e0f085ba135618b389fef4fe8ea5118225085e81d934a8443e06",
+          "inventory_sha256": "a1f509b0264185b4f03d0c999b5e1595600ad104bdf3dd85c6b57cc5ce17afca",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "subterrane-marker-f-low-step-01": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-marker-f-low-step-01",
+      "scenario_passed": false,
+      "stage": 50,
+      "save_sha256": "034f80097757d9e35cfdbf5ee99892021447bf476c6a27e88f5523cfe0e85426",
+      "actors": {
+        "content:oblivion.esm:032a16": {
+          "package": "content:oblivion.esm:017d7e",
+          "phase": 6,
+          "position": [
+            943.7993774414062,
+            7018.9267578125,
+            -1247
+          ]
+        },
+        "content:oblivion.esm:032a18": {
+          "package": "content:oblivion.esm:017d7c",
+          "phase": 7,
+          "position": [
+            978.2648315429688,
+            7118.037109375,
+            -1247
+          ]
+        }
+      },
+      "whole_entry_state_exact": true,
+      "player_health": 50.070030212402344
+    },
+    "subterrane-marker-f-arrival-01": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-marker-f-arrival-01",
+      "scenario_passed": true,
+      "stage": 52,
+      "save_sha256": "8aedb1ddddb63dab002a0ee881daeaf37e90bc0aa217b98089529e31e09383aa",
+      "actors": {
+        "content:oblivion.esm:032a16": {
+          "package": "content:oblivion.esm:017d7e",
+          "phase": 7,
+          "position": [
+            943.7993774414062,
+            7018.9267578125,
+            -1247
+          ]
+        },
+        "content:oblivion.esm:032a18": {
+          "package": "content:oblivion.esm:017d7c",
+          "phase": 7,
+          "position": [
+            978.2648315429688,
+            7118.037109375,
+            -1247
+          ]
+        }
+      },
+      "whole_entry_state_exact": true,
+      "player_health": 50.070030212402344
+    },
+    "subterrane-marker-f-reload-01": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-marker-f-reload-01",
+      "scenario_passed": true,
+      "stage": 52,
+      "save_sha256": "0d1af1493d7c6a32a5437679d85ef1b7d727956c388165dc29e292aacb947a81",
+      "actors": {
+        "content:oblivion.esm:032a16": {
+          "package": "content:oblivion.esm:017d7e",
+          "phase": 7,
+          "position": [
+            943.7993774414062,
+            7018.9267578125,
+            -1247
+          ]
+        },
+        "content:oblivion.esm:032a18": {
+          "package": "content:oblivion.esm:017d7c",
+          "phase": 7,
+          "position": [
+            978.2648315429688,
+            7118.037109375,
+            -1247
+          ]
+        }
+      },
+      "whole_entry_state_exact": true,
+      "player_health": 50.070030212402344
+    }
+  },
+  "native_content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "audit": "build/oblivion-compat/sewer-escape/stage50-original-packages.json",
+    "audit_sha256": "6f6875d2c35159806a31ce270df5ebb6bc7959df126d33313a54297c713ec96f",
+    "escort": "017d7e Glenroy Escort targets032a18 at distance150 and authored marker01770b; original OnPackageDone advances52",
+    "recipient": "017d7c Emperor Travel/CurrentLocation remains its own package",
+    "threshold": "0225f1 / base03f19c IDNHallExitN02; actual collision hit near5999.17Y,-984.128Z; upper-contact trace near-832.985Z"
+  },
+  "failure_evidence": {
+    "escort-recipient-diagnostic-01": "Recipient combat route cleared by peaceful combat cleanup each frame; waypoint continuity lost. Separate ephemeral routes fix this.",
+    "subterrane-marker-f-escort-route-01": "Recipient passed first door; leader stuck at second stone threshold; scenario failed52.",
+    "subterrane-marker-f-door-lifetime-01": "Larger exception lifetime alone did not resolve threshold; scenario failed52.",
+    "escort-door-diagnostic-01": "Exception remains active at threshold; steering aims forward.",
+    "escort-step-diagnostic-01": "Full34-unit step encounters overhang and ejects backwards despite small threshold.",
+    "escort-threshold-regression-before-01": "Real capsule regression reproduces threshold stall.",
+    "escort-threshold-regression-after-01": "Crossing passes; invalid enclosing-box negative assertion corrected to direct overlap test.",
+    "subterrane-marker-f-low-step-01": "Movement succeeds and both reach Marker F; scenario remains failed because fixed-endpoint Escort waits for schedule expiration."
+  },
+  "limits": [
+    "Recipient steering currently same-cell high process and stationary Travel/CurrentLocation only. Cross-cell Escort remains unverified/incomplete.",
+    "Preserved base packages and callbacks; ephemeral routes rebuilt on restore, no save schema change.",
+    "Reduced step rise retries remain collision-swept; insufficient-headroom regression blocks passage without roof overlap.",
+    "Fresh ASan/UBSan integration for accumulated changes remains due.",
+    "Captures inspected at arrival and reload; Player remains in ambush room, while actual escort positions and callback are independently inspected in runtime state."
+  ]
+}
