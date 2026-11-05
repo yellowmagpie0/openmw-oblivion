@@ -73,6 +73,18 @@ live under `scripts/data/oblivion_compat/oblivion_sewer_shaman_staff_*.json`.
 
 ## Current chunk — second ambush and reunion
 
+Latest: Player traversed both ledges, reached Baurus/Emperor, opened north door17753
+and walked through it normally. `subterrane-north-door-02` is the genuine open-door
+input. `subterrane-open-door-crossing-01` proves Player collision passage. Both
+assassins are alive; stage34 persists. Navigation now uses authored pathgrid links,
+partial routes and NPC door areas. Full2187 engine tests pass; focused49 pass.
+The actors move but stop short of melee. Stage36 courses01/02/03 remain failed.
+See [SEWER-COMBAT-NAVIGATION-VERIFICATION.json](SEWER-COMBAT-NAVIGATION-VERIFICATION.json).
+Next: inspect actual route points/cursor and obstruction at assassin05 upper landing
+(1179,5208,-671) and assassin06 north of door (1533,5710,-991). Do not count this as
+ambush resolution. Temporary diagnostic source is removed.
+
+
 The cavern exit now works through original OnActivate script04f700 and ordinary
 Space input. StopCombatAlarmOnActor/SCAOnActor performs target-specific active
 combat removal and Low combat-package reset; unrelated active fights survive.

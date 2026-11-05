@@ -5651,17 +5651,22 @@ namespace MWMechanics
             auto* navigator = mWorld.getNavigator();
             DetourNavigator::Flags flags = DetourNavigator::Flag_none;
             if (actor.getClass().canWalk(actor) && actor.getClass().getWalkSpeed(actor) > 0.f)
-                flags |= DetourNavigator::Flag_walk;
+                flags |= DetourNavigator::Flag_walk | DetourNavigator::Flag_usePathgrid;
             if (actor.getClass().canSwim(actor) && actor.getClass().getSwimSpeed(actor) > 0.f)
                 flags |= DetourNavigator::Flag_swim;
-            // A locked/closed door is not permission to move through it. The
-            // tutorial's authored escort still owns opening its route doors.
+            // Door areas remain part of a walking NPC's route even after
+            // the physical door opens. This does not unlock or bypass it.
+            if (actor.getType() == ESM::REC_NPC_4 && (flags & DetourNavigator::Flag_walk))
+                flags |= DetourNavigator::Flag_openDoor;
             if (navigator && flags != DetourNavigator::Flag_none)
             {
                 const auto status = DetourNavigator::findPath(*navigator, mWorld.getPathfindingAgentBounds(actor),
                     position, destination, flags, DetourNavigator::AreaCosts{}, 16.f, {},
                     std::back_inserter(route));
-                if (status != DetourNavigator::Status::Success) route.clear();
+                // A valid prefix still brings the actor toward the target.
+                // Replanning continues as navigation tiles/doors change.
+                if (status != DetourNavigator::Status::Success && status != DetourNavigator::Status::PartialPath)
+                    route.clear();
             }
             live.mCombatRoute.swap(route);
             live.mCombatRouteCursor = 0;
