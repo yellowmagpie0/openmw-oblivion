@@ -415,6 +415,14 @@ namespace MWGui
         if (mGoodbye || dialogueManager->isInChoice())
             return;
 
+        if (mPtr.getType() == ESM::REC_NPC_4 || mPtr.getType() == ESM::REC_CREA4)
+        {
+            onTopicActivated(topic);
+            if (mGoodbyeButton->getEnabled())
+                MWBase::Environment::get().getWindowManager()->setKeyFocusWidget(mGoodbyeButton);
+            return;
+        }
+
         const MWWorld::Store<ESM::GameSetting>& gmst
             = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
 

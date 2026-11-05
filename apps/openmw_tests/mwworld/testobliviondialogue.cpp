@@ -29,6 +29,11 @@
 #include "apps/openmw/mwworld/globals.hpp"
 #include "apps/openmw/mwstate/statemanagerimp.hpp"
 #include <components/settings/values.hpp>
+#include <components/esm3/dialoguestate.hpp>
+#include <components/esm3/esmreader.hpp>
+#include <components/esm3/esmwriter.hpp>
+#include <components/loadinglistener/loadinglistener.hpp>
+#include <sstream>
 #include "apps/openmw/mwworld/worldmodel.hpp"
 
 #include <components/compiler/extensions.hpp>
@@ -57,6 +62,7 @@
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadachr.hpp>
 #include <components/esm4/loadinfo.hpp>
+#include <components/esm4/loaddial.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadpack.hpp>
 #include <components/esm4/loadqust.hpp>
@@ -752,6 +758,72 @@ TEST(OblivionDialogueMenu, ClassDefaultQueryTracksUsesAndRetainsRealClassIdentit
         MWWorld::recordOblivionCharacterGenerationSkillUse(world.getPlayerPtr(), ESM::Skill::HandToHand, 0, 10.f);
         EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationState(), saved);
 
+    }
+}
+
+TEST(OblivionDialogueMenu, LearnedNativeTopicsUseConditionsAndPersistAcrossContentRemapping)
+{
+    std::string savedTopics;
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(0, shifted);
+        f.mFixture.mEnvironment.setDialogueManager(f.mMenu);
+        auto& store = f.mFixture.mWorld.getStore();
+        auto greeting = *store.search<ESM4::DialogInfo>(key(0x902));
+        greeting.mChoiceTopics.clear();
+        store.getWritable<ESM4::DialogInfo>().insertStatic(greeting, key(0x902));
+        Callback callback;
+        ASSERT_TRUE(f.mMenu.startDialogue(f.mActor, &callback));
+        EXPECT_FALSE(f.mMenu.isInChoice());
+        EXPECT_FALSE(f.mMenu.isGoodbye());
+        EXPECT_TRUE(f.mMenu.getChoices().empty());
+        EXPECT_TRUE(f.mMenu.getAvailableTopics().empty());
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        if (!shifted)
+        {
+            for (auto id : {0x903u, 0x905u, 0x903u})
+                scripts.call("AddTopic", {}, {ObScript::ReferenceValue{key(id), {}}}, context, {});
+            EXPECT_THROW(scripts.call("AddTopic", {}, {ObScript::ReferenceValue{key(0x800), {}}}, context, {}),
+                ObScript::RuntimeError);
+            ESM::ESMWriter writer;
+            std::stringstream stream;
+            writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+            writer.save(stream);
+            Loading::Listener listener;
+            f.mMenu.write(writer, listener);
+            writer.close();
+            savedTopics = stream.str();
+        }
+        auto stream = std::make_unique<std::stringstream>(savedTopics);
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "native-learned-topics");
+        const auto file = store.search<ESM4::Dialogue>(key(0x903))->mId.mContentFile;
+        std::map<int, int> mapping{{0, file}};
+        reader.setContentFileMapping(&mapping);
+        ASSERT_EQ(reader.getRecName(), ESM::REC_DIAS);
+        reader.getRecHeader();
+        f.mMenu.readRecord(reader, ESM::REC_DIAS);
+        EXPECT_EQ(f.mMenu.getAvailableTopics(), (std::list<std::string>{"Continue through the passage"}));
+
+        // Prepared restoration must retain native IDs too, and duplicates must
+        // remain one learned topic after actual serialization/remapping.
+        ESM::DialogueState state;
+        state.mKnownTopics = {ESM::RefId(ESM::FormId{0x903, file}), ESM::RefId(ESM::FormId{0x905, file})};
+        auto restore = f.mMenu.prepareDialogueState(std::move(state), store);
+        f.mMenu.clear();
+        ASSERT_TRUE(restore());
+        ASSERT_TRUE(f.mMenu.startDialogue(f.mActor, &callback));
+        EXPECT_EQ(f.mMenu.getAvailableTopics(), (std::list<std::string>{"Continue through the passage"}));
+        const auto responses = callback.mResponses.size();
+        f.mMenu.keywordSelected("This question must stay hidden", &callback);
+        EXPECT_EQ(callback.mResponses.size(), responses); // Learned, but its stage99 condition fails.
+        f.mMenu.keywordSelected("CONTINUE THROUGH THE PASSAGE", &callback);
+        EXPECT_EQ(f.stage(), 30);
+        EXPECT_EQ(callback.mResponses.size(), responses + 1);
+        EXPECT_TRUE(f.mMenu.isGoodbye());
+        EXPECT_TRUE(f.mMenu.getAvailableTopics().empty());
     }
 }
 

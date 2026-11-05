@@ -63,6 +63,7 @@
 #include <components/vfs/manager.hpp>
 #include <components/vfs/recursivedirectoryiterator.hpp>
 
+#include "../mwbase/dialoguemanager.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/inputmanager.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
@@ -1671,6 +1672,16 @@ namespace MWWorld
         }
         if (name == "getignorefriendlyhits")
             return std::int64_t(mWorld.getOblivionIgnoreFriendlyHits(objectKey()).value_or(false));
+        if (name == "addtopic")
+        {
+            const auto key = keyFromValue(argument(0));
+            const auto* topic = key ? mStore.search<ESM4::Dialogue>(*key) : nullptr;
+            if (!topic || (topic->mFlags & ESM4::Rec_Deleted))
+                throw ObScript::RuntimeError("OBSV115", "AddTopic requires a native DIAL", name);
+            MWBase::Environment::get().getDialogueManager()->addTopic(ESM::RefId(topic->mId));
+            trace("addtopic topic=" + key->serialize());
+            return std::int64_t(0);
+        }
         if (name == "autosave")
         {
             MWBase::Environment::get().getStateManager()->requestAutosave();
@@ -3111,7 +3122,7 @@ namespace MWWorld
         // milestones without pretending their subsystem effect occurred. They
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
-            "addtopic", "showmap",
+            "showmap",
             "cast", "addspell", "removespell",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
             "setunconscious" };

@@ -1,0 +1,434 @@
+{
+  "scope": "Original CharacterGen88 AddTopic effects, persistent native DIAL knowledge, conditional sidebar and ordinary Baurus Jauffre response after fresh process load.",
+  "full_escape_complete": false,
+  "implementation": [
+    "Player-global learned knowledge uses existing DialogueManager owner and DIAS save record, with native identity admitted during ordinary and prepared restore.",
+    "AddTopic resolves native DIAL identity and rejects absent/deleted records. Duplicate knowledge remains one entry.",
+    "Learned topics select eligible original INFO through native conditions. Forced linked tutorial choices retain priority. Ordinary no-link responses return to the topic list.",
+    "Native topic selection bypasses legacy Morrowind service-label lookup; legacy actors retain their existing route."
+  ],
+  "checks": {
+    "native-topics-ui-focused-01": {
+      "source": {
+        "head": "5b8e24bbd22974b34ef0c4e2d0d86004b4fbf5b6",
+        "source_fingerprint": "93330ff65a27d3b64456914f6e63db145acc7ee3033af83988fc99d97b94f997"
+      },
+      "results": {
+        "engine": {
+          "executed": 20,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogueMenu.*",
+          "binary_sha256": "1bf928e2e32a354996708f7276045a6abbc21118926ec52ca101a2bc55c80f30",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3a488ae925246c415a32d097bbdb9c384afc4b69d5f8a4791d439c0bd47fe3cc",
+          "inventory_sha256": "ab486b8bc86d1212983e7bcb98e55d24d4017bfb5056485d484eb04f447a84a3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/native-topics-ui-focused-01/verification.json"
+    },
+    "native-topics-ui-normal-integration-01": {
+      "source": {
+        "head": "5b8e24bbd22974b34ef0c4e2d0d86004b4fbf5b6",
+        "source_fingerprint": "93330ff65a27d3b64456914f6e63db145acc7ee3033af83988fc99d97b94f997"
+      },
+      "results": {
+        "engine": {
+          "executed": 2202,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1bf928e2e32a354996708f7276045a6abbc21118926ec52ca101a2bc55c80f30",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "511c1d6a901d324a9ae135e8ad932325639e2073fd948fba058c24b413dc7581",
+          "inventory_sha256": "ab486b8bc86d1212983e7bcb98e55d24d4017bfb5056485d484eb04f447a84a3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/native-topics-ui-normal-integration-01/verification.json"
+    }
+  },
+  "runtime_executable_sha256": "eb9107844c32da73276e406990fde6228f6bc0b891b28a41bde108bb317ff301",
+  "independent_oracle": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "command": "0x503b60 ->0x669690 with arguments(topic,1,0)",
+    "entry": "0x669690",
+    "invocations": 40,
+    "cases": [
+      {
+        "prior": [],
+        "topic_present": false,
+        "refresh": false,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": []
+      },
+      {
+        "prior": [],
+        "topic_present": false,
+        "refresh": true,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": []
+      },
+      {
+        "prior": [],
+        "topic_present": true,
+        "refresh": false,
+        "added": true,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "target"
+        ]
+      },
+      {
+        "prior": [],
+        "topic_present": true,
+        "refresh": true,
+        "added": true,
+        "repeat_added": false,
+        "refresh_count": 1,
+        "result": [
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "target"
+        ],
+        "topic_present": false,
+        "refresh": false,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "target"
+        ],
+        "topic_present": false,
+        "refresh": true,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "target"
+        ],
+        "topic_present": true,
+        "refresh": false,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "target"
+        ],
+        "topic_present": true,
+        "refresh": true,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "other"
+        ],
+        "topic_present": false,
+        "refresh": false,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "other"
+        ]
+      },
+      {
+        "prior": [
+          "other"
+        ],
+        "topic_present": false,
+        "refresh": true,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "other"
+        ]
+      },
+      {
+        "prior": [
+          "other"
+        ],
+        "topic_present": true,
+        "refresh": false,
+        "added": true,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "target",
+          "other"
+        ]
+      },
+      {
+        "prior": [
+          "other"
+        ],
+        "topic_present": true,
+        "refresh": true,
+        "added": true,
+        "repeat_added": false,
+        "refresh_count": 1,
+        "result": [
+          "target",
+          "other"
+        ]
+      },
+      {
+        "prior": [
+          "other",
+          "target"
+        ],
+        "topic_present": false,
+        "refresh": false,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "other",
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "other",
+          "target"
+        ],
+        "topic_present": false,
+        "refresh": true,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "other",
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "other",
+          "target"
+        ],
+        "topic_present": true,
+        "refresh": false,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "other",
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "other",
+          "target"
+        ],
+        "topic_present": true,
+        "refresh": true,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "other",
+          "target"
+        ]
+      },
+      {
+        "prior": [
+          "other",
+          "other2"
+        ],
+        "topic_present": false,
+        "refresh": false,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "other",
+          "other2"
+        ]
+      },
+      {
+        "prior": [
+          "other",
+          "other2"
+        ],
+        "topic_present": false,
+        "refresh": true,
+        "added": false,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "other",
+          "other2"
+        ]
+      },
+      {
+        "prior": [
+          "other",
+          "other2"
+        ],
+        "topic_present": true,
+        "refresh": false,
+        "added": true,
+        "repeat_added": false,
+        "refresh_count": 0,
+        "result": [
+          "target",
+          "other",
+          "other2"
+        ]
+      },
+      {
+        "prior": [
+          "other",
+          "other2"
+        ],
+        "topic_present": true,
+        "refresh": true,
+        "added": true,
+        "repeat_added": false,
+        "refresh_count": 1,
+        "result": [
+          "target",
+          "other",
+          "other2"
+        ]
+      }
+    ],
+    "boundaries": "Complete original knowledge setter and list insertion instructions. Valid/null topic identities supplied; allocation supplies8 poisoned bytes and topic-cache refresh52F6D0 is captured. Argument extraction/type checking and native cache rebuild are outside this probe. No notification path: actual AddTopic command passes notify=false."
+  },
+  "oracle_boundaries": "Full original knowledge setter and list insertion execute; typed argument extraction is outside the harness. Eight-byte allocator and knowledge-cache refresh are captured. Notification=false matches the real AddTopic caller. This does not prove native UI/disk behavior.",
+  "content_audit": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "topics": [
+      {
+        "id": "content:oblivion.esm:0025a5",
+        "editor_id": "AmuletofKingsTopic",
+        "name": "Amulet of Kings"
+      },
+      {
+        "id": "content:oblivion.esm:0025e3",
+        "editor_id": "JauffreTopic",
+        "name": "Jauffre"
+      },
+      {
+        "id": "content:oblivion.esm:0247e4",
+        "editor_id": "WeynonPrioryTopic",
+        "name": "Weynon Priory"
+      },
+      {
+        "id": "content:oblivion.esm:02adaf",
+        "editor_id": "UrielSeptimTopic",
+        "name": "Uriel Septim"
+      },
+      {
+        "id": "content:oblivion.esm:033df0",
+        "editor_id": "OrderOfTalosTopic",
+        "name": "Order of Talos"
+      }
+    ],
+    "original_jauffre_info": "content:oblivion.esm:01e910",
+    "original_jauffre_parent": "content:oblivion.esm:0025e3",
+    "audit": "build/oblivion-compat/sewer-escape/native-topic-master-audit.json"
+  },
+  "runtime": {
+    "baurus-class-topics-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/baurus-class-topics-01/scenario.json",
+      "passed": true
+    },
+    "baurus-topics-reload-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/baurus-topics-reload-01/scenario.json",
+      "passed": true,
+      "whole_entry_differences": 0
+    },
+    "baurus-topics-response-03": {
+      "evidence": "build/oblivion-compat/sewer-escape/baurus-topics-response-03/scenario.json",
+      "passed": true,
+      "whole_entry_differences": 0
+    }
+  },
+  "automatic_save": {
+    "path": "build/oblivion-compat/sewer-escape/baurus-class-topics-01/userdata/saves/Bendu_Olo/Autosave.omwsave",
+    "sha256": "e50ae819320a5624b3dbcaa6440ae7b38f76e3f75ae197cd415467154ffd3455",
+    "native_dias_topics": [
+      "content:oblivion.esm:0025a5",
+      "content:oblivion.esm:0025e3",
+      "content:oblivion.esm:0247e4",
+      "content:oblivion.esm:02adaf",
+      "content:oblivion.esm:033df0"
+    ]
+  },
+  "resaved_after_response": {
+    "path": "build/oblivion-compat/sewer-escape/baurus-topics-response-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "74d3e56e6ca7766e5eb30987d6d0eb56751de7e27a3f7c3b7070d181541730f9",
+    "native_dias_topics": [
+      "content:oblivion.esm:0025a5",
+      "content:oblivion.esm:0025e3",
+      "content:oblivion.esm:0247e4",
+      "content:oblivion.esm:02adaf",
+      "content:oblivion.esm:033df0"
+    ]
+  },
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/baurus-topics-reload-01/learned-topics.png",
+    "build/oblivion-compat/sewer-escape/baurus-topics-response-03/amulet-topic-response.png"
+  ],
+  "retained_failures": {
+    "native-topics-focused-01": "New fixture needed complete native DIAL header.",
+    "baurus-topics-response-01": "Recipe preflight rejected unsupported SDL absolute mouse movement; replaced with ordinary controller input.",
+    "baurus-topics-response-02": "Real list selection failed on missing Morrowind sPersuasion; native actor dispatch repaired and rerun."
+  },
+  "limits": [
+    "General dialogue services, persuasion, topic discovery and full dialogue milestone remain separate.",
+    "Native topic sidebar uses existing alphabetical ordering; exact native presentation is not claimed.",
+    "These late tutorial saves predate separate shaman victory and are not continuous opening proof."
+  ],
+  "remaining": [
+    "Continuous original prison-to-outdoors course including shaman victory",
+    "Accumulated sanitizer integration"
+  ]
+}

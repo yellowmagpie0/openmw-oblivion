@@ -9,46 +9,52 @@ birthsign/class choices, Baurus CharacterGen88 and MQ01 exit88. No injected
 health, quest, position or completion, skipped required encounters, or spliced
 save state qualifies. **Full escape remains incomplete.**
 
-Remaining: CharacterGen88 AddTopic effects/native topic persistence, the
-continuous prison-to-outdoors course including the shaman, and accumulated
-sanitizer integration. All2201 normal engine cases pass at the fingerprint in
-the autosave artifact. Component3262 coverage retains its original475c provenance.
+Remaining: the continuous prison-to-outdoors course including the shaman and
+accumulated sanitizer integration. All2202 normal engine cases pass at the
+fingerprint in the native topics artifact. Component3262 coverage retains its original475c provenance.
 No fresh component/Python/sanitizer result is claimed. The cancelled
 `default-open-sanitizer-integration-01` ran no tests; reuse objects, not its result.
 
-## Current chunk — script autosave and exact fresh reload accepted
+## Current chunk — native learned topics and fresh interaction accepted
 
-Original CharacterGen88 requests Autosave while Baurus dialogue is open. The
-request now waits for OpenMW's saveable-UI gate, then writes a real automatic
-file without F5. It belongs to the selected game across retention/rollback,
-coalesces repeated blocked requests, clears on cleanup and respects the autosave
-setting. Manual quicksave behaviour is unchanged. Deferred timing adapts to
-OpenMW's unsaveable open-dialogue UI; native queue timing is not claimed.
+CharacterGen88 now adds all five original DIAL topics to global Player knowledge.
+Existing DIAS saves retain native FormIds through ordinary/prepared load and
+content-index remapping. Conditional original INFO selection filters the sidebar;
+forced tutorial links retain priority. Ordinary no-link responses return to the
+learned-topic list. Native list selection bypasses Morrowind service labels.
 
-`baurus-class-autosave-01` writes only `Autosave.omwsave`; its recipe has no F5.
-`baurus-autosave-reload-01` reloads every field exactly in a fresh process, with
-Warrior class, CharacterGen88/MQ02=20, health84.297676, one key/Amulet, unchanged
-deaths and no autosave/dialogue replay. Both courses pass with no unreviewed
-errors; captures inspected. All2201 engine cases pass;32 independent original
-save-dispatch paths pass with notification/disk operations captured boundaries.
-[SEWER-SCRIPT-AUTOSAVE-VERIFICATION.json](SEWER-SCRIPT-AUTOSAVE-VERIFICATION.json).
+`baurus-class-topics-01` executes the original five AddTopic commands and writes
+Autosave. Fresh processes `baurus-topics-reload-01` and
+`baurus-topics-response-03` restore the whole runtime with zero differences.
+Actual controller selection of Jauffre executes original INFO01e910 and another
+normal F5 retains all five DIAS topics without replaying AddTopic. Captures
+inspected; no unreviewed errors. All2202 normal engine cases and40 original
+knowledge-setter invocations pass. General dialogue/services are not accepted.
+[SEWER-NATIVE-TOPICS-VERIFICATION.json](SEWER-NATIVE-TOPICS-VERIFICATION.json).
 
-Automatic checkpoint:
-`build/oblivion-compat/sewer-escape/baurus-class-autosave-01/userdata/saves/Bendu_Olo/Autosave.omwsave`.
-Recipes: `oblivion_sewer_baurus_class_autosave.json` and
-`oblivion_sewer_baurus_autosave_reload.json` in `scripts/data/oblivion_compat/`.
+Automatic topic checkpoint:
+`build/oblivion-compat/sewer-escape/baurus-class-topics-01/userdata/saves/Bendu_Olo/Autosave.omwsave`.
+Editable recipes: `oblivion_sewer_baurus_class_topics.json` and
+`oblivion_sewer_baurus_topics_reload.json` in `scripts/data/oblivion_compat/`.
 This class save and the outdoor checkpoint below predate the separate shaman
 victory. The continuous course must join the gameplay through ordinary controls.
 
+The preceding [script autosave chunk](SEWER-SCRIPT-AUTOSAVE-VERIFICATION.json)
+proves deferred saveable-UI timing, game-owned retention/rollback, coalescing,
+autosave preference and exact fresh load. It adapts to OpenMW's unsaveable
+open-dialogue UI; original queue timing is not claimed.
+
 ## Next action
 
-Implement/review native AddTopic using the real DIAL identity and persistent
-knowledge owner. It remains in ObScript's deferred set. Native dialogue currently
-handles explicit linked choices only; DIAS read/prepared restore filters known
-topics through TES3 DIAL records, dropping native ones. Keep linked tutorial
-choices intact while verifying native topic knowledge/save/load and any required
-Baurus interaction. Then assemble the continuous opening and batch the sanitizer
-gates. Do not broaden into unrelated dialogue services or exact combat arithmetic.
+Run the continuous original opening and batch accumulated sanitizer gates. An
+ignored `assemble-continuous-opening.py` prepares `continuous-opening.json` for
+new game through original19 in one process, with the existing normal-input
+recipes. Unbound F8 advances only local read-only observer phases; original
+scripts own gameplay progression. Its generated Lua syntax passes; runtime is
+not yet accepted. Extend that same course through solo dungeon/shaman, reunion,
+Emperor, choices and physical exit, then fresh outdoor save/load. Preserve all
+failed attempts and source provenance. Do not splice separate shaman/late saves
+or broaden into unrelated services or exact combat arithmetic.
 
 ## Reusable gameplay evidence
 
