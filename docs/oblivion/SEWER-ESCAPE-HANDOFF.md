@@ -1,6 +1,57 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — Natural Caverns entered and reloaded, 2026-11-04
+## Current checkpoint — first goblin defeated and reloaded, 2026-11-04
+
+Full escape remains incomplete: remaining goblin dungeon, escort reunion,
+Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
+reload and continuous full playthrough. Death/reload is verified. Current chunk:
+continue through Natural Caverns toward the second goblin and original exit.
+
+`cavern-first-approach-01` PASSES original pathgrid03b511 descent through nodes
+20,21,22,23,25,26,27, preserving health40.36. `cavern-goblin-chamber-01` FAILS
+at its fifth waypoint when goblin03b526 attacks and displaces Player. Normal
+manual movement release/F5 retained diagnostic save9376ad91b245d4906e1bf29c029d06935dac9930b273964d7104cc22f6ea2af7,
+health12.16; receipt and screenshot retained. `cavern-first-goblin-01` FAILS:
+Player hits land, but the goblin kills the low-health Player. Do not use its
+later output as survival evidence. Both failures are terminal and retained.
+
+`cavern-goblin-chamber-02` PASSES nodes37,31,30,36, stopping before combat with
+health40.36. `cavern-first-goblin-02` PASSES ordinary Club defence: goblin03b526
+dead with Player killer, health31.899994, no combat engagements. Encounter audit
+and capture inspected. Save SHA256
+`e4dfa32b7b05869b6b0decf25a9fb190c7972ebed1ae601321d2f56c6fd24422`.
+`cavern-first-goblin-reload-01` PASSES fresh-process load/resave; restart audit
+checks exact goblin life/killer/native values and entire Player inventory.
+Player values are unchanged except ordinary fatigue recovery137.19->140.
+An initial overly broad whole-value comparison failed on that recovery; the
+final audit explicitly records it. Health remains31.90. Goblin corpse still
+renders upright: known creature-corpse presentation limitation, not accepted
+corpse animation. All passing courses have no forbidden/unreviewed errors.
+No engine changes; existing2167 engine-test evidence reused, no new sanitizer.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/cavern-first-goblin-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `415341f2f5de02414f1ef831032c1d59b3e305141f751e54d40a7e71a596e04f`.
+Player(212.24,775.29,-282.65), yaw0.26426/pitch0, health31.90, Club and armor.
+All processes terminal. Next: follow original route around the western bend
+before approaching goblin03b513 near(788,1813,-205). Raw pathgrid route saved in
+`build/oblivion-compat/sewer-escape/cavern-second-goblin-path.json`: node35
+(196,877),38(49,940),39(-125,1018),43(-376,1144),46(-536,1379),47(-490,1584),
+48(-303,1676),49(-134,1776),50(77,1775),0(311,1789),1(522,1758),5(813,1800).
+Stop before an engaged enemy can push Player off a walking waypoint; fight
+separately. Nearby healing later in route: chest051d72 at(4645,1510,-464)
+has Healing009310 x3 plus00930e x1 in the current native inventory.
+
+Original path extraction helper/evidence: ignored `cavern_path.py` and
+`cavern-first-goblin-path.json`, master hash pinned to the existing original
+Oblivion.esm identity. Editable passing courses under scripts/data/oblivion_compat:
+`oblivion_sewer_cavern_first_approach.json`, `...cavern_goblin_chamber.json`,
+`...cavern_first_goblin.json`, `...cavern_first_goblin_reload.json`.
+Input chain: natural-caverns-reload01 -> first-approach01 -> chamber02 ->
+first-goblin02 -> first-goblin-reload01. Composite evidence only; full course
+still requires continuous prison-to-outdoors acceptance.
+
+## History — Natural Caverns entered and reloaded, 2026-11-04
 
 Full escape remains incomplete: goblin dungeon, escort reunion, Emperor/Amulet,
 character choices, actual MQ01 stage88 exit, outdoor fresh reload and continuous
