@@ -4855,6 +4855,18 @@ class EssentialBase84Tests(unittest.TestCase):
 
 
 class AnimatedReference85Tests(unittest.TestCase):
+    def test_fixed_anchor_motion_roundtrip(self):
+        state = self.make_state()
+        bodies = state["native_animated_references"][0]["bodies"]
+        for body, motion in zip(bodies, (7, 1)):
+            body["linear_velocity"] = [0.] * 3
+            body["native_packed_velocity"] = {"linear": [0.] * 4, "angular": [0.] * 4}
+            body["native_motion"] = motion
+        encoded = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(encoded)
+        self.assertEqual(decoded["native_animated_references"], state["native_animated_references"])
+        self.assertEqual(state_io.encode_payload(decoded), encoded)
+
     def make_state(self):
         state = make_state()
         state.update(schema_version=85, ai_rng_state=1)

@@ -29,6 +29,8 @@ namespace MWWorld
         for (std::size_t i = 0; i < file.numRecords(); ++i)
             if (const auto* body = dynamic_cast<const Nif::bhkRigidBody*>(file.getRecord(i)))
             {
+                if (body->mInfo.mMass == 0 && body->mInfo.mMotionType == Nif::HkMotionType::Motion_Fixed)
+                    continue;
                 if (!std::isfinite(body->mInfo.mMass) || body->mInfo.mMass <= 0
                     || body->mInfo.mMotionType != Nif::HkMotionType::Motion_Keyframed)
                     return false;
@@ -101,7 +103,8 @@ namespace MWWorld
             const auto poses = NifBullet::ragdollBodyWorldPoses(graph, renderer->initialBones());
             std::vector<NifBullet::RagdollNativeMotionRequest> motions;
             for (const auto& body : graph.mBodies)
-                motions.push_back({body.mRecord, NifBullet::RagdollNativeMotion::Dynamic});
+                motions.push_back({body.mRecord, body.mFixed
+                    ? NifBullet::RagdollNativeMotion::Fixed : NifBullet::RagdollNativeMotion::Dynamic});
             if (!renderer->isValid()) throw std::runtime_error("animated reference renderer changed during preparation");
             physics.addAnimatedReferenceBodies(ptr, graph, NifBullet::RagdollNativeLengthScale, poses,
                 MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,

@@ -191,9 +191,10 @@ namespace NifBullet
         // shared authored definitions survive rejected and successful scaling.
         shapeBudget(source.mShape);
         RagdollBodyDefinition result = source;
-        positive(source.mMass);
+        if (source.mFixed) nonnegative(source.mMass);
+        else positive(source.mMass);
         result.mMass = multiply(source.mMass, scale);
-        positive(result.mMass);
+        if (!source.mFixed) positive(result.mMass);
         result.mCenter = vector(source.mCenter);
         for (std::size_t i = 0; i < result.mInertia.size(); ++i)
             result.mInertia[i] = multiply(source.mInertia[i], inertiaScale);
@@ -650,7 +651,9 @@ namespace NifBullet
                     require(std::isfinite(entry), "nonfinite inertia tensor");
                     value.mInertia[row * 3 + col] = entry;
                 }
-            positive(info.mMass);
+            value.mFixed = referencePlacement && info.mMotionType == Nif::HkMotionType::Motion_Fixed;
+            if (value.mFixed) nonnegative(info.mMass);
+            else positive(info.mMass);
             nonnegative(info.mLinearDamping);
             nonnegative(info.mAngularDamping);
             nonnegative(info.mFriction);

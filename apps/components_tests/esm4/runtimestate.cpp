@@ -6403,6 +6403,17 @@ TEST(ESM4RuntimeState, AnimatedReferenceBodiesRoundTripWithoutActorOwnership)
     EXPECT_EQ(restored.mNativeAnimatedReferences, state.mNativeAnimatedReferences);
     EXPECT_TRUE(restored.mNativeActorRagdolls.empty());
     EXPECT_TRUE(std::signbit(restored.mNativeAnimatedReferences.at(reference).mBodies[0].mPosition[1]));
+    auto anchored = state;
+    auto& bodies = anchored.mNativeAnimatedReferences.at(reference).mBodies;
+    for (auto& body : bodies)
+    {
+        body.mLinearVelocity = {};
+        body.mNativePackedVelocity = ESM4::PhysicalWorldSceneVelocities{};
+        body.mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic;
+    }
+    bodies.front().mNativeMotion = ESM4::RuntimeRagdollMotion::Fixed;
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(anchored.serializeBinary()).mNativeAnimatedReferences,
+        anchored.mNativeAnimatedReferences);
     EXPECT_NE(restored.canonicalJson().find("\"native_animated_references\":[{\"reference\":"), std::string::npos);
     auto invalid = state;
     invalid.mVersion = 84;

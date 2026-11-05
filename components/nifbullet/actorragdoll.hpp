@@ -139,6 +139,7 @@ namespace NifBullet
         osg::Vec3f mCenter;
         std::array<float, 9> mInertia;
         float mMass;
+        bool mFixed = false;
         float mLinearDamping, mAngularDamping;
         float mFriction, mRestitution;
         float mMaxLinearVelocity, mMaxAngularVelocity;

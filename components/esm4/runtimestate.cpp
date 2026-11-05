@@ -1216,7 +1216,8 @@ namespace ESM4
                     throw std::runtime_error("Incomplete TES4 ragdoll motion snapshot");
                 if (body.mNativeMotion && (!body.mNativePackedVelocity
                     || (*body.mNativeMotion != RuntimeRagdollMotion::Dynamic
-                        && *body.mNativeMotion != RuntimeRagdollMotion::Keyframed)))
+                        && *body.mNativeMotion != RuntimeRagdollMotion::Keyframed
+                        && *body.mNativeMotion != RuntimeRagdollMotion::Fixed)))
                     throw std::runtime_error("Invalid TES4 logical ragdoll motion snapshot");
                 if (body.mNativePackedVelocity)
                     for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
@@ -2349,6 +2350,10 @@ namespace ESM4
         for (const auto& [actor, pose] : mNativeActorRagdolls)
         {
             pose.validate();
+            if (std::any_of(pose.mBodies.begin(), pose.mBodies.end(), [](const auto& body) {
+                    return body.mNativeMotion == RuntimeRagdollMotion::Fixed;
+                }))
+                throw std::runtime_error("Fixed anchors are only supported for animated scenery");
             if (mVersion < 32 && pose.mBodies.front().mNativePackedVelocity)
                 throw std::runtime_error("TES4 packed ragdoll velocities require runtime-state version32");
             if (mVersion < 33 && pose.mBodies.front().mNativeMotion)

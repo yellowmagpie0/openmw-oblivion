@@ -100,6 +100,84 @@ namespace
         EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
     }
 
+    TEST(AnimatedReferenceAsset, FixedAnchorCanAccompanyMultipleReleasableLinks)
+    {
+        Nif::NIFFile file(VFS::Path::Normalized("trap.nif"));
+        auto anchor = std::make_unique<Nif::bhkRigidBody>();
+        anchor->mInfo.mMass = 0;
+        anchor->mInfo.mMotionType = Nif::HkMotionType::Motion_Fixed;
+        file.mRecords.push_back(std::move(anchor));
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        for (int i = 0; i < 2; ++i)
+        {
+            auto link = std::make_unique<Nif::bhkRigidBody>();
+            link->mInfo.mMass = 1;
+            link->mInfo.mMotionType = Nif::HkMotionType::Motion_Keyframed;
+            file.mRecords.push_back(std::move(link));
+        }
+        EXPECT_TRUE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+    }
+
+    TEST_P(RagdollSchedulerTest, AnchoredScenerySwingsAndRestoresWithoutReleasingAnchor)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, -10));
+        auto bob = mGraph.mBodies.front();
+        bob.mRecord = 24;
+        bob.mNodeRecord = 8;
+        bob.mShape = NifBullet::RagdollSphere{0.1f};
+        auto& anchor = mGraph.mBodies.front();
+        anchor.mNodeRecord = 7;
+        anchor.mFixed = true;
+        anchor.mMass = 0;
+        anchor.mInertia = {};
+        anchor.mShape = NifBullet::RagdollSphere{0.1f};
+        mGraph.mBodies.push_back(bob);
+        mGraph.mSourceHash = std::string(16, 'a');
+        mPoses.emplace_back(btQuaternion::getIdentity(), btVector3(1, 0, 2));
+        NifBullet::RagdollConeJoint joint{};
+        joint.mA = {{0, 0, 0}, {0, 0, 1}, {1, 0, 0}};
+        joint.mB = {{-1, 0, 0}, {0, 0, 1}, {1, 0, 0}};
+        joint.mConeAngle = 3.14f;
+        joint.mPlaneMin = joint.mTwistMin = -3.14f;
+        joint.mPlaneMax = joint.mTwistMax = 3.14f;
+        mGraph.mJoints.push_back({36, 0, 1, false, 1.f, 1.f, joint});
+        const std::array motions{
+            NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Fixed},
+            NifBullet::RagdollNativeMotionRequest{24, NifBullet::RagdollNativeMotion::Dynamic}};
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, motions);
+        const auto base = ESM::FormKey::content("props.esm", 100);
+        const std::string model = "test/trap.nif";
+        const auto initial = scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("anchored scenery");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 0;
+        for (unsigned frame = 0; frame < 60; ++frame)
+        {
+            time += 1.f / 60.f;
+            scheduler.applyQueuedMovements(time, frames[frame % 2],
+                osg::Timer::instance()->tick(), frame, *stats, MWPhysics::WorldFrameData(false, {}));
+        }
+        const auto moved = scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model);
+        EXPECT_NE(initial, moved);
+        const auto bodies = scheduler.captureAnimatedReferenceBodies(mPtr);
+        ASSERT_EQ(bodies.size(), 2u);
+        EXPECT_LT((bodies[0].mPose.getOrigin() - mPoses[0].getOrigin()).length(), 1e-6);
+        EXPECT_GT((bodies[1].mPose.getOrigin() - mPoses[1].getOrigin()).length(), .1);
+        EXPECT_NEAR((bodies[1].mPose.getOrigin() - bodies[0].mPose.getOrigin()).length(), 1, .08);
+        EXPECT_EQ(moved.mBodies[0].mNativeMotion, ESM4::RuntimeRagdollMotion::Fixed);
+        scheduler.removeAnimatedReferenceBodies(mPtr);
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, motions);
+        scheduler.restoreAnimatedReferenceSnapshot(mPtr, moved, base, model);
+        EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), moved);
+        auto invalid = moved;
+        invalid.mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic;
+        EXPECT_THROW(scheduler.restoreAnimatedReferenceSnapshot(mPtr, invalid, base, model), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), moved);
+        scheduler.removeAnimatedReferenceBodies(mPtr);
+    }
+
     TEST_P(RagdollSchedulerTest, AnimatedReferenceBodiesFallPersistAndRemainSeparateFromActors)
     {
         NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);

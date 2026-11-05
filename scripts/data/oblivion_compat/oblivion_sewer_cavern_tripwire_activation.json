@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "name": "Tripwire activation chain and second goblin",
+  "name": "Anchored mace release and second goblin",
   "cwd": "{source}",
   "files": [
     {
@@ -628,7 +628,10 @@
     "activate-script ref=content:oblivion.esm:051acc activator=content:oblivion.esm:051acb",
     "playgroup ref=content:oblivion.esm:051acc group=unequip played=true",
     "activate-script ref=content:oblivion.esm:051aca activator=content:oblivion.esm:051acc",
-    "playgroup ref=content:oblivion.esm:051aca group=unequip played=true"
+    "playgroup ref=content:oblivion.esm:051aca group=unequip played=true",
+    "TES4 animated reference released: content:oblivion.esm:051acb bodies=8",
+    "TES4 animated reference released: content:oblivion.esm:051acc bodies=8",
+    "TES4 animated reference released: content:oblivion.esm:051aca bodies=8"
   ],
   "forbidden_log": [
     "Unsupported ObScript command",

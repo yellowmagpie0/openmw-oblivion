@@ -1404,7 +1404,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Incomplete TES4 packed ragdoll snapshot")
             if "native_motion" in body:
                 motion = body["native_motion"]
-                if version < 33 or type(motion) is not int or motion not in (1, 6) or "native_packed_velocity" not in body:
+                if version < 33 or type(motion) is not int or motion not in (1, 6, 7) or "native_packed_velocity" not in body:
                     raise RuntimeStateError("Invalid TES4 logical ragdoll motion or version")
             if ("native_motion" in body) != ("native_motion" in bodies[0]):
                 raise RuntimeStateError("Incomplete TES4 logical ragdoll motion snapshot")
@@ -1533,6 +1533,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Duplicate, dangling or mismatched TES4 ragdoll owner")
             ragdoll_actors.add(actor)
         bodies = validate_physical_bodies(entry)
+        if not is_reference and any(body.get("native_motion") == 7 for body in bodies):
+            raise RuntimeStateError("Fixed anchors are only supported for animated scenery")
         nodes = {body["node_record"] for body in bodies}
         if "world_registration" in entry:
             registration = entry["world_registration"]

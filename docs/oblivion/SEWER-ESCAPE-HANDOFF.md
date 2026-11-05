@@ -1,6 +1,76 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — trap script chain repaired, 2026-11-04
+## Current checkpoint — anchored mace motion and restart, 2026-11-04
+
+Full escape remains incomplete. The three swinging mace chains now release
+with fixed anchors and survive a fresh-process reload. Next bounded chunk:
+actual moving-body contact damage/pushback and persistence, then remaining
+caverns to escort reunion. Emperor/Amulet, character choices, stage 88 exit,
+outdoor reload and continuous prison-to-outdoors acceptance remain open.
+
+Fixed scenery bodies retain zero effective mass and immutable Fixed motion;
+movable links release as Dynamic. Actor ragdolls still reject fixed-body saves.
+Both C++ and Python save readers support the scenery motion mode. Scheduler
+coverage exercises a swinging constrained body, immobile anchor, fresh restore
+and rejection of an attempt to release that anchor under worker counts 0, 1 and 2.
+
+Evidence under `build/oblivion-compat/sewer-escape/`:
+
+- `anchored-engine-focused-02`: 262 selected engine tests pass, runtime built.
+  `anchored-engine-integration-01`: all 2,175 engine tests pass.
+- `anchored-sanitize-components-01`: 239 selected component tests pass under
+  ASan/UBSan, leak checking disabled. Exact inventories, no failures/skips.
+- `anchored-sanitize-engine-01` was deliberately stopped during compilation
+  (exit -15), before any tests; it provides NO engine sanitizer coverage. Batch
+  the 278 selected physics/Activate/parent tests with the upcoming trap-contact
+  persistence change, which modifies the same shared save header. The pending
+  engine sanitizer gate, including the earlier Activate repair, remains open.
+- Those receipts use fingerprint
+  `ac454d56b6c36b479a0b71fa5a59cb29612628b2fc3107e8e6ae739e54105ca5`.
+  Reuse `anchored-components-01` (3,247 component and 552 Python tests) with
+  its original fingerprint
+  `d621dc94c155279f1b6b7d9c2d4ba1f2980d3ae120eac278cc079e0d662c0694`:
+  only a scheduler test's time-variable compile correction followed that run.
+  The failed `anchored-engine-focused-01` remains failed; no production failure.
+- `anchored-trap-01`: ordinary movement/Club fight from pristine pre-wire save;
+  all three script activations release eight bodies each; second goblin dies,
+  Player survives with health 9.339996. Inspected capture shows hanging maces.
+- `anchored-trap-reload-01`: fresh load/resave, exact anchor bodies and motion
+  modes retained, movable links continue simulating. No activation/animation
+  replay. `restart-audit.json` verifies script/life state, entire Player identity,
+  inventory/position/character data and health. Only fatigue recovers to 140.
+  Both screenshots inspected; goblin corpses still appear upright.
+- `anchored-active-save-01` and `anchored-active-reload-01`: save immediately
+  after release with live goblin and unfinished trap timers; chain speeds
+  147–600 world units/s. Fresh process resumes ordinary Club combat; goblin
+  dies with Player killer, Player survives with health 12.159996. All anchors
+  remain exact while movable bodies travel 83–362 units; all three scripts
+  reach triggered=3/damage=5/pushback=100 without activation/release replay.
+  Both captures inspected. The run-local `restart-audit.json` records save
+  hashes and checks; editable `oblivion_sewer_cavern_anchored_active_save.json`
+  and `...anchored_active_reload.json` preserve the courses.
+
+Runtime SHA256
+`df5d31c92e7d0c4026435b9e1dedcfca104e277faa1e928fe7aa293e277cc38b`.
+Post-fight save SHA256
+`c0b91ff9a80d7d74fe0857a951c0e775078e868e37a317742399d825644c849a`;
+fresh-reload save SHA256
+`75ee348d461f3ba0c5f768b61441a5a7c0bbcffa1f7c5eb70df02c91f781eb7d`.
+Each is its run's `userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Editable courses: `oblivion_sewer_cavern_tripwire_activation.json` and
+`oblivion_sewer_cavern_anchored_traps_reload.json` in
+`scripts/data/oblivion_compat/`. Reload's health assertion targets this saved run.
+
+Trap damage is NOT implemented/proven by these results. Static original-handler
+notes are retained in `tripwire-assets/trap-damage-inspection.json` (hash-checked
+original executable; no emulated execution claim). Use released body contacts,
+not the replaced static reference collision, and retain environmental damage
+ownership and restart correctness. Test damage from the unconsumed pre-wire
+`cavern-second-approach-01` save, not by patching a consumed state. The current
+reloaded checkpoint is suitable for diagnostic onward traversal only until the
+hazard behavior is accepted. Existing compiler warnings remain unrelated.
+
+## History — trap script chain repaired, 2026-11-04
 
 Full escape remains incomplete. Next bounded chunk: release the anchored mace
 chains into physics, verify their hazard behavior and persistence, then continue

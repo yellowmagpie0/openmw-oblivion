@@ -423,7 +423,7 @@ namespace ESM4
     // Shape-world transforms and velocities in game world units. Record IDs
     // belong to the identified NIF asset, not the content load order.
     // Logical owned-body mode, not a raw Havok motion class/getter type.
-    enum class RuntimeRagdollMotion : std::uint8_t { Dynamic = 1, Keyframed = 6 };
+    enum class RuntimeRagdollMotion : std::uint8_t { Dynamic = 1, Keyframed = 6, Fixed = 7 };
 
     struct RuntimeRagdollBody
     {
