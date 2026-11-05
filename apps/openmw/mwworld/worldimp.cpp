@@ -2212,10 +2212,28 @@ namespace MWWorld
                         }
                     }
 
+                    // ONAM supplies an initial final pose, not an activation or unlock.
+                    // Persist it through the same owner as subsequent script animations.
+                    const auto seedDoorPose = [&] {
+                        if (type != ESM::REC_DOOR4
+                            || reference.mCustomState.contains("obscript.animation_group")) return;
+                        const auto& poses = ptr.getRefData().getAnimationState().mScriptedAnims;
+                        if (poses.empty()) return;
+                        const auto& pose = poses.front();
+                        reference.mCustomState["obscript.animation_group"] = pose.mGroup;
+                        reference.mCustomState["obscript.animation_mode"] = std::int64_t(1);
+                        reference.mCustomState["obscript.animation_playing"] = false;
+                        reference.mCustomState["obscript.animation_scripted"] = true;
+                        reference.mCustomState["obscript.animation_progress"] = double(pose.mTime);
+                        reference.mCustomState["obscript.animation_loop_count"] = std::int64_t(pose.mLoopCount);
+                        reference.mCustomState["obscript.animation_absolute"] = pose.mAbsolute;
+                    };
+                    seedDoorPose();
                     if (const auto previous = previousReferences.find(key); previous != previousReferences.end())
                     {
                         reference.mInventory = previous->second->mInventory;
                         reference.mCustomState = previous->second->mCustomState;
+                        seedDoorPose();
                         reference.mActorDrawState = previous->second->mActorDrawState;
                         if (mOblivionRuntimeState->mVersion < 4
                             && (ptr.getClass().getType() == ESM::REC_NPC_4

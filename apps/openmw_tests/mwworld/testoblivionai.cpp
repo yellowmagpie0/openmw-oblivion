@@ -840,3 +840,25 @@ TEST(OblivionAiTest, EscortArrivalCompletesBeforeScheduleExpiryAndDispatchesOnce
     EXPECT_EQ(calls, 1);
     queue.dispatch([&](const auto&) { ADD_FAILURE() << "arrival callback replayed"; });
 }
+
+TEST(OblivionAiTest, SavedClosedDoorOverridesDefaultOpenWithoutChangingLock)
+{
+    MWMechanics::OblivionDoorState authored{true, true, {}, {}, true};
+    ESM4::RuntimeReferenceState saved;
+    saved.mLockLevel = 100;
+    auto resolve = [&] { return MWMechanics::resolveOblivionDoorState(authored, &saved, std::nullopt); };
+    EXPECT_TRUE(resolve().mOpen); // Legacy snapshot with no explicit animation.
+    saved.mCustomState["obscript.animation_group"] = std::string("close");
+    saved.mCustomState["obscript.animation_progress"] = 1.0;
+    EXPECT_FALSE(resolve().mOpen);
+    EXPECT_TRUE(resolve().mLocked);
+    saved.mCustomState["obscript.animation_group"] = std::string("open");
+    EXPECT_TRUE(resolve().mOpen);
+    saved.mCustomState["obscript.animation_progress"] = .5;
+    EXPECT_FALSE(resolve().mOpen);
+    saved.mCustomState["obscript.animation_progress"] = 1.0;
+    saved.mCustomState["obscript.animation_absolute"] = true;
+    EXPECT_FALSE(resolve().mOpen); // Requires the model's time interval.
+    const MWMechanics::OblivionDoorState resident{true, true, {}, {}, false};
+    EXPECT_FALSE(MWMechanics::resolveOblivionDoorState(authored, &saved, resident).mOpen);
+}

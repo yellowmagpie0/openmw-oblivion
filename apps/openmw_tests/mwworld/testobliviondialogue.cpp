@@ -1132,7 +1132,7 @@ namespace
     struct AnimatedDoorFixture : SwitchFixture
     {
         MWWorld::Ptr mDoor;
-        AnimatedDoorFixture()
+        explicit AnimatedDoorFixture(bool openByDefault = false)
         {
             auto& world = mFixture.mWorld;
             auto& store = world.getStore();
@@ -1142,6 +1142,9 @@ namespace
             base.mId = {0xc00, file};
             store.getWritable<ESM4::Door>().insertStatic(base, key(0xc00));
             ESM4::Reference ref{};
+            ref.mOpenByDefault = openByDefault;
+            ref.mIsLocked = true;
+            ref.mLockLevel = 100;
             ref.mId = {0xc01, file};
             ref.mFormKey = key(0xc01);
             ref.mBaseObj = base.mId;
@@ -2568,4 +2571,32 @@ TEST(OblivionBoundItems, LaterWeaponAbilityWinsWithoutDroppingEarlierArmorOrSour
                 }
         EXPECT_EQ(weapons, 1u);
     }
+}
+
+TEST(OblivionTutorialDoor, DefaultOpenPoseRetainsLockAndSavedCloseOverridesAuthoredOpen)
+{
+    AnimatedDoorFixture f(true);
+    auto& world = f.mFixture.mWorld;
+    EXPECT_EQ(f.query(), 1);
+    EXPECT_TRUE(f.mDoor.getCellRef().isLocked());
+    auto snapshot = world.captureOblivionRuntimeState();
+    const auto findDoor = [](auto& state) -> auto& {
+        return *std::find_if(state.mReferences.begin(), state.mReferences.end(),
+            [](const auto& ref) { return ref.mKey == key(0xc01); });
+    };
+    const auto& captured = findDoor(snapshot);
+    EXPECT_EQ(std::get<std::string>(captured.mCustomState.at("obscript.animation_group")), "open");
+    EXPECT_EQ(std::get<double>(captured.mCustomState.at("obscript.animation_progress")), 1.0);
+    EXPECT_EQ(captured.mLockLevel, 100);
+    EXPECT_NO_THROW(world.prepareOblivionSaveState(
+        ESM4::RuntimeState::deserializeBinary(snapshot.serializeBinary())));
+    // The same animation owner used by scripts replaces the initial pose.
+    auto& pose = f.mDoor.getRefData().getAnimationState().mScriptedAnims.front();
+    pose.mGroup = "close";
+    pose.mTime = 1.f;
+    world.getOblivionScriptManager()->persistAnimationState(key(0xc01), "close", 1, false, true);
+    EXPECT_EQ(f.query(), 3);
+    snapshot = world.captureOblivionRuntimeState();
+    EXPECT_EQ(std::get<std::string>(findDoor(snapshot).mCustomState.at("obscript.animation_group")), "close");
+    EXPECT_TRUE(f.mDoor.getCellRef().isLocked());
 }

@@ -59,6 +59,7 @@ namespace MWMechanics
         bool mLocked = false;
         ESM::RefId mKey;
         ESM::FormKey mOwner;
+        bool mOpen = false;
     };
 
     // Resident state is authoritative, then a complete saved reference
@@ -81,6 +82,21 @@ namespace MWMechanics
                 authored.mLocked = *value;
             }
             authored.mOwner = saved->mOwner.value_or(ESM::FormKey{});
+            if (const auto group = saved->mCustomState.find("obscript.animation_group");
+                group != saved->mCustomState.end())
+            {
+                // A saved pose overrides ONAM, including an explicit close.
+                // Absolute animation clocks require a resident model to resolve.
+                const auto* name = std::get_if<std::string>(&group->second);
+                const auto progress = saved->mCustomState.find("obscript.animation_progress");
+                const auto absolute = saved->mCustomState.find("obscript.animation_absolute");
+                const auto* time = progress == saved->mCustomState.end()
+                    ? nullptr : std::get_if<double>(&progress->second);
+                const auto* isAbsolute = absolute == saved->mCustomState.end()
+                    ? nullptr : std::get_if<bool>(&absolute->second);
+                authored.mOpen = name && *name == "open" && time && *time >= 1.0
+                    && (!isAbsolute || !*isAbsolute);
+            }
         }
         return authored;
     }

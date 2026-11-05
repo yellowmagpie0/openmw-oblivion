@@ -59,6 +59,7 @@
 #include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/loadwthr.hpp>
 
+#include "../mwworld/obliviondooranimation.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
@@ -4907,6 +4908,9 @@ namespace MWMechanics
                 || (reference != nullptr && mWorld.mStore.search<ESM4::Door>(reference->mBaseKey) != nullptr);
             if (!isDoor || !door.getRefData().isEnabled() || door.mRef->isDeleted())
                 return false;
+            if (!door.getCellRef().getTeleport()
+                && MWWorld::oblivionAnimatedDoorState(mWorld, door) == 1)
+                return true;
             if (!door.getCellRef().isLocked())
                 return true;
             key = door.getCellRef().getKey();
@@ -5022,11 +5026,15 @@ namespace MWMechanics
 
     OblivionDoorState OblivionAiService::currentDoorState(const UnloadedLocation& door) const
     {
-        const OblivionDoorState authored{ door.mEnabled, door.mLocked, door.mKey, door.mOwner };
+        OblivionDoorState authored{ door.mEnabled, door.mLocked, door.mKey, door.mOwner };
+        if (const auto* reference = mWorld.mStore.search<ESM4::Reference>(door.mReference))
+            authored.mOpen = reference->mOpenByDefault && door.mTeleportDoor.isNull();
         if (const MWWorld::Ptr loadedDoor = loadedPtrFor(door.mReference); !loadedDoor.isEmpty())
         {
             OblivionDoorState resident{ loadedDoor.getRefData().isEnabled() && !loadedDoor.mRef->isDeleted(),
                 loadedDoor.getCellRef().isLocked(), loadedDoor.getCellRef().getKey(), {} };
+            resident.mOpen = !loadedDoor.getCellRef().getTeleport()
+                && MWWorld::oblivionAnimatedDoorState(mWorld, loadedDoor) == 1;
             const ESM::RefId owner = loadedDoor.getCellRef().getOwner();
             if (const ESM::FormId* id = owner.getIf<ESM::FormId>())
             {
@@ -5062,7 +5070,7 @@ namespace MWMechanics
                 || !currentDoorState(mUnloadedLocations[marker->second]).mAvailable)
                 return false;
         }
-        if (!current.mLocked)
+        if (!current.mLocked || (door.mTeleportDoor.isNull() && current.mOpen))
             return true;
         bool ownsConnectedCell = hasCellOwnershipPermission(live, door.mCell, actor);
         if (!ownsConnectedCell)
@@ -6621,7 +6629,7 @@ namespace MWMechanics
                                 continue;
                             }
                         }
-                        else
+                        else if (MWWorld::oblivionAnimatedDoorState(mWorld, door) != 1)
                         {
                             live.mState.mDoorAnimationStarted
                                 = mechanics->playAnimationGroup(door, "open", 1, 1, true);

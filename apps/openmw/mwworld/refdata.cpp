@@ -97,6 +97,13 @@ namespace MWWorld
         , mPhysicsPostponed(false)
         , mChanged(false)
     {
+        if (ref.mOpenByDefault && ref.mDoor.destDoor == ESM::FormId{})
+        {
+            ESM::AnimationState::ScriptedAnimation pose;
+            pose.mGroup = "open";
+            pose.mTime = 1.f;
+            mAnimationState.mScriptedAnims.push_back(std::move(pose));
+        }
     }
 
     RefData::RefData(const ESM4::ActorCharacter& ref)

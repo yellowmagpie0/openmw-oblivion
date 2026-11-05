@@ -506,7 +506,8 @@ namespace EsmTool
                     std::cout << *value.mFactionRank;
                 else
                     std::cout << "absent";
-                std::cout << "\n  Ownership global: " << value.mGlobal;
+                std::cout << "\n  Ownership global: " << value.mGlobal
+                          << "\n  Open by default: " << value.mOpenByDefault;
             }
             if constexpr (requires { value.mIsLocked; value.mLockLevel; value.mKey; })
             {

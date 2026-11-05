@@ -209,3 +209,23 @@ TEST(ESM4ReferenceOwnership, ClearsOwnershipExtrasWhenLoadingAnOverrideIntoReuse
     loadOwnership(ownershipPayload(-2), true, .8f, &reference);
     EXPECT_EQ(reference.mFactionRank, -2);
 }
+
+TEST(ESM4Reference, OpenByDefaultIsAnEmptyTes4MarkerAndResetsOnOverride)
+{
+    std::vector<char> payload;
+    appendSubRecord(payload, ESM::fourCC("ONAM"), {});
+    for (bool compressed : {false, true})
+    {
+        ESM4::Reference reused{};
+        EXPECT_TRUE(loadOwnership(payload, compressed, 1.f, &reused).mOpenByDefault);
+        std::vector<char> overridePayload;
+        appendSubRecord(overridePayload, ESM::fourCC("NAME"), {0x10, 0, 0, 0});
+        EXPECT_FALSE(loadOwnership(overridePayload, compressed, 1.f, &reused).mOpenByDefault);
+        auto duplicate = payload;
+        duplicate.insert(duplicate.end(), payload.begin(), payload.end());
+        EXPECT_THROW(loadOwnership(duplicate, compressed), std::runtime_error);
+        std::vector<char> malformed;
+        appendSubRecord(malformed, ESM::fourCC("ONAM"), {1});
+        EXPECT_THROW(loadOwnership(malformed, compressed), std::runtime_error);
+    }
+}

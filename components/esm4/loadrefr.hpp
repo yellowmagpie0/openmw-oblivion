@@ -115,6 +115,7 @@ namespace ESM4
         RadioStationData mRadio;
 
         TeleportDest mDoor;
+        bool mOpenByDefault = false; // TES4 ONAM, independent of the lock
         bool mIsLocked = false;
         std::int8_t mLockLevel = 0;
         ESM::FormId mKey;
