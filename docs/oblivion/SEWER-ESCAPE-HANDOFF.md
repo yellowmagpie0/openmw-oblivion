@@ -83,15 +83,25 @@ The route-continuity fix preserves the next shared waypoint across replanning;
 the authored fall approach is a bounded gameplay approximation, not exact AI parity.
 Fresh sanitizer integration for the accumulated navigation/door chunk remains due.
 
-GetPCIsSex now reads current Player sex across dialogue/package/idle contexts;
-the new male/female mutation test and broader29 selected tests pass. Original
-reunion speech reaches42 without errors; fresh stage36 entry state matches exactly.
-Evidence: [SEWER-REUNION-SEX-CONDITION-VERIFICATION.json](SEWER-REUNION-SEX-CONDITION-VERIFICATION.json).
-Current save is `subterrane-reunion-stage42-01` under the sewer-escape evidence root.
-The idle birthsign-menu01 course times out at42: authored follow-up SayTo lines
-require distance>400, while Player is already near the Emperor. Normal Emperor
-Space interaction is running in `subterrane-emperor-interaction-01`; inspect it
-before changing progression. No birthsign or later acceptance yet.
+GetPCIsSex and GetIsPlayerBirthsign now use current Player identity across
+condition adapters. Focused2 and broader27 dialogue/character cases pass.
+Normal controller input completes the Emperor greeting, Warrior choice and all
+linked fate/fear/destination responses. Original stage50 runs; F5 save and fresh
+process reload/resave pass with exact whole-state restore and no doubled bonuses.
+Evidence: [SEWER-BIRTHSIGN-VERIFICATION.json](SEWER-BIRTHSIGN-VERIFICATION.json).
+
+Current input: `build/oblivion-compat/sewer-escape/subterrane-warrior-stage50-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Warrior01fd9d; Strength/Endurance50, Health100/current50.07003. Screenshot inspected.
+Next: follow the original escort route into the final Emperor/Amulet sequence,
+then class choice, sewer exit and outdoor reload. Fresh sanitizer integration and
+continuous prison-to-outdoors acceptance remain due. Birthsign descriptions are
+blank in the inspected menu; record that presentation gap without discarding it.
+Only Warrior has this runtime choice/restart evidence. UI courses must run singly:
+virtual-controller acknowledgement rejects multiple open controllers. Dialogue
+starts with no selected response: hat-axis Down, then A selects the first choice.
+Original questions require fate and fear acknowledgements before destination and
+Goodbye; F5 only works after closing the conversation. Failed early runs remain
+failed in their original evidence directories.
 
 The cavern exit now works through original OnActivate script04f700 and ordinary
 Space input. StopCombatAlarmOnActor/SCAOnActor performs target-specific active

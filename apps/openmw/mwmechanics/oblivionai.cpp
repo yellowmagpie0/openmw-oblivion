@@ -1,3 +1,4 @@
+#include <components/esm4/loadbsgn.hpp>
 /*
   Copyright (C) 2026 OpenMW contributors
 
@@ -151,6 +152,15 @@ namespace MWMechanics
             if (player.isEmpty()) return ESM4::ConditionValue::missing();
             const bool male = player.get<ESM::NPC>()->mBase->isMale();
             return ESM4::ConditionValue::value(sex == (male ? 0 : 1) ? 1.0 : 0.0);
+        }
+
+        ESM4::ConditionValue nativePlayerBirthsignCondition(MWWorld::World& world, const ESM::FormKey& expected)
+        {
+            const auto& chosen = world.getPlayer().getBirthSign();
+            const auto* sign = world.getStore().search<ESM4::BirthSign>(expected);
+            const auto* id = chosen.getIf<ESM::FormId>();
+            return ESM4::ConditionValue::value(sign && !(sign->mFlags & ESM4::Rec_Deleted) && id
+                && ESM::FormKeyResolver(world.getContentFiles()).toFormKey(*id) == expected ? 1.0 : 0.0);
         }
 
         bool nativeIsGuard(MWWorld::World& world, const MWWorld::Ptr& actor, const ESM::FormKey& base)
@@ -1084,6 +1094,8 @@ namespace MWMechanics
                     subjectKey = ESM::FormKey::dynamic("player", 1);
                     break;
             }
+            if (condition.mFunction == 224)
+                return nativePlayerBirthsignCondition(mWorld, condition.mParameter1.mReferenceKey);
             if (condition.mFunction == 131)
                 return nativePlayerSexCondition(mWorld, condition.mParameter1.mNumber);
             if (condition.mFunction == 365)
@@ -1921,6 +1933,7 @@ namespace MWMechanics
                 {
                     case 18: return value(now().mHour);
                     case 131: return nativePlayerSexCondition(mWorld, condition.mParameter1.mNumber);
+                    case 224: return nativePlayerBirthsignCondition(mWorld, condition.mParameter1.mReferenceKey);
                     case 36:
                     {
                         const auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
@@ -2123,6 +2136,8 @@ namespace MWMechanics
                     subjectPtr = ptrFor(condition.mRunOnReferenceKey);
                     break;
             }
+            if (condition.mFunction == 224)
+                return nativePlayerBirthsignCondition(mWorld, condition.mParameter1.mReferenceKey);
             if (condition.mFunction == 131)
                 return nativePlayerSexCondition(mWorld, condition.mParameter1.mNumber);
             if (condition.mFunction == 365)

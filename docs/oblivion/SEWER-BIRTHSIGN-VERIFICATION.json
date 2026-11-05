@@ -1,0 +1,87 @@
+{
+  "scope": "GetIsPlayerBirthsign reads canonical current Player choice; normal Warrior menu selection and full Emperor dialogue reach50, save and fresh reload",
+  "full_escape_complete": false,
+  "checks": {
+    "player-birthsign-condition-focused-01": {
+      "path": "build/oblivion-compat/sewer-escape/player-birthsign-condition-focused-01/verification.json",
+      "source": {
+        "head": "3a2dcb3473b8b6c5be1831e47e8efa18192b338c",
+        "source_fingerprint": "db979f2be5998bdd07aca80cb4b4ede320d349e53b058bec0a48b135025672f5"
+      },
+      "results": {
+        "engine": {
+          "executed": 2,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogueMenu.PlayerBirthsignConditionTracksCurrentCanonicalChoice:OblivionDialogueMenu.PlayerSexConditionUsesCurrentPlayerInsteadOfSpeaker",
+          "binary_sha256": "8d3715f5ff175c4aba5202514351184fde2e0da6303bd83aac3761aa0d5e0001",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e39cda729a4965a904d0862292005424bfaa022b7761e840a26caab273c2af85",
+          "inventory_sha256": "500e51637b33f6e78609afbc21a40d93211b8060fa1f33b10bf081522b02fe3f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "player-birthsign-dialogue-regression-01": {
+      "path": "build/oblivion-compat/sewer-escape/player-birthsign-dialogue-regression-01/verification.json",
+      "source": {
+        "head": "3a2dcb3473b8b6c5be1831e47e8efa18192b338c",
+        "source_fingerprint": "db979f2be5998bdd07aca80cb4b4ede320d349e53b058bec0a48b135025672f5"
+      },
+      "results": {
+        "engine": {
+          "executed": 27,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogue*.*:OblivionWorldTest.*Character*:OblivionWorldTest.*Birth*",
+          "binary_sha256": "8d3715f5ff175c4aba5202514351184fde2e0da6303bd83aac3761aa0d5e0001",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "588b40ae775a93f20afc4ef8f9031820b732559a41a4092dbf94e22f16f7fb15",
+          "inventory_sha256": "500e51637b33f6e78609afbc21a40d93211b8060fa1f33b10bf081522b02fe3f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "subterrane-warrior-birthsign-07": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-warrior-birthsign-07",
+      "save_sha256": "6eef5e63670608772bab0b284e7452041c8efa9f6a21d6c041db34d5c640f4e9",
+      "passed": true
+    },
+    "subterrane-warrior-stage50-reload-01": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-warrior-stage50-reload-01",
+      "save_sha256": "8ad111a778f8f36d9f6a1fb69f2b077f726e6e3fe0c4a41e0eee46e1d278132d",
+      "passed": true
+    }
+  },
+  "selected_birthsign": "content:oblivion.esm:01fd9d",
+  "post_choice_values": {
+    "strength_base": 50,
+    "endurance_base": 50,
+    "health_base": 100,
+    "health_current": 50.070030212402344
+  },
+  "restart": "Whole state restores exactly, no differences; birthsign and bonuses remain unchanged after resave.",
+  "limits": [
+    "Fresh sanitizer integration for accumulated navigation/dialogue changes remains outstanding",
+    "Birthsign effect-description panel is blank in inspected menu captures; selection and native bonuses work",
+    "Only Warrior selection has this runtime acceptance; other choices retain separate acceptance needs"
+  ],
+  "retained_failures": "Warrior01 exposed missing224 condition;02 rejected concurrent controllers;03 deliberately stopped for missing dialogue confirmation;04/05/06 reached50 but F5 failed while unanswered choices kept GUI active. All retained; no failed course relabeled.",
+  "next_action": "Use stage50 reload save; follow original escorts to final Emperor/Amulet sequence, class choice, sewer exit and outdoor reload. Full continuous prison-to-outdoors course remains due."
+}

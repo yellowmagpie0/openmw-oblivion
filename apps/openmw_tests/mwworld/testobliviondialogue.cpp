@@ -1,3 +1,4 @@
+#include <components/esm4/loadbsgn.hpp>
 #include "oblivionworldfixture.hpp"
 #include "inventorywindowmanager.hpp"
 
@@ -348,6 +349,36 @@ TEST(OblivionDialogueMenu, PlayerSexConditionUsesCurrentPlayerInsteadOfSpeaker)
             EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, {}, std::span(&condition, 1)),
                 sex == (male ? 0 : 1) ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
         }
+    }
+}
+
+TEST(OblivionDialogueMenu, PlayerBirthsignConditionTracksCurrentCanonicalChoice)
+{
+    MenuFixture f;
+    auto& world = f.mFixture.mWorld;
+    for (const unsigned id : {0x910u, 0x911u})
+    {
+        ESM4::BirthSign sign{};
+        sign.mId = {id, 0};
+        world.getStore().getWritable<ESM4::BirthSign>().insertStatic(sign, key(id));
+    }
+    const auto query = [&](unsigned expected) {
+        ESM4::PackageCondition condition{};
+        condition.mFunction = 224;
+        condition.mParameter1.mIsFormId = true;
+        condition.mParameter1.mReferenceKey = key(expected);
+        condition.mOperator = ESM4::ConditionOperator::Equal;
+        condition.mComparisonValue = 1;
+        return world.getOblivionAiService()->evaluateDialogueConditions(f.mActor, {}, std::span(&condition, 1));
+    };
+    world.getPlayer().setBirthSign({});
+    EXPECT_EQ(query(0x910), ESM4::ConditionResult::False);
+    for (const unsigned id : {0x910u, 0x911u, 0x910u})
+    {
+        world.getPlayer().setBirthSign(ESM::RefId(ESM::FormId{id, 0}));
+        EXPECT_EQ(query(id), ESM4::ConditionResult::True);
+        EXPECT_EQ(query(id == 0x910 ? 0x911 : 0x910), ESM4::ConditionResult::False);
+        EXPECT_EQ(query(0x912), ESM4::ConditionResult::False);
     }
 }
 
