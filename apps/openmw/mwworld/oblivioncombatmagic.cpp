@@ -1,17 +1,101 @@
 #include "oblivioncombatmagic.hpp"
 
 #include "esmstore.hpp"
+#include "worldimp.hpp"
+#include "../mwbase/world.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 
 #include <components/esm4/combatmagicprofile.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadmgef.hpp>
 #include <components/esm4/loadspel.hpp>
+#include <components/esm4/combatsettings.hpp>
+#include <components/esm4/loadgmst.hpp>
 
 #include <set>
+#include <cmath>
+#include <sstream>
 #include <components/esm4/loadalch.hpp>
 
 namespace MWWorld
 {
+    OblivionSpellPresentation describeOblivionPlayerSpell(MWBase::World& world, const ESM4::Spell& spell)
+    {
+        const auto* native = dynamic_cast<const World*>(&world);
+        const auto* combat = native ? native->getOblivionCombatService() : nullptr;
+        if (!combat) throw std::logic_error("native spell display requires actor authority");
+        std::array<std::int32_t, 6> skills;
+        for (std::size_t i = 0; i < skills.size(); ++i)
+            skills[i] = combat->getPlayerIntegerValue(static_cast<std::uint8_t>(20 + i));
+        return describeOblivionSpell(world.getStore(), spell, skills, combat->getPlayerIntegerValue(7));
+    }
+
+    OblivionSpellPresentation describeOblivionSpell(const ESMStore& store, const ESM4::Spell& spell,
+        const std::array<std::int32_t, 6>& schoolSkills, std::int32_t luck)
+    {
+        OblivionSpellPresentation result;
+        if (!spell.mData || (spell.mFlags & ESM4::Rec_Deleted)) return result;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seenSettings;
+        for (const auto& record : store.get<ESM4::GameSetting>())
+            if (seenSettings.insert(record.mId).second)
+                if (const auto* winner = store.get<ESM4::GameSetting>().search(record.mId);
+                    winner && !(winner->mFlags & ESM4::Rec_Deleted)) settings.push_back(winner);
+        const auto costs = ESM4::buildSpellCostSettings(settings);
+        bool knownCost = spell.mData->mType == 0 && !spell.mEffects.empty();
+        float total = 0;
+        std::ostringstream description;
+        for (const auto& effect : spell.mEffects)
+        {
+            const ESM4::EffectSetting* definition = nullptr;
+            std::set<ESM::FormId> seen;
+            for (const auto& record : store.get<ESM4::EffectSetting>())
+            {
+                if (!seen.insert(record.mId).second) continue;
+                const auto* winner = store.get<ESM4::EffectSetting>().search(record.mId);
+                if (!winner || winner->mEffectCode != effect.mId || (winner->mFlags & ESM4::Rec_Deleted)) continue;
+                if (definition) throw std::invalid_argument("ambiguous native spell effect definition");
+                definition = winner;
+            }
+            if (!definition || !definition->mData || effect.mScriptEffect || effect.mRange > 2)
+            {
+                knownCost = false;
+                continue;
+            }
+            const auto& data = *definition->mData;
+            if (description.tellp() > 0) description << '\n';
+            description << definition->mFullName;
+            if (!(data.mFlags & 0x100)) description << " " << effect.mMagnitude << " pts";
+            if (!(data.mFlags & 0x80) && effect.mDuration) description << " for " << effect.mDuration << " sec";
+            if (!(data.mFlags & 0x200) && effect.mRange && effect.mArea)
+                description << " in " << effect.mArea << " ft";
+            description << (effect.mRange == 0 ? " on Self" : effect.mRange == 1 ? " on Touch" : " on Target");
+            if (result.mIcon.empty())
+                for (const auto& sub : definition->mSubRecords)
+                    if (sub.mType == ESM::fourCC("ICON") && !sub.mData.empty())
+                    {
+                        result.mIcon.assign(reinterpret_cast<const char*>(sub.mData.data()), sub.mData.size());
+                        if (const auto end = result.mIcon.find('\0'); end != std::string::npos) result.mIcon.resize(end);
+                    }
+            if (data.mSchool >= schoolSkills.size()) { knownCost = false; continue; }
+            if (spell.mData->mFlags & 1)
+            {
+                // Multi-effect manual spells need highest-cost school selection.
+                if (spell.mEffects.size() != 1) knownCost = false;
+                else total = ESM4::manualSpellMagickaCost(spell.mData->mCost, schoolSkills[data.mSchool], luck, costs);
+            }
+            else if (!(data.mFlags & 0x400000))
+                total += ESM4::spellEffectMagickaCost({data.mBaseCost,
+                    data.mFlags & 0x100 ? 0u : effect.mMagnitude,
+                    data.mFlags & 0x80 ? 0u : effect.mDuration,
+                    (data.mFlags & 0x200) || !effect.mRange ? 0u : effect.mArea,
+                    effect.mRange == 2}, schoolSkills[data.mSchool], luck, costs);
+        }
+        result.mDescription = description.str();
+        if (knownCost && std::isfinite(total)) result.mCost = total;
+        return result;
+    }
+
     std::optional<std::array<float, 3>> resolveOblivionPotionRestoration(
         const ESMStore& store, const ESM4::Potion& potion)
     {

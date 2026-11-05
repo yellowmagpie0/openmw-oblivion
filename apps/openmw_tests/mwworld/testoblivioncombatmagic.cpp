@@ -3,6 +3,7 @@
 
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
+#include <components/esm4/loadspel.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
 
 #include <gtest/gtest.h>
@@ -135,4 +136,69 @@ TEST(OblivionCombatMagicStore, OtherDefaultFormTypeUsesOriginalSpellItemCastFall
         sub(ESM::fourCC("EDID"), std::string("iTest\0", 6)) + sub(ESM::fourCC("DATA"), bytes(1u)));
     fixture.load("oblivion.esm", {}, {effect(), gmst});
     EXPECT_TRUE(fixture.supported());
+}
+
+namespace
+{
+    std::string healingEffect()
+    {
+        const auto data = bytes(0x01000870u) + bytes(10.f) + bytes(8u) + bytes(5u) + bytes(-1)
+            + std::string(44, '\0');
+        return record(ESM4::REC_MGEF, 0x188c,
+            sub(ESM::fourCC("EDID"), std::string("REHE\0", 5))
+            + sub(ESM::fourCC("FULL"), std::string("Restore Health\0", 15))
+            + sub(ESM::fourCC("ICON"), std::string("magic\\restorehealth.dds\0", 24))
+            + sub(ESM::fourCC("DATA"), data));
+    }
+
+    std::string healingSpell(std::uint8_t flags = 0)
+    {
+        const auto spit = bytes(0u) + bytes(24u) + bytes(0u) + bytes(flags) + std::string(3, '\0');
+        const auto efit = bytes(ESM::fourCC("REHE")) + bytes(8u) + bytes(0u) + bytes(0u) + bytes(0u) + bytes(8u);
+        return record(ESM4::REC_SPEL, 0x136, sub(ESM::fourCC("SPIT"), spit)
+            + sub(ESM::fourCC("FULL"), std::string("Heal Minor Wounds\0", 18))
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("REHE"))) + sub(ESM::fourCC("EFIT"), efit));
+    }
+
+    std::string floatSetting(std::uint32_t id, const std::string& name, float value)
+    {
+        return record(ESM4::REC_GMST, id,
+            sub(ESM::fourCC("EDID"), name + '\0') + sub(ESM::fourCC("DATA"), bytes(value)));
+    }
+
+    MWWorld::OblivionSpellPresentation describeHealing(const Fixture& fixture)
+    {
+        const auto* value = fixture.mStore.get<ESM4::Spell>().search(ESM::FormId{0x136, 1});
+        if (!value) throw std::runtime_error("missing fixture spell");
+        return MWWorld::describeOblivionSpell(fixture.mStore, *value, {5, 5, 5, 5, 5, 5}, 50);
+    }
+}
+
+TEST(OblivionCombatMagicStore, DisplaysTutorialHealingWithWinningNativeCostSettings)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {healingEffect(), healingSpell(),
+        floatSetting(0xcd320, "fMagicCostScale", 1.28f),
+        floatSetting(0x6c64c, "fMagicCasterSkillCostBase", .2f)});
+    auto value = describeHealing(fixture);
+    ASSERT_TRUE(value.mCost);
+    EXPECT_FLOAT_EQ(*value.mCost, 19.f); // Independent original-executable tutorial cost case.
+    EXPECT_EQ(value.mDescription, "Restore Health 8 pts on Self");
+    EXPECT_EQ(value.mIcon, "magic\\restorehealth.dds");
+    fixture.load("patch.esp", {"oblivion.esm"}, {healingSpell(1)});
+    value = describeHealing(fixture);
+    ASSERT_TRUE(value.mCost);
+    EXPECT_NEAR(*value.mCost, 32.16f, .001f); // Manual flag uses authored24, before display rounding.
+}
+
+TEST(OblivionCombatMagicStore, MissingAndDeletedEffectsDoNotInventSpellCost)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {healingSpell()});
+    EXPECT_FALSE(describeHealing(fixture).mCost);
+    Fixture complete;
+    complete.load("oblivion.esm", {}, {healingSpell(), healingEffect()});
+    EXPECT_TRUE(describeHealing(complete).mCost);
+    complete.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_MGEF, 0x188c, {}, true)});
+    EXPECT_FALSE(describeHealing(complete).mCost);
 }

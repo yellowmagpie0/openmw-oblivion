@@ -8,6 +8,13 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
+#include "../mwworld/player.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
+#include <components/esm4/loadspel.hpp>
+#include <cmath>
+#include <sstream>
 
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/spellutil.hpp"
@@ -71,6 +78,43 @@ namespace MWGui
     void SpellModel::update()
     {
         mSpells.clear();
+
+        auto& world = *MWBase::Environment::get().getWorld();
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            if (mActor != world.getPlayerPtr()) return;
+            const auto& store = world.getStore();
+            const auto inputs = MWWorld::resolveOblivionPlayerSpellInputs(store,
+                mActor.get<ESM::NPC>()->mBase->mRace, world.getPlayer().getBirthSign());
+            const auto filter = Utf8Stream::lowerCaseUtf8(mFilter);
+            for (const auto& key : inputs.mDeclaredSpells)
+            {
+                const auto* spell = store.get<ESM4::Spell>().search(key);
+                if (!spell || !spell->mData || (spell->mData->mType != 0
+                        && spell->mData->mType != 2 && spell->mData->mType != 3)) continue;
+                const auto presentation = MWWorld::describeOblivionPlayerSpell(world, *spell);
+                if (Utf8Stream::lowerCaseUtf8(spell->mFullName + " " + presentation.mDescription).find(filter)
+                    == std::string::npos) continue;
+                Spell entry;
+                entry.mNative = true;
+                entry.mNativeDescription = presentation.mDescription;
+                entry.mName = spell->mFullName;
+                entry.mId = ESM::RefId(spell->mId);
+                entry.mType = spell->mData->mType == 0 ? Spell::Type_Spell : Spell::Type_Power;
+                if (presentation.mCost)
+                {
+                    std::ostringstream cost;
+                    cost << std::floor(*presentation.mCost);
+                    entry.mCostColumn = cost.str();
+                }
+                entry.mSelected = MWBase::Environment::get().getWindowManager()->getSelectedSpell() == entry.mId;
+                entry.mActive = true;
+                entry.mCount = 1;
+                mSpells.push_back(std::move(entry));
+            }
+            std::sort(mSpells.begin(), mSpells.end(), sortSpells);
+            return;
+        }
 
         MWMechanics::CreatureStats& stats = mActor.getClass().getCreatureStats(mActor);
         const MWMechanics::Spells& spells = stats.getSpells();

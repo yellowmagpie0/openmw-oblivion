@@ -1,0 +1,53 @@
+{
+  "scope": "Native granted spell menu, selection and fresh-process persistence; no casting acceptance",
+  "source_fingerprint": "1c4175dc7731aabb0fc835556080569a52d8d2214183e9a5358d7bff07dbf3b4",
+  "game_sha256": "51eeefe34d88c6fef33ccc63c372814ce523d3dd3d1c415706aa633fe6298127",
+  "engine": {
+    "receipt": "build/oblivion-compat/sewer-escape/tutorial-spell-menu-04/verification.json",
+    "filter": "OblivionCombatMagicStore.*",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0
+  },
+  "runtime": [
+    {
+      "receipt": "build/oblivion-compat/sewer-escape/tutorial-spell-menu-select-01/scenario.json",
+      "passed": true,
+      "save": "build/oblivion-compat/sewer-escape/tutorial-spell-menu-select-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "2bb17f6ea5b233744472eb5703de7d059ff39a4df24787fe352ad3e9d08566fb"
+    },
+    {
+      "receipt": "build/oblivion-compat/sewer-escape/tutorial-spell-menu-reload-01/scenario.json",
+      "passed": true,
+      "save": "build/oblivion-compat/sewer-escape/tutorial-spell-menu-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "61155b286292225d14950c0ad77664f4f2cead84e2bebf13bbc430b6acd170cf"
+    }
+  ],
+  "semantic_checks": {
+    "selected_spell": "Oblivion.esm:000136",
+    "selected_ASPL_payload_hex": "033601000001000000",
+    "player_exact_restart_match": true,
+    "native_actor_life_exact_restart_match": true,
+    "health": 9.670021057128906,
+    "captures_visually_inspected": [
+      "heal-selected.png",
+      "heal-hud.png",
+      "heal-reloaded.png"
+    ],
+    "observed_heal_cost": 19,
+    "observed_flare_cost": 14
+  },
+  "retained_attempts": {
+    "tutorial-spell-menu-01": "Compile API mismatch, corrected concrete World service access",
+    "tutorial-spell-menu-02": "6/7 tests passed; deletion fixture addressed wrong originating plugin; corrected to master-owned effect",
+    "tutorial-spell-menu-03": "7/7 passed before presentation label fix",
+    "tutorial-spell-menu-runtime-01": "Passed exploratory menu input; captures revealed unresolved headings, subsequently fixed"
+  },
+  "limitations": [
+    "World startSpellCast/castSpell still reject TES4 execution",
+    "Granted Player/race/birthsign spells only; no learned spellbook",
+    "Native spell hotkeys explicitly unavailable",
+    "Scripted and multi-effect manual spell costs not admitted",
+    "No new sanitizer acceptance; casting integration remains pending"
+  ]
+}

@@ -26,6 +26,7 @@
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
+#include <components/esm4/loadspel.hpp>
 
 #include <components/fontloader/fontloader.hpp>
 
@@ -1692,9 +1693,10 @@ namespace MWGui
         mRuntime->mSelectedEnchantItem = MWWorld::Ptr();
         mRuntime->mHud->setSelectedSpell(spellId, successChancePercent);
 
-        const ESM::Spell* spell = mStore->get<ESM::Spell>().find(spellId);
-
-        mRuntime->mSpellWindow->setTitle(spell->mName);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            mRuntime->mSpellWindow->setTitle(mStore->get<ESM4::Spell>().find(spellId)->mFullName);
+        else
+            mRuntime->mSpellWindow->setTitle(mStore->get<ESM::Spell>().find(spellId)->mName);
     }
 
     void WindowManager::setSelectedEnchantItem(const MWWorld::Ptr& item)
@@ -2216,7 +2218,8 @@ namespace MWGui
         {
             reader.getSubNameIs("ID__");
             ESM::RefId spell = reader.getRefId();
-            if (mStore->get<ESM::Spell>().search(spell))
+            if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                ? mStore->get<ESM4::Spell>().search(spell) != nullptr : mStore->get<ESM::Spell>().search(spell) != nullptr)
                 mRuntime->mSelectedSpell = spell;
         }
         else if (type == ESM::REC_MARK)

@@ -114,6 +114,22 @@ No game binary rebuild, runtime casting or sanitizer acceptance is claimed here;
 these gates belong to the upcoming casting integration. Gameplay checkpoint above
 is unchanged. Stop expanding formula auditing now that the cost branch is resolved.
 
+## Magic menu continuation — native selection verified, 2026-11-04
+
+The normal magic menu now lists Player/race/birthsign granted TES4 spells with
+native names, effect descriptions and winning-setting costs. Normal controller
+input selects Heal Minor Wounds; its tooltip shows Restore Health8 on Self,
+cost19, and the HUD uses its native heart icon. Flare displays cost14.
+Fresh-process reload preserves selection000136, the entire native Player state
+and native actor-life state exactly. All seven focused OblivionCombatMagicStore
+engine tests pass; game rebuilt and captures inspected. Receipts and retained
+failures: [SEWER-SPELL-MENU-VERIFICATION.json](SEWER-SPELL-MENU-VERIFICATION.json).
+Native spell hotkeys are explicitly unavailable; learned spellbook ownership,
+scripted effects and multi-effect manual costs remain outside this menu chunk.
+No casting or new sanitizer acceptance is claimed. The genuine route checkpoint
+above remains authoritative; the selection-only continuation is recorded in the
+new evidence index and still has health9.670021.
+
 ## Next bounded chunk — tutorial magic and shaman, then reunion
 
 World::castSpell currently rejects all TES4 spell execution. Original Player

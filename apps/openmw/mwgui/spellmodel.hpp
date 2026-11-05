@@ -19,6 +19,8 @@ namespace MWGui
         Type mType;
         std::string mName;
         std::string mCostColumn; // Cost/chance or Cost/charge
+        std::string mNativeDescription;
+        bool mNative = false;
         ESM::RefId mId; // Item ID or spell ID
         MWWorld::Ptr mItem; // Only for Type_EnchantedItem
         int mCount; // Only for Type_EnchantedItem

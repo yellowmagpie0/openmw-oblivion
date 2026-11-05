@@ -96,9 +96,10 @@ namespace MWGui
             if (curType != spell.mType)
             {
                 if (spell.mType == Spell::Type_Power)
-                    addGroup("#{sPowers}", {});
+                    addGroup(spell.mNative ? "Powers" : "#{sPowers}", {});
                 else if (spell.mType == Spell::Type_Spell)
-                    addGroup("#{sSpells}", mShowCostColumn ? "#{sCostChance}" : "");
+                    addGroup(spell.mNative ? "Spells" : "#{sSpells}",
+                        mShowCostColumn ? (spell.mNative ? "#{sCastCost}" : "#{sCostChance}") : "");
                 else
                     addGroup("#{sMagicItem}", mShowCostColumn ? "#{sCostCharge}" : "");
                 curType = spell.mType;
@@ -289,6 +290,14 @@ namespace MWGui
         {
             widget->setUserData(MWWorld::Ptr(spell.mItem));
             widget->setUserString("ToolTipType", "ItemPtr");
+        }
+        else if (spell.mNative)
+        {
+            ToolTipInfo info;
+            info.caption = spell.mName;
+            info.text = spell.mNativeDescription;
+            widget->setUserString("ToolTipType", "ToolTipInfo");
+            widget->setUserData(info);
         }
         else
         {
