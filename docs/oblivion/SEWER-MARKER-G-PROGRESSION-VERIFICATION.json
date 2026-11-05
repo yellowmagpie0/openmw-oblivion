@@ -1,0 +1,152 @@
+{
+  "scope": "Ordinary Player follow reaches original54, unlocks transition door; fresh continuation moves Glenroy and Emperor into ImperialDungeon03 and reaches original56",
+  "full_escape_complete": false,
+  "runtime": {
+    "subterrane-follow-emperor-05": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-follow-emperor-05",
+      "passed": true,
+      "stage": 54,
+      "whole_entry_state_exact": true,
+      "save_sha256": "ccf8c6df96ede65db252282fadd082107d789c91a76ddfbe0566b3972acd1f7c",
+      "player_health": 71.19003295898438,
+      "actors": {
+        "content:oblivion.esm:032a16": {
+          "cell": "content:oblivion.esm:022288",
+          "package": "content:oblivion.esm:01d0ed",
+          "phase": 2,
+          "position": [
+            936.3305053710938,
+            6977.357421875,
+            -1247
+          ]
+        },
+        "content:oblivion.esm:032a17": {
+          "cell": "content:oblivion.esm:022288",
+          "package": "content:oblivion.esm:04f201",
+          "phase": 7,
+          "position": [
+            1459.8797607421875,
+            4922.578125,
+            -920.5377197265625
+          ]
+        },
+        "content:oblivion.esm:032a18": {
+          "cell": "content:oblivion.esm:022288",
+          "package": "content:oblivion.esm:00bf1e",
+          "phase": 2,
+          "position": [
+            990.9115600585938,
+            7067.95849609375,
+            -1247
+          ]
+        }
+      }
+    },
+    "subterrane-marker-g-escort-01": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-marker-g-escort-01",
+      "passed": true,
+      "stage": 56,
+      "whole_entry_state_exact": true,
+      "save_sha256": "06b2c245b2ea858e51890012dc9971257b2e1ef747809148166e684c5f9082d1",
+      "player_health": 71.19003295898438,
+      "actors": {
+        "content:oblivion.esm:032a16": {
+          "cell": "content:oblivion.esm:022282",
+          "package": "content:oblivion.esm:01d0ed",
+          "phase": 7,
+          "position": [
+            2827.589599609375,
+            7857.4443359375,
+            -1238.72802734375
+          ]
+        },
+        "content:oblivion.esm:032a17": {
+          "cell": "content:oblivion.esm:022288",
+          "package": "content:oblivion.esm:04f201",
+          "phase": 7,
+          "position": [
+            1459.8797607421875,
+            4922.578125,
+            -920.5377197265625
+          ]
+        },
+        "content:oblivion.esm:032a18": {
+          "cell": "content:oblivion.esm:022282",
+          "package": "content:oblivion.esm:00bf1e",
+          "phase": 7,
+          "position": [
+            2847.786376953125,
+            7633.50537109375,
+            -1184.023193359375
+          ]
+        }
+      }
+    }
+  },
+  "sanitizer_engine": {
+    "path": "build/oblivion-compat/sewer-escape/escort-marker-f-sanitizer-integration-01/verification.json",
+    "source": {
+      "head": "1eb42debb1eca221deea9dc0c85989e7b4c35549",
+      "source_fingerprint": "d6956201b7ee9cc692555a7ac048b5cbe8c3be50a56e2fd3f90a64ae3a9369da"
+    },
+    "results": {
+      "engine": {
+        "executed": 2191,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "900a737608fead26382be9931d66cdd609f46e8487daeea11befb98a7b6fa3be",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "84686f5122612aba2e18ca5637df22bc722e6e1bab3a8f704c32ce329affbc9f",
+        "inventory_sha256": "a1f509b0264185b4f03d0c999b5e1595600ad104bdf3dd85c6b57cc5ce17afca",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "environment": {
+      "SDL_VIDEODRIVER": "x11",
+      "SDL_AUDIODRIVER": "dummy",
+      "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+      "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+      "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "audits": [
+      "build/oblivion-compat/sewer-escape/stage54-original-packages.json",
+      "build/oblivion-compat/sewer-escape/stage54-marker-locations.json",
+      "build/oblivion-compat/sewer-escape/stage54-transition-records.json",
+      "build/oblivion-compat/sewer-escape/baurus-late-tutorial-packages.json",
+      "build/oblivion-compat/sewer-escape/follow-route-assassin-audit.json",
+      "build/oblivion-compat/sewer-escape/follow-route-assassin-parent-audit.json"
+    ],
+    "glenroy": "01d0ed Escort targets032a18 at distance150 and marker00bf05 in022282",
+    "emperor": "00bf1e Travel targets0c7970 in022282; own authored Travel handles this crossing, not generic cross-cell recipient steering",
+    "door": "0226a2 to022812; original stage54 unlocks it",
+    "baurus": "04f201 Find has OncePerDay flag and precedes017d7d FollowEmperorToF; completed Find remains winner even after stage54 EVP; next higher relevant package requires66"
+  },
+  "retained_failures": {
+    "subterrane-follow-emperor-01": "Actor-facing observations caused incorrect camera corrections and waypoint failure.",
+    "subterrane-follow-emperor-02": "Duplicate corrections before camera feedback settled caused alignment failure.",
+    "subterrane-follow-emperor-03": "Slower course died to actual generic assassin01774a melee hits; not fall damage. Actor belongs to enabled generic parent01772e.",
+    "subterrane-follow-emperor-04": "First SDL mouse correction after focus was ineffective; initial settling sequence retained for05."
+  },
+  "limits": [
+    "Baurus remains in022288 on completed Find: full Marker G party/58 acceptance is not achieved. OncePerDay execution history is the next required dependency.",
+    "Player remains near Marker F in022288; ordinary traversal through the unlocked door remains to be tested.",
+    "Successful follow uses ordinary W/Shift, mouse input and three owned C healing casts; no quest, health, position or completion injection. Generic assassin can attack here; failed03 retained, successful05 passes without an injected kill.",
+    "Rendered sanitizer runtime and final continuous prison-to-outdoors course remain due.",
+    "Captures inspected for Player endpoint and continuation; NPC cell/position ownership independently inspected in snapshots."
+  ]
+}
