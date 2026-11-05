@@ -110,7 +110,7 @@
   "sanitizers": {
     "engine": "ASan/UBSan; leak detection enabled",
     "components": "ASan/UBSan ESM4* selection; leak detection disabled",
-    "rendered_flight_reload": "Attempt02 restores whole state and observes projectile3 impact, but fails F5 SDL delivery deadline; retained as failed, no rendered sanitizer restart acceptance. Attempt01 failed startup deadline/resources."
+    "rendered_flight_reload": "build/oblivion-compat/sewer-escape/shaman-staff-flight-sanitized-reload-03/flight-restart-verification.json"
   },
   "runtime": {
     "shaman-staff-pending-01": {

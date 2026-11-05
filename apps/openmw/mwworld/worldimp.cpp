@@ -2967,6 +2967,58 @@ namespace MWWorld
         return true;
     }
 
+    bool World::executeOblivionStopCombatAlarmOnActor(const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty()) return false;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        const auto player = ESM::FormKey::dynamic("player", 1);
+        const auto subject = actor == getPlayerPtr() ? player
+            : ESM4::runtimeReferenceKey(actor.getCellRef().getFormKey());
+        if (!mOblivionCombat->findActorValues(subject) || !mOblivionCombat->findActorLife(subject))
+            throw std::invalid_argument("native combat alarm stop requires initialized actor");
+        if (!mOblivionRuntimeState) return true;
+        auto controllers = mOblivionRuntimeState->mCombatControllers;
+        std::vector<ESM::FormKey> cancelled, stopped;
+        // Original501D80 ->675D50 visits all process lists. Active actors
+        // receive a target-specific stop; Low actors reset their base package.
+        // Player +340 is a no-op, including its hidden base combat package.
+        // Alarm packages (native type15) have no producer in this profile yet;
+        // process Alert and committed crime history are separate state owners.
+        for (auto it = controllers.begin(); it != controllers.end();)
+        {
+            const auto owner = it->first;
+            if (owner == player) { ++it; continue; }
+            const auto* values = mOblivionCombat->findActorValues(owner);
+            const auto* life = mOblivionCombat->findActorLife(owner);
+            if (!values || !life) throw std::logic_error("combat controller has no actor authority");
+            const bool full = owner == subject || values->mProcess == ESM4::ActorValueProcess::Low;
+            const auto count = it->second.size();
+            if (full) it->second.clear();
+            else std::erase_if(it->second, [&](const auto& target) { return target.mTarget == subject; });
+            if (full || it->second.size() != count) cancelled.push_back(owner);
+            if (full || (count && it->second.empty()))
+            {
+                stopped.push_back(owner);
+                if (values->mProcess == ESM4::ActorValueProcess::Low
+                    || life->mPhase == ESM4::ActorLifePhase::Alive)
+                { it = controllers.erase(it); continue; }
+            }
+            ++it;
+        }
+        // All preparation precedes publication. Released projectiles retain
+        // their independent flight ownership when the caster stops combat.
+        mOblivionRuntimeState->mCombatControllers.swap(controllers);
+        for (const auto& owner : cancelled)
+        {
+            mOblivionCombat->cancelActorActions(owner);
+            mOblivionCombat->clearMeleeAiIntent(owner);
+        }
+        for (const auto& owner : stopped) mOblivionCombat->stopCombat(owner);
+        mOblivionCombat->stopCombat(subject);
+        return true;
+    }
+
     std::optional<std::uint16_t> World::getOblivionFriendHit(
         const ESM::FormKey& actor, const ESM::FormKey& target) const
     {

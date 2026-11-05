@@ -71,29 +71,37 @@ Staff acceptance and provenance:
 The full shaman encounter remains unaccepted. Six editable staff restart recipes
 live under `scripts/data/oblivion_compat/oblivion_sewer_shaman_staff_*.json`.
 
-## Current chunk — cavern exit script, then Blades reunion
+## Current chunk — second ambush and reunion
 
-Normal movement now reaches the real Door to Imperial Subterrane. The original
-OnActivate script04f700 fails on `player.scaonactor` before its Activate command.
-Implement StopCombatAlarmOnActor and its alias; do not skip the original script.
-The retained checkpoint faces the correct door (screenshot inspected):
-`build/oblivion-compat/sewer-escape/cavern-subterrane-door-checkpoint-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `5151c4598a4a9cbe159789cc2265f2331b3346bddb8317e6ade56ecac073399e`.
-This is route scouting with the shaman alive behind the Player, not victory.
+The cavern exit now works through original OnActivate script04f700 and ordinary
+Space input. StopCombatAlarmOnActor/SCAOnActor performs target-specific active
+combat removal and Low combat-package reset; unrelated active fights survive.
+Native alarm packages have no current producer; this does not establish general
+crime/alarm support. Both focused command tests pass; failed01 was a snapshot
+fixture missing three initialized references. Full engine regression remains due.
 
-Original executable command/manager dispatch passes256 isolated cases in
-`stop-combat-alarm-oracle-02/verification.json` under the sewer-escape evidence
-root. This establishes target-specific combat stop, four process-list branches,
-alarm-target matching and Player/process counter handling. Callbacks remain
-explicit boundaries; reuse the linked prior target/full-stop probes. Player's
-own stop callback is a no-op; do not substitute plain StopCombat. Alarm package
-state is separate from the process alert flag. The native instruction evidence
-is not runtime acceptance. Failed oracle01 retains a harness variable error.
+Normal entry, eleven pathgrid waypoints and original trigger reach stage32.
+Fresh continuation then reaches Glenroy's original marker callback and stage34,
+starting the two original assassins. Both entry-state comparisons are exact.
+Captures inspected; Player alive with30.07003 health. Evidence and save hashes:
+[SEWER-SUBTERRANE-ENTRY-VERIFICATION.json](SEWER-SUBTERRANE-ENTRY-VERIFICATION.json).
+Stage34 input: `build/oblivion-compat/sewer-escape/subterrane-second-ambush-start-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Editable entry/approach/start recipes are under `scripts/data/oblivion_compat/oblivion_sewer_subterrane_*.json`.
 
-Next: finish the staff commit, implement/test this command, activate the door
-with ordinary Space input and verify a fresh destination reload. Continue the
-original reunion/Emperor/Amulet/character-choice route from there. Shaman victory,
-general casting fallback and continuous prison-to-outdoors acceptance stay open.
+Next: ordinary movement down the authored ledges into the ambush room, verify
+combat deaths and stage36, then original reunion/birthsign progression. The
+passive stage36 course and room-navigation scout are running; neither is accepted.
+The entry corridor graph is disconnected from lower room nodes at the ledge.
+Use normal movement to traverse the drop; do not inject position or progression.
+Shaman victory, general casting fallback and continuous prison-to-outdoors proof
+remain open. All full-escape requirements above remain in force.
+
+The staff projectile fresh sanitizer reload now passes in
+`shaman-staff-flight-sanitized-reload-03`: exact loaded state except declared body
+velocity projection, restored projectile3 hits once without new charge, new cast4
+and normal F5 resave. Capture inspected. Rendered leak checking disabled; separate
+engine2186 leak gate passed. Attempts01/02 remain failed (startup/resources and
+SDL input deadline). See its `flight-restart-verification.json`.
 
 ## Previous chunk — native healing and restart
 

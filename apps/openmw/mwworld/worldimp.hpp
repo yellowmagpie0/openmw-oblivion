@@ -422,6 +422,7 @@ namespace MWWorld
         std::optional<bool> isOblivionInCombatWith(const Ptr& actor, const Ptr& opponent) const override;
         bool executeOblivionStartCombat(const Ptr& actor, const Ptr& opponent);
         bool executeOblivionStopCombat(const Ptr& actor);
+        bool executeOblivionStopCombatAlarmOnActor(const Ptr& actor);
 
         // Bounded native interaction surface for the M5 prison slice.
         void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor = {});

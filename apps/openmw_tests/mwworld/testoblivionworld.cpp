@@ -5656,6 +5656,52 @@ namespace
         EXPECT_TRUE(service.isActionPending(action, values.mActor));
     }
 
+    TEST(OblivionWorldTest, combatAlarmStopRemovesSubjectAndPreservesOtherActiveFights)
+    {
+        for (const auto command : {"StopCombatAlarmOnActor", "SCAOnActor"})
+        {
+            SCOPED_TRACE(command);
+            NativeWorldFixture fixture;
+            prepareNativeCombatCommandPlayer(fixture);
+            auto& world = fixture.mWorld;
+            auto& service = *world.getOblivionCombatService();
+            std::array<MWWorld::Ptr, 4> actors;
+            std::array<ESM::FormKey, 4> keys;
+            for (std::size_t i = 0; i < actors.size(); ++i)
+            {
+                actors[i] = addNativeNpc(fixture, 0x900 + i);
+                actors[i] = actors[i].getCell()->moveTo(actors[i], world.getPlayerPtr().getCell());
+                world.getWorldModel().registerPtr(actors[i]);
+                ASSERT_TRUE(world.activateOblivionActor(actors[i]));
+                keys[i] = actors[i].getCellRef().getFormKey();
+            }
+            ASSERT_TRUE(world.executeOblivionStartCombat(actors[0], actors[1]));
+            ASSERT_TRUE(world.executeOblivionStartCombat(actors[0], actors[2]));
+            ASSERT_TRUE(world.executeOblivionStartCombat(actors[3], actors[2]));
+            const auto pending = service.allocateAction(keys[0]);
+            MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+            const auto ref = ObScript::ReferenceValue{keys[1], {}};
+            EXPECT_THROW(host.call(command, ref, {std::int64_t(1)}, {}, {}), ObScript::RuntimeError);
+            EXPECT_EQ(ObScript::asInteger(host.call(command, ref, {}, {}, {})), 0);
+            EXPECT_FALSE(world.isOblivionCombatTarget(keys[0], keys[1]).value());
+            EXPECT_TRUE(world.isOblivionCombatTarget(keys[0], keys[2]).value());
+            EXPECT_TRUE(world.isOblivionCombatTarget(keys[3], keys[2]).value());
+            EXPECT_FALSE(service.isInCombatWith(keys[0], keys[1]));
+            EXPECT_TRUE(service.isInCombatWith(keys[0], keys[2]));
+            EXPECT_TRUE(service.isInCombatWith(keys[3], keys[2]));
+            EXPECT_FALSE(service.isActionPending(pending, keys[0]));
+            const auto snapshot = [&] {
+                auto state = captureNativeActorState(fixture, actors[0]);
+                for (std::size_t i = 1; i < actors.size(); ++i)
+                    state.mReferences.push_back(captureNativeActorState(fixture, actors[i]).mReferences[0]);
+                return state.serializeBinary();
+            };
+            const auto before = snapshot();
+            host.call(command, ref, {}, {}, {});
+            EXPECT_EQ(snapshot(), before);
+        }
+    }
+
     TEST(OblivionWorldTest, physicalWorldEntryPointsPreserveOwnershipMissReplayAndRejectedContact)
     {
         NativeWorldFixture fixture;

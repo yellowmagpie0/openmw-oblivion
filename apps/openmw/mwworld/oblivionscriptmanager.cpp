@@ -2367,7 +2367,8 @@ namespace MWWorld
                                                   : ObScript::Value(std::int64_t(visible));
         }
 
-        if (name == "startcombat" || name == "stopcombat")
+        if (name == "startcombat" || name == "stopcombat"
+            || name == "stopcombatalarmonactor" || name == "scaonactor")
         {
             try
             {
@@ -2394,6 +2395,8 @@ namespace MWWorld
                     const auto opponent = requireActor(*targetKey);
                     mWorld.executeOblivionStartCombat(ptrFor(actor), ptrFor(opponent));
                 }
+                else if (name == "stopcombatalarmonactor" || name == "scaonactor")
+                    mWorld.executeOblivionStopCombatAlarmOnActor(ptrFor(actor));
                 else
                 {
                     // The native command uses actor +334(true), whose Player
