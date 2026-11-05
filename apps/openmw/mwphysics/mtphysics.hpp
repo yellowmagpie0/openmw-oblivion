@@ -208,6 +208,7 @@ namespace MWPhysics
         void removeAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
         void updateAnimatedReferencePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
         std::vector<MWWorld::Ptr> animatedReferenceOwners();
+        std::vector<AnimatedReferenceContactStep> takeAnimatedReferenceContacts();
         std::vector<NifBullet::RagdollBodyState> captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
         // Reuses the body-graph snapshot representation, not the actor owner set.
         ESM4::RuntimeActorRagdoll captureAnimatedReferenceSnapshot(
@@ -418,6 +419,9 @@ namespace MWPhysics
         using ActorRagdollMap = std::map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>>;
         ActorRagdollMap mActorRagdolls;
         ActorRagdollMap mAnimatedReferenceBodies;
+        std::vector<AnimatedReferenceContactStep> mAnimatedReferenceContacts;
+        void observeAnimatedReferenceContacts(float duration);
+        void discardAnimatedReferenceContacts(const MWWorld::Ptr& ptr);
         void clearAnimatedReferenceBodies();
         std::shared_ptr<const char> mActorPreparationIdentity;
         std::map<const MWWorld::LiveCellRefBase*, std::weak_ptr<const char>> mActorPreparationSlots;

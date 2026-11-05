@@ -6,6 +6,7 @@
 #include <map>
 #include <optional>
 #include <set>
+#include <tuple>
 #include <utility>
 #include <string>
 #include <string_view>
@@ -70,7 +71,7 @@ namespace ESM4
     // v80 retains Player tutorial skill use, tracking and cached recommended CLAS.
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 85;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 86;
 
     struct RuntimeContentIdentity
     {
@@ -849,6 +850,19 @@ namespace ESM4
 
     // The binary representation is private to OpenMW saves and deliberately
     // does not reuse raw load-order indices from Bethesda plugins.
+    struct RuntimeTrapContact
+    {
+        ESM::FormKey mReference;
+        std::uint32_t mBodyRecord = 0;
+        ESM::FormKey mActor;
+        friend bool operator==(const RuntimeTrapContact&, const RuntimeTrapContact&) = default;
+        friend bool operator<(const RuntimeTrapContact& a, const RuntimeTrapContact& b)
+        {
+            return std::tie(a.mReference, a.mBodyRecord, a.mActor)
+                < std::tie(b.mReference, b.mBodyRecord, b.mActor);
+        }
+    };
+
     struct RuntimeState
     {
         static constexpr ESM::RecNameInts sRecordId = ESM::REC_T4ST;
@@ -919,6 +933,9 @@ namespace ESM4
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
         // v85: independent placed-reference body graphs; never actor or item owners.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeAnimatedReferences;
+        // v86: current trap overlaps, including contacts below the speed
+        // threshold. Restoring an existing overlap must not invent an entry.
+        std::set<RuntimeTrapContact> mNativeTrapContacts;
         // Absent in older saves: never infer solver history or skip flags.
         std::optional<RuntimeMovementState> mNativeMovement = std::nullopt;
         // v53: retained loose weapons, including currently unloaded cells.

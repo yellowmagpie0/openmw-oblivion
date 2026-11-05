@@ -930,6 +930,12 @@ namespace MWMechanics
         bool changePlayerHealth(MWWorld::Player& player, float delta, const ESM::FormKey& source,
             bool essential, const ESM4::EssentialRecoverySettings& settings,
             const ESM4::PlayerDynamicBaseSettings& baseSettings, bool godMode = false);
+        // Environmental impact: no invented attacking actor or melee action.
+        // Prepare the pushback allocation before the atomic Health publication.
+        bool applyTrapImpact(const MWWorld::Ptr& actor, MWWorld::Player* player, float damage,
+            const std::array<float, 3>& incomingVelocity, float pushback, bool essential,
+            const ESM4::EssentialRecoverySettings& recovery,
+            const ESM4::PlayerDynamicBaseSettings& playerBase, bool godMode);
         // Resource-current requests (including Lua) debit/restore Damage without
         // replacing Maximum or Script. Native Damage clamps still apply; a
         // request above the recoverable pool need not equal the resulting value.

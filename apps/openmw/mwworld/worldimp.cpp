@@ -2022,6 +2022,7 @@ namespace MWWorld
             state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
             state.mFactionReactions = mOblivionRuntimeState->mFactionReactions;
             state.mNativeBoundAbilities = mOblivionRuntimeState->mNativeBoundAbilities;
+            state.mNativeTrapContacts = mOblivionRuntimeState->mNativeTrapContacts;
             state.mFriendHitCounters = mOblivionRuntimeState->mFriendHitCounters;
             state.mCombatControllers = mOblivionRuntimeState->mCombatControllers;
         }
@@ -9048,6 +9049,7 @@ namespace MWWorld
         mPhysics->moveActors();
         synchronizeLooseWeaponPoses(*this,*mPhysics);
         synchronizeOblivionAnimatedReferencePoses();
+        processOblivionTrapContacts();
     }
 
     void World::updateNavigator()

@@ -205,6 +205,23 @@ namespace MWPhysics
         osg::Vec3f mNormal;
     };
 
+    struct AnimatedReferenceContact
+    {
+        MWWorld::Ptr mReference, mActor;
+        std::uint32_t mBodyRecord = 0;
+        std::uint8_t mLayer = 0;
+        // A small positive manifold gap retains an existing contact, but
+        // cannot start damage before the surfaces actually touch.
+        bool mTouching = false;
+        osg::Vec3f mPoint, mIncomingVelocity;
+    };
+
+    struct AnimatedReferenceContactStep
+    {
+        float mDuration = 0;
+        std::vector<AnimatedReferenceContact> mContacts;
+    };
+
     struct LOSRequest
     {
         LOSRequest(const std::weak_ptr<Actor>& a1, const std::weak_ptr<Actor>& a2);
@@ -385,6 +402,7 @@ namespace MWPhysics
             const ESM::FormKey& base = {}, std::string_view model = {});
         bool hasAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
         std::vector<MWWorld::Ptr> animatedReferenceOwners();
+        std::vector<AnimatedReferenceContactStep> takeAnimatedReferenceContacts();
         std::vector<NifBullet::RagdollBodyState> captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
         ESM4::RuntimeActorRagdoll captureAnimatedReferenceSnapshot(
             const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);

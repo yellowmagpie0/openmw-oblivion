@@ -1073,6 +1073,11 @@ namespace MWPhysics
         return mTaskScheduler->animatedReferenceOwners();
     }
 
+    std::vector<AnimatedReferenceContactStep> PhysicsSystem::takeAnimatedReferenceContacts()
+    {
+        return mTaskScheduler->takeAnimatedReferenceContacts();
+    }
+
     std::vector<NifBullet::RagdollBodyState> PhysicsSystem::captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr)
     {
         return mTaskScheduler->captureAnimatedReferenceBodies(ptr);

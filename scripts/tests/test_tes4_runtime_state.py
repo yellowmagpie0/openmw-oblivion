@@ -4854,6 +4854,44 @@ class EssentialBase84Tests(unittest.TestCase):
             with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(corrupt))
 
 
+class TrapContact86Tests(unittest.TestCase):
+    def make_state(self):
+        state = AnimatedReference85Tests.make_state(self)
+        state["schema_version"] = 86
+        state["native_trap_contacts"] = [{
+            "reference": state["native_animated_references"][0]["reference"],
+            "body_record": 13, "actor": state["player"]["reference"]}]
+        return state
+
+    def test_roundtrip_and_legacy_absence(self):
+        state = self.make_state()
+        encoded = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(encoded)
+        self.assertEqual(decoded["native_trap_contacts"], state["native_trap_contacts"])
+        self.assertEqual(state_io.encode_payload(decoded), encoded)
+        state["schema_version"] = 85
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["native_trap_contacts"] = []
+        self.assertNotIn("native_trap_contacts", state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_dangling_duplicate_and_invalid_contact(self):
+        edits = [lambda s: s["native_trap_contacts"][0].update(reference="content:oblivion.esm:000999"),
+                 lambda s: s["native_trap_contacts"][0].update(actor="content:oblivion.esm:000999"),
+                 lambda s: s["native_trap_contacts"][0].update(body_record=999),
+                 lambda s: s["native_trap_contacts"][0].update(body_record=True),
+                 lambda s: s["native_trap_contacts"].append(copy.deepcopy(s["native_trap_contacts"][0]))]
+        for edit in edits:
+            with self.subTest(edit=edit):
+                state = self.make_state(); edit(state)
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.make_state()
+        for body, mode in zip(state["native_animated_references"][0]["bodies"], (1, 7)):
+            body["native_motion"] = mode
+            body["linear_velocity"] = [0.] * 3
+            body["native_packed_velocity"] = {"linear": [0.] * 4, "angular": [0.] * 4}
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+
 class AnimatedReference85Tests(unittest.TestCase):
     def test_fixed_anchor_motion_roundtrip(self):
         state = self.make_state()

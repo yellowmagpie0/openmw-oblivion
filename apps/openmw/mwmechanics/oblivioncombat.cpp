@@ -4604,6 +4604,41 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionCombatService::applyTrapImpact(const MWWorld::Ptr& actor, MWWorld::Player* player,
+        float damage, const std::array<float, 3>& incomingVelocity, float pushback, bool essential,
+        const ESM4::EssentialRecoverySettings& recovery,
+        const ESM4::PlayerDynamicBaseSettings& playerBase, bool godMode)
+    {
+        if (!std::isfinite(damage) || damage < 0 || !std::isfinite(pushback)
+            || std::any_of(incomingVelocity.begin(), incomingVelocity.end(), [](float v) { return !std::isfinite(v); })
+            || (player && player->getPlayer() != actor))
+            throw std::invalid_argument("invalid environmental trap impact");
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* life = findActorLife(key);
+        if (!life) throw std::invalid_argument("trap impact requires actor lifecycle ownership");
+        if (damage == 0 || life->mPhase == ESM4::ActorLifePhase::Dead || (player && godMode)) return false;
+        decltype(mActorKnockback) prepared;
+        if (pushback > 0)
+        {
+            const auto previous = actorKnockback(key).value_or(ESM4::TimedKnockbackState{});
+            // Original noncontinuous controller branch caps force at1000 and
+            // passes duration0.5 to8907A0, the shared timed knockback setter.
+            const auto vector = ESM4::nativeKnockbackVector(incomingVelocity, std::min(pushback, 1000.f));
+            const auto pulse = ESM4::replaceNativeKnockback(previous, vector, .5f);
+            if (pulse != ESM4::TimedKnockbackState{}) prepared.emplace(key, pulse);
+        }
+        const bool changed = player
+            ? changePlayerHealth(*player, -damage, {}, essential, recovery, playerBase, godMode)
+            : changeNonPlayerHealth(actor, -damage, {}, essential, recovery);
+        if (changed && !prepared.empty())
+        {
+            const auto found = mActorKnockback.find(key);
+            if (found == mActorKnockback.end()) mActorKnockback.insert(prepared.extract(prepared.begin()));
+            else found->second = prepared.begin()->second;
+        }
+        return changed;
+    }
+
     std::optional<OblivionBreathUpdateResult> OblivionCombatService::prepareBreathUpdate(
         const ESM4::RuntimeActorValues& values, float duration, bool needsAir,
         const ESM4::SwimBreathSettings& settings) const

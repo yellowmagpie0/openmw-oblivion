@@ -216,6 +216,7 @@ namespace MWWorld
         void validateOblivionAnimatedReferenceState(const ESM4::RuntimeState& state) const;
         void updateOblivionAnimatedReference(const Ptr& ptr);
         void synchronizeOblivionAnimatedReferencePoses();
+        void processOblivionTrapContacts();
         using NativeLooseWeaponStates = std::map<ESM::FormKey, ESM4::RuntimeLooseWeapon>;
         // Immutable retained projection also identifies the cache version to
         // detached scene admissions across reentrant callbacks.

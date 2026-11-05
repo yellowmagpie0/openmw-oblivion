@@ -1,0 +1,58 @@
+{
+  "status": "static inspection; no emulator or gameplay damage acceptance",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "handler_entry": "0x5eccd0",
+  "scope": "Noncontinuous swinging mace script051ac4, original cavern refs051aca/051acb/051acc. Actual moving-body collision required.",
+  "observations": [
+    {
+      "addresses": "0x5ecd62..0x5ecdd2",
+      "finding": "Reads fTrapDamage; if fLevelledDamage exists, adds that value multiplied by actor accessor5e1fd0 result. Accessor reaches4677f0: base level word offset0xe, PC-level flag0x80, min/max clamp words0x10/0x12."
+    },
+    {
+      "addresses": "0x5ecdfd..0x5ece3f",
+      "finding": "Reads fTrapMinVelocity; nonpositive clamps zero, positive multiplied by double constant0.1428767293691635 (native world-length conversion)."
+    },
+    {
+      "addresses": "0x5ece43..0x5ecec8",
+      "finding": "bTrapContinuous defaults false; nonzero enables continuous. Noncontinuous branch skips when contact record flag bit0 is set. Meaning/caller of flag remains to verify."
+    },
+    {
+      "addresses": "0x5ecf22..0x5ecf88",
+      "finding": "For rigid body path, obtains motion vector, compares its magnitude with positive min velocity; below threshold replaces damage with zero."
+    },
+    {
+      "addresses": "0x5ed0eb..0x5ed169",
+      "finding": "Masks collision layer to6bits. Layer16 selects actor value67, other layers65. Damage multiplied by1-min(value/100,1). No lower resistance clamp observed."
+    },
+    {
+      "addresses": "0x5ed16d..0x5ed1b3",
+      "finding": "Nonpositive damage exits. Continuous branch additionally multiplies scalar at b33e9c and velocity-derived multiplier; noncontinuous passes computed damage to actor vtable0x220 with zero and null additional args."
+    },
+    {
+      "addresses": "0x5ed4e5..0x5ed584",
+      "finding": "Alive/controller pushback branch clamps force to1000 (A2FC70 double/A342A4 float), normalizes incoming direction, scales force and invokes shared8907A0 with duration0.5 (A3D65C). Contact record bit0 is set at5ED584, including the nonpositive-damage tail at5ED57C. Existing shared-knockback provenance is M15-NATIVE-RULE-PROVENANCE.md aroundline6066. Dead-NPC physical pushback takes a distinct branch and is not proven by reusing the controller pulse."
+    }
+  ],
+  "open_questions": [
+    "Verify actual released mace actor contacts and incoming speed in the fork.",
+    "Verify damage, death/essential/god-mode ownership and contact-entry persistence in normal-input runtime.",
+    "Inspect dead-NPC pushback/corpse behavior; controller pulse alone does not prove that path.",
+    "Continuous animated hazards remain unsupported pending an encountered requirement."
+  ],
+  "suggested_runtime_sites": [
+    "PhysicsTaskScheduler animated-reference bodies under worker/collision lock, expose body/actor contact and velocity; preserve ownership.",
+    "OblivionScriptManager named numeric local accessor, avoid loadMember creating new instances merely for inspection.",
+    "World synchronize/update after physics; CombatService health publication and existing essential/death handling with empty source for environmental damage once verified."
+  ],
+  "policy": "Approximate gameplay fidelity with tolerances; no bit-identical arithmetic/RNG requirement.",
+  "implementation_scope": "Noncontinuous impact rule, pre-solver contact collection, Health/death plus timed controller pushback, version86 saved contact entries. Integration/runtime verification pending; continuous hazards are explicitly unsupported.",
+  "rule_verification": {
+    "path": "build/oblivion-compat/sewer-escape/trap-impact-rule-01",
+    "passed": true,
+    "executed": 4,
+    "source": {
+      "head": "334220e952934aad74d80327a540db8c06ba15c5",
+      "source_fingerprint": "84156a0c09d372030c1448dbf3ccccd9098fd07c0bce442c9bbd5290f5b1ca63"
+    }
+  }
+}

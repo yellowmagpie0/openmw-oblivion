@@ -1863,7 +1863,7 @@ namespace
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
                 + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0)
-                + (version >= 85 ? 4 : 0);
+                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -6325,8 +6325,10 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     const auto wire = state.serializeBinary();
     // Independent public wire recipe, also checked by the Python inspector.
     const std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
-    ASSERT_GE(wire.size(),ownerTail.size());
-    EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin()));
+    const std::size_t contactSuffix = state.mVersion >= 86 ? 4 : 0;
+    ASSERT_GE(wire.size(),ownerTail.size() + contactSuffix);
+    EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin() + contactSuffix));
+    EXPECT_TRUE(std::all_of(wire.end() - contactSuffix, wire.end(), [](auto byte) { return byte == 0; }));
     const std::vector<std::uint8_t> sourceWire{0x01, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x02, 0x00, 0x00, 0x00};
     EXPECT_NE(std::search(wire.begin(),wire.end(),sourceWire.begin(),sourceWire.end()),wire.end());
 
@@ -6426,4 +6428,44 @@ TEST(ESM4RuntimeState, AnimatedReferenceBodiesRoundTripWithoutActorOwnership)
     EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
     invalid = state; invalid.mNativeAnimatedReferences.at(reference).mBodies.back().mRecord = 12;
     EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, TrapContactOwnershipRoundTripAndLegacyAbsence)
+{
+    auto state = makeState();
+    state.mVersion = 86;
+    const auto reference = state.mReferences.front().mKey;
+    ESM4::RuntimeActorRagdoll graph;
+    graph.mBase = state.mReferences.front().mBase;
+    graph.mModel = "dungeons/caves/traps/mace.nif";
+    graph.mAssetHash = "00112233445566778899aabbccddeeff";
+    ESM4::RuntimeRagdollBody body;
+    body.mRecord = 56;
+    body.mNodeRecord = 54;
+    body.mNativePackedVelocity = ESM4::PhysicalWorldSceneVelocities{};
+    body.mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic;
+    graph.mBodies.push_back(body);
+    state.mNativeAnimatedReferences.emplace(reference, graph);
+    state.mNativeTrapContacts.insert({reference, 56, state.mPlayer.mReference});
+    const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_EQ(restored.mNativeTrapContacts, state.mNativeTrapContacts);
+    EXPECT_NE(restored.canonicalJson().find("\"native_trap_contacts\":[{"), std::string::npos);
+    auto invalid = state;
+    invalid.mNativeAnimatedReferences.clear();
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state;
+    invalid.mNativeAnimatedReferences.at(reference).mBodies.front().mRecord = 57;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state;
+    invalid.mNativeAnimatedReferences.at(reference).mBodies.front().mNativeMotion = ESM4::RuntimeRagdollMotion::Fixed;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state;
+    invalid.mNativeTrapContacts.clear();
+    invalid.mNativeTrapContacts.insert({reference, 56, ESM::FormKey::content("Oblivion.esm", 999)});
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state;
+    invalid.mVersion = 85;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid.mNativeTrapContacts.clear();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(invalid.serializeBinary()).mNativeTrapContacts.empty());
 }

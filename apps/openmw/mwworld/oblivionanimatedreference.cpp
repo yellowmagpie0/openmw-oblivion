@@ -1,6 +1,11 @@
 #include "oblivionanimatedreference.hpp"
 #include "worldimp.hpp"
 #include "class.hpp"
+#include "player.hpp"
+#include "oblivionactorstats.hpp"
+#include "oblivionscriptmanager.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
+#include "../mwmechanics/creaturestats.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwphysics/object.hpp"
 #include "../mwphysics/collisiontype.hpp"
@@ -9,6 +14,7 @@
 #include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/trapdamage.hpp>
 #include <components/misc/convert.hpp>
 #include <components/misc/resourcehelpers.hpp>
 #include <components/nif/physics.hpp>
@@ -161,6 +167,81 @@ namespace MWWorld
         }
     }
 
+    void World::processOblivionTrapContacts()
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mOblivionScriptManager) return;
+        const auto steps = mPhysics->takeAnimatedReferenceContacts();
+        if (steps.empty()) return; // No physics step is not a separation event.
+        if (!mOblivionRuntimeState)
+            mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+        auto& previous = mOblivionRuntimeState->mNativeTrapContacts;
+        for (const auto& step : steps)
+        {
+            std::set<ESM4::RuntimeTrapContact> overlaps;
+            for (const auto& contact : step.mContacts)
+            {
+                const auto& trap = contact.mReference;
+                const auto& actor = contact.mActor;
+                if (trap.isEmpty() || actor.isEmpty() || trap.mRef->isDeleted() || actor.mRef->isDeleted()
+                    || !trap.getRefData().isEnabled() || !actor.getRefData().isEnabled()
+                    || actor.getClass().getCreatureStats(actor).isDead()) continue;
+                const auto variable = [&](std::string_view name) {
+                    return mOblivionScriptManager->scriptVariable(trap, name).value_or(0.0);
+                };
+                if (!mOblivionScriptManager->scriptVariable(trap, "fTrapDamage")) continue;
+                if (variable("bTrapContinuous") != 0)
+                    throw std::runtime_error("continuous animated trap damage is not implemented");
+                const bool player = actor == getPlayerPtr();
+                const auto actorKey = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+                const ESM4::RuntimeTrapContact key{trap.getCellRef().getFormKey(), contact.mBodyRecord, actorKey};
+                if (previous.contains(key))
+                {
+                    overlaps.insert(key);
+                    continue;
+                }
+                if (!contact.mTouching) continue;
+                overlaps.insert(key);
+                const ESM4::TrapImpactSettings settings{static_cast<float>(variable("fTrapDamage")),
+                    static_cast<float>(variable("fLevelledDamage")), static_cast<float>(variable("fTrapMinVelocity"))};
+                const auto resistanceValue = contact.mLayer == 16 ? 67 : 65;
+                const float resistance = player ? mOblivionCombat->getPlayerValue(resistanceValue)
+                    : mOblivionCombat->getNonPlayerValue(actor, resistanceValue);
+                const auto level = static_cast<std::uint32_t>(std::max(0, actor.getClass().getCreatureStats(actor).getLevel()));
+                const float damage = ESM4::trapImpactDamage(settings, level, contact.mIncomingVelocity.length(), resistance);
+                const float pushback = static_cast<float>(variable("fTrapPushBack"));
+                // Allocate the latch before Health publication, and roll it
+                // back if the native transaction rejects the impact. Earlier
+                // successful impacts in this step must never replay on error.
+                const auto [entry, inserted] = previous.insert(key);
+                bool changed = false;
+                try
+                {
+                    if (damage > 0)
+                    {
+                        auto adoption = mOblivionCombat->guardLifeAdoption(actor, player ? mPlayer.get() : nullptr);
+                        adoptOblivionActorLife(actor);
+                        changed = mOblivionCombat->applyTrapImpact(actor, player ? mPlayer.get() : nullptr,
+                            damage, {contact.mIncomingVelocity.x(), contact.mIncomingVelocity.y(), contact.mIncomingVelocity.z()},
+                            pushback, actor.getClass().isEssential(actor), resolveOblivionEssentialRecoverySettings(mStore),
+                            resolveOblivionPlayerDynamicBaseSettings(mStore), player && getGodModeState());
+                        adoption.commit();
+                    }
+                }
+                catch (...)
+                {
+                    if (inserted) previous.erase(entry);
+                    throw;
+                }
+                if (changed)
+                    Log(Debug::Info) << "TES4 trap impact: reference=" << key.mReference.serialize()
+                        << " body=" << key.mBodyRecord << " actor=" << key.mActor.serialize()
+                        << " speed=" << contact.mIncomingVelocity.length() << " damage=" << damage
+                        << " pushback=" << pushback;
+            }
+            previous.swap(overlaps);
+        }
+    }
+
     void World::captureOblivionAnimatedReferenceState(ESM4::RuntimeState& state) const
     {
         state.mNativeAnimatedReferences = mOblivionAnimatedReferenceStates
@@ -172,6 +253,8 @@ namespace MWWorld
             if (ptr.mRef->isDeleted() || ptr.getCellRef().getCount() <= 0)
             {
                 state.mNativeAnimatedReferences.erase(key);
+                std::erase_if(state.mNativeTrapContacts,
+                    [&](const auto& contact) { return contact.mReference == key; });
                 continue;
             }
             const auto base = baseKey(ptr);

@@ -263,6 +263,7 @@ add_component_dir (esm4
     combatstylepolicy
     combatsettings
     fatigueexpenditure
+    trapdamage
     physicalcombat
     nativeclampsequence
     nativeclampframe

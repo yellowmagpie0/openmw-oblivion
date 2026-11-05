@@ -4531,6 +4531,56 @@ namespace
             service.capture(saved);
             return saved;
         };
+        const auto impact = [&](float damage, bool essential = false,
+                                ESM4::EssentialRecoverySettings recovery = {3, .5f}, bool godMode = false) {
+            return service.applyTrapImpact(ptr, player, damage, {600, 0, 0}, 900,
+                essential, recovery, {}, godMode);
+        };
+        auto trapState = initial(100);
+        ASSERT_TRUE(impact(21.5f));
+        EXPECT_NEAR(health(), 78.5f, .001f);
+        const auto pulse = service.actorKnockback(values.mActor);
+        ASSERT_TRUE(pulse);
+        EXPECT_NEAR(pulse->mRemaining, .5f, .001f);
+        EXPECT_NEAR(pulse->mAcceleration[0], 257.1781f, .01f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Alive);
+        EXPECT_TRUE(service.findActorLife(values.mActor)->mKiller.isNull());
+        service.capture(trapState);
+        MWMechanics::OblivionCombatService restoredTrap;
+        restoredTrap.restore(ESM4::RuntimeState::deserializeBinary(trapState.serializeBinary()));
+        EXPECT_EQ(restoredTrap.actorKnockback(values.mActor), pulse);
+
+        trapState = initial(2);
+        ASSERT_TRUE(impact(21.5f));
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Dead);
+        EXPECT_TRUE(service.findActorLife(values.mActor)->mKiller.isNull());
+        EXPECT_EQ(service.getDeadCount(values.mBase), 1);
+        service.capture(trapState);
+        ASSERT_EQ(trapState.mPendingDeathEvents.size(), 1u);
+        EXPECT_FALSE(impact(21.5f));
+        auto repeatedTrap = trapState;
+        service.capture(repeatedTrap);
+        EXPECT_EQ(repeatedTrap, trapState);
+
+        initial(2);
+        ASSERT_TRUE(impact(21.5f, true));
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::EssentialUnconscious);
+        EXPECT_EQ(service.getDeadCount(values.mBase), 0);
+        const auto rejectedTrap = initial(2);
+        EXPECT_THROW(impact(21.5f, true, {std::numeric_limits<float>::quiet_NaN(), .5f}), std::invalid_argument);
+        auto afterRejectedTrap = rejectedTrap;
+        service.capture(afterRejectedTrap);
+        EXPECT_EQ(afterRejectedTrap, rejectedTrap);
+        EXPECT_EQ(health(), 2.f);
+        if (player)
+        {
+            const auto godModeTrap = initial(100);
+            EXPECT_FALSE(impact(21.5f, false, {}, true));
+            auto afterGodModeTrap = godModeTrap;
+            service.capture(afterGodModeTrap);
+            EXPECT_EQ(afterGodModeTrap, godModeTrap);
+        }
+
         auto saved = initial();
         ASSERT_TRUE(change(-.5f));
         EXPECT_FLOAT_EQ(health(), 1.5f);

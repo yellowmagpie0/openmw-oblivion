@@ -851,6 +851,21 @@ namespace MWWorld
         return numericScriptValue(instance->second.mLocals[*local]);
     }
 
+    std::optional<double> OblivionScriptManager::scriptVariable(const Ptr& target, std::string_view name) const
+    {
+        const auto program = scriptFor(target);
+        if (!program) return std::nullopt;
+        const auto instance = mInstances.find({program->mUnit.serialize(), keyFor(target)});
+        for (std::size_t i = 0; i < program->mLocals.size(); ++i)
+            if (Misc::StringUtils::ciEqual(program->mLocals[i].mName, name))
+            {
+                if (instance == mInstances.end()) return 0.0;
+                if (i >= instance->second.mLocals.size()) return std::nullopt;
+                return numericScriptValue(instance->second.mLocals[i]);
+            }
+        return std::nullopt;
+    }
+
     std::optional<Ptr> OblivionScriptManager::scriptedLookTarget(const Ptr& actor) const
     {
         const ESM4::RuntimeReferenceState* state = referenceState(keyFor(actor));

@@ -2345,6 +2345,22 @@ namespace ESM4
                 throw std::runtime_error("Dangling, conflicting or mismatched animated reference owner");
         }
         checkSize(mNativeActorRagdolls.size(), "native actor ragdoll list");
+        checkSize(mNativeTrapContacts.size(), "native trap contact list");
+        if (mVersion < 86 && !mNativeTrapContacts.empty())
+            throw std::runtime_error("Trap contacts require runtime-state version86");
+        for (const auto& contact : mNativeTrapContacts)
+        {
+            const auto graph = mNativeAnimatedReferences.find(contact.mReference);
+            if (graph == mNativeAnimatedReferences.end() || contact.mActor.isNull()
+                || (contact.mActor != mPlayer.mReference && !nativeActors.contains(contact.mActor)))
+                throw std::runtime_error("Dangling trap contact owner or actor");
+            const auto& bodies = graph->second.mBodies;
+            const auto body = std::find_if(bodies.begin(), bodies.end(), [&](const auto& candidate) {
+                return candidate.mRecord == contact.mBodyRecord;
+            });
+            if (body == bodies.end() || body->mNativeMotion == RuntimeRagdollMotion::Fixed)
+                throw std::runtime_error("Trap contact has no movable body");
+        }
         if (mVersion < 31 && !mNativeActorRagdolls.empty())
             throw std::runtime_error("TES4 actor ragdolls require runtime-state version31");
         for (const auto& [actor, pose] : mNativeActorRagdolls)
@@ -3944,6 +3960,16 @@ namespace ESM4
                 }
             }
         }
+        if (mVersion >= 86)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeTrapContacts.size()));
+            for (const auto& contact : mNativeTrapContacts)
+            {
+                writeKey(writer, contact.mReference);
+                writer.integer(contact.mBodyRecord);
+                writeKey(writer, contact.mActor);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -5290,6 +5316,19 @@ namespace ESM4
                     abilities.push_back({spell, readInventory(reader, 82)});
                 }
                 result.mNativeBoundAbilities.emplace(actor, std::move(abilities));
+            }
+        }
+        if (result.mVersion >= 86)
+        {
+            const auto count = reader.count();
+            std::optional<RuntimeTrapContact> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                RuntimeTrapContact contact{readKey(reader), reader.integer<std::uint32_t>(), readKey(reader)};
+                if (previous && !(*previous < contact))
+                    throw std::runtime_error("Noncanonical trap contact list");
+                previous = contact;
+                result.mNativeTrapContacts.insert(std::move(contact));
             }
         }
         if (!reader.eof())
@@ -6780,6 +6819,20 @@ namespace ESM4
                     stream << '}';
                 }
                 stream << "]}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 86)
+        {
+            stream << ",\"native_trap_contacts\":[";
+            bool first = true;
+            for (const auto& contact : mNativeTrapContacts)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"reference\":\"" << escapeJson(contact.mReference.serialize())
+                    << "\",\"body_record\":" << contact.mBodyRecord << ",\"actor\":\""
+                    << escapeJson(contact.mActor.serialize()) << "\"}";
             }
             stream << ']';
         }

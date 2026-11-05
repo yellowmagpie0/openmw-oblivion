@@ -1,0 +1,253 @@
+{
+  "status": "mace hazard chunk verified; full sewer escape incomplete",
+  "scope": "Original cavern swinging maces: script damage, incoming-speed contact, environmental lifecycle/pushback and restart ownership",
+  "tested_source": {
+    "head": "334220e952934aad74d80327a540db8c06ba15c5",
+    "source_fingerprint": "08d2ff8e0abb319e4a747c1d9082968106932abad16af289093a1a292a38b455"
+  },
+  "normal_results": {
+    "components": {
+      "executed": 3252,
+      "failed": 0,
+      "skipped": 0,
+      "inventory_matches": true,
+      "binary_sha256": "522c47c243f53c9e331fcd93fe0f391c879b1be8ab288e94d071df0bee98064b"
+    },
+    "engine": {
+      "executed": 2178,
+      "failed": 0,
+      "skipped": 0,
+      "inventory_matches": true,
+      "binary_sha256": "7dd500abab6324eeb7fe51fa6f5dccbd071295033e24c65aaac1fbe03587dec6"
+    }
+  },
+  "python": {
+    "tests": 554,
+    "evidence": "trap-hazard-focused-03/python.log",
+    "note": "Earlier fingerprint, before test-only physics fixture correction and documentation/manifests; Python unchanged since passing run.",
+    "tested_source": {
+      "head": "334220e952934aad74d80327a540db8c06ba15c5",
+      "source_fingerprint": "388c23b81e475df6703d5e0ecbd217eb03e4d829e78d8f312faf1683cedc3d9d"
+    }
+  },
+  "runtime_sha256": "501452531f4992357140e927914cdbf5898bd53599610674fffe6ee7aa4344ae",
+  "runtime_courses": [
+    "trap-hazard-01",
+    "trap-player-impact-04",
+    "trap-player-reload-01",
+    "trap-immediate-contact-01",
+    "trap-contact-reload-01"
+  ],
+  "restart_audits": [
+    {
+      "runtime_sha256": "501452531f4992357140e927914cdbf5898bd53599610674fffe6ee7aa4344ae",
+      "input_save_sha256": "67d5ce220039e0cb0045ccfaecd394d8c29a32f773306081a5bc5c7c416e4b2f",
+      "output_save_sha256": "35cf929eb5f4253d65bb29d0f319fc4cbce86c8874961929931225f8fe65779a",
+      "all_player_values_and_nonposition_fields_equal": true,
+      "actor_life_equal": true,
+      "health": 10.399993896484375,
+      "pushback_before": {
+        "actor": "dynamic:player:0000000000000001",
+        "acceleration": [
+          -171.17474365234375,
+          45.804141998291016,
+          -186.3914031982422
+        ],
+        "remaining": 0.39980000257492065
+      },
+      "pushback_after": {
+        "actor": "dynamic:player:0000000000000001",
+        "acceleration": [
+          -171.17474365234375,
+          45.804141998291016,
+          -186.3914031982422
+        ],
+        "remaining": 0.2996000051498413
+      },
+      "position_before": [
+        864.2880249023438,
+        1646.70263671875,
+        -221.83518981933594,
+        0.0,
+        0.0,
+        1.7158210277557373
+      ],
+      "position_after": [
+        821.3057861328125,
+        1658.2041015625,
+        -222.8560791015625,
+        0.0,
+        0.0,
+        1.7158210277557373
+      ],
+      "fixed_anchors_equal": [
+        "content:oblivion.esm:051aca",
+        "content:oblivion.esm:051acb",
+        "content:oblivion.esm:051acc"
+      ],
+      "contacts_before": [],
+      "contacts_after": [],
+      "active_contact_restart_proven": false,
+      "captures_inspected": true
+    },
+    {
+      "runtime_sha256": "501452531f4992357140e927914cdbf5898bd53599610674fffe6ee7aa4344ae",
+      "input_save_sha256": "841f0f43417f6ec160a9e2db1402c9e8c05f98f083bd3b0770037c8b2accecc2",
+      "output_save_sha256": "14febfef66ea0abdc97c4a11e8cb4271844b877774137f63bd9503550da15d0a",
+      "all_player_values_and_nonposition_fields_equal": true,
+      "actor_life_equal": true,
+      "health": 10.399993896484375,
+      "pushback_before": {
+        "actor": "dynamic:player:0000000000000001",
+        "acceleration": [
+          -224.92103576660156,
+          80.21118927001953,
+          -95.48444366455078
+        ],
+        "remaining": 0.5
+      },
+      "pushback_after": {
+        "actor": "dynamic:player:0000000000000001",
+        "acceleration": [
+          -224.92103576660156,
+          80.21118927001953,
+          -95.48444366455078
+        ],
+        "remaining": 0.39980000257492065
+      },
+      "position_before": [
+        900.7047729492188,
+        1605.860107421875,
+        -212.89959716796875,
+        0.0,
+        0.0,
+        1.7158210277557373
+      ],
+      "position_after": [
+        831.0139770507812,
+        1634.04248046875,
+        -213.61737060546875,
+        0.0,
+        0.0,
+        1.7158210277557373
+      ],
+      "fixed_anchors_equal": [
+        "content:oblivion.esm:051aca",
+        "content:oblivion.esm:051acb",
+        "content:oblivion.esm:051acc"
+      ],
+      "contacts_before": [
+        {
+          "reference": "content:oblivion.esm:051acc",
+          "body_record": 56,
+          "actor": "dynamic:player:0000000000000001"
+        }
+      ],
+      "contacts_after": [],
+      "active_contact_restart_proven": true
+    }
+  ],
+  "remaining_scope": [
+    "Entire sewer escape incomplete",
+    "Rolling logs use unsupported10.2.0.0 reference physics asset; originalactivation demonstrated failure",
+    "Upright goblin corpses/dead actor pushback presentation unproven",
+    "Remaining caverns and escort reunion",
+    "Emperor death/Amulet/character choices/MQ01stage88 exit/outdoorreload",
+    "Continuous original prison-to-outdoor course; isolated ordinary death/retry now verified"
+  ],
+  "normal_evidence": "build/oblivion-compat/sewer-escape/trap-hazard-integration-01",
+  "sanitizer_evidence": "build/oblivion-compat/sewer-escape/trap-hazard-sanitize-engine-01",
+  "sanitizer_results": {
+    "engine": {
+      "executed": 284,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*RagdollSchedulerTest.*:AnimatedReferenceAsset.*:NativeRagdollSnapshotTest.*:OblivionTutorialAction.*:OblivionEnableParent.*:OblivionActorStatsTest.*FloatingHealthTransactions",
+      "binary_sha256": "68ef60f749f84dc472678c9ad7ab24b98f2c8832554af2b322c7b1114cb1867f",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "7775c26c790e101776c30749096d99298e537fdbb8e60b1a7f3fb748b55df0ee",
+      "inventory_sha256": "d86db91ec71d6d2da3ce5745c6f66eedf43253c947c421fd8a7cda6c5e7c752b",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "death_retry": {
+    "passed": true,
+    "normal_save_and_confirmation": true,
+    "same_process_retry": true,
+    "fresh_process_retry": false,
+    "save_sha256": "9a1980def532addc7e20f0e1294e3970910b75d46e2141580dc5d0f45a7e8c01",
+    "save_tick": 6,
+    "load_tick": 72,
+    "complete_player_equal": true,
+    "actor_life_equal": true,
+    "health": 10.399993896484375,
+    "death_health": -0.8800048828125,
+    "death_observed": "Actor.isDead observer and death-load prompt capture",
+    "confirmation": "controller A selects Yes",
+    "captures_inspected": true
+  },
+  "onward_traversal": {
+    "output": "cavern-log-approach-02",
+    "passed": true,
+    "normal_input": true,
+    "waypoints": 15,
+    "position": [
+      3527.40771484375,
+      1413.78271484375,
+      -289.8931884765625,
+      0.0,
+      0.0,
+      1.481055498123169
+    ],
+    "health": 29.079994201660156,
+    "save_sha256": "1cd131c92c2d90e1f090d4f02a4b75d2f89020fbda51f750e3ffd7dc4da4ebbd",
+    "manifest": "trap-to-log-approach-prepared-02.json",
+    "screenshot_inspected": true,
+    "note": "01 failed overescaped harness aim regex;02 corrected from existing tested pattern. No source edits while sanitizer active. Current hazard chunk still awaiting gates/commit. Destination door audited as ImperialDungeon02/Imperial Subterrane cell022288."
+  },
+  "next_blocker": {
+    "course": "cavern-log-activation-01",
+    "passed": false,
+    "ordinary_activation": true,
+    "reference": "content:oblivion.esm:03b49e",
+    "base": "content:oblivion.esm:051ac1",
+    "script": "content:oblivion.esm:051ac2",
+    "failure": "Error in frame: Invalid actor ragdoll: unsupported NIF version",
+    "original_asset": "meshes/dungeons/caves/traps/ctraplogs01.nif",
+    "asset_sha256": "87f0a3bb9ada73c62185bdf9e2a453ec17f53f948a958718e0a64254c7a4a5cd",
+    "asset_version": "10.2.0.0 / 0x0a020000",
+    "body_records": [
+      19,
+      34,
+      43,
+      52,
+      61,
+      70
+    ],
+    "bodies": "six mass20 layer14 Keyframed motion6 convex hulls",
+    "source_guard": "components/nifbullet/actorragdoll.cpp loadRagdollDefinition currently only20.0.0.4/5; NIF reader already parses10.2",
+    "next_action": "Finish current sanitizer and commit hazard chunk first. Then scoped older-reference NIF support with focused loader tests and replay from cavern-log-approach-02 pristine checkpoint. Do not change source during current helper.",
+    "asset_user_version": 10,
+    "asset_bethesda_stream_version": 9,
+    "asset_record_count": 76
+  },
+  "post_test_changes": "Documentation/evidence consolidation and copying already-executed editable manifests only; production and tests unchanged."
+}

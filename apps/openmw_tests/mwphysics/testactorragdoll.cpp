@@ -13,6 +13,8 @@
 #include <BulletCollision/CollisionShapes/btTriangleMesh.h>
 #include <apps/openmw/mwphysics/oblivionragdoll.hpp>
 #include <apps/openmw/mwclass/static.hpp>
+#include <apps/openmw/mwclass/npc.hpp>
+#include <components/esm3/loadnpc.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollvelocity.hpp>
@@ -176,6 +178,99 @@ namespace
         EXPECT_THROW(scheduler.restoreAnimatedReferenceSnapshot(mPtr, invalid, base, model), std::invalid_argument);
         EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), moved);
         scheduler.removeAnimatedReferenceBodies(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, AnimatedHazardContactsRetainIncomingVelocityAndSeparation)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        MWClass::Npc::registerSelf();
+        ESM::NPC npc;
+        npc.blank();
+        MWWorld::LiveCellRef<ESM::NPC> liveActor(mReference, &npc);
+        const MWWorld::Ptr actorPtr(&liveActor);
+        MWPhysics::PtrHolder actorHolder(actorPtr, {});
+        // Sphere/box retains nearby contact points; Bullet's specialized
+        // sphere/sphere algorithm clears its manifold on every detection.
+        btBoxShape actorShape(btVector3(.5, .5, .5));
+        btCollisionObject actor;
+        actor.setCollisionShape(&actorShape);
+        actor.setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+        actor.setUserPointer(&actorHolder);
+        actor.setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(.75, 0, 2)));
+        world.addCollisionObject(&actor, 1, -1);
+        mGraph.mBodies[0].mInfoFilter.mLayer = 14;
+        mGraph.mBodies[0].mMaxLinearVelocity = 1000;
+        mGraph.mBodies[0].mMaxAngularVelocity = 1000;
+        mGraph.mSourceHash = std::string(16, 'a');
+        const auto base = ESM::FormKey::content("props.esm", 100);
+        const std::string model = "test/trap.nif";
+        const std::array motions{NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Dynamic}};
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, motions);
+        auto saved = scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model);
+        saved.mBodies[0].mLinearVelocity = {6, 0, 0};
+        saved.mBodies[0].mNativePackedVelocity->mLinear = {6, 0, 0, 0};
+        scheduler.restoreAnimatedReferenceSnapshot(mPtr, saved, base, model);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("trap contacts");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        const auto contacts = scheduler.takeAnimatedReferenceContacts();
+        ASSERT_EQ(contacts.size(), 1u);
+        ASSERT_EQ(contacts[0].mContacts.size(), 1u);
+        const auto& impact = contacts[0].mContacts[0];
+        EXPECT_EQ(impact.mReference, mPtr);
+        EXPECT_EQ(impact.mActor, actorPtr);
+        EXPECT_EQ(impact.mBodyRecord, 12u);
+        EXPECT_EQ(impact.mLayer, 14u);
+        EXPECT_TRUE(impact.mTouching);
+        EXPECT_GT(impact.mIncomingVelocity.x(), 5.f);
+        EXPECT_LT(scheduler.captureAnimatedReferenceBodies(mPtr)[0].mLinearVelocity.x(),
+            impact.mIncomingVelocity.x());
+        EXPECT_TRUE(scheduler.takeAnimatedReferenceContacts().empty());
+
+        // Solver separation within the persistent manifold must retain the
+        // old latch without treating a merely nearby surface as a new impact.
+        const auto origin = scheduler.captureAnimatedReferenceBodies(mPtr)[0].mPose.getOrigin();
+        ASSERT_EQ(mDispatcher.getNumManifolds(), 1);
+        auto* manifold = mDispatcher.getManifoldByIndexInternal(0);
+        actor.setWorldTransform(btTransform(btQuaternion::getIdentity(), origin + btVector3(1.005, 0, 0)));
+        // Refresh the existing manifold directly: a full broadphase update
+        // may retire the pair entirely, which is the separation case below.
+        manifold->refreshContactPoints(manifold->getBody0()->getWorldTransform(),
+            manifold->getBody1()->getWorldTransform());
+        ASSERT_EQ(manifold->getNumContacts(), 1);
+        ASSERT_GT(manifold->getContactPoint(0).getDistance(), 0);
+        static_cast<btDiscreteDynamicsWorld&>(world).solveConstraints(world.getSolverInfo());
+        const auto near = scheduler.takeAnimatedReferenceContacts();
+        ASSERT_EQ(near.size(), 1u);
+        ASSERT_EQ(near[0].mContacts.size(), 1u);
+        EXPECT_FALSE(near[0].mContacts[0].mTouching);
+
+        actor.setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(10, 0, 2)));
+        world.updateSingleAabb(&actor);
+        time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frames[1], osg::Timer::instance()->tick(), 1,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        const auto separated = scheduler.takeAnimatedReferenceContacts();
+        ASSERT_EQ(separated.size(), 1u);
+        EXPECT_TRUE(separated[0].mContacts.empty());
+
+        scheduler.removeAnimatedReferenceBodies(mPtr);
+        mGraph.mBodies[0].mInfoFilter.mLayer = 10; // Chain links are not the damaging weight.
+        actor.setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(.75, 0, 2)));
+        world.updateSingleAabb(&actor);
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1, motions);
+        time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 2,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        const auto chain = scheduler.takeAnimatedReferenceContacts();
+        ASSERT_EQ(chain.size(), 1u);
+        EXPECT_TRUE(chain[0].mContacts.empty());
+        scheduler.removeAnimatedReferenceBodies(mPtr);
+        world.removeCollisionObject(&actor);
     }
 
     TEST_P(RagdollSchedulerTest, AnimatedReferenceBodiesFallPersistAndRemainSeparateFromActors)

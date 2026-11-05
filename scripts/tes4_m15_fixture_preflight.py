@@ -156,6 +156,7 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
+    Version86 adds empty trap-contact ownership; these fixtures have no contacts.
     Version85 adds an empty animated-reference body collection; these fixture
     sources contain no released reference bodies.
     Version84 adds optional base essential flags, absent in these fixtures.
@@ -167,7 +168,7 @@ def is_current_fixture_schema(target, current, minimum):
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 85)
+            and target == current and minimum <= target <= 86)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):

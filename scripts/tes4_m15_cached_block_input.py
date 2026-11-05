@@ -51,6 +51,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     expected['schema_version'] = recipe['target_schema']
     expected.setdefault('native_loose_weapons', [])
     expected.setdefault('native_animated_references', [])
+    expected.setdefault('native_trap_contacts', [])
     expected.setdefault('native_movement', None)
     expected.setdefault('spoken_dialogue_infos', [])
     expected.setdefault('ignore_friendly_hits', {})

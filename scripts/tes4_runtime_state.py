@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 85
+CURRENT_VERSION = 86
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -36,6 +36,10 @@ DEFAULT_MIGRATION_CLASS = "content:oblivion.esm:0230e6"
 
 class RuntimeStateError(RuntimeError):
     pass
+
+
+def _trap_contact_order(contact: dict[str, Any]) -> tuple:
+    return (*contact["reference"].split(":"), contact["body_record"], *contact["actor"].split(":"))
 
 
 def _global_identity(value: Any) -> tuple[str, str, int]:
@@ -1661,6 +1665,27 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 if not isinstance(force, list) or len(force) != 4:
                     raise RuntimeStateError("Invalid TES4 generated controller force lanes")
                 for component in force: native_float(component)
+    contacts = check_collection(state.get("native_trap_contacts", []), "native trap contact list")
+    if version < 86 and contacts:
+        raise RuntimeStateError("Trap contacts require version86")
+    trap_bodies = {entry["reference"]: {body["record"]: body for body in entry["bodies"]} for entry in animated}
+    previous_contact = None
+    for contact in contacts:
+        if not isinstance(contact, dict) or set(contact) != {"reference", "body_record", "actor"}:
+            raise RuntimeStateError("Invalid trap contact shape")
+        native_key(contact["reference"]); native_key(contact["actor"])
+        record = contact["body_record"]
+        if type(record) is not int or not 0 <= record <= 0xffffffff:
+            raise RuntimeStateError("Invalid trap contact body identity")
+        body = trap_bodies.get(contact["reference"], {}).get(record)
+        if (body is None or body.get("native_motion") == 7
+                or contact["actor"] != player["reference"] and contact["actor"] not in native_keys):
+            raise RuntimeStateError("Dangling trap contact owner, actor or movable body")
+        order = _trap_contact_order(contact)
+        if previous_contact is not None and order <= previous_contact:
+            raise RuntimeStateError("Noncanonical trap contact list")
+        previous_contact = order
+
     melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
     if version < 21 and melee_states:
         raise RuntimeStateError("TES4 melee state requires version 21")
@@ -3353,6 +3378,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                          for _ in range(reader.count())]
             owners.append({"actor": actor, "abilities": abilities}); previous = order
         result["native_bound_abilities"] = owners
+    if version >= 86:
+        result["native_trap_contacts"] = [
+            {"reference": reader.string(), "body_record": reader.unpack("<I"), "actor": reader.string()}
+            for _ in range(reader.count())]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -4147,6 +4176,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             for ability in owner["abilities"]:
                 writer.string(ability["spell"])
                 _write_inventory(writer, ability.get("displaced_inventory", []), 82)
+    if version >= 86:
+        contacts = state.get("native_trap_contacts", [])
+        writer.pack("<I", len(contacts))
+        for contact in contacts:
+            writer.string(contact["reference"])
+            writer.pack("<I", contact["body_record"])
+            writer.string(contact["actor"])
     return writer.finish()
 
 
@@ -4281,6 +4317,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 85 and state.get("native_animated_references"):
         raise RuntimeStateError("Cannot infer animated reference bodies from an older schema")
     state.setdefault("native_animated_references", [])
+    if state.get("schema_version", 1) < 86 and state.get("native_trap_contacts"):
+        raise RuntimeStateError("Cannot infer trap contacts from an older schema")
+    state.setdefault("native_trap_contacts", [])
 
 
 def _upgrade_loose_weapons(state: dict[str, Any]) -> None:
