@@ -1,0 +1,31 @@
+{
+  "scope": "GetParentRef identity used by original Natural Caverns trigger; static original instruction inspection and installed-record audit, not a live-game probe",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "command": {
+    "opcode": "0x1113",
+    "table_entry": "0xb0f3b8",
+    "handler": "0x50c1c0",
+    "observations": [
+      "Handler initializes result to zero; null subject and null parent leave it zero.",
+      "Handler calls 0x4d7990, which queries subject extra data at +0x44 through 0x420260.",
+      "0x420260 requests extra-data type0x3f via0x41e210 and returns its reference pointer at+0x0c.",
+      "Handler reads returned reference FormID at+0x0c and passes it to result conversion0x4f9fb0.",
+      "This lookup is immediate; it does not traverse the parent chain or use the owning CELL."
+    ],
+    "layout_crosscheck": "Cached xOBSE GameExtraData.h ExtraEnableStateParent layout; instruction path is the primary evidence."
+  },
+  "original_content": {
+    "trigger_reference": "051acd",
+    "trigger_base": "051ace",
+    "script": "051acf",
+    "XESP_parent": "03b513",
+    "script_behavior": "On Player trigger, assigns GetParentRef to local target, invokes target.EvaluatePackage, then sets triggered=1."
+  },
+  "implementation_discrepancy": "Metadata mParent is owning CELL; mEnableParent is XESP. Returning mParent sends EvaluatePackage to a cell.",
+  "local_evidence": "build/oblivion-compat/sewer-escape/inspect_parentref.py; original executable objdump ranges50c1c0..50c220,4d7990..4d7998,420260..420271; original master raw subrecord inspection",
+  "limitations": [
+    "No original instructions executed by an emulator in this check.",
+    "Dynamic runtime changes to enable-parent links are outside this repair."
+  ]
+}

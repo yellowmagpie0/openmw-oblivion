@@ -2114,7 +2114,8 @@ namespace MWWorld
         if (name == "getparentref")
         {
             const ESM::FormRecordMetadata* metadata = mStore.getFormKeyIndex().resolve(objectKey());
-            return ObScript::ReferenceValue{ metadata && metadata->mParent ? *metadata->mParent : ESM::FormKey{}, {} };
+            return ObScript::ReferenceValue{
+                metadata && metadata->mEnableParent ? *metadata->mEnableParent : ESM::FormKey{}, {} };
         }
         if (name == "getknockedstate")
             return std::int64_t(mWorld.getOblivionScriptKnockedState(objectKey()).value_or(0.0));

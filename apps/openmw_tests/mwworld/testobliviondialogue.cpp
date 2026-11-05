@@ -1202,6 +1202,30 @@ TEST(OblivionEnableParent, NativeBitZeroOverridesOwnFlagAndCyclesAreExplicit)
     }
 }
 
+TEST(OblivionEnableParent, GetParentRefReturnsImmediateEnableParentRatherThanOwningCell)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted, true);
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        const auto query = [&](unsigned reference) {
+            ObScript::RuntimeContext context;
+            context.mSelf = key(reference);
+            return std::get<ObScript::ReferenceValue>(scripts.call("GetParentRef", {}, {}, context, {})).mKey;
+        };
+        EXPECT_EQ(query(0xb02), key(0xa00));
+        EXPECT_EQ(query(0xb06), key(0xa00)); // Inversion does not change parent identity.
+        EXPECT_EQ(query(0xb07), key(0xb06)); // Return the immediate parent, not the root.
+        EXPECT_TRUE(query(0xa00).isNull()); // Owning CELL is not an enable parent.
+        EXPECT_TRUE(query(0xdead).isNull());
+
+        ObScript::RuntimeContext context;
+        context.mSelf = key(0xb02);
+        const auto parent = scripts.call("GetParentRef", {}, {}, context, {});
+        EXPECT_NO_THROW(scripts.call("EvaluatePackage", parent, {}, context, {}));
+    }
+}
+
 TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChanges)
 {
     for (bool shifted : {false, true})

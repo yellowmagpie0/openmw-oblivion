@@ -1,6 +1,59 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — first goblin defeated and reloaded, 2026-11-04
+## Current checkpoint — second-goblin trigger repaired and reloaded, 2026-11-04
+
+Full escape remains incomplete: remaining goblin dungeon, escort reunion,
+Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
+reload and continuous full playthrough. Current chunk: approach/fight goblin
+03b513 beyond the western bend, then continue toward the cavern exit.
+
+`cavern-western-bend-01` reaches all nine waypoints but FAILS acceptance:
+original trigger051acd/script051acf repeatedly diagnoses EvaluatePackage on a
+non-actor. Its saved target local is cell0380bd and triggered=0. GetParentRef
+incorrectly returned metadata.mParent (owning CELL), rather than mEnableParent
+(XESP). Original XESP points to goblin03b513. Hash-identified original command
+handler50c1c0 reads enable-parent extra data via4d7990/420260; bounded static
+instruction/content evidence is in [SEWER-PARENTREF-ORACLE.json](SEWER-PARENTREF-ORACLE.json).
+No original emulator/live-game execution claim. Initial inspection helper lacked
+Capstone; corrected stdlib address lookup plus objdump supplied inspection.
+
+The production lookup now returns immediate mEnableParent or null. Regression
+covers ordinary/inverted links, immediate versus root identity, owning-cell
+exclusion, missing reference, and parent-targeted EvaluatePackage in both load
+layouts. `parent-ref-focused-01` PASSES all3 enable-parent cases and rebuilds
+openmw/esmtool. `parent-ref-engine-01` PASSES all2168 engine tests, exact inventory,
+zero failures/skips. Source fingerprint
+`99907a20e4a05e4058c89a7ff8382b036c814be4570c5c456f5549bc18719f75`.
+Runtime SHA256 `7732c91388744538ec6243ad735c892934ab09e3541b0b82ee47cf874e2747a5`.
+Existing unrelated EffectSettingData missing-initializer compiler warning remains;
+no new sanitizer claim. No Python implementation changes.
+
+`cavern-western-bend-02` PASSES repeat from the pristine first-goblin reload:
+original nodes35,38,39,43,46,47,48,49,50. Original EvaluatePackage targets03b513
+exactly once and reports evaluated=true; saved locals target=03b513, triggered=1.
+Health31.90 unchanged. `cavern-trigger-reload-01` PASSES fresh load/resave and
+checks exact trigger state and Player values/inventory with no EvaluatePackage
+replay. `trigger-restart-audit.json` and captures inspected. Both passing runs
+have no forbidden/unreviewed errors. Failed01 remains failed.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/cavern-trigger-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `8e9b6f91dfdc71c8256fa1c21b25dbfadcc3f3a277ed3509b7add363d817b715`.
+Player(87.65,1774.84,-296.47), yaw1.59043/pitch0, health31.90, Club and armor.
+Second goblin is visible ahead; still alive, latest position near(788,1813,-206).
+Next path nodes0(311,1789,-258),1(522,1758,-256),5(813,1800,-254); stop walking
+when engaged, then use ordinary combat. Do not consume health waiting on a
+waypoint after enemy knockback. All runtime/build processes terminal.
+
+Editable course: `scripts/data/oblivion_compat/oblivion_sewer_cavern_western_bend.json`.
+Trigger reload reuses `oblivion_sewer_cavern_first_goblin_reload.json`; its saved
+script-state/no-replay comparison is the separate audit. Ignored helper
+`prepare_cavern_walk.py ROUTE START END LABEL` builds courses from route JSON,
+with START inclusive/END exclusive. `cavern-second-goblin-path.json` indices10–12
+are the three remaining approach nodes. Earlier source/component evidence keeps
+its original provenance. Full continuous prison-to-outdoors course remains open.
+
+## History — first goblin defeated and reloaded, 2026-11-04
 
 Full escape remains incomplete: remaining goblin dungeon, escort reunion,
 Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
