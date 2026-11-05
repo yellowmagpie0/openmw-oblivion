@@ -109,3 +109,43 @@ TEST(ESM4CombatSpellPower, IntegerProductsRoundOnceAtOriginalPrecisionBeforeFloa
     }
     EXPECT_EQ(checked, 76u);
 }
+
+TEST(ESM4SpellCost, TutorialHealMatchesOriginalCostRoutine)
+{
+    ESM4::SpellCostSettings settings;
+    settings.mSkillBase = .2f;
+    settings.mMagnitudeExponent = 1.28f;
+    const ESM4::SpellEffectCostInput heal{10.f, 8, 0, 0, false};
+    // Hash-pinned original SpellItem virtual41D320, including original math
+    // and effect-list traversal; only the integer actor AV getter is stubbed.
+    struct Case { int skill; int luck; float cost; };
+    for (const auto& row : std::array<Case, 6>{{{5, 50, 19}, {25, 50, 15}, {50, 50, 11},
+             {100, 50, 2}, {5, 0, 20}, {5, 100, 15}}})
+        EXPECT_FLOAT_EQ(ESM4::spellEffectMagickaCost(heal, row.skill, row.luck, settings), row.cost);
+    auto ranged = heal;
+    ranged.mTarget = true;
+    EXPECT_FLOAT_EQ(ESM4::spellEffectMagickaCost(ranged, 5, 50, settings), 28.f);
+    EXPECT_FLOAT_EQ(ESM4::manualSpellMagickaCost(0, 5, 50, settings), 0.f);
+    EXPECT_NEAR(ESM4::manualSpellMagickaCost(1, 5, 50, settings), 1.34f, .0001f);
+    EXPECT_NEAR(ESM4::manualSpellMagickaCost(24, 5, 50, settings), 32.16f, .0001f);
+}
+
+TEST(ESM4SpellCost, ValidatesCostInputsAndRetainsCalculatedMinimum)
+{
+    ESM4::SpellCostSettings settings;
+    const ESM4::SpellEffectCostInput empty{0.f, 0, 0, 0, false};
+    EXPECT_FLOAT_EQ(ESM4::spellEffectMagickaCost(empty, 5, 50, settings), 1.f);
+    auto invalid = empty;
+    invalid.mBaseCost = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::spellEffectMagickaCost(invalid, 5, 50, settings), std::invalid_argument);
+    invalid = empty;
+    invalid.mMagnitude = std::numeric_limits<std::uint32_t>::max();
+    EXPECT_THROW(ESM4::spellEffectMagickaCost(invalid, 5, 50, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::manualSpellMagickaCost(std::numeric_limits<std::uint32_t>::max(), 5, 50, settings),
+        std::invalid_argument);
+    settings.mSkillMultiplier = -1.f;
+    EXPECT_THROW(ESM4::manualSpellMagickaCost(24, 5, 50, settings), std::invalid_argument);
+    settings = {};
+    settings.mMagnitudeExponent = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::spellEffectMagickaCost({10.f, 8, 0, 0, false}, 5, 50, settings), std::invalid_argument);
+}

@@ -99,6 +99,21 @@ Player (5508.464,3257.950,-448.217), health 9.670021, axe equipped; no healing
 potions left. Seven encountered cavern goblins are dead. Capture inspected;
 upright corpses remain a known presentation gap.
 
+## Magic prerequisite — spell cost rule implemented, not yet wired
+
+`components/esm4/magiccaster` now has calculated-effect and manual spell-cost
+queries. Eleven original-executable cases run the complete SpellItem cost path,
+including original pow/skill/luck arithmetic; only integer actor AV getters are
+stubbed. Heal Minor Wounds000136 ignores stored cost24 because flag bit0 is clear:
+its calculated cost at Restoration5/Luck50 is19. Manual flag1 keeps fractional
+skill-adjusted cost and permits zero. Winning master overrides cost scale to1.28
+and skill base to0.2; compiled defaults differ and must not be used unconditionally.
+Focused new cost and existing spell-power component suites pass. Evidence:
+[SEWER-SPELL-COST-VERIFICATION.json](SEWER-SPELL-COST-VERIFICATION.json).
+No game binary rebuild, runtime casting or sanitizer acceptance is claimed here;
+these gates belong to the upcoming casting integration. Gameplay checkpoint above
+is unchanged. Stop expanding formula auditing now that the cost branch is resolved.
+
 ## Next bounded chunk — tutorial magic and shaman, then reunion
 
 World::castSpell currently rejects all TES4 spell execution. Original Player

@@ -5,6 +5,38 @@
 
 namespace ESM4
 {
+    struct SpellCostSettings
+    {
+        // Compiled defaults; callers resolve winning GMST overrides.
+        float mAreaMultiplier = .15f;
+        float mDurationMultiplier = .1f;
+        float mMagnitudeExponent = 1.25f;
+        float mTargetMultiplier = 1.5f;
+        float mSkillBase = .1f;
+        float mSkillMultiplier = 1.2f;
+        float mLuckMultiplier = .4f;
+        std::int32_t mLuckBase = -20;
+    };
+
+    struct SpellEffectCostInput
+    {
+        float mBaseCost;
+        std::uint32_t mMagnitude;
+        std::uint32_t mDuration;
+        std::uint32_t mArea;
+        bool mTarget;
+    };
+
+    // Inputs have already applied MGEF NoMagnitude/NoDuration/NoArea flags
+    // and self-range area suppression. Script effects and school selection
+    // belong to the caller. These queries do not debit Magicka or cast.
+    float spellEffectMagickaCost(const SpellEffectCostInput& effect, std::int32_t skill,
+        std::int32_t luck, const SpellCostSettings& settings);
+    // Spell flag bit 0 selects stored cost, which keeps its fractional
+    // skill-adjusted result instead of the calculated per-effect minimum.
+    float manualSpellMagickaCost(std::uint32_t cost, std::int32_t skill,
+        std::int32_t luck, const SpellCostSettings& settings);
+
     struct CombatSpellPowerSettings
     {
         float mFatigueBase = 0.f;

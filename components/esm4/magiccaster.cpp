@@ -1,11 +1,36 @@
 #include "magiccaster.hpp"
+#include <algorithm>
 #include <bit>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 namespace ESM4
 {
     namespace
     {
+        void validateSpellCostSettings(const SpellCostSettings& settings)
+        {
+            for (float value : {settings.mAreaMultiplier, settings.mDurationMultiplier,
+                     settings.mMagnitudeExponent, settings.mTargetMultiplier, settings.mSkillBase,
+                     settings.mSkillMultiplier, settings.mLuckMultiplier})
+                if (!std::isfinite(value) || value < 0)
+                    throw std::invalid_argument("invalid native spell cost setting");
+        }
+
+        double spellCostSkillFactor(std::int32_t skill, std::int32_t luck, const SpellCostSettings& settings)
+        {
+            const double adjusted = std::clamp(double(skill) + double(luck) * settings.mLuckMultiplier
+                    + settings.mLuckBase, 0., 100.);
+            return settings.mSkillBase + (1. - adjusted / 100.) * settings.mSkillMultiplier;
+        }
+
+        float checkedSpellCost(double cost)
+        {
+            if (!std::isfinite(cost) || cost < 0 || cost > std::numeric_limits<float>::max())
+                throw std::invalid_argument("native spell cost overflow");
+            return static_cast<float>(cost);
+        }
+
         float integerRatio24(std::int32_t numerator, std::int32_t denominator)
         {
             const bool negative = (numerator < 0) != (denominator < 0);
@@ -64,6 +89,35 @@ namespace ESM4
             const double mantissa = lower + (fraction > .5 || (fraction == .5 && static_cast<std::uint32_t>(lower) % 2));
             return std::copysign(std::ldexp(mantissa, exponent - 24), value);
         }
+    }
+
+    float spellEffectMagickaCost(const SpellEffectCostInput& effect, std::int32_t skill,
+        std::int32_t luck, const SpellCostSettings& settings)
+    {
+        validateSpellCostSettings(settings);
+        if (!std::isfinite(effect.mBaseCost) || effect.mBaseCost < 0)
+            throw std::invalid_argument("invalid native effect base cost");
+        for (auto value : {effect.mMagnitude, effect.mDuration, effect.mArea})
+            if (value > std::uint32_t(std::numeric_limits<std::int32_t>::max()))
+                throw std::invalid_argument("unrepresentable native spell cost input");
+        const double area = std::max(1., double(effect.mArea) * settings.mAreaMultiplier);
+        const double magnitude = std::pow(double(std::max(1u, effect.mMagnitude)), settings.mMagnitudeExponent);
+        const double base = effect.mBaseCost * double(settings.mDurationMultiplier)
+            * std::max(1u, effect.mDuration) * area * magnitude
+            * (effect.mTarget ? settings.mTargetMultiplier : 1.f);
+        const float cost = checkedSpellCost(base * spellCostSkillFactor(skill, luck, settings));
+        // Original 413890 floors each calculated effect and applies a minimum
+        // of one. Gameplay arithmetic uses ordinary floating point here.
+        return std::max(1.f, std::floor(cost));
+    }
+
+    float manualSpellMagickaCost(std::uint32_t cost, std::int32_t skill,
+        std::int32_t luck, const SpellCostSettings& settings)
+    {
+        validateSpellCostSettings(settings);
+        if (cost > std::uint32_t(std::numeric_limits<std::int32_t>::max()))
+            throw std::invalid_argument("unrepresentable native manual spell cost");
+        return checkedSpellCost(cost * spellCostSkillFactor(skill, luck, settings));
     }
 
     void validateCombatSpellPowerSettings(const CombatSpellPowerSettings& settings)
