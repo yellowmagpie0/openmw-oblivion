@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "scope": "Creature castable-only leveled spell lists do not block melee contact admission",
+  "accepted": true,
+  "full_shaman_encounter_accepted": false,
+  "original_content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "independent_audit": "build/oblivion-compat/sewer-escape/shaman-castable-list-original-records.json",
+    "creature": "03b52d",
+    "list": "090617",
+    "chance_none": 0,
+    "flags": 7,
+    "children": [
+      {
+        "spell": "0a97df",
+        "name": "Flare",
+        "type": 0,
+        "effect": "FIDG",
+        "magnitude": 6,
+        "range": 2,
+        "duration": 0
+      },
+      {
+        "spell": "0a97a7",
+        "name": "Protect",
+        "type": 0,
+        "effect": "SHLD",
+        "magnitude": 5,
+        "range": 0,
+        "duration": 30
+      }
+    ]
+  },
+  "behavior": "Validate winning direct child spells and classify ordinary spells/powers separately from passive abilities and diseases. Castable-only lists contribute no contact effects. This classification neither rolls spell selection nor casts or applies their effects. Mixed, unresolved, deleted and malformed sources remain rejected.",
+  "checks": [
+    {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-castable-list-focused-01",
+      "scope": "New castable-list classification and invalid/mixed source regression",
+      "passed": true
+    },
+    {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-contact-regression-01",
+      "scope": "Existing creature disease selection/contact, passive abilities and natural/victim contact plus new classification",
+      "passed": true
+    },
+    {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-normal-integration-01",
+      "scope": "Full normal engine and component inventories",
+      "engine_cases": 2186,
+      "component_cases": 3259,
+      "passed": true,
+      "source": {
+        "head": "006fe184de4992632b5dd1403e4b9104c49dcf05",
+        "source_fingerprint": "736f75c9b34d50705bdc8369e91168fc78008a5c7a55538a01a5e4c9ccf9c79a"
+      }
+    }
+  ],
+  "runtime": {
+    "before": "build/oblivion-compat/sewer-escape/shaman-contact-02",
+    "finding": "Player axe and shaman natural attacks commit real damage, fatigue and wear after classification repair. The Player subsequently dies; the course is retained as a failure and is not victory acceptance.",
+    "after": "build/oblivion-compat/sewer-escape/shaman-fight-03"
+  },
+  "limitations": [
+    "General leveled spell selection and NPC casting remain separate work.",
+    "The tested dirty source also includes the in-progress staff/projectile integration; evidence retains that fingerprint rather than claiming a clean-revision run.",
+    "No fresh sanitizer claim for this isolated classification fix; broader staff integration validation remains outstanding."
+  ]
+}

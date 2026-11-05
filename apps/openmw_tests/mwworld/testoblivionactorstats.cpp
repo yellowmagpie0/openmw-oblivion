@@ -8251,3 +8251,53 @@ TEST_F(OblivionActorStatsTest, compiledParalysisContinuationOwnsReplacementResis
             EXPECT_TRUE(service.isActionConsumed(1));
         }
     }
+
+TEST(OblivionCreatureSpells, CastableLeveledListsDoNotBecomeMeleeContactEffects)
+{
+    MWWorld::ESMStore store;
+    const auto key = [](unsigned id) { return ESM::FormKey::content("witch.esm", id); };
+    ESM4::Creature creature{};
+    creature.mId = {0x3b52d, 2}; creature.mFormKey = key(0x3b52d);
+    creature.mSpell = {{0x90617, 2}};
+    store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+    ESM4::Spell flare{}, protect{};
+    flare.mId = {0xa97df, 2}; flare.mFormKey = key(0xa97df);
+    flare.mData = ESM4::SpellData{0, 9, 0, 0, {}};
+    flare.mEffects = {{ESM::fourCC("FIDG"), 6, 0, 0, 2, 8, {}}};
+    protect.mId = {0xa97a7, 2}; protect.mFormKey = key(0xa97a7);
+    protect.mData = ESM4::SpellData{0, 10, 0, 4, {}};
+    protect.mEffects = {{ESM::fourCC("SHLD"), 5, 0, 30, 0, 43, {}}};
+    store.getWritable<ESM4::Spell>().insertStatic(flare, flare.mFormKey);
+    store.getWritable<ESM4::Spell>().insertStatic(protect, protect.mFormKey);
+    ESM4::LevelledSpell list{};
+    list.mId = {0x90617, 2}; list.mFormKey = key(0x90617);
+    list.mChanceNone = 0; list.mListFlags = 7;
+    list.mEntries = {{1, flare.mId, flare.mFormKey, 1}, {1, protect.mId, protect.mFormKey, 1}};
+    const auto publishList = [&] { store.getWritable<ESM4::LevelledSpell>().insertStatic(list, list.mFormKey); };
+    const auto resolve = [&] { return MWWorld::resolveOblivionCreatureContactSpellSources(store, creature.mFormKey); };
+    publishList();
+    auto sources = resolve();
+    ASSERT_TRUE(sources); EXPECT_TRUE(sources->empty());
+    const auto abilities = MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, creature.mFormKey);
+    ASSERT_TRUE(abilities); EXPECT_TRUE(abilities->empty());
+    // A learned timed Shield spell is not an already-applied passive Shield.
+    // Mixed passive/disease lists still require their own effect ownership.
+    for (unsigned type : {1u, 4u, 5u})
+    {
+        protect.mData->mType = type;
+        store.getWritable<ESM4::Spell>().insertStatic(protect, protect.mFormKey);
+        EXPECT_FALSE(resolve()) << type;
+    }
+    protect.mData->mType = 0;
+    protect.mFlags = ESM4::Rec_Deleted;
+    store.getWritable<ESM4::Spell>().insertStatic(protect, protect.mFormKey);
+    EXPECT_FALSE(resolve());
+    protect.mFlags = 0;
+    store.getWritable<ESM4::Spell>().insertStatic(protect, protect.mFormKey);
+    list.mEntries.back().mSpellKey = key(0xdead); publishList(); EXPECT_FALSE(resolve());
+    list.mEntries.back().mSpellKey = protect.mFormKey;
+    list.mListFlags = 8; publishList(); EXPECT_FALSE(resolve());
+    list.mListFlags = 7; list.mEntries.back().mCount = 0; publishList(); EXPECT_FALSE(resolve());
+    list.mEntries.back().mCount = 1; publishList();
+    sources = resolve(); ASSERT_TRUE(sources); EXPECT_TRUE(sources->empty());
+}

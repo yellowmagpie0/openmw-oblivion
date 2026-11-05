@@ -600,11 +600,28 @@ namespace MWWorld
             const auto* list = lists.search(id);
             if (!list || (list->mFlags & ESM4::Rec_Deleted) || list->mFormKey.isNull()
                 || !list->mChanceNone || *list->mChanceNone > 100 || !list->mListFlags
-                || (*list->mListFlags & ~3u) || list->mEntries.size() != 1
-                || list->mEntries[0].mCount != 1 || list->mEntries[0].mSpellKey.isNull())
+                || (*list->mListFlags & ~7u))
                 return std::nullopt;
             if (const auto* winner = store.getFormKeyIndex().winner(list->mFormKey);
                 winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_LVSP))
+                return std::nullopt;
+            // Castable spells do not apply on a melee contact. In particular,
+            // the tutorial witch's use-all list contains Flare and Protect,
+            // not diseases or passive abilities. Selection/casting ownership
+            // is separate; no contact selection or RNG draw is needed here.
+            const bool castableOnly = !list->mEntries.empty()
+                && std::all_of(list->mEntries.begin(), list->mEntries.end(), [&](const auto& entry) {
+                    if (entry.mSpellKey.isNull() || entry.mCount == 0) return false;
+                    const auto* child = spells.searchStatic(entry.mSpellKey);
+                    if (!child || (child->mFlags & ESM4::Rec_Deleted) || !child->mData) return false;
+                    if (const auto* winner = store.getFormKeyIndex().winner(entry.mSpellKey);
+                        winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL)) return false;
+                    const auto type = child->mData->mType;
+                    return type == 0 || type == 2 || type == 3;
+                });
+            if (castableOnly) continue;
+            if ((*list->mListFlags & ~3u) || list->mEntries.size() != 1
+                || list->mEntries[0].mCount != 1 || list->mEntries[0].mSpellKey.isNull())
                 return std::nullopt;
             const auto& key = list->mEntries[0].mSpellKey;
             const auto* disease = spells.searchStatic(key);
