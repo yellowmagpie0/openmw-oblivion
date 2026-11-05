@@ -7,7 +7,7 @@ using ordinary controls and original quest progression. Include equipment/loot,
 combat/traversal, escort reunion, Emperor death/Amulet, character choices,
 MQ01 stage 88 exit and fresh-process save/load outdoors. No console progression,
 injected completion state or skipped required encounters qualifies.
-**The full escape is incomplete.** Remaining: eastern cavern encounters and rest of
+**The full escape is incomplete.** Remaining: shaman encounter and rest of
 the caverns, reunion, Emperor/Amulet, character choices, final exit/outdoor reload,
 and the continuous prison-to-outdoors acceptance run. Goblin corpses still
 appear upright; dead-actor physical pushback/presentation needs follow-up.
@@ -78,22 +78,44 @@ No engine changes or additional broad builds were needed. Container activation
 currently takes all contents with a notification; selective browsing and Lua
 Container.content support for TES4 containers remain separate limitations.
 
+The healing/patrol continuation and hashes remain in its verification index.
+
+## Current continuation — eastern goblin verified, 2026-11-04
+
+The initial eastern fight failed with Player death using the worn club. A normal
+inventory switch equips the already-owned Rusty Iron War Axe 090613, then a
+continuous seven-node approach and melee course defeats goblin 03b52f. This is
+ordinary inventory/navigation/attack input, no health or completion injection.
+The axe still deals about 0.82 per hit; the successful course is not evidence of
+a large weapon-damage improvement. Death, failed wait, wrong initial weapon label,
+and input-delivery failures are preserved in
+[SEWER-EASTERN-CAVERN-VERIFICATION.json](SEWER-EASTERN-CAVERN-VERIFICATION.json).
+No implementation changed; prior build/sanitizer results retain their provenance.
+
 Current genuine continuation save:
-`build/oblivion-compat/sewer-escape/cavern-arena-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256:`bd016069aa8a8b0331917358352ca2402cf10609524100a7348bbdd4aacfc0cd`.
-Player (4468.253,2764.886,-481.258), health 29.620010; no healing potions left.
-The chest and all six encountered cavern goblin deaths remain consumed.
+`build/oblivion-compat/sewer-escape/cavern-eastern-combined-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256:`510e8a520909b21756bce107a8a703edeb05fda7850726693d1cede234e7c1db`.
+Player (5508.464,3257.950,-448.217), health 9.670021, axe equipped; no healing
+potions left. Seven encountered cavern goblins are dead. Capture inspected;
+upright corpses remain a known presentation gap.
 
-## Next bounded chunk — eastern cavern encounters and reunion
+## Next bounded chunk — tutorial magic and shaman, then reunion
 
-Continue from pathgrid node 240 toward eastern goblin 03b52f near (5865,3543,-454),
-then shaman 03b52e near (5508,4520,-401), remaining cavern traversal and exit.
-Prepared ordinary-input approach (not yet run):
-`build/oblivion-compat/sewer-escape/cavern-eastern-approach-prepared.json`.
-Audited path: `cavern-patrol-to-eastern-goblin-path.json` in the same evidence root.
-Remaining rats 047b65/66/67 and any original triggers must be checked as encountered.
-Door 03816c at (4384,6144,64) connects to 026c36 in ImperialDungeon02 /
-Imperial Subterrane cell 022288, near (3200,3203,-761). Reunion remains original-record
+World::castSpell currently rejects all TES4 spell execution. Original Player
+NPC_000007 owns Heal Minor Wounds 000136 (REHE 8, self, instant) and Flare.
+Shaman 03b52e / base03b52d owns staff066c45 with enchantment066c42 (SHDG 5,
+target, instant). Audit actual cost/casting/effect rules, implement the required
+normal-input healing path and prove resource/save ownership, then verify the
+shaman's actual staff behavior. Do not accept an inert shaman as a complete fight
+or broaden into unrelated magic before these tutorial abilities work.
+Raw original-record audit is ignored: `cavern-next-magic-record-audit.json` under
+`build/oblivion-compat/sewer-escape/`; normalized facts are in the evidence index.
+
+Prepared shaman approach (not yet run): `cavern-shaman-approach-prepared.json` in
+that evidence root, with audited path `cavern-eastern-to-shaman-path.json`.
+Remaining rats 047b65/66/67 and original triggers must be checked as encountered.
+Door03816c at (4384,6144,64) connects to 026c36 in ImperialDungeon02 /
+Imperial Subterrane cell022288, near (3200,3203,-761). Reunion remains original-record
 inspection, not traversal acceptance. Full-course requirements above remain open.
 
 Historical implementation details and retained failures:

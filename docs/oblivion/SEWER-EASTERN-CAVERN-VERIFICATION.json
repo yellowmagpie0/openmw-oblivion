@@ -1,0 +1,72 @@
+{
+  "scope": "Normal inventory weapon switch and eastern cavern goblin defeat; shaman and magic remain unverified",
+  "implementation_commit": "246e66e682",
+  "game_sha256": "3e3ebda7cf46c2e2e2e8cda877c95b78695059bf43e10ad8efc1a4b264a5eea6",
+  "courses": {
+    "cavern-waraxe-02": {
+      "passed": true,
+      "capture_inspected": true,
+      "unreviewed_errors": []
+    },
+    "cavern-eastern-combined-01": {
+      "passed": true,
+      "capture_inspected": true,
+      "unreviewed_errors": []
+    }
+  },
+  "checkpoint": {
+    "save": "build/oblivion-compat/sewer-escape/cavern-eastern-combined-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "510e8a520909b21756bce107a8a703edeb05fda7850726693d1cede234e7c1db",
+    "health": 9.670021057128906,
+    "position": [
+      5508.4638671875,
+      3257.950439453125,
+      -448.2167053222656,
+      9.322166442871094e-05,
+      0.0,
+      -1.707226037979126
+    ],
+    "goblin_life": {
+      "actor": "content:oblivion.esm:03b52f",
+      "base": "content:oblivion.esm:03b517",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    }
+  },
+  "retained_attempts": {
+    "cavern-eastern-approach-01": "Passed seven original pathgrid waypoints, took damage while traversing",
+    "cavern-eastern-fight-01": "Failed: Player died during normal club fight; preserved input save",
+    "cavern-wait-01": "Failed recovery expectation: no wait dialog or healing during chargen. No world/script errors. Rest UI uses rest-allowed/chargen gate; original tutorial acceptance needs investigation if this becomes required.",
+    "cavern-shortsword-01": "Failed input delivery: dpad button did not satisfy physical SDL barrier. Weapon was also initially misidentified; winning record is Rusty Iron War Axe.",
+    "cavern-waraxe-01": "Preflight rejected unsupported offscreen Down key; no gameplay executed"
+  },
+  "next_dependency": {
+    "source": "apps/openmw/mwworld/worldimp.cpp::castSpell",
+    "observed_code_behavior": "Oblivion profile logs M16 native magic: spell execution is unsupported and returns",
+    "winning_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "player_default_heal": {
+      "spell": "000136",
+      "name": "Heal Minor Wounds",
+      "effect": "REHE",
+      "magnitude": 8,
+      "range": "self",
+      "duration": 0,
+      "record_cost": 24,
+      "note": "Actual casting cost, eligibility and effect dispatch still require independent rule review."
+    },
+    "shaman": {
+      "actor": "03b52e",
+      "base": "03b52d",
+      "staff": "066c45",
+      "enchantment": "066c42",
+      "effect": "SHDG",
+      "magnitude": 5,
+      "range": "target",
+      "duration": 0,
+      "record_enchantment_cost": 13,
+      "note": "Actual staff selection, charge consumption, projectile and damage acceptance remain open."
+    },
+    "ignored_record_audit": "build/oblivion-compat/sewer-escape/cavern-next-magic-record-audit.json"
+  }
+}
