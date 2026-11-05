@@ -145,6 +145,14 @@ namespace MWMechanics
             return id && ESM::FormKeyResolver(world.getContentFiles()).toFormKey(*id) == expected;
         }
 
+        ESM4::ConditionValue nativePlayerSexCondition(MWWorld::World& world, std::int32_t sex)
+        {
+            const auto player = world.getPlayerPtr();
+            if (player.isEmpty()) return ESM4::ConditionValue::missing();
+            const bool male = player.get<ESM::NPC>()->mBase->isMale();
+            return ESM4::ConditionValue::value(sex == (male ? 0 : 1) ? 1.0 : 0.0);
+        }
+
         bool nativeIsGuard(MWWorld::World& world, const MWWorld::Ptr& actor, const ESM::FormKey& base)
         {
             // Original4F7B90 reads the NPC's class;51BEF0 tests class flag bit1.
@@ -1076,6 +1084,8 @@ namespace MWMechanics
                     subjectKey = ESM::FormKey::dynamic("player", 1);
                     break;
             }
+            if (condition.mFunction == 131)
+                return nativePlayerSexCondition(mWorld, condition.mParameter1.mNumber);
             if (condition.mFunction == 365)
                 return playerRealmCondition();
             const std::optional<StableLocation> subjectLocation = locationFor(subjectKey);
@@ -1910,6 +1920,7 @@ namespace MWMechanics
                 switch (condition.mFunction)
                 {
                     case 18: return value(now().mHour);
+                    case 131: return nativePlayerSexCondition(mWorld, condition.mParameter1.mNumber);
                     case 36:
                     {
                         const auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
@@ -2112,6 +2123,8 @@ namespace MWMechanics
                     subjectPtr = ptrFor(condition.mRunOnReferenceKey);
                     break;
             }
+            if (condition.mFunction == 131)
+                return nativePlayerSexCondition(mWorld, condition.mParameter1.mNumber);
             if (condition.mFunction == 365)
                 return playerRealmCondition();
             if (subjectPtr.isEmpty())

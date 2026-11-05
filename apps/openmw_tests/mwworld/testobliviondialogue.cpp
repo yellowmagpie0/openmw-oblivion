@@ -327,6 +327,30 @@ TEST(OblivionDialogueMenu, ImmediateAndResponseResultsExecuteAtTheirOwnPresentat
     }
 }
 
+TEST(OblivionDialogueMenu, PlayerSexConditionUsesCurrentPlayerInsteadOfSpeaker)
+{
+    MenuFixture f;
+    auto& world = f.mFixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    for (const bool male : {true, false, true})
+    {
+        auto base = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        base.setIsMale(male);
+        auto prepared = world.getStore().preparePlayerRecord(base);
+        world.getPlayer().set(prepared.commit());
+        for (const int sex : {0, 1, 2})
+        {
+            ESM4::PackageCondition condition{};
+            condition.mFunction = 131;
+            condition.mParameter1.mNumber = sex;
+            condition.mOperator = ESM4::ConditionOperator::Equal;
+            condition.mComparisonValue = 1;
+            EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, {}, std::span(&condition, 1)),
+                sex == (male ? 0 : 1) ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        }
+    }
+}
+
 TEST(OblivionDialogueMenu, TurnArrestConditionAndCommandConsumeTheSameOneShotSignal)
 {
     MenuFixture f;

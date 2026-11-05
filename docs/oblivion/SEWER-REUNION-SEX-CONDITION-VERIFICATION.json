@@ -1,0 +1,69 @@
+{
+  "scope": "GetPCIsSex condition reads current Player sex in dialogue, package and idle adapters; original reunion reaches42",
+  "full_escape_complete": false,
+  "checks": {
+    "player-sex-condition-retry-01": {
+      "path": "build/oblivion-compat/sewer-escape/player-sex-condition-retry-01/verification.json",
+      "source": {
+        "head": "d493953d495e12f9c808d30c635be36308f69ba0",
+        "source_fingerprint": "ac0956ae2e0fccf34e340cc4d4b7b478d80a591813ef8e3f9c0a93bfda5a37d2"
+      },
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogueMenu.PlayerSexConditionUsesCurrentPlayerInsteadOfSpeaker",
+          "binary_sha256": "e376f78e66095434a312c00657f2b4235eb1bd2c87ad295d1d36185ab92bafc8",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "809c128b4106ac53375bcd911fd28eb1261c8849a2b6ec5a63da640199a75945",
+          "inventory_sha256": "904d2deb405e4de4896ca6e720e007b48a4b123cadaa4220ec495dc9fdcc0b8f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "player-sex-dialogue-regression-01": {
+      "path": "build/oblivion-compat/sewer-escape/player-sex-dialogue-regression-01/verification.json",
+      "source": {
+        "head": "d493953d495e12f9c808d30c635be36308f69ba0",
+        "source_fingerprint": "ac0956ae2e0fccf34e340cc4d4b7b478d80a591813ef8e3f9c0a93bfda5a37d2"
+      },
+      "results": {
+        "engine": {
+          "executed": 29,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogue*.*:OblivionWorldTest.*Combat*",
+          "binary_sha256": "e376f78e66095434a312c00657f2b4235eb1bd2c87ad295d1d36185ab92bafc8",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "c82a37460ac3eb4478f1754ce6ed4aa5e71991f9a5742833f80b429977c3553e",
+          "inventory_sha256": "904d2deb405e4de4896ca6e720e007b48a4b123cadaa4220ec495dc9fdcc0b8f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "path": "build/oblivion-compat/sewer-escape/subterrane-reunion-stage42-01",
+    "passed": true,
+    "save_sha256": "f005e9b6d1166e99fe840432b10dd242e290375d64629472268c0f70f36cad8d",
+    "entry_restore": "build/oblivion-compat/sewer-escape/subterrane-reunion-stage42-01/entry-state-verification.json"
+  },
+  "original_condition": "INFO04f774 CTDA131 in original CharGen dialogue; sex parameter0 male. Same conventions as existing GetIsSex Player proxy.",
+  "retained_failures": "focused01 added package/idle callbacks but missed dialogue resolver; new test exposed unsupported result. retry01 and regression01 pass after resolver hookup. birthsign-menu01 times out at42; no menu acceptance.",
+  "next_action": "Normal Space interaction with Emperor032a18 from stage42 save; course running. Follow-up SayTo candidates require Player distance>400 and current Player is closer."
+}

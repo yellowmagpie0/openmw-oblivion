@@ -83,11 +83,15 @@ The route-continuity fix preserves the next shared waypoint across replanning;
 the authored fall approach is a bounded gameplay approximation, not exact AI parity.
 Fresh sanitizer integration for the accumulated navigation/door chunk remains due.
 
-Next blocker: `subterrane-reunion-dialogue-01` reaches original stage40 but fails
-on unsupported condition131 GetPCIsSex in INFO04f774. Add this query from Player
-sex, then resume the stage36 save in `subterrane-authored-fall-combat-01`.
-That original save SHA256 is e7a64c53c5d95612611448fe6e0dd8e57721e377590d143f150c7305442f2cb1.
-The reunion course remains failed; no birthsign or later progression is accepted.
+GetPCIsSex now reads current Player sex across dialogue/package/idle contexts;
+the new male/female mutation test and broader29 selected tests pass. Original
+reunion speech reaches42 without errors; fresh stage36 entry state matches exactly.
+Evidence: [SEWER-REUNION-SEX-CONDITION-VERIFICATION.json](SEWER-REUNION-SEX-CONDITION-VERIFICATION.json).
+Current save is `subterrane-reunion-stage42-01` under the sewer-escape evidence root.
+The idle birthsign-menu01 course times out at42: authored follow-up SayTo lines
+require distance>400, while Player is already near the Emperor. Normal Emperor
+Space interaction is running in `subterrane-emperor-interaction-01`; inspect it
+before changing progression. No birthsign or later acceptance yet.
 
 The cavern exit now works through original OnActivate script04f700 and ordinary
 Space input. StopCombatAlarmOnActor/SCAOnActor performs target-specific active
