@@ -10,7 +10,7 @@ fresh-process save/load outdoors. No injected health,
 quest/completion state or skipped required encounters qualifies.
 **Full escape remains incomplete.**
 
-Remaining: shaman victory, continuous prison-to-outdoors acceptance, review of
+Remaining: continuous prison-to-outdoors acceptance including the shaman fight, review of
 CharacterGen88 topic/autosave effects, and fresh accumulated sanitizer integration.
 The original exit and exact fresh outdoor reload now pass. All2200 normal engine
 cases pass at the source fingerprint in the exterior verification artifact.
@@ -18,7 +18,33 @@ Unchanged component3262 evidence retains its original475c provenance; no fresh
 component/Python/sanitizer result is claimed. The cancelled sanitizer run remains
 incomplete, with its reusable objects and terminal-stop receipt retained.
 
-## Current chunk — original exterior exit and fresh outdoor reload accepted
+## Current chunk — shaman victory and fresh healing continuation accepted
+
+`shaman-camera-fight-02` defeats original cavern actor03b52e/base03b52d through18
+ordinary axe contacts. The shaman releases11 real shock projectiles, consumes
+staff charge150→7 and then retaliates unarmed. Player survives at3.780029 HP;
+shaman life is Dead with Player killer and count1. No active combat engagements,
+owned actions, pending death events or projectiles remain. Native death occurs
+below1 Health; its remaining0.840938 Health does not mean the actor survived.
+
+`shaman-victory-reload-heal-01` preserves that death and executes two normal healing
+casts to17.860031 HP. The old schema87 input adds only reviewed schema88/89 empty
+owners and13 content-audited default-open poses. Every other existing field is
+retained, with only animated-body velocity projection tolerated at1e-5. The fresh
+schema89 boundary has eight such tiny velocity differences and no other changes.
+Captures inspected; the known upright goblin corpse pose remains unfixed.
+[SEWER-SHAMAN-VICTORY-VERIFICATION.json](SEWER-SHAMAN-VICTORY-VERIFICATION.json).
+
+Clean post-victory input:
+`build/oblivion-compat/sewer-escape/shaman-victory-reload-heal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+CharacterGen30, Player in Natural Caverns; no artificial health, Kill, position or
+quest writes. Recipes: `oblivion_sewer_shaman_victory.json` and
+`oblivion_sewer_shaman_victory_reload.json`. No implementation changes or repeated
+engine builds; the unchanged2200 normal gate retains its original provenance.
+The outdoor checkpoint below predates this fight. **Never splice save state**;
+the continuous opening must include the actual victory.
+
+## Prior chunk — original exterior exit and fresh outdoor reload accepted
 
 The original four-button character review accepts Finished, executes both MQ01
 stage88 result entries, disables chargen tracking, clears its skill-use history,
@@ -36,7 +62,7 @@ all prior death counts and no pending death callbacks. Captures inspected.
 [SEWER-EXTERIOR-EXIT-VERIFICATION.json](SEWER-EXTERIOR-EXIT-VERIFICATION.json).
 This closes exterior exit/reload acceptance, **not the full continuous opening**.
 
-Current clean outdoor input:
+Prior validated outdoor input:
 `build/oblivion-compat/sewer-escape/sewers03-outdoor-reload-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
 Editable recipes: `oblivion_sewer_exterior_exit.json` and
 `oblivion_sewer_outdoor_reload.json` under `scripts/data/oblivion_compat/`.
@@ -44,8 +70,7 @@ Editable recipes: `oblivion_sewer_exterior_exit.json` and
 The final indoor continuation has eight audited exact save boundaries. Three
 failed encounter probes contributed genuine pre-failure F5 checkpoints only;
 their failures remain failed and the report records each prefix. The two final
-hostile rats were defeated; the bridge goblins were avoided alive. No shaman
-victory or continuous proof follows from this composite chain.
+hostile rats were defeated; the bridge goblins were avoided alive. Shaman victory is proven separately above; continuous proof does not follow from this composite chain.
 
 Native resurrection remains bounded: Player world reset, attached preserve-state
 reset and owned-paralysis reset reject explicitly; general leveled inventory and
@@ -138,9 +163,8 @@ Glenroy, Emperor and final assassin dead once; Baurus alive. Recipes:
 
 ## Next action
 
-Return to the earlier healed cavern checkpoint and prove shaman victory through
-ordinary combat. Then review/finish CharacterGen88 AddTopic and dialogue-time
-autosave effects before the continuous prison-to-outdoors course. Batch the
+Review/finish CharacterGen88 AddTopic and dialogue-time autosave effects, then
+run the continuous prison-to-outdoors course including the proven shaman fight. Batch the
 accumulated sanitizer integration at that checkpoint. Do not inject health,
 quest stages, positions or completion to join the course.
 
@@ -178,7 +202,8 @@ Earlier accepted checkpoints:
 - [Healing casts](SEWER-HEAL-CAST-VERIFICATION.json) and
   [staff projectiles](SEWER-STAFF-PROJECTILE-VERIFICATION.json): genuine casts,
   release/flight ownership and fresh restart. General NPC spell fallback and
-  Player Flare casting remain unsupported; shaman victory is still open.
+  Player Flare casting remain unsupported; shaman victory now passes using
+  staff and unarmed retaliation, without establishing general spell selection.
 - [Subterrane entry](SEWER-SUBTERRANE-ENTRY-VERIFICATION.json) and
   [second ambush](SEWER-SECOND-AMBUSH-VERIFICATION.json): normal cavern exit,
   stage32/34/36 and both assassin deaths through original callbacks.

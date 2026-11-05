@@ -1,0 +1,228 @@
+{
+  "scope": "Original cavern shaman defeat by ordinary axe attacks against actual staff and unarmed retaliation; fresh reload and native healing. Not continuous opening acceptance.",
+  "full_escape_complete": false,
+  "runtime_executable_sha256": "c364342eeef305616bcce00aeb8b651e713e228846462c637c96a43912d9636f",
+  "reused_engine_gate": {
+    "evidence": "build/oblivion-compat/sewer-escape/exit-resurrection-normal-integration-02/verification.json",
+    "source": {
+      "head": "2ee6cd238e7a4b7052ea57c25aba059461413e52",
+      "source_fingerprint": "17ea2603c8523535c23faebc4fee7ea950b9e298411017fdc82109c650fbe241"
+    },
+    "results": {
+      "engine": {
+        "executed": 2200,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "c74ce5823005230db0226faf0fbd0e3571b20399065e0cbaa8a5298dbfcc9314",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "508bd87e479c5c7065165e081c24f4a7728a10803cac7186139e70bd21d486e2",
+        "inventory_sha256": "ee7af09f515f975e58be76f6276b2d3ea6b5dbeb13e196d985ed636d59aab285",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "implementation_changes": "No C++ or Python implementation changes. Corrected normal-input camera aiming and used ordinary short swings to conserve fatigue.",
+  "runtime": {
+    "shaman-camera-fight-02": {
+      "scenario_passed": true,
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-camera-fight-02/scenario.json",
+      "save": "build/oblivion-compat/sewer-escape/shaman-camera-fight-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "d5892d97800deb809ea140a9aa30e2cfef444f7f0ebb5451321e37129ed6b9d5",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/tutorial-heal-low-magicka-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_sha256": "9db20fa7762acc1ff9da633e28c36ec9208b0aac789d9a2602870d37afd29006",
+        "source_schema": 87,
+        "target_schema": 89,
+        "reviewed_added_defaults": {
+          "daily_package_completions": [],
+          "native_magic_projectiles": [],
+          "next_magic_projectile": 1
+        },
+        "default_open_content_audit": "build/oblivion-compat/sewer-escape/default-open-master-audit-01/verification.json",
+        "reviewed_default_open_normalization": [
+          "content:oblivion.esm:01760f",
+          "content:oblivion.esm:03f1b5",
+          "content:oblivion.esm:0432d7",
+          "content:oblivion.esm:0432d8",
+          "content:oblivion.esm:04337a",
+          "content:oblivion.esm:049188",
+          "content:oblivion.esm:04d120",
+          "content:oblivion.esm:0769a2",
+          "content:oblivion.esm:091fcb",
+          "content:oblivion.esm:0942ae",
+          "content:oblivion.esm:0943b0",
+          "content:oblivion.esm:0943b1",
+          "content:oblivion.esm:143f22"
+        ],
+        "differences": [
+          [
+            "/native_animated_references/3/bodies/2/linear_velocity/0",
+            0.005305422004312277,
+            0.005305422469973564
+          ],
+          [
+            "/native_animated_references/3/bodies/3/linear_velocity/2",
+            -1.125051994677051e-06,
+            -1.1250521083638887e-06
+          ],
+          [
+            "/native_animated_references/3/bodies/5/linear_velocity/1",
+            0.0006956797442398965,
+            0.0006956798024475574
+          ],
+          [
+            "/native_animated_references/3/bodies/6/linear_velocity/2",
+            2.9579787224065512e-05,
+            2.957978540507611e-05
+          ],
+          [
+            "/native_animated_references/3/bodies/7/linear_velocity/1",
+            -0.004415879491716623,
+            -0.004415879026055336
+          ],
+          [
+            "/native_animated_references/4/bodies/1/linear_velocity/0",
+            0.0075998432002961636,
+            0.007599842734634876
+          ],
+          [
+            "/native_animated_references/4/bodies/1/linear_velocity/1",
+            -0.008580961264669895,
+            -0.00858096219599247
+          ],
+          [
+            "/native_animated_references/4/bodies/2/linear_velocity/2",
+            -0.026054667308926582,
+            -0.02605466917157173
+          ],
+          [
+            "/native_animated_references/4/bodies/3/linear_velocity/0",
+            -0.0035391778219491243,
+            -0.003539178054779768
+          ],
+          [
+            "/native_animated_references/4/bodies/5/linear_velocity/2",
+            -0.05946353077888489,
+            -0.059463534504175186
+          ],
+          [
+            "/native_animated_references/4/bodies/6/linear_velocity/1",
+            0.12063439190387726,
+            0.12063439935445786
+          ],
+          [
+            "/native_animated_references/4/bodies/7/linear_velocity/2",
+            -0.036019328981637955,
+            -0.036019325256347656
+          ]
+        ],
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5; every other existing field exact"
+      },
+      "capture_inspected": true
+    },
+    "shaman-victory-reload-heal-01": {
+      "scenario_passed": true,
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-victory-reload-heal-01/scenario.json",
+      "save": "build/oblivion-compat/sewer-escape/shaman-victory-reload-heal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "84620fb2d4656c18e52ca06814237b3adde83799cdf4c601c662e84d15859aab",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/shaman-camera-fight-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "d5892d97800deb809ea140a9aa30e2cfef444f7f0ebb5451321e37129ed6b9d5",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/3/bodies/1/linear_velocity/0",
+            -0.0041041867807507515,
+            -0.004104186315089464
+          ],
+          [
+            "/native_animated_references/3/bodies/2/linear_velocity/2",
+            -1.1856834589707432e-06,
+            -1.185683572657581e-06
+          ],
+          [
+            "/native_animated_references/3/bodies/3/linear_velocity/2",
+            1.8452149106451543e-06,
+            1.8452147969583166e-06
+          ],
+          [
+            "/native_animated_references/3/bodies/5/linear_velocity/0",
+            -0.003770257346332073,
+            -0.003770257579162717
+          ],
+          [
+            "/native_animated_references/3/bodies/6/linear_velocity/0",
+            -0.007801421452313662,
+            -0.007801420986652374
+          ],
+          [
+            "/native_animated_references/4/bodies/1/linear_velocity/1",
+            -0.002314515644684434,
+            -0.0023145154118537903
+          ],
+          [
+            "/native_animated_references/4/bodies/3/linear_velocity/1",
+            0.007623909041285515,
+            0.007623909506946802
+          ],
+          [
+            "/native_animated_references/4/bodies/7/linear_velocity/1",
+            0.005132538266479969,
+            0.005132537800818682
+          ]
+        ]
+      },
+      "capture_inspected": true
+    }
+  },
+  "combat": {
+    "reference": "content:oblivion.esm:03b52e",
+    "base": "content:oblivion.esm:03b52d",
+    "native_health_before": 15,
+    "actual_player_contacts": 18,
+    "logged_player_damage_total": 14.159062,
+    "final_life": {
+      "actor": "content:oblivion.esm:03b52e",
+      "base": "content:oblivion.esm:03b52d",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "note": "Native death occurs below1 Health; the positive remaining0.8409376 is not a survival flag. No artificial Kill or health write.",
+    "staff_releases": 11,
+    "staff_charge_before": 150,
+    "staff_charge_after": 7,
+    "player_health_before": 65.99002838134766,
+    "player_health_after": 3.780029296875,
+    "player_health_after_reload_healing": 17.860031127929688,
+    "active_combat_engagements": [],
+    "pending_death_events": [],
+    "physical_action_owners": [],
+    "active_projectiles": []
+  },
+  "retained_failures": {
+    "shaman-camera-fight-01": "Player died; one clamped camera correction was insufficient and all swings missed. Original input save unchanged.",
+    "initial_entry_verifier": "Raw schema87 to89 comparison rejected added projectile/daily-history fields and authored ONAM poses. Reviewed defaults and independently audited13 default-open references are now explicit; all other existing fields are checked. Earlier failed raw check is not represented as an exact unchanged-schema restore."
+  },
+  "known_limits": [
+    "Goblin corpse can remain upright; the inspected capture is not acceptance of a corrected death pose.",
+    "General NPC spell fallback and Player Flare casting remain unsupported; this encounter exercised real staff projectiles and unarmed retaliation.",
+    "The existing outdoor checkpoint predates this victory. Never merge death or quest state between saves; the continuous opening must include the fight."
+  ],
+  "remaining": [
+    "Continuous prison-to-outdoors course including this fight",
+    "CharacterGen88 topic/autosave effects review",
+    "Fresh accumulated sanitizer integration"
+  ]
+}
