@@ -5,7 +5,8 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-namespace ESM4 { struct Potion; struct Spell; }
+#include <components/esm/formkey.hpp>
+namespace ESM4 { struct Potion; struct Spell; struct Weapon; }
 namespace MWBase { class World; }
 
 namespace MWWorld
@@ -29,6 +30,30 @@ namespace MWWorld
 
     std::optional<std::array<float, 3>> resolveOblivionSpellRestoration(
         const ESMStore& store, const ESM4::Spell& spell);
+
+    struct OblivionTargetDamage
+    {
+        std::uint32_t mEffectCode;
+        float mMagnitude;
+        std::uint8_t mResistanceActorValue;
+        float mProjectileSpeedFactor;
+        std::string mModel;
+    };
+
+    struct OblivionStaffCastInputs
+    {
+        ESM::FormKey mEnchantment;
+        float mAuthoredChargeCost;
+        float mMaximumCharge;
+        OblivionTargetDamage mDamage;
+    };
+
+    // Admit complete instant, single-target fire/shock effects. These queries
+    // resolve winning content only; they do not equip, spend charge or launch.
+    std::optional<OblivionTargetDamage> resolveOblivionTargetSpellDamage(
+        const ESMStore& store, const ESM4::Spell& spell);
+    std::optional<OblivionStaffCastInputs> resolveOblivionStaffCastInputs(
+        const ESMStore& store, const ESM4::Weapon& weapon);
 
     // Winning TES4 store preflight for the narrow default self-PARA owner.
     // No forms, actor state, selected spells or RNG are changed. The caller

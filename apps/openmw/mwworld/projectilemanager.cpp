@@ -34,6 +34,7 @@
 #include <components/sceneutil/visitor.hpp>
 
 #include <components/settings/values.hpp>
+#include <components/esm4/magiccaster.hpp>
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
@@ -695,8 +696,46 @@ namespace MWWorld
         }
     }
 
+    void ProjectileManager::syncOblivionMagicProjectiles(
+        const std::map<std::uint64_t, ESM4::MagicProjectileState>& projectiles)
+    {
+        for (auto it = mOblivionMagicModels.begin(); it != mOblivionMagicModels.end();)
+            if (!projectiles.contains(it->first))
+            {
+                mParent->removeChild(it->second.mNode);
+                it = mOblivionMagicModels.erase(it);
+            }
+            else ++it;
+        for (const auto& [id, projectile] : projectiles)
+        {
+            const osg::Vec3f position(projectile.mPosition[0], projectile.mPosition[1], projectile.mPosition[2]);
+            const osg::Vec3f velocity(projectile.mVelocity[0], projectile.mVelocity[1], projectile.mVelocity[2]);
+            auto it = mOblivionMagicModels.find(id);
+            if (it == mOblivionMagicModels.end())
+            {
+                State state{};
+                const auto color = projectile.mEffectCode == ESM::fourCC("SHDG")
+                    ? osg::Vec4(.6f, .7f, 1.f, 1.f) : osg::Vec4(1.f, .4f, .1f, 1.f);
+                createModel(state, Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(projectile.mModel)),
+                    position, lookAt(velocity), false, true, color, {}, false);
+                // Allocate the retained node before publishing it to the scene.
+                it = mOblivionMagicModels.emplace(id, std::move(state)).first;
+                if (!mParent->addChild(it->second.mNode))
+                {
+                    mOblivionMagicModels.erase(it);
+                    throw std::runtime_error("native magic projectile scene publication rejected");
+                }
+            }
+            it->second.mNode->setPosition(position);
+            it->second.mNode->setAttitude(lookAt(velocity));
+            it->second.mEffectAnimationTime->resetTime(projectile.mDistance / velocity.length());
+        }
+    }
+
     void ProjectileManager::clear()
     {
+        for (auto& [id, state] : mOblivionMagicModels) mParent->removeChild(state.mNode);
+        mOblivionMagicModels.clear();
         ++mRestoreGeneration;
         for (auto& mProjectile : mProjectiles)
             cleanupProjectile(mProjectile);

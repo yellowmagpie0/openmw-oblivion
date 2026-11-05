@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "scope": "Native shaman staff release, shock projectile flight/impact and fresh-process ownership; not encounter victory or full sewer escape",
+  "full_sewer_escape_complete": false,
+  "implementation": {
+    "save_schema": 88,
+    "charge_policy": "Authored ENCH cost13, not established skill-adjusted cost",
+    "supported_effects": "One instantaneous target shock/fire damage effect",
+    "known_limits": [
+      "Player Flare casting not wired",
+      "General NPC spell selection/casting fallback incomplete",
+      "Absorption/reflection unsupported",
+      "Projectiles discarded when source cell is unloaded",
+      "No general magic-hit script notification hookup",
+      "No isolated screenshot proving visible bolt presentation"
+    ]
+  },
+  "checks": {
+    "shaman-staff-normal-integration-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-normal-integration-01/verification.json",
+      "source": {
+        "head": "006fe184de4992632b5dd1403e4b9104c49dcf05",
+        "source_fingerprint": "736f75c9b34d50705bdc8369e91168fc78008a5c7a55538a01a5e4c9ccf9c79a"
+      },
+      "results": {
+        "engine": {
+          "executed": 2186,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "2d512ed3f4b81b2b1da4e6258faa4d0c97828c1155a47c28696b82293e667185",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "17eb2669226e9c59e269e97c624ccc097b382b8be985462e48db103305839084",
+          "inventory_sha256": "25381fad0c7aeb3067dee9e24349d08d1fa2ce85393e58ce459ddba32e3cc451",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components": {
+          "executed": 3259,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "fdcceeef723d47fb6eb65b1c48746fb7865be73bf940859ad3553cd4de0d9784",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "cb3fdbc2f0267e43242ac1dee3b38f44578d3d66717913914dcf5910dade2c4d",
+          "inventory_sha256": "39b5265cf228b59e414f2c6c1a39baf74f95c0175c67a5a523d943e0dd5c2793",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "shaman-staff-sanitizer-integration-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-sanitizer-integration-01/verification.json",
+      "source": {
+        "head": "f43e8045dc8b86d496e992bee2f9989d6624078a",
+        "source_fingerprint": "1626f40c75248f7e8a338af0b89abb0ab1d910b155bcb746550c4482aae92399"
+      },
+      "results": {
+        "engine": {
+          "executed": 2186,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "e6d5a6cb241713c8163731805a5f3db30157045a89a8cc31c0c4b5c98760ccb4",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f9d4acd204325ea300efde55d6d38792157cd972a8b01ee777c9bf0a6132cf8d",
+          "inventory_sha256": "25381fad0c7aeb3067dee9e24349d08d1fa2ce85393e58ce459ddba32e3cc451",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "sanitize": {
+          "executed": 1081,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "c6d4a30e91ba165761e4b652cc15c278e6fb502bba57011664a4e3b8bf985129",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "d249a748422730fca4cfd94fc650798e5bf9a1db43b095cfe48a731944cc88c1",
+          "inventory_sha256": "6b90998ac35a4935f7bf188e86124f888c7f1c278d90e0a3b590ee4dacb8535b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitizers": {
+    "engine": "ASan/UBSan; leak detection enabled",
+    "components": "ASan/UBSan ESM4* selection; leak detection disabled",
+    "rendered_flight_reload": "Attempt02 restores whole state and observes projectile3 impact, but fails F5 SDL delivery deadline; retained as failed, no rendered sanitizer restart acceptance. Attempt01 failed startup deadline/resources."
+  },
+  "runtime": {
+    "shaman-staff-pending-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-pending-01",
+      "scenario_passed": true,
+      "save_sha256": "efd75c87fa0d2664e466671cfb35b7060092009fd1d9710debdf7f5592c47433"
+    },
+    "shaman-staff-pending-reload-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-pending-reload-01",
+      "scenario_passed": true,
+      "save_sha256": "c0ce46ffbff3c5bab07b99c285f36f42e1cea22a65ffca0974fcfb5140a223bc",
+      "whole_state_comparison": "build/oblivion-compat/sewer-escape/shaman-staff-pending-reload-01/state-comparison.json",
+      "tolerance_scope": "Only animated-body world linear velocity projection, absolute1e-5; all other state exact"
+    },
+    "shaman-staff-windup-runtime-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-windup-runtime-01",
+      "scenario_passed": true,
+      "save_sha256": "63f589ed47e7869f24ad2c2ba4942308c7c47f8b0cee61f25659c29eb5e40e5a"
+    },
+    "shaman-staff-released-reload-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-released-reload-01",
+      "scenario_passed": true,
+      "save_sha256": "1725725fe9f1abe22b54bbc96d26ff74ea711160001fafca22a0393a70fc4b5f",
+      "whole_state_comparison": "build/oblivion-compat/sewer-escape/shaman-staff-released-reload-01/state-comparison.json",
+      "tolerance_scope": "Only animated-body world linear velocity projection, absolute1e-5; all other state exact"
+    },
+    "shaman-staff-flight-03": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-flight-03",
+      "scenario_passed": true,
+      "save_sha256": "aa08de01674877cf1e60ece2a2f01ff4352febd634aec525d4d04d8e6b4ed0c9"
+    },
+    "shaman-staff-flight-reload-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-flight-reload-01",
+      "scenario_passed": true,
+      "save_sha256": "607bcef3811c7d4d57ebad8deea753e99212859250e87d0880f1619356b37e7c",
+      "whole_state_comparison": "build/oblivion-compat/sewer-escape/shaman-staff-flight-reload-01/state-comparison.json",
+      "tolerance_scope": "Only animated-body world linear velocity projection, absolute1e-5; all other state exact"
+    },
+    "shaman-staff-approach-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/shaman-staff-approach-01",
+      "scenario_passed": true,
+      "save_sha256": "9295b68810a175bc1fde3529d5fe01e5cd5c33199142f4badc3fcb993bb53800"
+    }
+  },
+  "runtime_phase_notes": {
+    "shaman-staff-windup-runtime-01": "Actually after release0.908s; charge137; projectile1 already impacted",
+    "shaman-staff-pending-01": "Before release0.332s, charge150, nextserial1",
+    "shaman-staff-flight-03": "Released0.776s, projectile3 in flight at distance284, charge111,nextserial4",
+    "shaman-staff-flight-reload-01": "Restored projectile3 impacts once, new cast4 charges once to98",
+    "shaman-staff-approach-01": "Player survives11 staff shots with15.990028 health; not shaman victory"
+  },
+  "runtime_binaries": {
+    "build/openmw": "f24e0a2e758e5566398088b28a9c71359b831262382dd0d606b5e230d33ec064",
+    "build/m15-sanitize/openmw": "6542313a0bb163d77dbf96f4cd144b5e841695f7fcff4798f01fe09f28d3e808",
+    "build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54",
+    "build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
+  },
+  "retained_failures": [
+    "shaman-staff-integration-01 compile failure",
+    "shaman-staff-integration-02 two stale wire assertions; repaired retry and full normal/sanitizer pass",
+    "shaman-staff-flight-01 startup timeout;02 saved after impact",
+    "shaman-fight-03 and shaman-power-fight-01/02 Player deaths; not accepted victories"
+  ]
+}

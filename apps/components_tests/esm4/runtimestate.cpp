@@ -1863,7 +1863,7 @@ namespace
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
                 + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0)
-                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0);
+                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0) + (version >= 88 ? 12 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -3609,6 +3609,7 @@ TEST(ESM4RuntimeState, Crime42PopulatedRoundTripAndOriginalLayoutsRemainDelibera
 TEST(ESM4RuntimeState, Crime42RejectsUnissuedOrPendingCommittedCausesAndMalformedSuffix)
 {
     auto state = makeState();
+    state.mVersion = 42; // This test corrupts the trailing version42 crime fields.
     state.mPhysicalActions.mNext = 10;
     state.mNativeCrime = Testing::crimeFixture();
     auto bad = state;
@@ -3628,6 +3629,7 @@ TEST(ESM4RuntimeState, Crime42RejectsUnissuedOrPendingCommittedCausesAndMalforme
     auto extra = bytes; extra.push_back(0);
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(extra), std::runtime_error);
     auto empty = makeState();
+    empty.mVersion = 42;
     auto corrupt = empty.serializeBinary();
     // The empty suffix is three u64 counters followed by three u32 counts.
     corrupt[corrupt.size() - 12] = 0x41;
@@ -6269,7 +6271,7 @@ TEST(ESM4RuntimeState, FactionReactions81PreserveDirectedZeroOverridesAndRejectL
     state.mFactionReactions[{b,a}] = 17;
     auto unordered = state.serializeBinary();
     const auto factionEnd = unordered.end() - (state.mVersion >= 83 ? 4 : 0)
-        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0);
+        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0) - (state.mVersion >= 88 ? 12 : 0);
     std::swap_ranges(factionEnd-2*rowSize, factionEnd-rowSize, factionEnd-rowSize);
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(unordered), std::runtime_error);
     state.mFactionReactions.clear(); state.mVersion = 80;
@@ -6326,10 +6328,12 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     const auto wire = state.serializeBinary();
     // Independent public wire recipe, also checked by the Python inspector.
     const std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
-    const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0);
+    const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0);
     ASSERT_GE(wire.size(),ownerTail.size() + contactSuffix);
     EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin() + contactSuffix));
-    EXPECT_TRUE(std::all_of(wire.end() - contactSuffix, wire.end(), [](auto byte) { return byte == 0; }));
+    std::vector<std::uint8_t> emptySuffix(contactSuffix, 0);
+    if (state.mVersion >= 88) emptySuffix[contactSuffix - 12] = 1; // First unused projectile serial.
+    EXPECT_TRUE(std::equal(emptySuffix.begin(), emptySuffix.end(), wire.end() - contactSuffix));
     const std::vector<std::uint8_t> sourceWire{0x01, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x02, 0x00, 0x00, 0x00};
     EXPECT_NE(std::search(wire.begin(),wire.end(),sourceWire.begin(),sourceWire.end()),wire.end());
 
@@ -6503,6 +6507,34 @@ TEST(ESM4RuntimeState, NativeSpellCastRetainsReleaseBoundaryAndRejectsDanglingOw
     EXPECT_THROW(invalid.serializeBinary(), std::invalid_argument);
     invalid = state; invalid.mNativeSpellCasts.at(actor).mSpell = {};
     EXPECT_THROW(invalid.serializeBinary(), std::invalid_argument);
-    auto wire = state.serializeBinary(); wire.back() = 2;
+    auto wire = state.serializeBinary(); wire.at(wire.size() - 13) = 2;
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, NativeMagicProjectilePreservesFlightAndRejectsReusedSerial)
+{
+    auto state = makeState();
+    const auto actor = state.mPlayer.mReference;
+    ESM4::RuntimeActorValues values;
+    values.mActor = actor; values.mBase = ESM::FormKey::content("Oblivion.esm", 7);
+    values.mOwner = ESM4::ActorValueOwner::Player;
+    state.mNativeActorValues.push_back(values);
+    ESM4::MagicProjectileState projectile;
+    projectile.mCaster = actor;
+    projectile.mSource = ESM::FormKey::content("Oblivion.esm", 0xa97df);
+    projectile.mCell = state.mPlayer.mCell;
+    projectile.mEffectCode = ESM::fourCC("FIDG"); projectile.mMagnitude = 6;
+    projectile.mPosition = {3, 4, 5}; projectile.mVelocity = {0, 1000, 0};
+    projectile.mDistance = 250; projectile.mModel = "MagicEffects/fireball.nif";
+    state.mNativeMagicProjectiles.emplace(9, projectile); state.mNextMagicProjectile = 10;
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), state);
+    EXPECT_NE(state.canonicalJson().find("\"next_magic_projectile\":10"), std::string::npos);
+    auto invalid = state; invalid.mNextMagicProjectile = 9;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mNativeActorValues.clear();
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mVersion = 87;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid.mNativeMagicProjectiles.clear(); invalid.mNextMagicProjectile = 1;
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(invalid.serializeBinary()).mNativeMagicProjectiles.empty());
 }

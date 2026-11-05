@@ -7,6 +7,7 @@
 #include "steering.hpp"
 #include "../mwworld/oblivioncombatdata.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/environment.hpp"
@@ -448,7 +449,51 @@ namespace MWMechanics
             return true; // Lost collision residence cannot turn into a substituted hit or cost.
         }
         const auto* priorMelee = combat->findMeleeState(key);
-        if (!priorMelee || !priorMelee->mStrike)
+        auto& staffInventory = actor.getClass().getInventoryStore(actor);
+        auto staffItem = staffInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto staffInputs = [&](const MWWorld::Ptr& item) -> std::optional<MWWorld::OblivionStaffCastInputs> {
+            if (item.getType() != ESM::REC_WEAP) return {};
+            const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item.getCellRef().getRefId());
+            const auto* weapon = world.getStore().get<ESM4::Weapon>().search(id);
+            if (!weapon || item.getCellRef().getItemCondition(weapon->mData.health) <= 0) return {};
+            return MWWorld::resolveOblivionStaffCastInputs(world.getStore(), *weapon);
+        };
+        if (staffItem == staffInventory.end() && !combat->findSpellCast(key)
+            && (!priorMelee || (!priorMelee->mStrike && !priorMelee->mReaction)))
+            for (auto item = staffInventory.begin(); item != staffInventory.end(); ++item)
+                if (const auto inputs = staffInputs(*item))
+                {
+                    const float charge = item->getCellRef().getEnchantmentCharge();
+                    if ((charge < 0 ? inputs->mMaximumCharge : charge) < inputs->mAuthoredChargeCost) continue;
+                    staffInventory.equip(MWWorld::InventoryStore::Slot_CarriedRight, item);
+                    staffItem = staffInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                    Log(Debug::Info) << "M16 staff equipped: actor=" << key.serialize();
+                    break;
+                }
+        if (staffItem != staffInventory.end())
+            if (const auto inputs = staffInputs(*staffItem))
+            {
+                const float charge = staffItem->getCellRef().getEnchantmentCharge();
+                if ((charge < 0 ? inputs->mMaximumCharge : charge) >= inputs->mAuthoredChargeCost
+                    || combat->findSpellCast(key))
+                {
+                    if (nativeWorld->getOblivionCombatTarget(key) != currentTarget) return true;
+                    combat->engage(key, *currentTarget);
+                    combat->clearMeleeAiIntent(key);
+                    stats.setDrawState(DrawState::Weapon);
+                    const auto delta = target.getRefData().getPosition().asVec3()
+                        - actor.getRefData().getPosition().asVec3();
+                    static_cast<void>(zTurn(actor, std::atan2(delta.x(), delta.y())));
+                    const bool visible = world.getLOS(actor, target);
+                    if (visible) ai->clearCombatRoute(actor);
+                    else ai->approachCombatTarget(actor, target, duration);
+                    stats.setAttackingOrSpell(visible && style.mAttackChance != 0);
+                    return true;
+                }
+                // An exhausted staff cannot be treated as an ordinary melee weapon.
+                staffInventory.unequipSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            }
+        if (const auto* afterEquipment = combat->findMeleeState(key); !afterEquipment || !afterEquipment->mStrike)
             equipOwnedMeleeWeapon(*nativeWorld, actor, *combat);
         // Equipment observers can stop combat or replace its target.
         if (nativeWorld->getOblivionCombatTarget(key) != currentTarget)

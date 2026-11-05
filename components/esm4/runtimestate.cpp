@@ -2561,6 +2561,15 @@ namespace ESM4
                     throw std::runtime_error("Invalid, duplicate or replaying TES4 melee action identity");
             }
         }
+        checkSize(mNativeMagicProjectiles.size(), "native magic projectile list");
+        if (!mNextMagicProjectile || (mVersion < 88 && (!mNativeMagicProjectiles.empty() || mNextMagicProjectile != 1)))
+            throw std::runtime_error("Invalid native magic projectile serial or state version");
+        for (const auto& [id, projectile] : mNativeMagicProjectiles)
+        {
+            projectile.validate();
+            if (!id || id >= mNextMagicProjectile || !nativeActors.contains(projectile.mCaster))
+                throw std::runtime_error("Dangling native magic projectile caster or serial");
+        }
         checkSize(mNativeSpellCasts.size(), "native spell cast list");
         if (mVersion < 87 && !mNativeSpellCasts.empty())
             throw std::runtime_error("Native spell casts require runtime-state version87");
@@ -3998,6 +4007,21 @@ namespace ESM4
                 writer.integer<std::uint8_t>(cast.mReleased);
             }
         }
+        if (mVersion >= 88)
+        {
+            writer.integer(mNextMagicProjectile);
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeMagicProjectiles.size()));
+            for (const auto& [id, projectile] : mNativeMagicProjectiles)
+            {
+                writer.integer(id);
+                writeKey(writer, projectile.mCaster); writeKey(writer, projectile.mSource); writeKey(writer, projectile.mCell);
+                writer.integer(projectile.mEffectCode); writer.floating(projectile.mMagnitude);
+                for (float value : projectile.mPosition) writer.floating(value);
+                for (float value : projectile.mVelocity) writer.floating(value);
+                writer.floating(projectile.mDistance); writer.floating(projectile.mMaximumDistance);
+                writer.string(projectile.mModel);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -5377,6 +5401,26 @@ namespace ESM4
                 if (released > 1) throw std::runtime_error("Invalid native spell release flag");
                 cast.mReleased = released;
                 result.mNativeSpellCasts.emplace(std::move(actor), std::move(cast));
+            }
+        }
+        if (result.mVersion >= 88)
+        {
+            result.mNextMagicProjectile = reader.integer<std::uint64_t>();
+            const auto count = reader.count();
+            std::uint64_t previous = 0;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto id = reader.integer<std::uint64_t>();
+                if (id <= previous) throw std::runtime_error("Noncanonical native magic projectile serials");
+                previous = id;
+                MagicProjectileState projectile;
+                projectile.mCaster = readKey(reader); projectile.mSource = readKey(reader); projectile.mCell = readKey(reader);
+                projectile.mEffectCode = reader.integer<std::uint32_t>(); projectile.mMagnitude = reader.float32();
+                for (float& value : projectile.mPosition) value = reader.float32();
+                for (float& value : projectile.mVelocity) value = reader.float32();
+                projectile.mDistance = reader.float32(); projectile.mMaximumDistance = reader.float32();
+                projectile.mModel = reader.string();
+                result.mNativeMagicProjectiles.emplace(id, std::move(projectile));
             }
         }
         if (!reader.eof())
@@ -6956,6 +7000,33 @@ namespace ESM4
                 stream << ",\"release_time\":"; number(cast.mReleaseTime);
                 stream << ",\"duration\":"; number(cast.mDuration);
                 stream << ",\"released\":" << (cast.mReleased ? "true" : "false") << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 88)
+        {
+            stream << ",\"next_magic_projectile\":" << mNextMagicProjectile << ",\"native_magic_projectiles\":[";
+            bool first = true;
+            const auto number = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
+            for (const auto& [id, projectile] : mNativeMagicProjectiles)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"id\":" << id << ",\"caster\":\"" << escapeJson(projectile.mCaster.serialize())
+                    << "\",\"source\":\"" << escapeJson(projectile.mSource.serialize())
+                    << "\",\"cell\":\"" << escapeJson(projectile.mCell.serialize())
+                    << "\",\"effect_code\":" << projectile.mEffectCode << ",\"magnitude\":";
+                number(projectile.mMagnitude);
+                stream << ",\"position\":[";
+                for (std::size_t i = 0; i < 3; ++i) { if (i) stream << ','; number(projectile.mPosition[i]); }
+                stream << "],\"velocity\":[";
+                for (std::size_t i = 0; i < 3; ++i) { if (i) stream << ','; number(projectile.mVelocity[i]); }
+                stream << "],\"distance\":"; number(projectile.mDistance);
+                stream << ",\"maximum_distance\":"; number(projectile.mMaximumDistance);
+                stream << ",\"model\":\"" << escapeJson(projectile.mModel) << "\"}";
             }
             stream << ']';
         }

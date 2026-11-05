@@ -73,7 +73,7 @@ namespace ESM4
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
     // v87 retains pending native spells and once-only release ownership.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 87;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 88;
 
     struct RuntimeContentIdentity
     {
@@ -951,6 +951,9 @@ namespace ESM4
         // v38: owned bow playback, retained independently of loaded renderers.
         std::map<ESM::FormKey, RuntimeBowState> mNativeBowStates;
         std::map<ESM::FormKey, SpellCastState> mNativeSpellCasts;
+        // v88: persistent flight, distinct from once-only cast release ownership.
+        std::uint64_t mNextMagicProjectile = 1;
+        std::map<std::uint64_t, MagicProjectileState> mNativeMagicProjectiles;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

@@ -1,4 +1,5 @@
 #include "magiccaster.hpp"
+#include <components/esm/defs.hpp>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -6,6 +7,45 @@
 #include <stdexcept>
 namespace ESM4
 {
+    void MagicProjectileState::validate() const
+    {
+        if (mCaster.isNull() || !mSource.isContent() || !mCell.isContent()
+            || ESM::FormKey::deserialize(mCaster.serialize()) != mCaster
+            || ESM::FormKey::deserialize(mSource.serialize()) != mSource
+            || ESM::FormKey::deserialize(mCell.serialize()) != mCell
+            || mModel.empty() || mModel.find('\0') != std::string::npos)
+            throw std::invalid_argument("invalid native magic projectile identity or model");
+        if (mEffectCode != ESM::fourCC("SHDG") && mEffectCode != ESM::fourCC("FIDG"))
+            throw std::invalid_argument("unsupported native projectile effect");
+        for (float value : mPosition)
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite magic projectile position");
+        double speedSquared = 0;
+        for (float value : mVelocity)
+        {
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite magic projectile velocity");
+            speedSquared += double(value) * value;
+        }
+        if (speedSquared <= 0 || !std::isfinite(mMagnitude) || mMagnitude < 0
+            || !std::isfinite(mDistance) || !std::isfinite(mMaximumDistance)
+            || mDistance < 0 || mMaximumDistance <= 0 || mDistance > mMaximumDistance)
+            throw std::invalid_argument("invalid native magic projectile magnitude or flight range");
+    }
+
+    MagicProjectileState advanceMagicProjectile(const MagicProjectileState& state, float duration)
+    {
+        state.validate();
+        if (!std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid magic projectile frame duration");
+        const double speed = std::hypot(double(state.mVelocity[0]), double(state.mVelocity[1]), double(state.mVelocity[2]));
+        const double distance = std::min(double(state.mMaximumDistance) - state.mDistance, speed * duration);
+        auto next = state;
+        for (std::size_t i = 0; i < 3; ++i)
+            next.mPosition[i] = static_cast<float>(state.mPosition[i] + state.mVelocity[i] * (distance / speed));
+        next.mDistance = static_cast<float>(state.mDistance + distance);
+        next.validate();
+        return next;
+    }
+
     void SpellCastState::validate() const
     {
         if (!mSpell.isContent() || mSpell != ESM::FormKey::deserialize(mSpell.serialize()) || mAnimationGroup.empty()

@@ -53,6 +53,8 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     expected.setdefault('native_animated_references', [])
     expected.setdefault('native_trap_contacts', [])
     expected.setdefault('native_spell_casts', [])
+    expected.setdefault('native_magic_projectiles', [])
+    expected.setdefault('next_magic_projectile', 1)
     expected.setdefault('native_movement', None)
     expected.setdefault('spoken_dialogue_infos', [])
     expected.setdefault('ignore_friendly_hits', {})
@@ -92,7 +94,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                   script_before=before, script_after=instances[0],
                   original_reference_inventories_checked=len(original['references']),
                   state_other_than_declared_script_and_empty_schema_defaults_preserved=True,
-                  schema_defaults={'native_spell_casts': [], 'reference.dropper': None, 'reference.dropped_items': None,
+                  schema_defaults={'native_magic_projectiles': [], 'next_magic_projectile': 1, 'native_spell_casts': [], 'reference.dropper': None, 'reference.dropped_items': None,
                                    'inventory.extra_scale': None, 'native_actor_values.process_alerted': None, 'melee.reaction': None,
                                    'melee.retiring_sequences': [], 'melee.first_person': None,
                                    'melee.passive_sequence': None, 'melee.held_blocks': [],

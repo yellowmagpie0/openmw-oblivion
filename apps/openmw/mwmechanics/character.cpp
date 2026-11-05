@@ -2354,6 +2354,8 @@ namespace MWMechanics
         const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : mPtr.getCellRef().getFormKey();
         if (!world->cancelOblivionHeldBlock(mPtr)) return;
+        service->cancelSpellCast(actor);
+        if (!mOblivionCastGroup.empty()) mAnimation->disable(std::exchange(mOblivionCastGroup, {}));
         service->endBlockingDodge(actor);
         bindOblivionBlockingDodge();
         std::string strikeGroup;
@@ -2421,6 +2423,12 @@ namespace MWMechanics
         auto* service = world ? world->getOblivionCombatService() : nullptr;
         if (!service || !mAnimation || mPtr != world->getPlayerPtr()) return false;
         const auto actor = ESM::FormKey::dynamic("player", 1);
+        if (const auto* cast = service->findSpellCast(actor);
+            cast && world->getStore().get<ESM4::Enchantment>().search(cast->mSpell))
+        {
+            if (duration > 0) world->getPlayer().consumeOblivionCastRequest();
+            return false;
+        }
         const bool requested = duration > 0 && world->getPlayer().consumeOblivionCastRequest();
         const auto stop = [&] {
             service->cancelSpellCast(actor);
@@ -2544,9 +2552,105 @@ namespace MWMechanics
         }
     }
 
+    bool CharacterController::updateOblivionStaffCast(float duration)
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        auto* service = world ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation) return false;
+        const bool player = mPtr == world->getPlayerPtr();
+        const auto actor = player ? ESM::FormKey::dynamic("player", 1) : mPtr.getCellRef().getFormKey();
+        const auto* pending = service->findSpellCast(actor);
+        if (pending && world->getStore().get<ESM4::Spell>().search(pending->mSpell)) return false;
+        const auto stop = [&] {
+            service->cancelSpellCast(actor);
+            if (!mOblivionCastGroup.empty()) mAnimation->disable(std::exchange(mOblivionCastGroup, {}));
+            if (mUpperBodyState == UpperBodyState::Casting) mUpperBodyState = UpperBodyState::WeaponEquipped;
+        };
+        const auto* life = service->findActorLife(actor);
+        const auto& stats = mPtr.getClass().getCreatureStats(mPtr);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive || mOblivionRecoveryActive
+            || mSkipAnim || isScriptedAnimPlaying() || isKnockedOut() || isKnockedDown() || isRecovery()
+            || oblivionParalyzed(*world, mPtr)) { stop(); return false; }
+        if (player)
+        {
+            const auto input = MWBase::Environment::get().getInputManager();
+            if (!input->getControlSwitch("playercontrols") || !input->getControlSwitch("playerfighting"))
+            { stop(); return false; }
+        }
+        auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
+        const auto item = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto id = item == inventory.end() ? ESM::RefId{}
+            : MWWorld::OblivionProfileServices::nativeItemId(world->getStore(), item->getCellRef().getRefId());
+        const auto* weapon = world->getStore().get<ESM4::Weapon>().search(id);
+        const auto inputs = weapon ? MWWorld::resolveOblivionStaffCastInputs(world->getStore(), *weapon) : std::nullopt;
+        if (!inputs || stats.getDrawState() != DrawState::Weapon)
+        { if (pending) stop(); return false; }
+        getActiveWeapon(mPtr, &mWeaponType);
+        mAnimation->showWeapons(true);
+        try
+        {
+            if (!pending)
+            {
+                if (!mOblivionCastGroup.empty()) mAnimation->disable(std::exchange(mOblivionCastGroup, {}));
+                mUpperBodyState = UpperBodyState::WeaponEquipped;
+                if (duration <= 0 || !stats.getAttackingOrSpell()) return true;
+                const float charge = item->getCellRef().getEnchantmentCharge();
+                if ((charge < 0 ? inputs->mMaximumCharge : charge) < inputs->mAuthoredChargeCost) return true;
+                const std::string group = "staffattackright";
+                const auto* metadata = mAnimation->getControllerSequenceMetadata(group);
+                if (!metadata || metadata->mCycleType != 2 || metadata->mFrequency <= 0)
+                    throw std::invalid_argument("missing native staff attack sequence");
+                const auto keys = ESM4::powerMeleeKeyTimes(nativeRawKeys(*metadata));
+                if (keys.mMatchedCount != 3) throw std::invalid_argument("native staff attack lacks release keys");
+                ESM4::SpellCastState cast{inputs->mEnchantment, group, inputs->mAuthoredChargeCost, 0,
+                    (keys.mTimes[1] - keys.mTimes[0]) / metadata->mFrequency,
+                    (keys.mTimes[2] - keys.mTimes[0]) / metadata->mFrequency, false};
+                if (!service->beginSpellCast(actor, std::move(cast), false)) return true;
+                Log(Debug::Info) << "M16 staff cast begin: actor=" << actor.serialize();
+                pending = service->findSpellCast(actor);
+            }
+            if (!pending || pending->mSpell != inputs->mEnchantment) { stop(); return true; }
+            const auto cast = *pending;
+            const float nextTime = static_cast<float>(std::min(double(cast.mDuration), double(cast.mElapsed) + duration));
+            const auto bind = [&](MWRender::Animation& view) {
+                const auto* metadata = view.getControllerSequenceMetadata(cast.mAnimationGroup);
+                if (!metadata || metadata->mStopTime <= metadata->mStartTime || metadata->mFrequency <= 0)
+                    throw std::invalid_argument("native staff cast has no animation metadata");
+                const auto fraction = [&](float time) {
+                    return std::clamp(time * metadata->mFrequency / (metadata->mStopTime - metadata->mStartTime), 0.f, 1.f);
+                };
+                if (!view.getInfo(cast.mAnimationGroup))
+                    view.play(cast.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_UpperBody,
+                        false, 0.f, "start", "stop", fraction(cast.mElapsed), 0, false, MWRender::Animation::PlaybackScope::ThisView);
+                const float frame = metadata->mTimelineStart
+                    + fraction(nextTime) * (metadata->mTimelineStop - metadata->mTimelineStart);
+                if (!view.setAnimationFrameTime(cast.mAnimationGroup, frame, MWRender::Animation::PlaybackScope::ThisView))
+                    throw std::invalid_argument("native staff cast renderer refused frame");
+            };
+            bind(*mAnimation);
+            if (auto* peer = mAnimation->getPlaybackPeer()) bind(*peer);
+            mOblivionCastGroup = cast.mAnimationGroup;
+            mUpperBodyState = UpperBodyState::Casting;
+            const auto update = service->advanceItemCast(actor, duration, [&] {
+                return world->releaseOblivionStaffProjectile(mPtr, cast.mSpell, cast.mCost);
+            });
+            if (update && update->mReleased)
+                Log(Debug::Info) << "M16 staff cast release: actor=" << actor.serialize()
+                    << " applied=" << update->mApplied << " charge=" << item->getCellRef().getEnchantmentCharge();
+            return true;
+        }
+        catch (const std::exception& error)
+        {
+            Log(Debug::Warning) << "M16 native staff rejected: " << error.what();
+            stop();
+            return true;
+        }
+    }
+
     bool CharacterController::updateOblivionWeaponState(float duration)
     {
         if (updateOblivionSpellCast(duration)) return true;
+        if (updateOblivionStaffCast(duration)) return true;
         if (mOblivionRecoveryActive) return true;
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
         auto* service = world ? world->getOblivionCombatService() : nullptr;

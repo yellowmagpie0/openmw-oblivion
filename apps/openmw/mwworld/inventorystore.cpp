@@ -19,6 +19,7 @@
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/weapontype.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 
 #include "class.hpp"
 #include "preparedinitialinventory.hpp"
@@ -717,6 +718,22 @@ MWWorld::ContainerStoreIterator MWWorld::InventoryStore::unequipSlot(int slot, b
     if (it != end())
     {
         ContainerStoreIterator retval = it;
+
+        // A pending staff release owns this equipped unit. Changing it must
+        // not debit a replacement stack with the same base or enchantment.
+        if (slot == Slot_CarriedRight)
+        {
+            auto* world = dynamic_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+            if (world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+                if (auto* combat = world->getOblivionCombatService())
+                {
+                    const auto actor = getPtr() == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                        : getPtr().getCellRef().getFormKey();
+                    if (const auto* cast = combat->findSpellCast(actor);
+                        cast && world->getStore().get<ESM4::Enchantment>().search(cast->mSpell))
+                        combat->cancelSpellCast(actor);
+                }
+        }
 
         // empty this slot
         mSlots[slot] = end();

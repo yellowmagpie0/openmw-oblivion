@@ -4981,3 +4981,41 @@ class SpellCast87Tests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
         state = self.make_state(); state['native_spell_casts'] *= 2
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+class MagicProjectile88Tests(unittest.TestCase):
+    def make_state(self):
+        state = SpellCast87Tests().make_state()
+        state['schema_version'] = 88
+        state['native_spell_casts'] = []
+        state['next_magic_projectile'] = 10
+        state['native_magic_projectiles'] = [{'id': 9, 'caster': state['player']['reference'],
+            'source': 'content:oblivion.esm:066c42', 'cell': state['player']['cell'],
+            'effect_code': int.from_bytes(b'SHDG', 'little'), 'magnitude': 5.,
+            'position': [3., 4., 5.], 'velocity': [0., 2000., 0.], 'distance': 250.,
+            'maximum_distance': 10000., 'model': 'MagicEffects/shockbolt.nif'}]
+        return state
+
+    def test_flight_roundtrip_and_old_version_absence(self):
+        state = self.make_state()
+        decoded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertEqual(decoded['native_magic_projectiles'], state['native_magic_projectiles'])
+        self.assertEqual(decoded['next_magic_projectile'], 10)
+        state['schema_version'] = 87
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state['next_magic_projectile'] = 1
+        state['native_magic_projectiles'] = []
+        self.assertNotIn('native_magic_projectiles', state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_reused_identity_dangling_caster_and_invalid_flight_are_rejected(self):
+        for edit in [{'id': 10}, {'caster': 'content:oblivion.esm:000999'},
+                     {'velocity': [0., 0., 0.]}, {'position': [float('nan'), 0., 0.]},
+                     {'magnitude': -1.}, {'distance': 10001.}, {'model': ''},
+                     {'effect_code': int.from_bytes(b'REHE', 'little')}]:
+            with self.subTest(edit=edit):
+                state = self.make_state(); state['native_magic_projectiles'][0].update(edit)
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+        state = self.make_state(); state['native_magic_projectiles'] *= 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)

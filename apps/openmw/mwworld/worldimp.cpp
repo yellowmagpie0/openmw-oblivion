@@ -2023,6 +2023,8 @@ namespace MWWorld
             state.mFactionReactions = mOblivionRuntimeState->mFactionReactions;
             state.mNativeBoundAbilities = mOblivionRuntimeState->mNativeBoundAbilities;
             state.mNativeTrapContacts = mOblivionRuntimeState->mNativeTrapContacts;
+            state.mNativeMagicProjectiles = mOblivionRuntimeState->mNativeMagicProjectiles;
+            state.mNextMagicProjectile = mOblivionRuntimeState->mNextMagicProjectile;
             state.mFriendHitCounters = mOblivionRuntimeState->mFriendHitCounters;
             state.mCombatControllers = mOblivionRuntimeState->mCombatControllers;
         }
@@ -7716,6 +7718,7 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
+        validateOblivionMagicProjectiles(state);
         auto getupResources = prepareOblivionGetUpResources(state, incoming);
         if (prepared) prepared->mGetUpResources = std::move(getupResources);
         for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)
@@ -9050,6 +9053,7 @@ namespace MWWorld
         synchronizeLooseWeaponPoses(*this,*mPhysics);
         synchronizeOblivionAnimatedReferencePoses();
         processOblivionTrapContacts();
+        updateOblivionMagicProjectiles(duration);
     }
 
     void World::updateNavigator()

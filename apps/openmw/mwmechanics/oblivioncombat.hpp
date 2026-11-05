@@ -1074,9 +1074,13 @@ namespace MWMechanics
         bool restorePotionResources(const MWWorld::Ptr& actor, MWWorld::Player* player,
             const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings);
         const ESM4::SpellCastState* findSpellCast(const ESM::FormKey& actor) const;
-        bool beginSpellCast(const ESM::FormKey& actor, ESM4::SpellCastState cast);
+        bool beginSpellCast(const ESM::FormKey& actor, ESM4::SpellCastState cast, bool usesMagicka = true);
         void cancelSpellCast(const ESM::FormKey& actor) noexcept;
         struct SpellCastUpdate { bool mReleased; bool mApplied; bool mFinished; };
+        // The item release callback prepares all work before its no-throw
+        // charge/projectile publication. No renderer callback owns this event.
+        std::optional<SpellCastUpdate> advanceItemCast(const ESM::FormKey& actor, float duration,
+            const std::function<bool()>& release);
         std::optional<SpellCastUpdate> advanceRestorationCast(const MWWorld::Ptr& actor, MWWorld::Player* player,
             float duration, const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings);
         void restoreNonPlayerResources(const MWWorld::Ptr& actor, const OblivionRestorationUpdate& input,

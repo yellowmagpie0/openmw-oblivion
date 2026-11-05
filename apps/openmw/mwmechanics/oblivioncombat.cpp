@@ -5455,7 +5455,7 @@ namespace MWMechanics
         return found == mSpellCasts.end() ? nullptr : &found->second;
     }
 
-    bool OblivionCombatService::beginSpellCast(const ESM::FormKey& actor, ESM4::SpellCastState cast)
+    bool OblivionCombatService::beginSpellCast(const ESM::FormKey& actor, ESM4::SpellCastState cast, bool usesMagicka)
     {
         cast.validate();
         if (cast.mElapsed != 0 || cast.mReleased)
@@ -5472,7 +5472,7 @@ namespace MWMechanics
         };
         if (const auto* melee = findMeleeState(actor); melee && (busy(*melee) || melee->mDodge
                 || (melee->mFirstPerson && busy(*melee->mFirstPerson)))) return false;
-        if (ESM4::composeActorValue(values->mValues[9], values->mOwner, values->mProcess) < cast.mCost)
+        if (usesMagicka && ESM4::composeActorValue(values->mValues[9], values->mOwner, values->mProcess) < cast.mCost)
             return false;
         mSpellCasts.emplace(actor, std::move(cast));
         return true;
@@ -5481,6 +5481,27 @@ namespace MWMechanics
     void OblivionCombatService::cancelSpellCast(const ESM::FormKey& actor) noexcept
     {
         mSpellCasts.erase(actor);
+    }
+
+    std::optional<OblivionCombatService::SpellCastUpdate> OblivionCombatService::advanceItemCast(
+        const ESM::FormKey& actor, float duration, const std::function<bool()>& release)
+    {
+        const auto found = mSpellCasts.find(actor);
+        if (found == mSpellCasts.end()) return {};
+        const auto* life = findActorLife(actor);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
+        {
+            mSpellCasts.erase(found);
+            return {};
+        }
+        auto next = found->second;
+        const bool released = ESM4::advanceSpellCast(next, duration);
+        const bool applied = released && release();
+        const bool finished = next.mElapsed >= next.mDuration;
+        static_assert(std::is_nothrow_swappable_v<ESM4::SpellCastState>);
+        if (finished) mSpellCasts.erase(found);
+        else std::swap(found->second, next);
+        return SpellCastUpdate{released, applied, finished};
     }
 
     std::optional<OblivionCombatService::SpellCastUpdate> OblivionCombatService::advanceRestorationCast(

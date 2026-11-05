@@ -2,6 +2,7 @@
 #define OPENMW_ESM4_MAGICCASTER_H
 
 #include <cstdint>
+#include <array>
 #include <string>
 #include <components/esm/formkey.hpp>
 
@@ -25,6 +26,27 @@ namespace ESM4
     // Advance a candidate, then publish it together with the release's resource
     // changes. Returns true exactly once when the authored release time is crossed.
     bool advanceSpellCast(SpellCastState& state, float duration);
+
+    // Authoritative in-flight state; scene/physics handles are projections.
+    // A consumed projectile is removed together with its impact publication.
+    struct MagicProjectileState
+    {
+        ESM::FormKey mCaster;
+        ESM::FormKey mSource;
+        ESM::FormKey mCell;
+        std::uint32_t mEffectCode = 0;
+        float mMagnitude = 0;
+        std::array<float, 3> mPosition{};
+        std::array<float, 3> mVelocity{};
+        float mDistance = 0;
+        float mMaximumDistance = 10000;
+        std::string mModel;
+        void validate() const;
+        friend bool operator==(const MagicProjectileState&, const MagicProjectileState&) = default;
+    };
+    // Candidate endpoint for a swept collision query, limited by remaining range.
+    // The caller owns hit testing and commits either the flight step or impact.
+    MagicProjectileState advanceMagicProjectile(const MagicProjectileState& state, float duration);
 
     struct SpellCostSettings
     {

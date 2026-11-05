@@ -1,4 +1,5 @@
 #include <components/esm4/magiccaster.hpp>
+#include <components/esm/defs.hpp>
 
 #include <gtest/gtest.h>
 
@@ -10,6 +11,33 @@
 namespace
 {
 #include "magiccaster_expected.inc"
+}
+
+TEST(ESM4MagicProjectile, SweptEndpointPreservesFlightAndStopsAtRange)
+{
+    ESM4::MagicProjectileState state;
+    state.mCaster = ESM::FormKey::dynamic("player", 1);
+    state.mSource = ESM::FormKey::content("Oblivion.esm", 0xa97df);
+    state.mCell = ESM::FormKey::content("Oblivion.esm", 0x380bd);
+    state.mEffectCode = ESM::fourCC("FIDG"); state.mMagnitude = 6;
+    state.mPosition = {10, 20, 30}; state.mVelocity = {0, 1000, 0};
+    state.mModel = "MagicEffects/fireball.nif";
+    auto next = ESM4::advanceMagicProjectile(state, .25f);
+    EXPECT_EQ(next.mPosition, (std::array<float, 3>{10, 270, 30}));
+    EXPECT_FLOAT_EQ(next.mDistance, 250);
+    EXPECT_EQ(state.mPosition, (std::array<float, 3>{10, 20, 30}));
+    next = ESM4::advanceMagicProjectile(next, 20);
+    EXPECT_FLOAT_EQ(next.mPosition[1], 10020);
+    EXPECT_FLOAT_EQ(next.mDistance, next.mMaximumDistance);
+    EXPECT_EQ(ESM4::advanceMagicProjectile(next, 1), next);
+    EXPECT_THROW(ESM4::advanceMagicProjectile(state, -1), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceMagicProjectile(state, std::numeric_limits<float>::infinity()), std::invalid_argument);
+    auto invalid = state; invalid.mVelocity = {};
+    EXPECT_THROW(invalid.validate(), std::invalid_argument);
+    invalid = state; invalid.mMagnitude = -1;
+    EXPECT_THROW(invalid.validate(), std::invalid_argument);
+    invalid = state; invalid.mEffectCode = ESM::fourCC("REHE");
+    EXPECT_THROW(invalid.validate(), std::invalid_argument);
 }
 
 TEST(ESM4CombatSpellPower, ReplaysOriginalPlayerCasterPowerAndRejectsUnrepresentableOutputs)

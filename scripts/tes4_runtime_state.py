@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 87
+CURRENT_VERSION = 88
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1685,6 +1685,44 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if previous_contact is not None and order <= previous_contact:
             raise RuntimeStateError("Noncanonical trap contact list")
         previous_contact = order
+
+    projectiles = check_collection(state.get("native_magic_projectiles", []), "native magic projectile list")
+    next_projectile = state.get("next_magic_projectile", 1)
+    if (type(next_projectile) is not int or not 0 < next_projectile <= 0xFFFFFFFFFFFFFFFF
+            or (version < 88 and (projectiles or next_projectile != 1))):
+        raise RuntimeStateError("Invalid native magic projectile serial or state version")
+    previous_projectile = 0
+    for projectile in projectiles:
+        if not isinstance(projectile, dict) or set(projectile) != {
+                "id", "caster", "source", "cell", "effect_code", "magnitude", "position", "velocity",
+                "distance", "maximum_distance", "model"}:
+            raise RuntimeStateError("Invalid native magic projectile shape")
+        serial = projectile["id"]
+        if type(serial) is not int or not previous_projectile < serial < next_projectile:
+            raise RuntimeStateError("Noncanonical native magic projectile serials")
+        previous_projectile = serial
+        for key in ("caster", "source", "cell"):
+            native_key(projectile[key])
+        if (projectile["caster"] not in native_keys or not projectile["source"].startswith("content:")
+                or not projectile["cell"].startswith("content:")):
+            raise RuntimeStateError("Dangling native magic projectile identity")
+        if type(projectile["effect_code"]) is not int or projectile["effect_code"] not in {
+                int.from_bytes(b'SHDG', 'little'), int.from_bytes(b'FIDG', 'little')}:
+            raise RuntimeStateError("Unsupported native magic projectile effect")
+        model = projectile["model"]
+        if not isinstance(model, str) or not model or '\0' in model:
+            raise RuntimeStateError("Invalid native magic projectile model")
+        for key in ("position", "velocity"):
+            values = projectile[key]
+            if not isinstance(values, list) or len(values) != 3:
+                raise RuntimeStateError("Invalid magic projectile vector")
+            for value in values:
+                native_float(value)
+        magnitude, distance, maximum = [native_float(projectile[key])
+            for key in ("magnitude", "distance", "maximum_distance")]
+        if (magnitude < 0 or distance < 0 or maximum <= 0 or distance > maximum
+                or not any(value != 0 for value in projectile["velocity"])):
+            raise RuntimeStateError("Invalid magic projectile magnitude or flight range")
 
     casts = check_collection(state.get("native_spell_casts", []), "native spell cast list")
     if version < 87 and casts:
@@ -3424,6 +3462,21 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             if flag > 1: raise RuntimeStateError("Invalid native spell release flag")
             cast["released"] = bool(flag)
             result["native_spell_casts"].append(cast)
+    if version >= 88:
+        result["next_magic_projectile"] = reader.unpack("<Q")
+        result["native_magic_projectiles"] = []
+        for _ in range(reader.count()):
+            projectile = {"id": reader.unpack("<Q")}
+            for key in ("caster", "source", "cell"):
+                projectile[key] = reader.string()
+            projectile["effect_code"] = reader.unpack("<I")
+            projectile["magnitude"] = reader.unpack("<f")
+            for key in ("position", "velocity"):
+                projectile[key] = [reader.unpack("<f") for _ in range(3)]
+            for key in ("distance", "maximum_distance"):
+                projectile[key] = reader.unpack("<f")
+            projectile["model"] = reader.string()
+            result["native_magic_projectiles"].append(projectile)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -4233,6 +4286,22 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             for key in ("cost", "elapsed", "release_time", "duration"):
                 writer.pack("<f", cast[key])
             writer.pack("<B", cast["released"])
+    if version >= 88:
+        writer.pack("<Q", state.get("next_magic_projectile", 1))
+        projectiles = state.get("native_magic_projectiles", [])
+        writer.pack("<I", len(projectiles))
+        for projectile in projectiles:
+            writer.pack("<Q", projectile["id"])
+            for key in ("caster", "source", "cell"):
+                writer.string(projectile[key])
+            writer.pack("<I", projectile["effect_code"])
+            writer.pack("<f", projectile["magnitude"])
+            for key in ("position", "velocity"):
+                for value in projectile[key]:
+                    writer.pack("<f", value)
+            for key in ("distance", "maximum_distance"):
+                writer.pack("<f", projectile[key])
+            writer.string(projectile["model"])
     return writer.finish()
 
 
@@ -4373,6 +4442,11 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 87 and state.get("native_spell_casts"):
         raise RuntimeStateError("Cannot infer pending casts from an older schema")
     state.setdefault("native_spell_casts", [])
+    if state.get("schema_version", 1) < 88 and (state.get("native_magic_projectiles")
+            or state.get("next_magic_projectile", 1) != 1):
+        raise RuntimeStateError("Cannot infer magic projectiles from an older schema")
+    state.setdefault("native_magic_projectiles", [])
+    state.setdefault("next_magic_projectile", 1)
 
 
 def _upgrade_loose_weapons(state: dict[str, Any]) -> None:

@@ -4,6 +4,9 @@
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/loadspel.hpp>
+#include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadench.hpp>
+#include <limits>
 #include <components/loadinglistener/loadinglistener.hpp>
 
 #include <gtest/gtest.h>
@@ -201,4 +204,89 @@ TEST(OblivionCombatMagicStore, MissingAndDeletedEffectsDoNotInventSpellCost)
     EXPECT_TRUE(describeHealing(complete).mCost);
     complete.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_MGEF, 0x188c, {}, true)});
     EXPECT_FALSE(describeHealing(complete).mCost);
+}
+
+namespace
+{
+    std::string shockEffect(float speed = 2.f, std::uint32_t id = 0x189b)
+    {
+        const auto data = bytes(0x25001c75u) + bytes(7.8f) + bytes(8u) + bytes(2u) + bytes(68)
+            + std::string(8, '\0') + bytes(speed) + std::string(32, '\0');
+        return record(ESM4::REC_MGEF, id,
+            sub(ESM::fourCC("EDID"), std::string("SHDG\0", 5))
+            + sub(ESM::fourCC("MODL"), std::string("MagicEffects\\shockbolt.NIF") + '\0')
+            + sub(ESM::fourCC("DATA"), data));
+    }
+
+    std::string staffEnchantment(std::uint32_t magnitude = 5, std::uint32_t duration = 0)
+    {
+        const auto enit = bytes(1u) + bytes(13u) + bytes(13u) + std::string(4, '\0');
+        const auto efit = bytes(ESM::fourCC("SHDG")) + bytes(magnitude) + bytes(0u)
+            + bytes(duration) + bytes(2u) + bytes(8u);
+        return record(ESM4::REC_ENCH, 0x66c42, sub(ESM::fourCC("ENIT"), enit)
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("SHDG"))) + sub(ESM::fourCC("EFIT"), efit));
+    }
+
+    std::string staff()
+    {
+        const auto data = bytes(4u) + bytes(1.f) + bytes(1.f) + bytes(0u) + bytes(50u)
+            + bytes(20u) + bytes(8.f) + bytes(std::uint16_t{0});
+        return record(ESM4::REC_WEAP, 0x66c45, sub(ESM::fourCC("DATA"), data)
+            + sub(ESM::fourCC("ENAM"), bytes(0x66c42u))
+            + sub(ESM::fourCC("ANAM"), bytes(std::uint16_t{150})));
+    }
+
+    auto resolveStaff(const Fixture& fixture)
+    {
+        const auto* weapon = fixture.mStore.get<ESM4::Weapon>().search(ESM::FormId{0x66c45, 1});
+        if (!weapon) throw std::runtime_error("missing fixture staff");
+        return MWWorld::resolveOblivionStaffCastInputs(fixture.mStore, *weapon);
+    }
+}
+
+TEST(OblivionCombatMagicStore, StaffTargetDamageUsesWinningEnchantmentAndAsset)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {shockEffect(), staffEnchantment(), staff()});
+    const auto before = fixture.mStore.getFormKeyIndex().serialize();
+    auto input = resolveStaff(fixture);
+    ASSERT_TRUE(input);
+    EXPECT_EQ(input->mEnchantment, ESM::FormKey::content("Oblivion.esm", 0x66c42));
+    EXPECT_FLOAT_EQ(input->mAuthoredChargeCost, 13);
+    EXPECT_FLOAT_EQ(input->mMaximumCharge, 150);
+    EXPECT_FLOAT_EQ(input->mDamage.mMagnitude, 5);
+    EXPECT_EQ(input->mDamage.mResistanceActorValue, 68);
+    EXPECT_FLOAT_EQ(input->mDamage.mProjectileSpeedFactor, 2);
+    EXPECT_EQ(input->mDamage.mModel, "MagicEffects\\shockbolt.NIF");
+    EXPECT_EQ(fixture.mStore.getFormKeyIndex().serialize(), before);
+    fixture.load("patch.esp", {"oblivion.esm"}, {staffEnchantment(7), shockEffect(1.5f)});
+    input = resolveStaff(fixture);
+    ASSERT_TRUE(input);
+    EXPECT_FLOAT_EQ(input->mDamage.mMagnitude, 7);
+    EXPECT_FLOAT_EQ(input->mDamage.mProjectileSpeedFactor, 1.5f);
+    fixture.load("final.esp", {"oblivion.esm", "patch.esp"},
+        {record(ESM4::REC_ENCH, 0x66c42, {}, true)});
+    EXPECT_FALSE(resolveStaff(fixture));
+}
+
+TEST(OblivionCombatMagicStore, StaffTargetDamageRejectsTimedAmbiguousAndInvalidProjectiles)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {shockEffect(), staffEnchantment(5, 2), staff()});
+    EXPECT_FALSE(resolveStaff(fixture)); // No partial immediate substitution for a timed effect.
+    fixture.load("patch.esp", {"oblivion.esm"}, {staffEnchantment()});
+    ASSERT_TRUE(resolveStaff(fixture));
+    fixture.load("other.esm", {}, {shockEffect(2, 0x800)});
+    EXPECT_FALSE(resolveStaff(fixture));
+
+    for (float speed : {0.f, -1.f, std::numeric_limits<float>::infinity()})
+    {
+        Fixture invalid;
+        invalid.load("oblivion.esm", {}, {shockEffect(speed), staffEnchantment(), staff()});
+        EXPECT_FALSE(resolveStaff(invalid));
+    }
+    Fixture deleted;
+    deleted.load("oblivion.esm", {}, {shockEffect(), staffEnchantment(), staff()});
+    deleted.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_MGEF, 0x189b, {}, true)});
+    EXPECT_FALSE(resolveStaff(deleted));
 }
