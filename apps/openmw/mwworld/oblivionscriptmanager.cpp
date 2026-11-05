@@ -11,6 +11,7 @@
 #include <charconv>
 #include <cmath>
 #include <cstdlib>
+#include <cstdio>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -55,6 +56,7 @@
 #include <components/esm4/loadsoun.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/inventorymechanics.hpp>
+#include <components/misc/messageformatparser.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/resource/resourcesystem.hpp>
@@ -89,6 +91,82 @@ namespace MWWorld
 {
     namespace
     {
+        // Formatting arguments precede the literal button labels. Consume the
+        // placeholders before handing the remaining labels to the existing UI.
+        class NativeMessageFormatter : public Misc::MessageFormatParser
+        {
+            const std::vector<ObScript::Value>& mArguments;
+            std::size_t mNext = 1;
+            std::string mText;
+
+            template <class T>
+            void append(const std::string& format, T value)
+            {
+                const int length = std::snprintf(nullptr, 0, format.c_str(), value);
+                if (length < 0)
+                    throw ObScript::RuntimeError("OBSV115", "invalid native message format", "MessageBox");
+                std::string text(static_cast<std::size_t>(length) + 1, '\0');
+                std::snprintf(text.data(), text.size(), format.c_str(), value);
+                text.resize(length);
+                mText += text;
+            }
+
+            void visitedCharacter(char c) override { mText += c; }
+
+            void visitedPlaceholder(Placeholder placeholder, int flags, int width, int precision,
+                Notation notation) override
+            {
+                if (mNext == mArguments.size())
+                    throw ObScript::RuntimeError("OBSV115", "missing native message format argument", "MessageBox");
+                const auto& value = mArguments[mNext++];
+                std::string format = "%";
+                if (flags & AlignLeft) format += '-';
+                if (flags & PositiveSign) format += '+';
+                if (flags & PositiveSpace) format += ' ';
+                if (flags & AlternateForm) format += '#';
+                if (flags & PrependZero) format += '0';
+                if (width >= 0) format += std::to_string(width);
+                if (precision >= 0) format += "." + std::to_string(precision);
+                if (placeholder == StringPlaceholder)
+                {
+                    format += 's';
+                    const auto text = ObScript::valueString(value);
+                    append(format, text.c_str());
+                }
+                else if (placeholder == IntegerPlaceholder)
+                {
+                    format += "lld";
+                    append(format, static_cast<long long>(ObScript::asInteger(value)));
+                }
+                else
+                {
+                    format += static_cast<char>(notation);
+                    append(format, ObScript::asNumber(value));
+                }
+            }
+
+        public:
+            explicit NativeMessageFormatter(const std::vector<ObScript::Value>& arguments)
+                : mArguments(arguments)
+            {
+            }
+
+            const std::string& text() const { return mText; }
+
+            std::vector<std::string> buttons() const
+            {
+                std::vector<std::string> result;
+                for (auto i = mNext; i < mArguments.size(); ++i)
+                {
+                    const auto* label = std::get_if<std::string>(&mArguments[i]);
+                    if (!label)
+                        throw ObScript::RuntimeError("OBSV115", "native message button must be a string", "MessageBox");
+                    result.push_back(*label);
+                }
+                return result;
+            }
+        };
+
         bool nativeInventoryActor(const Ptr& actor)
         {
             if (actor.isEmpty())
@@ -550,6 +628,7 @@ namespace MWWorld
     {
         OblivionScriptManager* mOwner;
         decltype(OblivionScriptManager::mNativeSpeech) mNativeSpeech{};
+        ESM::FormKey mMessageBoxOwner;
         decltype(OblivionScriptManager::mDiagnosedVoiceTopics) mDiagnosedVoiceTopics{};
         decltype(OblivionScriptManager::mInstances) mInstances{};
         decltype(OblivionScriptManager::mQuests) mQuests{};
@@ -584,6 +663,7 @@ namespace MWWorld
         {
             using std::swap;
             swap(mNativeSpeech, owner.mNativeSpeech);
+            swap(mMessageBoxOwner, owner.mMessageBoxOwner);
             swap(mDiagnosedVoiceTopics, owner.mDiagnosedVoiceTopics);
             swap(mInstances, owner.mInstances);
             swap(mQuests, owner.mQuests);
@@ -691,6 +771,7 @@ namespace MWWorld
     {
         requireMutableRuntime();
         mNativeSpeech.clear();
+        mMessageBoxOwner = {};
         mDiagnosedVoiceTopics.clear();
         mInstances.clear();
         mSpokenDialogueInfos.clear();
@@ -1464,6 +1545,24 @@ namespace MWWorld
             return context.mSelf;
         };
         const auto objectPtr = [&]() { return ptrFor(objectKey()); };
+        const auto messageBoxOwner = [&]() {
+            const auto self = ESM4::runtimeReferenceKey(objectKey());
+            if (self == ESM::FormKey::dynamic("player", 1)) return self;
+            // Original5072B0 uses a permanent reference's FormID, otherwise
+            // the executing script's FormID. Other pollers must not consume it.
+            if (const auto* reference = mStore.search<ESM4::Reference>(self))
+            {
+                if (!(reference->mFlags & 0x4000u)) return self;
+            }
+            else if (const auto* actor = mStore.search<ESM4::ActorCharacter>(self))
+            {
+                if (!(actor->mFlags & 0x4000u)) return self;
+            }
+            const auto script = context.mUnit.mOwner;
+            if (const auto quest = mQuestScripts.find(script); quest != mQuestScripts.end())
+                return quest->second;
+            return script;
+        };
         const auto isDispositionActor = [&](const ESM::FormKey& key) {
             const auto base = mWorld.getOblivionReferenceBaseKey(key);
             return base && (mStore.search<ESM4::Npc>(*base) || mStore.search<ESM4::Creature>(*base));
@@ -1516,7 +1615,13 @@ namespace MWWorld
         if (name == "getsecondspassed")
             return context.mSecondsPassed;
         if (name == "getbuttonpressed")
-            return std::int64_t(MWBase::Environment::get().getWindowManager()->readPressedButton());
+        {
+            if (mMessageBoxOwner.isNull() || mMessageBoxOwner != messageBoxOwner())
+                return std::int64_t(-1);
+            const int button = MWBase::Environment::get().getWindowManager()->readPressedButton();
+            if (button >= 0) mMessageBoxOwner = {};
+            return std::int64_t(button);
+        }
         if (name == "getself" || name == "getcontainer")
             return ObScript::ReferenceValue{ context.mSelf, "self" };
         if (name == "getactionref" || name == "getactionreference")
@@ -1704,9 +1809,18 @@ namespace MWWorld
         }
         if (name == "message" || name == "messagebox")
         {
-            const std::string text = ObScript::valueString(argument(0));
-            MWBase::Environment::get().getWindowManager()->messageBox(text);
-            trace(name + " text=" + text);
+            NativeMessageFormatter formatter(arguments);
+            formatter.process(ObScript::valueString(argument(0)));
+            const auto buttons = name == "messagebox" ? formatter.buttons() : std::vector<std::string>{};
+            const auto windows = MWBase::Environment::get().getWindowManager();
+            if (buttons.empty())
+                windows->messageBox(formatter.text());
+            else
+            {
+                windows->interactiveMessageBox(formatter.text(), buttons);
+                mMessageBoxOwner = messageBoxOwner();
+            }
+            trace(name + " text=" + formatter.text() + " buttons=" + std::to_string(buttons.size()));
             return std::int64_t(0);
         }
         if (name == "getrandompercent")
@@ -3057,6 +3171,7 @@ namespace MWWorld
         target.mTrace.swap(mImpl->mTrace);
         target.mSequence = mImpl->mSequence;
         target.mNativeSpeech.clear();
+        target.mMessageBoxOwner = {};
         target.mDiagnosedVoiceTopics.clear();
         mImpl->mTarget = nullptr;
         // Logging cannot veto a completed state replacement.

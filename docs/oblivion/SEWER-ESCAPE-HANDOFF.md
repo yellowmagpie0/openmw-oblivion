@@ -20,7 +20,33 @@ cancelled before tests to batch this observed navigation repair, with driver and
 owned build group verified terminal. Do not treat its receipt or compiled objects
 as a pass. Earlier1eb42 sanitizer coverage retains its original provenance.
 
-## Current chunk — first final-sewer rat and western bridge approach accepted
+## Current chunk — native exit review repaired; exterior acceptance still fails
+
+Native MessageBox now preserves formatted text and literal button labels and opens
+an asynchronous interactive UI. GetButtonPressed consumes a result only for the
+owning reference/script; MQ01's unrelated poll no longer steals the exit choice.
+Temporary runtime detachment preserves ownership; reset/load clears it. Original
+handler execution proves72 ownership paths with no function stubs. All2198 normal
+engine cases pass at the recorded dirty-source fingerprint.
+[SEWER-EXIT-MESSAGEBOX-VERIFICATION.json](SEWER-EXIT-MESSAGEBOX-VERIFICATION.json).
+
+Runtime `sewers03-exterior-exit-02` selects the original Finished button, reaches
+MQ01 stage88 and physically enters the exterior. **The course fails** on
+AddAchievement, native Resurrect and outdoor GetDayOfWeek. Its outdoor save is
+excluded from the accepted continuation chain. Next implement these actual
+command paths and replay from the clean indoor exit approach, then verify a
+fresh outdoor reload. Shaman victory, continuous opening and accumulated
+sanitizer gates remain required. Existing CharacterGen88 AddTopic/autosave
+limitations below remain open. Do not treat the physical transition as acceptance.
+
+The newer ignored traversal evidence reaches the indoor exit in
+`sewers03-exit-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+under `build/oblivion-compat/sewer-escape/`. Its intermediate courses include
+failed encounter probes with genuine pre-failure F5 checkpoints; promotion of
+that composite chain still requires its whole-state boundary audit. The prior
+fully documented accepted checkpoint remains the bridge approach below.
+
+## Prior chunk — first final-sewer rat and western bridge approach accepted
 
 Normal stairs/descent reaches the western rat0666a7. The first walking course
 stalled nearby while it bit Player and is failed/excluded. Clean landing replay

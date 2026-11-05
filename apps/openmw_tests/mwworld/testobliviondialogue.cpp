@@ -1,6 +1,7 @@
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
 #include "apps/openmw/mwmechanics/oblivionplayerhostility.hpp"
 #include <components/esm4/loadbsgn.hpp>
+#include <utility>
 #include "oblivionworldfixture.hpp"
 #include "inventorywindowmanager.hpp"
 
@@ -748,6 +749,87 @@ TEST(OblivionDialogueMenu, ClassDefaultQueryTracksUsesAndRetainsRealClassIdentit
         MWWorld::recordOblivionCharacterGenerationSkillUse(world.getPlayerPtr(), ESM::Skill::HandToHand, 0, 10.f);
         EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationState(), saved);
 
+    }
+}
+
+TEST(OblivionDialogueMenu, NativeMessageBoxRetainsButtonsAfterFormatArgumentsAndReadsUiSelection)
+{
+    struct Windows : TestingOpenMW::InventoryWindowManager
+    {
+        std::string mText;
+        std::vector<std::string> mButtons;
+        bool mBlock = true;
+        int mChoice = -1;
+        void interactiveMessageBox(std::string_view text, const std::vector<std::string>& buttons,
+            bool block, int) override
+        {
+            mText = text;
+            mButtons = buttons;
+            mBlock = block;
+        }
+        int readPressedButton() override { return std::exchange(mChoice, -1); }
+    };
+    for (bool shifted : {false, true})
+    {
+        Windows windows;
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        f.mFixture.mEnvironment.setWindowManager(windows);
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> exit{
+            std::string("Before exiting the sewers, you may revise your character."),
+            std::string("Edit Race"), std::string("Edit Birthsign"), std::string("Edit Class"),
+            std::string("Finished - Exit Sewers")};
+        scripts.call("MessageBox", {}, exit, context, {});
+        EXPECT_EQ(windows.mText, std::get<std::string>(exit[0]));
+        EXPECT_EQ(windows.mButtons, (std::vector<std::string>{"Edit Race", "Edit Birthsign", "Edit Class",
+            "Finished - Exit Sewers"}));
+        EXPECT_FALSE(windows.mBlock);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, context, {})), -1);
+        windows.mChoice = 3;
+        auto unrelated = context;
+        unrelated.mSelf = ESM::FormKey::dynamic("player", 1);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, unrelated, {})), -1);
+        EXPECT_EQ(windows.mChoice, 3);
+        auto retained = scripts.retainRuntime();
+        ASSERT_TRUE(retained.detach());
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, context, {})), -1);
+        EXPECT_EQ(windows.mChoice, 3);
+        ASSERT_TRUE(retained.restore());
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, context, {})), 3);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, context, {})), -1);
+
+        // Quest/global calls without a reference use script identity, rather
+        // than letting an unrelated quest's unconditional poll steal a result.
+        auto global = context;
+        global.mSelf = key(0x9000);
+        global.mUnit.mOwner = key(0x9001);
+        scripts.call("MessageBox", {}, exit, global, {});
+        windows.mChoice = 2;
+        auto otherGlobal = global;
+        otherGlobal.mUnit.mOwner = key(0x9002);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, otherGlobal, {})), -1);
+        EXPECT_EQ(windows.mChoice, 2);
+        auto sameScript = global;
+        sameScript.mSelf = key(0x9003);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, sameScript, {})), 2);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, global, {})), -1);
+
+        const std::vector<ObScript::Value> formatted{std::string("%s: %.0f / %03d (100%%)"),
+            std::string("Score"), 2.25, std::int64_t(7), std::string("Continue"), std::string("Cancel")};
+        scripts.call("MessageBox", {}, formatted, context, {});
+        EXPECT_EQ(windows.mText, "Score: 2 / 007 (100%)");
+        EXPECT_EQ(windows.mButtons, (std::vector<std::string>{"Continue", "Cancel"}));
+        std::string toast;
+        windows.mMessageCallback = [&](std::string_view text, MWGui::ShowInDialogueMode) { toast = text; };
+        scripts.call("MessageBox", {}, {std::string("Button = %.0f"), std::int64_t(3)}, context, {});
+        EXPECT_EQ(toast, "Button = 3");
+        scripts.call("Message", {}, {std::string("Value %d"), std::int64_t(4)}, context, {});
+        EXPECT_EQ(toast, "Value 4");
+        EXPECT_THROW(scripts.call("MessageBox", {}, {std::string("Value %g")}, context, {}), ObScript::RuntimeError);
+        EXPECT_THROW(scripts.call("MessageBox", {}, {std::string("Text"), std::int64_t(4)}, context, {}),
+            ObScript::RuntimeError);
     }
 }
 

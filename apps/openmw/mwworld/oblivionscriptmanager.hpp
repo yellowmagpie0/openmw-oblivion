@@ -180,6 +180,9 @@ namespace MWWorld
         std::map<ESM::FormKey, ESM::FormKey> mQuestScripts;
         std::map<InstanceKey, Instance> mInstances;
         std::map<ESM::FormKey, ESM4::RuntimeQuestState> mQuests;
+        // Interactive UI is not saveable; retain its polling identity across
+        // temporary runtime detachment and clear it on game restore/reset.
+        ESM::FormKey mMessageBoxOwner;
         std::set<ESM::FormKey> mSpokenDialogueInfos;
         std::vector<ObScript::RuntimeDiagnostic> mDiagnostics;
         std::vector<std::string> mTrace;
