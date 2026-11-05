@@ -26,6 +26,7 @@
 #include "apps/openmw/mwworld/cellstore.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivionscriptmanager.hpp"
+#include "apps/openmw/mwworld/globals.hpp"
 #include "apps/openmw/mwworld/worldmodel.hpp"
 
 #include <components/compiler/extensions.hpp>
@@ -830,6 +831,36 @@ TEST(OblivionDialogueMenu, NativeMessageBoxRetainsButtonsAfterFormatArgumentsAnd
         EXPECT_THROW(scripts.call("MessageBox", {}, {std::string("Value %g")}, context, {}), ObScript::RuntimeError);
         EXPECT_THROW(scripts.call("MessageBox", {}, {std::string("Text"), std::int64_t(4)}, context, {}),
             ObScript::RuntimeError);
+    }
+}
+
+TEST(OblivionDialogueMenu, NativeWeekdayUsesElapsedDaysAndPcAchievementHasNoSideEffects)
+{
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& scripts = *world.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        for (const auto [days, expected] : std::vector<std::pair<int, int>>{
+                 {0, 0}, {1, 1}, {6, 6}, {7, 0}, {8, 1}, {12, 5}, {365, 1}, {10000, 4}})
+        {
+            world.setGlobalInt(MWWorld::Globals::sDaysPassed, days);
+            EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), expected);
+        }
+        // A changed counter is read immediately, without a cached weekday.
+        world.setGlobalInt(MWWorld::Globals::sDaysPassed, 7);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), 0);
+        // PC AddAchievement must not alter inventory, quests or character state.
+        const auto inventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+        const auto stage = f.stage();
+        const auto sequence = f.sequence();
+        EXPECT_NO_THROW(scripts.call("AddAchievement", {}, {std::int64_t(1)}, context, {}));
+        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), inventory);
+        EXPECT_EQ(f.stage(), stage);
+        EXPECT_EQ(f.sequence(), sequence);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), 0);
     }
 }
 

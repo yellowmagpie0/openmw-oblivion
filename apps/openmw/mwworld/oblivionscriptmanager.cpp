@@ -2625,6 +2625,20 @@ namespace MWWorld
         }
         if (name == "getcurrenttime")
             return double(mWorld.mGlobalVariables[Globals::sGameHour].getFloat());
+        if (name == "getdayofweek")
+        {
+            // Original5051D0 ->402C40 truncates GameDaysPassed and takes the
+            // unsigned low32 remainder. The world owns this integer counter.
+            return std::int64_t(static_cast<std::uint32_t>(
+                mWorld.mGlobalVariables[Globals::sDaysPassed].getInteger()) % 7);
+        }
+        if (name == "addachievement")
+        {
+            // The original PC command table dispatches to977C50: success,
+            // without extracting arguments or changing game/platform state.
+            trace("addachievement pc-noop");
+            return std::int64_t(0);
+        }
         if (name == "getfactionrank")
             return std::int64_t(-1);
         if (name == "getdestroyed")

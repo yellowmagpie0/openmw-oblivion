@@ -25,7 +25,14 @@ as a pass. Earlier1eb42 sanitizer coverage retains its original provenance.
 Native MessageBox now preserves formatted text and literal button labels and opens
 an asynchronous interactive UI. GetButtonPressed consumes a result only for the
 owning reference/script; MQ01's unrelated poll no longer steals the exit choice.
-Temporary runtime detachment preserves ownership; reset/load clears it. Original
+Temporary runtime detachment preserves ownership; reset/load clears it. GetDayOfWeek
+and PC AddAchievement are now implemented: weekday follows the elapsed-day counter
+modulo7; original PC achievement handler succeeds without side effects. Complete
+original instruction paths cover11 weekday fixtures and the achievement handler;
+two focused engine tests pass (both master layouts).
+[SEWER-EXIT-CALENDAR-VERIFICATION.json](SEWER-EXIT-CALENDAR-VERIFICATION.json).
+Fresh exterior replay is still required; the three failures below describe the
+retained pre-fix course. Original
 handler execution proves72 ownership paths with no function stubs. All2198 normal
 engine cases pass at the recorded dirty-source fingerprint.
 [SEWER-EXIT-MESSAGEBOX-VERIFICATION.json](SEWER-EXIT-MESSAGEBOX-VERIFICATION.json).
