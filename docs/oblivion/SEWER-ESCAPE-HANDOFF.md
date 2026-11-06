@@ -15,7 +15,27 @@ coverage of recipient/fall fixes now passes as explicit composite evidence.
 The genuine prison-origin checkpoint chain now reaches the exterior and passes
 fresh outdoor reload. It remains composite evidence; full escape is not complete.
 
-## Current chunk — occluded first-ambush descent
+## Current chunk — uninterrupted escort and solo course
+
+Original-new-game07 is LIVE, supervisor218924/runner218936/game218963, source
+56e51fbe9a/runtime225953a1…db552, manifest `occluded-descent-full-assembly-01`.
+No load flag/event. Original Emperor conversation/19 and first ambush26 now PASS
+in the same process: Player80HP/inventory unchanged, Renault scripteddead with
+essentialfalse, all4 assassins dead (two Glenroy/two Baurus), all3 escorts alive,
+no dead bound owners and combat/death/action/cast/projectile queues clear. Actual
+victoryF5 is preserved unchanged and parses exactly to its native receipt snapshot;
+rendered victory capture inspected. This closes06's ambush reproduction in a cold
+new game, without a loaded continuation.
+[Uninterrupted ambush prefix](SEWER-UNINTERRUPTED-AMBUSH-VERIFICATION.json).
+
+The process has also reached original27/28/29 and continues toward escort30.
+Preserve this exact process; inspect its live milestones before starting any UI.
+Next: physical tunnel/escort30, integrated early3-rat course/healing/room traversal,
+then the remaining loot/combat/shaman/reunion/class/exit sequence. The single
+prison→exterior course and fresh reload of its own outdoor save remain due.
+No whole-course completion is inferred from this prefix or the older composite.
+
+### Reusable occluded first-ambush descent fix
 
 Original-new-game06 is terminal FAILED: original19/80HP, passage/descent and
 ambush24 passed; three assassins died, but0178c3 stalled above Glenroy and the

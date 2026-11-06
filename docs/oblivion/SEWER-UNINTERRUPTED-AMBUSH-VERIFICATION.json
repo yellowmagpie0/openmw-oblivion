@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "scope": "Original uninterrupted new-game07 prison opening and first ambush prefix; full sewer escape remains incomplete",
+  "status": "Verified original26 prefix, not whole-course acceptance",
+  "functional_source_commit": "56e51fbe9a9506885c853f59528800744b127588",
+  "course": "build/oblivion-compat/sewer-escape/full-escape-continuous-07",
+  "launch": {
+    "recorded_utc": "2026-11-06T17:53:21.667679+00:00",
+    "scope": "Launch provenance only; not completion evidence",
+    "status": "RUNNING",
+    "functional_source_commit": "56e51fbe9a9506885c853f59528800744b127588",
+    "binary_built_from": "f56706b558 plus tested/committed occluded-descent patch; original dirty fingerprint retained in committed proof",
+    "supervisor_pid": 218924,
+    "runner_pid": 218936,
+    "game_pid": 218963,
+    "argv": [
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "--replace=config",
+      "--config",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-07/config",
+      "--no-sound=1",
+      "--no-grab"
+    ],
+    "runtime_sha256": "225953a16a8ea2c020165e3186adf8112704f8ccee90d90356dffcccb82db552",
+    "manifest": "build/oblivion-compat/sewer-escape/occluded-descent-full-assembly-01/full-escape.json",
+    "manifest_sha256": "18d63be3f55148685997d224e9e08b2eab2d25951644c0cb299e5ee511b1568d",
+    "new_game": true,
+    "no_load_savegame": true,
+    "acceptance": "Single original new-game prison to physical exterior; fresh process reload of its own actual outdoor save remains due"
+  },
+  "one_game_pid": 218963,
+  "no_load_events_through_victory": true,
+  "opening_prefix": "opening-stage19-verification.json",
+  "chargen": {
+    "quest": "content:oblivion.esm:02466e",
+    "stage": 26,
+    "running": true,
+    "completed_stages": [
+      5,
+      6,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      22,
+      23,
+      24,
+      26
+    ]
+  },
+  "player_health": 80,
+  "player_inventory_unchanged_from_opening": true,
+  "escorts_alive": [
+    "032a16",
+    "032a17",
+    "032a18"
+  ],
+  "renault_scripted_dead": {
+    "actor": "content:oblivion.esm:032a15",
+    "base": "content:oblivion.esm:02349f",
+    "phase": 1,
+    "recovery_remaining": 0,
+    "killer": "null"
+  },
+  "renault_essential_override": false,
+  "assassins": [
+    {
+      "actor": "content:oblivion.esm:014a2c",
+      "base": "content:oblivion.esm:014a28",
+      "phase": 1,
+      "recovery_remaining": 0,
+      "killer": "content:oblivion.esm:032a16"
+    },
+    {
+      "actor": "content:oblivion.esm:014a30",
+      "base": "content:oblivion.esm:014a27",
+      "phase": 1,
+      "recovery_remaining": 0,
+      "killer": "content:oblivion.esm:032a17"
+    },
+    {
+      "actor": "content:oblivion.esm:0178c3",
+      "base": "content:oblivion.esm:017617",
+      "phase": 1,
+      "recovery_remaining": 0,
+      "killer": "content:oblivion.esm:032a17"
+    },
+    {
+      "actor": "content:oblivion.esm:0178c4",
+      "base": "content:oblivion.esm:017619",
+      "phase": 1,
+      "recovery_remaining": 0,
+      "killer": "content:oblivion.esm:032a16"
+    }
+  ],
+  "no_terminal_bound_owners": true,
+  "queues": {
+    "native_combat_engagements": 0,
+    "pending_death_events": 0,
+    "physical_action_owners": 0,
+    "native_spell_casts": 0,
+    "native_magic_projectiles": 0
+  },
+  "actual_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-07/first-ambush-victory.omwsave",
+  "save_receipt": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 218963,
+    "sequence": 19,
+    "tick": 2048,
+    "event": "save-complete",
+    "action_id": "observation-19",
+    "actor": "dynamic:player:0000000000000001",
+    "cause": "normal-save",
+    "deltas": {
+      "health": 0
+    },
+    "live": "live-3-19.json",
+    "live_sha256": "c234627fcc7865424cda0266c65810d740b355a78dc551a205363ee5f0e163d9",
+    "result": "committed",
+    "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-07/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "save_sha256": "f184c23730950df347fec11b968c870bc6b3685e8f0e8f5955eb8337eb305648",
+    "target": "dynamic:player:0000000000000001"
+  },
+  "parsed_save_equals_native_receipt_snapshot": true,
+  "capture": "segment02-phase8-ambush-victory.png",
+  "rendered_review_pending": false,
+  "implementation_evidence_reused": "SEWER-OCCLUDED-COMBAT-DESCENT-VERIFICATION.json:final2210normal/2210sanitized, focused4 and actual normal/sanitized diagnostic recovery; original source provenance retained",
+  "limits": "The process continues through original27\u201329 toward escort30. This prefix closes the first-ambush reproduction in a real new game; it does not prove solo course, shaman, later escort/class/exit or outdoor reload.",
+  "rendered_inspected": true,
+  "rendered_findings": "Original rendered prison chamber, persistent corpses and surviving escort after real native victory; ordinary HUD visible.",
+  "recorded_utc": "2026-11-06T18:32:30.695943+00:00"
+}
