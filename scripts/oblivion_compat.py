@@ -540,9 +540,10 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
                 raise ValueError("repeat_until_log requires a non-empty action list")
             allowed = (sdl_offscreen_replay.INPUT_ACTIONS | sdl_offscreen_replay.GAMEPAD_ACTIONS
                        | {"sleep", "wait_log"}) - {"type", "type_held"}
-            if any(a.get("type") not in allowed
-                   for field in ("actions", "cleanup_actions") for a in action.get(field, [])):
-                raise ValueError("repeat_until_log permits only normal input and read-only waits")
+            for field in ("actions", "cleanup_actions"):
+                permitted = allowed | {"repeat_until_log"} if field == "actions" else allowed
+                if any(a.get("type") not in permitted for a in action.get(field, [])):
+                    raise ValueError("repeat_until_log permits only normal input and read-only waits; cleanup cannot loop")
             if "after_start" in action and type(action["after_start"]) is not bool:
                 raise ValueError("repeat_until_log after_start must be a boolean")
         if action_type == "wait_log" and (not isinstance(action.get("pattern"), str) or not action["pattern"]):
@@ -1365,7 +1366,8 @@ def _start_xvfb(output: Path, width: int, height: int) -> tuple[subprocess.Popen
 
 def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: Path,
                 m15_session: tes4_m15.Session | None = None,
-                offscreen_input: sdl_offscreen_replay.Replay | None = None) -> dict[str, Any]:
+                offscreen_input: sdl_offscreen_replay.Replay | None = None,
+                _repeat_deadline: float | None = None) -> dict[str, Any]:
     if action.get("type") == "m15_snapshot":
         if m15_session is None:
             raise ValueError("M15 snapshots require an isolated M15 session")
@@ -1383,6 +1385,9 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         matched = False
         failed = False
         reason = "maximum_iterations"
+        deadline = started + action["timeout_seconds"]
+        if _repeat_deadline is not None:
+            deadline = min(deadline, _repeat_deadline)
         def reached() -> bool:
             if not log_path.is_file():
                 return False
@@ -1392,7 +1397,7 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
 
         try:
             for _ in range(action["maximum_iterations"]):
-                if time.monotonic() - started >= action["timeout_seconds"]:
+                if time.monotonic() >= deadline:
                     reason = "timeout"
                     break
                 matched = reached()
@@ -1402,20 +1407,21 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
                 iteration: list[dict[str, Any]] = []
                 results.append(iteration)
                 for child in action["actions"]:
-                    if time.monotonic() - started >= action["timeout_seconds"]:
+                    if time.monotonic() >= deadline:
                         reason, failed = "timeout", True
                         break
                     result = _run_action(child, environment=environment, output=output,
-                                         offscreen_input=offscreen_input)
+                                         offscreen_input=offscreen_input, _repeat_deadline=deadline)
                     iteration.append(result)
                     if not result["passed"]:
-                        reason, failed = "child_failed", True
+                        reason = "timeout" if time.monotonic() >= deadline else "child_failed"
+                        failed = True
                         break
                 if failed:
                     break
             else:
                 # Completion during the final input burst counts within the time bound.
-                if time.monotonic() - started >= action["timeout_seconds"]:
+                if time.monotonic() >= deadline:
                     reason = "timeout"
                 elif reached():
                     matched = True

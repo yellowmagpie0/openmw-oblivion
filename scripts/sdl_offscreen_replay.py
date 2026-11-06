@@ -23,8 +23,10 @@ CONTROLLER_AXES = {name: i for i, name in enumerate((
     "left_x", "left_y", "right_x", "right_y", "left_trigger", "right_trigger"))}
 
 
-def validation_actions(actions):
+def validation_actions(actions, _depth=0):
     """Include bounded-loop inputs in the same preflight as ordinary inputs."""
+    if _depth > 8:
+        raise ValueError('repeat_until_log nesting exceeds eight levels')
     if not isinstance(actions, list):
         raise ValueError('Scenario actions must be a list')
     for action in actions:
@@ -34,10 +36,7 @@ def validation_actions(actions):
                 nested = action.get(field, [])
                 if not isinstance(nested, list) or any(not isinstance(a, dict) for a in nested):
                     raise ValueError(f'repeat_until_log {field} must be an action list')
-                for child in nested:
-                    if child.get('type') == 'repeat_until_log':
-                        raise ValueError('Nested repeat_until_log actions are unsupported')
-                    yield child
+                yield from validation_actions(nested, _depth + 1)
 
 
 def scancode(value):

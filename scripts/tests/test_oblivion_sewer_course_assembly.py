@@ -77,6 +77,42 @@ class SewerCourseAssemblyTest(unittest.TestCase):
         for query in queries:
             self.assertRegex(query, r'^at \d+ command \S+ (GetStage|GetDead)$')
 
+    def test_observed_camera_motion_waits_for_frames_before_continuing(self):
+        motions = 0
+        def check(actions):
+            nonlocal motions
+            for index, action in enumerate(actions):
+                if action['type'] == 'mouse_move' and 'from_log' in action:
+                    motions += 1
+                    following = actions[index + 1:index + 3]
+                    self.assertEqual(following[0], {'type': 'key_down', 'value': 'F7'})
+                    self.assertEqual(following[1]['type'], 'wait_log')
+                    self.assertIn('camera settled', following[1]['pattern'])
+                    self.assertTrue(following[1]['after_start'])
+                for field in ('actions', 'cleanup_actions'):
+                    check(action.get(field, []))
+        check(self.actions)
+        self.assertGreater(motions, 0)
+
+    def test_focused_selection_retains_a_real_save_load_and_scoped_completion(self):
+        selection = json.loads((self.repo / 'scripts/data/oblivion_compat/'
+                                'oblivion_sewer_continuous_selection.json').read_text())
+        selection['segments'] = [row for row in selection['segments'] if row['segment'] in (4, 5, 6)]
+        root = Path(self.directory.name) / 'focused'
+        root.mkdir()
+        source = root / 'selection.json'
+        source.write_text(json.dumps(selection))
+        output = root / 'course.json'
+        subprocess.run([sys.executable, str(self.repo / 'scripts/assemble_oblivion_sewer_course.py'),
+                        '--selection', str(source), '--output', str(output)],
+                       cwd=self.repo, check=True, capture_output=True, text=True)
+        course = json.loads(output.read_text())
+        self.assertTrue(any('--load-savegame=' in arg for arg in course['command']))
+        self.assertIn('Escape outer segment 3 ready', course['expected_log'])
+        self.assertNotIn('Escape outer segment 67 ready', course['expected_log'])
+        files = {entry['path']: entry['content'] for entry in course['files']}
+        self.assertRegex(files['config/openmw.cfg'], r'(?m)^new-game=0$')
+
 
 if __name__ == '__main__':
     unittest.main()

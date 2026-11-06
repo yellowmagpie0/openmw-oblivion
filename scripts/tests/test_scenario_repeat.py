@@ -129,13 +129,82 @@ class ScenarioRepeatTests(unittest.TestCase):
                              ("path", ""), ("actions", []), ("cleanup_actions", None),
                              ("actions", [dict(type="key_hold", value="shift", seconds=.5)]),
                              ("actions", [dict(type="command", command=["SetHealth", "100"])]),
-                             ("actions", [self.action()])]:
+                             ("cleanup_actions", [self.action()])]:
             manifest = copy.deepcopy(base)
             manifest["actions"][0][field] = value
             with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                 MODULE.validate_scenario_manifest(manifest)
         with self.assertRaisesRegex(ValueError, "isolated SDL"):
             MODULE.validate_scenario_manifest(dict(base, sdl_xvfb_input=False, xvfb=False))
+
+    def test_nested_preflight_validates_every_level_and_bounds_depth(self):
+        inner = self.action()
+        outer = self.action()
+        outer['actions'] = [inner]
+        base = dict(schema_version=1, name='nested normal input', command=['openmw'],
+                    sdl_xvfb_input=True, xvfb=True, actions=[outer])
+        MODULE.validate_scenario_manifest(base)
+        for bad in [dict(type='command', command=['SetHealth', '100']),
+                    dict(type='m15_snapshot'), dict(type='type', value='SetHealth 100')]:
+            candidate = copy.deepcopy(base)
+            candidate['actions'][0]['actions'][0]['actions'] = [bad]
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                MODULE.validate_scenario_manifest(candidate)
+        candidate = copy.deepcopy(base)
+        candidate['actions'][0]['actions'][0]['maximum_iterations'] = 0
+        with self.assertRaises(ValueError):
+            MODULE.validate_scenario_manifest(candidate)
+        deep = self.action()
+        for _ in range(10):
+            parent = self.action()
+            parent['actions'] = [deep]
+            deep = parent
+        with self.assertRaisesRegex(ValueError, 'nesting'):
+            MODULE.validate_scenario_manifest(dict(base, actions=[deep]))
+
+    def test_nested_completion_releases_inner_and_outer_controls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            inner = self.action()
+            inner.update(pattern='aim done', actions=[dict(type='key_hold', value='a', seconds=.1)],
+                         cleanup_actions=[dict(type='key_up', value='a')])
+            outer = self.action()
+            outer['actions'] = [inner, dict(type='key_hold', value='w', seconds=.1)]
+            calls = []
+            def deliver(action):
+                calls.append((action['type'], action['value']))
+                if action['type'] == 'key_hold':
+                    with (output / 'process.log').open('a') as log:
+                        log.write('aim done\n' if action['value'] == 'a' else 'route done\n')
+                return dict(type=action['type'], passed=True)
+            result, _ = self.run_loop(output, outer, deliver)
+            self.assertTrue(result['passed'])
+            self.assertTrue(result['iterations'][0][0]['passed'])
+            self.assertEqual(calls, [('key_hold', 'a'), ('key_up', 'a'),
+                                     ('key_hold', 'w'), ('key_up', 'w')])
+
+    def test_nested_loop_inherits_parent_deadline_and_both_cleanups_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            inner = self.action()
+            inner.update(pattern='never', timeout_seconds=100, maximum_iterations=100,
+                         actions=[dict(type='key_hold', value='a', seconds=.1)],
+                         cleanup_actions=[dict(type='key_up', value='a')])
+            outer = self.action()
+            outer['actions'] = [inner, dict(type='key_hold', value='z', seconds=.1)]
+            now = [0.0]
+            calls = []
+            def deliver(action):
+                calls.append((action['type'], action['value']))
+                if action['type'] == 'key_hold':
+                    now[0] += 6
+                return dict(type=action['type'], passed=True)
+            with mock.patch.object(MODULE.time, 'monotonic', side_effect=lambda: now[0]):
+                result, _ = self.run_loop(Path(directory), outer, deliver)
+            self.assertFalse(result['passed'])
+            self.assertEqual(result['reason'], 'timeout')
+            self.assertEqual(len(result['iterations'][0][0]['iterations']), 2)
+            self.assertEqual(calls[-2:], [('key_up', 'a'), ('key_up', 'w')])
+            self.assertNotIn(('key_hold', 'z'), calls)
 
 
 if __name__ == "__main__":
