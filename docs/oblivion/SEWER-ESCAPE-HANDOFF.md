@@ -35,12 +35,21 @@ Runtime binaries built in focused normal and full sanitizer gates.
 
 Current original-new-game UI: `full-escape-continuous-04`, supervisor178123,
 runner178129/game178210, manifest `full-escape-bound-cleanup-fixed.json`.
-Same course/ordinary controls, actual no-load argv and new-game1. Latest observed
-original10/no frame errors; first ambush remains pending. Launch provenance records
+Same course/ordinary controls, actual no-load argv and new-game1. Original26
+first-ambush victory now passes: actualF5 `live-3-19.json`,80HP/unchanged Player
+inventory, Renault scripteddead/essentialfalse, all4 assassins dead (three Baurus,
+one Glenroy), surviving3 escorts alive. All5 deathcallbacks drain; bound ownership,
+combat/death/action/cast/projectile queues clear. ActualF5 copied unchanged to
+`full-escape-continuous-04/first-ambush-victory.omwsave`; parsed native state exactly
+matches the receipt snapshot. Inspected victory capture and133 matching issued/
+delivered inputs. No loads or frame errors. Original27/departure movement/28/29
+continue normally; escort30 and the rest of the escape remain pending.
+This closes the new-game runtime reproduction of the bound-cleanup failure;
+it does not close the full uninterrupted escape. Launch provenance records
 normal runtime SHA256ef71da25d612636f79b97bf50d2d17643aef49549d044483d5a1a0ad36b7292a,
-built from7db0440e9a plus this tested actor-state patch. Preserve the running
+built from7db0440e9a plus the tested actor-state patch/code392bd5d472. Preserve the running
 process; check actual status before another UI or rebuild. All build helpers are
-terminal. Next: continue this same process through26 and the physical exterior,
+terminal. Next: continue this same process through escort30 and the physical exterior,
 then fresh-load its own outdoorF5 and run the whole-course audit. Full escape
 remains incomplete until that uninterrupted course and fresh reload pass.
 
