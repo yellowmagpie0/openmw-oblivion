@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T21:18:45.438527+00:00",
+  "scope": "Ordinary feedback-controlled Club fight for first Substructure rat, then chest/armor/axe/potion from genuine keyed-door save; full escape incomplete",
+  "status": "Verified bounded QA-data fix, normal runtime/18 focused Python tests/full observer preflight; no uninterrupted whole-course pass",
+  "parent_commit": "183751beb2",
+  "baseline": {
+    "scenario": "build/oblivion-compat/sewer-escape/key-arrival-loot-gear-01/scenario.json",
+    "sha256": "f405f73798b487dd141ba05e4e11e94e3e6d13d76e6cb82ae1ff42848a2e5521",
+    "result": "Failed source8 death wait30sec after one committed Club hit2.90938; Player50HP, game0/no findings. Source7 guarded route prefix passed separately.",
+    "source_save": "build/oblivion-compat/sewer-escape/key-arrival-loot-gear-01/retained-saves/3-0003-Quicksave.omwsave",
+    "source_save_sha256": "7163c89d17353798b966fcc9357bb831b9637bc9d5d5b1ff9c41ebe6a4af45ec"
+  },
+  "change": "Retain initial approach and actual death/F5 gates. Bounded normal aim/approach/charged-attack feedback max10, control cleanup and read-only rat health logging. Selection8 retains complete source50->13 top-level actions via nesting. No C++/Python or combat formula changes.",
+  "source_sha256": {
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_first_rat.json": "e0e98924b178aedc7c25653c815cd7f06c024099bc77c100cc69671d29b6dcaa",
+    "scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json": "1cce84dbea8cbf043d02c1c69987d5e362a8365611619911aa0b8b7889a117d5"
+  },
+  "normal_runtime": {
+    "proof": "build/oblivion-compat/sewer-escape/substructure-rat-feedback-01/native-victory-gear-verification.json",
+    "sha256": "afaf0e675894ed7fc788a76ad805aa1fa5e1064e979452d1f3d0b34f581e8de3",
+    "passed": true,
+    "whole_entry_differences": 0,
+    "native_Player_Club_hit_damage": [
+      1.16375,
+      2.89204
+    ],
+    "rat": "038819 dead, killerPlayer",
+    "final_health": 80,
+    "armor_axe_equipped": [
+      "0661c1",
+      "0661c3",
+      "090613"
+    ],
+    "actual_save_native_exact": true,
+    "ordinary_inputs_match": true,
+    "combat_death_action_cast_projectile_clear": true,
+    "rendered_inspection": {
+      "path": "build/oblivion-compat/sewer-escape/substructure-rat-feedback-01/rendered-gear-inspection.json",
+      "sha256": "018d1351f460e4a8bc5f1e3a7521927690f853338eb0f684b0f9df799749ac24"
+    }
+  },
+  "tests": {
+    "python": {
+      "proof": "build/oblivion-compat/sewer-escape/substructure-rat-feedback-python-focused-01-verification.json",
+      "sha256": "1424a9704d51b08fc10fb9c7d5f6c8fc89517aea5f54fc5a9960914751bda544",
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "assembly": {
+      "proof": "build/oblivion-compat/sewer-escape/substructure-rat-feedback-preflight-verification.json",
+      "sha256": "7056466920cd396ef82a00f5a0516f2cd1bca0a770587ab56b7ee675952784df",
+      "segments": 67,
+      "top_level_actions": 11554,
+      "regex_gates": 4293,
+      "combined_lua_compiled_with_engine_library": true
+    },
+    "reused_engine_evidence": "SEWER-NEW-GAME-MENU-VERIFICATION.json: original2210 normal and2210 ASan/UBSan gates, leak1, source/runtime hashes unchanged; not new-source runs. Full Python578 in SEWER-INPUT-FEEDBACK-HARNESS-VERIFICATION.json retains original scope/provenance."
+  },
+  "normal_runtime_sha256": "a5073d8a47049971cdcdf07c70e5613ecceefc243c261d583a532e3190b79503",
+  "remaining": "Launch original-new-game09 with this and committed key-arrival guard; require all67 segments, physical exterior and fresh reload of that run own outdoor save. Loaded focus does not substitute."
+}

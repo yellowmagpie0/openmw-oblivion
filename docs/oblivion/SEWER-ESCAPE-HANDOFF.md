@@ -15,47 +15,49 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — loot route accepts an already-reached waypoint
+## Current chunk — uninterrupted attempt 09
 
-`full-escape-continuous-08` is terminal FAILED, game0/launcher1, no engine
-findings. Same original-new-game process233687 passes original19/26/30, all3
-Player rat kills, actual wall exit, normal menu selection and3 native healing
-releases42→66, then physical room traversal tox1696.163/y3220.488. Actual native
-saves22/23/24 parse exactly to their matching receipts; queues clear. This closes
-07's cold menu/healing failure, but full escape remains incomplete.
+`full-escape-continuous-09` is LIVE: supervisor237633, runner237634,
+game237657, read-only save archiver237740. Original new-game1/no load flag;
+normal runtime SHAa5073d8a…79503, runtime codeaee30a8b22 unchanged.
+Actual launch proof: `full-escape-continuous-09/launch-verification.json`.
+Current work note: `build/oblivion-compat/sewer-escape/menu-admission-current-work.json`.
+Inspect actual processes/status before new UI or rebuild; preserve this process.
 
-The driver next waited10seconds for waypoint1 aim. The observer had correctly
-printed reached1 immediately (incoming y>=3220) and advanced to waypoint2.
-Preserve08's raw failure and immutable actual
-`full-escape-continuous-08/retained-saves/3-0024-Quicksave.omwsave`.
-Failure proof: `full-escape-continuous-08-failure-verification.json`.
+Manifest `substructure-rat-feedback-full-assembly-01/full-escape.json`:67 segments,
+11554 top-level actions/4293 compiled regex gates, combined observer compiles with
+the exact engine LuaJIT library. Both QA fixes below are included. Read-only
+archiver retains only actual bytes matching native save receipts; inspect
+`full-escape-continuous-09/retained-saves/index.json`.
+All short course paths are under `build/oblivion-compat/sewer-escape/`.
 
-Current change is QA data only: the three original loot-route movement blocks
-are retained verbatim inside single-iteration completion guards. Already reached
-waypoints skip aim/movement; unfinished ones keep their original controls and
-arrival checks. The complete selection7 changes219→78 top-level actions through
-nesting, with no additional selected content. C++/Python harness unchanged.
+08 is terminal FAILED at source7 obsolete waypoint1 aim wait, game0/no findings.
+Its same new-game process passes three actual Player rat kills, wall exit, native
+healing42→66 and room traversal tox1696/y3220, with exact native saves/clear queues.
+Actual immutable source: `full-escape-continuous-08/retained-saves/3-0024-Quicksave.omwsave`.
+No full escape inferred from this accepted prefix.
 
-The guard fix passes the exact actual08 room-save continuation: guard iterations
-0/1/1, actual loot transfer, Club equipped, Iron Key retained once and original
-keyed door crossed to022ff6. Actual F5/archive3 parses exactly to native snapshot,
-Player66HP, corpse empty; whole entry differs only by3 tiny body-velocity projections.
-18 focused assembly/repeat tests pass. New67-segment assembly has11591 top-level
-actions/4300 compiled gates; Lua observer identical to08. C++/Python unchanged;
-reuse full normal/sanitizer engine gates with original provenance.
-[Guard and cold-healing proof](SEWER-KEY-ARRIVAL-GUARD-VERIFICATION.json).
+Completed QA fixes and evidence:
 
-The extended focused scenario itself remains FAILED at the next (source8) rat:
-one charged Club hit landed2.90938 damage, then a30second death wait failed.
-Player alive50HP, game0/no engine findings. Do not relabel this as scenarioPASS.
-Current next chunk: bounded normal combat feedback using its actual immutable
-precombat `key-arrival-loot-gear-01/retained-saves/3-0003-Quicksave.omwsave`.
-Verify the native Player rat kill and nearby gear before a fresh original-new-game09.
-All UI/helper processes are terminal at this checkpoint; inspect state before launch.
+- `183751beb2` guards the three original loot-route movement blocks when their
+  arrival was already observed. Actual08 source already satisfies waypoint1.
+  Loaded guard iterations0/1/1 pass, corpse loot transferred, Club equipped,
+  Iron Key retained once and original keyed door crossed to022ff6. Actual F5
+  parses exactly; entry differs only by3 tiny body-velocity projections.
+  [Guard/cold-healing proof](SEWER-KEY-ARRIVAL-GUARD-VERIFICATION.json).
+- Extended `key-arrival-loot-gear-01` remains FAILED at source8 after one Club
+  hit2.90938 followed by a30second death wait. No engine error/pass relabeling.
+  Bounded ordinary aim/approach/charge feedback now tests actual death and cleans
+  controls, without changing combat rules. `substructure-rat-feedback-01` PASSES
+  from its actual unmodified precombat F5: two native Club hits, rat038819 killed
+  by Player, chest loot, armor/axe equipped, potion→80HP, clear queues and exact
+  final save/native snapshot. Whole loaded entry exact0differences; captures
+  inspected.18 focused Python checks pass; no C++/Python implementation changes.
+  [Combat feedback proof](SEWER-SUBSTRUCTURE-RAT-FEEDBACK-VERIFICATION.json).
 
-All short course paths above are under `build/oblivion-compat/sewer-escape/`.
-Ignored work note `menu-admission-current-work.json` needs terminal/future-run update.
-Never overwrite binaries/resources used by a live UI.
+09 must now prove the full uninterrupted course and its own outdoor reload.
+Loaded focused checks do not substitute. Reuse unchanged engine/Python evidence
+with its original provenance; do not repeat broad gates for QA-data-only changes.
 
 ## Latest completed fix and reusable evidence
 
@@ -92,7 +94,7 @@ Other reusable evidence:
 
 ## Next action and completion audit
 
-Preserve08; inspect milestones, actual saves/native receipts and rendered captures.
+Preserve09; inspect milestones, actual saves/native receipts and rendered captures.
 On terminal failure, retain raw evidence, diagnose the actual failed gate and
 verify a bounded fix with focused/runtime checks before broad integration gates.
 Commit completed self-contained changes; no push. Do not edit source/docs or

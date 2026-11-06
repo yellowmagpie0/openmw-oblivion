@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died in joined Substructure')\n if frame==5 then print('Joined Substructure ready health='..hp) end\n if camera.getMode()==camera.MODE.FirstPerson then print('Substructure first person') end\n local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x38819))\n assert(rat and rat:isValid(),'First Substructure rat missing')\n local distance=(rat.position-self.position):length()\n if Actor.isDead(rat) then print('Substructure first rat dead') end\n if self.position.x>=600 or distance<=220 then print('Substructure first approach reached') end\n if distance<=130 then print('Substructure rat in reach') end\n local x,y,f=aim(rat.position+util.vector3(0,0,100))\n print(string.format('Substructure rat aim x=%d y=%d distance=%.2f',x,y,distance))\n if f then print('Substructure rat facing') end\n if frame%15==0 then print('Substructure Player '..tostring(self.position)..' health='..hp..' rat='..tostring(rat.position)) end\nend}}}}\n"
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died in joined Substructure')\n if frame==5 then print('Joined Substructure ready health='..hp) end\n if camera.getMode()==camera.MODE.FirstPerson then print('Substructure first person') end\n local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x38819))\n assert(rat and rat:isValid(),'First Substructure rat missing')\n local distance=(rat.position-self.position):length()\n if Actor.isDead(rat) then print('Substructure first rat dead') end\n if self.position.x>=600 or distance<=220 then print('Substructure first approach reached') end\n if distance<=130 then print('Substructure rat in reach') end\n local x,y,f=aim(rat.position+util.vector3(0,0,100))\n print(string.format('Substructure rat aim x=%d y=%d distance=%.2f',x,y,distance))\n if f then print('Substructure rat facing') end\n if frame%15==0 then print('Substructure Player '..tostring(self.position)..' health='..hp..' rat='..tostring(rat.position)..' ratHealth='..Actor.stats.dynamic.health(rat).current) end\nend}}}}\n"
     }
   ],
   "command": [
@@ -82,231 +82,157 @@
       "value": "Shift_L"
     },
     {
-      "type": "wait_log",
-      "pattern": "Substructure rat aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Substructure rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure rat aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Substructure rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure rat aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Substructure rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure rat aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Substructure rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure rat facing",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure rat in reach",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure rat aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Substructure rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure rat aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Substructure rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure rat facing",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_down",
-      "button": 1
-    },
-    {
-      "type": "sleep",
-      "seconds": 3
-    },
-    {
-      "type": "mouse_up",
-      "button": 1
+      "type": "repeat_until_log",
+      "pattern": "Substructure first rat dead",
+      "after_start": false,
+      "maximum_iterations": 10,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "repeat_until_log",
+          "pattern": "Substructure rat facing",
+          "after_start": true,
+          "maximum_iterations": 12,
+          "timeout_seconds": 180,
+          "abort_on_failure": true,
+          "actions": [
+            {
+              "type": "wait_log",
+              "pattern": "Substructure rat aim x=",
+              "timeout_seconds": 30,
+              "after_start": true,
+              "abort_on_failure": true
+            },
+            {
+              "type": "mouse_move",
+              "x": 0,
+              "y": 0,
+              "from_log": {
+                "path": "process.log",
+                "pattern": "Substructure rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+              }
+            },
+            {
+              "type": "key_down",
+              "value": "F7"
+            },
+            {
+              "type": "wait_log",
+              "pattern": "Substructure camera settled",
+              "timeout_seconds": 30,
+              "after_start": true,
+              "abort_on_failure": true
+            },
+            {
+              "type": "key_up",
+              "value": "F7"
+            }
+          ],
+          "cleanup_actions": [
+            {
+              "type": "key_up",
+              "value": "F7"
+            }
+          ]
+        },
+        {
+          "type": "key_down",
+          "value": "w"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Substructure rat in reach",
+          "timeout_seconds": 15,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "repeat_until_log",
+          "pattern": "Substructure rat facing",
+          "after_start": true,
+          "maximum_iterations": 12,
+          "timeout_seconds": 180,
+          "abort_on_failure": true,
+          "actions": [
+            {
+              "type": "wait_log",
+              "pattern": "Substructure rat aim x=",
+              "timeout_seconds": 30,
+              "after_start": true,
+              "abort_on_failure": true
+            },
+            {
+              "type": "mouse_move",
+              "x": 0,
+              "y": 0,
+              "from_log": {
+                "path": "process.log",
+                "pattern": "Substructure rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+              }
+            },
+            {
+              "type": "key_down",
+              "value": "F7"
+            },
+            {
+              "type": "wait_log",
+              "pattern": "Substructure camera settled",
+              "timeout_seconds": 30,
+              "after_start": true,
+              "abort_on_failure": true
+            },
+            {
+              "type": "key_up",
+              "value": "F7"
+            }
+          ],
+          "cleanup_actions": [
+            {
+              "type": "key_up",
+              "value": "F7"
+            }
+          ]
+        },
+        {
+          "type": "mouse_down",
+          "button": 1
+        },
+        {
+          "type": "sleep",
+          "seconds": 3
+        },
+        {
+          "type": "mouse_up",
+          "button": 1
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "mouse_up",
+          "button": 1
+        }
+      ]
     },
     {
       "type": "wait_log",

@@ -54,7 +54,7 @@
     {
       "segment": 8,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_first_rat.json",
-      "action_count": 50,
+      "action_count": 13,
       "source_course": "joined-substructure-first-rat-02",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
