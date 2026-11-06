@@ -13,15 +13,26 @@ Remaining: join the genuine course through the solo dungeon/shaman, reunion,
 Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
 escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — all cavern defenders before shaman defeated
+## Current chunk — cleared cavern defenders, full resources before shaman
 
-Latest fully inspected main checkpoint:
-`build/oblivion-compat/sewer-escape/joined-engaged-eastern-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Natural Caverns0380bd, Player(4715.517,3051.534,-438.572), health4.239990,
-magicka33.771198. Both03b541/03b52f dead/Player killer; only bases03b531/03b517
-count0→1. Shaman03b52e remains alive. No active combat or pending deaths/actions.
-All three reinforcing/recovery/final defender courses cleanpass, native fresh
-entries compare with only recorded tiny velocity projections. Captures inspected.
+Latest inspected main checkpoint:
+`build/oblivion-compat/sewer-escape/joined-cavern-full-recovery-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Natural Caverns0380bd, Player(4715.517,3051.534,-438.572), health80/magicka80.
+No combat/casts or pending death/action work. Shaman03b52e remains alive.
+[Full resource recovery proof](SEWER-JOINED-PRE-SHAMAN-RECOVERY-VERIFICATION.json).
+Clean69-action course uses remaining Sorcery931a/Respite930e through inventory,
+11 real heal releases with observed19MP gates, then natural MP regeneration.
+Only those two inventory entries consumed; life/death unchanged. Exact fresh entry,
+FIRS1 and capture inspected. Original potion master hash/effects audited separately.
+
+Current detached UI `joined-cavern-shaman-course-01`, supervisor107411,
+status `joined-cavern-shaman-course-01-launcher-status.json`. From actual80/80
+save:11 original route points,80-unit final-node handoff, reactive approach and
+8 ordinary axe power holds against03b52e. Inspect actual process/status/scenario
+before another UI run. Next: actual shaman victory, original reunion/Emperor/
+choices/exit, uninterrupted new-game escape and fresh outdoor load. Full escape
+remains incomplete.
+
 [Eastern defenders proof](SEWER-JOINED-EASTERN-DEFENDERS-VERIFICATION.json).
 
 Early reinforcing handoff completes but defender52f joins, leaving8HP/active
@@ -31,16 +42,6 @@ Original missed-waypoint followup is stopped/no checkpoint; incorrectly launched
 Northern patrol real finalF5/fresh native victory accepted separately; launcher143
 prevents a whole-course pass claim:
 [patrol evidence](SEWER-JOINED-NORTHERN-PATROL-VERIFICATION.json).
-
-Current detached UI `joined-cavern-full-recovery-course-01`, supervisor107102,
-status `joined-cavern-full-recovery-course-01-launcher-status.json`. From actual
-4.24HP defender victory: use remaining Sorcery931a (+50magicka) and Respite930e
-(+20fatigue) through inventory, then11 ordinary heal casts gated on observed19MP,
-finally natural magicka regeneration to80. Potion records independently audited
-against hash-verified original master in ignored `remaining-potion-audit.json`.
-Inspect actual process/status/scenario before another UI course. Next: original
-path to shaman and required Player victory, then original reunion/exit and full
-uninterrupted new-game escape/fresh outdoor load. Full escape remains incomplete.
 
 [Recovery/chest proof](SEWER-JOINED-CAVERN-RECOVERY-VERIFICATION.json) records
 three normal casts5.02→26.14, six original downhill points, original chest051d72
