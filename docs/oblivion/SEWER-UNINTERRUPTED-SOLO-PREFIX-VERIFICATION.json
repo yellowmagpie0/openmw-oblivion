@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T20:20:56.165166+00:00",
+  "scope": "Uninterrupted original-new-game prison, first ambush/escort30, and first Player rat victory prefix only",
+  "status": "Prefix verified; live course continues; full escape incomplete",
+  "code_commit": "aee30a8b22",
+  "implementation_gates": "docs/oblivion/SEWER-NEW-GAME-MENU-VERIFICATION.json; reuse full2210 normal/ASan-UBSan provenance, no C++ changes",
+  "runtime_sha256": "a5073d8a47049971cdcdf07c70e5613ecceefc243c261d583a532e3190b79503",
+  "course": "build/oblivion-compat/sewer-escape/full-escape-continuous-08",
+  "game_pid": 233687,
+  "original_new_game": 1,
+  "load_flag_or_event": false,
+  "native_proofs": {
+    "launch-verification.json": {
+      "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-08/launch-verification.json",
+      "sha256": "52bc47e54346a12638608032306ecc18094e7cff0259f9121e55eaac889dca81"
+    },
+    "first-ambush-victory-verification.json": {
+      "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-08/first-ambush-victory-verification.json",
+      "sha256": "a2c4d2234003d2dde78368b04d56efcdbb0602f66e0a0801236c7a59660a32df"
+    },
+    "escort-stage30-native-verification.json": {
+      "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-08/escort-stage30-native-verification.json",
+      "sha256": "711212793b2ed44732b22d487e7230dfbf1534798a5050dfb9ccc185b1a55da6"
+    },
+    "first-rat-native-verification.json": {
+      "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-08/first-rat-native-verification.json",
+      "sha256": "bd5e4667f3c376a33874f44b12b7260e765ca94b07c30857316eb3c6e42f8ebf"
+    }
+  },
+  "accepted_prefix": {
+    "original_stages": [
+      19,
+      24,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "first_ambush": "Four NPC assassin kills, Renault scripteddead/nullkiller/essentialfalse, three surviving escorts, Player80HP/unchanged inventory, clear combat/death/action/cast/projectile work",
+    "escort30": "Actual F5 parses exactly to native receipt; three escorts alive in022288; Player80HP/unchanged inventory; two living early rats targeting Player, other queues clear",
+    "first_rat": "Actual F5/native snapshot exact;037e42 killed by Player; Player70HP;037e40/037e41 still alive"
+  },
+  "rendered_inspection": {
+    "proof": "build/oblivion-compat/sewer-escape/full-escape-continuous-08/opening-prefix-rendered-inspection.json",
+    "sha256": "22cddcd009b4f1bdd27e32fc670e1705a1451d24e951e7891aba3659f1ede74d",
+    "captures": [
+      "diagnostic-opening-stage10.png",
+      "segment01-phase3-emperor-greeting.png",
+      "segment02-phase8-ambush-victory.png"
+    ]
+  },
+  "remaining": "Preserve live process. Finish remaining rats, cold post-wall healing, all remaining loot/traps/combat/shaman/reunion/birthsign/Amulet/class, physical exterior and fresh reload of this run own outdoor save. No whole-course or general M15 acceptance inferred."
+}

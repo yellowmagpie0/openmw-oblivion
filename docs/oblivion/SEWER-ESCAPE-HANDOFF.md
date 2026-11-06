@@ -23,8 +23,15 @@ Actual argv/config verify original new-game1/no load; runtime SHA256
 Code commit `aee30a8b22`. Manifest
 `build/oblivion-compat/sewer-escape/menu-admission-full-assembly-01/full-escape.json`
 is byte-identical to07's course:67 segments/11732 actions, SHA18d63be3…b1568d.
-Opening is underway. Inspect actual process/log state before further action;
-do not restart this course merely because observation times out.
+Original19/24/26/27/28/29/30 now pass in this same process. Actual first-ambush
+F5/native snapshot is exact: all4 assassins killed by guards, Renault scripteddead,
+three escorts alive, Player80HP/inventory unchanged, queues clear. Actual30 F5
+retains80HP and all3 escorts alive in022288; two early rats have acquired Player,
+other queues clear. First rat037e42 now killed by Player, actual F5/native exact,
+70HP, remaining2 rats alive. Outer4 is active, then cold post-wall healing5.
+[Current prefix proof](SEWER-UNINTERRUPTED-SOLO-PREFIX-VERIFICATION.json).
+Inspect actual process/log state before further action; do not restart this
+course merely because observation times out.
 
 Read-only save archiver233753 preserves only actual bytes matching native F5/
 autosave receipts. Inspect `full-escape-continuous-08/retained-saves/index.json`.
