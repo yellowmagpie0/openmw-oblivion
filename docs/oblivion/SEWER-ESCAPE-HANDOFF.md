@@ -90,8 +90,15 @@ Current original new-game UI `full-escape-continuous-03`: supervisor171082,
 runner171083/game171106, manifest `full-escape-continuous-mixed-fixed.json`,
 unused-new-game formatter source. Actual argv has no load-save flag, config
 new-game=1; launch provenance records the loaded executable SHA256. Latest observed
-original10/guard conversation; preserve this same live process. Verify actual
+original19, actual outer segment2/inner phase4 transition, passage crossed and
+phase5 lower landing reached; preserve this same live process. Verify actual
 process/status/report before another UI. No helper remains live.
+
+[Ongoing uninterrupted opening prefix](SEWER-UNINTERRUPTED-OPENING-PREFIX-VERIFICATION.json):
+new-game→original19,80HP, no load events/samePID171106, original Emperor dialogue,
+switch, inspected captures, immutable native snapshot/F5 receipt. Mixed native14
+fallback really released strafe; F7+F8 outer transition retains intended inner4.
+This is only a prefix; first ambush/escort/rest of escape are not inferred complete.
 
 Four hermetic regression cases now protect producer classification, mixed native
 callbacks, wrong Lua-segment rejection, nested regex groups/all gate compilation,
