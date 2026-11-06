@@ -16,10 +16,18 @@ escape and fresh outdoor reload. Separate shaman/late saves do not prove this jo
 ## Current chunk — western encounters and actual root-area attacker accepted
 
 Latest semantically verified course save:
-`build/oblivion-compat/sewer-escape/joined-actual-root-attacker-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player(-2944.769,4206.296,-256.803), health46.04. Actual attacker159838 is
-Player-killed, with one expected base death-count increment; no combat, physical
-actions or pending deaths. Fresh native entry is exact. Capture inspected.
+`build/oblivion-compat/sewer-escape/joined-root-descent-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(-5034.059,2936.020,-378.381), health80. Five real healing casts and all17
+remaining original root-detour/descent waypoints pass in one process. Inventory
+and death history unchanged; no combat, physical actions or pending deaths.
+Native entry exact; capture inspected.
+[Root descent proof](SEWER-JOINED-ROOT-DESCENT-VERIFICATION.json).
+
+Preceding [root entrance/combat proof](SEWER-JOINED-ROOT-ENTRANCE-VERIFICATION.json)
+passes normal healing, physical return to known corridor/root entrance, then exact
+fresh continuation killing actually engaged38818. Final47.7HP save clears combat;
+base02509b count increments once to8. Earlier actual attacker159838 is Player-killed
+with exact fresh entry, no pending state and46.04HP output.
 [Upper stairs/actual attacker proof](SEWER-JOINED-ROOT-ATTACKER-VERIFICATION.json).
 
 The [western proof](SEWER-JOINED-WEST-VERIFICATION.json) accepts a real six-phase
@@ -37,14 +45,13 @@ stair prefix restores exactly; short normal movement segments and fresh camera
 feedback defeat159838. The unrelated rat38818 remains alive at that boundary.
 Neither raw failure is relabeled a whole-course pass.
 
-Current UI course: `joined-engaged-root-side-rat-01` (launcher52834), from actual
-`joined-root-entrance-course-01` save. The latter raw course PASSES five normal
-heals, physical return along observed path and original root entrance; semantic
-save inspection/comparison remains pending. Rat38818 now actually engages there.
-Inspect the current process/scenario before another UI course. Then inspect both
-new saves/captures, record results, and follow remaining original root/lower route
-to Caverns door0381b8. Original root detour points in tracked west_root_detour
-recipe include the necessary turn around geometry; use actual source position.
+Current UI course: `joined-lower-east-rat-course-01` (launcher49163), from actual
+`joined-lower-corridor-approach-01` save. The latter raw five-waypoint course PASSES
+at80HP, but semantic save comparison remains pending. The current course follows
+three more original lower-corridor points and fights nearby159832 using short
+movement/fresh camera feedback. Inspect its actual process/scenario before a new
+UI course. Then handle actual38174 if engaged, follow physical lower corridor to
+original Caverns door0381b8, and continue shaman/late escape. No build helper live.
 
 Earlier accepted joins: [zombie](SEWER-JOINED-ZOMBIE-VERIFICATION.json),
 [recovery](SEWER-JOINED-ZOMBIE-HEALING-VERIFICATION.json),

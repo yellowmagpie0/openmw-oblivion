@@ -1,0 +1,103 @@
+{
+  "scope": "Clean genuine continuation normally heals to80, physically returns along observed corridor and reaches original root entrance, then exact fresh engaged-combat continuation defeats038818. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "passed": true,
+  "source_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-actual-root-attacker-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7377d00fbb9508855316b589b432d477f5888ec9824b6ae20247e535b3824ea1",
+    "cell": "content:oblivion.esm:022ff6",
+    "position": [
+      -2944.7685546875,
+      4206.29638671875,
+      -256.8033447265625,
+      -0.07207021862268448,
+      0.0,
+      -2.5713894367218018
+    ],
+    "health": 46.040000915527344
+  },
+  "root_entrance": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-root-entrance-course-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-actual-root-attacker-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "7377d00fbb9508855316b589b432d477f5888ec9824b6ae20247e535b3824ea1",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "actual_healing_releases": [
+      "[21:26:20.743 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=53.08 magicka=61",
+      "[21:26:33.277 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=60.12 magicka=54.264",
+      "[21:26:45.795 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=67.16 magicka=47.4358",
+      "[21:26:58.274 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=74.2 magicka=40.5705",
+      "[21:27:10.801 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=33.7009"
+    ],
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-root-entrance-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "eeb9394176b5f2163445d3dc63012ad8433c5d670c11b656c4c5f80f706c0fb4",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -3587.627197265625,
+        4242.8828125,
+        -235.84585571289062,
+        0.05566416308283806,
+        0.0,
+        -2.4481470584869385
+      ],
+      "health": 66.69999694824219
+    },
+    "active_combat_at_save": [
+      {
+        "first": "content:oblivion.esm:038818",
+        "second": "dynamic:player:0000000000000001"
+      }
+    ]
+  },
+  "root_side_victory": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-engaged-root-side-rat-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-root-entrance-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "eeb9394176b5f2163445d3dc63012ad8433c5d670c11b656c4c5f80f706c0fb4",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-engaged-root-side-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "c424f02ce10b3205b71279b762d660cb49aa5243b0f2a1230a75e426e0ed4f53",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -3570.171875,
+        4246.6474609375,
+        -241.67848205566406,
+        0.11523447185754776,
+        0.0,
+        1.1996864080429077
+      ],
+      "health": 47.70000457763672
+    },
+    "rat": {
+      "actor": "content:oblivion.esm:038818",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "base_death_count": 8,
+    "only_expected_counter_increment": true,
+    "pending_deaths": [],
+    "physical_action_owners": [],
+    "combat_engagements": []
+  },
+  "observer_scope": "Read-only camera, actor state and local segment timing; ordinary C, movement, axe attacks and F5. No health/quest/position writes or save-state splicing.",
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/joined-root-entrance-course-01/phase3-joined-root-detour-entrance.png",
+    "build/oblivion-compat/sewer-escape/joined-engaged-root-side-rat-01/joined-actual-root-attacker-victory.png"
+  ],
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "next": "Normal recovery and remaining original root detour to lower floor, then physical lower route/Natural Caverns door; shaman and late escape/full uninterrupted course/outdoor reload remain required."
+}

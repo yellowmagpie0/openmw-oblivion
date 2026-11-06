@@ -1,0 +1,69 @@
+{
+  "scope": "Clean genuine recovery and physical17-waypoint remaining root detour/western descent. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "passed": true,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-root-descent-course-01/scenario.json",
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-engaged-root-side-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "c424f02ce10b3205b71279b762d660cb49aa5243b0f2a1230a75e426e0ed4f53",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "source_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-engaged-root-side-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "c424f02ce10b3205b71279b762d660cb49aa5243b0f2a1230a75e426e0ed4f53",
+    "health": 47.70000457763672
+  },
+  "output_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-root-descent-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "8ccd83b3865ac35bcc454d97b4932ad35fce55c7bb7eaf333bfa1f4f52832588",
+    "cell": "content:oblivion.esm:022ff6",
+    "position": [
+      -5034.05908203125,
+      2936.019775390625,
+      -378.3814697265625,
+      0.09218758344650269,
+      0.0,
+      -3.0889670848846436
+    ],
+    "health": 80
+  },
+  "actual_healing_releases": [
+    "[21:38:34.912 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=54.74 magicka=61",
+    "[21:38:47.491 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=61.78 magicka=54.2899",
+    "[21:38:59.977 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=68.82 magicka=47.4733",
+    "[21:39:12.370 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=75.86 magicka=40.4978",
+    "[21:39:24.859 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=33.599"
+  ],
+  "physical_waypoints_reached": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "ordinary_controls": "Walk tight root corners, then normal Shift+W on established route; no world/position/health writes.",
+  "inventory_unchanged": true,
+  "death_history_unchanged": true,
+  "pending_deaths": [],
+  "physical_action_owners": [],
+  "combat_engagements": [],
+  "capture_inspected": "build/oblivion-compat/sewer-escape/joined-root-descent-course-01/phase2-joined-cleared-root-descent.png",
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "reused_checks": "No implementation change;2203 normal/ASan-UBSan engine gates and rendered camera reload retain original provenance.",
+  "next": "Original lower corridor, actual intervening attackers and physical Caverns door0381b8. Shaman, late escape/full uninterrupted course/outdoor reload remain required."
+}
