@@ -1,0 +1,151 @@
+{
+  "scope": "Connected main-course original goblin shaman03b52e Player victory, genuine original staff-expenditure/approach prefix then clean fresh four-heal/sprint/axe continuation. Full escape remains incomplete.",
+  "full_escape_complete": false,
+  "implementation_unchanged": true,
+  "staff_approach_prefix": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-shaman-course-01/scenario.json",
+    "raw_passed": false,
+    "accepted_prefix_actions": 469,
+    "raw_failure": "Later melee in-reach gate fails while caster moves away. No Player attack or victory from this run.",
+    "save": "build/oblivion-compat/sewer-escape/joined-cavern-shaman-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "b75481c8611655cee538cfa758f76026eba13cc5f93e847b6871ca33aed52440",
+    "position": [
+      5540.240234375,
+      4180.9775390625,
+      -437.836669921875,
+      -0.012304721400141716,
+      0.0,
+      -0.5134925842285156
+    ],
+    "health": 25,
+    "magicka": 80,
+    "staff_charge": 7,
+    "native_staff_release_charges": [
+      137.0,
+      124.0,
+      111.0,
+      98.0,
+      85.0,
+      72.0,
+      59.0,
+      46.0,
+      33.0,
+      20.0,
+      7.0
+    ],
+    "projectile_impact_damage": [
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0
+    ],
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-full-recovery-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "956aa885e045187db724bd31eff2cc07f841d97bd9a5a94ddf95e5491a5fd490",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    }
+  },
+  "victory": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-shaman-continuous-course-01/scenario.json",
+    "passed": true,
+    "actions": 264,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-shaman-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "b75481c8611655cee538cfa758f76026eba13cc5f93e847b6871ca33aed52440",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": [
+        [
+          "/native_animated_references/0/bodies/0/linear_velocity/0",
+          0.0008582223090343177,
+          0.0008582222508266568
+        ],
+        [
+          "/native_animated_references/0/bodies/0/linear_velocity/2",
+          0.0002652323164511472,
+          0.00026523234555497766
+        ],
+        [
+          "/native_animated_references/3/bodies/2/linear_velocity/0",
+          -0.002706108381971717,
+          -0.0027061081491410732
+        ],
+        [
+          "/native_animated_references/3/bodies/2/linear_velocity/1",
+          0.00014551234198734164,
+          0.00014551232743542641
+        ],
+        [
+          "/native_animated_references/3/bodies/3/linear_velocity/2",
+          4.0417603486275766e-07,
+          4.0417600644104823e-07
+        ],
+        [
+          "/native_animated_references/3/bodies/4/linear_velocity/2",
+          -2.4717990072531393e-06,
+          -2.4717992346268147e-06
+        ],
+        [
+          "/native_animated_references/3/bodies/7/linear_velocity/1",
+          -0.006333015859127045,
+          -0.006333015393465757
+        ]
+      ]
+    },
+    "save": "build/oblivion-compat/sewer-escape/joined-shaman-continuous-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "d8bf3a42c51a4ad50126682922642160239423d1cf3220e7e3ac3e1d190cf141",
+    "position": [
+      5472.60205078125,
+      4419.79150390625,
+      -401.57818603515625,
+      0.17148445546627045,
+      0.0,
+      0.3208824694156647
+    ],
+    "health": 15.330001831054688,
+    "magicka": 64.35079956054688,
+    "life": {
+      "actor": "content:oblivion.esm:03b52e",
+      "base": "content:oblivion.esm:03b52d",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "death_count_changes": {
+      "content:oblivion.esm:03b52d": 1
+    },
+    "staff_charge": 7,
+    "actual_player_axe_contacts": 17,
+    "actual_health_damage": 14.662055,
+    "ordinary_heal_release_health": [
+      32.04,
+      39.08,
+      46.12,
+      53.16
+    ],
+    "no_active_combat_cast_projectile_or_pending_action_death": true,
+    "capture_inspected": true
+  },
+  "retained_attempts": {
+    "joined-shaman-sprint-course-01": "Preflight rejected lowercase shift key; no gameplay.",
+    "joined-shaman-sprint-course-02": "Player dies after damaging shaman13.7736. No checkpoint accepted. Retry returns to genuine25HP original staff save, repeats healing, uses shorter control pauses."
+  },
+  "limits": [
+    "Explicit composite; uninterrupted new-game escape remains outstanding.",
+    "Native death below1 HP is retained; no exact float/RNG parity claim.",
+    "Upright shaman corpse visible; collapsed pose not accepted.",
+    "General spell fallback and PlayerFlare unsupported; this encounter proves staff/projectile expenditure, real recovery, unarmed retaliation and ordinary Player axe victory.",
+    "Data-only input changes; prior engine/sanitizer evidence retains original provenance."
+  ]
+}

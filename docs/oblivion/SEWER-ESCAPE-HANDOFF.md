@@ -13,25 +13,36 @@ Remaining: join the genuine course through the solo dungeon/shaman, reunion,
 Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
 escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — cleared cavern defenders, full resources before shaman
+## Current chunk — required shaman victory joined to genuine main route
 
-Latest inspected main checkpoint:
-`build/oblivion-compat/sewer-escape/joined-cavern-full-recovery-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Natural Caverns0380bd, Player(4715.517,3051.534,-438.572), health80/magicka80.
-No combat/casts or pending death/action work. Shaman03b52e remains alive.
-[Full resource recovery proof](SEWER-JOINED-PRE-SHAMAN-RECOVERY-VERIFICATION.json).
-Clean69-action course uses remaining Sorcery931a/Respite930e through inventory,
-11 real heal releases with observed19MP gates, then natural MP regeneration.
-Only those two inventory entries consumed; life/death unchanged. Exact fresh entry,
-FIRS1 and capture inspected. Original potion master hash/effects audited separately.
+Latest fully inspected main checkpoint:
+`build/oblivion-compat/sewer-escape/joined-shaman-continuous-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Natural Caverns0380bd, Player(5472.602,4419.792,-401.578), health15.330002,
+magicka64.350800. Shaman03b52e dead/Player killer, only base03b52d count0→1.
+Staff remains7charge. No active combat/casts/projectiles or pending death/action
+work. Clean264-action final continuation; capture inspected, corpse remains upright.
+[Connected shaman victory](SEWER-JOINED-SHAMAN-VICTORY-VERIFICATION.json).
 
-Current detached UI `joined-cavern-shaman-course-01`, supervisor107411,
-status `joined-cavern-shaman-course-01-launcher-status.json`. From actual80/80
-save:11 original route points,80-unit final-node handoff, reactive approach and
-8 ordinary axe power holds against03b52e. Inspect actual process/status/scenario
-before another UI run. Next: actual shaman victory, original reunion/Emperor/
-choices/exit, uninterrupted new-game escape and fresh outdoor load. Full escape
-remains incomplete.
+Original11-point route/six walk segments supply genuine469-action failed-course
+F5 prefix:11 real shock impacts5 each, Player80→25, staff150→7, shaman alive15HP.
+Later in-reach gate fails when caster moves away. Clean continuation repeats four
+ordinary heals25→53.16, normal Shift_L+W sprint,17 axe contacts14.662damage and
+actual death. Slow sprint02 dies/no checkpoint accepted; lowercase sprint01 is
+preflight rejection/no gameplay. Only recorded tiny velocity projections allowed
+at fresh boundary. No state splicing; full uninterrupted escape remains unproven.
+
+Current detached UI `joined-cavern-to-subterrane-course-01`, supervisor108301,
+status `joined-cavern-to-subterrane-course-01-launcher-status.json`. From actual
+victory save:10 ordinary heals with observed19MP gates;26 originalPGRD nodes
+back around camp and up northern stairs; normal Space at original03816c into
+Subterrane022288. Ignored `current-shaman-to-exit-path.json` retains original
+master hash/pathgrid/node indices. Inspect actual process/status/scenario before
+another UI course. Next: original second ambush/reunion/Emperor/choices/exit,
+then uninterrupted new-game escape and fresh outdoor load. Full escape incomplete.
+
+[Pre-shaman recovery](SEWER-JOINED-PRE-SHAMAN-RECOVERY-VERIFICATION.json) proves
+clean80HP/80MP,11 normalC releases, actual Sorcery/Respite use, unchanged life/counts
+and FIRS1. This precedes the successful connected shaman encounter.
 
 [Eastern defenders proof](SEWER-JOINED-EASTERN-DEFENDERS-VERIFICATION.json).
 
