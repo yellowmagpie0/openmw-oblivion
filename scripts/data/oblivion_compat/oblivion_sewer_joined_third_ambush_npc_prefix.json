@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "name": "Executed connected third-ambush corridor prefix; original later54 wait remains open",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\nat 0 command content:oblivion.esm:01760f GetOpenState\nat 0 command content:oblivion.esm:01760f GetLocked\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(2754.0,6541.0,-1177.0),util.vector3(2794.0,6766.0,-1177.0),util.vector3(2794.0,7364.0,-1170.0),util.vector3(2713.0,7439.0,-1177.0),util.vector3(2176.0,7452.0,-1242.0),util.vector3(1740.0,7296.0,-1229.0),util.vector3(1652.0,7276.0,-1181.0),util.vector3(1300.0,7260.0,-1200.0)}}\nlocal step=1\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Adaptive camera settled') end\n assert(not Actor.isDead(self),'Player died along escort route')\n if frame==5 then print('Adaptive route ready') end\n if step<=#points then\n  local d=points[step]-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<25 then\n   print('Adaptive waypoint '..step..' reached '..tostring(self.position))\n   step=step+1\n  end\n end\n if step>#points then\n  print('Adaptive route complete')\n  print('Adaptive route aim x=0 y=0')\n else\n  local p=points[step]\n  local x,y=aim(util.vector3(p.x,p.y,self.position.z+100))\n  print(string.format('Adaptive route aim x=%d y=%d point=%d',x,y,step))\n end\n if frame%30==0 then\n  print('Adaptive Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x32a16,0x32a17,0x32a18}}) do\n   local actor=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if actor and actor:isValid() then print('Adaptive escort '..id..' pos='..tostring(actor.position)) end\n  end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Adaptive route ready",
+      "timeout_seconds": 120,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Adaptive route complete",
+      "maximum_iterations": 600,
+      "timeout_seconds": 1200,
+      "actions": [
+        {
+          "type": "keys_down",
+          "values": [
+            "Shift_L",
+            "w"
+          ]
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive route aim x=",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Adaptive route aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive camera settled",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive route aim x=",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Adaptive route aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive camera settled",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "adaptive-escort-route.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1800,
+  "expected_exit": 0,
+  "expected_log": [
+    "Adaptive waypoint 8 reached"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)",
+    "activate-script ref=content:oblivion.esm:051ac[abc]",
+    "playgroup ref=content:oblivion.esm:051ac[abc]",
+    "M16 native staff rejected:",
+    "M16 native cast rejected:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

@@ -37242,6 +37242,75 @@ TEST(OblivionWorldTest, AutonomousPlayerCombatRequiresHostilityResidenceAndDetec
     }
 }
 
+TEST(OblivionWorldTest, AutonomousCombatAcquiresNearestDetectedHostileNpcWithoutReplacingController)
+{
+    NativeWeaponFactoryFixture fixture(false, 1, false, false, false, true, false);
+    auto& world = fixture.mWorld;
+    setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    world.getPlayer().setCell(fixture.mActor.getCell());
+    const auto actor = fixture.mActor;
+    world.getWorldModel().registerPtr(actor);
+    ASSERT_TRUE(world.activateOblivionActor(actor));
+    auto& combat = *world.getOblivionCombatService();
+    const auto key = actor.getCellRef().getFormKey();
+    const std::array residents{actor};
+    // Installed fight base: the Blades' aggression10 and hostile disposition0
+    // admit combat, while friendly dispositions do not. No ally incident needed.
+    ESM4::GameSetting setting{};
+    setting.mId = {0xf001, 0}; setting.mEditorId = "fFightAggrBase"; setting.mData = -55.f;
+    world.getStore().getWritable<ESM4::GameSetting>().insertStatic(
+        setting, ESM::FormKey::content("headless.esm", 0xf001));
+    combat.setNonPlayerBaseValue(actor, 33, 10, residents);
+    for (const std::uint8_t av : {3, 7, 31})
+        combat.setNonPlayerBaseValue(actor, av, 100, residents);
+    auto origin = actor.getRefData().getPosition();
+    origin.rot[0] = origin.rot[1] = origin.rot[2] = 0;
+    actor.getRefData().setPosition(origin);
+    fixture.mPhysics->addActor(actor, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+    const auto target = [&](unsigned id, float distance, bool hostile) {
+        auto npc = addNativeNpc(fixture, id);
+        npc = npc.getCell()->moveTo(npc, actor.getCell());
+        auto position = origin; position.pos[1] += distance;
+        npc.getRefData().setPosition(position);
+        osg::ref_ptr<SceneUtil::PositionAttitudeTransform> node = new SceneUtil::PositionAttitudeTransform;
+        node->setPosition(position.asVec3()); npc.getRefData().setBaseNode(node);
+        world.getWorldModel().registerPtr(npc);
+        EXPECT_TRUE(world.activateOblivionActor(npc));
+        EXPECT_TRUE(world.modifyOblivionDispositionModifier(
+            key, npc.getCellRef().getFormKey(), hostile ? -1000.f : 1000.f));
+        fixture.mPhysics->addActor(npc, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+        return npc;
+    };
+    const auto friendly = target(0x810, 20, false);
+    const auto farther = target(0x811, 80, true);
+    const auto nearer = target(0x812, 50, true);
+    EXPECT_EQ(world.getOblivionDisposition(key, nearer.getCellRef().getFormKey()), 0);
+    EXPECT_EQ(world.getOblivionDisposition(key, friendly.getCellRef().getFormKey()), 100);
+    const std::array unavailable{actor, MWWorld::Ptr{}, friendly, nearer};
+    nearer.getRefData().disable();
+    const auto random = combat.combatRandomState();
+    EXPECT_FALSE(MWMechanics::acquireOblivionCombat(world, actor, unavailable));
+    EXPECT_EQ(combat.combatRandomState(), random);
+    nearer.getRefData().enable();
+    osg::ref_ptr<SceneUtil::PositionAttitudeTransform> node = nearer.getRefData().getBaseNode();
+    nearer.getRefData().setBaseNode(nullptr);
+    EXPECT_FALSE(MWMechanics::acquireOblivionCombat(world, actor, unavailable));
+    nearer.getRefData().setBaseNode(node);
+    ASSERT_TRUE(world.getLOS(actor, nearer));
+    // Candidate order must not turn a closer friend or an earlier farther foe
+    // into the selected target. Rejected candidates never construct controllers.
+    const std::array candidates{farther, friendly, nearer};
+    ASSERT_TRUE(MWMechanics::acquireOblivionCombat(world, actor, candidates));
+    EXPECT_EQ(world.getOblivionCombatTarget(key), nearer.getCellRef().getFormKey());
+    const auto before = world.captureOblivionRuntimeState();
+    EXPECT_FALSE(MWMechanics::acquireOblivionCombat(world, actor, candidates));
+    const auto after = world.captureOblivionRuntimeState();
+    EXPECT_EQ(after.mCombatControllers, before.mCombatControllers);
+    EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+    EXPECT_EQ(after.mNativeCombatEngagements, before.mNativeCombatEngagements);
+}
+
 TEST(OblivionWorldTest, CreatureScriptStartConsumesEmptySelectionDrawsWithoutNpcConstructorDraw)
 {
     NativeWorldFixture fixture;

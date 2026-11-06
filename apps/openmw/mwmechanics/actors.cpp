@@ -1742,6 +1742,14 @@ namespace MWMechanics
                 if (MWMechanics::OblivionAiService* oblivionAi = nativeWorld->getOblivionAiService())
                     oblivionAi->updateUnloaded(duration);
 
+            std::vector<MWWorld::Ptr> nativeCombatCandidates;
+            if (aiActive && nativeWorld && nativeWorld->getOblivionAiService())
+            {
+                nativeCombatCandidates.reserve(mActors.size());
+                for (const Actor& resident : mActors)
+                    if (!resident.isInvalid()) nativeCombatCandidates.push_back(resident.getPtr());
+            }
+
             // AI and magic effects update
             for (Actor& actor : mActors)
             {
@@ -1797,7 +1805,7 @@ namespace MWMechanics
                         try
                         {
                             if (inProcessingRange && engageCombatTimerStatus == Misc::TimerStatus::Elapsed)
-                                acquireOblivionPlayerCombat(*world, actorPtr);
+                                acquireOblivionCombat(*world, actorPtr, nativeCombatCandidates);
                             if (!updateOblivionMeleeAi(*world, actorPtr, inProcessingRange, duration))
                                 oblivionAi->update(actorPtr, duration, inProcessingRange);
                         }

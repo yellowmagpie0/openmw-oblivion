@@ -1,0 +1,361 @@
+{
+  "scope": "Autonomous native NPC hostile acquisition and actual third-ambush victories; escort54 and full escape remain incomplete",
+  "full_escape_complete": false,
+  "policy": "Nearest detected resident eligible actor with positive reviewed native fight score. Existing controllers keep targets. Canonical Player identity and legacy view supported. Practical target ranking, not exact original utility/cadence or general ally/incident selection.",
+  "checks": {
+    "focused-03": {
+      "evidence": "build/oblivion-compat/sewer-escape/third-ambush-npc-acquisition-focused-03/verification.json",
+      "source": {
+        "head": "91e6070c353126931e1cebd7d6438af9dc868c06",
+        "source_fingerprint": "f424655640de48729e2b69b5af08c657be58de92ee2bc2e75d4adde610c375b6"
+      },
+      "results": {
+        "engine": {
+          "executed": 3,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.Autonomous*Combat*:OblivionTutorialGreeting.NativeFightScore*",
+          "binary_sha256": "92411a3552e27fef280e4ba4261231d0dc16c35daf2b1fd09fe0cc62764c73a3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "cdb9d55036527c5e8df4c0fbb17666fdc9ac22b8175207360938732f32d9fcd6",
+          "inventory_sha256": "6c885cedb1ac7d73ec61cfd59cac90702bc3983a22d5391f5bfdf139dfc18d80",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "engine-integration-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/third-ambush-npc-acquisition-engine-integration-01/verification.json",
+      "source": {
+        "head": "91e6070c353126931e1cebd7d6438af9dc868c06",
+        "source_fingerprint": "ea9a29f2931f7bc44910b9e93cd7b6600fd8f181585a9d4e6f175e83739872ce"
+      },
+      "results": {
+        "engine": {
+          "executed": 2204,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "92411a3552e27fef280e4ba4261231d0dc16c35daf2b1fd09fe0cc62764c73a3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "5ddac8c58e6ab3e2f08da9c5ca6a0281f8a63fe087ece1acb1b140b5b51fa294",
+          "inventory_sha256": "6c885cedb1ac7d73ec61cfd59cac90702bc3983a22d5391f5bfdf139dfc18d80",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitizer-integration-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/third-ambush-npc-acquisition-sanitizer-integration-01/verification.json",
+      "source": {
+        "head": "91e6070c353126931e1cebd7d6438af9dc868c06",
+        "source_fingerprint": "ea9a29f2931f7bc44910b9e93cd7b6600fd8f181585a9d4e6f175e83739872ce"
+      },
+      "results": {
+        "engine": {
+          "executed": 2204,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "35c6760caa7bf04c824400dfe258e0a40a365e0326680e43143e75fa80ac08f4",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6a96378bfc909f9abaed25dfa126fe4742ccf43823ed66ef6010a861f85b7275",
+          "inventory_sha256": "6c885cedb1ac7d73ec61cfd59cac90702bc3983a22d5391f5bfdf139dfc18d80",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "oracle_reused": {
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "cases": 6426,
+    "mismatches": 0,
+    "comparison": "build/oblivion-compat/m15/S2/oracle-emulator/fight-score-cpp-comparison.json",
+    "provenance": "M15-NATIVE-RULE-PROVENANCE.md#fight-score-for-ai-and-alarm-response",
+    "new_original_execution": false
+  },
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "audit": "build/oblivion-compat/sewer-escape/third-ambush-original-actors.json",
+    "generic_script": "025df1: OnDeath Player kill-count callback only; no scripted combat start",
+    "runtime_diagnostic": "build/oblivion-compat/sewer-escape/third-ambush-disposition-observations.json",
+    "observed_mutual_disposition": 0,
+    "observed_aggression": {
+      "assassin01772e": 80,
+      "Glenroy032a16": 10,
+      "Baurus032a17": 10
+    },
+    "actor_identity": "Original bases023f2b=Glenroy,023f2a=Baurus; stable reference IDs authoritative."
+  },
+  "runtime_binary_sha256": "72622354312fec01edd73ef8d9c055586afe5fa45b159ae0caf53280f464debf",
+  "runtime": [
+    {
+      "course": "joined-third-ambush-npc-escort-01",
+      "raw_passed": false,
+      "save_sha256": "b5da4c1b4ff297c6b884448306580b9ded5941792ec988abf7ad21bde083a113",
+      "player_position": [
+        1226.8897705078125,
+        7265.53759765625,
+        -1183.0,
+        0.4390626549720764,
+        0.0,
+        -1.4819366931915283
+      ],
+      "health": 100,
+      "inventory_unchanged_from_safe_approach": true,
+      "life": [
+        {
+          "actor": "content:oblivion.esm:01772e",
+          "base": "content:oblivion.esm:0176db",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:032a17"
+        },
+        {
+          "actor": "content:oblivion.esm:017734",
+          "base": "content:oblivion.esm:0176db",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:032a17"
+        },
+        {
+          "actor": "content:oblivion.esm:01774a",
+          "base": "content:oblivion.esm:0176db",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:032a16",
+          "base": "content:oblivion.esm:023f2b",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "base": "content:oblivion.esm:023f2a",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:032a18",
+          "base": "content:oblivion.esm:023f2e",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        }
+      ],
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-third-ambush-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "b0c3e1817bd1e3df1258b05c24d2d80685be966e578f81dd1a32894586ce847b",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "quests": [
+        {
+          "quest": "content:oblivion.esm:02466e",
+          "stage": 50,
+          "running": true,
+          "completed_stages": [
+            5,
+            6,
+            9,
+            10,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29,
+            30,
+            32,
+            34,
+            36,
+            40,
+            42,
+            43,
+            44,
+            45,
+            50
+          ]
+        }
+      ],
+      "engagements": [
+        {
+          "first": "content:oblivion.esm:01774a",
+          "second": "content:oblivion.esm:032a16"
+        }
+      ],
+      "physical_action_owners": [],
+      "pending_death_events": []
+    },
+    {
+      "course": "joined-third-ambush-escort-restart-01",
+      "raw_passed": false,
+      "save_sha256": "46ec3c080a56b9f95687f969cad512538b416a926b482a9070cea84a0f2e4cb2",
+      "player_position": [
+        1226.8897705078125,
+        7265.53759765625,
+        -1183.0,
+        0.4390626549720764,
+        0.0,
+        -1.4819366931915283
+      ],
+      "health": 100,
+      "inventory_unchanged_from_safe_approach": true,
+      "life": [
+        {
+          "actor": "content:oblivion.esm:01772e",
+          "base": "content:oblivion.esm:0176db",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:032a17"
+        },
+        {
+          "actor": "content:oblivion.esm:017734",
+          "base": "content:oblivion.esm:0176db",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:032a17"
+        },
+        {
+          "actor": "content:oblivion.esm:01774a",
+          "base": "content:oblivion.esm:0176db",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:032a16"
+        },
+        {
+          "actor": "content:oblivion.esm:032a16",
+          "base": "content:oblivion.esm:023f2b",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "base": "content:oblivion.esm:023f2a",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:032a18",
+          "base": "content:oblivion.esm:023f2e",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        }
+      ],
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-third-ambush-npc-escort-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "b5da4c1b4ff297c6b884448306580b9ded5941792ec988abf7ad21bde083a113",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "quests": [
+        {
+          "quest": "content:oblivion.esm:02466e",
+          "stage": 50,
+          "running": true,
+          "completed_stages": [
+            5,
+            6,
+            9,
+            10,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29,
+            30,
+            32,
+            34,
+            36,
+            40,
+            42,
+            43,
+            44,
+            45,
+            50
+          ]
+        }
+      ],
+      "engagements": [],
+      "physical_action_owners": [],
+      "pending_death_events": []
+    }
+  ],
+  "semantic_reinspection": {
+    "inventory_unchanged_from_approach": true,
+    "all_three_dead_and_correct_Blades_killers": true,
+    "dead_assassins_have_no_bound_inventory": true,
+    "all_three_escorts_alive": true,
+    "health": 100,
+    "stage": 50,
+    "no_combat_or_pending_death_or_action_owners": true,
+    "captures_inspected": [
+      "joined-third-ambush-npc-escort-01/adaptive-escort-route.png",
+      "joined-third-ambush-escort-restart-01/joined-post-ambush-escort-restart.png"
+    ]
+  },
+  "failed_checks": {
+    "focused-01": "Compile error: deleted reference query used wrong API. No tests ran.",
+    "focused-02": "New NPC test passes; existing Player/greeting tests catch canonical identity/legacy view regression. Corrected focused03 and full gates pass."
+  },
+  "remaining": "After NPC kills, escort navigation fails. Raw first run Player reaches all8 remaining waypoints100HP; F5 holds first2 dead, third still fighting; third later killed and all controllers retired. No52/54. Fresh restart exact entry0 differences, third killed again, actualF5 all3 dead/allparty alive/HP100/no combat or pending. Glenroy032a16 package017d7e phaseStalled12 bounded-repath-exhausted at2871.873,6762.040,-1183.035 node171=(3023.648,6722.121,-1184). Emperor032a18 TravelCurrentLocation017d7c Complete7 at1496.063,5398.644,-967.868, back toward old holding position; Baurus032a17 Follow017d7d Wait6 at1545.95,5588.41,-983.937. Not full escort acceptance. Both captures inspected.",
+  "rendered_sanitizer": {
+    "status": "03 running; no pass yet",
+    "course": "joined-third-ambush-npc-sanitized-prefix-03",
+    "leak_detection": false,
+    "separate_engine_leak_gate": true,
+    "retained01": "Preload path was GNU linker script, native exited before gameplay; runner stopped-2 after native terminal confirmed.",
+    "retained02": "120-second startup wait expired, no gameplay; no sanitizer error."
+  }
+}

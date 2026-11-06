@@ -61,6 +61,10 @@ namespace MWMechanics
     // Ordinary active actors can acquire a detected hostile Player without a
     // script StartCombat. Existing directed controllers retain their targets.
     bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor);
+    // Scan resident native actors using the same disposition/fight/detection gates.
+    // Existing controllers keep their targets; nearest positive candidate wins.
+    bool acquireOblivionCombat(MWBase::World& world, const MWWorld::Ptr& actor,
+        std::span<const MWWorld::Ptr> candidates);
 
     struct OblivionOrdinaryContactResult
     {

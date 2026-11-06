@@ -330,13 +330,12 @@ namespace MWMechanics
         return result && *result == target;
     }
 
-    std::optional<std::int32_t> oblivionPlayerFightScore(
-        MWWorld::World& world, const MWWorld::Ptr& actor)
+    static std::optional<std::int32_t> oblivionFightScore(
+        MWWorld::World& world, const MWWorld::Ptr& actor, const MWWorld::Ptr& target)
     {
         auto* combat = world.getOblivionCombatService();
-        const auto player = world.getPlayerPtr();
         if (world.getGameProfile() != ESM::GameProfile::Oblivion || !combat
-            || actor.isEmpty() || player.isEmpty() || actor == player
+            || actor.isEmpty() || target.isEmpty() || actor == target
             || (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
             return std::nullopt;
         const auto key = actor.getCellRef().getFormKey();
@@ -344,7 +343,9 @@ namespace MWMechanics
         const auto aggression = combat->getNonPlayerIntegerValue(actor, 33);
         if (aggression <= 0)
             return 0;
-        const auto disposition = world.getOblivionDisposition(key, ESM::FormKey::dynamic("player", 1));
+        const auto targetKey = target == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : target.getCellRef().getFormKey();
+        const auto disposition = world.getOblivionDisposition(key, targetKey);
         if (!disposition)
             return std::nullopt;
         std::vector<const ESM4::GameSetting*> settings;
@@ -353,17 +354,17 @@ namespace MWMechanics
             if (seen.insert(setting.mId).second)
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
         const auto distance = (actor.getRefData().getPosition().asVec3()
-            - player.getRefData().getPosition().asVec3()).length();
+            - target.getRefData().getPosition().asVec3()).length();
         // Original 524AD4/5EA187 only admit positive 546190 fight scores.
-        // This ordinary Player encounter has no ally incident/friend term.
-        // Use the existing detector; exact native scan cadence and general
-        // multi-target/ally selection are separate from this admission path.
+        // Ordinary hostility has no ally incident/friend term.
+        // Detection and target selection belong to the acquisition caller.
         const ESM4::FightScoreInput input{*disposition, 0, aggression, distance,
             false, false, combat->getNonPlayerIntegerValue(actor, 36)};
         return ESM4::fightScore(input, ESM4::buildFightScoreSettings(settings));
     }
 
-    bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor)
+    bool acquireOblivionCombat(MWBase::World& world, const MWWorld::Ptr& actor,
+        std::span<const MWWorld::Ptr> candidates)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
@@ -372,31 +373,69 @@ namespace MWMechanics
         if (!combat || !ai || actor.isEmpty()
             || (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
             return false;
-        const auto player = world.getPlayerPtr();
-        if (player.isEmpty() || actor == player || !actor.isInCell() || !player.isInCell()
-            || !actor.getRefData().isEnabled() || !player.getRefData().isEnabled()
-            || (actor.getCell() != player.getCell()
-                && (!actor.getCell()->isExterior() || !player.getCell()->isExterior())))
+        if (!actor.isInCell() || !actor.getRefData().isEnabled() || actor.getBase()->isDeleted()
+            || actor == world.getPlayerPtr())
             return false;
         const auto key = actor.getCellRef().getFormKey();
         if (nativeWorld->hasOblivionCombatController(key).value_or(false))
             return false;
         const auto* values = combat->findActorValues(key);
         const auto* life = combat->findActorLife(key);
-        const auto* playerLife = combat->findActorLife(ESM::FormKey::dynamic("player", 1));
         if (!values || values->mProcess != ESM4::ActorValueProcess::Active
             || !life || life->mPhase != ESM4::ActorLifePhase::Alive
-            || !playerLife || playerLife->mPhase != ESM4::ActorLifePhase::Alive
             || ai->isRestrained(actor) || ai->isRidingHorse(actor)
             || oblivionParalyzed(world, actor) || oblivionKnockedState(world, actor) != 0)
             return false;
         if (const auto* state = ai->state(actor); state && state->mPackageType == ESM4::AIPackageType::Sleep
             && (state->mPhase == ESM4::PackagePhase::Act || state->mPhase == ESM4::PackagePhase::Wait))
             return false;
-        const auto score = oblivionPlayerFightScore(*nativeWorld, actor);
-        if (!score || *score <= 0 || !ai->detection(actor, player).mDetected)
-            return false;
-        return nativeWorld->executeOblivionStartCombat(actor, player);
+        const auto player = world.getPlayerPtr();
+        const auto candidateKey = [&](const MWWorld::Ptr& candidate) {
+            return candidate == player ? ESM::FormKey::dynamic("player", 1)
+                : candidate.getCellRef().getFormKey();
+        };
+        MWWorld::Ptr selected;
+        float nearest = std::numeric_limits<float>::infinity();
+        for (const auto& target : candidates)
+        {
+            if (target.isEmpty() || target == actor || !target.isInCell()
+                || !target.getRefData().isEnabled() || target.getBase()->isDeleted()
+                || (target != player && target.getType() != ESM::REC_NPC_4 && target.getType() != ESM::REC_CREA4)
+                || (actor.getCell() != target.getCell()
+                    && (!actor.getCell()->isExterior() || !target.getCell()->isExterior())))
+                continue;
+            const auto targetKey = candidateKey(target);
+            const auto* targetValues = combat->findActorValues(targetKey);
+            const auto* targetLife = combat->findActorLife(targetKey);
+            if (!targetValues || targetValues->mProcess != ESM4::ActorValueProcess::Active
+                || !targetLife || targetLife->mPhase != ESM4::ActorLifePhase::Alive)
+                continue;
+            const float distance = (actor.getRefData().getPosition().asVec3()
+                - target.getRefData().getPosition().asVec3()).length2();
+            if (distance > nearest || (distance == nearest && !selected.isEmpty()
+                    && !(targetKey < candidateKey(selected))))
+                continue;
+            const auto score = oblivionFightScore(*nativeWorld, actor, target);
+            if (!score || *score <= 0 || !ai->detection(actor, target).mDetected)
+                continue;
+            selected = target;
+            nearest = distance;
+        }
+        // Practical nearest detected hostile policy, not original target ranking.
+        // Publish only the selected controller; rejected candidates consume no RNG.
+        return !selected.isEmpty() && nativeWorld->executeOblivionStartCombat(actor, selected);
+    }
+
+    std::optional<std::int32_t> oblivionPlayerFightScore(
+        MWWorld::World& world, const MWWorld::Ptr& actor)
+    {
+        return oblivionFightScore(world, actor, world.getPlayerPtr());
+    }
+
+    bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        const std::array candidates{world.getPlayerPtr()};
+        return acquireOblivionCombat(world, actor, candidates);
     }
 
     bool updateOblivionMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled, float duration)

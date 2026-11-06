@@ -14,13 +14,13 @@ and physical exterior, then prove a single-process new-game escape and fresh
 outdoor reload. Solo dungeon/shaman, second ambush, reunion and Warrior birthsign
 are connected. Historical separate late/outdoor saves do not prove the remaining join.
 
-## Current chunk — original reunion/birthsign50 joined, escort departs
+## Current chunk — third ambush won; post-combat escort navigation open
 
-Latest fully inspected main checkpoint:
+Earlier fully inspected birthsign checkpoint:
 `build/oblivion-compat/sewer-escape/joined-escort-door-clearance-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
 Subterrane022288, Player(1444.228,5496.875,-991.036), health100/magicka80,
 Warrior birthsign01fd9d, class still placeholder0230e6. CharacterGen50.
-Both second-ambush assassins dead:0176ff/Glenroy032a17,017708/Baurus032a16;
+Both second-ambush assassins dead:0176ff/killer032a17,017708/killer032a16;
 only bases017618/017620 count0→1. All3 escorts alive. No active combat or pending
 work. Original stages32/34/36/40/42/43/44/45/50, birthsign bonusesStr50/End50/maxHP100
 and actual UI replies are proven. Ordinary A+Shift_L0.4s clears Player from doorway;
@@ -50,9 +50,43 @@ Player(2540.174,6212.144,-1183.047),100HP/80MP, CharacterGen50, unchanged
 inventory/death counts, no combat/pending death. All13 approach points, actualF5,
 matching input receipts, exact fresh entry and inspected capture pass.
 [Approach proof](SEWER-JOINED-THIRD-AMBUSH-APPROACH-VERIFICATION.json).
-Next: resolve the actual third ambush from this checkpoint, then original54/56,
-Sanctum Emperor/Amulet, class/Baurus88, physical exterior, uninterrupted new-game
-escape and fresh outdoor load. Full escape remains incomplete.
+Autonomous NPC hostile acquisition is implemented. Full normal and ASan/UBSan
+engine suites pass2204/2204, exact inventories, no failures/skips; engine leak
+checking enabled. Focused03 passes3 cases with runtime rebuilt. Retained01 compile
+failure and02 Player/greeting identity regressions precede the passing checks.
+Practical nearest detected positive native fight-score target; no exact target
+utility/cadence or general ally/incident selection claim.
+[NPC acquisition proof](SEWER-THIRD-AMBUSH-NPC-ACQUISITION-VERIFICATION.json).
+
+Latest genuine main input:
+`build/oblivion-compat/sewer-escape/joined-third-ambush-escort-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(1226.890,7265.538,-1183),100HP/80MP, Warrior birthsign, stage50, unchanged
+inventory. Third pursuers01772e/017734 killed byBaurus032a17,01774a byGlenroy032a16.
+All3 escorts alive; no combat, pending death or physical action owners. Corpses
+have no bound inventory. Both whole-state fresh boundaries restore exactly.
+First raw NPC course passes its actual8-point/F5 prefix with2 dead/third fighting;
+third dies later. Raw course and actual fresh restart both FAIL missing52/54.
+The fresh restart's actual finalF5 independently proves all3 victories, not a
+whole-course pass. Both captures inspected; no state splicing.
+
+Remaining observed blocker: after combat, Glenroy's017d7e route stalls at
+(2871.873,6762.040,-1183.035), pathnode171, bounded-repath-exhausted. Emperor's
+CurrentLocation Travel017d7c returns toward old hold and completes at(1496.063,
+5398.644,-967.868); Baurus follows him. Terminal combat controllers retire
+correctly. Investigate escort navigation/recipient behavior from this actual state.
+No fix for this next gap yet. Preserve the pre-combat approach for continuous
+replay under that fix; do not force phases or quest stages.
+
+Current rendered sanitizer UI `joined-third-ambush-npc-sanitized-prefix-03`,
+supervisor127060. Correct ELF preload, startup360s, receipt90s; inspect actual
+process/status/report before another UI run.01 preload/startup failure and02
+startup120s timeout retained. No rendered sanitizer pass yet; engine leak gate
+already passes. Normal game SHA25672622354312fec01edd73ef8d9c055586afe5fa45b159ae0caf53280f464debf.
+
+Next: post-combat escort navigation, original54/56, Sanctum Emperor/Amulet,
+class/Baurus88, physical exterior, uninterrupted new-game escape and fresh
+outdoor reload. Full escape remains incomplete. Failed axe and inventory probes
+supply no checkpoint;159829 is a bow, not a katana.
 
 [Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json):
 clean978-action post-shaman10heal/26originalPGRD/Space03816c→022288 course,
