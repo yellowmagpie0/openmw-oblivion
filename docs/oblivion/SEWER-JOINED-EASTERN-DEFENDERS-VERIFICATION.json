@@ -1,0 +1,156 @@
+{
+  "scope": "Connected reinforcing goblin03b541 and already engaged eastern defender03b52f Player victories, with four real recovery casts between. Full escape incomplete.",
+  "full_escape_complete": false,
+  "implementation_unchanged": true,
+  "courses": {
+    "joined-cavern-reinforcement-early-course-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-reinforcement-early-course-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-patrol-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "d604df680760d22232bc46e31931171b955c726cfec35ba5d0f34518d8f87e56",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-cavern-reinforcement-early-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "d0836f0e93bb71c77afdf58eb4d2c5d3dc345e29e9b0c6e2d030859aedcb1fa2",
+      "health": 7.999992370605469,
+      "magicka": 80.0,
+      "position": [
+        4715.5166015625,
+        3051.5341796875,
+        -438.5722351074219,
+        -0.08574221283197403,
+        0.0,
+        0.8470541834831238
+      ],
+      "active_combat": [
+        {
+          "first": "content:oblivion.esm:03b52f",
+          "second": "dynamic:player:0000000000000001"
+        }
+      ],
+      "physical_action_owners": [
+        {
+          "id": 332,
+          "actor": "content:oblivion.esm:03b52f"
+        }
+      ],
+      "pending_deaths": [],
+      "capture_inspected": true
+    },
+    "joined-reinforcement-recovery-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-reinforcement-recovery-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-reinforcement-early-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "d0836f0e93bb71c77afdf58eb4d2c5d3dc345e29e9b0c6e2d030859aedcb1fa2",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/0/linear_velocity/1",
+            -0.012887436896562576,
+            -0.012887435965240002
+          ]
+        ]
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-reinforcement-recovery-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "13a44d833a563e3a333dd05e745addc7da1bf4e2149c1338e67ab761b5b0f5f9",
+      "health": 21.70000457763672,
+      "magicka": 7.063072204589844,
+      "position": [
+        4715.5166015625,
+        3051.5341796875,
+        -438.5722351074219,
+        -0.08574221283197403,
+        0.0,
+        0.8470541834831238
+      ],
+      "active_combat": [
+        {
+          "first": "content:oblivion.esm:03b52f",
+          "second": "dynamic:player:0000000000000001"
+        }
+      ],
+      "physical_action_owners": [],
+      "pending_deaths": [],
+      "capture_inspected": true
+    },
+    "joined-engaged-eastern-fight-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-engaged-eastern-fight-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-reinforcement-recovery-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "13a44d833a563e3a333dd05e745addc7da1bf4e2149c1338e67ab761b5b0f5f9",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/0/linear_velocity/0",
+            -0.006733634974807501,
+            -0.0067336345091462135
+          ]
+        ]
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-engaged-eastern-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "d80cf0d5af5b6cd3bcf22dce8222d1d359b2163065f9252dbb8b75438a0fa66e",
+      "health": 4.239990234375,
+      "magicka": 33.77119827270508,
+      "position": [
+        4715.5166015625,
+        3051.5341796875,
+        -438.5722351074219,
+        0.13496091961860657,
+        0.0,
+        -1.1953285932540894
+      ],
+      "active_combat": [],
+      "physical_action_owners": [],
+      "pending_deaths": [],
+      "capture_inspected": true
+    }
+  },
+  "victories": [
+    {
+      "actor": "content:oblivion.esm:03b52f",
+      "base": "content:oblivion.esm:03b517",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:03b541",
+      "base": "content:oblivion.esm:03b531",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    }
+  ],
+  "shaman_still_alive": {
+    "actor": "content:oblivion.esm:03b52e",
+    "base": "content:oblivion.esm:03b52d",
+    "phase": 0,
+    "recovery_remaining": 0.0,
+    "killer": "null"
+  },
+  "death_count_changes": {
+    "content:oblivion.esm:03b531": 1,
+    "content:oblivion.esm:03b517": 1
+  },
+  "retained_failures": {
+    "joined-cavern-reinforcement-course-01": "Intentionally interrupted after tight waypoint2 missed under combat/knockback; no checkpoint accepted. Earlier80-unit combat handoff passes.",
+    "joined-cavern-eastern-course-01": "Incorrect followup launched from8HP with defender already active. Player dies before launcher interrupted; no checkpoint accepted. Actual unchanged8HP source then recovers through four ordinaryC casts and clean immediate fight."
+  },
+  "limits": [
+    "Other defender joins reinforcing fight; first clean pass still has active combat and8HP, explicitly not a safe traversal checkpoint.",
+    "Only final eastern fight has clear combat/action/death queues.",
+    "Upright corpses remain a visual limitation.",
+    "Full uninterrupted new-game escape and shaman victory still outstanding.",
+    "Data-only runtime courses; prior engine/sanitizer gates retain original provenance."
+  ]
+}
