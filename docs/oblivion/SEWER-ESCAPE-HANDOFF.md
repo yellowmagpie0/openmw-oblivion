@@ -77,11 +77,16 @@ correctly. Investigate escort navigation/recipient behavior from this actual sta
 No fix for this next gap yet. Preserve the pre-combat approach for continuous
 replay under that fix; do not force phases or quest stages.
 
-Current rendered sanitizer UI `joined-third-ambush-npc-sanitized-prefix-03`,
-supervisor127060. Correct ELF preload, startup360s, receipt90s; inspect actual
-process/status/report before another UI run.01 preload/startup failure and02
-startup120s timeout retained. No rendered sanitizer pass yet; engine leak gate
-already passes. Normal game SHA25672622354312fec01edd73ef8d9c055586afe5fa45b159ae0caf53280f464debf.
+Rendered ASan/UBSan third-ambush prefix03 now cleanPASSES:8 waypoints, realF5,
+matching input receipts, exact native fresh entry, Player100HP/inventory unchanged,
+all3 assassins dead/Glenroy032a16 killer, all3 escorts alive, capture inspected.
+01 preload startup failure and02 startup120s timeout retained;03 uses ELF preload,
+startup360s andreceipt90s. Rendered leak checking disabled; full engine2204 leak
+checking remains separate. This also supplies a clean genuine battle checkpoint:
+`build/oblivion-compat/sewer-escape/joined-third-ambush-npc-sanitized-prefix-03/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+No UI or build helper remains live. No52/54 or full escape claimed. Normal game
+SHA25672622354312fec01edd73ef8d9c055586afe5fa45b159ae0caf53280f464debf;
+sanitized game SHA256febea73e11dc4814b2a64711e0b34f2cfd81d238ac0aa39e4c4de03c6bb98b32.
 
 Next: post-combat escort navigation, original54/56, Sanctum Emperor/Amulet,
 class/Baurus88, physical exterior, uninterrupted new-game escape and fresh
