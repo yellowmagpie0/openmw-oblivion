@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "scope": "Coherent bound-equipment publication after late native actor registration",
-  "status": "Implementation and original-new-game first ambush verified; full uninterrupted escape/reload pending",
+  "status": "Original new-game opening, first ambush and escort30 accepted; whole run failed at first solo rat input-facing gate",
   "failure": {
     "status": "failed_original_new_game",
     "scenario_passed": false,
@@ -191,8 +191,8 @@
       "new_game": true,
       "load_save_flag": false
     },
-    "status": "First ambush original26 passed in same new-game process; current escort continuation28",
-    "observed": "Original26 victory07:08:33; original27 and actual90unit departure displacement, then28 at07:10:04. SamePID178210/no load; course still live.",
+    "status": "Terminal whole course FAILED at segment3 facing observation; first ambush and original30 prefixes accepted",
+    "observed": "Original30 fired07:17:05; actualF5 live-3-20 confirms30. Whole driver exits1/game0 at07:19, no engine findings. Keep rawfailure. Focused camera-aware first-rat check is separate, not uninterrupted acceptance.",
     "first_ambush": {
       "save_event": {
         "run_id": "tutorial-player-intervention",
@@ -362,6 +362,85 @@
         "sha256": "378b2b7b6f882c792ae4252880edeaafe83baa420e558326e45407c94c50077a",
         "review": "Inspected: normal first-person room, defeated assassins on floor, surviving Blade walking away; no obstructing GUI."
       }
+    },
+    "escort30": {
+      "save_event": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 178210,
+        "sequence": 20,
+        "tick": 2442,
+        "event": "save-complete",
+        "action_id": "observation-20",
+        "actor": "dynamic:player:0000000000000001",
+        "cause": "normal-save",
+        "deltas": {
+          "health": 0
+        },
+        "live": "live-3-20.json",
+        "live_sha256": "bd345e2b1e200a5495e9e1fd35e70a75b3197ab342c5932b488255c1a8f07711",
+        "result": "committed",
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "524d03bd45b5aad5d0d6dabe33327d71913b72de3cf05b724173f9039418e5e1",
+        "target": "dynamic:player:0000000000000001"
+      },
+      "immutable_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-04/stage30-departure.omwsave",
+      "parsed_state_equals_snapshot": true,
+      "stage": {
+        "quest": "content:oblivion.esm:02466e",
+        "stage": 30,
+        "running": true,
+        "completed_stages": [
+          5,
+          6,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          22,
+          23,
+          24,
+          26,
+          27,
+          28,
+          29,
+          30
+        ]
+      },
+      "health": 80.0,
+      "surviving_escort_cells": {
+        "content:oblivion.esm:032a16": "content:oblivion.esm:022288",
+        "content:oblivion.esm:032a17": "content:oblivion.esm:022288",
+        "content:oblivion.esm:032a18": "content:oblivion.esm:022288"
+      },
+      "rendered_capture": "build/oblivion-compat/sewer-escape/full-escape-continuous-04/segment02-phase8-escort-departed.png",
+      "rendered_review": "Inspected: Player first-person view, retained corpses, empty departed escort room."
+    },
+    "terminal_failure": {
+      "failed_actions": [
+        {
+          "duration_seconds": 10.035956,
+          "passed": false,
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-04/process.log",
+          "pattern": "Escape segment 3:\\s*(?:Joined wall rat facing)",
+          "poll_interval_seconds": 0.1,
+          "start_offset": 10799949,
+          "type": "wait_log"
+        }
+      ],
+      "game_exit_code": 0,
+      "launcher_exit_code": 1,
+      "forbidden_findings": [],
+      "unreviewed_findings": [],
+      "scenario_sha256": "d42630be1f8e84945cd1b1140a88e81574ca87ad64d53fffdff3db2349ddb80e",
+      "full_failure_proof": "build/oblivion-compat/sewer-escape/full-escape-continuous-04-failure-verification.json"
     }
   },
   "limits": "The connected exterior/reload evidence is retained with its own provenance. This fix does not yet close the original-new-game single-process escape and fresh reload gate.",

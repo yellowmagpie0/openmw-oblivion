@@ -15,7 +15,7 @@ coverage of recipient/fall fixes now passes as explicit composite evidence.
 The genuine prison-origin checkpoint chain now reaches the exterior and passes
 fresh outdoor reload. It remains composite evidence; full escape is not complete.
 
-## Current chunk — bound-equipment actor state and uninterrupted replay
+## Current chunk — camera-aware early rat input and uninterrupted replay
 
 Original new-game `full-escape-continuous-03` failed during the first ambush:
 Glenroy killed0178c4, then bound-gear cleanup threw `Invalid or dangling disposition
@@ -33,8 +33,26 @@ ASan/UBSan engine tests pass, exact inventories,0fail/0skip, sanitizer leak1.
 Runtime binaries built in focused normal and full sanitizer gates.
 [Actor-state cleanup proof](SEWER-BOUND-CLEANUP-ACTOR-STATE-VERIFICATION.json).
 
-Current original-new-game UI: `full-escape-continuous-04`, supervisor178123,
-runner178129/game178210, manifest `full-escape-bound-cleanup-fixed.json`.
+Original-new-game `full-escape-continuous-04` is now terminal/failed. It passed
+opening/ambush/escort30; then its first rat-facing observation timed out before
+Player attacks. Game0/launcher1, no engine findings. Preserve the raw failure;
+no whole-course pass inferred. Its triple-yaw early rat observer overshot in the
+preserved first-person view. Two early rat observers now use camera-aware gain;
+all actions/order/counts unchanged. Four assembly regressions pass.
+Focused `wall-rat-camera-aware-first-01` and `wall-rat-camera-aware-finish-01`
+both pass cleanly from04's genuine stage30 save and the first victory's actualF5.
+Player kills both rats;80→66→36HP, actual wall crossing, final combat/death/action
+queues clear. Actual saves parse exactly to their receipt snapshots. Both fresh
+entries restore the whole state with only6 tiny animated-body velocity projection
+differences, abs<=1e-5. Captures inspected and input receipts match. Source changes
+are only the2 observer yaw gains; actions/order/counts unchanged. Four assembly
+regressions pass; rebuilt67-segment/11957-action Lua compiles and4340 gates compile.
+[Early rat input proof](SEWER-WALL-RAT-CAMERA-VERIFICATION.json).
+These are separate loaded checks; uninterrupted full escape remains unproven.
+Current UI courses are terminal; no build helper live. Next full course is prepared
+at `aim-aware-assembly-01/full-escape.json`; verify actual process/status before UI.
+
+Accepted04 prefix used manifest `full-escape-bound-cleanup-fixed.json`.
 Same course/ordinary controls, actual no-load argv and new-game1. Original26
 first-ambush victory now passes: actualF5 `live-3-19.json`,80HP/unchanged Player
 inventory, Renault scripteddead/essentialfalse, all4 assassins dead (three Baurus,
@@ -42,16 +60,17 @@ one Glenroy), surviving3 escorts alive. All5 deathcallbacks drain; bound ownersh
 combat/death/action/cast/projectile queues clear. ActualF5 copied unchanged to
 `full-escape-continuous-04/first-ambush-victory.omwsave`; parsed native state exactly
 matches the receipt snapshot. Inspected victory capture and133 matching issued/
-delivered inputs. No loads or frame errors. Original27/departure movement/28/29
-continue normally; escort30 and the rest of the escape remain pending.
+delivered inputs. No loads or frame errors. Original27/departure movement/28/29/30 passed. Actual30 F5 `live-3-20.json`
+retains80HP and all3 escorts alive in022288; immutable stage30 save parses exactly
+to its receipt snapshot. The solo section/rest of escape remain pending.
 This closes the new-game runtime reproduction of the bound-cleanup failure;
 it does not close the full uninterrupted escape. Launch provenance records
 normal runtime SHA256ef71da25d612636f79b97bf50d2d17643aef49549d044483d5a1a0ad36b7292a,
-built from7db0440e9a plus the tested actor-state patch/code392bd5d472. Preserve the running
-process; check actual status before another UI or rebuild. All build helpers are
-terminal. Next: continue this same process through escort30 and the physical exterior,
-then fresh-load its own outdoorF5 and run the whole-course audit. Full escape
-remains incomplete until that uninterrupted course and fresh reload pass.
+built from7db0440e9a plus the tested actor-state patch/code392bd5d472. Keep this
+binary provenance separate from the focused check above. All build helpers are
+terminal. Next: run the prepared camera-aware original-new-game course through the physical exterior
+and fresh-load its own outdoorF5. Full escape remains incomplete until that
+uninterrupted course and fresh reload pass.
 
 ## Connected exterior and fresh outdoor reload evidence
 
@@ -141,7 +160,7 @@ C++ unchanged, full2208 normal/sanitized and rendered descent54 retain provenanc
 
 Earlier03 prefix used normal runtime73861667d0252ae7260ddb3c954ad2ced059e820edaa54028060d5b74cc33bf6,
 built at ef2c3ef348+final descent patch/codea9ab59a13e. Keep that original
-provenance separate from the current04 actor-state fix and tests above.
+provenance separate from the bound-cleanup fix and tests above.
 Prepared ignored `verify-full-escape.py` draft rejects composite exterior, partial
 opening and a still-running course; positive whole-course/reload audit is pending.
 
@@ -159,8 +178,8 @@ movement/aim observation is segment-scoped. Actual interrupted prefixes are cut
 at saved evidence, notably fifth patrol save and fourth Subterrane save; no later
 planned actions inferred. Versioned source recipes preserve provenance and genuine
 input course, prepared recipe is not gameplay acceptance. Lua syntax compiles.
-The current original-new-game04 course uses this assembler output; physical
-exterior/reload acceptance remains due for that single process. Main composite
+The next original-new-game course uses the camera-aware assembler output;
+physical exterior/reload acceptance remains due for a single new-game process. Main composite
 physical exterior/fresh reload retains its separate provenance.
 
 [Final battle/class proof](SEWER-JOINED-CLASS-CHOICE-VERIFICATION.json): Baurus032a17
@@ -184,8 +203,8 @@ escort recipients and allow existing yielding without new wire/phase/destination
 writes.42 focused and full2206 normal+ASan/UBSan engine/leak1 pass with original
 source provenance. A later fixture-only ID cleanup separates NPC bases from PACK
 keys; both affected cases pass normal and sanitized checks with runtime rebuilt.
-No helper currently live. New rendered recipient-fix coverage remains due; old
-rendered NPC victory retains its provenance. Normal landing backstep permits
+Later rendered recipient/fall coverage is closed by the completed-descent
+sanitizer proof above; older NPC victory retains its original provenance. Normal landing backstep permits
 original52/54/56; every genuine continuation restores exactly.
 [NPC acquisition proof](SEWER-THIRD-AMBUSH-NPC-ACQUISITION-VERIFICATION.json).
 
@@ -195,7 +214,7 @@ Pre-combat source for continuous battle/escort replay:
 [reunion/birthsign50](SEWER-JOINED-REUNION-BIRTHSIGN-VERIFICATION.json).
 
 Historical checkpoint sequence continued through key door/manhole, final sewers
-and exterior/reload as linked above. Current action is the uninterrupted04 run.
+and exterior/reload as linked above. Current action is the next camera-aware uninterrupted course.
 
 [Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json):
 clean978-action post-shaman10heal/26originalPGRD/Space03816c→022288 course,
