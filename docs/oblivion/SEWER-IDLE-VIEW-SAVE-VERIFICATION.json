@@ -1,0 +1,126 @@
+{
+  "scope": "Preserve selected first/third-person save preference across temporary idle vanity/preview cameras; keep existing native knockout recovery handling. No new save format.",
+  "full_escape_complete": false,
+  "observed_gameplay_problem": "The joined escort course had CAM_/FIRS1 at19 and0 at30 with no POV input. Its long idle wait entered vanity view; old World save compared that temporary mode with FirstPerson and wrote false. Reload then selected third person. Native T4ST entry equality did not cover this legacy metadata.",
+  "implementation": "getModeForSave returns the existing selected user preference for Vanity/Preview, retaining prior native recovery priority. Explicit static and ordinary view handling remain unchanged. Existing saved FIRS values remain authoritative; no retroactive rewrite of old saves.",
+  "checks": {
+    "idle-view-save-focused-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/idle-view-save-focused-01/verification.json",
+      "source": {
+        "head": "5d738861e25f659447a1d6b4a64d8d8d7af2a6c3",
+        "source_fingerprint": "9cb31a4f29b4f1dd89065f84a59c243f76698e009fbce314cdfc8b896a3f26d9"
+      },
+      "results": {
+        "engine": {
+          "executed": 4,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "NativeRecoveryCameraTest.*",
+          "binary_sha256": "c1ed8b56c7b93335c1ce821b270f5201d3d1e262c80d2bb5513328f1d73d03f4",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "73d2a815f566b0611bba5b871d8b8a360fa679defb149e76f4da2bb48d3c3da8",
+          "inventory_sha256": "481ebf51d1bb848487bfa01a2687ffbb16b96877946d0dca4c5f8e03c6dc1803",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "idle-view-save-normal-integration-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/idle-view-save-normal-integration-01/verification.json",
+      "source": {
+        "head": "5d738861e25f659447a1d6b4a64d8d8d7af2a6c3",
+        "source_fingerprint": "9cb31a4f29b4f1dd89065f84a59c243f76698e009fbce314cdfc8b896a3f26d9"
+      },
+      "results": {
+        "engine": {
+          "executed": 2203,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c1ed8b56c7b93335c1ce821b270f5201d3d1e262c80d2bb5513328f1d73d03f4",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3fea143ed954e71af6660fcd208ee237a6cb6e383f4d8521968448afff151eec",
+          "inventory_sha256": "481ebf51d1bb848487bfa01a2687ffbb16b96877946d0dca4c5f8e03c6dc1803",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "negative_unit": {
+    "evidence": "build/oblivion-compat/sewer-escape/idle-view-save-red-01/verification.json",
+    "expected_failure": true,
+    "test": "NativeRecoveryCameraTest.IdleAndPreviewViewsSaveTheSelectedPreference",
+    "coverage": "Both selected views, both temporary modes, World boolean representation/fresh Camera reconstruction, and a subsequent explicit POV toggle. Existing three recovery cases also pass after fix."
+  },
+  "negative_runtime": {
+    "original_selected_view": "FirstPerson",
+    "observed_idle_view": "Vanity",
+    "output_cam_firs": false,
+    "save_sha256": "e6eeec1f4da15249d06e1d022513527a5fac6a9c4bd89ffccb4a29c28782eacd",
+    "expected_firs": true,
+    "raw_scenario_passed": false,
+    "limit": "All inputs/observations completed and original preference loss reproduced. Raw scenario fails on resource-version mismatch from the pre-fix executable versus regenerated resource revision; no clean gameplay acceptance claimed.",
+    "runtime_identity": {
+      "sha256": "eb9107844c32da73276e406990fde6228f6bc0b891b28a41bde108bb317ff301",
+      "scope": "Existing pre-fix binary; upcoming focused helper builds tests only, not this executable",
+      "implementation_commit": "5d738861e2 (engine unchanged since a057b0af86)"
+    },
+    "raw_error": {
+      "line": 13,
+      "patterns": [
+        "\\sE\\]"
+      ],
+      "text": "[19:01:23.267 E] Resources dir /home/maciek/openmw-oblivion/openmw-oblivion/build/resources doesn't match OpenMW binary, the game may work incorrectly."
+    }
+  },
+  "runtime": {
+    "idle-view-save-runtime-01": {
+      "passed": true,
+      "scenario": "build/oblivion-compat/sewer-escape/idle-view-save-runtime-01/scenario.json",
+      "native_t4st_entry_differences": 0,
+      "save": "build/oblivion-compat/sewer-escape/idle-view-save-runtime-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "c66c636d2585ce673e8919e94c92fcd05de8aef275b8cf26cd92b7254b941d21",
+      "cam_firs": true
+    },
+    "idle-view-reload-01": {
+      "passed": true,
+      "scenario": "build/oblivion-compat/sewer-escape/idle-view-reload-01/scenario.json",
+      "native_t4st_entry_differences": 0,
+      "save": "build/oblivion-compat/sewer-escape/idle-view-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "12b1062932b67c7886eae370d672c478b186c87ecb17e2da990d6fabbf0ce314",
+      "cam_firs": true
+    }
+  },
+  "runtime_identity": {
+    "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+    "resources_version": "0.52.0\n5d738861e25f659447a1d6b4a64d8d8d7af2a6c3\n\n",
+    "built_source": {
+      "head": "5d738861e25f659447a1d6b4a64d8d8d7af2a6c3",
+      "source_fingerprint": "9cb31a4f29b4f1dd89065f84a59c243f76698e009fbce314cdfc8b896a3f26d9"
+    }
+  },
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/idle-view-save-runtime-01/idle-vanity-save.png",
+    "build/oblivion-compat/sewer-escape/idle-view-reload-01/idle-first-person-restored.png"
+  ],
+  "capture_limit": "The post-F5 screenshot shows the resumed first-person view. Entry into Vanity before F5 is proven by the read-only Lua observation; disk value is parsed from the actual single CAM_/FIRS record.",
+  "testing_scope": "All2203 normal engine cases pass. Prior2202 ASan/UBSan engine gate remains at a057b0af86; no current-source sanitizer pass is inferred for this camera change. Batch new sanitizer/rendered checks at the next required integration checkpoint.",
+  "remaining": [
+    "Normal next-room rat/loot/equipment and joined solo dungeon/shaman",
+    "Joined late story and physical exterior",
+    "Fresh full-course outdoor save/load and current rendered sanitizer evidence"
+  ]
+}

@@ -16,63 +16,58 @@ The accumulated sanitizer gate enables leak checking and builds the instrumented
 runtime; fresh rendered sanitizer gameplay remains separate. Component3262 and
 Python560 coverage retain their original provenance, with no fresh pass inferred.
 
-## Current chunk — Player wall-rat victories and physical passage accepted
+## Current chunk — idle camera preference save/load fixed and accepted
 
-The genuine original30 save continues to both authored wall-rat deaths by real
-Player power punches, then physical passage through the broken wall. Rat037e42
-falls in `joined-wall-rats-03`; its genuine F5 (health68) is restored exactly in
-`joined-wall-rats-06`, which kills037e41 and passes the crossing. Final health38,
-position(585.390,3175.597,-855.278), both Player killers, shared base death count2,
-no pending deaths/actions/combat engagements. Full native T4ST entry comparisons
-at both boundaries have zero differences. Capture inspected; no engine changes.
-[SEWER-JOINED-WALL-RATS-VERIFICATION.json](SEWER-JOINED-WALL-RATS-VERIFICATION.json).
+A long idle escort wait selected temporary Vanity mode. Old `getModeForSave()`
+returned it as-is, causing World to serialize CAM_/FIRS0 and reload third person
+after a first-person choice. The getter now preserves the existing selected view
+for Vanity/Preview while retaining native recovery priority and existing static
+handling. No format change; old explicit saved FIRS values remain authoritative.
 
-Raw03 is FAILED later on crossing-facing input; its successful real F5 prefix
-alone supplies06. Raw01/02/04/05 remain failed input/aim attempts;06 passes.
-World-axis camera observations and ordinary input now converge with fresh samples
-and a reasonable~0.04rad facing bound; actual contacts/deaths remain mandatory.
-A separate room rat037e40/base02509b stays alive; handle it in the next room route.
+The new test fails on old code, then all4 camera/recovery cases and all2203 normal
+engine cases pass after fix. Actual idle save observes FirstPerson→Vanity, writes
+FIRS1 and fresh-loads FirstPerson with zero native T4ST entry differences at both
+boundaries. Captures inspected; positive runs have no unreviewed errors. The old
+runtime negative observation reproduces FIRS0, but its raw scenario remains failed
+on a resource-revision mismatch (old binary5b8 versus regenerated resources5d738).
+[SEWER-IDLE-VIEW-SAVE-VERIFICATION.json](SEWER-IDLE-VIEW-SAVE-VERIFICATION.json).
 
-Latest genuine save:
+The prior2202 ASan/UBSan engine pass remains at a057b0af86 with leak checking;
+it does not cover this new camera change. Batch fresh sanitizer/rendered gates
+at the next required integration checkpoint. No component/Python pass is inferred.
+
+## Gameplay checkpoint and next action
+
+Latest genuine course save remains:
 `build/oblivion-compat/sewer-escape/joined-wall-rats-06/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Recipes: `oblivion_sewer_joined_first_wall_rat.json` (executed F5 prefix) and
-`oblivion_sewer_joined_wall_rats_finish.json` under `scripts/data/oblivion_compat/`.
-These are composite continuations, not a full single-process escape.
+Health38, position(585.390,3175.597,-855.278), both authored wall rats dead with
+Player killers/base count2, no pending deaths/actions/combat engagements. The
+separate room rat037e40/base02509b remains alive. Its saved view is third person
+from the old bug and remains authoritative; change it only through normal R if
+wanted. Normal healing, room combat, key-corpse loot, Club equipment and the keyed
+door are next. No current UI runner or build helper is live.
+
+[Wall-rat proof](SEWER-JOINED-WALL-RATS-VERIFICATION.json) is explicitly composite:
+raw03 fails later on crossing-facing input, but its actual first-kill F5 (health68)
+restores exactly in06, which passes second kill/crossing. Failed01/02/04/05 remain
+failed. World-axis camera observations/fresh input feedback converge; actual
+contacts/deaths remain required. Both native T4ST entry comparisons are exact.
 
 The preceding [original19→30 course](SEWER-CONTINUOUS-ESCORT-VERIFICATION.json)
-proves passage, ambush/five deaths, original conversations26–29, all three escort
-cell transitions and Glenroy callback30. Raw course fails only an inherited
-MQ01 stage24 exclusion. Independent master audit and trace prove rat037e42's
-original wall activation legitimately sets24; all input gates pass, exit0, no
-unreviewed errors. Separate reviewed acceptance passes; raw failure is preserved.
-Corrected escort recipes still forbid premature MQ01 exit88. The genuine input
-follows [new game→19](SEWER-CONTINUOUS-OPENING-VERIFICATION.json) without splicing.
+proves passage, ambush/five deaths, conversations26–29, all three escort cell
+transitions and callback30. Its raw scenario fails solely an inherited MQ01
+stage24 exclusion. Independent master audit/trace proves original rat wall
+activation legitimately sets24; separate reviewed acceptance passes, preserving
+the raw failure. Corrected recipes forbid premature MQ01 exit88. The input follows
+[new game→19](SEWER-CONTINUOUS-OPENING-VERIFICATION.json) without splicing.
 
-All2202 normal and all2202 accumulated ASan/UBSan engine cases pass with original
-fingerprints; sanitizer leak checking enabled at a057b0af86. No engine change
-since that gate. [Sanitizer evidence](SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json).
-
-## Next action — fix idle camera preference save before the next course
-
-Actual saves expose a required persistence gap: CAM_/FIRS is1 (first person) at19,
-but0 at30 after a long idle escort wait with no R/POV input. Subsequent reloads
-retain third person, affecting observed camera/aim behaviour. `getModeForSave()`
-only preserves native recovery view; it returns temporary Vanity/Preview as-is,
-so World's bool comparison writes false. Native T4ST entry checks do not cover
-legacy CAM metadata. Preserve the selected user view across temporary idle view,
-keep native recovery semantics, and test actual save/fresh-load behaviour.
-
-All UI runners are terminal; no build/check helper is live. After the focused
-camera fix, continue from the genuine health38 save by ordinary healing if
-needed, the room rat, key-corpse loot, Club equipment and keyed door. Then join
-solo dungeon/shaman, reunion, Emperor/Amulet, choices and physical exterior;
-verify fresh full-course outdoor load and focused rendered sanitizer gameplay.
-Do not splice separate shaman/late saves, inject health/quest/position, or broaden
-into unrelated services/exact combat arithmetic. Preserve every failed attempt.
-
-The complete new-game escort recipe is prepared but unrun. F8 advances only
-local read-only observer phases; phase-scoped wait/aim patterns prevent stale
-matches. Original scripts and ordinary inputs own all progression.
+Continue by the next observed gameplay blocker through solo dungeon/shaman,
+reunion, Emperor/Amulet, choices and physical exterior. Then verify fresh
+full-course outdoor load and current rendered sanitizer gameplay. Assemble the
+complete new-game course once joins work. Do not splice separate shaman/late
+saves, inject health/quest/position, or broaden into unrelated services/exact math.
+Preserve failures/provenance and keep UI courses single. F8 selects only local
+read-only observer phases; phase-scoped wait/aim patterns prevent stale matches.
 
 ## Reusable gameplay evidence
 
