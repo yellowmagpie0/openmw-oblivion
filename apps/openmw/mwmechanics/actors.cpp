@@ -1506,7 +1506,7 @@ namespace MWMechanics
             }
             if (!nativeCombatTarget && !isMoving && giveWayWhenIdle && nativeState != nullptr)
             {
-                if (oblivionActorCanProactivelyYield(*nativeState))
+                if (oblivionActorCanProactivelyYield(*nativeState, oblivionAi->isEscortRecipient(ptr)))
                     shouldGiveWay = true;
             }
 

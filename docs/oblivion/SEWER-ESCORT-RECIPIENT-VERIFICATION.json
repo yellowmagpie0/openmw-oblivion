@@ -1,0 +1,547 @@
+{
+  "scope": "Keep peaceful escort recipients with a paused leader, allow their existing collision yielding, and join original stages52/54/56",
+  "full_escape_complete": false,
+  "behavior": [
+    "CurrentLocation Travel recipient holds while its live same-cell Escort leader fights, stalls or is interrupted; package phase/destination and follower route are preserved.",
+    "Actual stationary native recipients may use existing proactive collision yielding. Relationship comes from live package graph; restrained/reserved actors still cannot yield. No new wire state or forced actor positions."
+  ],
+  "checks": {
+    "escort-recipient-hold-red-05": {
+      "passed": false,
+      "evidence": "build/oblivion-compat/sewer-escape/escort-recipient-hold-red-05/verification.json",
+      "source": {
+        "head": "52b615b521c1ac3f19bfd4122ae337dc73ca3545",
+        "source_fingerprint": "8a77259dc6696ada2a57f108896bdaae4e1e92008faa5581382b55f52019269c"
+      },
+      "results": {}
+    },
+    "escort-recipient-hold-focused-01": {
+      "passed": true,
+      "evidence": "build/oblivion-compat/sewer-escape/escort-recipient-hold-focused-01/verification.json",
+      "source": {
+        "head": "52b615b521c1ac3f19bfd4122ae337dc73ca3545",
+        "source_fingerprint": "81ed5799f538463575fb2d343dce5f9b5cdf27379e678757f5afaae93cc0b4ff"
+      },
+      "results": {
+        "engine": {
+          "executed": 41,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.*:OblivionWorldTest.Autonomous*Combat*:OblivionTutorialGreeting.NativeFightScore*",
+          "binary_sha256": "023fa23ad7e1ecc11c6ac88b03c5ca5673dbf829a1d5bf555bc9265e076e821f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "c7c61f757ad4cdbe5938063172e040010f433e9f85fd59e28edcad875c161659",
+          "inventory_sha256": "7139d5a931787c5368a277edbdf31903e3b9ffa8dce2ebdf03071440121d1229",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "escort-recipient-yield-focused-01": {
+      "passed": true,
+      "evidence": "build/oblivion-compat/sewer-escape/escort-recipient-yield-focused-01/verification.json",
+      "source": {
+        "head": "52b615b521c1ac3f19bfd4122ae337dc73ca3545",
+        "source_fingerprint": "cf9605c54bee859798edfab9b197c1e1e0dc0dac480bebb5331d98db86e9dd9b"
+      },
+      "results": {
+        "engine": {
+          "executed": 42,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.*:OblivionWorldTest.Autonomous*Combat*:OblivionTutorialGreeting.NativeFightScore*",
+          "binary_sha256": "8fd00d5d214d55ae701f57160c79646599cd549dc348f19a19765b56a78e3fd5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "a761605d1aa20e630aa7846bfddf42782548a64c4b1453c50cbf7d2ba2c2dd1b",
+          "inventory_sha256": "2a96803d99c2571b94e3596dadebe1325e8f38bdf91e8eaaa017fe73475bf80c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "escort-recipient-engine-integration-01": {
+      "passed": true,
+      "evidence": "build/oblivion-compat/sewer-escape/escort-recipient-engine-integration-01/verification.json",
+      "source": {
+        "head": "52b615b521c1ac3f19bfd4122ae337dc73ca3545",
+        "source_fingerprint": "172d228fe9e9985753b082175c0d979cf8289d5bed2a664bfa46870d91eaefad"
+      },
+      "results": {
+        "engine": {
+          "executed": 2206,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8fd00d5d214d55ae701f57160c79646599cd549dc348f19a19765b56a78e3fd5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6b53a673bb743ad8da83121e0ea3abe0fe409f66cdd0d7cad03f974cae97c4b5",
+          "inventory_sha256": "2a96803d99c2571b94e3596dadebe1325e8f38bdf91e8eaaa017fe73475bf80c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": [
+    {
+      "course": "joined-third-ambush-paused-recipient-01",
+      "raw_passed": false,
+      "save_sha256": "497127435ee10225b687df3dd414fb897906aa42d289dd6af1a0a8ad841127c5",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-third-ambush-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "b0c3e1817bd1e3df1258b05c24d2d80685be966e578f81dd1a32894586ce847b",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "player_position": [
+        1160.292724609375,
+        7267.59423828125,
+        -1183.0,
+        0.21308603882789612,
+        0.0,
+        -1.5092799663543701
+      ],
+      "health": 100.0,
+      "magicka": 80.0,
+      "quest": [
+        {
+          "quest": "content:oblivion.esm:02466e",
+          "stage": 50,
+          "running": true,
+          "completed_stages": [
+            5,
+            6,
+            9,
+            10,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29,
+            30,
+            32,
+            34,
+            36,
+            40,
+            42,
+            43,
+            44,
+            45,
+            50
+          ]
+        }
+      ],
+      "party": [
+        {
+          "actor": "content:oblivion.esm:032a16",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            2885.812744140625,
+            6424.86767578125,
+            -1180.8203125,
+            0.0,
+            0.0,
+            -0.2193816751241684
+          ]
+        },
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            2844.142822265625,
+            6694.33544921875,
+            -1183.0345458984375,
+            0.0,
+            0.0,
+            -0.34535232186317444
+          ]
+        },
+        {
+          "actor": "content:oblivion.esm:032a18",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            2852.09228515625,
+            6473.1650390625,
+            -1171.1573486328125,
+            0.0,
+            0.0,
+            -2.7756965160369873
+          ]
+        }
+      ],
+      "combat_engagements": [],
+      "pending_death": [],
+      "physical_action_owners": [],
+      "input_receipts_match": true
+    },
+    {
+      "course": "joined-third-ambush-paused-recipient-02",
+      "raw_passed": false,
+      "save_sha256": "84dffac634eee761b8b63dc2358cee1773a46b759543991e134c1f829ffa9b01",
+      "entry": null,
+      "player_position": [
+        1215.0634765625,
+        7263.4365234375,
+        -1183.0,
+        0.5806641578674316,
+        0.0,
+        -1.5192410945892334
+      ],
+      "health": 100.0,
+      "magicka": 80.0,
+      "quest": [
+        {
+          "quest": "content:oblivion.esm:02466e",
+          "stage": 50,
+          "running": true,
+          "completed_stages": [
+            5,
+            6,
+            9,
+            10,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29,
+            30,
+            32,
+            34,
+            36,
+            40,
+            42,
+            43,
+            44,
+            45,
+            50
+          ]
+        }
+      ],
+      "party": [
+        {
+          "actor": "content:oblivion.esm:032a16",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            1144.888671875,
+            7192.099609375,
+            -1183.0550537109375,
+            0.0,
+            0.0,
+            0.8886934518814087
+          ]
+        },
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            1455.4892578125,
+            7223.0830078125,
+            -1183.0,
+            0.0,
+            0.0,
+            -1.8464586734771729
+          ]
+        },
+        {
+          "actor": "content:oblivion.esm:032a18",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            1248.873291015625,
+            7174.09033203125,
+            -1183.0,
+            0.0,
+            0.0,
+            -2.3886449337005615
+          ]
+        }
+      ],
+      "combat_engagements": [],
+      "pending_death": [],
+      "physical_action_owners": [],
+      "input_receipts_match": true
+    },
+    {
+      "course": "joined-marker-f-player-clearance-01",
+      "raw_passed": true,
+      "save_sha256": "903b9cdb40acc33289f16715138230fb0845dd65635b10ecff819fc96b800a33",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-third-ambush-paused-recipient-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "84dffac634eee761b8b63dc2358cee1773a46b759543991e134c1f829ffa9b01",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "player_position": [
+        1343.9378662109375,
+        7256.7919921875,
+        -1183.0,
+        0.5806641578674316,
+        0.0,
+        -1.5192410945892334
+      ],
+      "health": 100.0,
+      "magicka": 80.0,
+      "quest": [
+        {
+          "quest": "content:oblivion.esm:02466e",
+          "stage": 54,
+          "running": true,
+          "completed_stages": [
+            5,
+            6,
+            9,
+            10,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29,
+            30,
+            32,
+            34,
+            36,
+            40,
+            42,
+            43,
+            44,
+            45,
+            50,
+            52,
+            54
+          ]
+        }
+      ],
+      "party": [
+        {
+          "actor": "content:oblivion.esm:032a16",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            850.8992919921875,
+            6979.40869140625,
+            -1247.0,
+            0.0,
+            0.0,
+            -2.717988967895508
+          ]
+        },
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            1130.416259765625,
+            7179.47607421875,
+            -1187.19482421875,
+            0.0,
+            0.0,
+            -1.632468581199646
+          ]
+        },
+        {
+          "actor": "content:oblivion.esm:032a18",
+          "cell": "content:oblivion.esm:022288",
+          "position": [
+            900.848876953125,
+            7069.33935546875,
+            -1247.0,
+            0.0,
+            0.0,
+            -2.635880708694458
+          ]
+        }
+      ],
+      "combat_engagements": [],
+      "pending_death": [],
+      "physical_action_owners": [],
+      "input_receipts_match": true
+    },
+    {
+      "course": "joined-marker-g-departure-01",
+      "raw_passed": true,
+      "save_sha256": "fbc6e7558fa32eaaf626d58a2bbf1169746a5839fcb943e221986502501bb3e7",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-marker-f-player-clearance-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "903b9cdb40acc33289f16715138230fb0845dd65635b10ecff819fc96b800a33",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "player_position": [
+        1343.9378662109375,
+        7256.7919921875,
+        -1183.0,
+        0.5806641578674316,
+        0.0,
+        -1.5192410945892334
+      ],
+      "health": 100.0,
+      "magicka": 80.0,
+      "quest": [
+        {
+          "quest": "content:oblivion.esm:02466e",
+          "stage": 56,
+          "running": true,
+          "completed_stages": [
+            5,
+            6,
+            9,
+            10,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29,
+            30,
+            32,
+            34,
+            36,
+            40,
+            42,
+            43,
+            44,
+            45,
+            50,
+            52,
+            54,
+            56
+          ]
+        }
+      ],
+      "party": [
+        {
+          "actor": "content:oblivion.esm:032a16",
+          "cell": "content:oblivion.esm:022282",
+          "position": [
+            2812.340087890625,
+            7463.908203125,
+            -1184.0230712890625,
+            0.0,
+            0.0,
+            -3.135350227355957
+          ]
+        },
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "cell": "content:oblivion.esm:022282",
+          "position": [
+            2812.340087890625,
+            7463.908203125,
+            -1184.0230712890625,
+            0.0,
+            0.0,
+            -3.0735654830932617
+          ]
+        },
+        {
+          "actor": "content:oblivion.esm:032a18",
+          "cell": "content:oblivion.esm:022282",
+          "position": [
+            2812.340087890625,
+            7463.908203125,
+            -1184.0230712890625,
+            0.0,
+            0.0,
+            -3.134737730026245
+          ]
+        }
+      ],
+      "combat_engagements": [],
+      "pending_death": [],
+      "physical_action_owners": [],
+      "input_receipts_match": true
+    }
+  ],
+  "runtime_binary_sha256": "e4689275beba4c04b1ccde59087d9fc13676b1bfe2f40928a202b1d1f59fdd2d",
+  "geometry": {
+    "source_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "pathgrid": "0164b3",
+    "hold_only_blocked_node": 168,
+    "receiver_distance_to_node": 23.373377801390614,
+    "party_spacing": 59.69151970536957,
+    "yielded_run_final_blocker": "Player near native node199; normal S+Shift_L0.8s clears landing. No additional engine repair needed."
+  },
+  "status_interpretation": {
+    "hold-only01": "Failed52/54; actual save proves party remains together, but recipient blocks leader node168.",
+    "yield02": "Failed52/54 after real8-point route/F5; all pursuers dead100HP, party reaches final landing, Player blocks node199. Actual failed-run finalF5 is source for clearance01.",
+    "clearance01": "Clean original52/54 pass with ordinary backstep; fresh entry exact.",
+    "departure01": "Clean original56 pass; all3 escorts cross native portal to022282 while Player remains022288. Fresh entry exact; no state splicing.",
+    "repro_manifest_note": "The recipient course remains an editable reproduction of failed54 wait; clean clearance and departure are separate actual continuations."
+  },
+  "screenshots_inspected": [
+    "joined-marker-f-player-clearance-01/joined-marker-f-player-clearance.png",
+    "joined-marker-g-departure-01/marker-g-escort.png"
+  ],
+  "retained_fixture_failures": {
+    "red01": "Const position API compile error.",
+    "red02": "Fixture missing required Player race/class metadata.",
+    "red03": "Fixture missing canonical package procedure.",
+    "red04": "Fixture lacked mechanics/physics for real movement; debug backtrace identifies getMaxSpeed. Corrected fixture red05 exposes actual unwanted movement and timer advancement."
+  },
+  "sanitizer_status": "New integration pending. Prior NPC-acquisition2204 engine leak pass and rendered third-ambush pass retain original source provenance.",
+  "next": "Player must physically enter Sanctum, then original Emperor/Amulet, class/Baurus88, exterior and uninterrupted new-game escape/outdoor reload."
+}

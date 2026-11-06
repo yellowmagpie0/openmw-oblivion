@@ -5702,6 +5702,28 @@ namespace MWMechanics
         live.mIgnoredPhysicalDoor = {};
     }
 
+    bool OblivionAiService::isEscortRecipient(const MWWorld::ConstPtr& actor) const
+    {
+        if (!handles(actor) || !actor.isInCell()) return false;
+        const auto found = mActors.find(actorKey(actor));
+        if (found == mActors.end() || found->second.mState.mPackageType != ESM4::AIPackageType::Travel)
+            return false;
+        const auto* current = package(found->second.mState.mPackage);
+        if (!current || current->mLocationData.mKind != ESM4::PackageLocationKind::CurrentLocation)
+            return false;
+        for (const auto& [leaderKey, leader] : mActors)
+        {
+            if (leaderKey == found->first || leader.mState.mPackageType != ESM4::AIPackageType::Escort
+                || leader.mState.mTarget != found->first || leader.mState.mRestrained)
+                continue;
+            const auto leaderPtr = loadedPtrFor(leaderKey);
+            if (package(leader.mState.mPackage) && !leaderPtr.isEmpty() && cellKey(leaderPtr) == cellKey(actor)
+                && !leaderPtr.getClass().getCreatureStats(leaderPtr).isDead())
+                return true;
+        }
+        return false;
+    }
+
     void OblivionAiService::clearCombatRoute(const MWWorld::Ptr& actor)
     {
         requireMutableRuntime();
@@ -6093,16 +6115,24 @@ namespace MWMechanics
                 for (const auto& [leaderKey, leader] : mActors)
                 {
                     if (leaderKey == live.mState.mActor || leader.mState.mPackageType != ESM4::AIPackageType::Escort
-                        || leader.mState.mTarget != live.mState.mActor || leader.mState.mRestrained
-                        || leader.mState.mPhase == ESM4::PackagePhase::Stalled
-                        || leader.mState.mPhase == ESM4::PackagePhase::Interrupted)
+                        || leader.mState.mTarget != live.mState.mActor || leader.mState.mRestrained)
                         continue;
                     const auto leaderPtr = loadedPtrFor(leaderKey);
                     const auto* escort = package(leader.mState.mPackage);
                     if (!escort || leaderPtr.isEmpty() || cellKey(leaderPtr) != cellKey(actor)
-                        || leaderPtr.getClass().getCreatureStats(leaderPtr).isDead()
-                        || mWorld.hasOblivionCombatController(leaderKey).value_or(false))
+                        || leaderPtr.getClass().getCreatureStats(leaderPtr).isDead())
                         continue;
+                    if (mWorld.hasOblivionCombatController(leaderKey).value_or(false)
+                        || leader.mState.mPhase == ESM4::PackagePhase::Stalled
+                        || leader.mState.mPhase == ESM4::PackagePhase::Interrupted)
+                    {
+                        // The escort still owns this relationship while paused.
+                        // Falling through would resume the recipient's old
+                        // CurrentLocation destination and walk it away from the
+                        // encounter. Preserve its package and follower cursor.
+                        stopMovement(actor);
+                        return true;
+                    }
                     const float range = std::max(64.f, float(escort->mTargetData.mDistance));
                     // A smaller receiver stop radius leaves room for the leader
                     // to resume without both actors stopping at the same boundary.

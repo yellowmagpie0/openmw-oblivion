@@ -115,6 +115,8 @@ namespace MWMechanics
         bool isCurrentPackage(const MWWorld::ConstPtr& actor, const ESM::FormKey& package) const;
         bool isRestrained(const MWWorld::ConstPtr& actor) const;
         bool isRidingHorse(const MWWorld::ConstPtr& actor) const;
+        // Derived from the current package graph; no extra saved idle/phase flag.
+        bool isEscortRecipient(const MWWorld::ConstPtr& actor) const;
 
         bool getLOS(const MWWorld::ConstPtr& observer, const MWWorld::ConstPtr& target) const;
         struct DialogueConditionInputs
