@@ -15,57 +15,56 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — select the actual Inventory controller page
+## Current chunk — uninterrupted original-new-game10
 
-09 is terminal FAILED at source7 Club-equipped wait120sec, game0/launcher1,
-no engine findings. It passed original19/26/30, three Player rat kills, native
-healing46→70, room traversal, guarded waypoints and corpse loot. Its equipment
-capture shows the remembered Magic page; the driver assumed Inventory.
-No supplemental input was delivered: xdotool display discovery failed only
-after terminal cleanup, before any key/click command. Preserve09 unchanged.
-Failure proof: `full-escape-continuous-09-failure-verification.json`.
+`full-escape-continuous-10` is live, game PID254562, runner254545,
+supervisor254532, read-only save archiver254608. Preserve this process.
+Actual argv has no load-save argument; config has new-game1; native events
+through opening19 contain one run-start, no load and only the5 audited Peryite
+startup deferrals. Original stages5/6/9/10/12/13/14/15/16/17/18/19 and actual
+outer segment2 observed. Stage19 archive12/native snapshot match exactly,
+80HP, Player still in the prison at the saved checkpoint; physical passage
+traversal and ambush are subsequent gates. Initial quicksave/autosave and
+stand-back save also match native snapshots. Prison/Emperor captures inspected.
+`full-escape-continuous-10/opening19-verification.json` retains exact provenance.
 
-First UI candidate `equipment-panel-magic-01` is terminal FAILED only for
-mis-scoped expected logs; its actions finish and produce genuine pre-equipment
-save3 and keyed-door save4. Visibility-based page detection is also rejected:
-all controller pages stay visible and are moved off-screen when inactive.
-Do not relabel this exploratory scenario or accept its ambiguous UI oracle.
+Current binary SHA ff12ce92…c7f6d; full67 manifest SHA7c2e216a…9d0b85,
+`equipment-active-page-full-assembly-01/full-escape.json`. All paths below are
+relative to `build/oblivion-compat/sewer-escape/`. Incremental monitor reads logs
+without input and verifies PID identity; `full-escape-continuous-10/incremental-watch.json`
+is observation history, not sufficient alone to prove a currently live process.
+Inspect actual process/launcher status. Current handles and prepared evidence:
+`menu-admission-current-work.json`. No build/test helper is live at this checkpoint.
 
-Current changes: a private Lua UI query returns the engine's active controller
-window ID; source7 cycles ordinary trigger inputs and samples the actual page
-across3 frames before equipping. Expected logs retain their inner Key phase
-prefixes. No combat/world rules or actor/quest/position writes change.
-83 top-level source7 actions retain its complete selected course.
+Next: same process through physical passage, first ambush and all remaining
+segments; then fresh-load its own outdoor save. No other rendered game or binary/
+resource overwrite while this UI is live. Do not restart on observation timeout.
+On terminal failure retain raw evidence, fix the actual failed gate, verify a
+bounded correction and commit it before another full original-new-game attempt.
 
-Current C++ passes all2210 normal and2210 ASan/UBSan engine cases, exact
-inventories,0fail/0skip, same stable fingerprint29778055…1c939; engine leak1.
-18 focused assembly/repeat tests pass. Full67 assembly11559 actions compiles
-with the engine LuaJIT. These are implementation/assembly gates, not full escape.
-Normal `equipment-active-page-magic-01` passes remembered-Magic selection, Club
-selection and keyed-door traversal. Actual final F5/native snapshot match,
-70HP, Key once, Club equipped, cell022ff6; all input bytes delivered. Whole entry
-matches except7 body-velocity projections≤1e-5. Relevant captures inspected.
+Static later risk, not an observed failure: source10 leaves Inventory's Magic
+filter selected; source40 assumes All before3 rightshoulder presses. Source
+onOpen preserves the filter. `remaining-ui-filter-context-risk.json` records
+this; `healing-filter-context-prepared-01/reproduce.json` is prepared, **not run**,
+from native-exact real chest-loot save SHA f6327a68…3c84eb,26.14HP/3 potions.
+It seeds the remembered category using normal inputs. Do not launch alongside10.
 
-Sanitized `equipment-active-page-inventory-sanitize-03` passes the same course
-from default Inventory (4 actual page cycles); normal Magic start takes1 cycle.
-Both verify fresh Inventory with no simultaneous Magic/Inventory samples,
-Club equipped, original keyed traversal, native-exact70HP final save, Key/Club
-once, all delivered input bytes, run-end error0/pending0/unsupported0. Sanitized
-whole entry differs only by7 permitted body-velocity projections≤1e-5.
-Sanitized UI01 retains initial focus-delivery10sec failure;02 retains loop120sec
-expiry after3 healthy~40sec cycles.03 changes only receipt90sec and waits3x;
-engine leak1/runtime leak0. Captures inspected. All helpers/UI are terminal.
-[Current bounded proof](SEWER-EQUIPMENT-PAGE-VERIFICATION.json).
+## Latest completed fixes and reusable evidence
 
-Next: commit the verified active-page query/driver fix, then original-new-game10
-through all67 segments and its own outdoor fresh reload. Full escape remains
-incomplete. Never overwrite a binary/resources used by a live UI.
-
-All short courses are under `build/oblivion-compat/sewer-escape/`.
-Inspect actual processes/status before any launch; update ignored
-`menu-admission-current-work.json` with current helper/UI handles.
-
-## Latest completed fix and reusable evidence
+Active page fix `afe0f46d22`: private Lua query returns the actual controller
+window ID; source7 uses ordinary trigger inputs and fresh3-frame samples before
+Club selection. Visibility is insufficient because inactive pages remain visible
+off-screen.83 top-level source7 actions retain the full selected course. Inner
+Key-phase expected-log prefixes corrected. Full2210 normal and2210 ASan/UBSan
+engine cases pass, exact inventories,0fail/0skip, stable fingerprint29778055…1c939;
+18 focused assembly/repeat tests pass. Full67/11559-action assembly compiles in
+engine LuaJIT. Normal remembered-Magic and sanitized default-Inventory UI courses
+pass (1/4 cycles): Club equipped, Key once, actual keyed destination022ff6,
+native-exact70HP saves, all input bytes delivered, native run-end error0/pending0/
+unsupported0. Whole entries differ only by7 body-velocity projections≤1e-5.
+Engine leak1/runtime leak0; captures inspected. Failed full09, visibility candidate
+and sanitizer timing attempts remain failed with original provenance.
+[Active page proof](SEWER-EQUIPMENT-PAGE-VERIFICATION.json).
 
 Menu admission fix `aee30a8b22`: Morrowind's new-game menu lock had also blocked
 Oblivion; original TES4 scripts never issue those menu-unlock commands. Oblivion
@@ -100,7 +99,7 @@ Other reusable evidence:
 
 ## Next action and completion audit
 
-Preserve the next original-new-game process; inspect milestones, actual saves/native receipts and rendered captures.
+Preserve the current original-new-game process; inspect milestones, actual saves/native receipts and rendered captures.
 On terminal failure, retain raw evidence, diagnose the actual failed gate and
 verify a bounded fix with focused/runtime checks before broad integration gates.
 Commit completed self-contained changes; no push. Do not edit source/docs or
