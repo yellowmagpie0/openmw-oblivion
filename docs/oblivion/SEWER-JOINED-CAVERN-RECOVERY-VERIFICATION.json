@@ -1,0 +1,118 @@
+{
+  "scope": "Connected post-log healing, original six-point downhill traversal, healing chest take-all, and three real inventory potion uses to health80. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "implementation_unchanged": true,
+  "courses": {
+    "joined-cavern-healing-chest-course-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-healing-chest-course-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-log-final-two-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "a9b3690c14a65d05f4370fc423d67b25c03131dbc341efcbe2ef2c0902bd78df",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/0/linear_velocity/0",
+            -0.0016341914888471365,
+            -0.0016341916052624583
+          ],
+          [
+            "/native_animated_references/0/bodies/1/linear_velocity/2",
+            -0.006323494482785463,
+            -0.006323494948446751
+          ],
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/1",
+            0.0019420747412368655,
+            0.0019420746248215437
+          ],
+          [
+            "/native_animated_references/0/bodies/3/linear_velocity/1",
+            -0.11983242630958557,
+            -0.11983243376016617
+          ],
+          [
+            "/native_animated_references/0/bodies/4/linear_velocity/1",
+            -0.3855849802494049,
+            -0.3855849504470825
+          ],
+          [
+            "/native_animated_references/0/bodies/4/linear_velocity/2",
+            0.10102753341197968,
+            0.10102754086256027
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/1",
+            -0.09602656960487366,
+            -0.09602656215429306
+          ]
+        ]
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-cavern-healing-chest-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "f6327a68481a07075ae6e92d9216edfd886432fa048051dfa4f0d8b9603c84eb",
+      "position": [
+        4555.6494140625,
+        1560.7462158203125,
+        -470.4376525878906,
+        0.784375011920929,
+        0.0,
+        2.083772897720337
+      ],
+      "health": 26.14000701904297,
+      "pending_work": false,
+      "captures_inspected": true
+    },
+    "joined-cavern-healing-potions-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-healing-potions-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-healing-chest-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "f6327a68481a07075ae6e92d9216edfd886432fa048051dfa4f0d8b9603c84eb",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-cavern-healing-potions-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "0ca684618e249c2cbcc98135b6b6909dceb49e71d065ae9b56feaac9cd6672bc",
+      "position": [
+        4555.6494140625,
+        1560.7462158203125,
+        -470.4376525878906,
+        0.784375011920929,
+        0.0,
+        2.083772897720337
+      ],
+      "health": 80.0,
+      "pending_work": false,
+      "captures_inspected": true
+    }
+  },
+  "ordinary_healing": {
+    "input_health": 5.0200042724609375,
+    "spell": "content:oblivion.esm:000136",
+    "casts": 3,
+    "post_cast_health": 26.14000701904297,
+    "healing_potions_used": 3,
+    "final_health": 80
+  },
+  "chest": {
+    "reference": "content:oblivion.esm:051d72",
+    "remaining_inventory": [],
+    "player_inventory_delta": {
+      "content:oblivion.esm:009310": 3,
+      "content:oblivion.esm:00930e": 1
+    },
+    "consumption_delta": {
+      "content:oblivion.esm:009310": -3
+    }
+  },
+  "life_and_death_counts_unchanged": true,
+  "limits": [
+    "Fresh entry permits only recorded animated-body velocity projection differences\u22641e-5.",
+    "No uninterrupted new-game-to-exterior proof yet.",
+    "Data-only runtime input courses; prior engine/sanitizer gates retain original provenance."
+  ]
+}

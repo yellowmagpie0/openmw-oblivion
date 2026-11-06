@@ -13,38 +13,37 @@ Remaining: join the genuine course through the solo dungeon/shaman, reunion,
 Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
 escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — rolling logs and both goblins complete on main route
+## Current chunk — connected log victory, healing chest and full recovery
 
-Latest fully inspected main checkpoint:
-`build/oblivion-compat/sewer-escape/joined-log-final-two-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Natural Caverns0380bd, Player(3549.393,1340.225,-290.602), health5.020004,
-magicka40.487915. Both03b518 and03b51a dead/Player killer; only respective bases
-03b51d and0c9ffc count0→1. No combat/pending deaths/action owners. Clean final course.
-[Log encounter proof](SEWER-JOINED-LOG-ENCOUNTER-VERIFICATION.json).
+Latest inspected main checkpoint:
+`build/oblivion-compat/sewer-escape/joined-cavern-healing-potions-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Natural Caverns0380bd, Player(4555.649,1560.746,-470.438), health80. No active
+combat or pending death/action work. Three real Heal Minor Wounds casts restore
+5.020004→26.140007; six original downhill points reach051d72. Space takes its
+three009310 healing potions plus one00930e; chest empty. Three ordinary inventory
+uses consume exactly009310×3 and restore80; other potion preserved. Both courses
+cleanpass, native fresh entries compare with only recorded velocity projections.
+Life/death counts unchanged. Captures inspected.
+[Recovery/chest proof](SEWER-JOINED-CAVERN-RECOVERY-VERIFICATION.json).
 
-The16-point approach and original Space release of6 log bodies are proven;
-neither goblin died environmentally on this route. First log-goblin victory uses
-a genuine68-action failed-course F5 prefix; later Player death is retained.
-Clean fresh two-cast recovery/final fight kills the survivor and saves alive.
-All fresh entries compare every native field, allowing only explicitly recorded
-animated-body velocity projections≤1e-5. Captures inspected; upright corpse limit.
-Failed log namespace course accepts only549-action pre-activation navigation F5.
-Standalone activation cleanpasses. Rapid attack/cast failure and insufficient-MP
-third-heal attempt remain failed, no checkpoints accepted. Selected spell persists;
-dedicated ordinaryC casts consume real19magicka and restore7.04 with armor.
+[Connected log encounter](SEWER-JOINED-LOG-ENCOUNTER-VERIFICATION.json) records
+16-point approach, original Space release of6 log bodies, Player kills03b518 and
+03b51a (only respective bases03b51d/0c9ffc count0→1). Neither environmental kill
+claimed. Genuine first-kill68-action F5 prefix and clean final continuation are
+explicit; later failed/death attempts remain failed. No state splice. Creature
+corpses remain upright. Dedicated C casts work; general combat casting not accepted.
 
-Current UI `joined-cavern-healing-chest-course-01` (launcher47394) begins from
-actual5HP victory save: three normal healing casts, six original downhill points,
-then original healing-chest051d72 Space take-all. Inspect process/scenario before
-another UI course. Next: verify loot/recovery, northern/eastern goblins, shaman
-victory, original reunion/exit, then uninterrupted new-game escape/fresh outdoor load.
+Current UI `joined-cavern-patrol-course-01` (launcher4102) starts at actual recovered
+save, follows first6 original northern path points then ordinary combat03b543.
+Inspect process/scenario before another UI run. Next: patrol/reinforcing/eastern
+goblins, shaman victory, original reunion/exit, then uninterrupted new-game escape
+and fresh outdoor load. Full escape remains incomplete.
 
 Earlier cavern joins:
 [first goblin](SEWER-JOINED-FIRST-GOBLIN-VERIFICATION.json),
 [western passage/second goblin](SEWER-JOINED-SECOND-GOBLIN-VERIFICATION.json),
 [lower route/Caverns entry](SEWER-JOINED-CAVERN-ENTRY-VERIFICATION.json).
 Their raw failures and reviewed prefix/expectation acceptances remain separate.
-No state splicing; full uninterrupted new-game escape remains unproven.
 
 Earlier accepted joins:
 [root entrance/combat](SEWER-JOINED-ROOT-ENTRANCE-VERIFICATION.json),
