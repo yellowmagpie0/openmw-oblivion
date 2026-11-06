@@ -59,14 +59,22 @@ Current genuine save:
 `build/oblivion-compat/sewer-escape/joined-room-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
 Player(1663.148,2739.201,-835.260), health62, all three encountered rats dead.
 
-`joined-key-loot-door-02` is RUNNING (launcher59093), joining navigation north
-and east to the key corpse, actual Take All, Club equipment and the original
-keyed transition into22ff6 in one process. Ignored source:
-`joined-key-loot-door-settled.json`. F8 changes only local read-only observation
-phase; unbound F7 requests a camera sample after3 onFrame observations. Raw01
-fails its initial facing gate before movement because fixed-time sampling acted
-on delayed camera matrices. Corrected02 uses frame settlement. No implementation
-change or broad test repeat. Poll it before another UI course; no helper is live.
+`joined-key-loot-door-02` PASSES: normal navigation, corpse Take All, Club
+selection/equipment and the original keyed door join in one process. Every corpse
+stack transfers exactly; the key remains owned, door unlocks through original
+script04e86e and default teleport reaches Imperial Substructure022ff6. Health62
+is unchanged; no new deaths or pending actions. Entry differs only by one tiny
+animated-body velocity projection≤1e-5. Destination capture inspected.
+[Joined loot/key proof](SEWER-JOINED-KEY-LOOT-VERIFICATION.json).
+
+Latest genuine course save:
+`build/oblivion-compat/sewer-escape/joined-key-loot-door-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(14.077,383.274,134.472), health62, Club equipped. Continue first Substructure
+rat, chest equipment/healing, zombie and the physical route to Natural Caverns.
+The corrected course uses unbound F7 to settle camera observations for3 rendered
+frames; raw01 remains failed before movement on delayed fixed-time observations.
+No implementation change or repeated broad normal gate for this data-only course.
+Fresh camera-fix sanitizer integration is next, followed by rendered coverage.
 
 The source post-wall save remains available in `joined-wall-rats-06`, health38,
 position(585.390,3175.597,-855.278). Both authored wall rats are Player-killed,

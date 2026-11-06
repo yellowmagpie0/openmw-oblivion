@@ -1,0 +1,69 @@
+{
+  "scope": "One fresh genuine continuation joins normal room navigation, corpse Take All, Club equipment, sheath/redraw and original keyed door transition into Imperial Substructure. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-key-loot-door-02/scenario.json",
+  "passed": true,
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-room-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "eaf6a703a8e211bb97f64936789552ffafc1e627cd9976b00e793446b6115339",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": [
+      [
+        "/native_animated_references/0/bodies/6/linear_velocity/2",
+        -0.00023834679450374097,
+        -0.0002383468090556562
+      ]
+    ]
+  },
+  "source_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-room-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "eaf6a703a8e211bb97f64936789552ffafc1e627cd9976b00e793446b6115339"
+  },
+  "output_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-key-loot-door-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "93d3a9f7f6ef7c9d4bddb31fa038b8e49ebd29b4e51f5640f94ff82769a364e9",
+    "cell": "content:oblivion.esm:022ff6",
+    "position": [
+      14.077371597290039,
+      383.2737731933594,
+      134.47239685058594,
+      0.0,
+      0.0,
+      1.5707981586456299
+    ],
+    "health": 62
+  },
+  "loot": {
+    "corpse": "content:oblivion.esm:15985a",
+    "transferred_types": 6,
+    "every_original_stack_transferred_exactly": true,
+    "corpse_empty": true,
+    "iron_key_count": 1,
+    "club_count": 1,
+    "club_equipped_slots": 65536
+  },
+  "door": {
+    "reference": "content:oblivion.esm:0248b2",
+    "original_script": "content:oblivion.esm:04e86e",
+    "locked_before": true,
+    "locked_after": false,
+    "key_retained": true,
+    "actual_default_teleport": true,
+    "destination": "content:oblivion.esm:022ff6"
+  },
+  "death_history_unchanged": true,
+  "pending_deaths": [],
+  "physical_action_owners": [],
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "observer_scope": "F8 selects only local phase; unbound F7 waits3 onFrame observations after each ordinary mouse correction. Phase-prefixed observations prevent old waypoint/UI messages from passing later gates. No world/health/quest writes, console, save splicing or mid-course restart.",
+  "retained_failure": "joined-key-loot-door-01 fails initial facing before movement: fixed-time samples acted on delayed matrices. Raw failure unchanged; frame-settled02 passes.",
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/joined-key-loot-door-02/phase2-corpse-inventory.png",
+    "build/oblivion-compat/sewer-escape/joined-key-loot-door-02/phase3-club-equipped-menu.png",
+    "build/oblivion-compat/sewer-escape/joined-key-loot-door-02/phase4-key-door-destination.png"
+  ],
+  "reused_checks": "2203 normal engine cases at camera-fix fingerprint; no implementation changes or broad tests repeated for this data-only course. Current sanitizer/rendered integration remains due.",
+  "next": "First Substructure rat, chest loot/armor/weapon/potion, zombie and route to Natural Caverns, then joined shaman and late escape."
+}
