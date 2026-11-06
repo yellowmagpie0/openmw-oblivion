@@ -768,7 +768,7 @@
     "Segmentation fault",
     "Assertion.*failed",
     "TES4 AI update failed",
-    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)"
+    "setstage quest=content:oblivion.esm:01e723 stage=88(?:\\s|$)"
   ],
   "reviewed_error_log": [
     "Failed to create audio decoder, can not play audio stream",

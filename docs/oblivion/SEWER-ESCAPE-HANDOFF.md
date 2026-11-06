@@ -16,59 +16,58 @@ The accumulated sanitizer gate enables leak checking and builds the instrumented
 runtime; fresh rendered sanitizer gameplay remains separate. Component3262 and
 Python560 coverage retain their original provenance, with no fresh pass inferred.
 
-## Current chunk — continuous original opening and accumulated sanitizer accepted
+## Current chunk — original19→30 gameplay accepted after assertion audit
 
-`continuous-opening-01` passes a genuine new-game process from prison startup
-through CharacterGen19. It completes original stages5,6,9,10,12–19, ordinary
-stand-back movement, all Emperor greeting choices and one original Renault
-switch activation. Player health80, the authored zero-health goblin corpse stays
-Dead with null killer, and pending deaths are empty. No save reload or stage,
-position, health or completion injection. Two documented diagnostic X11 F5 saves
-retain guard progress; all other inputs are in the editable recipe. Captures
-inspected; the early wall capture alone does not prove passage traversal.
-[SEWER-CONTINUOUS-OPENING-VERIFICATION.json](SEWER-CONTINUOUS-OPENING-VERIFICATION.json).
+`continuous-escort-continuation-01` completes passage/lower stairs, original
+ambush and Renault death, all four assassin deaths, original conversations26–29,
+all three escort cell transitions and Glenroy's original callback30 in one fresh
+continuation. Its genuine19 input restores the entire runtime with zero
+differences. Player health80, all escorts alive in Imperial Subterrane022288,
+five recorded deaths, no assassin bound equipment, no pending deaths or physical
+action owners. Only the two newly authored wall-rat→Player engagements remain.
+The Blades fight this ambush; Player combat follows in the rat course.
 
-Original19 checkpoint:
-`build/oblivion-compat/sewer-escape/continuous-opening-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-SHA256 `bb5f3e8a803410317faaafbb8f91e12b083da819cb80d78dec5a243ce17c41c6`.
-`oblivion_sewer_continuous_opening.json` starts a new game without an input save.
+The raw scenario is **FAILED**, solely because its inherited forbidden MQ01
+stage24 assertion was incorrect for this expanded course. All input gates pass,
+engine exits0, no unreviewed errors. Independent master audit confirms original
+rat037e42/PACK07303d activates wall03e31c/SCPT03faf5, whose non-Player branch sets
+MQ01 stage24. Trace proves exactly one original activation/result; source events
+are read-only. The raw failure remains untouched. Separate reviewed acceptance
+passes, and corrected escort recipes still forbid premature MQ01 exit88.
+[SEWER-CONTINUOUS-ESCORT-VERIFICATION.json](SEWER-CONTINUOUS-ESCORT-VERIFICATION.json).
 
-`native-topics-sanitizer-integration-01` passes all2202 engine cases, exact
-inventory, no failures/skips, ASan leak checking and UBSan halt enabled at
-commit a057b0af86. The runtime also builds. The previous cancelled gate ran no
-tests; its objects were reused, not its result.
-[SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json](SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json).
+Genuine30 checkpoint:
+`build/oblivion-compat/sewer-escape/continuous-escort-continuation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+SHA256 `9aededc78a77c68acd482903af3354fc470fa4717c925ee3c5bc92ad9f697d6a`. Player(37.988,2562.151,-703.023).
+MQ01 is naturally28; both wall rats remain alive. No save-state substitutions.
+This follows the accepted [continuous new-game opening through19](SEWER-CONTINUOUS-OPENING-VERIFICATION.json)
+through one exact fresh-load boundary; the full single-process escape is unproven.
 
-The preceding [native topics chunk](SEWER-NATIVE-TOPICS-VERIFICATION.json)
-proves all five original CharacterGen88 AddTopic effects, native DIAS knowledge,
-conditional sidebar, content-index remapping and actual Jauffre INFO01e910 after
-fresh load/resave. Runtime provenance now distinguishes pre-UI-repair courses
-whose binary hashes were not captured from the identified post-fix response run.
-The [autosave chunk](SEWER-SCRIPT-AUTOSAVE-VERIFICATION.json) proves saveable-UI
-deferral, game-owned retention/rollback, coalescing and exact fresh load. General
-dialogue/services and original autosave queue timing remain unclaimed.
+All2202 accumulated ASan/UBSan engine cases pass with leak checking at a057b0af86;
+the instrumented runtime builds. No new C++/Python implementation change since
+that gate. [Sanitizer evidence](SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json).
 
-## Next action — continuation is running; poll before another UI course
+## Next action — rat/wall course is running; poll before another UI course
 
-`continuous-escort-continuation-01` is running from the genuine19 checkpoint,
-with exact whole-runtime entry restoration (zero differences). It has passed
-physical passage traversal, lower stairs and all three roomC waypoints, and
-moved north beyond2435 to clear Renault's marker. Original ambush/departure30
-and the whole course remain pending. Poll launcher session51391 (game PID67281)
-and inspect its actual state before taking further action. Run UI courses singly.
+`joined-wall-rats-02` runs from the genuine30 checkpoint (launcher session21339).
+Ignored recipe `joined-wall-rats-aimed.json` uses ordinary movement, actual camera
+view observations, explicit facing gates, normal held punches and physical wall
+crossing. `joined-wall-rats-01` remains FAILED: its punches missed while the
+camera was still aligning, and the first death gate timed out. Whole entry was
+exactly restored, with no engine errors. No health/position/quest correction.
 
-Editable recipes under `scripts/data/oblivion_compat/`:
-`oblivion_sewer_continuous_escort_continuation.json` loads the genuine19 save;
-`oblivion_sewer_continuous_escort.json` prepares the full new-game prefix through30
-but that assembled version is unrun. Unbound F8 advances only local read-only
-observer phases. Observer wait/aim patterns are phase-scoped, preventing repeated
-waypoint names from matching old observations. Original scripts own progression.
+Poll the existing game and inspect its actual outcome before another UI course.
+If needed, repair the next observed input/gameplay blocker. Then continue normal
+key-corpse loot, Club equipment, keyed door, solo dungeon/shaman, reunion,
+Emperor/Amulet, choices and physical exit; verify fresh outdoor save/load and
+focused rendered sanitizer gameplay. Assemble the complete new-game course once
+joins work. Preserve failures and provenance; do not splice separate shaman/late
+saves or broaden into unrelated services or exact combat arithmetic.
 
-Continue by the next observed gameplay blocker. Then extend the joined course
-through solo dungeon/shaman, reunion, Emperor, choices and physical exit, and
-verify fresh outdoor save/load plus focused rendered sanitizer gameplay. Preserve
-failed attempts and provenance. Do not splice separate shaman/late saves or
-broaden into unrelated services or exact combat arithmetic.
+The editable continuous opening/escort recipes remain in
+`scripts/data/oblivion_compat/`. Unbound F8 advances only local read-only observer
+phases; phase-scoped wait/aim patterns prevent stale waypoint matches. The full
+new-game escort assembly is prepared but unrun; original scripts own progression.
 
 ## Reusable gameplay evidence
 
