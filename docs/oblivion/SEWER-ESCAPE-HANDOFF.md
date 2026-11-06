@@ -15,49 +15,55 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — uninterrupted attempt 09
+## Current chunk — select the actual Inventory controller page
 
-`full-escape-continuous-09` is LIVE: supervisor237633, runner237634,
-game237657, read-only save archiver237740. Original new-game1/no load flag;
-normal runtime SHAa5073d8a…79503, runtime codeaee30a8b22 unchanged.
-Actual launch proof: `full-escape-continuous-09/launch-verification.json`.
-Current work note: `build/oblivion-compat/sewer-escape/menu-admission-current-work.json`.
-Inspect actual processes/status before new UI or rebuild; preserve this process.
+09 is terminal FAILED at source7 Club-equipped wait120sec, game0/launcher1,
+no engine findings. It passed original19/26/30, three Player rat kills, native
+healing46→70, room traversal, guarded waypoints and corpse loot. Its equipment
+capture shows the remembered Magic page; the driver assumed Inventory.
+No supplemental input was delivered: xdotool display discovery failed only
+after terminal cleanup, before any key/click command. Preserve09 unchanged.
+Failure proof: `full-escape-continuous-09-failure-verification.json`.
 
-Manifest `substructure-rat-feedback-full-assembly-01/full-escape.json`:67 segments,
-11554 top-level actions/4293 compiled regex gates, combined observer compiles with
-the exact engine LuaJIT library. Both QA fixes below are included. Read-only
-archiver retains only actual bytes matching native save receipts; inspect
-`full-escape-continuous-09/retained-saves/index.json`.
-All short course paths are under `build/oblivion-compat/sewer-escape/`.
+First UI candidate `equipment-panel-magic-01` is terminal FAILED only for
+mis-scoped expected logs; its actions finish and produce genuine pre-equipment
+save3 and keyed-door save4. Visibility-based page detection is also rejected:
+all controller pages stay visible and are moved off-screen when inactive.
+Do not relabel this exploratory scenario or accept its ambiguous UI oracle.
 
-08 is terminal FAILED at source7 obsolete waypoint1 aim wait, game0/no findings.
-Its same new-game process passes three actual Player rat kills, wall exit, native
-healing42→66 and room traversal tox1696/y3220, with exact native saves/clear queues.
-Actual immutable source: `full-escape-continuous-08/retained-saves/3-0024-Quicksave.omwsave`.
-No full escape inferred from this accepted prefix.
+Current changes: a private Lua UI query returns the engine's active controller
+window ID; source7 cycles ordinary trigger inputs and samples the actual page
+across3 frames before equipping. Expected logs retain their inner Key phase
+prefixes. No combat/world rules or actor/quest/position writes change.
+83 top-level source7 actions retain its complete selected course.
 
-Completed QA fixes and evidence:
+Current C++ passes all2210 normal and2210 ASan/UBSan engine cases, exact
+inventories,0fail/0skip, same stable fingerprint29778055…1c939; engine leak1.
+18 focused assembly/repeat tests pass. Full67 assembly11559 actions compiles
+with the engine LuaJIT. These are implementation/assembly gates, not full escape.
+Normal `equipment-active-page-magic-01` passes remembered-Magic selection, Club
+selection and keyed-door traversal. Actual final F5/native snapshot match,
+70HP, Key once, Club equipped, cell022ff6; all input bytes delivered. Whole entry
+matches except7 body-velocity projections≤1e-5. Relevant captures inspected.
 
-- `183751beb2` guards the three original loot-route movement blocks when their
-  arrival was already observed. Actual08 source already satisfies waypoint1.
-  Loaded guard iterations0/1/1 pass, corpse loot transferred, Club equipped,
-  Iron Key retained once and original keyed door crossed to022ff6. Actual F5
-  parses exactly; entry differs only by3 tiny body-velocity projections.
-  [Guard/cold-healing proof](SEWER-KEY-ARRIVAL-GUARD-VERIFICATION.json).
-- Extended `key-arrival-loot-gear-01` remains FAILED at source8 after one Club
-  hit2.90938 followed by a30second death wait. No engine error/pass relabeling.
-  Bounded ordinary aim/approach/charge feedback now tests actual death and cleans
-  controls, without changing combat rules. `substructure-rat-feedback-01` PASSES
-  from its actual unmodified precombat F5: two native Club hits, rat038819 killed
-  by Player, chest loot, armor/axe equipped, potion→80HP, clear queues and exact
-  final save/native snapshot. Whole loaded entry exact0differences; captures
-  inspected.18 focused Python checks pass; no C++/Python implementation changes.
-  [Combat feedback proof](SEWER-SUBSTRUCTURE-RAT-FEEDBACK-VERIFICATION.json).
+Sanitized `equipment-active-page-inventory-sanitize-03` passes the same course
+from default Inventory (4 actual page cycles); normal Magic start takes1 cycle.
+Both verify fresh Inventory with no simultaneous Magic/Inventory samples,
+Club equipped, original keyed traversal, native-exact70HP final save, Key/Club
+once, all delivered input bytes, run-end error0/pending0/unsupported0. Sanitized
+whole entry differs only by7 permitted body-velocity projections≤1e-5.
+Sanitized UI01 retains initial focus-delivery10sec failure;02 retains loop120sec
+expiry after3 healthy~40sec cycles.03 changes only receipt90sec and waits3x;
+engine leak1/runtime leak0. Captures inspected. All helpers/UI are terminal.
+[Current bounded proof](SEWER-EQUIPMENT-PAGE-VERIFICATION.json).
 
-09 must now prove the full uninterrupted course and its own outdoor reload.
-Loaded focused checks do not substitute. Reuse unchanged engine/Python evidence
-with its original provenance; do not repeat broad gates for QA-data-only changes.
+Next: commit the verified active-page query/driver fix, then original-new-game10
+through all67 segments and its own outdoor fresh reload. Full escape remains
+incomplete. Never overwrite a binary/resources used by a live UI.
+
+All short courses are under `build/oblivion-compat/sewer-escape/`.
+Inspect actual processes/status before any launch; update ignored
+`menu-admission-current-work.json` with current helper/UI handles.
 
 ## Latest completed fix and reusable evidence
 
@@ -94,13 +100,13 @@ Other reusable evidence:
 
 ## Next action and completion audit
 
-Preserve09; inspect milestones, actual saves/native receipts and rendered captures.
+Preserve the next original-new-game process; inspect milestones, actual saves/native receipts and rendered captures.
 On terminal failure, retain raw evidence, diagnose the actual failed gate and
 verify a bounded fix with focused/runtime checks before broad integration gates.
 Commit completed self-contained changes; no push. Do not edit source/docs or
 commit while any `run_checks.py` helper is live. Reuse unchanged passing checks.
 
-On a full exterior pass, fresh-load08's own outdoor save in another process.
+On a full exterior pass, fresh-load that run's own outdoor save in another process.
 Prepared ignored `build/oblivion-compat/sewer-escape/verify-full-escape.py` audits
 all67 ordered segments, native quest/death/equipment state, selected loot/healing/
 traversal gates, ordinary input receipts, exact save/native snapshots and fresh

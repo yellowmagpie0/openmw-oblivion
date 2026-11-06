@@ -47,7 +47,7 @@
     {
       "segment": 7,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_key_loot_door.json",
-      "action_count": 78,
+      "action_count": 83,
       "source_course": "joined-key-loot-door-02",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

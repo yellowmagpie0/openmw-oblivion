@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "local function phase1()\nlocal output=print\nlocal function print(...) output(\"Key course phase 1:\",...) end\nlocal self=require('openmw.self')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal step=1\nlocal frame=0\nlocal points={{util.vector3(1663,3240,-780),util.vector3(1930,3240,-780),util.vector3(2003.264,3034.733,-780)}}\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n assert(not Actor.isDead(self) and Actor.stats.dynamic.health(self).current>0,'Player died on key route')\n if frame==5 then print('Joined key navigation ready') end\n if step>#points then return end\n local p=points[step]\n local done=(step==1 and self.position.y>=3220) or (step==2 and self.position.x>=1910) or (step==3 and math.sqrt((p.x-self.position.x)^2+(p.y-self.position.y)^2)<100)\n if done then print('Joined key waypoint '..step..' reached '..tostring(self.position)) step=step+1 return end\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n print(string.format('Joined key waypoint %d aim x=%d y=%d',step,units(yaw*gain),units(pitch)))\n if math.abs(yaw)<.04 and math.abs(pitch)<.04 then print('Joined key waypoint '..step..' facing') end\n if frame%15==0 then print('Joined key position '..tostring(self.position)) end\nend}}}}\n\nend\nlocal function phase2()\nlocal output=print\nlocal function print(...) output(\"Key course phase 2:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal probe=require('scripts.tutorial_camera_probe')\nlocal camera=require('openmw.camera')\nlocal expected=nil\nlocal done=false\nreturn {{engineHandlers={{onFrame=function(dt)\n local corpse=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x15985a))\n if not corpse or not corpse:isValid() then return end\n local x,y=probe.motion(corpse,'frame',1/5120)\n print(string.format('Sewer corpse aim x=%d y=%d',x,y))\n local source=Actor.inventory(corpse)\n local player=Actor.inventory(self)\n if not expected then\n  expected={{}}\n  for _,item in ipairs(source:getAll()) do\n   local id=item.recordId\n   expected[id]=player:countOf(id)+source:countOf(id)\n   local record=item.type.record and item.type.record(item)\n   print('Sewer corpse item '..id..' count '..source:countOf(id)..' name '..(record and record.name or '?'))\n  end\n  print('Sewer loot observer ready dead='..tostring(Actor.isDead(corpse)))\n  print('Sewer view toggle enabled='..tostring(require('openmw.types').Player.getControlSwitch(self,require('openmw.types').Player.CONTROL_SWITCH.ViewMode)))\n end\n if done then return end\n local n=0\n for id,count in pairs(expected) do\n  n=n+1\n  if source:countOf(id)~=0 or player:countOf(id)~=count then return end\n end\n if n>0 then done=true print('Sewer corpse loot transferred types='..n) end\nend}}}}\n\nend\nlocal function phase3()\nlocal output=print\nlocal function print(...) output(\"Key course phase 3:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal ready,equipped=false,false\nreturn {{engineHandlers={{onFrame=function()\n local club=core.getFormId('Oblivion.esm',0x159829)\n local key=core.getFormId('Oblivion.esm',0x159826)\n local inv=Actor.inventory(self)\n local corpse=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x15985a))\n if not ready and inv:countOf(club)==1 and inv:countOf(key)==1 and corpse:isValid() and #Actor.inventory(corpse):getAll()==0 then\n  ready=true print('Sewer loot restored key and Club once; corpse empty')\n end\n for slot,item in pairs(Actor.getEquipment(self)) do\n  if not equipped and item.recordId==club then equipped=true print('Sewer Club equipped slot='..slot) end\n end\nend}}}}\n\nend\nlocal function phase4()\nlocal output=print\nlocal function print(...) output(\"Key course phase 4:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal Actor=require('openmw.types').Actor\nlocal probe=require('scripts.tutorial_camera_probe')\nlocal ready,facing,close,entered=false,false,false,false\nlocal sheathed,drawn=false,false\nreturn {{engineHandlers={{onFrame=function()\n if not self.cell then return end\n if not sheathed and Actor.getStance(self)==Actor.STANCE.Nothing then sheathed=true print('Sewer Club sheathed') end\n if sheathed and not drawn and Actor.getStance(self)==Actor.STANCE.Weapon then drawn=true print('Sewer Club drawn') end\n if not ready then\n  local club=core.getFormId('Oblivion.esm',0x159829)\n  local found=false\n  for _,item in pairs(Actor.getEquipment(self)) do if item.recordId==club then found=true end end\n  assert(found,'Club not equipped after reload')\n  assert(Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x159826))==1,'Iron Key missing')\n  ready=true print('Sewer keyed route ready; Club equipped and Iron Key retained')\n end\n if self.cell.id==core.getFormId('Oblivion.esm',0x22ff6) then\n  if not entered then entered=true print('Sewer entered original keyed destination '..self.cell.id) end\n  return\n end\n local dx,dy=2240-self.position.x,2944-self.position.y\n local f=self.rotation:apply(util.vector3(0,1,0))\n local angle=math.atan2(f.y*dx-f.x*dy,f.x*dx+f.y*dy)\n if not facing and math.abs(angle)<.04 then facing=true print('Sewer facing key door') end\n if not close and math.sqrt(dx*dx+dy*dy)<110 then close=true print('Sewer key door in range '..tostring(self.position)) end\n local door=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x248b2))\n if door and door:isValid() then local x,y=probe.motion(door,'frame',1/5120) print(string.format('Sewer door aim x=%d y=%d',x,y)) end\nend}}}}\n\nend\nlocal input=require('openmw.input')\nlocal phases={{phase1,phase2,phase3,phase4}}\nlocal n=1\nlocal active=phases[n]()\nlocal held=false\nlocal sampleHeld=false\nlocal sampleFrame=nil\nlocal frame=0\nprint('Key observation phase 1 ready')\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n local sample=input.isKeyPressed(input.KEY.F7)\n if sample and not sampleHeld then sampleFrame=frame+3 end\n if not sample then sampleFrame=nil end\n sampleHeld=sample\n if sampleFrame and frame>=sampleFrame then print(\"Key camera settled\") end\n local down=input.isKeyPressed(input.KEY.F8)\n if down and not held then n=n+1 assert(phases[n],'Unexpected key observation phase') active=phases[n]() print('Key observation phase '..n..' ready') end\n held=down\n active.engineHandlers.onFrame(dt)\nend}}}}\n"
+      "content": "local function phase1()\nlocal output=print\nlocal function print(...) output(\"Key course phase 1:\",...) end\nlocal self=require('openmw.self')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal step=1\nlocal frame=0\nlocal points={{util.vector3(1663,3240,-780),util.vector3(1930,3240,-780),util.vector3(2003.264,3034.733,-780)}}\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n assert(not Actor.isDead(self) and Actor.stats.dynamic.health(self).current>0,'Player died on key route')\n if frame==5 then print('Joined key navigation ready') end\n if step>#points then return end\n local p=points[step]\n local done=(step==1 and self.position.y>=3220) or (step==2 and self.position.x>=1910) or (step==3 and math.sqrt((p.x-self.position.x)^2+(p.y-self.position.y)^2)<100)\n if done then print('Joined key waypoint '..step..' reached '..tostring(self.position)) step=step+1 return end\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n print(string.format('Joined key waypoint %d aim x=%d y=%d',step,units(yaw*gain),units(pitch)))\n if math.abs(yaw)<.04 and math.abs(pitch)<.04 then print('Joined key waypoint '..step..' facing') end\n if frame%15==0 then print('Joined key position '..tostring(self.position)) end\nend}}}}\n\nend\nlocal function phase2()\nlocal output=print\nlocal function print(...) output(\"Key course phase 2:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal probe=require('scripts.tutorial_camera_probe')\nlocal camera=require('openmw.camera')\nlocal expected=nil\nlocal done=false\nreturn {{engineHandlers={{onFrame=function(dt)\n local corpse=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x15985a))\n if not corpse or not corpse:isValid() then return end\n local x,y=probe.motion(corpse,'frame',1/5120)\n print(string.format('Sewer corpse aim x=%d y=%d',x,y))\n local source=Actor.inventory(corpse)\n local player=Actor.inventory(self)\n if not expected then\n  expected={{}}\n  for _,item in ipairs(source:getAll()) do\n   local id=item.recordId\n   expected[id]=player:countOf(id)+source:countOf(id)\n   local record=item.type.record and item.type.record(item)\n   print('Sewer corpse item '..id..' count '..source:countOf(id)..' name '..(record and record.name or '?'))\n  end\n  print('Sewer loot observer ready dead='..tostring(Actor.isDead(corpse)))\n  print('Sewer view toggle enabled='..tostring(require('openmw.types').Player.getControlSwitch(self,require('openmw.types').Player.CONTROL_SWITCH.ViewMode)))\n end\n if done then return end\n local n=0\n for id,count in pairs(expected) do\n  n=n+1\n  if source:countOf(id)~=0 or player:countOf(id)~=count then return end\n end\n if n>0 then done=true print('Sewer corpse loot transferred types='..n) end\nend}}}}\n\nend\nlocal function phase3()\nlocal output=print\nlocal function print(...) output(\"Key course phase 3:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal ui=require('openmw.ui')\nlocal input=require('openmw.input')\nlocal frame,sampleFrame,held=0,nil,false\nlocal ready,equipped=false,false\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then\n  local activeWindow=ui._getActiveControllerWindow()\n  if activeWindow=='Inventory' then print('Sewer equipment inventory sampled') end\n  if activeWindow=='Magic' then print('Sewer equipment magic sampled') end\n end\n local club=core.getFormId('Oblivion.esm',0x159829)\n local key=core.getFormId('Oblivion.esm',0x159826)\n local inv=Actor.inventory(self)\n local corpse=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x15985a))\n if not ready and inv:countOf(club)==1 and inv:countOf(key)==1 and corpse:isValid() and #Actor.inventory(corpse):getAll()==0 then\n  ready=true print('Sewer loot restored key and Club once; corpse empty')\n end\n for slot,item in pairs(Actor.getEquipment(self)) do\n  if not equipped and item.recordId==club then equipped=true print('Sewer Club equipped slot='..slot) end\n end\nend}}}}\n\nend\nlocal function phase4()\nlocal output=print\nlocal function print(...) output(\"Key course phase 4:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal Actor=require('openmw.types').Actor\nlocal probe=require('scripts.tutorial_camera_probe')\nlocal ready,facing,close,entered=false,false,false,false\nlocal sheathed,drawn=false,false\nreturn {{engineHandlers={{onFrame=function()\n if not self.cell then return end\n if not sheathed and Actor.getStance(self)==Actor.STANCE.Nothing then sheathed=true print('Sewer Club sheathed') end\n if sheathed and not drawn and Actor.getStance(self)==Actor.STANCE.Weapon then drawn=true print('Sewer Club drawn') end\n if not ready then\n  local club=core.getFormId('Oblivion.esm',0x159829)\n  local found=false\n  for _,item in pairs(Actor.getEquipment(self)) do if item.recordId==club then found=true end end\n  assert(found,'Club not equipped after reload')\n  assert(Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x159826))==1,'Iron Key missing')\n  ready=true print('Sewer keyed route ready; Club equipped and Iron Key retained')\n end\n if self.cell.id==core.getFormId('Oblivion.esm',0x22ff6) then\n  if not entered then entered=true print('Sewer entered original keyed destination '..self.cell.id) end\n  return\n end\n local dx,dy=2240-self.position.x,2944-self.position.y\n local f=self.rotation:apply(util.vector3(0,1,0))\n local angle=math.atan2(f.y*dx-f.x*dy,f.x*dx+f.y*dy)\n if not facing and math.abs(angle)<.04 then facing=true print('Sewer facing key door') end\n if not close and math.sqrt(dx*dx+dy*dy)<110 then close=true print('Sewer key door in range '..tostring(self.position)) end\n local door=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x248b2))\n if door and door:isValid() then local x,y=probe.motion(door,'frame',1/5120) print(string.format('Sewer door aim x=%d y=%d',x,y)) end\nend}}}}\n\nend\nlocal input=require('openmw.input')\nlocal phases={{phase1,phase2,phase3,phase4}}\nlocal n=1\nlocal active=phases[n]()\nlocal held=false\nlocal sampleHeld=false\nlocal sampleFrame=nil\nlocal frame=0\nprint('Key observation phase 1 ready')\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n local sample=input.isKeyPressed(input.KEY.F7)\n if sample and not sampleHeld then sampleFrame=frame+3 end\n if not sample then sampleFrame=nil end\n sampleHeld=sample\n if sampleFrame and frame>=sampleFrame then print(\"Key camera settled\") end\n local down=input.isKeyPressed(input.KEY.F8)\n if down and not held then n=n+1 assert(phases[n],'Unexpected key observation phase') active=phases[n]() print('Key observation phase '..n..' ready') end\n held=down\n active.engineHandlers.onFrame(dt)\nend}}}}\n"
     },
     {
       "path": "test-data/scripts/tutorial_camera_probe.lua",
@@ -1140,6 +1140,82 @@
       "seconds": 3
     },
     {
+      "type": "repeat_until_log",
+      "pattern": "Key course phase 3:\\s*(?:Sewer equipment inventory sampled)",
+      "after_start": true,
+      "maximum_iterations": 4,
+      "timeout_seconds": 120,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "gamepad_axis",
+          "axis": "left_trigger",
+          "value": 1
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        },
+        {
+          "type": "gamepad_axis",
+          "axis": "left_trigger",
+          "value": 0
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "gamepad_axis",
+          "axis": "left_trigger",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Key camera settled",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Key course phase 3:\\s*(?:Sewer equipment inventory sampled)",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
       "type": "screenshot",
       "name": "phase3-inventory-before-equip.png",
       "minimum_entropy": 0.02
@@ -1377,13 +1453,13 @@
   "timeout_seconds": 1800,
   "expected_exit": 0,
   "expected_log": [
-    "Joined key waypoint 3 reached",
-    "Sewer loot observer ready dead=true",
-    "Sewer corpse loot transferred",
-    "Sewer loot restored",
-    "Sewer Club equipped",
-    "Sewer keyed route ready",
-    "Sewer entered original keyed destination"
+    "Key course phase 1:\\s*(?:Joined key waypoint 3 reached)",
+    "Key course phase 2:\\s*(?:Sewer loot observer ready dead=true)",
+    "Key course phase 2:\\s*(?:Sewer corpse loot transferred)",
+    "Key course phase 3:\\s*(?:Sewer loot restored)",
+    "Key course phase 3:\\s*(?:Sewer Club equipped)",
+    "Key course phase 4:\\s*(?:Sewer keyed route ready)",
+    "Key course phase 4:\\s*(?:Sewer entered original keyed destination)"
   ],
   "forbidden_log": [
     "Unsupported ObScript command",
