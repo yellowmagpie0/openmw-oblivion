@@ -15,7 +15,7 @@ coverage of recipient/fall fixes now passes as explicit composite evidence.
 The genuine prison-origin checkpoint chain now reaches the exterior and passes
 fresh outdoor reload. It remains composite evidence; full escape is not complete.
 
-## Current chunk — camera-aware early rat input and uninterrupted replay
+## Current chunk — frame-synchronized early solo course
 
 Original new-game `full-escape-continuous-03` failed during the first ambush:
 Glenroy killed0178c4, then bound-gear cleanup threw `Invalid or dangling disposition
@@ -49,12 +49,44 @@ are only the2 observer yaw gains; actions/order/counts unchanged. Four assembly
 regressions pass; rebuilt67-segment/11957-action Lua compiles and4340 gates compile.
 [Early rat input proof](SEWER-WALL-RAT-CAMERA-VERIFICATION.json).
 These are separate loaded checks; uninterrupted full escape remains unproven.
-Current UI: original-new-game `full-escape-continuous-05`, supervisor186455,
-runner186456/game186497, manifest `aim-aware-assembly-01/full-escape.json`.
-Actual argv has no load flag; confignew-game1 and runtime SHAef71da25…7292a
-verified in `launch-provenance.json`. Code392bd5d472/course43b3cfa61f; no build
-helper live. Preserve this process and paired binary/resources. Verify actual
-process/status before another UI. Full uninterrupted escape is still pending.
+Original-new-game05 is terminal/failed: it passed original30 and the first
+Player wall-rat kill, then timed out at the second course's wall-crossing gate.
+No engine findings; actual first-ratF5/72HP retained unchanged. Camera sampling
+could precede application of previous motion at low frame rates; the one-shot
+heading also missed the opening. Raw failure is preserved in05.
+
+Current changes: assembled camera motions wait for actual frames (later adaptive
+recipes keep their existing barriers); wall movement uses feedback through a
+pre-gap point and yields to a rat within melee reach before completing the exit.
+Room-rat first-person selection now tolerates an already first-person save.
+Focused selections are explicitly loaded checks and do not qualify as full escape.
+Harness support is committedef32f3b33e: bounded nested normal-input feedback,
+parent deadlines/control cleanup, frame barriers and explicit focused selections.
+Full Python02 passes578/0fail/0skip;12 loop and6 assembly cases are included.
+Failed Python01 retains its one Xvfb startup error; isolated case passes.
+[Harness proof](SEWER-INPUT-FEEDBACK-HARNESS-VERIFICATION.json).
+
+Focused `wall-frame-feedback-slow-06` now PASSES (game/launcher0), from05's
+immutable genuine stage30 save with a one-FPS cap. All3 rats, including the early
+joining room rat037e40, have native Player kill credit. Actual wall exit passes;
+ordinary healing48→72HP and actual room traversal tox1687 pass. Final Player72HP,
+CharacterGen30, combat/death/action/cast/projectile queues clear. Actual finalF5
+parses exactly to its hashed receipt snapshot;365 issued/delivered inputs match.
+Fresh entry differs only in12 tiny animated-body velocity projection values.
+Wall-exit and room captures inspected; upright creature corpses remain a known
+rendering limitation. This loaded check is not uninterrupted escape acceptance.
+[Early solo feedback proof](SEWER-EARLY-RAT-FRAME-FEEDBACK-VERIFICATION.json).
+
+Raw focused failures remain separate:01 deliberate/-2 for insufficient walking
+budget;02 Player death against a rat just short ofx560;03 Player death during
+redundant fixed aiming;04 untracked room rat037e40 killed Player while the recipe
+aimed at a different/farther rat;05 preflight rejection of nested loops before
+launch. Do not infer passes. No C++ changes: code392bd5d472/runtimeef71da25…7292a
+and2209 normal/sanitized gates retain their provenance. No UI or build helper live
+at this checkpoint. Fresh default assembly `frame-feedback-full-assembly-01`
+contains67 segments/11732 actions; Lua and4297 regex gates compile, no load flag.
+Next: start original-new-game06 with this assembly. Full uninterrupted escape and
+fresh reload of that run's own outdoor save remain due.
 
 Accepted04 prefix used manifest `full-escape-bound-cleanup-fixed.json`.
 Same course/ordinary controls, actual no-load argv and new-game1. Original26
@@ -72,7 +104,7 @@ it does not close the full uninterrupted escape. Launch provenance records
 normal runtime SHA256ef71da25d612636f79b97bf50d2d17643aef49549d044483d5a1a0ad36b7292a,
 built from7db0440e9a plus the tested actor-state patch/code392bd5d472. Keep this
 binary provenance separate from the focused check above. All build helpers are
-terminal. Next: continue the current05 camera-aware original-new-game process through the physical exterior
+terminal. Next: run a fresh original new game through the physical exterior
 and fresh-load its own outdoorF5. Full escape remains incomplete until that
 uninterrupted course and fresh reload pass.
 
@@ -176,13 +208,13 @@ Record for later Peryite work, do not claim general script/game acceptance.
 Uninterrupted course editable sources now prepared: selection
 `scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json`, assembler
 `scripts/assemble_oblivion_sewer_course.py --output build/oblivion-compat/sewer-escape/full-escape-continuous-versioned.json`.
-67 segments,11957 ordinary actions, original new-game/no load flag. F7+F8 changes
+67 segments,11732 ordinary actions, original new-game/no load flag (current assembly). F7+F8 changes
 only outer observer locals; plainF8 retains compound inner phases. Every Lua
 movement/aim observation is segment-scoped. Actual interrupted prefixes are cut
 at saved evidence, notably fifth patrol save and fourth Subterrane save; no later
 planned actions inferred. Versioned source recipes preserve provenance and genuine
 input course, prepared recipe is not gameplay acceptance. Lua syntax compiles.
-The current05 original-new-game course uses the camera-aware assembler output;
+The next original-new-game course will use the verified early-solo feedback recipes;
 physical exterior/reload acceptance remains due for a single new-game process. Main composite
 physical exterior/fresh reload retains its separate provenance.
 
@@ -218,7 +250,7 @@ Pre-combat source for continuous battle/escort replay:
 [reunion/birthsign50](SEWER-JOINED-REUNION-BIRTHSIGN-VERIFICATION.json).
 
 Historical checkpoint sequence continued through key door/manhole, final sewers
-and exterior/reload as linked above. Current action is the05 camera-aware uninterrupted course.
+and exterior/reload as linked above. Current action is the next uninterrupted original-new-game attempt after the focused early-solo pass.
 
 [Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json):
 clean978-action post-shaman10heal/26originalPGRD/Space03816c→022288 course,

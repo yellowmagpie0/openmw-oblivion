@@ -19,14 +19,14 @@
     {
       "segment": 3,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_first_wall_rat.json",
-      "action_count": 37,
+      "action_count": 20,
       "source_course": "joined-wall-rats-03",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
     {
       "segment": 4,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_wall_rats_finish.json",
-      "action_count": 129,
+      "action_count": 7,
       "source_course": "joined-wall-rats-06",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -40,7 +40,7 @@
     {
       "segment": 6,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_room_rat.json",
-      "action_count": 100,
+      "action_count": 14,
       "source_course": "joined-room-rat-02",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
