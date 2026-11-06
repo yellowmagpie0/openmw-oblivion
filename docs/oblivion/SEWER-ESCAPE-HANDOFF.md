@@ -16,58 +16,63 @@ The accumulated sanitizer gate enables leak checking and builds the instrumented
 runtime; fresh rendered sanitizer gameplay remains separate. Component3262 and
 Python560 coverage retain their original provenance, with no fresh pass inferred.
 
-## Current chunk — original19→30 gameplay accepted after assertion audit
+## Current chunk — Player wall-rat victories and physical passage accepted
 
-`continuous-escort-continuation-01` completes passage/lower stairs, original
-ambush and Renault death, all four assassin deaths, original conversations26–29,
-all three escort cell transitions and Glenroy's original callback30 in one fresh
-continuation. Its genuine19 input restores the entire runtime with zero
-differences. Player health80, all escorts alive in Imperial Subterrane022288,
-five recorded deaths, no assassin bound equipment, no pending deaths or physical
-action owners. Only the two newly authored wall-rat→Player engagements remain.
-The Blades fight this ambush; Player combat follows in the rat course.
+The genuine original30 save continues to both authored wall-rat deaths by real
+Player power punches, then physical passage through the broken wall. Rat037e42
+falls in `joined-wall-rats-03`; its genuine F5 (health68) is restored exactly in
+`joined-wall-rats-06`, which kills037e41 and passes the crossing. Final health38,
+position(585.390,3175.597,-855.278), both Player killers, shared base death count2,
+no pending deaths/actions/combat engagements. Full native T4ST entry comparisons
+at both boundaries have zero differences. Capture inspected; no engine changes.
+[SEWER-JOINED-WALL-RATS-VERIFICATION.json](SEWER-JOINED-WALL-RATS-VERIFICATION.json).
 
-The raw scenario is **FAILED**, solely because its inherited forbidden MQ01
-stage24 assertion was incorrect for this expanded course. All input gates pass,
-engine exits0, no unreviewed errors. Independent master audit confirms original
-rat037e42/PACK07303d activates wall03e31c/SCPT03faf5, whose non-Player branch sets
-MQ01 stage24. Trace proves exactly one original activation/result; source events
-are read-only. The raw failure remains untouched. Separate reviewed acceptance
-passes, and corrected escort recipes still forbid premature MQ01 exit88.
-[SEWER-CONTINUOUS-ESCORT-VERIFICATION.json](SEWER-CONTINUOUS-ESCORT-VERIFICATION.json).
+Raw03 is FAILED later on crossing-facing input; its successful real F5 prefix
+alone supplies06. Raw01/02/04/05 remain failed input/aim attempts;06 passes.
+World-axis camera observations and ordinary input now converge with fresh samples
+and a reasonable~0.04rad facing bound; actual contacts/deaths remain mandatory.
+A separate room rat037e40/base02509b stays alive; handle it in the next room route.
 
-Genuine30 checkpoint:
-`build/oblivion-compat/sewer-escape/continuous-escort-continuation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-SHA256 `9aededc78a77c68acd482903af3354fc470fa4717c925ee3c5bc92ad9f697d6a`. Player(37.988,2562.151,-703.023).
-MQ01 is naturally28; both wall rats remain alive. No save-state substitutions.
-This follows the accepted [continuous new-game opening through19](SEWER-CONTINUOUS-OPENING-VERIFICATION.json)
-through one exact fresh-load boundary; the full single-process escape is unproven.
+Latest genuine save:
+`build/oblivion-compat/sewer-escape/joined-wall-rats-06/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Recipes: `oblivion_sewer_joined_first_wall_rat.json` (executed F5 prefix) and
+`oblivion_sewer_joined_wall_rats_finish.json` under `scripts/data/oblivion_compat/`.
+These are composite continuations, not a full single-process escape.
 
-All2202 accumulated ASan/UBSan engine cases pass with leak checking at a057b0af86;
-the instrumented runtime builds. No new C++/Python implementation change since
-that gate. [Sanitizer evidence](SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json).
+The preceding [original19→30 course](SEWER-CONTINUOUS-ESCORT-VERIFICATION.json)
+proves passage, ambush/five deaths, original conversations26–29, all three escort
+cell transitions and Glenroy callback30. Raw course fails only an inherited
+MQ01 stage24 exclusion. Independent master audit and trace prove rat037e42's
+original wall activation legitimately sets24; all input gates pass, exit0, no
+unreviewed errors. Separate reviewed acceptance passes; raw failure is preserved.
+Corrected escort recipes still forbid premature MQ01 exit88. The genuine input
+follows [new game→19](SEWER-CONTINUOUS-OPENING-VERIFICATION.json) without splicing.
 
-## Next action — rat/wall course is running; poll before another UI course
+All2202 normal and all2202 accumulated ASan/UBSan engine cases pass with original
+fingerprints; sanitizer leak checking enabled at a057b0af86. No engine change
+since that gate. [Sanitizer evidence](SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json).
 
-`joined-wall-rats-02` runs from the genuine30 checkpoint (launcher session21339).
-Ignored recipe `joined-wall-rats-aimed.json` uses ordinary movement, actual camera
-view observations, explicit facing gates, normal held punches and physical wall
-crossing. `joined-wall-rats-01` remains FAILED: its punches missed while the
-camera was still aligning, and the first death gate timed out. Whole entry was
-exactly restored, with no engine errors. No health/position/quest correction.
+## Next action — fix idle camera preference save before the next course
 
-Poll the existing game and inspect its actual outcome before another UI course.
-If needed, repair the next observed input/gameplay blocker. Then continue normal
-key-corpse loot, Club equipment, keyed door, solo dungeon/shaman, reunion,
-Emperor/Amulet, choices and physical exit; verify fresh outdoor save/load and
-focused rendered sanitizer gameplay. Assemble the complete new-game course once
-joins work. Preserve failures and provenance; do not splice separate shaman/late
-saves or broaden into unrelated services or exact combat arithmetic.
+Actual saves expose a required persistence gap: CAM_/FIRS is1 (first person) at19,
+but0 at30 after a long idle escort wait with no R/POV input. Subsequent reloads
+retain third person, affecting observed camera/aim behaviour. `getModeForSave()`
+only preserves native recovery view; it returns temporary Vanity/Preview as-is,
+so World's bool comparison writes false. Native T4ST entry checks do not cover
+legacy CAM metadata. Preserve the selected user view across temporary idle view,
+keep native recovery semantics, and test actual save/fresh-load behaviour.
 
-The editable continuous opening/escort recipes remain in
-`scripts/data/oblivion_compat/`. Unbound F8 advances only local read-only observer
-phases; phase-scoped wait/aim patterns prevent stale waypoint matches. The full
-new-game escort assembly is prepared but unrun; original scripts own progression.
+All UI runners are terminal; no build/check helper is live. After the focused
+camera fix, continue from the genuine health38 save by ordinary healing if
+needed, the room rat, key-corpse loot, Club equipment and keyed door. Then join
+solo dungeon/shaman, reunion, Emperor/Amulet, choices and physical exterior;
+verify fresh full-course outdoor load and focused rendered sanitizer gameplay.
+Do not splice separate shaman/late saves, inject health/quest/position, or broaden
+into unrelated services/exact combat arithmetic. Preserve every failed attempt.
+
+The complete new-game escort recipe is prepared but unrun. F8 advances only
+local read-only observer phases; phase-scoped wait/aim patterns prevent stale
+matches. Original scripts and ordinary inputs own all progression.
 
 ## Reusable gameplay evidence
 

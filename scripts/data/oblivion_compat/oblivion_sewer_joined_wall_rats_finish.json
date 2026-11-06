@@ -1,0 +1,884 @@
+{
+  "schema_version": 1,
+  "name": "Fresh first-rat victory continuation: cross opening, approach remaining wall rat and leave at original east route with repeated world-axis correction",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\nat 0 command content:oblivion.esm:01760f GetOpenState\nat 0 command content:oblivion.esm:01760f GetLocked\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal frame=0\nlocal lastDead=-1\nlocal function aim(p)\n local fromCamera=camera.getViewTransform():inverse()\n local origin=fromCamera:apply(util.vector3(0,0,0))\n local forward=fromCamera:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(forward.y*d.x-forward.x*d.y,forward.x*d.x+forward.y*d.y)\n local targetPitch=math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local currentPitch=math.atan2(forward.z,math.sqrt(forward.x*forward.x+forward.y*forward.y))\n local pitch=currentPitch-targetPitch\n local function units(angle) return math.max(-8192,math.min(8192,math.floor(angle*5120+.5))) end\n return units(yaw*2),units(pitch)\nend\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n assert(not Actor.isDead(self) and Actor.stats.dynamic.health(self).current>0,'Player died during wall encounter')\n if frame==5 then print('Joined wall encounter ready') end\n if Actor.getStance(self)==Actor.STANCE.Weapon then print('Joined wall fists ready') end\n if self.position.y>=3190 then print('Joined wall centerline reached') end\n local target,distance,dead=nil,nil,0\n for _,id in ipairs({{0x37e41,0x37e42}}) do\n  local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n  if a and a:isValid() then\n   if Actor.isDead(a) then dead=dead+1 else\n    local d=(a.position-self.position):length()\n    if not distance or d<distance then target,distance=a,d end\n   end\n  end\n end\n if dead~=lastDead then lastDead=dead print('Joined wall dead count '..dead) end\n if distance and distance<=130 then print('Joined wall rat in reach') end\n if self.position.x>=275 or (distance and distance<=130) then print('Joined wall first approach reached') end\n local x,y=aim(util.vector3(600,3190,-780))\n print(string.format('Joined wall crossing aim x=%d y=%d',x,y))\n if math.abs(x)<400 and math.abs(y)<200 then print('Joined wall crossing facing') end\n if target then\n  local rx,ry=aim(target.position+util.vector3(0,0,100))\n  print(string.format('Joined wall rat aim x=%d y=%d distance=%.2f',rx,ry,distance))\n  if math.abs(rx)<400 and math.abs(ry)<200 then print('Joined wall rat facing') end\n end\n if self.position.x>=560 then print('Joined wall crossed') end\n if self.position.x>=560 and math.abs(self.position.y-3190)<40 then print('Joined wall exit ready') end\n if frame%15==0 then print('Joined wall player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current..' fatigue='..Actor.stats.dynamic.fatigue(self).current) end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall encounter ready",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing facing",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossed",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat facing",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat in reach",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall rat facing",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall dead count 2",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Joined wall crossing aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall crossing facing",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Joined wall exit ready",
+      "timeout_seconds": 120,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "joined-wall-crossed.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "Joined wall dead count 2",
+    "Joined wall exit ready"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "activate-script ref=content:oblivion.esm:051ac[abc]",
+    "playgroup ref=content:oblivion.esm:051ac[abc]",
+    "M16 native staff rejected:",
+    "M16 native cast rejected:",
+    "Native AI package done: actor=content:oblivion.esm:032a17 package=content:oblivion.esm:04f201"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}
