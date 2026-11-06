@@ -49,8 +49,12 @@ are only the2 observer yaw gains; actions/order/counts unchanged. Four assembly
 regressions pass; rebuilt67-segment/11957-action Lua compiles and4340 gates compile.
 [Early rat input proof](SEWER-WALL-RAT-CAMERA-VERIFICATION.json).
 These are separate loaded checks; uninterrupted full escape remains unproven.
-Current UI courses are terminal; no build helper live. Next full course is prepared
-at `aim-aware-assembly-01/full-escape.json`; verify actual process/status before UI.
+Current UI: original-new-game `full-escape-continuous-05`, supervisor186455,
+runner186456/game186497, manifest `aim-aware-assembly-01/full-escape.json`.
+Actual argv has no load flag; confignew-game1 and runtime SHAef71da25…7292a
+verified in `launch-provenance.json`. Code392bd5d472/course43b3cfa61f; no build
+helper live. Preserve this process and paired binary/resources. Verify actual
+process/status before another UI. Full uninterrupted escape is still pending.
 
 Accepted04 prefix used manifest `full-escape-bound-cleanup-fixed.json`.
 Same course/ordinary controls, actual no-load argv and new-game1. Original26
@@ -68,7 +72,7 @@ it does not close the full uninterrupted escape. Launch provenance records
 normal runtime SHA256ef71da25d612636f79b97bf50d2d17643aef49549d044483d5a1a0ad36b7292a,
 built from7db0440e9a plus the tested actor-state patch/code392bd5d472. Keep this
 binary provenance separate from the focused check above. All build helpers are
-terminal. Next: run the prepared camera-aware original-new-game course through the physical exterior
+terminal. Next: continue the current05 camera-aware original-new-game process through the physical exterior
 and fresh-load its own outdoorF5. Full escape remains incomplete until that
 uninterrupted course and fresh reload pass.
 
@@ -178,7 +182,7 @@ movement/aim observation is segment-scoped. Actual interrupted prefixes are cut
 at saved evidence, notably fifth patrol save and fourth Subterrane save; no later
 planned actions inferred. Versioned source recipes preserve provenance and genuine
 input course, prepared recipe is not gameplay acceptance. Lua syntax compiles.
-The next original-new-game course uses the camera-aware assembler output;
+The current05 original-new-game course uses the camera-aware assembler output;
 physical exterior/reload acceptance remains due for a single new-game process. Main composite
 physical exterior/fresh reload retains its separate provenance.
 
@@ -214,7 +218,7 @@ Pre-combat source for continuous battle/escort replay:
 [reunion/birthsign50](SEWER-JOINED-REUNION-BIRTHSIGN-VERIFICATION.json).
 
 Historical checkpoint sequence continued through key door/manhole, final sewers
-and exterior/reload as linked above. Current action is the next camera-aware uninterrupted course.
+and exterior/reload as linked above. Current action is the05 camera-aware uninterrupted course.
 
 [Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json):
 clean978-action post-shaman10heal/26originalPGRD/Space03816c→022288 course,
