@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "name": "Genuine post-wall save: select starting Heal Minor Wounds in normal UI and recover through native casts",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died during normal healing')\n if frames==5 then print('Post-wall healing ready health='..hp) end\n if hp>=54 then print('Post-wall recovery accepted health='..hp) end\n if frames%15==0 then print('Post-wall recovery health='..hp..' magicka='..Actor.stats.dynamic.magicka(self).current) end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Post-wall healing ready",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "Tab"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "menu-initial.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "right_trigger",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "right_trigger",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.4
+    },
+    {
+      "type": "screenshot",
+      "name": "menu-cycle-0.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "gamepad_button",
+      "value": "rightstick",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "screenshot",
+      "name": "heal-selected.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
+      "value": "b",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Post-wall recovery accepted",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "post-wall-healed.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 360,
+  "expected_exit": 0,
+  "expected_log": [
+    "Post-wall healing ready",
+    "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+    "Post-wall recovery accepted",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

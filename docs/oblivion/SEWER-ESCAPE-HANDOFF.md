@@ -38,14 +38,28 @@ at the next required integration checkpoint. No component/Python pass is inferre
 
 ## Gameplay checkpoint and next action
 
-Latest genuine course save remains:
-`build/oblivion-compat/sewer-escape/joined-wall-rats-06/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Health38, position(585.390,3175.597,-855.278), both authored wall rats dead with
-Player killers/base count2, no pending deaths/actions/combat engagements. The
-separate room rat037e40/base02509b remains alive. Its saved view is third person
-from the old bug and remains authoritative; change it only through normal R if
-wanted. Normal healing, room combat, key-corpse loot, Club equipment and the keyed
-door are next. No current UI runner or build helper is live.
+Latest genuine course save:
+`build/oblivion-compat/sewer-escape/joined-post-wall-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Ordinary menu selection and three actual Heal Minor Wounds releases restore
+38→46→54→62 health; magicka50.249794 after natural regeneration. Inventory/death
+history unchanged, no combat/actions/pending deaths. Entry is identical except10
+recorded animated-body world-velocity projection differences≤1e-5. Capture
+inspected; no health write or saved-state substitution.
+[SEWER-JOINED-HEALING-VERIFICATION.json](SEWER-JOINED-HEALING-VERIFICATION.json).
+
+`joined-room-rat-01` is RUNNING from that genuine healed save (launcher80994).
+It selects first person by ordinary R, then uses read-only camera/world aim and
+normal movement/power punch to approach and fight037e40/base02509b. That rat is
+alive at(1774.61,2717.20,-821.36). Course source is ignored
+`joined-room-rat.json`; Lua syntax passes, gameplay outcome remains pending.
+Poll the current process before another UI course. No build helper is live.
+
+The source post-wall save remains available in `joined-wall-rats-06`, health38,
+position(585.390,3175.597,-855.278). Both authored wall rats are Player-killed,
+base count2. Its old third-person CAM value stays authoritative; the new course
+changes view through real R input. After room victory, continue key-corpse loot,
+Club equipment and keyed door. Restore a safe east/northeast lane around y3240
+before reusing the old corpse approach: a direct line near y3188 hits a wall.
 
 [Wall-rat proof](SEWER-JOINED-WALL-RATS-VERIFICATION.json) is explicitly composite:
 raw03 fails later on crossing-facing input, but its actual first-kill F5 (health68)
