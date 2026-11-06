@@ -53,874 +53,934 @@
       "name": "OpenMW"
     },
     {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 facing)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
+      "type": "repeat_until_log",
       "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 reached)",
-      "timeout_seconds": 120,
       "after_start": false,
-      "abort_on_failure": true
+      "maximum_iterations": 1,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 facing)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_down",
+          "value": "w"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 1 reached)",
+          "timeout_seconds": 120,
+          "after_start": false,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        }
+      ]
     },
     {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 facing)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
+      "type": "repeat_until_log",
       "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 reached)",
-      "timeout_seconds": 120,
       "after_start": false,
-      "abort_on_failure": true
+      "maximum_iterations": 1,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 facing)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_down",
+          "value": "w"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 2 reached)",
+          "timeout_seconds": 120,
+          "after_start": false,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        }
+      ]
     },
     {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key camera settled",
-      "after_start": true,
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 facing)",
-      "timeout_seconds": 10,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
+      "type": "repeat_until_log",
       "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 reached)",
-      "timeout_seconds": 120,
       "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
+      "maximum_iterations": 1,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 facing)",
+          "timeout_seconds": 10,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_down",
+          "value": "w"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Key course phase 1:\\s*(?:Joined key waypoint 3 reached)",
+          "timeout_seconds": 120,
+          "after_start": false,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        }
+      ]
     },
     {
       "type": "key_hold",

@@ -15,30 +15,47 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — uninterrupted attempt 08
+## Current chunk — loot route accepts an already-reached waypoint
 
-`full-escape-continuous-08` is live: supervisor233648, runner233660, game233687.
-Actual argv/config verify original new-game1/no load; runtime SHA256
-`a5073d8a47049971cdcdf07c70e5613ecceefc243c261d583a532e3190b79503`.
-Code commit `aee30a8b22`. Manifest
-`build/oblivion-compat/sewer-escape/menu-admission-full-assembly-01/full-escape.json`
-is byte-identical to07's course:67 segments/11732 actions, SHA18d63be3…b1568d.
-Original19/24/26/27/28/29/30 now pass in this same process. Actual first-ambush
-F5/native snapshot is exact: all4 assassins killed by guards, Renault scripteddead,
-three escorts alive, Player80HP/inventory unchanged, queues clear. Actual30 F5
-retains80HP and all3 escorts alive in022288; two early rats have acquired Player,
-other queues clear. First rat037e42 now killed by Player, actual F5/native exact,
-70HP, remaining2 rats alive. Outer4 is active, then cold post-wall healing5.
-[Current prefix proof](SEWER-UNINTERRUPTED-SOLO-PREFIX-VERIFICATION.json).
-Inspect actual process/log state before further action; do not restart this
-course merely because observation times out.
+`full-escape-continuous-08` is terminal FAILED, game0/launcher1, no engine
+findings. Same original-new-game process233687 passes original19/26/30, all3
+Player rat kills, actual wall exit, normal menu selection and3 native healing
+releases42→66, then physical room traversal tox1696.163/y3220.488. Actual native
+saves22/23/24 parse exactly to their matching receipts; queues clear. This closes
+07's cold menu/healing failure, but full escape remains incomplete.
 
-Read-only save archiver233753 preserves only actual bytes matching native F5/
-autosave receipts. Inspect `full-escape-continuous-08/retained-saves/index.json`.
-Live launch proof: `full-escape-continuous-08/launch-verification.json`; ignored
-work note: `build/oblivion-compat/sewer-escape/menu-admission-current-work.json`.
-All short course names above are under `build/oblivion-compat/sewer-escape/`.
-Run only one rendered game. Never overwrite a binary/resources used by a live UI.
+The driver next waited10seconds for waypoint1 aim. The observer had correctly
+printed reached1 immediately (incoming y>=3220) and advanced to waypoint2.
+Preserve08's raw failure and immutable actual
+`full-escape-continuous-08/retained-saves/3-0024-Quicksave.omwsave`.
+Failure proof: `full-escape-continuous-08-failure-verification.json`.
+
+Current change is QA data only: the three original loot-route movement blocks
+are retained verbatim inside single-iteration completion guards. Already reached
+waypoints skip aim/movement; unfinished ones keep their original controls and
+arrival checks. The complete selection7 changes219→78 top-level actions through
+nesting, with no additional selected content. C++/Python harness unchanged.
+
+The guard fix passes the exact actual08 room-save continuation: guard iterations
+0/1/1, actual loot transfer, Club equipped, Iron Key retained once and original
+keyed door crossed to022ff6. Actual F5/archive3 parses exactly to native snapshot,
+Player66HP, corpse empty; whole entry differs only by3 tiny body-velocity projections.
+18 focused assembly/repeat tests pass. New67-segment assembly has11591 top-level
+actions/4300 compiled gates; Lua observer identical to08. C++/Python unchanged;
+reuse full normal/sanitizer engine gates with original provenance.
+[Guard and cold-healing proof](SEWER-KEY-ARRIVAL-GUARD-VERIFICATION.json).
+
+The extended focused scenario itself remains FAILED at the next (source8) rat:
+one charged Club hit landed2.90938 damage, then a30second death wait failed.
+Player alive50HP, game0/no engine findings. Do not relabel this as scenarioPASS.
+Current next chunk: bounded normal combat feedback using its actual immutable
+precombat `key-arrival-loot-gear-01/retained-saves/3-0003-Quicksave.omwsave`.
+Verify the native Player rat kill and nearby gear before a fresh original-new-game09.
+All UI/helper processes are terminal at this checkpoint; inspect state before launch.
+
+All short course paths above are under `build/oblivion-compat/sewer-escape/`.
+Ignored work note `menu-admission-current-work.json` needs terminal/future-run update.
+Never overwrite binaries/resources used by a live UI.
 
 ## Latest completed fix and reusable evidence
 

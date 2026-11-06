@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T21:09:12.577220+00:00",
+  "scope": "Already-completed initial waypoint in ordinary sewer loot route; source7 only, full escape incomplete",
+  "status": "Bounded QA fix verified. Extended loaded check fails later at source8 rat; no whole-course pass",
+  "parent_commit": "ec924c8807",
+  "changes": "Three original movement blocks are byte-equivalent data in original order within single-iteration completion guards; already reached points skip obsolete aim/movement. Selection7 retains whole source219->78 top-level via nesting. Lua thresholds/observer and C++/Python unchanged.",
+  "source_sha256": {
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_key_loot_door.json": "9a30c131f0f9fdeba028ab5c93676c5bf81136dd3927341eaccb0a5ee31ddc2d",
+    "scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json": "22e1e374ddc07033e6a2d0efc16f560252f5f80bd21781e37a6bf5991b966aa8"
+  },
+  "failed_original08": {
+    "proof": "build/oblivion-compat/sewer-escape/full-escape-continuous-08-failure-verification.json",
+    "sha256": "e69d97caae7c57be9d74f844bed90a871279d679bb93016776e2d0d68823d2d5",
+    "result": "Incoming y3220.4875 already satisfies waypoint1 y>=3220; observer advances2, driver fails obsolete aim1 wait10s; game0/no findings"
+  },
+  "accepted_original08_prefix": {
+    "course": "build/oblivion-compat/sewer-escape/full-escape-continuous-08",
+    "game_pid": 233687,
+    "three_native_Player_rat_kills": true,
+    "healing": {
+      "before": 42,
+      "after": 66,
+      "native_releases": 3
+    },
+    "room_position": [
+      1696.162841796875,
+      3220.487548828125,
+      -867.5581665039062
+    ],
+    "proofs": {
+      "three-rat-victory-verification.json": {
+        "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-08/three-rat-victory-verification.json",
+        "sha256": "1855926f5f6cf4feb55cbec6bde7a206c8b35566e3b5236eea84cd4986697718"
+      },
+      "cold-new-game-healing-verification.json": {
+        "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-08/cold-new-game-healing-verification.json",
+        "sha256": "99ff63a2cb3a32890c21876b1887e0af1486fe21600963986e2b9cd321cb2aac"
+      },
+      "room-traversal-verification.json": {
+        "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-08/room-traversal-verification.json",
+        "sha256": "8c064886bdee6df97f1095615cc106219a7096a0d45274a9a507acb773784f9c"
+      }
+    },
+    "save_native_snapshots_exact": true,
+    "clear_combat_death_action_cast_projectile_work": true,
+    "capture_inspected": "full-escape-continuous-08/segment05-heal-selected.png"
+  },
+  "focused_loaded_source7_prefix": {
+    "proof": "build/oblivion-compat/sewer-escape/key-arrival-loot-gear-01/keyed-door-prefix-verification.json",
+    "sha256": "79d043cdc448e7db7e82ebfab5b5da475e2c7a7199674498281aec6968576e56",
+    "passed": true,
+    "guard_iterations": [
+      0,
+      1,
+      1
+    ],
+    "loot_key_Club_native_once_and_original_door_crossed": true,
+    "whole_entry_restore_projection_differences": 3
+  },
+  "focused_extended_failure": {
+    "scenario": "build/oblivion-compat/sewer-escape/key-arrival-loot-gear-01/scenario.json",
+    "sha256": "f405f73798b487dd141ba05e4e11e94e3e6d13d76e6cb82ae1ff42848a2e5521",
+    "passed": false,
+    "failure": "Source8 Substructure first rat dead wait30sec after one actual charged Club hit2.90938; live Player50HP; no engine findings",
+    "next": "Use actual keyed-door F5 archive3 as unmodified precombat input; bounded ordinary combat feedback before new full09"
+  },
+  "tests": {
+    "focused_python": {
+      "proof": "build/oblivion-compat/sewer-escape/key-arrival-python-focused-01-verification.json",
+      "sha256": "b817d0d558dc266907e96e367deb21e4edbf9a0c84c80e5470dce889945d217a",
+      "executed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "preflight": {
+      "proof": "build/oblivion-compat/sewer-escape/key-arrival-preflight-verification.json",
+      "sha256": "4786d9cf4fb82ea355704b659963bd9c59ed201128235faaa8c2116d69ccbc6f",
+      "segments": 67,
+      "top_level_actions": 11591,
+      "regex_gates": 4300,
+      "lua_observer_identical_to08": true
+    },
+    "engine": "C++ unchanged; reuse2210 normal/2210 ASan-UBSan and cold GUI instrumentation with original provenance in SEWER-NEW-GAME-MENU-VERIFICATION.json. No new full Python-suite claim."
+  },
+  "remaining": "Full uninterrupted original-new-game prison->physical exterior and fresh own outdoor reload remain unproven. Loaded focused prefixes never substitute."
+}
