@@ -949,7 +949,7 @@ TEST(OblivionAiTest, PausedEscortKeepsRecipientAtCurrentPositionWithoutAdvancing
         makePackage(0xa01, ESM4::AIPackageType::Travel);
         const auto makeActor = [&](unsigned id, unsigned package, float x) {
             auto npc = *store.search<ESM4::Npc>(stable(0x800));
-            npc.mId = {id+0x100,0}; npc.mFormKey = stable(id+0x100); npc.mRace = race.mId;
+            npc.mId = {id+0x200,0}; npc.mFormKey = stable(id+0x200); npc.mRace = race.mId;
             npc.mAIPackageKeys = {stable(package)};
             store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
             ESM4::ActorCharacter reference{}; reference.mId = {id,0}; reference.mFormKey = stable(id);
