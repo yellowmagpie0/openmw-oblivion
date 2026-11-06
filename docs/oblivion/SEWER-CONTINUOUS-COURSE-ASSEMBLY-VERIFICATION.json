@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "scope": "Actual engine speech/door log regressions and Lua producer isolation, input order unchanged",
+  "changes": [
+    {
+      "index": 12,
+      "before": "Escape segment 1:\\s*(?:sayto topic=.* info=)",
+      "after": "sayto topic=.* info="
+    },
+    {
+      "index": 11196,
+      "before": "Escape segment 50:\\s*(?:M5 door activation: result=animated ref=content:oblivion.esm:017753)",
+      "after": "M5 door activation: result=animated ref=content:oblivion.esm:017753"
+    }
+  ],
+  "sayto_actual": "[05:21:25.458 I] M7 ObScript: sayto topic=content:oblivion.esm:032adf info=content:oblivion.esm:03334e responses=1 voice=sound/voice/oblivion.esm/high elf/m/charactergen_chargentaunt2_0003334e_1.mp3 duration=14.001750",
+  "door_actual": "[00:08:12.241 I] M5 door activation: result=animated ref=content:oblivion.esm:017753",
+  "lua_actual": "[05:21:06.959 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 1:\tSewer loot observer ready dead=true",
+  "cross_segment_does_not_match": true,
+  "original_attempt": "full-escape-continuous-01 deliberately interrupted/-2 because engine wait was incorrectly Lua-prefixed; no gameplay failure relabeled",
+  "manifest_sha256": "ea44bb28751e7653c241e3517dc828dd610603265cd7c3cae72c2e92589e188f",
+  "full_escape_complete": false,
+  "adjacent_startup_gap": {
+    "command": "SetUnconscious",
+    "instances": 5,
+    "unit": "content:oblivion.esm:01ecbd@oblivion.esm/quest/unit=0",
+    "original_script": "DAPeryiteScript",
+    "targets": "ErTeeus, Maren, Kewan, Ilvel Romayn, Mirie at Peryite shrine, outside tutorial route",
+    "original_record_audit": "build/oblivion-compat/sewer-escape/new-game-deferred-command-audit.json",
+    "baseline": "Same five tick1 deferred events in previously accepted continuous-opening-01; no new exception added to runner rules",
+    "implementation_status": "Unsupported remote quest initialization retained as separate compatibility gap; this course is not general ObScript/full M15 acceptance"
+  }
+}

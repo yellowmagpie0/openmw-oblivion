@@ -69,19 +69,29 @@ Old raw route fails54; later first retry remains intentionally interrupted/-2.
 No failures relabeled. Read-only GDB02 and ordinary diagnosticF5 receipts retained.
 This closes rendered recipient/fall coverage as explicit composite evidence.
 
-Current normal UI `full-escape-continuous-01` is live: supervisor169932,
-runner169933/game169977, manifest `full-escape-continuous-versioned.json`.
-Actual game argv has **no load-save flag**, config new-game=1. Video intro and
-segment1 original corpse observer have started; no runtime/outer-phase pass is
-inferred from recipe preparation. Inspect actual processes/status/report before
-another UI. Source argument `unused-new-game` only supplies an unused formatter
-variable; its path does not exist and is not used by the game command/config.
-No helper remains live; full2208 gates are terminal. Binary/resources built at
-ef2c3ef348 with the final descent patch, subsequently committeda9ab59a13e;
-later210b58d422/current edits are evidence/handoff only. Do not rebuild a partial
-runtime/resource version over the active game. Follow existing phase-scoped
-normal controls through original exterior, then fresh-load its own outdoorF5.
-Full escape remains incomplete until this uninterrupted course is proven.
+First full new-game attempt `full-escape-continuous-01` is terminal/-2, deliberately
+stopped after an impossible driver gate: real engine SayTo was incorrectly given
+an outer Lua prefix. No gameplay failure/pass inferred. Corrected assembler keeps
+engine SayTo and allM-numbered events unwrapped; only Lua observations are scoped.
+Actual speech/door log regressions plus wrong-segment exclusion pass, combined
+observer compiles. Exactly2 wait patterns changed; all11957 input actions/order
+otherwise identical. [Producer audit](SEWER-CONTINUOUS-COURSE-ASSEMBLY-VERIFICATION.json).
+
+Next/current launch target: `full-escape-continuous-corrected.json`, fresh
+`full-escape-continuous-02`, detached launcher source argument `unused-new-game`.
+Actual game command has no load-save flag, config new-game=1; unused input-save
+formatter path does not exist. Confirm actual process before another UI.
+Normal runtime SHA25673861667d0252ae7260ddb3c954ad2ced059e820edaa54028060d5b74cc33bf6,
+paired resources built at ef2c3ef348+final descent patch, code committeda9ab59a13e.
+Later commits are QA/evidence only; no runtime/resource rebuild required.
+Full2208 normal/sanitized gates and rendered descent54 are already terminal/pass.
+Continue original new-game course through physical exterior, then reload its own
+outdoorF5. Full escape remains incomplete until that uninterrupted course passes.
+
+Adjacent known new-game gap: five tick1 deferred SetUnconscious events belong to
+original DAPeryiteScript01ecbd/shrine followers outside the tutorial. Same events
+exist in accepted earlier opening baseline; original source independently audited.
+Record for later Peryite work, do not claim general script/game acceptance.
 
 Uninterrupted course editable sources now prepared: selection
 `scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json`, assembler

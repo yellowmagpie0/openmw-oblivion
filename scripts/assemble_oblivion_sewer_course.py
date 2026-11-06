@@ -8,16 +8,21 @@ r=args.output.parent
 r.mkdir(parents=True,exist_ok=True)
 chain=json.loads((repo/'scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json').read_text())['segments']
 recipes=[];provenance=[];code=[];actions=[];extra={};types=set()
-engine_prefix=('Applied ','acceptance-command ','Native ','M7 ','M10 ','M11 ','M15 ','M16 ','TES4 ','Writing ','character_menu ','messagebox ','setstage ','startcombat ','"event":')
+engine_prefix=('Applied ','acceptance-command ','Native ','TES4 ','Writing ','character_menu ','messagebox ','setstage ','startcombat ','sayto ','"event":')
+
+def engine_pattern(pattern):
+ # Engine events keep their producer's prefix; only Lua observer output is
+ # wrapped by the segment's local print function.
+ return bool(re.match(r'M\d+\s',pattern)) or pattern.startswith(engine_prefix)
 
 def scope(a,phase):
  a=copy.deepcopy(a);types.add(a['type'])
  if a['type']=='wait_log':
   if a['pattern']=='Applied TES4 runtime state:' or a['pattern'].startswith('acceptance-command '):return None
-  if not a['pattern'].startswith(engine_prefix):a['pattern']=f'Escape segment {phase}:\\s*(?:'+a['pattern']+')'
+  if not engine_pattern(a['pattern']):a['pattern']=f'Escape segment {phase}:\\s*(?:'+a['pattern']+')'
   if a['pattern'].startswith('Escape segment') and 'ready' in a['pattern'].lower():a['timeout_seconds']=max(a.get('timeout_seconds',0),120)
  if a['type']=='repeat_until_log':
-  if not a['pattern'].startswith(engine_prefix):a['pattern']=f'Escape segment {phase}:\\s*(?:'+a['pattern']+')'
+  if not engine_pattern(a['pattern']):a['pattern']=f'Escape segment {phase}:\\s*(?:'+a['pattern']+')'
  if a['type']=='mouse_move' and 'from_log'in a:a['from_log']['pattern']=f'Escape segment {phase}:\\s*(?:'+a['from_log']['pattern']+')'
  if a['type']=='screenshot':a['name']=f'segment{phase:02d}-'+a['name']
  for k in ['actions','cleanup_actions']:
