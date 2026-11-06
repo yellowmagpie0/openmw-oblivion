@@ -42,23 +42,32 @@ rat death+1, health unchanged; actual victoryF5/capture before SIGINT during run
 shutdown. Raw launcher remains interrupted/-2; no whole-scenario pass inferred.
 All following main continuations use that actual F5 with exact native entry.
 
-Current detached UI `joined-recipient-rendered-sanitized-01`, supervisor145163,
-runner145164/game145187, from `joined-third-ambush-approach-01` genuine precombatF5.
-Prepared `joined-recipient-rendered-sanitized.json`: current instrumented binary/
-matching sanitizer resources, actual ELF libasan preload,360s startup/90s SDL,
-read-only route plus normal landing backstep, original54/F5/capture. Runtime leak
-checking disabled; full2206 engine sanitizer gate separately has leak checking.
-Inspect actual processes/status/report before another UI. No rendered pass yet.
+Current rendered sanitizer `joined-recipient-rendered-sanitized-01`, supervisor145163,
+runner145164/game145187, must be polled to terminal before another UI.8 points and
+two real Glenroy assassin kills pass; Player100HP. Original54 wait is blocked by
+third assassin01774a isolated on upper ledge above Glenroy. Ordinary diagnosticF5
+recorded in `diagnostic-f5.json` at10:23:30UTC, no injected state. Snapshot shows
+1774a(3050.500,6786.964,-991.999), Glenroy(3045.055,6766.681,-1176.099), one genuine
+engagement and no third contact. Independent original package017d81 has flags81004,
+including AllowFalls; upper original PGRD nodes295/296 are isolated. Existing
+approachResidentTarget fall fallback wrongly requires a nonempty route, so empty
+navigation on this platform prevents the allowed physical descent. Current chunk:
+fix that observed empty-route fall case, test, replay same actual sanitizer save.
+No rendered54 acceptance yet. Runtime leak checking disabled; full2206 engine
+sanitizer/leak gate remains separate with its original provenance.
 
-Next: finish that rendered course, then assemble/replay the original new-game→
-exterior course. Existing `assemble-continuous-escort.py` and
-`namespace-continuous-phases.py` demonstrate read-only Lua observer wrappers;
-compound later courses also use internalF8, so outer transitions need a distinct
-modifier (Lua `input.KEY.LeftCtrl` is supported) and phase-scoped log patterns.
-Reuse accepted inputs, retain all raw failures, remove only obsolete checkpoint/
-load-specific observations. Never splice historical outdoor state into the course.
-Checkpoint: main gameplay gaps shrank through genuine physical exterior/reload;
-remaining acceptance is uninterrupted execution and current rendered sanitizer.
+Uninterrupted course editable sources now prepared: selection
+`scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json`, assembler
+`scripts/assemble_oblivion_sewer_course.py --output build/oblivion-compat/sewer-escape/full-escape-continuous-versioned.json`.
+67 segments,11957 ordinary actions, original new-game/no load flag. Ctrl+F8 changes
+only outer observer locals; plainF8 retains compound inner phases. Every Lua
+movement/aim observation is segment-scoped. Actual interrupted prefixes are cut
+at saved evidence, notably fifth patrol save and fourth Subterrane save; no later
+planned actions inferred. Versioned source recipes preserve provenance and genuine
+input course, prepared recipe is not gameplay acceptance. Lua syntax compiles.
+After the fall fix passes, finish rendered course, then run that original new-game
+course to the exterior and audit all acceptance. Main composite already passes
+physical exterior/fresh reload; uninterrupted and current rendered checks remain.
 
 [Final battle/class proof](SEWER-JOINED-CLASS-CHOICE-VERIFICATION.json): Baurus032a17
 kills final assassin01e703 with three genuine sword contacts while Player blocks,

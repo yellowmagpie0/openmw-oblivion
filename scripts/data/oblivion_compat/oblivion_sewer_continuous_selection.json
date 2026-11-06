@@ -1,0 +1,475 @@
+{
+  "schema_version": 1,
+  "scope": "Original new-game full sewer escape using successful ordinary inputs and actual F5 prefixes; prepared recipe is not acceptance",
+  "segments": [
+    {
+      "segment": 1,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_continuous_opening.json",
+      "action_count": 72,
+      "source_course": "continuous-opening-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 2,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_continuous_escort_continuation.json",
+      "action_count": 70,
+      "source_course": "continuous-escort-continuation-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 3,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_first_wall_rat.json",
+      "action_count": 37,
+      "source_course": "joined-wall-rats-03",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 4,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_wall_rats_finish.json",
+      "action_count": 129,
+      "source_course": "joined-wall-rats-06",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 5,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_post_wall_healing.json",
+      "action_count": 33,
+      "source_course": "joined-post-wall-healing-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 6,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_room_rat.json",
+      "action_count": 100,
+      "source_course": "joined-room-rat-02",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 7,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_key_loot_door.json",
+      "action_count": 219,
+      "source_course": "joined-key-loot-door-02",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 8,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_first_rat.json",
+      "action_count": 50,
+      "source_course": "joined-substructure-first-rat-02",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 9,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_first_chest.json",
+      "action_count": 73,
+      "source_course": "joined-substructure-first-chest-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 10,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_gear.json",
+      "action_count": 49,
+      "source_course": "joined-substructure-gear-06",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 11,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_runners_zombie.json",
+      "action_count": 267,
+      "source_course": "joined-substructure-runners-zombie-02",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 12,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_post_zombie_healing.json",
+      "action_count": 24,
+      "source_course": "joined-post-zombie-healing-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 13,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_north_passage.json",
+      "action_count": 243,
+      "source_course": "joined-substructure-north-passage-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 14,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_northern_rat.json",
+      "action_count": 44,
+      "source_course": "joined-substructure-northern-rat-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 15,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_west_approach.json",
+      "action_count": 175,
+      "source_course": "joined-substructure-west-approach-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 16,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_west_encounters_prefix.json",
+      "action_count": 442,
+      "source_course": "joined-west-encounters-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 17,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_west_lower_room_rat.json",
+      "action_count": 44,
+      "source_course": "joined-west-rat-38175-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 18,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_upper_stairs_prefix.json",
+      "action_count": 141,
+      "source_course": "joined-upper-stairs-rat-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 19,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_actual_root_attacker.json",
+      "action_count": 117,
+      "source_course": "joined-actual-root-attacker-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 20,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_root_entrance.json",
+      "action_count": 239,
+      "source_course": "joined-root-entrance-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 21,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_root_side_rat.json",
+      "action_count": 117,
+      "source_course": "joined-engaged-root-side-rat-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 22,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_root_descent.json",
+      "action_count": 619,
+      "source_course": "joined-root-descent-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 23,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_lower_approach.json",
+      "action_count": 175,
+      "source_course": "joined-lower-corridor-approach-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 24,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_lower_rat.json",
+      "action_count": 226,
+      "source_course": "joined-lower-east-rat-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 25,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_final_lower_rat.json",
+      "action_count": 192,
+      "source_course": "joined-final-lower-rat-course-02",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 26,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_entry.json",
+      "action_count": 726,
+      "source_course": "joined-cavern-entry-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 27,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_entry_healing.json",
+      "action_count": 15,
+      "source_course": "joined-cavern-entry-healing-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 28,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_first_goblin_approach_prefix.json",
+      "action_count": 333,
+      "source_course": "joined-first-cavern-goblin-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 29,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_first_goblin_rock_detour.json",
+      "action_count": 141,
+      "source_course": "joined-first-goblin-rock-detour-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 30,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_first_goblin_rock_finish.json",
+      "action_count": 107,
+      "source_course": "joined-first-goblin-rock-finish-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 31,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_first_cavern_goblin.json",
+      "action_count": 207,
+      "source_course": "joined-first-cavern-goblin-close-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 32,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_western_bend.json",
+      "action_count": 311,
+      "source_course": "joined-cavern-western-bend-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 33,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_second_goblin.json",
+      "action_count": 207,
+      "source_course": "joined-cavern-second-goblin-early-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 34,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_log_approach.json",
+      "action_count": 549,
+      "source_course": "joined-cavern-log-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 35,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_log_activation.json",
+      "action_count": 45,
+      "source_course": "joined-cavern-log-activation-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 36,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_combat_heal.json",
+      "action_count": 7,
+      "source_course": "joined-combat-heal-probe-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 37,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_log_first_victory.json",
+      "action_count": 68,
+      "source_course": "joined-cavern-log-fight-focused-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 38,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_log_final.json",
+      "action_count": 75,
+      "source_course": "joined-log-final-two-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 39,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_healing_chest.json",
+      "action_count": 270,
+      "source_course": "joined-cavern-healing-chest-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 40,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_healing_potions.json",
+      "action_count": 17,
+      "source_course": "joined-cavern-healing-potions-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 41,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_northern_patrol.json",
+      "action_count": 386,
+      "source_course": "joined-cavern-patrol-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 42,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_reinforcement.json",
+      "action_count": 282,
+      "source_course": "joined-cavern-reinforcement-early-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 43,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_reinforcement_recovery.json",
+      "action_count": 17,
+      "source_course": "joined-reinforcement-recovery-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 44,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_engaged_eastern.json",
+      "action_count": 82,
+      "source_course": "joined-engaged-eastern-fight-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 45,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_full_recovery.json",
+      "action_count": 69,
+      "source_course": "joined-cavern-full-recovery-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 46,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_shaman_staff_approach.json",
+      "action_count": 469,
+      "source_course": "joined-cavern-shaman-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 47,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_shaman_victory.json",
+      "action_count": 264,
+      "source_course": "joined-shaman-continuous-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 48,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_subterrane_entry.json",
+      "action_count": 978,
+      "source_course": "joined-cavern-to-subterrane-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 49,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_subterrane_ambush_prefix.json",
+      "action_count": 891,
+      "source_course": "joined-subterrane-ambush-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 50,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_subterrane_ambush_resolution.json",
+      "action_count": 159,
+      "source_course": "joined-subterrane-door-resolution-course-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 51,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_reunion_stage42.json",
+      "action_count": 6,
+      "source_course": "joined-subterrane-reunion-stage42-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 52,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_warrior_birthsign.json",
+      "action_count": 86,
+      "source_course": "joined-warrior-birthsign-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 53,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_escort_door_clearance.json",
+      "action_count": 10,
+      "source_course": "joined-escort-door-clearance-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 54,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_third_ambush_approach.json",
+      "action_count": 6,
+      "source_course": "joined-third-ambush-approach-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 55,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_third_ambush_recipient.json",
+      "action_count": 10,
+      "source_course": "joined-third-ambush-paused-recipient-02",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 56,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_marker_f_clearance.json",
+      "action_count": 10,
+      "source_course": "joined-marker-f-player-clearance-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 57,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_marker_g_departure.json",
+      "action_count": 6,
+      "source_course": "joined-marker-g-departure-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 58,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_physical_sanctum_entry.json",
+      "action_count": 31,
+      "source_course": "joined-physical-sanctum-entry-walk-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 59,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_sanctum_stage65.json",
+      "action_count": 6,
+      "source_course": "joined-sanctum-stage65-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 60,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_sanctum_amulet.json",
+      "action_count": 18,
+      "source_course": "joined-sanctum-to-amulet-clearance-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 61,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_emperor_death.json",
+      "action_count": 6,
+      "source_course": "joined-emperor-death-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 62,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_final_battle_class.json",
+      "action_count": 178,
+      "source_course": "joined-final-battle-class-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 63,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_secret_passage.json",
+      "action_count": 6,
+      "source_course": "joined-sanctum-secret-passage-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 64,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_final_sewers_entry.json",
+      "action_count": 57,
+      "source_course": "joined-final-sewers-entry-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 65,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_final_western_rat.json",
+      "action_count": 10,
+      "source_course": "joined-final-western-rat-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 66,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_upper_tunnel.json",
+      "action_count": 6,
+      "source_course": "joined-final-upper-tunnel-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    },
+    {
+      "segment": 67,
+      "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_exterior_exit.json",
+      "action_count": 76,
+      "source_course": "joined-final-exterior-exit-01",
+      "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
+    }
+  ]
+}
