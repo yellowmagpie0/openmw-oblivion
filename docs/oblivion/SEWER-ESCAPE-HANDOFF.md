@@ -30,13 +30,21 @@ shutdown remains interrupted, no whole-scenario pass inferred. Final actualF5 an
 capture precede interruption; exact entry0differences.
 [Western victory](SEWER-JOINED-FINAL-WESTERN-RAT-VERIFICATION.json).
 
-Current detached UI `joined-final-upper-tunnel-01`, supervisor144244, from that
-actual victory save: original27 bridge/lower-room/stair points, ordinary walking
-and axe inputs with read-only nearby-enemy aim, actualF5 at upper door approach.
-Inspect actual process/status/report before another UI. No upper-route pass yet.
-Next: upper door/traversal, MQ01 exit88, physical exterior/fresh reload, then
-uninterrupted new-game escape. Full escape remains incomplete. Prepared rendered
-sanitizer recipient course `joined-recipient-rendered-sanitized.json` for afterward.
+Clean connected upper-sewer course passes all27 original route points: bridge,
+lower rooms, upper stairs, rat066a04 killed by genuine Player axe contacts. ActualF5
+at(352.754,1616.010,6878.335),84.511HP/110,80MP; no combat/pending death/action.
+Goblins remain alive away from route; no actor relocation or combat suppression.
+Exact fresh entry0differences; capture inspected.
+[Upper passage proof](SEWER-JOINED-UPPER-TUNNEL-VERIFICATION.json).
+Latest main input `build/oblivion-compat/sewer-escape/joined-final-upper-tunnel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+
+Current detached UI `joined-final-exterior-exit-01`, supervisor144643, from that
+actual save: normal upper gate activation/jump, original corridor points,
+exit review Finished, MQ01 exit88 and physical Tamriel entry/F5. Inspect actual
+process/status/report before another UI. No exterior pass yet.
+Next: outdoor fresh reload, rendered sanitizer recipient course already prepared
+as `joined-recipient-rendered-sanitized.json`, then uninterrupted new-game escape.
+Full escape remains incomplete.
 
 [Final battle/class proof](SEWER-JOINED-CLASS-CHOICE-VERIFICATION.json): Baurus032a17
 kills final assassin01e703 with three genuine sword contacts while Player blocks,
