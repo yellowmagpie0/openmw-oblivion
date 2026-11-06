@@ -1,0 +1,119 @@
+{
+  "scope": "One genuine equipped-save continuation observes authored fleeing runners, physically enters the zombie room, lets the original rat/zombie fight occur and wins real Player axe combat. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "passed": true,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-substructure-runners-zombie-02/scenario.json",
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-substructure-gear-06/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "8c65bb999a0632040fa3837f2a40f7e55b2c51335cabadd779645125697f122d",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "source_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-substructure-gear-06/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "8c65bb999a0632040fa3837f2a40f7e55b2c51335cabadd779645125697f122d"
+  },
+  "output_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-substructure-runners-zombie-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "aeee3cd92463a4f269ca52dbeef061a63e7bea0b9c083d1649dd4822446dd781",
+    "cell": "content:oblivion.esm:022ff6",
+    "position": [
+      727.3505249023438,
+      2191.29443359375,
+      -66.6024169921875,
+      -0.02578113041818142,
+      0.0,
+      -1.287405014038086
+    ],
+    "health": 38.39999771118164
+  },
+  "zombie": {
+    "actor": "content:oblivion.esm:0491fc",
+    "base": "content:oblivion.esm:051445",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "dynamic:player:0000000000000001"
+  },
+  "tutorial_rat": {
+    "actor": "content:oblivion.esm:0387d9",
+    "base": "content:oblivion.esm:0521e3",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "content:oblivion.esm:0491fc"
+  },
+  "runners": [
+    {
+      "life": {
+        "actor": "content:oblivion.esm:0387da",
+        "base": "content:oblivion.esm:0387d8",
+        "phase": 0,
+        "recovery_remaining": 0.0,
+        "killer": "null"
+      },
+      "cell": "content:oblivion.esm:01fbb9",
+      "position": [
+        2176.0,
+        2944.0,
+        -857.3624877929688,
+        0.0,
+        0.0,
+        -2.0184781551361084
+      ]
+    },
+    {
+      "life": {
+        "actor": "content:oblivion.esm:0387db",
+        "base": "content:oblivion.esm:0387d8",
+        "phase": 0,
+        "recovery_remaining": 0.0,
+        "killer": "null"
+      },
+      "cell": "content:oblivion.esm:01fbb9",
+      "position": [
+        2176.0,
+        2944.0,
+        -857.3624877929688,
+        0.0,
+        0.0,
+        -2.0302066802978516
+      ]
+    }
+  ],
+  "actual_Player_contacts": [
+    "[20:35:09.916 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4a fatigue_cost=8.2 before=140 after=131.8 action=3 health_damage=0.83125 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=55.7 victim=content:oblivion.esm:0491fc victim_action=2 armor_condition_writes=0 combat_random_draws=0",
+    "[20:35:10.474 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4c fatigue_cost=41 before=137.239 after=96.2395 action=3 health_damage=2.05212 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=55.4 victim=content:oblivion.esm:0491fc victim_action=3 armor_condition_writes=0 combat_random_draws=0",
+    "[20:35:12.376 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4e fatigue_cost=41 before=115.3 after=74.2995 action=3 health_damage=1.88465 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=55.1 victim=content:oblivion.esm:0491fc victim_action=3 armor_condition_writes=0 combat_random_draws=0",
+    "[20:35:19.128 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=53 fatigue_cost=8.2 before=140 after=131.8 action=3 health_damage=0.82457 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=54.8 victim=content:oblivion.esm:0491fc victim_action=2 armor_condition_writes=0 combat_random_draws=0",
+    "[20:35:19.667 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=55 fatigue_cost=41 before=137.109 after=96.1095 action=3 health_damage=2.03464 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=54.5 victim=content:oblivion.esm:0491fc victim_action=ffffffff armor_condition_writes=0 combat_random_draws=0"
+  ],
+  "pending_deaths": [],
+  "physical_action_owners": [],
+  "native_combat_engagements": [],
+  "original_content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "audit": "build/oblivion-compat/sewer-escape/original-corridor-rat-routing-audit.json",
+    "audit_sha256": "ba9d00fc30aeef43c91f1f47e6fc378a0d5cc6f1f2ef131f6495cad5e43b98f8",
+    "runners": [
+      "DORatRunner01",
+      "DORatRunner02"
+    ],
+    "package": "content:oblivion.esm:0387de DORatRun01",
+    "note": "Raw editable-master record audit, not an original-executable rule comparison."
+  },
+  "retained_failures": {
+    "joined-substructure-corridor-01": "Continued movement enters combat without handing over controls; final waypoint fails and Player dies. No checkpoint accepted.",
+    "joined-substructure-corridor-fights-01": "Original runner leaves the cell while facing corrections chase it; facing gate fails. No victory/checkpoint accepted.",
+    "joined-substructure-runners-zombie-01": "Both runners correctly leave, but room waypoint too deep leaves movement active during Zombie attacks; Player dies. Only this dead-Player runtime was terminated with SIGTERM, raw scenario remains failed."
+  },
+  "control_correction": "Stand at safe corridor waypoint until both runners leave; stop at room mouth before switching read-only observation phase to ordinary aim/approach/axe attacks. No runtime/engine/input-helper changes.",
+  "observer_scope": "Read-only cell/position/health/death/camera state; F7 settles observations and F8 selects local observer phase. All gameplay uses real controls; no health, quest, position or completion writes.",
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/joined-substructure-runners-zombie-02/phase3-joined-zombie-victory.png"
+  ],
+  "visual_limit": "Inspected zombie corpse remains upright despite verified native death; collapsed creature death poses remain unaccepted.",
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "reused_checks": "Current2203 normal engine cases and2203 ASan/UBSan engine gate plus rendered sanitized camera reload retain their recorded fingerprints; data-only course requires no broad repeat.",
+  "next": "Ordinary selected Heal Minor Wounds from38.4 health, then north passage and actual encounters on route to Natural Caverns/shaman; late escape/full new-game course/outdoor reload remain required."
+}

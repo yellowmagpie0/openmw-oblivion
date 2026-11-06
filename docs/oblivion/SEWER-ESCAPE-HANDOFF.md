@@ -16,42 +16,36 @@ escape and fresh outdoor reload. Separate shaman/late saves do not prove this jo
 ## Current chunk — joined Substructure combat, loot and equipment accepted
 
 Latest genuine course save:
-`build/oblivion-compat/sewer-escape/joined-substructure-gear-06/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player(957.130,-28.291,122.501), health76. Original chest cuirass/greaves and war
-axe equipped; original healing potion consumed normally for56→76 health. No
-pending deaths, physical actions or combat engagements. Captures inspected.
-[Joined Substructure proof](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
+`build/oblivion-compat/sewer-escape/joined-substructure-runners-zombie-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(727.351,2191.294,-66.602), health38.4, original chest armor and war axe owned
+and equipped. All pending deaths/actions/combat clear. Exact native entry from
+gear save. [Joined zombie proof](SEWER-JOINED-ZOMBIE-VERIFICATION.json).
 
-This follows actual key-corpse Take All, Club equipment and original script04e86e
-keyed teleport into022ff6 ([key proof](SEWER-JOINED-KEY-LOOT-VERIFICATION.json)),
-then Player-killed rat038819 (62→56 health) and all8 first-chest item types.
-All3 new entry comparisons are exact. Rat-victory save retains Player action65;
-its exact restoration and later chest save prove normal completion with no death
-replay. Chest/gear saves have no pending actions. These remain composite proofs.
+One process physically follows the corridor, waits at a safe waypoint for original
+DORatRunner01/02 (0387da/db) to follow PACK0387de back through the previous door,
+then hands control to combat at the room mouth. Zombie0491fc kills tutorial
+rat0387d9 naturally; five real Player axe contacts kill the zombie. Both runners
+remain alive in01fbb9, position(2176,2944,-857.362). Capture inspected: zombie
+corpse remains upright; logical death is proven, collapsed poses are not accepted.
 
-Failed rat01 waits too close while rat attacks from190 units and Player dies;
-corrected02 faces/approaches/attacks normally. Gear01/02/05 select the reordered
-shirt after cuirass, replacing armor;06 selects the greaves already under focus.
-03 rejects unsupported absolute mouse before gameplay;04 confirms uinput D-pad
-EV_KEY does not reach SDL. No engine/input-helper change was required. Failures
-remain failed; corrected input has actual semantic inventory checks.
+Failed corridor01 continues walking into combat and Player dies; no checkpoint
+accepted. Failed corridor-fights01 chases an authored runner after it leaves the
+cell. Failed runners-zombie01 hands over too deep inside combat and Player dies;
+only its dead-Player runtime was terminated with SIGTERM, raw scenario failed.
+Corrected02 hands over at the corridor mouth and passes. No implementation change.
+Raw-master routing audit stays ignored with master hash and original record names.
 
-`joined-substructure-corridor-01` fails its final room arrival: continued movement
-without fighting eventually enters the encounter and Player dies. No prefix save
-is accepted. The apparent blocking rats are original DORatRunner01/02 (0387da/db),
-PACK0387de DORatRun01; they run back through the previous door. Ignored raw-master
-audit `original-corridor-rat-routing-audit.json` retains record names/PLDT and hash.
-`joined-substructure-corridor-fights-01` fails its facing gate while chasing the
-runner after it leaves the cell; no victory or checkpoint accepted.
+Current UI course `joined-post-zombie-healing-01` is running; inspect its actual
+process or the session handle recorded in ignored resume state.
+It uses six ordinary C casts of the already selected Heal Minor Wounds, with
+natural magicka regeneration; no stat write. Poll it before another UI course.
+Then take the north passage and actual encounters toward Natural Caverns/shaman.
 
-Current UI course `joined-substructure-runners-zombie-01` joins safe approach,
-read-only confirmation that both runners left the cell, physical room entry and
-ordinary axe combat with original zombie0491fc. Ignored editable recipe:
-`joined-substructure-runners-zombie.json`. Poll launcher93690 before another UI
-course. This is running, not accepted; current main save remains the gear save.
-Then handle any surviving hostile rat0387d9 and follow the physical route toward
-Natural Caverns. Preserve the original fleeing behavior; do not chase runners
-into another cell or infer that they require Player kills.
+Earlier accepted composite joins remain linked:
+[key-corpse loot/Club/key door](SEWER-JOINED-KEY-LOOT-VERIFICATION.json),
+[first Substructure rat/chest/armor/axe/potion](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
+Gear input correction accounts for inventory reorder; raw failed01–05 remain failed.
+The genuine38.4-health zombie save remains the main checkpoint until healing passes.
 
 ## Verification and reusable opening evidence
 
@@ -134,7 +128,7 @@ all raw failures remain failed. No full single-process acceptance is inferred.
 ## Known limits and operation
 
 General NPC spell fallback and Player Flare remain unsupported; the shaman proof
-covers staff/unarmed combat. Upright goblin corpses, blank birthsign descriptions
+covers staff/unarmed combat. Upright creature corpses, blank birthsign descriptions
 and take-all-only loot remain gaps. Other birthsign choices lack this runtime
 coverage. No full M15/S7/E1 or general magic/dialogue acceptance is implied.
 
