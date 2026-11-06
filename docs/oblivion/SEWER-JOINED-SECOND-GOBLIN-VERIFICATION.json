@@ -1,0 +1,120 @@
+{
+  "scope": "Connected western cavern passage and second goblin03b513 Player victory. Raw western inherited trap exclusions reviewed separately; full escape incomplete.",
+  "full_escape_complete": false,
+  "implementation_unchanged": true,
+  "reused_trap_implementation_evidence": "docs/oblivion/SEWER-TRAP-HAZARD-VERIFICATION.json",
+  "courses": {
+    "joined-cavern-western-bend-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-western-bend-01/scenario.json",
+      "raw_passed": false,
+      "all_actions_passed": true,
+      "exit_code": 0,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "5d064d70b0b4a00dfbedcfcf02044ff3734d4bcde0401f26ec2386b9ab5301d3",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-cavern-western-bend-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "12128e1b48c2af8e50a462859f8750931c5ddd0d96bf0c99713922bc0d3eb77c",
+      "position": [
+        65.82652282714844,
+        1774.74951171875,
+        -294.6363830566406,
+        0.07949220389127731,
+        0.0,
+        1.5408036708831787
+      ],
+      "health": 80,
+      "combat": [
+        {
+          "first": "content:oblivion.esm:03b513",
+          "second": "dynamic:player:0000000000000001"
+        }
+      ],
+      "capture_inspected": true,
+      "reviewed_gameplay_accepted": true,
+      "raw_failure": [
+        {
+          "line": 26961,
+          "patterns": [
+            "playgroup ref=content:oblivion.esm:051ac[abc]"
+          ],
+          "text": "[22:40:09.871 I] M7 ObScript: playgroup ref=content:oblivion.esm:051acb group=unequip played=true"
+        },
+        {
+          "line": 26962,
+          "patterns": [
+            "activate-script ref=content:oblivion.esm:051ac[abc]"
+          ],
+          "text": "[22:40:09.871 I] M7 ObScript: activate-script ref=content:oblivion.esm:051acb activator=content:oblivion.esm:051ac9"
+        },
+        {
+          "line": 27103,
+          "patterns": [
+            "playgroup ref=content:oblivion.esm:051ac[abc]"
+          ],
+          "text": "[22:40:10.954 I] M7 ObScript: playgroup ref=content:oblivion.esm:051acc group=unequip played=true"
+        },
+        {
+          "line": 27104,
+          "patterns": [
+            "activate-script ref=content:oblivion.esm:051ac[abc]"
+          ],
+          "text": "[22:40:10.954 I] M7 ObScript: activate-script ref=content:oblivion.esm:051acc activator=content:oblivion.esm:051acb"
+        }
+      ],
+      "correction": "Remove only inherited exclusions for original mace activation/playgroup051aca/b/c; actions/files identical. Corrected expectations independently match retained trace; corrected whole recipe not rerun."
+    },
+    "joined-cavern-second-goblin-early-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-second-goblin-early-01/scenario.json",
+      "raw_passed": true,
+      "all_actions_passed": true,
+      "exit_code": 0,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-western-bend-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "12128e1b48c2af8e50a462859f8750931c5ddd0d96bf0c99713922bc0d3eb77c",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-cavern-second-goblin-early-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "b117019e3aa31e730748b89670304ddb20a35ab42ac41abaab542899ff6f6da2",
+      "position": [
+        206.95277404785156,
+        1782.63916015625,
+        -287.23388671875,
+        -0.11464843153953552,
+        0.0,
+        1.4974445104599
+      ],
+      "health": 80,
+      "combat": [],
+      "capture_inspected": true
+    }
+  },
+  "victory": {
+    "actor": "content:oblivion.esm:03b513",
+    "base": "content:oblivion.esm:03b512",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "dynamic:player:0000000000000001"
+  },
+  "death_count_changes": {
+    "content:oblivion.esm:03b512": 1
+  },
+  "retained_attempt": {
+    "course": "joined-cavern-tripwire-course-01",
+    "accepted": false,
+    "status": "intentionally interrupted launcher130",
+    "reason": "Live goblin intercepted fixed approach; no checkpoint accepted. Retry begins combat directly from unchanged genuine western save."
+  },
+  "limits": [
+    "Corpse upright in render; no collapsed pose claim.",
+    "No uninterrupted new-game-to-exterior proof yet.",
+    "Data-only courses; broad engine gates reused with original provenance."
+  ]
+}
