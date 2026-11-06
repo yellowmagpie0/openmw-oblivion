@@ -16,7 +16,13 @@ escape and fresh outdoor reload. Separate shaman/late saves do not prove this jo
 ## Current chunk — joined Substructure combat, loot and equipment accepted
 
 Latest genuine course save:
-`build/oblivion-compat/sewer-escape/joined-substructure-runners-zombie-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+`build/oblivion-compat/sewer-escape/joined-post-zombie-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Six actual C releases of saved Heal Minor Wounds restore38.4→80 health with normal
+magicka regeneration. Inventory and death history unchanged; no combat, pending
+deaths or physical actions. Exact native entry, fresh source save, capture inspected.
+[Recovery proof](SEWER-JOINED-ZOMBIE-HEALING-VERIFICATION.json).
+
+Pre-recovery Zombie victory save remains in `joined-substructure-runners-zombie-02`:
 Player(727.351,2191.294,-66.602), health38.4, original chest armor and war axe owned
 and equipped. All pending deaths/actions/combat clear. Exact native entry from
 gear save. [Joined zombie proof](SEWER-JOINED-ZOMBIE-VERIFICATION.json).
@@ -35,17 +41,17 @@ only its dead-Player runtime was terminated with SIGTERM, raw scenario failed.
 Corrected02 hands over at the corridor mouth and passes. No implementation change.
 Raw-master routing audit stays ignored with master hash and original record names.
 
-Current UI course `joined-post-zombie-healing-01` is running; inspect its actual
-process or the session handle recorded in ignored resume state.
-It uses six ordinary C casts of the already selected Heal Minor Wounds, with
-natural magicka regeneration; no stat write. Poll it before another UI course.
-Then take the north passage and actual encounters toward Natural Caverns/shaman.
+Next/current course: `joined-substructure-north-passage-01`, ignored editable
+`joined-substructure-north-passage.json`, starts from the verified80-health recovery
+save and follows original physical route toward(-161,3321,-260). Inspect its actual
+process or the handle in ignored `native-topics-resume.json` before any new UI
+course. Then handle actual northern/western encounters and reach Natural Caverns.
 
 Earlier accepted composite joins remain linked:
 [key-corpse loot/Club/key door](SEWER-JOINED-KEY-LOOT-VERIFICATION.json),
 [first Substructure rat/chest/armor/axe/potion](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
 Gear input correction accounts for inventory reorder; raw failed01–05 remain failed.
-The genuine38.4-health zombie save remains the main checkpoint until healing passes.
+The genuine80-health recovery save is the main checkpoint until north traversal passes.
 
 ## Verification and reusable opening evidence
 
