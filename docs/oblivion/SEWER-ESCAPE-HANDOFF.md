@@ -16,10 +16,16 @@ escape and fresh outdoor reload. Separate shaman/late saves do not prove this jo
 ## Current chunk — joined Substructure combat, loot and equipment accepted
 
 Latest genuine course save:
-`build/oblivion-compat/sewer-escape/joined-post-zombie-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+`build/oblivion-compat/sewer-escape/joined-substructure-northern-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(-162.212,3316.627,-258.602), health70.6. The original north passage traverses
+physically with health80 unchanged; its actual F5 contains rat038173→Player combat.
+Exact fresh restoration then real axe contacts kill that rat with Player ownership.
+All combat, physical actions and pending deaths clear. Both entry comparisons exact;
+captures inspected. [North traversal/combat proof](SEWER-JOINED-NORTH-VERIFICATION.json).
+
+Previous genuine80-health recovery save remains in `joined-post-zombie-healing-01`.
 Six actual C releases of saved Heal Minor Wounds restore38.4→80 health with normal
-magicka regeneration. Inventory and death history unchanged; no combat, pending
-deaths or physical actions. Exact native entry, fresh source save, capture inspected.
+magicka regeneration, unchanged inventory/death history and no pending actions.
 [Recovery proof](SEWER-JOINED-ZOMBIE-HEALING-VERIFICATION.json).
 
 Pre-recovery Zombie victory save remains in `joined-substructure-runners-zombie-02`:
@@ -41,17 +47,19 @@ only its dead-Player runtime was terminated with SIGTERM, raw scenario failed.
 Corrected02 hands over at the corridor mouth and passes. No implementation change.
 Raw-master routing audit stays ignored with master hash and original record names.
 
-Next/current course: `joined-substructure-north-passage-01`, ignored editable
-`joined-substructure-north-passage.json`, starts from the verified80-health recovery
-save and follows original physical route toward(-161,3321,-260). Inspect its actual
-process or the handle in ignored `native-topics-resume.json` before any new UI
-course. Then handle actual northern/western encounters and reach Natural Caverns.
+Current UI course: `joined-substructure-west-approach-01` (launcher26106), ignored
+editable `joined-substructure-west-approach.json`, starts at the rat-victory save
+and follows original route corners1–5 toward(-619,4200,-230). Inspect its actual
+process/scenario before any new UI course. Next take actual intervening encounters
+(38171/38172 if they engage) and the western/lower route to original Caverns door.
+The40 original route corners and old successful western/lower courses remain
+reusable; do not assume that alive NPCs permit walking through them during combat.
 
 Earlier accepted composite joins remain linked:
 [key-corpse loot/Club/key door](SEWER-JOINED-KEY-LOOT-VERIFICATION.json),
 [first Substructure rat/chest/armor/axe/potion](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
 Gear input correction accounts for inventory reorder; raw failed01–05 remain failed.
-The genuine80-health recovery save is the main checkpoint until north traversal passes.
+The northern-rat victory save is the main checkpoint until west traversal passes.
 
 ## Verification and reusable opening evidence
 
