@@ -58,11 +58,21 @@ read-only GDB exposed a second variant, and retains another genuine diagnosticF5
 GDB02 shows1774a combat partial path2points nearY6834/cursor2 exhausted, target
 GlenroyY6766/Z-1176. Repath timer rebuilds the already-consumed projected platform
 prefix and repeatedly pulls the actor back, interrupting its allowed descent.
-Next chunk: preserve that descent for a stable target/cell/destination rather than
-replanning solely because the timer expires. Keep target/cell/moved-destination,
-visibility/AllowFalls and active-route guards. Reuse original flags81004/package
-017d81 audit and real GDB snapshot. Normal empty-route pass is not rendered
-sanitizer acceptance for this remaining variant. No full escape claim.
+Repath-progress change is implemented, not committed yet. Stable target/cell and
+small destination drift preserve an exhausted permitted descent; target/cell changes,
+>64unit destination movement, visibility/fall-permission/downward-separation loss
+retain replanning. Standalone C++ red counterexample uses actual GDB02 route data;
+focused2 normal+sanitized engine cases pass, runtime rebuilt. New rate-limited
+`combat-descent` event reports visibility/repath/cursor/point counts for a replay.
+A local-name cleanup removes the new shadow warning before final integration;
+production behavior unchanged from the focused green. Full2208 normal/sanitized
+integration is next, then same actual original stalled save under sanitizer.
+Old rendered retry remains interrupted/-2; no new rendered pass inferred.
+Source standalone counterexample `build/oblivion-compat/sewer-escape/completed-descent-red-01/verification.json`;
+focused cases `completed-descent-focused-normal-01` and
+`completed-descent-focused-sanitized-01`. No active UI now; check helper processes
+before editing/committing. Main physical exterior/fresh reload already passes;
+full uninterrupted course still required.
 
 Uninterrupted course editable sources now prepared: selection
 `scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json`, assembler

@@ -70,6 +70,33 @@ namespace
         return ESM::FormKey::content("m14-test.esm", id);
     }
 
+    TEST(OblivionAiTest, AllowedDescentPreservesCompletedPartialRouteAcrossRepathTimer)
+    {
+        // Live instrumented navigation: the consumed prefix is projected back
+        // onto the upper platform. Rebuilding it pulls the assassin away from
+        // Glenroy every quarter second before the physical descent can finish.
+        const osg::Vec3f position(3048.5f, 6807.65f, -990.97f);
+        const osg::Vec3f destination(3046.709f, 6766.538f, -1176.361f);
+        const std::array route{osg::Vec3f(3048.179f, 6834.f, -986.924f),
+            osg::Vec3f(3046.709f, 6834.f, -986.924f)};
+        const auto flags = ESM4::decodePackageFlags(0x81004);
+        ASSERT_TRUE(MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, destination, flags, true));
+        const auto target = key(0x32a16), cell = key(0x22288);
+        const auto repath = [&](bool descending, osg::Vec3f nextDestination,
+                                ESM::FormKey nextTarget, ESM::FormKey nextCell, float timer) {
+            return MWMechanics::oblivionResidentTargetNeedsRepath(target, nextTarget,
+                cell, nextCell, destination, nextDestination, timer, descending);
+        };
+        EXPECT_FALSE(repath(true, destination, target, cell, 0.f));
+        EXPECT_FALSE(repath(true, destination + osg::Vec3f(.7f, 0, 0), target, cell, 0.f));
+        EXPECT_TRUE(repath(false, destination, target, cell, 0.f));
+        EXPECT_FALSE(repath(false, destination, target, cell, .1f));
+        EXPECT_TRUE(repath(true, destination + osg::Vec3f(65, 0, 0), target, cell, .1f));
+        EXPECT_TRUE(repath(true, destination, key(0x32a17), cell, .1f));
+        EXPECT_TRUE(repath(true, destination, target, key(0x22282), .1f));
+    }
+
     PackageCandidate candidate(std::uint32_t id, AIPackageType type, std::size_t listIndex)
     {
         PackageCandidate result;

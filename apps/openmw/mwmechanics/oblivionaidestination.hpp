@@ -15,6 +15,19 @@
 
 namespace MWMechanics
 {
+    inline bool oblivionResidentTargetNeedsRepath(const ESM::FormKey& previousTarget,
+        const ESM::FormKey& target, const ESM::FormKey& previousCell, const ESM::FormKey& cell,
+        const osg::Vec3f& previousDestination, const osg::Vec3f& destination, float repathSeconds,
+        bool continuingDescent)
+    {
+        // Rebuilding an exhausted partial path can project the actor back
+        // onto its platform before an allowed descent finishes. Keep that
+        // physical movement until its target/context changes or it loses the
+        // fall permission, visibility or downward separation.
+        return previousTarget != target || previousCell != cell || (repathSeconds == 0.f && !continuingDescent)
+            || (destination - previousDestination).length2() > 64.f * 64.f;
+    }
+
     inline std::optional<osg::Vec3f> oblivionResidentTargetStep(std::span<const osg::Vec3f> route,
         std::size_t cursor, const osg::Vec3f& position, const osg::Vec3f& destination,
         ESM4::PackageFlags flags, bool visible)

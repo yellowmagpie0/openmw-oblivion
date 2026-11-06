@@ -5756,10 +5756,21 @@ namespace MWMechanics
         auto& navigation = escort ? live.mEscortRoute : live.mCombatRoute;
         const auto position = actor.getRefData().getPosition().asVec3();
         const auto destination = target.getRefData().getPosition().asVec3();
+        const auto* authoredPackage = package(live.mState.mPackage);
+        const auto packageFlags = authoredPackage ? authoredPackage->mPackageFlags : ESM4::PackageFlags{};
+        const bool visibleBelow = destination.z() < position.z() - 64.f
+            && packageFlags.has(ESM4::PackageFlag::AllowFalls) && mWorld.getLOS(actor, target);
+        const bool continuingDescent = navigation.mCursor >= navigation.mPoints.size() && visibleBelow;
         navigation.mRepath = std::max(0.f, navigation.mRepath - duration);
-        if (navigation.mTarget != actorKey(target) || navigation.mCell != cellKey(actor)
-            || navigation.mRepath == 0.f
-            || distanceSquared(destination, navigation.mDestination) > 64.f * 64.f)
+        const bool repath = oblivionResidentTargetNeedsRepath(navigation.mTarget, actorKey(target),
+            navigation.mCell, cellKey(actor), navigation.mDestination, destination,
+            navigation.mRepath, continuingDescent);
+        if (mEventStream && !escort && packageFlags.has(ESM4::PackageFlag::AllowFalls)
+            && destination.z() < position.z() - 64.f)
+            logEvent("combat-descent", live, "visible=" + std::to_string(visibleBelow)
+                + " repath=" + std::to_string(repath) + " cursor=" + std::to_string(navigation.mCursor)
+                + " points=" + std::to_string(navigation.mPoints.size()));
+        if (repath)
         {
             std::vector<osg::Vec3f> route;
             auto* navigator = mWorld.getNavigator();
@@ -5822,13 +5833,8 @@ namespace MWMechanics
                 break;
             ++navigation.mCursor;
         }
-        const auto* authored = package(live.mState.mPackage);
-        const auto flags = authored ? authored->mPackageFlags : ESM4::PackageFlags{};
-        const bool visibleBelow = navigation.mCursor >= navigation.mPoints.size()
-            && destination.z() < position.z() - 64.f
-            && flags.has(ESM4::PackageFlag::AllowFalls) && mWorld.getLOS(actor, target);
         if (const auto next = oblivionResidentTargetStep(navigation.mPoints, navigation.mCursor,
-                position, destination, flags, visibleBelow))
+                position, destination, packageFlags, visibleBelow))
             faceAndMove(actor, *next, true);
 
     }
@@ -5913,7 +5919,7 @@ namespace MWMechanics
 
         const bool diagnostic = event == "route-blocked" || event == "door-failure"
             || event == "action-commit-failed" || event == "low-process-reconcile-failed"
-            || event == "fast-forward-bounded";
+            || event == "fast-forward-bounded" || event == "combat-descent";
         std::uint64_t diagnosticCount = 0;
         if (diagnostic)
         {
