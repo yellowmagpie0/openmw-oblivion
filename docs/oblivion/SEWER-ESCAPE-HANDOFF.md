@@ -13,33 +13,38 @@ Remaining: join the genuine course through the solo dungeon/shaman, reunion,
 Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
 escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — both first cavern goblins defeated on genuine route
+## Current chunk — rolling logs and both goblins complete on main route
 
-Latest inspected main checkpoint:
-`build/oblivion-compat/sewer-escape/joined-cavern-second-goblin-early-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Natural Caverns0380bd, Player(206.953,1782.639,-287.234), health80.
-Goblin03b513 dead/Player killer; only base03b512 count0→1. No active combat or
-pending death/action work. Clean passed course; exact fresh entry0differences.
-[Second goblin and western passage proof](SEWER-JOINED-SECOND-GOBLIN-VERIFICATION.json).
+Latest fully inspected main checkpoint:
+`build/oblivion-compat/sewer-escape/joined-log-final-two-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Natural Caverns0380bd, Player(3549.393,1340.225,-290.602), health5.020004,
+magicka40.487915. Both03b518 and03b51a dead/Player killer; only respective bases
+03b51d and0c9ffc count0→1. No combat/pending deaths/action owners. Clean final course.
+[Log encounter proof](SEWER-JOINED-LOG-ENCOUNTER-VERIFICATION.json).
 
-Western nine-point course completes every action but rawfails inherited trap
-exclusions when original maces activate. Corrected recipe only removes those two
-exclusions; actions/files identical, remaining expectations independently match
-trace. Raw failure retained, reviewed gameplay accepted; corrected whole not rerun.
-Fixed tripwire approach retry was intentionally stopped after goblin interception;
-no checkpoint accepted. Immediate ordinary combat from unchanged western F5 passes.
-Corpse captures inspected; upright pose remains a known limitation.
+The16-point approach and original Space release of6 log bodies are proven;
+neither goblin died environmentally on this route. First log-goblin victory uses
+a genuine68-action failed-course F5 prefix; later Player death is retained.
+Clean fresh two-cast recovery/final fight kills the survivor and saves alive.
+All fresh entries compare every native field, allowing only explicitly recorded
+animated-body velocity projections≤1e-5. Captures inspected; upright corpse limit.
+Failed log namespace course accepts only549-action pre-activation navigation F5.
+Standalone activation cleanpasses. Rapid attack/cast failure and insufficient-MP
+third-heal attempt remain failed, no checkpoints accepted. Selected spell persists;
+dedicated ordinaryC casts consume real19magicka and restore7.04 with armor.
 
-[First goblin connected proof](SEWER-JOINED-FIRST-GOBLIN-VERIFICATION.json) records
-rock detour/actual combat with all three courses cleanpass and exact fresh entries.
-[Lower route/Caverns entry](SEWER-JOINED-CAVERN-ENTRY-VERIFICATION.json) retains its
-separate expected-log review and actual healing80. No state splicing.
+Current UI `joined-cavern-healing-chest-course-01` (launcher47394) begins from
+actual5HP victory save: three normal healing casts, six original downhill points,
+then original healing-chest051d72 Space take-all. Inspect process/scenario before
+another UI course. Next: verify loot/recovery, northern/eastern goblins, shaman
+victory, original reunion/exit, then uninterrupted new-game escape/fresh outdoor load.
 
-Current UI course `joined-cavern-log-course-01` (launcher61380) walks the trap
-passage and16 original points to the rolling-log encounter, then ordinary Space
-activation with actual-camera aim. Inspect process/scenario before another UI run.
-Next: actual log outcome, cavern loot/remaining encounters and shaman victory,
-then original reunion/exit. Full uninterrupted new-game escape remains unproven.
+Earlier cavern joins:
+[first goblin](SEWER-JOINED-FIRST-GOBLIN-VERIFICATION.json),
+[western passage/second goblin](SEWER-JOINED-SECOND-GOBLIN-VERIFICATION.json),
+[lower route/Caverns entry](SEWER-JOINED-CAVERN-ENTRY-VERIFICATION.json).
+Their raw failures and reviewed prefix/expectation acceptances remain separate.
+No state splicing; full uninterrupted new-game escape remains unproven.
 
 Earlier accepted joins:
 [root entrance/combat](SEWER-JOINED-ROOT-ENTRANCE-VERIFICATION.json),

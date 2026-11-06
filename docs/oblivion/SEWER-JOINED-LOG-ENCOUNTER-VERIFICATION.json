@@ -1,0 +1,425 @@
+{
+  "scope": "Connected16-point mace passage/log approach, ordinary rolling-log activation, genuine first log goblin kill prefix, and clean fresh healing/final log goblin victory. Explicit composite; full escape incomplete.",
+  "full_escape_complete": false,
+  "implementation_unchanged": true,
+  "courses": {
+    "joined-cavern-log-course-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-log-course-01/scenario.json",
+      "raw_passed": false,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-second-goblin-early-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "b117019e3aa31e730748b89670304ddb20a35ab42ac41abaab542899ff6f6da2",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/1/bodies/1/linear_velocity/1",
+            0.006757775787264109,
+            0.006757775321602821
+          ],
+          [
+            "/native_animated_references/1/bodies/2/linear_velocity/0",
+            0.09464208781719208,
+            0.09464208036661148
+          ],
+          [
+            "/native_animated_references/1/bodies/3/linear_velocity/0",
+            0.17670050263404846,
+            0.17670048773288727
+          ],
+          [
+            "/native_animated_references/1/bodies/3/linear_velocity/1",
+            0.04007713496685028,
+            0.04007713124155998
+          ],
+          [
+            "/native_animated_references/1/bodies/3/linear_velocity/2",
+            0.00010578496585367247,
+            0.00010578497312963009
+          ],
+          [
+            "/native_animated_references/1/bodies/6/linear_velocity/0",
+            0.4713056981563568,
+            0.4713057279586792
+          ],
+          [
+            "/native_animated_references/1/bodies/6/linear_velocity/1",
+            0.086182601749897,
+            0.0861825942993164
+          ],
+          [
+            "/native_animated_references/1/bodies/7/linear_velocity/1",
+            0.12586666643619537,
+            0.12586668133735657
+          ],
+          [
+            "/native_animated_references/1/bodies/7/linear_velocity/2",
+            0.0003950958780478686,
+            0.00039509590715169907
+          ],
+          [
+            "/native_animated_references/2/bodies/1/linear_velocity/1",
+            -0.00018426500901114196,
+            -0.00018426499445922673
+          ],
+          [
+            "/native_animated_references/2/bodies/1/linear_velocity/2",
+            4.304016329115257e-06,
+            4.304015874367906e-06
+          ],
+          [
+            "/native_animated_references/2/bodies/4/linear_velocity/2",
+            -2.836542626027949e-05,
+            -2.8365424441290088e-05
+          ],
+          [
+            "/native_animated_references/2/bodies/5/linear_velocity/2",
+            -0.000184490330866538,
+            -0.00018449034541845322
+          ],
+          [
+            "/native_animated_references/2/bodies/7/linear_velocity/0",
+            -0.34110337495803833,
+            -0.34110334515571594
+          ],
+          [
+            "/native_animated_references/2/bodies/7/linear_velocity/2",
+            -0.0004413501010276377,
+            -0.00044135007192380726
+          ]
+        ]
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-cavern-log-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "e5119d2d1a703376d7a1de1b1458d2534035a5a0003c529a5f35957712f5f0ee",
+      "health": 80.0,
+      "magicka": 80.0,
+      "position": [
+        3503.3525390625,
+        1412.3759765625,
+        -290.12872314453125,
+        0.0771484300494194,
+        0.0,
+        1.5398271083831787
+      ],
+      "combat": [],
+      "pending_death_events": [],
+      "physical_action_owners": [],
+      "accepted_prefix_actions": 549,
+      "raw_failure": "Phase2 engine TES4 released log was incorrectly Lua-prefixed by recipe composer. Actual activation occurred; no post-activation save was written. Only genuine phase1 F5 approach is used.",
+      "prefix_capture_inspected": true
+    },
+    "joined-cavern-log-activation-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-log-activation-01/scenario.json",
+      "raw_passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-log-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "e5119d2d1a703376d7a1de1b1458d2534035a5a0003c529a5f35957712f5f0ee",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-cavern-log-activation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "b19ef96c3cd3d2cf541b670f1019bf33a9b955ca2dcecf6b571126f22bfbcc85",
+      "health": 77.1500015258789,
+      "magicka": 80.0,
+      "position": [
+        3549.39306640625,
+        1340.2252197265625,
+        -290.6024475097656,
+        0.3072265684604645,
+        0.0,
+        2.558382034301758
+      ],
+      "combat": [
+        {
+          "first": "content:oblivion.esm:03b518",
+          "second": "dynamic:player:0000000000000001"
+        },
+        {
+          "first": "content:oblivion.esm:03b51a",
+          "second": "dynamic:player:0000000000000001"
+        }
+      ],
+      "pending_death_events": [],
+      "physical_action_owners": [
+        {
+          "id": 213,
+          "actor": "content:oblivion.esm:03b51a"
+        },
+        {
+          "id": 214,
+          "actor": "content:oblivion.esm:03b518"
+        }
+      ]
+    },
+    "joined-combat-heal-probe-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-combat-heal-probe-01/scenario.json",
+      "raw_passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-log-activation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "b19ef96c3cd3d2cf541b670f1019bf33a9b955ca2dcecf6b571126f22bfbcc85",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/0/linear_velocity/0",
+            -0.008640892803668976,
+            -0.00864089373499155
+          ],
+          [
+            "/native_animated_references/0/bodies/1/linear_velocity/0",
+            53.6262321472168,
+            53.62622833251953
+          ],
+          [
+            "/native_animated_references/0/bodies/3/linear_velocity/2",
+            4.5641326904296875,
+            4.564133167266846
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/2",
+            -10.051674842834473,
+            -10.051675796508789
+          ]
+        ]
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-combat-heal-probe-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "c0eb1e5da9ff33135c33ca2bf425f9a0f75f21492791e9747bd9a21ddd9d8973",
+      "health": 77.1500015258789,
+      "magicka": 61.0,
+      "position": [
+        3549.39306640625,
+        1340.2252197265625,
+        -290.6024475097656,
+        0.3072265684604645,
+        0.0,
+        2.558382034301758
+      ],
+      "combat": [
+        {
+          "first": "content:oblivion.esm:03b518",
+          "second": "dynamic:player:0000000000000001"
+        },
+        {
+          "first": "content:oblivion.esm:03b51a",
+          "second": "dynamic:player:0000000000000001"
+        }
+      ],
+      "pending_death_events": [],
+      "physical_action_owners": []
+    },
+    "joined-cavern-log-fight-focused-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-log-fight-focused-01/scenario.json",
+      "raw_passed": false,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-combat-heal-probe-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "c0eb1e5da9ff33135c33ca2bf425f9a0f75f21492791e9747bd9a21ddd9d8973",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/1/linear_velocity/0",
+            68.17194366455078,
+            68.17193603515625
+          ],
+          [
+            "/native_animated_references/0/bodies/1/linear_velocity/2",
+            -36.34511184692383,
+            -36.34510803222656
+          ],
+          [
+            "/native_animated_references/0/bodies/3/linear_velocity/1",
+            35.6593132019043,
+            35.65930938720703
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/1",
+            31.983489990234375,
+            31.983488082885742
+          ],
+          [
+            "/native_animated_references/2/bodies/1/linear_velocity/0",
+            -0.0004504819808062166,
+            -0.00045048200991004705
+          ],
+          [
+            "/native_animated_references/2/bodies/6/linear_velocity/0",
+            -0.0023517527151852846,
+            -0.0023517529480159283
+          ],
+          [
+            "/native_animated_references/2/bodies/7/linear_velocity/0",
+            -0.0009150828118436038,
+            -0.0009150828700512648
+          ],
+          [
+            "/native_animated_references/2/bodies/7/linear_velocity/1",
+            0.01543631311506033,
+            0.015436314046382904
+          ],
+          [
+            "/native_animated_references/2/bodies/7/linear_velocity/2",
+            0.00019677903037518263,
+            0.0001967790158232674
+          ],
+          [
+            "/native_animated_references/3/bodies/3/linear_velocity/1",
+            0.0005191212403587997,
+            0.0005191211821511388
+          ],
+          [
+            "/native_animated_references/3/bodies/5/linear_velocity/1",
+            0.00871902797371149,
+            0.008719027042388916
+          ],
+          [
+            "/native_animated_references/3/bodies/6/linear_velocity/0",
+            -0.014221270568668842,
+            -0.014221271499991417
+          ],
+          [
+            "/native_animated_references/3/bodies/7/linear_velocity/2",
+            0.00023223142488859594,
+            0.0002322314103366807
+          ],
+          [
+            "/native_animated_references/4/bodies/1/linear_velocity/1",
+            0.02022218331694603,
+            0.02022218517959118
+          ],
+          [
+            "/native_animated_references/4/bodies/1/linear_velocity/2",
+            0.0034138571936637163,
+            0.00341385742649436
+          ],
+          [
+            "/native_animated_references/4/bodies/2/linear_velocity/1",
+            0.05811784043908119,
+            0.058117836713790894
+          ],
+          [
+            "/native_animated_references/4/bodies/2/linear_velocity/2",
+            0.007475079502910376,
+            0.007475079968571663
+          ],
+          [
+            "/native_animated_references/4/bodies/3/linear_velocity/2",
+            0.009435209445655346,
+            0.009435208514332771
+          ],
+          [
+            "/native_animated_references/4/bodies/5/linear_velocity/0",
+            0.02882256545126438,
+            0.02882256731390953
+          ],
+          [
+            "/native_animated_references/4/bodies/5/linear_velocity/2",
+            0.009643481113016605,
+            0.00964348018169403
+          ]
+        ]
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-cavern-log-fight-focused-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "832b173385c332707b43240b69bfd1b336bcf108e45d42a18ca75dd6fa2d3336",
+      "health": 19.740001678466797,
+      "magicka": 52.48435974121094,
+      "position": [
+        3549.39306640625,
+        1340.2252197265625,
+        -290.6024475097656,
+        0.19589844346046448,
+        0.0,
+        0.923616349697113
+      ],
+      "combat": [
+        {
+          "first": "content:oblivion.esm:03b51a",
+          "second": "dynamic:player:0000000000000001"
+        }
+      ],
+      "pending_death_events": [],
+      "physical_action_owners": [],
+      "accepted_prefix_actions": 68,
+      "raw_failure": "Later third combat cast did not release; subsequent Player death. Only genuine second F5 before that attempt is accepted.",
+      "first_goblin_victory": {
+        "actor": "content:oblivion.esm:03b518",
+        "base": "content:oblivion.esm:03b51d",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    },
+    "joined-log-final-two-course-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-log-final-two-course-01/scenario.json",
+      "raw_passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-log-fight-focused-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "832b173385c332707b43240b69bfd1b336bcf108e45d42a18ca75dd6fa2d3336",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-log-final-two-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "a9b3690c14a65d05f4370fc423d67b25c03131dbc341efcbe2ef2c0902bd78df",
+      "health": 5.0200042724609375,
+      "magicka": 40.4879150390625,
+      "position": [
+        3549.39306640625,
+        1340.2252197265625,
+        -290.6024475097656,
+        -0.15058594942092896,
+        0.0,
+        -3.110936164855957
+      ],
+      "combat": [],
+      "pending_death_events": [],
+      "physical_action_owners": []
+    }
+  },
+  "victories": [
+    {
+      "actor": "content:oblivion.esm:03b518",
+      "base": "content:oblivion.esm:03b51d",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:03b51a",
+      "base": "content:oblivion.esm:0c9ffc",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    }
+  ],
+  "final_capture_inspected": true,
+  "death_count_changes": {
+    "content:oblivion.esm:03b51d": 1,
+    "content:oblivion.esm:0c9ffc": 1
+  },
+  "log_activation": {
+    "reference": "content:oblivion.esm:03b49e",
+    "released_bodies": 6,
+    "clean_course": "joined-cavern-log-activation-01",
+    "capture_inspected": true,
+    "environmental_kill_claimed": false
+  },
+  "retained_failures": {
+    "joined-cavern-log-fight-01": "Player died; no checkpoint accepted. Healing keys during rapid power attacks had no cast release.",
+    "joined-log-final-course-01": "First two casts release; third has insufficient magicka. No checkpoint accepted.",
+    "joined-cavern-log-fight-focused-01": "Only first-kill actual F5 prefix accepted, later failure retained.",
+    "joined-cavern-log-course-01": "Only549-action navigation/F5 prefix accepted, later namespace failure retained."
+  },
+  "limits": [
+    "Original traps released but neither goblin died environmentally on this route. Both were Player-killed.",
+    "Creature corpses remain upright in captures.",
+    "Cast requests can fail during combat; dedicated recovery proved supported selected spell and real magicka debits. No general combat casting acceptance claimed.",
+    "No uninterrupted new-game-to-exterior proof yet.",
+    "Data-only runtime recipes; prior normal/sanitizer engine evidence retains original provenance."
+  ]
+}
