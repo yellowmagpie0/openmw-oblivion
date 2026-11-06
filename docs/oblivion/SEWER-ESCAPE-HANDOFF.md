@@ -17,23 +17,33 @@ fresh outdoor reload. It remains composite evidence; full escape is not complete
 
 ## Current chunk — uninterrupted escort and solo course
 
-Original-new-game07 is LIVE, supervisor218924/runner218936/game218963, source
-56e51fbe9a/runtime225953a1…db552, manifest `occluded-descent-full-assembly-01`.
-No load flag/event. Original Emperor conversation/19 and first ambush26 now PASS
-in the same process: Player80HP/inventory unchanged, Renault scripteddead with
-essentialfalse, all4 assassins dead (two Glenroy/two Baurus), all3 escorts alive,
-no dead bound owners and combat/death/action/cast/projectile queues clear. Actual
-victoryF5 is preserved unchanged and parses exactly to its native receipt snapshot;
-rendered victory capture inspected. This closes06's ambush reproduction in a cold
-new game, without a loaded continuation.
-[Uninterrupted ambush prefix](SEWER-UNINTERRUPTED-AMBUSH-VERIFICATION.json).
+Original-new-game07 is terminal FAILED, game0/launcher1, no engine findings.
+The same original-new-game process passes original19/26/27/28/29/30, all4
+assassin deaths and all3 early rats killed by Player, then the physical wall exit.
+Player health36/magicka80. All three post-wall menu captures show gameplay;
+Tab never opens the menu, three cast attempts produce no releases or healing,
+and segment5 recovery times out. Preserve raw07 and its actual immutable
+`retained-saves/3-0023-Quicksave.omwsave` (SHA0e90362e…b3491).
+[Accepted uninterrupted ambush prefix](SEWER-UNINTERRUPTED-AMBUSH-VERIFICATION.json).
+Terminal failure proof: `build/oblivion-compat/sewer-escape/full-escape-continuous-07-failure-verification.json`.
 
-The process has also reached original27/28/29 and continues toward escort30.
-Preserve this exact process; inspect its live milestones before starting any UI.
-Next: physical tunnel/escort30, integrated early3-rat course/healing/room traversal,
-then the remaining loot/combat/shaman/reunion/class/exit sequence. The single
-prison→exterior course and fresh reload of its own outdoor save remain due.
-No whole-course completion is inferred from this prefix or the older composite.
+Menu admission fix verified: original TES4 scripts never issue Morrowind's menu
+unlock commands. Oblivion new games now allow their windows; Morrowind's lock and
+both profiles' CharacterCreation reset remain. Normal and instrumented cold
+original-new-game probes pass actual Tab/menu observation and rendered inspection.
+Focused9, full2210 normal and full2210 ASan/UBSan engine cases pass, exact
+inventories/0fail/0skip, same stable full-gate source; engine leak checking1.
+Actual loaded07 wall-exit save heals36→60 through3 native releases, then physically
+traverses room tox1695.613. Inventory and all3 Player rat kills retained; native
+save exact, queues clear, fresh entry differs only by2 tiny body-velocity projections.
+Runtime leak checking0. Instrumented01 startup120sec failure retained unchanged;
+instrumented02 passes with600sec startup allowance. No gameplay/source change.
+[Menu admission proof](SEWER-NEW-GAME-MENU-VERIFICATION.json).
+
+Next: commit this self-contained fix, then original-new-game08 using
+`menu-admission-full-assembly-01/full-escape.json` (byte-identical full course,
+67segments/11732actions/SHA18d63be3…b1568d). Preserve its actual saves as receipts
+arrive. Full continuous prison→exterior and own-save fresh reload remain unproven.
 
 ### Reusable occluded first-ambush descent fix
 

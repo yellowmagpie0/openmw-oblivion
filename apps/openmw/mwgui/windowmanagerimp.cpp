@@ -693,7 +693,13 @@ namespace MWGui
         requireMutableRuntime();
         if (newgame)
         {
-            disallowAll();
+            // Morrowind's chargen scripts unlock these windows individually.
+            // Oblivion's tutorial uses player controls instead and never issues
+            // those menu-unlock commands.
+            if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+                allow(GW_ALL);
+            else
+                disallowAll();
 
             mRuntime->mStatsWatcher->removeListener(mRuntime->mCharGen.get());
             mRuntime->mCharGen = std::make_unique<CharacterCreation>(mViewer->getSceneData()->asGroup(), mResourceSystem);
