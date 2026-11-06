@@ -50,29 +50,30 @@ Glenroy kills it, original52/54 fire, Player100HP/inventory unchanged, no pendin
 combat/death/action. Exact fresh0differences and inspected stage54 capture.
 [Empty-route fall proof](SEWER-EMPTY-COMBAT-ROUTE-FALLS-VERIFICATION.json).
 
-No UI/helper remains live after this checkpoint. Raw initial sanitizer
-`joined-recipient-rendered-sanitized-01` fails54wait after2 genuine guard kills.
-Its ordinary diagnosticF5 is the reusable isolated-platform source; no injection.
-`isolated-platform-resume-sanitized-01` is deliberately interrupted/-2 after
-read-only GDB exposed a second variant, and retains another genuine diagnosticF5.
-GDB02 shows1774a combat partial path2points nearY6834/cursor2 exhausted, target
-GlenroyY6766/Z-1176. Repath timer rebuilds the already-consumed projected platform
-prefix and repeatedly pulls the actor back, interrupting its allowed descent.
-Repath-progress change is implemented, not committed yet. Stable target/cell and
-small destination drift preserve an exhausted permitted descent; target/cell changes,
->64unit destination movement, visibility/fall-permission/downward-separation loss
-retain replanning. Standalone C++ red counterexample uses actual GDB02 route data;
-focused2 normal+sanitized engine cases pass, runtime rebuilt. New rate-limited
-`combat-descent` event reports visibility/repath/cursor/point counts for a replay.
-A local-name cleanup removes the new shadow warning before final integration;
-production behavior unchanged from the focused green. Full2208 normal/sanitized
-integration is next, then same actual original stalled save under sanitizer.
-Old rendered retry remains interrupted/-2; no new rendered pass inferred.
-Source standalone counterexample `build/oblivion-compat/sewer-escape/completed-descent-red-01/verification.json`;
-focused cases `completed-descent-focused-normal-01` and
-`completed-descent-focused-sanitized-01`. No active UI now; check helper processes
-before editing/committing. Main physical exterior/fresh reload already passes;
-full uninterrupted course still required.
+Completed-route descent preservation is now verified and committeda9ab59a13e.
+Standalone red uses live GDB02 projected-prefix data; focused2 normal+ASan/UBSan
+and full2208 normal+sanitized engine cases pass, exact inventories/0fail/0skip,
+engine leak checking. Actor/cell/large destination changes and loss of permitted
+visible downward movement retain normal replanning. Transient routes only;
+no save schema change.
+[Descent progress proof](SEWER-COMBAT-DESCENT-PROGRESS-VERIFICATION.json).
+
+Rendered `completed-descent-rendered-sanitized-01` passes cleanly from the original
+failed sanitizer route's real diagnosticF5, exact fresh0differences. Third assassin
+01774a physically descends, Emperor032a18 kills it (normal empty-route proof has
+Glenroy killer); all3 escorts alive, Player100HP/inventory unchanged. Only generic
+assassin base death count+1, queues/combat clear. Original52/54 and actualF5/capture
+pass; SDL receipts match. Runtime leaks disabled, engine leak gate separate.
+Old raw route fails54; later first retry remains intentionally interrupted/-2.
+No failures relabeled. Read-only GDB02 and ordinary diagnosticF5 receipts retained.
+This closes rendered recipient/fall coverage as explicit composite evidence.
+
+No helper/UI remains live at this checkpoint. Next: launch the prepared original
+new-game continuous escape. Use `full-escape-continuous-versioned.json` and fresh
+output `full-escape-continuous-01`; pass `unused-new-game` to the detached launcher
+(the command has no load flag and config new-game=1). Verify actual startup,
+outer/inner phase controls and continue to physical exterior/fresh outdoor load.
+Full escape remains incomplete until this uninterrupted course is proven.
 
 Uninterrupted course editable sources now prepared: selection
 `scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json`, assembler

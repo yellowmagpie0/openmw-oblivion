@@ -18,7 +18,11 @@
     "isolated-platform-falls-red-01": {
       "passed": false,
       "results": {},
-      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-red-01/verification.json"
+      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-red-01/verification.json",
+      "source_before": {
+        "head": "e32476ba19a79cca1f5c9a5a9d72a0140a337013",
+        "source_fingerprint": "82007676d4be6a734a56726329121676963e8ff8b41c31e78dd07b3044a0c650"
+      }
     },
     "isolated-platform-falls-green-01": {
       "passed": true,
@@ -42,7 +46,15 @@
           }
         }
       },
-      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-green-01/verification.json"
+      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-green-01/verification.json",
+      "source_before": {
+        "head": "e32476ba19a79cca1f5c9a5a9d72a0140a337013",
+        "source_fingerprint": "e777bca2a8342b549f4aeeab0e7ad035622cc2214cbdbb5e6b80494097b00f7f"
+      },
+      "source_after": {
+        "head": "e32476ba19a79cca1f5c9a5a9d72a0140a337013",
+        "source_fingerprint": "e777bca2a8342b549f4aeeab0e7ad035622cc2214cbdbb5e6b80494097b00f7f"
+      }
     },
     "isolated-platform-falls-engine-integration-01": {
       "passed": true,
@@ -66,7 +78,15 @@
           }
         }
       },
-      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-engine-integration-01/verification.json"
+      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-engine-integration-01/verification.json",
+      "source_before": {
+        "head": "e32476ba19a79cca1f5c9a5a9d72a0140a337013",
+        "source_fingerprint": "d5f6c6dd906b2def7855db276b2f432b734f6814cba77a6034121a584215f39b"
+      },
+      "source_after": {
+        "head": "e32476ba19a79cca1f5c9a5a9d72a0140a337013",
+        "source_fingerprint": "d5f6c6dd906b2def7855db276b2f432b734f6814cba77a6034121a584215f39b"
+      }
     },
     "isolated-platform-falls-sanitizer-integration-01": {
       "passed": true,
@@ -90,7 +110,15 @@
           }
         }
       },
-      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-sanitizer-integration-01/verification.json"
+      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-sanitizer-integration-01/verification.json",
+      "source_before": {
+        "head": "e32476ba19a79cca1f5c9a5a9d72a0140a337013",
+        "source_fingerprint": "d5f6c6dd906b2def7855db276b2f432b734f6814cba77a6034121a584215f39b"
+      },
+      "source_after": {
+        "head": "e32476ba19a79cca1f5c9a5a9d72a0140a337013",
+        "source_fingerprint": "d5f6c6dd906b2def7855db276b2f432b734f6814cba77a6034121a584215f39b"
+      }
     }
   },
   "normal_runtime": {
