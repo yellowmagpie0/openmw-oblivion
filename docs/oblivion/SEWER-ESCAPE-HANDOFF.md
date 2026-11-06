@@ -9,42 +9,56 @@ birthsign/class choices, Baurus CharacterGen88 and MQ01 exit88. No injected
 health, quest, position or completion, skipped required encounters, or spliced
 save state qualifies. **Full escape remains incomplete.**
 
-Remaining: physical final sewer traversal, distinct MQ01 exit88/outdoors and fresh
-outdoor reload, then prove a single-process new-game escape. Historical separate
-outdoor saves do not prove the remaining main-world join.
+Remaining: prove one uninterrupted original new-game prison→physical exterior
+course, and close fresh rendered sanitizer coverage of the escort recipient fix.
+The genuine prison-origin checkpoint chain now reaches the exterior and passes
+fresh outdoor reload. It remains composite evidence; full escape is not complete.
 
-## Current chunk — connected final sewer entry; western encounter next
+## Current chunk — connected exterior and fresh outdoor reload pass
 
-Latest inspected main input:
-`build/oblivion-compat/sewer-escape/joined-final-sewers-entry-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player final Imperial Sewers03/0272f2,(-2595.823,1077.309,6878.335),101.971HP/max110,
-80MP, Warrior class/birthsign and one Amulet. Original key door02282e consumes only
-Baurus key01e702; Space0270e2 performs one real manhole teleport. Health/death counts
-unchanged, no combat/pending death/action, exact fresh entry0differences, capture
-inspected. [Final sewer entry](SEWER-JOINED-FINAL-SEWERS-ENTRY-VERIFICATION.json).
+Latest fully inspected main save:
+`build/oblivion-compat/sewer-escape/joined-final-outdoor-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player outside/Tamriel005e3d,(47073.230,82958.086,297.828),84.511HP/110,80MP,
+Warrior class/birthsign, one Amulet/no sewer key. Original04bed7 exit review
+Finished and one real exterior teleport, followed by clean separate-process
+reload/F5/capture. Both scenarios pass, all actions/receipts match, no unexpected
+errors; both fresh boundaries exact0differences. Health/inventory/death counts
+unchanged from upper gate, no combat/pending death/action. Character creation
+tracking cleared; MQ01 exit88 completed. Original5-second tutorial timer then
+runs90→100/stops MQ01 and CharacterGen during outdoor continuation; independent
+original records verify this is authored progression, not replay.
+[Connected exterior proof](SEWER-JOINED-EXTERIOR-VERIFICATION.json).
 
-Connected western rat victory F5 is independently verified: two real axe hits
-1.13626+3.37034 kill0666a7, Player health unchanged101.971, only axe condition-0.6,
-rat base death count+1, no combat/death/action pending. Raw runner SIGINT/-2 during
-shutdown remains interrupted, no whole-scenario pass inferred. Final actualF5 and
-capture precede interruption; exact entry0differences.
-[Western victory](SEWER-JOINED-FINAL-WESTERN-RAT-VERIFICATION.json).
-
-Clean connected upper-sewer course passes all27 original route points: bridge,
-lower rooms, upper stairs, rat066a04 killed by genuine Player axe contacts. ActualF5
-at(352.754,1616.010,6878.335),84.511HP/110,80MP; no combat/pending death/action.
-Goblins remain alive away from route; no actor relocation or combat suppression.
-Exact fresh entry0differences; capture inspected.
+Clean27-point bridge/lower-room/stair course includes actual upper rat066a04
+Player victory, ending at(352.452,1601.702,6878.335),84.511HP. Goblins remain alive
+away from route, no actor relocation or combat suppression. Actual upper gate
+activation/jump and final corridor use ordinary inputs.
 [Upper passage proof](SEWER-JOINED-UPPER-TUNNEL-VERIFICATION.json).
-Latest main input `build/oblivion-compat/sewer-escape/joined-final-upper-tunnel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
 
-Current detached UI `joined-final-exterior-exit-01`, supervisor144643, from that
-actual save: normal upper gate activation/jump, original corridor points,
-exit review Finished, MQ01 exit88 and physical Tamriel entry/F5. Inspect actual
-process/status/report before another UI. No exterior pass yet.
-Next: outdoor fresh reload, rendered sanitizer recipient course already prepared
-as `joined-recipient-rendered-sanitized.json`, then uninterrupted new-game escape.
-Full escape remains incomplete.
+[Key door/final sewer entry](SEWER-JOINED-FINAL-SEWERS-ENTRY-VERIFICATION.json):
+only original Baurus key consumed, Amulet/health preserved, actual manhole teleport.
+[Western rat](SEWER-JOINED-FINAL-WESTERN-RAT-VERIFICATION.json): two axe contacts,
+rat death+1, health unchanged; actual victoryF5/capture before SIGINT during runner
+shutdown. Raw launcher remains interrupted/-2; no whole-scenario pass inferred.
+All following main continuations use that actual F5 with exact native entry.
+
+Current detached UI `joined-recipient-rendered-sanitized-01`, supervisor145163,
+runner145164/game145187, from `joined-third-ambush-approach-01` genuine precombatF5.
+Prepared `joined-recipient-rendered-sanitized.json`: current instrumented binary/
+matching sanitizer resources, actual ELF libasan preload,360s startup/90s SDL,
+read-only route plus normal landing backstep, original54/F5/capture. Runtime leak
+checking disabled; full2206 engine sanitizer gate separately has leak checking.
+Inspect actual processes/status/report before another UI. No rendered pass yet.
+
+Next: finish that rendered course, then assemble/replay the original new-game→
+exterior course. Existing `assemble-continuous-escort.py` and
+`namespace-continuous-phases.py` demonstrate read-only Lua observer wrappers;
+compound later courses also use internalF8, so outer transitions need a distinct
+modifier (Lua `input.KEY.LeftCtrl` is supported) and phase-scoped log patterns.
+Reuse accepted inputs, retain all raw failures, remove only obsolete checkpoint/
+load-specific observations. Never splice historical outdoor state into the course.
+Checkpoint: main gameplay gaps shrank through genuine physical exterior/reload;
+remaining acceptance is uninterrupted execution and current rendered sanitizer.
 
 [Final battle/class proof](SEWER-JOINED-CLASS-CHOICE-VERIFICATION.json): Baurus032a17
 kills final assassin01e703 with three genuine sword contacts while Player blocks,
