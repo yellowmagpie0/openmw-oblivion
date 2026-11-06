@@ -9,57 +9,54 @@ birthsign/class choices, Baurus CharacterGen88 and MQ01 exit88. No injected
 health, quest, position or completion, skipped required encounters, or spliced
 save state qualifies. **Full escape remains incomplete.**
 
-Remaining: physically enter Sanctum from the genuine stage56 checkpoint, complete
-Emperor/Amulet, class and exterior, then prove a single-process new-game escape and
-fresh outdoor reload. Solo dungeon/shaman, reunion, Warrior birthsign and original
-escort56 are connected. Historical late/outdoor saves do not prove the remaining join.
+Remaining: final assassin victory, Baurus class88, physical sewer exit/MQ01 exit88,
+fresh outdoor reload and a single-process new-game escape. Historical separate
+late/outdoor saves do not prove this remaining join.
 
-## Current chunk — original escort56 joined; physical Sanctum entry next
+## Current chunk — Emperor/Amulet/death80 joined; final fight/class next
 
 Latest genuine main input:
-`build/oblivion-compat/sewer-escape/joined-marker-g-departure-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player remains Subterrane022288 at(1343.938,7256.792,-1183),100HP/80MP, Warrior
-birthsign01fd9d, class still placeholder0230e6. Original CharacterGen52/54/56 are
-saved along with the full prior opening. All3 escorts alive and physically crossed
-native portal into Sanctum022282 at(2812.340,7463.908,-1184.023). Player still must
-traverse the room and activate the original door0226a2 himself. No combat/pending
-death/action owners; inventory unchanged from pre-combat approach.
-[Recipient/escort56 proof](SEWER-ESCORT-RECIPIENT-VERIFICATION.json).
+`build/oblivion-compat/sewer-escape/joined-emperor-death-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player Sanctum022282 at(2724.397,10065.542,-1439),100HP/80MP, Warrior birthsign,
+class still placeholder0230e6, exactly one Amulet0250a0. Current CharacterGen80;
+original58/59/60/62/64/65/66/67/68/70/71/72/73/74/76/80 saved alongside prior opening.
+Emperor032a18 and Glenroy032a16 scripted dead/killer null, Baurus032a17 alive,
+final assassin01e703 alive40HP and engaged. Final assassin/class/outdoor not yet
+accepted. [Joined Sanctum/Amulet proof](SEWER-JOINED-SANCTUM-AMULET-VERIFICATION.json).
 
-Implemented two related fixes: peaceful CurrentLocation Travel recipients hold
-while their Escort leader fights/stalls/is interrupted; actually stationary
-recipients can use existing proactive yielding through a derived package-graph
-query. No saved phase/destination replacement or new wire state. Red05 reproduces
-unwanted old travel movement after fixture repairs;42 focused and full2206 normal
-engine cases pass, exact inventory/no failures/skips. New sanitizer integration
-is next; older2204 sanitizer/leak coverage retains its original provenance.
+Clean physical portal course walks nine original PGRD nodes plus near-door point,
+uses real Space0226a2→022282 and saves58. Clean passive original scene reaches65.
+First approach-to-Amulet attempt reaches3points but70 wait fails/noF5; repeated
+actual approachF5 plus normal A+Shift_L0.6s clears Player from actor path, then
+original70/73/74 dialogue/Amulet and actual finalF5 pass. Clean fresh continuation
+executes original Emperor death76 and80. Every native fresh boundary restores
+exactly; five captures inspected. Inventory changes only by Amulet+1. Raw sprint
+portal01 interrupted for overshoots/noF5; unchanged56 walking01 passes. No splicing.
 
-Runtime progression is honest composite evidence: hold-only01 fails54 with the
-Emperor occupying Glenroy's node168; yield02 passes actual8-point/F5 prefix then
-fails54 because Player stands near final stair node199. Both raw failures retained.
-Actual finalF5 of yield02 feeds normal S+Shift_L0.8s clearance01, which cleanly
-reaches original52/54. Fresh departure01 cleanly reaches56. Every native fresh
-boundary restores exactly; captures inspected. No state splicing or forced phases.
-The three pursuit assassins01772e/017734/01774a are dead with Blades killers;
-Glenroy032a16 and Baurus032a17 identities follow original bases023f2b/023f2a.
+Current normal UI `joined-final-battle-class-01`, supervisor142406, from actual80
+save: hold ordinary weapon block and aim while Baurus fights, then original native
+Warrior class/Baurus88 UI recipe. Inspect actual process/status/report before
+another UI run. No pass claimed yet. Source remains committed through04152787f5;
+normal binary SHA256e4689275beba4c04b1ccde59087d9fc13676b1bfe2f40928a202b1d1f59fdd2d.
 
-[NPC acquisition proof](SEWER-THIRD-AMBUSH-NPC-ACQUISITION-VERIFICATION.json)
-retains full2204 normal+ASan/UBSan engine passes (leak1), focused3 cases and a
-clean rendered sanitized8-point third-ambush/F5 course03 (leak0). It loads the
-actual pre-combat approach exactly, saves100HP/unchanged inventory/all3 assassins
-dead/Glenroy killer/all3 escorts alive, with matching receipts and inspected
-capture. Startup01 preload and02 timeout failures retained. This is earlier
-source coverage, not a sanitizer pass for the new recipient fixes.
+[Recipient/escort56 proof](SEWER-ESCORT-RECIPIENT-VERIFICATION.json): hold recipient
+through paused leader; derive stationary Escort recipient and use existing yield,
+without phase/destination replacement or new wire state.42 focused, full2206 normal
+and current clean04152787f5 full2206 ASan/UBSan engine/leak1 pass, exact inventories,
+0fail/skip, runtime built. No helper currently live. New rendered recipient coverage
+is still due; older rendered third-ambush proof retains its original provenance.
+Normal S+Shift_L0.8s clears Player from node199, original52/54 then56 pass; all3
+escorts cross original portal before Player follows. Failed hold/yield54 waits
+retain actual F5 prefix/continuation scope and are not whole-course passes.
+[NPC acquisition proof](SEWER-THIRD-AMBUSH-NPC-ACQUISITION-VERIFICATION.json).
 
-Reusable pre-combat input for continuous replay:
+Reusable pre-combat source for continuous battle/escort replay:
 `build/oblivion-compat/sewer-escape/joined-third-ambush-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-[Approach proof](SEWER-JOINED-THIRD-AMBUSH-APPROACH-VERIFICATION.json).
-[Earlier birthsign50/reunion](SEWER-JOINED-REUNION-BIRTHSIGN-VERIFICATION.json).
-Normal current game SHA256e4689275beba4c04b1ccde59087d9fc13676b1bfe2f40928a202b1d1f59fdd2d.
-No UI/helper live at this checkpoint; inspect actual process/status before launch.
+[Approach](SEWER-JOINED-THIRD-AMBUSH-APPROACH-VERIFICATION.json),
+[reunion/birthsign50](SEWER-JOINED-REUNION-BIRTHSIGN-VERIFICATION.json).
 
-Next: Player portal→Sanctum, Emperor/Amulet, class/Baurus88, physical exterior,
-uninterrupted new-game escape and fresh outdoor reload. Full escape is incomplete.
+Next: final assassin/Baurus88, key/physical sewers, MQ01 exit88/outdoors, fresh
+outdoor reload, then uninterrupted prison→exterior. Full escape remains incomplete.
 
 [Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json):
 clean978-action post-shaman10heal/26originalPGRD/Space03816c→022288 course,

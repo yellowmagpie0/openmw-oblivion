@@ -98,6 +98,35 @@
           }
         }
       }
+    },
+    "escort-recipient-sanitizer-integration-01": {
+      "passed": true,
+      "evidence": "build/oblivion-compat/sewer-escape/escort-recipient-sanitizer-integration-01/verification.json",
+      "source": {
+        "head": "04152787f5f3e4b3f2017402b5ed6a64543e5ab6",
+        "source_fingerprint": "0cc4f835732efb15e5ca072a756b3ee3f4c744f4246de0d54821d7b027173d6b"
+      },
+      "results": {
+        "engine": {
+          "executed": 2206,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a2859ea484e2f2d62cb151f473ad49aaf711b935114c8922fc16a1bc04d63f71",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "af86ea15cd4831b0fc661eb9e10fab7fdb83655a14c5013c83e7ccdd0354f963",
+          "inventory_sha256": "2a96803d99c2571b94e3596dadebe1325e8f38bdf91e8eaaa017fe73475bf80c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "leak_detection": true
     }
   },
   "runtime": [
@@ -542,6 +571,6 @@
     "red03": "Fixture missing canonical package procedure.",
     "red04": "Fixture lacked mechanics/physics for real movement; debug backtrace identifies getMaxSpeed. Corrected fixture red05 exposes actual unwanted movement and timer advancement."
   },
-  "sanitizer_status": "New integration pending. Prior NPC-acquisition2204 engine leak pass and rendered third-ambush pass retain original source provenance.",
+  "sanitizer_status": "Current clean04152787f5 full2206 ASan/UBSan engine tests pass, exact inventory,0fail/skip, leak1, runtimebuilt. No new rendered recipient-fix pass yet; prior rendered NPC prefix retains provenance.",
   "next": "Player must physically enter Sanctum, then original Emperor/Amulet, class/Baurus88, exterior and uninterrupted new-game escape/outdoor reload."
 }
