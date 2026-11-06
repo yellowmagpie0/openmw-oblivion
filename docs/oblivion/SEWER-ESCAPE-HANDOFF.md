@@ -13,53 +13,45 @@ Remaining: join the genuine course through the solo dungeon/shaman, reunion,
 Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
 escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — joined Substructure combat, loot and equipment accepted
+## Current chunk — western encounters and actual root-area attacker accepted
 
-Latest genuine course save:
-`build/oblivion-compat/sewer-escape/joined-substructure-northern-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player(-162.212,3316.627,-258.602), health70.6. The original north passage traverses
-physically with health80 unchanged; its actual F5 contains rat038173→Player combat.
-Exact fresh restoration then real axe contacts kill that rat with Player ownership.
-All combat, physical actions and pending deaths clear. Both entry comparisons exact;
-captures inspected. [North traversal/combat proof](SEWER-JOINED-NORTH-VERIFICATION.json).
+Latest semantically verified course save:
+`build/oblivion-compat/sewer-escape/joined-actual-root-attacker-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(-2944.769,4206.296,-256.803), health46.04. Actual attacker159838 is
+Player-killed, with one expected base death-count increment; no combat, physical
+actions or pending deaths. Fresh native entry is exact. Capture inspected.
+[Upper stairs/actual attacker proof](SEWER-JOINED-ROOT-ATTACKER-VERIFICATION.json).
 
-Previous genuine80-health recovery save remains in `joined-post-zombie-healing-01`.
-Six actual C releases of saved Heal Minor Wounds restore38.4→80 health with normal
-magicka regeneration, unchanged inventory/death history and no pending actions.
-[Recovery proof](SEWER-JOINED-ZOMBIE-HEALING-VERIFICATION.json).
+The [western proof](SEWER-JOINED-WEST-VERIFICATION.json) accepts a real six-phase
+F5 prefix: Player kills38171/38172, normal six-cast healing reaches80, physical
+pillar passage and combat descent reach lower room, and38176 dies. Raw seven-phase
+run remains failed: later backtracking lets38175 kill Player. Its actual preceding
+68.72HP F5 restores exactly; clean fresh continuation kills38175 and ends59.32HP.
+Base02509b death count changes only2→5→6. No health/quest/position write or save
+splicing. Corrected editable six-phase recipe matches all442 successful prefix
+actions; it has not been rerun independently as a whole.
 
-Pre-recovery Zombie victory save remains in `joined-substructure-runners-zombie-02`:
-Player(727.351,2191.294,-66.602), health38.4, original chest armor and war axe owned
-and equipped. All pending deaths/actions/combat clear. Exact native entry from
-gear save. [Joined zombie proof](SEWER-JOINED-ZOMBIE-VERIFICATION.json).
+Upper-stair raw case likewise passes its141-action physical/F5 prefix, then fails
+while chasing38818 beyond a wall while actual159838 attacks. The saved59.32HP
+stair prefix restores exactly; short normal movement segments and fresh camera
+feedback defeat159838. The unrelated rat38818 remains alive at that boundary.
+Neither raw failure is relabeled a whole-course pass.
 
-One process physically follows the corridor, waits at a safe waypoint for original
-DORatRunner01/02 (0387da/db) to follow PACK0387de back through the previous door,
-then hands control to combat at the room mouth. Zombie0491fc kills tutorial
-rat0387d9 naturally; five real Player axe contacts kill the zombie. Both runners
-remain alive in01fbb9, position(2176,2944,-857.362). Capture inspected: zombie
-corpse remains upright; logical death is proven, collapsed poses are not accepted.
+Current UI course: `joined-engaged-root-side-rat-01` (launcher52834), from actual
+`joined-root-entrance-course-01` save. The latter raw course PASSES five normal
+heals, physical return along observed path and original root entrance; semantic
+save inspection/comparison remains pending. Rat38818 now actually engages there.
+Inspect the current process/scenario before another UI course. Then inspect both
+new saves/captures, record results, and follow remaining original root/lower route
+to Caverns door0381b8. Original root detour points in tracked west_root_detour
+recipe include the necessary turn around geometry; use actual source position.
 
-Failed corridor01 continues walking into combat and Player dies; no checkpoint
-accepted. Failed corridor-fights01 chases an authored runner after it leaves the
-cell. Failed runners-zombie01 hands over too deep inside combat and Player dies;
-only its dead-Player runtime was terminated with SIGTERM, raw scenario failed.
-Corrected02 hands over at the corridor mouth and passes. No implementation change.
-Raw-master routing audit stays ignored with master hash and original record names.
-
-Current UI course: `joined-substructure-west-approach-01` (launcher26106), ignored
-editable `joined-substructure-west-approach.json`, starts at the rat-victory save
-and follows original route corners1–5 toward(-619,4200,-230). Inspect its actual
-process/scenario before any new UI course. Next take actual intervening encounters
-(38171/38172 if they engage) and the western/lower route to original Caverns door.
-The40 original route corners and old successful western/lower courses remain
-reusable; do not assume that alive NPCs permit walking through them during combat.
-
-Earlier accepted composite joins remain linked:
-[key-corpse loot/Club/key door](SEWER-JOINED-KEY-LOOT-VERIFICATION.json),
-[first Substructure rat/chest/armor/axe/potion](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
-Gear input correction accounts for inventory reorder; raw failed01–05 remain failed.
-The northern-rat victory save is the main checkpoint until west traversal passes.
+Earlier accepted joins: [zombie](SEWER-JOINED-ZOMBIE-VERIFICATION.json),
+[recovery](SEWER-JOINED-ZOMBIE-HEALING-VERIFICATION.json),
+[north passage/combat](SEWER-JOINED-NORTH-VERIFICATION.json),
+[key loot/equipment/door](SEWER-JOINED-KEY-LOOT-VERIFICATION.json),
+[first Substructure chest/gear](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
+All remain explicit genuine-save composites; full uninterrupted escape is unproven.
 
 ## Verification and reusable opening evidence
 

@@ -1,0 +1,2694 @@
+{
+  "schema_version": 1,
+  "name": "Joined western encounters, ordinary recovery and physical stair passage",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\nat 0 command content:oblivion.esm:01760f GetOpenState\nat 0 command content:oblivion.esm:01760f GetLocked\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local function phase1()\nlocal output=print\nlocal function print(...) output(\"West course phase 1:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(-704.17,4307.92,-260.0)}}\nlocal step=1\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n assert(not Actor.isDead(self),'Player died on joined corridor')\n if frame==5 then\n  local armor=0 local axe=false\n  for _,item in pairs(Actor.getEquipment(self)) do\n   if item.recordId==core.getFormId('Oblivion.esm',0x661c1) or item.recordId==core.getFormId('Oblivion.esm',0x661c3) then armor=armor+1 end\n   if item.recordId==core.getFormId('Oblivion.esm',0x90613) then axe=true end\n  end\n  assert(armor==2 and axe,'Joined chest gear missing') print('Joined corridor ready')\n end\n if step<=#points then\n  local p=points[step]\n  local d=p-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<55 then print('Joined corridor waypoint '..step..' reached '..tostring(self.position)) step=step+1\n  else\n   local x,y,f=aim(util.vector3(p.x,p.y,self.position.z+100))\n   print(string.format('Joined corridor waypoint %d aim x=%d y=%d',step,x,y))\n   if f then print('Joined corridor waypoint '..step..' facing') end\n  end\n end\n if frame%15==0 then\n  print('Joined corridor Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x38172,0x38171,0x38175,0x38176,0x38818}}) do\n   local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if obj and obj:isValid() then print('Joined room actor '..id..' pos='..tostring(obj.position)..' dead='..tostring(Actor.isDead(obj))..' health='..Actor.stats.dynamic.health(obj).current) end\n  end\n end\nend}}}}\n\nend\nlocal function phase2()\nlocal output=print\nlocal function print(...) output(\"West course phase 2:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died in joined Substructure')\n if frame==5 then print('Joined northern rat ready health='..hp) end\n if camera.getMode()==camera.MODE.FirstPerson then print('Substructure first person') end\n local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x38171))\n assert(rat and rat:isValid(),'Original zombie missing')\n local distance=(rat.position-self.position):length()\n if Actor.isDead(rat) then print('Joined northern rat dead') end\n if self.position.x>=600 or distance<=220 then print('Substructure first approach reached') end\n if distance<=150 or Actor.isDead(rat) then print('Joined northern rat in reach') end\n local x,y,f=aim(rat.position+util.vector3(0,0,100))\n print(string.format('Joined northern rat aim x=%d y=%d distance=%.2f',x,y,distance))\n if f then print('Joined northern rat facing') end\n if frame%15==0 then print('Joined northern rat Player '..tostring(self.position)..' health='..hp..' rat='..tostring(rat.position)) end\nend}}}}\n\nend\nlocal function phase3()\nlocal output=print\nlocal function print(...) output(\"West course phase 3:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died in joined Substructure')\n if frame==5 then print('Joined northern rat ready health='..hp) end\n if camera.getMode()==camera.MODE.FirstPerson then print('Substructure first person') end\n local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x38172))\n assert(rat and rat:isValid(),'Original zombie missing')\n local distance=(rat.position-self.position):length()\n if Actor.isDead(rat) then print('Joined northern rat dead') end\n if self.position.x>=600 or distance<=220 then print('Substructure first approach reached') end\n if distance<=150 or Actor.isDead(rat) then print('Joined northern rat in reach') end\n local x,y,f=aim(rat.position+util.vector3(0,0,100))\n print(string.format('Joined northern rat aim x=%d y=%d distance=%.2f',x,y,distance))\n if f then print('Joined northern rat facing') end\n if frame%15==0 then print('Joined northern rat Player '..tostring(self.position)..' health='..hp..' rat='..tostring(rat.position)) end\nend}}}}\n\nend\nlocal function phase4()\nlocal output=print\nlocal function print(...) output(\"West course phase 4:\",...) end\nlocal self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal previous=nil\nlocal n=0\nreturn {{engineHandlers={{onFrame=function()\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died during ordinary recovery')\n if not previous then previous=hp print('Joined zombie healing ready health='..hp) end\n if hp>previous+.01 then n=n+1 previous=hp print('Joined zombie healing step '..n..' health='..hp) end\n if hp>=69.99 then print('Joined zombie health restored') end\nend}}}}\n\nend\nlocal function phase5()\nlocal output=print\nlocal function print(...) output(\"West course phase 5:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(-775.99,4422.57,-258.0),util.vector3(-898.5,4544.81,-260.0),util.vector3(-959.51,4658.05,-260.0),util.vector3(-1038.73,4760.58,-260.0),util.vector3(-1183.41,4736.84,-256.0),util.vector3(-1298.49,4776.19,-260.0),util.vector3(-1430.5,4792.72,-252.0)}}\nlocal step=1\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n assert(not Actor.isDead(self),'Player died on joined corridor')\n if frame==5 then\n  local armor=0 local axe=false\n  for _,item in pairs(Actor.getEquipment(self)) do\n   if item.recordId==core.getFormId('Oblivion.esm',0x661c1) or item.recordId==core.getFormId('Oblivion.esm',0x661c3) then armor=armor+1 end\n   if item.recordId==core.getFormId('Oblivion.esm',0x90613) then axe=true end\n  end\n  assert(armor==2 and axe,'Joined chest gear missing') print('Joined corridor ready')\n end\n if step<=#points then\n  local p=points[step]\n  local d=p-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<55 then print('Joined corridor waypoint '..step..' reached '..tostring(self.position)) step=step+1\n  else\n   local x,y,f=aim(util.vector3(p.x,p.y,self.position.z+100))\n   print(string.format('Joined corridor waypoint %d aim x=%d y=%d',step,x,y))\n   if f then print('Joined corridor waypoint '..step..' facing') end\n  end\n end\n if frame%15==0 then\n  print('Joined corridor Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x38172,0x38171,0x38175,0x38176,0x38818}}) do\n   local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if obj and obj:isValid() then print('Joined room actor '..id..' pos='..tostring(obj.position)..' dead='..tostring(Actor.isDead(obj))..' health='..Actor.stats.dynamic.health(obj).current) end\n  end\n end\nend}}}}\n\nend\nlocal function phase6()\nlocal output=print\nlocal function print(...) output(\"West course phase 6:\",...) end\nlocal self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died in joined Substructure')\n if frame==5 then print('Joined northern rat ready health='..hp) end\n if camera.getMode()==camera.MODE.FirstPerson then print('Substructure first person') end\n local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x38176))\n assert(rat and rat:isValid(),'Original zombie missing')\n local distance=(rat.position-self.position):length()\n if Actor.isDead(rat) then print('Joined northern rat dead') end\n if self.position.x>=600 or distance<=220 then print('Substructure first approach reached') end\n if distance<=150 or Actor.isDead(rat) then print('Joined northern rat in reach') end\n local x,y,f=aim(rat.position+util.vector3(0,0,100))\n print(string.format('Joined northern rat aim x=%d y=%d distance=%.2f',x,y,distance))\n if f then print('Joined northern rat facing') end\n if frame%15==0 then print('Joined northern rat Player '..tostring(self.position)..' health='..hp..' rat='..tostring(rat.position)) end\nend}}}}\n\nend\nlocal input=require('openmw.input')\nlocal phases={{phase1,phase2,phase3,phase4,phase5,phase6}}\nlocal n=1\nlocal active=phases[n]()\nlocal held=false\nreturn {{engineHandlers={{onFrame=function(dt)\n local down=input.isKeyPressed(input.KEY.F8)\n if down and not held then n=n+1 assert(phases[n],'Unexpected west observation phase') active=phases[n]() print('West observation phase '..n..' ready') end\n held=down\n active.engineHandlers.onFrame(dt)\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor ready)",
+      "timeout_seconds": 120,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 1:\\s*(?:Joined corridor waypoint 1 reached)",
+      "timeout_seconds": 90,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "phase1-joined-west-pillar-approach.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F8",
+      "seconds": 0.25
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West observation phase 2 ready",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat ready)",
+      "timeout_seconds": 120,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat in reach)",
+      "timeout_seconds": 20,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 2:\\s*(?:Joined northern rat dead)",
+      "timeout_seconds": 10,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "phase2-joined-northern-rat-victory.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F8",
+      "seconds": 0.25
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West observation phase 3 ready",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat ready)",
+      "timeout_seconds": 120,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat in reach)",
+      "timeout_seconds": 20,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 3:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 3:\\s*(?:Joined northern rat dead)",
+      "timeout_seconds": 10,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "phase3-joined-northern-rat-victory.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F8",
+      "seconds": 0.25
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West observation phase 4 ready",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 4:\\s*(?:Joined zombie healing ready)",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 4:\\s*(?:Joined zombie health restored)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "phase4-west-recovery.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F8",
+      "seconds": 0.25
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West observation phase 5 ready",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor ready)",
+      "timeout_seconds": 120,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 1 reached)",
+      "timeout_seconds": 90,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 2 reached)",
+      "timeout_seconds": 90,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 3 reached)",
+      "timeout_seconds": 90,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 4 reached)",
+      "timeout_seconds": 90,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 5 reached)",
+      "timeout_seconds": 90,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 6 reached)",
+      "timeout_seconds": 90,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 5:\\s*(?:Joined corridor waypoint 7 reached)",
+      "timeout_seconds": 90,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "phase5-joined-west-pre-stairs.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F8",
+      "seconds": 0.25
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West observation phase 6 ready",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat ready)",
+      "timeout_seconds": 120,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat facing)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat in reach)",
+      "timeout_seconds": 20,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "West course phase 6:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "F7"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Substructure camera settled)",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F7"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "West course phase 6:\\s*(?:Joined northern rat dead)",
+      "timeout_seconds": 10,
+      "after_start": false,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "phase6-joined-northern-rat-victory.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1800,
+  "expected_exit": 0,
+  "expected_log": [
+    "West course phase 1:\\s*(?:Joined corridor waypoint 1 reached)",
+    "West course phase 2:\\s*(?:Joined northern rat dead)",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001",
+    "West course phase 3:\\s*(?:Joined northern rat dead)",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001",
+    "West course phase 4:\\s*(?:Joined zombie health restored)",
+    "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+    "West course phase 5:\\s*(?:Joined corridor waypoint 7 reached)",
+    "West course phase 6:\\s*(?:Joined northern rat dead)",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "activate-script ref=content:oblivion.esm:051ac[abc]",
+    "playgroup ref=content:oblivion.esm:051ac[abc]",
+    "M16 native staff rejected:",
+    "M16 native cast rejected:",
+    "Native AI package done: actor=content:oblivion.esm:032a17 package=content:oblivion.esm:04f201"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true,
+  "sdl_input_timeout_seconds": 30
+}
