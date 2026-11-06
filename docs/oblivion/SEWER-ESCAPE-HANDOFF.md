@@ -15,7 +15,36 @@ coverage of recipient/fall fixes now passes as explicit composite evidence.
 The genuine prison-origin checkpoint chain now reaches the exterior and passes
 fresh outdoor reload. It remains composite evidence; full escape is not complete.
 
-## Current chunk — connected exterior and fresh outdoor reload pass
+## Current chunk — bound-equipment actor state and uninterrupted replay
+
+Original new-game `full-escape-continuous-03` failed during the first ambush:
+Glenroy killed0178c4, then bound-gear cleanup threw `Invalid or dangling disposition
+actor identity` each frame. Original24/Renault death passed;26 did not. The driver
+waited900seconds and ended with scenarioFAIL/launcher1/game0. Preserve raw logs,
+ordinary diagnosticF5 and read-only GDB; no ambush victory inferred.
+
+GDB locates the failed validation in bound-equipment publication. Its copied
+cached snapshot lacked a later registered disposition actor0280da, while live
+whole-world capture remained valid. Transactions now stage a fresh world capture
+before updating inventory/ability ownership and validating; strict validation and
+atomic inventory/registry publication remain. No save schema change. Focused red
+reproduces the exact error; all9 bound-item tests and full2209 normal plus2209
+ASan/UBSan engine tests pass, exact inventories,0fail/0skip, sanitizer leak1.
+Runtime binaries built in focused normal and full sanitizer gates.
+[Actor-state cleanup proof](SEWER-BOUND-CLEANUP-ACTOR-STATE-VERIFICATION.json).
+
+Current original-new-game UI: `full-escape-continuous-04`, supervisor178123,
+runner178129/game178210, manifest `full-escape-bound-cleanup-fixed.json`.
+Same course/ordinary controls, actual no-load argv and new-game1. Latest observed
+original10/no frame errors; first ambush remains pending. Launch provenance records
+normal runtime SHA256ef71da25d612636f79b97bf50d2d17643aef49549d044483d5a1a0ad36b7292a,
+built from7db0440e9a plus this tested actor-state patch. Preserve the running
+process; check actual status before another UI or rebuild. All build helpers are
+terminal. Next: continue this same process through26 and the physical exterior,
+then fresh-load its own outdoorF5 and run the whole-course audit. Full escape
+remains incomplete until that uninterrupted course and fresh reload pass.
+
+## Connected exterior and fresh outdoor reload evidence
 
 Latest fully inspected main save:
 `build/oblivion-compat/sewer-escape/joined-final-outdoor-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
@@ -86,13 +115,8 @@ status. Corrected all3 mixed conditions, including later Emperor70 fallback;
 actual native14/70 and Lua/wrong-segment checks pass. All4340 regex gates compile;
 11957 actions/control order unchanged. QA source only, runtime C++ unchanged.
 
-Current original new-game UI `full-escape-continuous-03`: supervisor171082,
-runner171083/game171106, manifest `full-escape-continuous-mixed-fixed.json`,
-unused-new-game formatter source. Actual argv has no load-save flag, config
-new-game=1; launch provenance records the loaded executable SHA256. Latest observed
-original19, actual outer segment2/inner phase4 transition, passage crossed and
-phase5 lower landing reached; preserve this same live process. Verify actual
-process/status/report before another UI. No helper remains live.
+Earlier03 opening-prefix evidence below remains valid for its recorded prefix;
+its later terminal ambush failure is recorded above. No whole-course pass inferred.
 
 [Ongoing uninterrupted opening prefix](SEWER-UNINTERRUPTED-OPENING-PREFIX-VERIFICATION.json):
 new-game→original19,80HP, no load events/samePID171106, original Emperor dialogue,
@@ -106,11 +130,9 @@ and original-new-game/readonly-query constraints. Focused4pass/0fail/0skip, sour
 hashes in producer audit. This is not a fresh full Python-suite claim; runtime
 C++ unchanged, full2208 normal/sanitized and rendered descent54 retain provenance.
 
-Normal runtime SHA25673861667d0252ae7260ddb3c954ad2ced059e820edaa54028060d5b74cc33bf6,
-paired resources built at ef2c3ef348+final descent patch, code committeda9ab59a13e.
-Later commits are QA/evidence only; do not rebuild resources across the active
-runtime. Continue to original physical exterior, then fresh-load its own outdoorF5.
-Full escape remains incomplete until the uninterrupted course passes.
+Earlier03 prefix used normal runtime73861667d0252ae7260ddb3c954ad2ced059e820edaa54028060d5b74cc33bf6,
+built at ef2c3ef348+final descent patch/codea9ab59a13e. Keep that original
+provenance separate from the current04 actor-state fix and tests above.
 Prepared ignored `verify-full-escape.py` draft rejects composite exterior, partial
 opening and a still-running course; positive whole-course/reload audit is pending.
 
@@ -128,9 +150,9 @@ movement/aim observation is segment-scoped. Actual interrupted prefixes are cut
 at saved evidence, notably fifth patrol save and fourth Subterrane save; no later
 planned actions inferred. Versioned source recipes preserve provenance and genuine
 input course, prepared recipe is not gameplay acceptance. Lua syntax compiles.
-After the fall fix passes, finish rendered course, then run that original new-game
-course to the exterior and audit all acceptance. Main composite already passes
-physical exterior/fresh reload; uninterrupted and current rendered checks remain.
+The current original-new-game04 course uses this assembler output; physical
+exterior/reload acceptance remains due for that single process. Main composite
+physical exterior/fresh reload retains its separate provenance.
 
 [Final battle/class proof](SEWER-JOINED-CLASS-CHOICE-VERIFICATION.json): Baurus032a17
 kills final assassin01e703 with three genuine sword contacts while Player blocks,
@@ -163,9 +185,8 @@ Pre-combat source for continuous battle/escort replay:
 [Approach](SEWER-JOINED-THIRD-AMBUSH-APPROACH-VERIFICATION.json),
 [reunion/birthsign50](SEWER-JOINED-REUNION-BIRTHSIGN-VERIFICATION.json).
 
-Next: actual key door/manhole→final sewers, required encounters and exit review,
-MQ01 exit88 and physical exterior, fresh outdoor reload, then uninterrupted
-prison→exterior course. Full escape remains incomplete.
+Historical checkpoint sequence continued through key door/manhole, final sewers
+and exterior/reload as linked above. Current action is the uninterrupted04 run.
 
 [Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json):
 clean978-action post-shaman10heal/26originalPGRD/Space03816c→022288 course,

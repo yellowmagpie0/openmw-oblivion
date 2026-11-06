@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "scope": "Coherent bound-equipment publication after late native actor registration",
+  "status": "Implementation integration passed; uninterrupted rendered new-game replay in progress",
+  "failure": {
+    "status": "failed_original_new_game",
+    "scenario_passed": false,
+    "game_exit_code": 0,
+    "launcher_exit_code": 1,
+    "failed_actions": [
+      {
+        "duration_seconds": 900.0979,
+        "passed": false,
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-03/process.log",
+        "pattern": "setstage quest=content:oblivion.esm:02466e stage=26",
+        "poll_interval_seconds": 0.1,
+        "start_offset": 0,
+        "type": "wait_log"
+      }
+    ],
+    "first_engine_error": {
+      "line": 73290,
+      "patterns": [
+        "Error in frame"
+      ],
+      "text": "[06:16:28.379 E] Error in frame: Invalid or dangling disposition actor identity"
+    },
+    "repeated_error_count": 21312,
+    "diagnosis": "Bound equipment terminal-death cleanup validates a copy of cached RuntimeState. A later disposition write names an actor registered in live combat state after that cached snapshot. GDB confirms missing actor in the cached nativeActorValues map; whole-world save capture validates successfully. Strict validation is retained.",
+    "gdb_read_only": "build/oblivion-compat/sewer-escape/disposition-validation-gdb-01.log",
+    "artifacts": {
+      "build/oblivion-compat/sewer-escape/full-escape-continuous-03/scenario.json": {
+        "sha256": "6109a6cb0fba134a21eab30e6af5544d96635d1509cff4a2308322c78f72c0ac"
+      },
+      "build/oblivion-compat/sewer-escape/full-escape-continuous-03/process.log": {
+        "sha256": "88b971be654c6a81e8018698f72bd9978a77a020000ff9f979fe5685bf98cb51"
+      },
+      "build/oblivion-compat/sewer-escape/full-escape-continuous-03/launch-provenance.json": {
+        "sha256": "4c4c732a9bd42249ce824807c0f112f731f843886e4a5bcc0dd3569a906ba470"
+      },
+      "build/oblivion-compat/sewer-escape/full-escape-continuous-03/diagnostic-f5-ambush.json": {
+        "sha256": "6f89021ba06b1aab19cdd813861ccadac85f78ea4f9cc3bc222d0bb3cb361df9"
+      },
+      "build/oblivion-compat/sewer-escape/full-escape-continuous-03/userdata/saves/Bendu_Olo/Quicksave.omwsave": {
+        "sha256": "4c9c71a02f30ee2a6ca2f9c2517c66840eb85be0e97be09b80b4fbd886bb342d"
+      },
+      "build/oblivion-compat/sewer-escape/disposition-validation-gdb-01.log": {
+        "sha256": "c64bc23c2598a09d08d464e1e1e1dfefac18ae59e3f23852c264d593b4242757"
+      }
+    }
+  },
+  "implementation": {
+    "file": "apps/openmw/mwworld/oblivionbounditems.cpp",
+    "change": "Stage bound-equipment transactions from captureOblivionRuntimeState rather than the cached persistent state; keep strict whole-world validation before live inventory/registry publication.",
+    "schema_change": false,
+    "regression": "OblivionBoundItems.DeathCleanupIncludesDispositionActorsRegisteredAfterTheGrant",
+    "regression_coverage": "Both content-file layouts; grant equipment, register a new NPC without a bound ability, change its disposition, kill the original owner, remove bound gear, retain disposition and pending death, serialize the validated result."
+  },
+  "checks": {
+    "bound-cleanup-late-actor-red-01": {
+      "path": "build/oblivion-compat/sewer-escape/bound-cleanup-late-actor-red-01/verification.json",
+      "sha256": "f1cd4060081844a7136c9db32aa0ccc2195bf417b9ed6aaf122d0bcd53f95fba",
+      "passed": false,
+      "results": {},
+      "source_before": {
+        "head": "7db0440e9a37a721f205e567ff52e6de69afc6a1",
+        "source_fingerprint": "12b7a7659f1a66e337de427f5f1d5a544a615ac3d75f4e7f78dff0f02d984cd5"
+      },
+      "source_after": null
+    },
+    "bound-cleanup-late-actor-green-01": {
+      "path": "build/oblivion-compat/sewer-escape/bound-cleanup-late-actor-green-01/verification.json",
+      "sha256": "23d21d2d217602b83f8591bd1b18e5447437940f1f9b695169c55d3623a24b67",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 9,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionBoundItems.*",
+          "binary_sha256": "f74cae927eedd7e23f392508f26df9a4ff4c42031805c1f3bcca9e958c81cf9b",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "02bff1ea6a31712aebeb253f7c8dc5cfde584cedbf252c26ba1d4fca83e29147",
+          "inventory_sha256": "7d0a10afcc34ef29cd1fff74dba8841440e888b55a46263da04363a04dbaf052",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "7db0440e9a37a721f205e567ff52e6de69afc6a1",
+        "source_fingerprint": "e9dd59df92eea771483f02fb505075a5199932e28833d33846cfaf4feb0d2b56"
+      },
+      "source_after": {
+        "head": "7db0440e9a37a721f205e567ff52e6de69afc6a1",
+        "source_fingerprint": "e9dd59df92eea771483f02fb505075a5199932e28833d33846cfaf4feb0d2b56"
+      }
+    },
+    "bound-cleanup-engine-integration-01": {
+      "path": "build/oblivion-compat/sewer-escape/bound-cleanup-engine-integration-01/verification.json",
+      "sha256": "0368a5d6b9347a7ec870e405e71351ca75a40ffc372f26bc076442d17303c7ea",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2209,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f74cae927eedd7e23f392508f26df9a4ff4c42031805c1f3bcca9e958c81cf9b",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3dda64fc81bff78194cfdfd52c638de7e22699342a0659bd857ca094561777bd",
+          "inventory_sha256": "7d0a10afcc34ef29cd1fff74dba8841440e888b55a46263da04363a04dbaf052",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "7db0440e9a37a721f205e567ff52e6de69afc6a1",
+        "source_fingerprint": "e9dd59df92eea771483f02fb505075a5199932e28833d33846cfaf4feb0d2b56"
+      },
+      "source_after": {
+        "head": "7db0440e9a37a721f205e567ff52e6de69afc6a1",
+        "source_fingerprint": "e9dd59df92eea771483f02fb505075a5199932e28833d33846cfaf4feb0d2b56"
+      }
+    },
+    "bound-cleanup-sanitizer-integration-01": {
+      "path": "build/oblivion-compat/sewer-escape/bound-cleanup-sanitizer-integration-01/verification.json",
+      "sha256": "0ab0ac06e6db000902c031693bc0843b9406b42d06e069e1044e60da9de95446",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2209,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "d003c5a1383ba5d1a6c3fc0e043ce9cb43bfb43f5ffcc46492e9f14e5bab900e",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "4468f474dc351f7cf7d9d31792fc2b77614a86a6cff31ec3376559ec115efb15",
+          "inventory_sha256": "7d0a10afcc34ef29cd1fff74dba8841440e888b55a46263da04363a04dbaf052",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "7db0440e9a37a721f205e567ff52e6de69afc6a1",
+        "source_fingerprint": "e9dd59df92eea771483f02fb505075a5199932e28833d33846cfaf4feb0d2b56"
+      },
+      "source_after": {
+        "head": "7db0440e9a37a721f205e567ff52e6de69afc6a1",
+        "source_fingerprint": "e9dd59df92eea771483f02fb505075a5199932e28833d33846cfaf4feb0d2b56"
+      }
+    }
+  },
+  "runtime": {
+    "course": "build/oblivion-compat/sewer-escape/full-escape-continuous-04",
+    "launch_provenance": {
+      "recorded_utc": "2026-11-06T12:36:03.599751+00:00",
+      "pid": 178210,
+      "actual_executable_sha256": "ef71da25d612636f79b97bf50d2d17643aef49549d044483d5a1a0ad36b7292a",
+      "proc_command_line": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-04/config",
+        "--no-sound=1",
+        "--no-grab"
+      ],
+      "manifest_sha256": "2efaf0efbd62c52b2c788c4ff24f8ba36240967f513575177f774dc23e387ce6",
+      "source_verification": "bound-cleanup-late-actor-green-01/verification.json",
+      "source_fingerprint": {
+        "head": "7db0440e9a37a721f205e567ff52e6de69afc6a1",
+        "source_fingerprint": "e9dd59df92eea771483f02fb505075a5199932e28833d33846cfaf4feb0d2b56"
+      },
+      "new_game": true,
+      "load_save_flag": false
+    },
+    "status": "Running; no uninterrupted escape acceptance inferred",
+    "observed": "Original10, no frame errors observed as of06:43 local; first ambush pending."
+  },
+  "limits": "The connected exterior/reload evidence is retained with its own provenance. This fix does not yet close the original-new-game single-process escape and fresh reload gate.",
+  "recorded_utc": "2026-11-06T12:45:25.253708+00:00",
+  "sanitizer_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  }
+}

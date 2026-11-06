@@ -2020,6 +2020,52 @@ TEST(OblivionBoundItems, TerminalDeathRemovesGearButEssentialKnockoutRetainsIt)
     }
 }
 
+TEST(OblivionBoundItems, DeathCleanupIncludesDispositionActorsRegisteredAfterTheGrant)
+{
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        LiveBoundFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        world.updateOblivionBoundEquipment(f.mActor);
+        ASSERT_FALSE(world.captureOblivionRuntimeState().mNativeBoundAbilities.empty());
+
+        // The prison dialogue changes a newly encountered NPC's disposition
+        // after the assassins' bound gear has already been granted.
+        auto npc = *store.search<ESM4::Npc>(key(0x800));
+        npc.mId.mIndex = 0xe30;
+        npc.mFormKey = key(0xe30);
+        npc.mSpell.clear();
+        store.getWritable<ESM4::Npc>().insertStatic(npc, key(0xe30));
+        const auto* base = store.search<ESM4::Npc>(key(0xe30));
+        ESM4::ActorCharacter placed{};
+        placed.mId = {0xa02, base->mId.mContentFile};
+        placed.mFormKey = key(0xa02);
+        placed.mBaseObj = base->mId;
+        placed.mBaseKey = key(0xe30);
+        store.getWritable<ESM4::ActorCharacter>().insertStatic(placed, placed.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(placed, base);
+        auto& cell = *f.mActor.getCell();
+        const MWWorld::Ptr lateActor(cell.insert(&live), &cell);
+        world.getWorldModel().registerPtr(lateActor);
+        ASSERT_TRUE(world.activateOblivionActor(lateActor));
+        const auto lateKey = lateActor.getCellRef().getFormKey();
+        ASSERT_TRUE(world.modifyOblivionDisposition(lateKey, lateKey, 20));
+        const auto before = world.captureOblivionRuntimeState();
+        EXPECT_NO_THROW(before.serializeBinary());
+        ASSERT_TRUE(world.getOblivionCombatService()->killNonPlayer(f.mActor, lateKey, false, {}));
+        ASSERT_NO_THROW(world.removeOblivionDeadBoundEquipment());
+        const auto after = world.captureOblivionRuntimeState();
+        EXPECT_TRUE(after.mNativeBoundAbilities.empty());
+        EXPECT_EQ(after.mDispositionModifiers, before.mDispositionModifiers);
+        EXPECT_FALSE(after.mPendingDeathEvents.empty());
+        EXPECT_NO_THROW(after.serializeBinary());
+        for (const auto& item : world.captureOblivionActorInventory(f.mActor))
+            EXPECT_FALSE(item.mBoundSource);
+    }
+}
+
 TEST(OblivionBoundItems, SourceRemovalRestoresOrdinaryItemAndGenericRemovalRejectsBeforeMutation)
 {
     LiveBoundFixture f(false);

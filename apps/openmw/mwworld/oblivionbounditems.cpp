@@ -197,21 +197,14 @@ namespace MWWorld
         // actor views; the guard prevents recursive grant publication there.
         auto contents = OblivionProfileServices::stageActorInventory(
             OblivionProfileServices::prepareActorInventory(mStore, resolver, update.mInventory));
-        auto state = std::make_unique<ESM4::RuntimeState>(
-            mOblivionRuntimeState ? *mOblivionRuntimeState : captureOblivionRuntimeState());
-        state->mVersion = ESM4::CurrentRuntimeStateVersion;
+        // The cached state owns persistent maps, but its actor/reference rows
+        // can predate later registrations and dialogue writes. A transaction
+        // that validates the whole world must merge the live authorities too.
+        auto state = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
         auto reference = std::find_if(state->mReferences.begin(), state->mReferences.end(),
             [&](const auto& ref) { return ref.mKey == key; });
         if (reference == state->mReferences.end())
-        {
-            const auto snapshot = captureOblivionRuntimeState();
-            const auto found = std::find_if(snapshot.mReferences.begin(), snapshot.mReferences.end(),
-                [&](const auto& ref) { return ref.mKey == key; });
-            if (found == snapshot.mReferences.end())
-                throw std::invalid_argument("bound equipment actor is absent from world capture");
-            state->mReferences.push_back(*found);
-            reference = std::prev(state->mReferences.end());
-        }
+            throw std::invalid_argument("bound equipment actor is absent from world capture");
         reference->mInventory = update.mInventory;
         if (update.mAbilities.empty()) state->mNativeBoundAbilities.erase(key);
         else state->mNativeBoundAbilities.insert_or_assign(key, std::move(update.mAbilities));
