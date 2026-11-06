@@ -82,11 +82,16 @@ budget;02 Player death against a rat just short ofx560;03 Player death during
 redundant fixed aiming;04 untracked room rat037e40 killed Player while the recipe
 aimed at a different/farther rat;05 preflight rejection of nested loops before
 launch. Do not infer passes. No C++ changes: code392bd5d472/runtimeef71da25…7292a
-and2209 normal/sanitized gates retain their provenance. No UI or build helper live
-at this checkpoint. Fresh default assembly `frame-feedback-full-assembly-01`
-contains67 segments/11732 actions; Lua and4297 regex gates compile, no load flag.
-Next: start original-new-game06 with this assembly. Full uninterrupted escape and
-fresh reload of that run's own outdoor save remain due.
+and2209 normal/sanitized gates retain their provenance. Recipe/proof committed
+03455a1358. Fresh default assembly `frame-feedback-full-assembly-01` contains67
+segments/11732 actions; Lua and4297 regex gates compile, no load flag.
+
+Current UI: `full-escape-continuous-06`, supervisor192502/runner192503/game192526,
+original new game/no load. Launch provenance in its `launch-verification.json`
+records recipe03455a1358, harnessef32f3b33e and unchanged runtimeef71da25…7292a.
+Opening observer1 is ready; this is launch evidence only. No build helper live.
+Preserve this single process; follow actual milestones and terminal receipts.
+Full uninterrupted escape and fresh reload of its own outdoor save remain due.
 
 Accepted04 prefix used manifest `full-escape-bound-cleanup-fixed.json`.
 Same course/ordinary controls, actual no-load argv and new-game1. Original26
