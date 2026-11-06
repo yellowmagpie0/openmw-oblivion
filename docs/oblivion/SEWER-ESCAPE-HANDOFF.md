@@ -9,31 +9,43 @@ birthsign/class choices, Baurus CharacterGen88 and MQ01 exit88. No injected
 health, quest, position or completion, skipped required encounters, or spliced
 save state qualifies. **Full escape remains incomplete.**
 
-Remaining: join the genuine course through original second ambush/reunion,
-Emperor/Amulet, choices and physical exterior, then prove a single-process
-new-game escape and fresh outdoor reload. Historical separate late/outdoor saves
-do not prove this join. Solo dungeon and required shaman victory are now connected.
+Remaining: join the genuine escort from50 through Emperor/Amulet, class choice
+and physical exterior, then prove a single-process new-game escape and fresh
+outdoor reload. Solo dungeon/shaman, second ambush, reunion and Warrior birthsign
+are connected. Historical separate late/outdoor saves do not prove the remaining join.
 
-## Current chunk — genuine shaman victory and physical Subterrane entry
+## Current chunk — original reunion/birthsign50 joined, escort departs
 
 Latest fully inspected main checkpoint:
-`build/oblivion-compat/sewer-escape/joined-cavern-to-subterrane-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Imperial Subterrane022288, Player(3200.538,3203.458,-763.680), health80/magicka80.
-CharacterGen30. Shaman03b52e remains dead/Player killer; inventory/death counts
-unchanged. No combat, casts, projectiles or pending death/action work. Clean978-action
-course:10 normal Heal Minor Wounds releases,26 originalPGRD nodes up northern
-stairs, real Space at03816c and one original teleport. Capture inspected; fresh
-native entry allows only5 recorded tiny body-velocity projections.
-[Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json).
+`build/oblivion-compat/sewer-escape/joined-escort-door-clearance-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Subterrane022288, Player(1444.228,5496.875,-991.036), health100/magicka80,
+Warrior birthsign01fd9d, class still placeholder0230e6. CharacterGen50.
+Both second-ambush assassins dead:0176ff/Glenroy032a17,017708/Baurus032a16;
+only bases017618/017620 count0→1. All3 escorts alive. No active combat or pending
+work. Original stages32/34/36/40/42/43/44/45/50, birthsign bonusesStr50/End50/maxHP100
+and actual UI replies are proven. Ordinary A+Shift_L0.4s clears Player from doorway;
+Emperor then crosses to(1568.116,5711.307,-991.041). Capture inspected.
+[Connected ambush/reunion/birthsign](SEWER-JOINED-REUNION-BIRTHSIGN-VERIFICATION.json).
 
-Current detached UI `joined-subterrane-ambush-course-01`, supervisor108901,
-status `joined-subterrane-ambush-course-01-launcher-status.json`. Starts at actual
-80HP Subterrane save:11 original approach points, original stage34 wait,8 upper
-room points/6 authored drops using normal sprint, original stage36 wait. All
-observer phases read only; gameplay via keyboard/mouse. Inspect actual process/
-status/scenario before another UI run. Next: second ambush/reunion, Emperor/
-Amulet, choices, original exterior; then uninterrupted new-game escape and fresh
-outdoor load. Full escape remains incomplete.
+Raw first ambush course intentionally stops during36wait; genuine first4 phases/
+891-action F5 prefix accepted at34/80HP/first assassin dead. Backstep wait fails,
+not used. Moving to doorway resolves second assassin before actual Space opens
+017753(groupopen/progress1); no door-causes-kill claim. Clean door-resolution,
+reunion42, native Warrior-menu50 and sidestep courses each fresh-restore exactly.
+Automatic Emperor greeting interrupts planned approach; direct original menu
+response passes from unchanged42 save. Left-offset/centre follow attempts fail
+before any checkpoint; sidestep then frees Emperor. No state splicing.
+
+Current detached UI `joined-follow-emperor-centre-02`, supervisor111335,
+status `joined-follow-emperor-centre-02-launcher-status.json`. From actual100HP
+clearance save:21 original escort corridor points and original52/54 gates. Inspect
+actual process/status/scenario before another UI run. Next: escort through Sanctum,
+Emperor/Amulet, class/Baurus88, physical exterior, uninterrupted new-game escape
+and fresh outdoor load. Full escape remains incomplete.
+
+[Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json):
+clean978-action post-shaman10heal/26originalPGRD/Space03816c→022288 course,
+80HP/80MP, CharacterGen30, inventory/death counts unchanged.
 
 [Connected shaman victory](SEWER-JOINED-SHAMAN-VICTORY-VERIFICATION.json): original
 469-action staff/approach F5 prefix (raw later fails melee distance),11 real shock
