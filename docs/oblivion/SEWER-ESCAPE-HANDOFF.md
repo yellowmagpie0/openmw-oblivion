@@ -36,14 +36,22 @@ shirt after cuirass, replacing armor;06 selects the greaves already under focus.
 EV_KEY does not reach SDL. No engine/input-helper change was required. Failures
 remain failed; corrected input has actual semantic inventory checks.
 
-`joined-substructure-corridor-01` fails: original live corridor rats obstruct the
-straight waypoint course; continued movement eventually reaches the room, where
-Player dies without fighting. No prefix save is accepted. Corrected ignored
-`joined-substructure-corridor-rat-approach.json` stops before the encounter, then
-`joined-substructure-corridor-rat.json` fights original rat0387da with the axe.
-Run these next after the current rendered sanitizer camera course. Then handle
-0387db, the authored rat/zombie fight and route to Natural Caverns. Do not attempt
-to walk through live actors or skip required shaman combat.
+`joined-substructure-corridor-01` fails its final room arrival: continued movement
+without fighting eventually enters the encounter and Player dies. No prefix save
+is accepted. The apparent blocking rats are original DORatRunner01/02 (0387da/db),
+PACK0387de DORatRun01; they run back through the previous door. Ignored raw-master
+audit `original-corridor-rat-routing-audit.json` retains record names/PLDT and hash.
+`joined-substructure-corridor-fights-01` fails its facing gate while chasing the
+runner after it leaves the cell; no victory or checkpoint accepted.
+
+Current UI course `joined-substructure-runners-zombie-01` joins safe approach,
+read-only confirmation that both runners left the cell, physical room entry and
+ordinary axe combat with original zombie0491fc. Ignored editable recipe:
+`joined-substructure-runners-zombie.json`. Poll launcher93690 before another UI
+course. This is running, not accepted; current main save remains the gear save.
+Then handle any surviving hostile rat0387d9 and follow the physical route toward
+Natural Caverns. Preserve the original fleeing behavior; do not chase runners
+into another cell or infer that they require Player kills.
 
 ## Verification and reusable opening evidence
 
@@ -58,8 +66,15 @@ inventory, zero failures/skips, leak checking enabled and runtime built:
 `idle-view-sanitizer-integration-02/verification.json`, source d697f176f8 clean.
 First01 also has independently verified2203 passing XML cases, but its supervisor
 lost its session before final report; it is not the accepted integration gate.
-02 repeats only to resolve that missing terminal evidence. Fresh rendered camera
-save/reload is next; engine tests alone do not establish rendered acceptance.
+02 repeats only to resolve that missing terminal evidence. Current rendered
+sanitizer fresh reload/save also PASSES: FP observed, exact native entry and actual
+FIRS1 save, clean exit0, capture inspected. The source idle FP→Vanity F5 prefix
+really writesFIRS1 but its raw scenario fails a10-second SDL receipt timeout
+because the wrong key left the default active. Raw failure retained; independent
+prefix observation and clean fresh continuation are explicit composite evidence.
+Correct key `sdl_input_timeout_seconds=90` is verified in fresh receipt provenance.
+Rendered leak checking is disabled; engine leak coverage stays separate.
+[Current sanitizer proof](SEWER-IDLE-VIEW-SANITIZER-VERIFICATION.json).
 Component3262/Python560 retain their original provenance; no fresh pass inferred.
 
 The genuine opening chain remains linked without state splicing:
