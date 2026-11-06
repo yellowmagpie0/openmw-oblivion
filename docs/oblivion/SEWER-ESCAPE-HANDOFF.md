@@ -41,12 +41,18 @@ sideways deflection, then overshot; terminal failed, no new checkpoint. A bounde
 normal-input feedback loop now corrects aim between half-second W bursts. Nine
 focused loop tests and the full569 Python suite pass; see
 [adaptive input verification](SEWER-ADAPTIVE-INPUT-VERIFICATION.json).
-Current detached UI `joined-adaptive-escort-01`, supervisor112576/child112578,
-status `joined-adaptive-escort-01-launcher-status.json`. From actual100HP clearance
-save:21 original escort corridor points and original52/54 gates. Inspect actual
-process/status/scenario before another UI run. No gameplay pass claimed yet.
-Next: escort through Sanctum, Emperor/Amulet, class/Baurus88, physical exterior,
-uninterrupted new-game escape and fresh outdoor load. Full escape remains incomplete.
+All three full escort attempts are terminal failed: walking dies after waypoint15,
+sprint bursts reach52/54 but die before21, continuous sprint stops at(2781.915,
+6928.704) and dies to01772e. No new checkpoints from these failed runs.
+Clean `joined-third-ambush-approach-01` now supplies the genuine next input:
+`build/oblivion-compat/sewer-escape/joined-third-ambush-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(2540.174,6212.144,-1183.047),100HP/80MP, CharacterGen50, unchanged
+inventory/death counts, no combat/pending death. All13 approach points, actualF5,
+matching input receipts, exact fresh entry and inspected capture pass.
+[Approach proof](SEWER-JOINED-THIRD-AMBUSH-APPROACH-VERIFICATION.json).
+Next: resolve the actual third ambush from this checkpoint, then original54/56,
+Sanctum Emperor/Amulet, class/Baurus88, physical exterior, uninterrupted new-game
+escape and fresh outdoor load. Full escape remains incomplete.
 
 [Connected Subterrane entry](SEWER-JOINED-SUBTERRANE-ENTRY-VERIFICATION.json):
 clean978-action post-shaman10heal/26originalPGRD/Space03816c→022288 course,
