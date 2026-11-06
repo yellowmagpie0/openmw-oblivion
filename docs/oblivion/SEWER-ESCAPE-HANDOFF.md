@@ -9,101 +9,69 @@ birthsign/class choices, Baurus CharacterGen88 and MQ01 exit88. No injected
 health, quest, position or completion, skipped required encounters, or spliced
 save state qualifies. **Full escape remains incomplete.**
 
-Remaining: join the original gameplay continuously through shaman victory and
-the physical exterior, then fresh outdoor save/load. All2203 normal engine cases
-pass after the camera fix. The prior2202 ASan/UBSan cases pass at their original
-fingerprint before that fix.
-The accumulated sanitizer gate enables leak checking and builds the instrumented
-runtime; fresh rendered sanitizer gameplay remains separate. Component3262 and
-Python560 coverage retain their original provenance, with no fresh pass inferred.
+Remaining: join the genuine course through the solo dungeon/shaman, reunion,
+Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
+escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — idle camera preference save/load fixed and accepted
-
-A long idle escort wait selected temporary Vanity mode. Old `getModeForSave()`
-returned it as-is, causing World to serialize CAM_/FIRS0 and reload third person
-after a first-person choice. The getter now preserves the existing selected view
-for Vanity/Preview while retaining native recovery priority and existing static
-handling. No format change; old explicit saved FIRS values remain authoritative.
-
-The new test fails on old code, then all4 camera/recovery cases and all2203 normal
-engine cases pass after fix. Actual idle save observes FirstPerson→Vanity, writes
-FIRS1 and fresh-loads FirstPerson with zero native T4ST entry differences at both
-boundaries. Captures inspected; positive runs have no unreviewed errors. The old
-runtime negative observation reproduces FIRS0, but its raw scenario remains failed
-on a resource-revision mismatch (old binary5b8 versus regenerated resources5d738).
-[SEWER-IDLE-VIEW-SAVE-VERIFICATION.json](SEWER-IDLE-VIEW-SAVE-VERIFICATION.json).
-
-The prior2202 ASan/UBSan engine pass remains at a057b0af86 with leak checking;
-it does not cover this new camera change. Batch fresh sanitizer/rendered gates
-at the next required integration checkpoint. No component/Python pass is inferred.
-
-## Gameplay checkpoint and next action
+## Current chunk — joined Substructure combat, loot and equipment accepted
 
 Latest genuine course save:
-`build/oblivion-compat/sewer-escape/joined-post-wall-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Ordinary menu selection and three actual Heal Minor Wounds releases restore
-38→46→54→62 health; magicka50.249794 after natural regeneration. Inventory/death
-history unchanged, no combat/actions/pending deaths. Entry is identical except10
-recorded animated-body world-velocity projection differences≤1e-5. Capture
-inspected; no health write or saved-state substitution.
-[SEWER-JOINED-HEALING-VERIFICATION.json](SEWER-JOINED-HEALING-VERIFICATION.json).
+`build/oblivion-compat/sewer-escape/joined-substructure-gear-06/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(957.130,-28.291,122.501), health76. Original chest cuirass/greaves and war
+axe equipped; original healing potion consumed normally for56→76 health. No
+pending deaths, physical actions or combat engagements. Captures inspected.
+[Joined Substructure proof](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
 
-`joined-room-rat-02` PASSES: normal R selects first person, a real power-punch
-contact kills original room rat037e40/base02509b, and Player remains62 health.
-No pending deaths/actions/combat engagements; actual CAM_/FIRS1 records the
-selected view. Entry has only the same10≤1e-5 body-velocity projection differences.
-Capture inspected. Raw01 failed before movement on overescaped observer regex;
-no engine error. [Room-rat proof](SEWER-JOINED-ROOM-RAT-VERIFICATION.json).
+This follows actual key-corpse Take All, Club equipment and original script04e86e
+keyed teleport into022ff6 ([key proof](SEWER-JOINED-KEY-LOOT-VERIFICATION.json)),
+then Player-killed rat038819 (62→56 health) and all8 first-chest item types.
+All3 new entry comparisons are exact. Rat-victory save retains Player action65;
+its exact restoration and later chest save prove normal completion with no death
+replay. Chest/gear saves have no pending actions. These remain composite proofs.
 
-Current genuine save:
-`build/oblivion-compat/sewer-escape/joined-room-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player(1663.148,2739.201,-835.260), health62, all three encountered rats dead.
+Failed rat01 waits too close while rat attacks from190 units and Player dies;
+corrected02 faces/approaches/attacks normally. Gear01/02/05 select the reordered
+shirt after cuirass, replacing armor;06 selects the greaves already under focus.
+03 rejects unsupported absolute mouse before gameplay;04 confirms uinput D-pad
+EV_KEY does not reach SDL. No engine/input-helper change was required. Failures
+remain failed; corrected input has actual semantic inventory checks.
 
-`joined-key-loot-door-02` PASSES: normal navigation, corpse Take All, Club
-selection/equipment and the original keyed door join in one process. Every corpse
-stack transfers exactly; the key remains owned, door unlocks through original
-script04e86e and default teleport reaches Imperial Substructure022ff6. Health62
-is unchanged; no new deaths or pending actions. Entry differs only by one tiny
-animated-body velocity projection≤1e-5. Destination capture inspected.
-[Joined loot/key proof](SEWER-JOINED-KEY-LOOT-VERIFICATION.json).
+`joined-substructure-corridor-01` fails: original live corridor rats obstruct the
+straight waypoint course; continued movement eventually reaches the room, where
+Player dies without fighting. No prefix save is accepted. Corrected ignored
+`joined-substructure-corridor-rat-approach.json` stops before the encounter, then
+`joined-substructure-corridor-rat.json` fights original rat0387da with the axe.
+Run these next after the current rendered sanitizer camera course. Then handle
+0387db, the authored rat/zombie fight and route to Natural Caverns. Do not attempt
+to walk through live actors or skip required shaman combat.
 
-Latest genuine course save:
-`build/oblivion-compat/sewer-escape/joined-key-loot-door-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player(14.077,383.274,134.472), health62, Club equipped. Continue first Substructure
-rat, chest equipment/healing, zombie and the physical route to Natural Caverns.
-The corrected course uses unbound F7 to settle camera observations for3 rendered
-frames; raw01 remains failed before movement on delayed fixed-time observations.
-No implementation change or repeated broad normal gate for this data-only course.
-Fresh camera-fix sanitizer integration is next, followed by rendered coverage.
+## Verification and reusable opening evidence
 
-The source post-wall save remains available in `joined-wall-rats-06`, health38,
-position(585.390,3175.597,-855.278). Both authored wall rats are Player-killed,
-base count2. Its old third-person CAM value stays authoritative; the new course
-changes view through real R input. After room victory, continue key-corpse loot,
-Club equipment and keyed door. Restore a safe east/northeast lane around y3240
-before reusing the old corpse approach: a direct line near y3188 hits a wall.
+Camera preference save/load is fixed and accepted: temporary Vanity/Preview retain
+the selected view; old explicit saves remain authoritative. Red regression,
+all4 camera/recovery cases and2203 normal engine cases pass. Real idle FP→Vanity
+save writesFIRS1 and fresh-loads FirstPerson with exact native state at both
+boundaries. [Camera proof](SEWER-IDLE-VIEW-SAVE-VERIFICATION.json).
 
-[Wall-rat proof](SEWER-JOINED-WALL-RATS-VERIFICATION.json) is explicitly composite:
-raw03 fails later on crossing-facing input, but its actual first-kill F5 (health68)
-restores exactly in06, which passes second kill/crossing. Failed01/02/04/05 remain
-failed. World-axis camera observations/fresh input feedback converge; actual
-contacts/deaths remain required. Both native T4ST entry comparisons are exact.
+Current camera-fix ASan/UBSan engine integration PASSES all2203 cases, exact
+inventory, zero failures/skips, leak checking enabled and runtime built:
+`idle-view-sanitizer-integration-02/verification.json`, source d697f176f8 clean.
+First01 also has independently verified2203 passing XML cases, but its supervisor
+lost its session before final report; it is not the accepted integration gate.
+02 repeats only to resolve that missing terminal evidence. Fresh rendered camera
+save/reload is next; engine tests alone do not establish rendered acceptance.
+Component3262/Python560 retain their original provenance; no fresh pass inferred.
 
-The preceding [original19→30 course](SEWER-CONTINUOUS-ESCORT-VERIFICATION.json)
-proves passage, ambush/five deaths, conversations26–29, all three escort cell
-transitions and callback30. Its raw scenario fails solely an inherited MQ01
-stage24 exclusion. Independent master audit/trace proves original rat wall
-activation legitimately sets24; separate reviewed acceptance passes, preserving
-the raw failure. Corrected recipes forbid premature MQ01 exit88. The input follows
-[new game→19](SEWER-CONTINUOUS-OPENING-VERIFICATION.json) without splicing.
-
-Continue by the next observed gameplay blocker through solo dungeon/shaman,
-reunion, Emperor/Amulet, choices and physical exterior. Then verify fresh
-full-course outdoor load and current rendered sanitizer gameplay. Assemble the
-complete new-game course once joins work. Do not splice separate shaman/late
-saves, inject health/quest/position, or broaden into unrelated services/exact math.
-Preserve failures/provenance and keep UI courses single. F8 selects only local
-read-only observer phases; phase-scoped wait/aim patterns prevent stale matches.
+The genuine opening chain remains linked without state splicing:
+[new game→19](SEWER-CONTINUOUS-OPENING-VERIFICATION.json),
+[original19→30 escort](SEWER-CONTINUOUS-ESCORT-VERIFICATION.json),
+[wall-rat victories/passage](SEWER-JOINED-WALL-RATS-VERIFICATION.json),
+[normal healing38→62](SEWER-JOINED-HEALING-VERIFICATION.json),
+[first-person room rat](SEWER-JOINED-ROOM-RAT-VERIFICATION.json).
+Escort raw failure is solely the inherited MQ01wall24 exclusion: independent
+original-record/trace audit accepts the authored wall activation separately.
+Wall proof accepts genuine failed03 first-kill F5 followed by exact06 continuation;
+all raw failures remain failed. No full single-process acceptance is inferred.
 
 ## Reusable gameplay evidence
 

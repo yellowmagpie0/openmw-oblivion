@@ -1,0 +1,199 @@
+{
+  "scope": "Genuine joined escape continuation through first Imperial Substructure rat victory and original first-chest loot. Composite fresh saves; full uninterrupted escape remains incomplete.",
+  "full_escape_complete": false,
+  "rat": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-substructure-first-rat-02/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-key-loot-door-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "93d3a9f7f6ef7c9d4bddb31fa038b8e49ebd29b4e51f5640f94ff82769a364e9",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "source_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-key-loot-door-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "93d3a9f7f6ef7c9d4bddb31fa038b8e49ebd29b4e51f5640f94ff82769a364e9"
+    },
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-first-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "e9561a5975e0f26d6653768a55f0e056b100dc3b487c65b210ada015578d7084",
+      "position": [
+        454.0171203613281,
+        344.6495056152344,
+        123.51486206054688,
+        0.05781250074505806,
+        0.0,
+        2.464548110961914
+      ],
+      "health": 56.0
+    },
+    "life": {
+      "actor": "content:oblivion.esm:038819",
+      "base": "content:oblivion.esm:0cd335",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "actual_contact": true,
+    "health_lost": 6,
+    "saved_physical_action_owners": [
+      {
+        "id": 65,
+        "actor": "dynamic:player:0000000000000001"
+      }
+    ]
+  },
+  "chest": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-substructure-first-chest-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-substructure-first-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "e9561a5975e0f26d6653768a55f0e056b100dc3b487c65b210ada015578d7084",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "source_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-first-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "e9561a5975e0f26d6653768a55f0e056b100dc3b487c65b210ada015578d7084"
+    },
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-first-chest-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "e543d9999b5576914ecf9bc7616d1d7635ab7a1332f3fde89162d0c30983a83f",
+      "position": [
+        957.130126953125,
+        -28.290725708007812,
+        122.50093078613281,
+        0.9177735447883606,
+        0.0,
+        2.2079074382781982
+      ],
+      "health": 56.0
+    },
+    "container": "content:oblivion.esm:049352",
+    "every_original_stack_transferred_exactly": true,
+    "transferred_types": 8,
+    "container_empty": true,
+    "death_history_unchanged": true
+  },
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "observer_scope": "Read-only actual camera transforms, actor health/death, position and inventory; F7 settles local observations only. All gameplay uses ordinary controls.",
+  "retained_failure": "joined-substructure-first-rat-01 fails overstrict130-unit proximity wait while native rat attacks from190 units; Player dies, no output save accepted. Corrected02 faces, walks into reach and wins.",
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/joined-substructure-first-rat-02/joined-substructure-first-rat.png",
+    "build/oblivion-compat/sewer-escape/joined-substructure-first-chest-01/joined-first-chest-looted.png"
+  ],
+  "gear": {
+    "scope": "One genuine continuation equips original chest cuirass/greaves and war axe, then consumes original chest healing potion through ordinary inventory controls. Full sewer escape remains incomplete.",
+    "full_escape_complete": false,
+    "passed": true,
+    "scenario": "build/oblivion-compat/sewer-escape/joined-substructure-gear-06/scenario.json",
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-substructure-first-chest-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "e543d9999b5576914ecf9bc7616d1d7635ab7a1332f3fde89162d0c30983a83f",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "source_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-first-chest-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "e543d9999b5576914ecf9bc7616d1d7635ab7a1332f3fde89162d0c30983a83f"
+    },
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-gear-06/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "8c65bb999a0632040fa3837f2a40f7e55b2c51335cabadd779645125697f122d",
+      "position": [
+        957.130126953125,
+        -28.290725708007812,
+        122.50093078613281,
+        0.9177735447883606,
+        0.0,
+        2.2079074382781982
+      ],
+      "health": 76
+    },
+    "equipment": [
+      {
+        "base": "content:oblivion.esm:0661c1",
+        "count": 1,
+        "condition": 250.0,
+        "charge": -1.0,
+        "equipped_slots": 4,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      },
+      {
+        "base": "content:oblivion.esm:0661c3",
+        "count": 1,
+        "condition": 175.0,
+        "charge": -1.0,
+        "equipped_slots": 8,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      },
+      {
+        "base": "content:oblivion.esm:090613",
+        "count": 1,
+        "condition": 56.0,
+        "charge": -1.0,
+        "equipped_slots": 65536,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      }
+    ],
+    "healing": {
+      "potion": "content:oblivion.esm:009310",
+      "count_before": 1,
+      "count_after": 0,
+      "health_before": 56,
+      "health_after": 76
+    },
+    "death_history_unchanged": true,
+    "pending_deaths": [],
+    "physical_action_owners": [],
+    "captures_inspected": [
+      "build/oblivion-compat/sewer-escape/joined-substructure-gear-06/joined-both-armor-menu.png",
+      "build/oblivion-compat/sewer-escape/joined-substructure-gear-06/joined-gear-healed-world.png"
+    ],
+    "retained_failures": {
+      "01": "Extra Down after cuirass selects the reordered shirt; equipping shirt replaces cuirass, both-armor gate fails.",
+      "02": "Added settle time leaves the same wrong shirt selection.",
+      "03": "Unsupported absolute-mouse action rejected before runtime gameplay.",
+      "04": "Direct uinput D-pad EV_KEY does not reach SDL; read-only barrier fails.",
+      "05": "Shorter axis tap selects shirt as expected; wrong target, not repeated input."
+    },
+    "input_correction": "Cuirass equipment moves greaves into current focus. Select greaves directly; Weapons filter clamps focus to war axe. Magic filter uses three Up presses to original healing potion. No engine or test-runner implementation change.",
+    "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9"
+  },
+  "sanitizer_engine_gate": {
+    "path": "build/oblivion-compat/sewer-escape/idle-view-sanitizer-integration-02/verification.json",
+    "executed": 2203,
+    "passed": true,
+    "leak_checking": true,
+    "source": {
+      "head": "d697f176f872541fc1c4b1e18f3beb54193c29ec",
+      "source_fingerprint": "0d32544e76a083fb07a6b0a414ec2335b9626aafcfe1ee330cfed55835104ca6"
+    },
+    "rendered_sanitizer_pending": true
+  },
+  "next": "Original corridor rat encounters, zombie room and physical route to Natural Caverns. Full single-process escape and outdoor reload remain required."
+}
