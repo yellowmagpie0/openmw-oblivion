@@ -10,7 +10,8 @@ health, quest, position or completion, skipped required encounters, or spliced
 save state qualifies. **Full escape remains incomplete.**
 
 Remaining: prove one uninterrupted original new-game prison→physical exterior
-course, and close fresh rendered sanitizer coverage of the escort recipient fix.
+course and fresh outdoor reload from that new course. Current rendered sanitizer
+coverage of recipient/fall fixes now passes as explicit composite evidence.
 The genuine prison-origin checkpoint chain now reaches the exterior and passes
 fresh outdoor reload. It remains composite evidence; full escape is not complete.
 
@@ -68,11 +69,18 @@ Old raw route fails54; later first retry remains intentionally interrupted/-2.
 No failures relabeled. Read-only GDB02 and ordinary diagnosticF5 receipts retained.
 This closes rendered recipient/fall coverage as explicit composite evidence.
 
-No helper/UI remains live at this checkpoint. Next: launch the prepared original
-new-game continuous escape. Use `full-escape-continuous-versioned.json` and fresh
-output `full-escape-continuous-01`; pass `unused-new-game` to the detached launcher
-(the command has no load flag and config new-game=1). Verify actual startup,
-outer/inner phase controls and continue to physical exterior/fresh outdoor load.
+Current normal UI `full-escape-continuous-01` is live: supervisor169932,
+runner169933/game169977, manifest `full-escape-continuous-versioned.json`.
+Actual game argv has **no load-save flag**, config new-game=1. Video intro and
+segment1 original corpse observer have started; no runtime/outer-phase pass is
+inferred from recipe preparation. Inspect actual processes/status/report before
+another UI. Source argument `unused-new-game` only supplies an unused formatter
+variable; its path does not exist and is not used by the game command/config.
+No helper remains live; full2208 gates are terminal. Binary/resources built at
+ef2c3ef348 with the final descent patch, subsequently committeda9ab59a13e;
+later210b58d422/current edits are evidence/handoff only. Do not rebuild a partial
+runtime/resource version over the active game. Follow existing phase-scoped
+normal controls through original exterior, then fresh-load its own outdoorF5.
 Full escape remains incomplete until this uninterrupted course is proven.
 
 Uninterrupted course editable sources now prepared: selection
