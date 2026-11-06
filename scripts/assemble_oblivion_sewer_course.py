@@ -15,14 +15,30 @@ def engine_pattern(pattern):
  # wrapped by the segment's local print function.
  return bool(re.match(r'M\d+\s',pattern)) or pattern.startswith(engine_prefix)
 
+def scoped_pattern(pattern,phase):
+ # Scope each top-level alternative to its own producer. A guard callback
+ # can legitimately finish movement before the observer's waypoint fires.
+ branches=[];start=0;depth=0;character_class=False;escaped=False
+ for i,ch in enumerate(pattern):
+  if escaped:escaped=False;continue
+  if ch=='\\':escaped=True;continue
+  if ch=='[':character_class=True
+  elif ch==']':character_class=False
+  elif not character_class:
+   if ch=='(':depth+=1
+   elif ch==')':depth-=1
+   elif ch=='|' and depth==0:branches.append(pattern[start:i]);start=i+1
+ branches.append(pattern[start:])
+ return '|'.join(branch if engine_pattern(branch) else f'Escape segment {phase}:\\s*(?:'+branch+')' for branch in branches)
+
 def scope(a,phase):
  a=copy.deepcopy(a);types.add(a['type'])
  if a['type']=='wait_log':
   if a['pattern']=='Applied TES4 runtime state:' or a['pattern'].startswith('acceptance-command '):return None
-  if not engine_pattern(a['pattern']):a['pattern']=f'Escape segment {phase}:\\s*(?:'+a['pattern']+')'
+  a['pattern']=scoped_pattern(a['pattern'],phase)
   if a['pattern'].startswith('Escape segment') and 'ready' in a['pattern'].lower():a['timeout_seconds']=max(a.get('timeout_seconds',0),120)
  if a['type']=='repeat_until_log':
-  if not engine_pattern(a['pattern']):a['pattern']=f'Escape segment {phase}:\\s*(?:'+a['pattern']+')'
+  a['pattern']=scoped_pattern(a['pattern'],phase)
  if a['type']=='mouse_move' and 'from_log'in a:a['from_log']['pattern']=f'Escape segment {phase}:\\s*(?:'+a['from_log']['pattern']+')'
  if a['type']=='screenshot':a['name']=f'segment{phase:02d}-'+a['name']
  for k in ['actions','cleanup_actions']:

@@ -77,8 +77,17 @@ Actual speech/door log regressions plus wrong-segment exclusion pass, combined
 observer compiles. Exactly2 wait patterns changed; all11957 input actions/order
 otherwise identical. [Producer audit](SEWER-CONTINUOUS-COURSE-ASSEMBLY-VERIFICATION.json).
 
-Next/current launch target: `full-escape-continuous-corrected.json`, fresh
-`full-escape-continuous-02`, detached launcher source argument `unused-new-game`.
+Second original new-game attempt `full-escape-continuous-02` is also terminal/-2,
+intentionally stopped at actual14: mixed Lua/engine alternatives were wrapped as
+one producer, so original14 could not satisfy the South movement fallback. East
+waypoint really passed; original9/10/12/13/14 and complete guard conversation
+passed. Ordinary diagnosticF5 at10 is documented; no state injection. Preserve raw
+status. Corrected all3 mixed conditions, including later Emperor70 fallback;
+actual native14/70 and Lua/wrong-segment checks pass. All4340 regex gates compile;
+11957 actions/control order unchanged. QA source only, runtime C++ unchanged.
+
+Next/current launch target: `full-escape-continuous-mixed-fixed.json`, fresh
+`full-escape-continuous-03`, detached launcher source argument `unused-new-game`.
 Actual game command has no load-save flag, config new-game=1; unused input-save
 formatter path does not exist. Confirm actual process before another UI.
 Normal runtime SHA25673861667d0252ae7260ddb3c954ad2ced059e820edaa54028060d5b74cc33bf6,
@@ -87,6 +96,9 @@ Later commits are QA/evidence only; no runtime/resource rebuild required.
 Full2208 normal/sanitized gates and rendered descent54 are already terminal/pass.
 Continue original new-game course through physical exterior, then reload its own
 outdoorF5. Full escape remains incomplete until that uninterrupted course passes.
+Prepared ignored native/process final-audit script `verify-full-escape.py` rejects
+old composite exterior, partial opening and a still-running course. Positive
+whole-course/reload audit remains unavailable until actual completion.
 
 Adjacent known new-game gap: five tick1 deferred SetUnconscious events belong to
 original DAPeryiteScript01ecbd/shrine followers outside the tutorial. Same events

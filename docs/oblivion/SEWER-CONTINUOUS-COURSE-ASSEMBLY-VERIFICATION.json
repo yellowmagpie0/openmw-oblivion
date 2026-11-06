@@ -29,5 +29,34 @@
     "original_record_audit": "build/oblivion-compat/sewer-escape/new-game-deferred-command-audit.json",
     "baseline": "Same five tick1 deferred events in previously accepted continuous-opening-01; no new exception added to runner rules",
     "implementation_status": "Unsupported remote quest initialization retained as separate compatibility gap; this course is not general ObScript/full M15 acceptance"
-  }
+  },
+  "mixed_alternatives": {
+    "passed": true,
+    "scope": "Actual native14 and70 fallback events remain alternatives to segment-scoped Lua movement; nested native-info/roomC groups preserve original regex semantics",
+    "changes": [
+      {
+        "index": 17,
+        "before": "Escape segment 1:\\s*(?:Fresh standback east reached|setstage quest=content:oblivion.esm:02466e stage=14)",
+        "after": "Escape segment 1:\\s*(?:Fresh standback east reached)|setstage quest=content:oblivion.esm:02466e stage=14"
+      },
+      {
+        "index": 20,
+        "before": "Escape segment 1:\\s*(?:Fresh standback south reached|setstage quest=content:oblivion.esm:02466e stage=14)",
+        "after": "Escape segment 1:\\s*(?:Fresh standback south reached)|setstage quest=content:oblivion.esm:02466e stage=14"
+      },
+      {
+        "index": 11511,
+        "before": "Escape segment 60:\\s*(?:Adaptive route complete|setstage quest=content:oblivion.esm:02466e stage=70)",
+        "after": "Escape segment 60:\\s*(?:Adaptive route complete)|setstage quest=content:oblivion.esm:02466e stage=70"
+      }
+    ],
+    "native14": "[05:39:59.474 I] M7 ObScript: setstage quest=content:oblivion.esm:02466e stage=14",
+    "native70": "[03:28:12.518 I] M7 ObScript: setstage quest=content:oblivion.esm:02466e stage=70",
+    "lua_east": "[05:39:37.304 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 1:\tFresh standback east reached (731.549072265625, -13.5852508544921875, -108.89730072021484375)",
+    "wrong_lua_segment_rejected": true,
+    "all_patterns_compile": 4340,
+    "input_actions_and_order_unchanged": true,
+    "raw_attempt": "full-escape-continuous-02 intentionally interrupted at14 because old mixed-producer gate could not accept the already-real native14 fallback"
+  },
+  "mixed_fixed_manifest_sha256": "befeacad01473431c5392a9b9388b2277d9855d8f423ac14092d5773851d7bef"
 }
