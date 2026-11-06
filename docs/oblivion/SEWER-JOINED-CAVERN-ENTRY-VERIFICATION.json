@@ -1,0 +1,191 @@
+{
+  "scope": "Genuine lower Substructure route and two rat victories, original20-waypoint door approach/normal activation into Natural Caverns, then clean exact fresh destination continuation and ordinary healing. Explicit composite; full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "lower_approach": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-lower-corridor-approach-01/scenario.json",
+    "save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-lower-corridor-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "3ea00455f158894832ec95f9eb47d0402762a0b64aad97b4dcd83c0a2f9c1b60",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -4771.62255859375,
+        2190.221435546875,
+        -450.6024475097656,
+        0.08105476945638657,
+        0.0,
+        2.531522512435913
+      ],
+      "health": 80.0
+    },
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-root-descent-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "8ccd83b3865ac35bcc454d97b4932ad35fce55c7bb7eaf333bfa1f4f52832588",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    }
+  },
+  "lower_rat": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-lower-east-rat-course-01/scenario.json",
+    "save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-lower-east-rat-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "dbf47ba7135661c19e95f8b739b5fbd85c1276151da82cd8e561826683adae85",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -4099.06787109375,
+        1925.173095703125,
+        -446.5505676269531,
+        0.09511726349592209,
+        0.0,
+        1.589920997619629
+      ],
+      "health": 80.0
+    },
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-lower-corridor-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "3ea00455f158894832ec95f9eb47d0402762a0b64aad97b4dcd83c0a2f9c1b60",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "passed": true,
+    "rat": {
+      "actor": "content:oblivion.esm:159832",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "native_base_death_count": 9
+  },
+  "final_lower_rat": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-final-lower-rat-course-02/scenario.json",
+    "save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-final-lower-rat-course-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "3a62dfc53a66c40fffdcace4eb7664a7792d09df44145129a296abe848b6fb3b",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -3669.1337890625,
+        1954.3795166015625,
+        -450.3460693359375,
+        0.021679753437638283,
+        0.0,
+        1.1315226554870605
+      ],
+      "health": 62.900001525878906
+    },
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-lower-east-rat-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "dbf47ba7135661c19e95f8b739b5fbd85c1276151da82cd8e561826683adae85",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "passed": true,
+    "rat": {
+      "actor": "content:oblivion.esm:038174",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "native_base_death_count": 10
+  },
+  "initial_skeleton": {
+    "reference": "content:oblivion.esm:159834",
+    "phase_before": 1,
+    "phase_after": 1,
+    "killer": "null",
+    "Player_kill_not_claimed": true
+  },
+  "retained_failure": "joined-final-lower-rat-course-01 fails late approach waypoint:38174 intercepts movement and Player dies. No checkpoint accepted.02 hands combat over one waypoint earlier and passes.",
+  "cavern_transition": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-entry-course-01/scenario.json",
+    "save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-cavern-entry-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "cc92e8931b7b2cbc7078bcb027f5bd9a18c1f3b81ad088a9dc700f3cd84e968e",
+      "cell": "content:oblivion.esm:0380bd",
+      "position": [
+        -365.9091491699219,
+        -13.117950439453125,
+        40.27142333984375,
+        0.0,
+        0.0,
+        1.5000009536743164
+      ],
+      "health": 62.900001525878906
+    },
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-final-lower-rat-course-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "3a62dfc53a66c40fffdcace4eb7664a7792d09df44145129a296abe848b6fb3b",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "raw_passed": false,
+    "reviewed_gameplay_acceptance": true,
+    "all_actions_pass": true,
+    "all_actions_complete": true,
+    "exit_code": 0,
+    "missing_original_expectation": [
+      "West course phase 2:\\s*(?:M5 door activation: result=teleport ref=content:oblivion.esm:0381b8)"
+    ],
+    "independent_original_door_activation": "[22:04:59.972 I] M5 door activation: result=teleport ref=content:oblivion.esm:0381b8 destination=FormId:0x10380bd",
+    "source_cell": "content:oblivion.esm:022ff6",
+    "destination": "content:oblivion.esm:0380bd",
+    "corrected_recipe": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_entry.json",
+    "only_change": "expected_log: nativeM5 output is not Lua phase-prefixed; all gameplay actions/files unchanged.",
+    "all_corrected_expectations_match_original_log": true,
+    "corrected_recipe_rerun_as_whole": false
+  },
+  "fresh_cavern_recovery": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-entry-healing-01/scenario.json",
+    "save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-cavern-entry-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "ebc4abf6ad3a55e301eeac005e1edd87b058043c06eb166cc4e7ed8426f9cd74",
+      "cell": "content:oblivion.esm:0380bd",
+      "position": [
+        -365.9091491699219,
+        -13.117950439453125,
+        40.27142333984375,
+        0.0,
+        0.0,
+        1.5000009536743164
+      ],
+      "health": 80.0
+    },
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-entry-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "cc92e8931b7b2cbc7078bcb027f5bd9a18c1f3b81ad088a9dc700f3cd84e968e",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "passed": true,
+    "actual_three_healing_releases": [
+      "[22:09:23.496 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=69.94 magicka=61",
+      "[22:09:36.049 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=76.98 magicka=54.1041",
+      "[22:09:48.506 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=47.2622"
+    ],
+    "health_before": 62.900001525878906,
+    "health_after": 80
+  },
+  "pending_deaths": [],
+  "physical_action_owners": [],
+  "combat_engagements": [],
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/joined-lower-corridor-approach-01/joined-lower-corridor-approach.png",
+    "build/oblivion-compat/sewer-escape/joined-lower-east-rat-course-01/phase2-joined-actual-root-attacker-victory.png",
+    "build/oblivion-compat/sewer-escape/joined-final-lower-rat-course-02/phase2-joined-actual-root-attacker-victory.png",
+    "build/oblivion-compat/sewer-escape/joined-cavern-entry-course-01/phase2-actual-natural-caverns-entry.png",
+    "build/oblivion-compat/sewer-escape/joined-cavern-entry-healing-01/joined-zombie-healed.png"
+  ],
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "reused_checks": "Unchanged implementation:2203 normal and2203 ASan/UBSan engine cases plus rendered camera reload retain original provenance; no broad repeat for input manifests.",
+  "next": "Original first cavern goblin, physical traps/loot and shaman victory on this genuine route; reunion/Emperor/Amulet/choices/physical exterior, then uninterrupted new-game escape and fresh outdoor reload remain required."
+}

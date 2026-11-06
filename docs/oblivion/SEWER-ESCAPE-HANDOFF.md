@@ -13,52 +13,49 @@ Remaining: join the genuine course through the solo dungeon/shaman, reunion,
 Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
 escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — western encounters and actual root-area attacker accepted
+## Current chunk — genuine route reaches Natural Caverns
 
-Latest semantically verified course save:
-`build/oblivion-compat/sewer-escape/joined-root-descent-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player(-5034.059,2936.020,-378.381), health80. Five real healing casts and all17
-remaining original root-detour/descent waypoints pass in one process. Inventory
-and death history unchanged; no combat, physical actions or pending deaths.
-Native entry exact; capture inspected.
-[Root descent proof](SEWER-JOINED-ROOT-DESCENT-VERIFICATION.json).
+Latest fully inspected main checkpoint:
+`build/oblivion-compat/sewer-escape/joined-cavern-entry-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player in0380bd (Natural Caverns), position(-365.909,-13.118,40.271), health80 after
+three real Heal Minor Wounds casts. No pending deaths/actions/combat. Exact fresh
+native entry from original door save. Capture inspected.
+[Lower route/Caverns proof](SEWER-JOINED-CAVERN-ENTRY-VERIFICATION.json).
 
-Preceding [root entrance/combat proof](SEWER-JOINED-ROOT-ENTRANCE-VERIFICATION.json)
-passes normal healing, physical return to known corridor/root entrance, then exact
-fresh continuation killing actually engaged38818. Final47.7HP save clears combat;
-base02509b count increments once to8. Earlier actual attacker159838 is Player-killed
-with exact fresh entry, no pending state and46.04HP output.
-[Upper stairs/actual attacker proof](SEWER-JOINED-ROOT-ATTACKER-VERIFICATION.json).
+Lower159832 and38174 are Player-killed; base02509b counts change only8→9→10.
+Initial skeleton159834 remains originally dead/null killer; no Player kill claimed.
+Final-rat raw01 dies at a late waypoint with no checkpoint accepted;02 hands over
+to combat earlier and passes. The20-point original door approach and real Space
+activation0381b8→0380bd complete all726 actions, exit0, no forbidden/unreviewed
+errors. Raw door scenario fails only a wrongly Lua-prefixed nativeM5 expected log.
+Corrected expected_log preserves actions/files byte-for-byte and matches original
+trace; raw failure retained, reviewed gameplay accepted, clean fresh healing follows.
+Corrected full door recipe has not been rerun independently as a whole.
 
-The [western proof](SEWER-JOINED-WEST-VERIFICATION.json) accepts a real six-phase
-F5 prefix: Player kills38171/38172, normal six-cast healing reaches80, physical
-pillar passage and combat descent reach lower room, and38176 dies. Raw seven-phase
-run remains failed: later backtracking lets38175 kill Player. Its actual preceding
-68.72HP F5 restores exactly; clean fresh continuation kills38175 and ends59.32HP.
-Base02509b death count changes only2→5→6. No health/quest/position write or save
-splicing. Corrected editable six-phase recipe matches all442 successful prefix
-actions; it has not been rerun independently as a whole.
+`joined-first-cavern-goblin-course-01` passes original7-point approach but fails
+pursuit proximity before attacking: goblin03b526 moves behind a rock to(-366,655).
+Its genuine F5 at Player(183.510,555.661,-283.670), health80, no combat is retained;
+initial entry from healed Caverns save compares exactly. No goblin victory claimed.
 
-Upper-stair raw case likewise passes its141-action physical/F5 prefix, then fails
-while chasing38818 beyond a wall while actual159838 attacks. The saved59.32HP
-stair prefix restores exactly; short normal movement segments and fresh camera
-feedback defeat159838. The unrelated rat38818 remains alive at that boundary.
-Neither raw failure is relabeled a whole-course pass.
+Current UI course `joined-first-goblin-rock-detour-01` (launcher8027) starts from
+that actual pursuit F5 and follows original PGRD03b511 nodes30,36,35,38 around the
+rock. Ignored recipe `joined-first-goblin-rock-detour.json`; current-target A* audit
+`current-first-goblin-pursuit-path.json` retains original master hash. Inspect its
+actual process/scenario before another UI course. Then finish actual first goblin,
+traps/loot and required shaman victory on this main route. Do not splice old shaman
+or outdoor saves into it. Full uninterrupted new-game escape remains unproven.
 
-Current UI course: `joined-lower-east-rat-course-01` (launcher49163), from actual
-`joined-lower-corridor-approach-01` save. The latter raw five-waypoint course PASSES
-at80HP, but semantic save comparison remains pending. The current course follows
-three more original lower-corridor points and fights nearby159832 using short
-movement/fresh camera feedback. Inspect its actual process/scenario before a new
-UI course. Then handle actual38174 if engaged, follow physical lower corridor to
-original Caverns door0381b8, and continue shaman/late escape. No build helper live.
-
-Earlier accepted joins: [zombie](SEWER-JOINED-ZOMBIE-VERIFICATION.json),
+Earlier accepted joins:
+[root entrance/combat](SEWER-JOINED-ROOT-ENTRANCE-VERIFICATION.json),
+[17-point root descent](SEWER-JOINED-ROOT-DESCENT-VERIFICATION.json),
+[western encounters](SEWER-JOINED-WEST-VERIFICATION.json),
+[actual root attacker](SEWER-JOINED-ROOT-ATTACKER-VERIFICATION.json),
+[north passage](SEWER-JOINED-NORTH-VERIFICATION.json),
+[zombie](SEWER-JOINED-ZOMBIE-VERIFICATION.json),
 [recovery](SEWER-JOINED-ZOMBIE-HEALING-VERIFICATION.json),
-[north passage/combat](SEWER-JOINED-NORTH-VERIFICATION.json),
-[key loot/equipment/door](SEWER-JOINED-KEY-LOOT-VERIFICATION.json),
-[first Substructure chest/gear](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
-All remain explicit genuine-save composites; full uninterrupted escape is unproven.
+[key loot/door](SEWER-JOINED-KEY-LOOT-VERIFICATION.json),
+[first chest/gear](SEWER-JOINED-SUBSTRUCTURE-START-VERIFICATION.json).
+Failed-prefix acceptances, exact fresh boundaries and all raw failures remain explicit.
 
 ## Verification and reusable opening evidence
 
