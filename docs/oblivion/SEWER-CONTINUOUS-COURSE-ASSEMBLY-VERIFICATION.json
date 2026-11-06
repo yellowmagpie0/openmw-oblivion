@@ -58,5 +58,29 @@
     "input_actions_and_order_unchanged": true,
     "raw_attempt": "full-escape-continuous-02 intentionally interrupted at14 because old mixed-producer gate could not accept the already-real native14 fallback"
   },
-  "mixed_fixed_manifest_sha256": "befeacad01473431c5392a9b9388b2277d9855d8f423ac14092d5773851d7bef"
+  "mixed_fixed_manifest_sha256": "befeacad01473431c5392a9b9388b2277d9855d8f423ac14092d5773851d7bef",
+  "hermetic_regression_tests": {
+    "passed": true,
+    "selection": "Only test_oblivion_sewer_course_assembly.py; not all Python tests",
+    "executed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "command": [
+      "/usr/bin/python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts/tests",
+      "-p",
+      "test_oblivion_sewer_course_assembly.py",
+      "-v"
+    ],
+    "log": "build/oblivion-compat/sewer-escape/assembly-hermetic-regressions.log",
+    "source_sha256": {
+      "scripts/tests/test_oblivion_sewer_course_assembly.py": "529b13dd5486f6fe27f9a72e87486676a29656431731b0f0df950de0ec347903",
+      "scripts/assemble_oblivion_sewer_course.py": "2f2b3d3ae88496d128b52a59dde07ce56afe422d1cd3a4235874eac01904299b"
+    },
+    "scope": "Actual engine/Lua format regressions, original native fallbacks, wrong-segment rejection, nested regex groups, all gate regex compilation and original-new-game/readonly-query constraints. No installed game data or active UI used."
+  }
 }

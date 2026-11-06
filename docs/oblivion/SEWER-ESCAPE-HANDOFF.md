@@ -86,19 +86,26 @@ status. Corrected all3 mixed conditions, including later Emperor70 fallback;
 actual native14/70 and Lua/wrong-segment checks pass. All4340 regex gates compile;
 11957 actions/control order unchanged. QA source only, runtime C++ unchanged.
 
-Next/current launch target: `full-escape-continuous-mixed-fixed.json`, fresh
-`full-escape-continuous-03`, detached launcher source argument `unused-new-game`.
-Actual game command has no load-save flag, config new-game=1; unused input-save
-formatter path does not exist. Confirm actual process before another UI.
+Current original new-game UI `full-escape-continuous-03`: supervisor171082,
+runner171083/game171106, manifest `full-escape-continuous-mixed-fixed.json`,
+unused-new-game formatter source. Actual argv has no load-save flag, config
+new-game=1; launch provenance records the loaded executable SHA256. Latest observed
+original10/guard conversation; preserve this same live process. Verify actual
+process/status/report before another UI. No helper remains live.
+
+Four hermetic regression cases now protect producer classification, mixed native
+callbacks, wrong Lua-segment rejection, nested regex groups/all gate compilation,
+and original-new-game/readonly-query constraints. Focused4pass/0fail/0skip, source
+hashes in producer audit. This is not a fresh full Python-suite claim; runtime
+C++ unchanged, full2208 normal/sanitized and rendered descent54 retain provenance.
+
 Normal runtime SHA25673861667d0252ae7260ddb3c954ad2ced059e820edaa54028060d5b74cc33bf6,
 paired resources built at ef2c3ef348+final descent patch, code committeda9ab59a13e.
-Later commits are QA/evidence only; no runtime/resource rebuild required.
-Full2208 normal/sanitized gates and rendered descent54 are already terminal/pass.
-Continue original new-game course through physical exterior, then reload its own
-outdoorF5. Full escape remains incomplete until that uninterrupted course passes.
-Prepared ignored native/process final-audit script `verify-full-escape.py` rejects
-old composite exterior, partial opening and a still-running course. Positive
-whole-course/reload audit remains unavailable until actual completion.
+Later commits are QA/evidence only; do not rebuild resources across the active
+runtime. Continue to original physical exterior, then fresh-load its own outdoorF5.
+Full escape remains incomplete until the uninterrupted course passes.
+Prepared ignored `verify-full-escape.py` draft rejects composite exterior, partial
+opening and a still-running course; positive whole-course/reload audit is pending.
 
 Adjacent known new-game gap: five tick1 deferred SetUnconscious events belong to
 original DAPeryiteScript01ecbd/shrine followers outside the tutorial. Same events
