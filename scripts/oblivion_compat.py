@@ -51,7 +51,7 @@ SCENARIO_ACTION_TYPES = {
     "mouse_up", "focus_window", "command", "assert_file", "m14_checkpoint", "m14_assert_events",
     "m14_observe", "m14_actor_distance", "m14_actor_state_delta", "m14_advance_clock",
     "m14_obstruction", "m14_debug_navigation", "m14_console",
-    "m15_snapshot",
+    "m15_snapshot", "repeat_until_log",
 }
 FORBIDDEN_M14_ACTION_TYPES = {
     "select_actor", "select_package", "advance_phase", "set_phase", "move_actor", "teleport_actor",
@@ -507,7 +507,7 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             or not all(isinstance(value, int) and value >= 1 for value in m14["maximum_repeated_events"].values())
         ):
             raise ValueError("M14 maximum_repeated_events must map event names to positive integers")
-    for index, action in enumerate(actions):
+    for index, action in enumerate(sdl_offscreen_replay.validation_actions(actions)):
         if not isinstance(action, dict) or not isinstance(action.get("type"), str):
             raise ValueError(f"Scenario action {index} must be an object with a type")
         action_type = action["type"]
@@ -515,6 +515,36 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             raise ValueError(f"Scenario action {index} abort_on_failure must be a boolean")
         if action_type not in SCENARIO_ACTION_TYPES:
             raise ValueError(f"Unsupported scenario action: {action_type!r}")
+        if action_type == "repeat_until_log":
+            if not (raw.get("sdl_offscreen_input") or raw.get("sdl_xvfb_input")):
+                raise ValueError("repeat_until_log requires isolated SDL input")
+            if not isinstance(action.get("pattern"), str) or not action["pattern"]:
+                raise ValueError("repeat_until_log requires a non-empty pattern")
+            try:
+                re.compile(action["pattern"], re.MULTILINE)
+            except re.error as error:
+                raise ValueError(f"Invalid repeat_until_log pattern: {error}") from error
+            maximum = action.get("maximum_iterations")
+            timeout = action.get("timeout_seconds")
+            if type(maximum) is not int or maximum < 1:
+                raise ValueError("repeat_until_log maximum_iterations must be positive")
+            if (type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0):
+                raise ValueError("repeat_until_log timeout_seconds must be positive and finite")
+            log_path = action.get("path", "process.log")
+            if not isinstance(log_path, str) or not log_path:
+                raise ValueError("repeat_until_log requires an output-relative log path")
+            path = Path(log_path)
+            if path.is_absolute() or ".." in path.parts:
+                raise ValueError("repeat_until_log requires an output-relative log path")
+            if not action.get("actions"):
+                raise ValueError("repeat_until_log requires a non-empty action list")
+            allowed = (sdl_offscreen_replay.INPUT_ACTIONS | sdl_offscreen_replay.GAMEPAD_ACTIONS
+                       | {"sleep", "wait_log"}) - {"type", "type_held"}
+            if any(a.get("type") not in allowed
+                   for field in ("actions", "cleanup_actions") for a in action.get(field, [])):
+                raise ValueError("repeat_until_log permits only normal input and read-only waits")
+            if "after_start" in action and type(action["after_start"]) is not bool:
+                raise ValueError("repeat_until_log after_start must be a boolean")
         if action_type == "wait_log" and (not isinstance(action.get("pattern"), str) or not action["pattern"]):
             raise ValueError(f"Scenario action {index} wait_log requires a non-empty pattern")
         if action_type == "wait_log" and "after_start" in action and not isinstance(action["after_start"], bool):
@@ -1342,6 +1372,62 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         return m15_session.snapshot(action)
     action_type = action.get("type")
     started = time.monotonic()
+    if action_type == "repeat_until_log":
+        if offscreen_input is None:
+            raise ValueError("repeat_until_log requires isolated SDL input")
+        pattern = re.compile(action["pattern"], re.MULTILINE)
+        log_path = output / action.get("path", "process.log")
+        start_offset = log_path.stat().st_size if action.get("after_start", False) and log_path.exists() else 0
+        results: list[list[dict[str, Any]]] = []
+        cleanup: list[dict[str, Any]] = []
+        matched = False
+        failed = False
+        reason = "maximum_iterations"
+        def reached() -> bool:
+            if not log_path.is_file():
+                return False
+            with log_path.open(encoding="utf-8", errors="replace") as stream:
+                stream.seek(start_offset)
+                return pattern.search(stream.read()) is not None
+
+        try:
+            for _ in range(action["maximum_iterations"]):
+                if time.monotonic() - started >= action["timeout_seconds"]:
+                    reason = "timeout"
+                    break
+                matched = reached()
+                if matched:
+                    reason = "matched"
+                    break
+                iteration: list[dict[str, Any]] = []
+                results.append(iteration)
+                for child in action["actions"]:
+                    if time.monotonic() - started >= action["timeout_seconds"]:
+                        reason, failed = "timeout", True
+                        break
+                    result = _run_action(child, environment=environment, output=output,
+                                         offscreen_input=offscreen_input)
+                    iteration.append(result)
+                    if not result["passed"]:
+                        reason, failed = "child_failed", True
+                        break
+                if failed:
+                    break
+            else:
+                # Completion during the final input burst counts within the time bound.
+                if time.monotonic() - started >= action["timeout_seconds"]:
+                    reason = "timeout"
+                elif reached():
+                    matched = True
+                    reason = "matched"
+        finally:
+            for child in action.get("cleanup_actions", []):
+                cleanup.append(_run_action(child, environment=environment, output=output,
+                                           offscreen_input=offscreen_input))
+        return {"type": action_type, "passed": matched and not failed and all(r["passed"] for r in cleanup),
+                "pattern": pattern.pattern, "path": str(log_path), "start_offset": start_offset, "reason": reason,
+                "iterations": results, "cleanup_actions": cleanup,
+                "duration_seconds": round(time.monotonic() - started, 6)}
     observed_motion = None
     if action_type == 'mouse_move' and 'from_log' in action:
         action, observed_motion = sdl_offscreen_replay.observed_mouse_motion(action, output)

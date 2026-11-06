@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "scope": "Bounded normal-input scenario feedback, not sewer gameplay acceptance",
+  "source": {
+    "head": "830b0b00d7dd2a1915c5e0fc9a1cc2efe45f5b3b",
+    "source_fingerprint": "855507d9a3e9145d638e507013e8cce86eba67ae8c5d098cfa6392bc18511ec4"
+  },
+  "python": {
+    "executed": 569,
+    "passed": true,
+    "log_sha256": "ab288b6165405103a2c89f0409c7a61ae8b88e6e38695901d6eaccd3ae4d9936"
+  },
+  "evidence": "build/oblivion-compat/sewer-escape/adaptive-input-python-01/verification.json",
+  "focused_cases": 9,
+  "behavior": [
+    "Only ordinary isolated SDL inputs and read-only waits permitted in bounded body/cleanup",
+    "Positive finite timeout and maximum iteration bound",
+    "Nested receipt results retained; cleanup runs on success, failure and exception",
+    "Nested loops, commands and raw text rejected before launch"
+  ],
+  "runtime_status": "joined-adaptive-escort-01 launched; no result yet",
+  "limitations": [
+    "No native engine change or new native engine acceptance",
+    "Full uninterrupted sewer escape remains incomplete"
+  ]
+}
