@@ -1,0 +1,68 @@
+{
+  "scope": "One original new-game process from prison startup through CharacterGen19, with original conversations, ordinary standback movement and Renault switch activation. Not full escape acceptance.",
+  "full_escape_complete": false,
+  "acceptance": {
+    "passed": true,
+    "scenario": "build/oblivion-compat/sewer-escape/continuous-opening-01/scenario.json",
+    "new_game": true,
+    "process_load_save_flag": false,
+    "normal_inputs_plus_two_documented_diagnostic_F5": true,
+    "source_save_injections": false,
+    "save": "build/oblivion-compat/sewer-escape/continuous-opening-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "save_sha256": "bb5f3e8a803410317faaafbb8f91e12b083da819cb80d78dec5a243ce17c41c6",
+    "runtime_executable_sha256": "eb9107844c32da73276e406990fde6228f6bc0b891b28a41bde108bb317ff301",
+    "quest": {
+      "quest": "content:oblivion.esm:02466e",
+      "stage": 19,
+      "running": true,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    "player_health": 80,
+    "corpse_life": {
+      "actor": "content:oblivion.esm:15985a",
+      "base": "content:oblivion.esm:159859",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "null"
+    },
+    "switch_activation_count": 1,
+    "manual_input_receipt": "build/oblivion-compat/sewer-escape/continuous-opening-01/manual-input.json",
+    "remaining": "Physical passage through full escape not proven by this initial continuous course",
+    "captures_inspected": [
+      "phase2-standback-trigger.png",
+      "phase3-emperor-greeting.png",
+      "phase3-secret-passage.png"
+    ],
+    "capture_limit": "The stage19 switch capture is not physical passage acceptance; traversal is the next course."
+  },
+  "scenario_passed": true,
+  "source_commit": "a057b0af86",
+  "normal_gate": "build/oblivion-compat/sewer-escape/native-topics-ui-normal-integration-01/verification.json",
+  "readonly_observation": {
+    "scheduled_commands": [
+      "at 0 command content:oblivion.esm:02466e GetStage",
+      "at 0 command dynamic:player:0000000000000001 GetDead"
+    ],
+    "phase_selection": "F8 changes only local Lua observer phase. No world mutation handlers.",
+    "gameplay_inputs": "Ordinary SDL keyboard/controller inputs plus two documented diagnostic X11 F5 saves; no console, stage/position/health writes or save substitutions."
+  },
+  "remaining": [
+    "Joined gameplay through shaman, reunion, Emperor/Amulet, character choices and physical exterior",
+    "Fresh full-course outdoor save/load",
+    "Rendered sanitizer gameplay on the accumulated implementation"
+  ],
+  "sanitizer_gate": "SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json"
+}

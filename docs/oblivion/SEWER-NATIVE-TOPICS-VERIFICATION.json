@@ -63,7 +63,6 @@
       "evidence": "build/oblivion-compat/sewer-escape/native-topics-ui-normal-integration-01/verification.json"
     }
   },
-  "runtime_executable_sha256": "eb9107844c32da73276e406990fde6228f6bc0b891b28a41bde108bb317ff301",
   "independent_oracle": {
     "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
     "command": "0x503b60 ->0x669690 with arguments(topic,1,0)",
@@ -378,17 +377,34 @@
   "runtime": {
     "baurus-class-topics-01": {
       "evidence": "build/oblivion-compat/sewer-escape/baurus-class-topics-01/scenario.json",
-      "passed": true
+      "passed": true,
+      "built_source": {
+        "head": "5b8e24bbd22974b34ef0c4e2d0d86004b4fbf5b6",
+        "source_fingerprint": "280199248f1038fd2aef3e7c08339317e2c8de3822445e779db4b04621d0d757"
+      },
+      "runtime_executable_sha256": null,
+      "binary_identity_limit": "Pre-UI-repair runtime hash was not captured; source/build and actual scenario remain identified. No later runtime hash is attributed to this course."
     },
     "baurus-topics-reload-01": {
       "evidence": "build/oblivion-compat/sewer-escape/baurus-topics-reload-01/scenario.json",
       "passed": true,
-      "whole_entry_differences": 0
+      "whole_entry_differences": 0,
+      "built_source": {
+        "head": "5b8e24bbd22974b34ef0c4e2d0d86004b4fbf5b6",
+        "source_fingerprint": "280199248f1038fd2aef3e7c08339317e2c8de3822445e779db4b04621d0d757"
+      },
+      "runtime_executable_sha256": null,
+      "binary_identity_limit": "Pre-UI-repair runtime hash was not captured; source/build and actual scenario remain identified. No later runtime hash is attributed to this course."
     },
     "baurus-topics-response-03": {
       "evidence": "build/oblivion-compat/sewer-escape/baurus-topics-response-03/scenario.json",
       "passed": true,
-      "whole_entry_differences": 0
+      "whole_entry_differences": 0,
+      "built_source": {
+        "head": "5b8e24bbd22974b34ef0c4e2d0d86004b4fbf5b6",
+        "source_fingerprint": "93330ff65a27d3b64456914f6e63db145acc7ee3033af83988fc99d97b94f997"
+      },
+      "runtime_executable_sha256": "eb9107844c32da73276e406990fde6228f6bc0b891b28a41bde108bb317ff301"
     }
   },
   "automatic_save": {

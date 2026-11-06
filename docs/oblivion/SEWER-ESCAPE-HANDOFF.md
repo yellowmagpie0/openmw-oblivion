@@ -9,52 +9,66 @@ birthsign/class choices, Baurus CharacterGen88 and MQ01 exit88. No injected
 health, quest, position or completion, skipped required encounters, or spliced
 save state qualifies. **Full escape remains incomplete.**
 
-Remaining: the continuous prison-to-outdoors course including the shaman and
-accumulated sanitizer integration. All2202 normal engine cases pass at the
-fingerprint in the native topics artifact. Component3262 coverage retains its original475c provenance.
-No fresh component/Python/sanitizer result is claimed. The cancelled
-`default-open-sanitizer-integration-01` ran no tests; reuse objects, not its result.
+Remaining: join the original gameplay continuously through shaman victory and
+the physical exterior, then fresh outdoor save/load. All2202 normal engine
+cases and all2202 ASan/UBSan engine cases pass at their recorded fingerprints.
+The accumulated sanitizer gate enables leak checking and builds the instrumented
+runtime; fresh rendered sanitizer gameplay remains separate. Component3262 and
+Python560 coverage retain their original provenance, with no fresh pass inferred.
 
-## Current chunk — native learned topics and fresh interaction accepted
+## Current chunk — continuous original opening and accumulated sanitizer accepted
 
-CharacterGen88 now adds all five original DIAL topics to global Player knowledge.
-Existing DIAS saves retain native FormIds through ordinary/prepared load and
-content-index remapping. Conditional original INFO selection filters the sidebar;
-forced tutorial links retain priority. Ordinary no-link responses return to the
-learned-topic list. Native list selection bypasses Morrowind service labels.
+`continuous-opening-01` passes a genuine new-game process from prison startup
+through CharacterGen19. It completes original stages5,6,9,10,12–19, ordinary
+stand-back movement, all Emperor greeting choices and one original Renault
+switch activation. Player health80, the authored zero-health goblin corpse stays
+Dead with null killer, and pending deaths are empty. No save reload or stage,
+position, health or completion injection. Two documented diagnostic X11 F5 saves
+retain guard progress; all other inputs are in the editable recipe. Captures
+inspected; the early wall capture alone does not prove passage traversal.
+[SEWER-CONTINUOUS-OPENING-VERIFICATION.json](SEWER-CONTINUOUS-OPENING-VERIFICATION.json).
 
-`baurus-class-topics-01` executes the original five AddTopic commands and writes
-Autosave. Fresh processes `baurus-topics-reload-01` and
-`baurus-topics-response-03` restore the whole runtime with zero differences.
-Actual controller selection of Jauffre executes original INFO01e910 and another
-normal F5 retains all five DIAS topics without replaying AddTopic. Captures
-inspected; no unreviewed errors. All2202 normal engine cases and40 original
-knowledge-setter invocations pass. General dialogue/services are not accepted.
-[SEWER-NATIVE-TOPICS-VERIFICATION.json](SEWER-NATIVE-TOPICS-VERIFICATION.json).
+Original19 checkpoint:
+`build/oblivion-compat/sewer-escape/continuous-opening-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+SHA256 `bb5f3e8a803410317faaafbb8f91e12b083da819cb80d78dec5a243ce17c41c6`.
+`oblivion_sewer_continuous_opening.json` starts a new game without an input save.
 
-Automatic topic checkpoint:
-`build/oblivion-compat/sewer-escape/baurus-class-topics-01/userdata/saves/Bendu_Olo/Autosave.omwsave`.
-Editable recipes: `oblivion_sewer_baurus_class_topics.json` and
-`oblivion_sewer_baurus_topics_reload.json` in `scripts/data/oblivion_compat/`.
-This class save and the outdoor checkpoint below predate the separate shaman
-victory. The continuous course must join the gameplay through ordinary controls.
+`native-topics-sanitizer-integration-01` passes all2202 engine cases, exact
+inventory, no failures/skips, ASan leak checking and UBSan halt enabled at
+commit a057b0af86. The runtime also builds. The previous cancelled gate ran no
+tests; its objects were reused, not its result.
+[SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json](SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json).
 
-The preceding [script autosave chunk](SEWER-SCRIPT-AUTOSAVE-VERIFICATION.json)
-proves deferred saveable-UI timing, game-owned retention/rollback, coalescing,
-autosave preference and exact fresh load. It adapts to OpenMW's unsaveable
-open-dialogue UI; original queue timing is not claimed.
+The preceding [native topics chunk](SEWER-NATIVE-TOPICS-VERIFICATION.json)
+proves all five original CharacterGen88 AddTopic effects, native DIAS knowledge,
+conditional sidebar, content-index remapping and actual Jauffre INFO01e910 after
+fresh load/resave. Runtime provenance now distinguishes pre-UI-repair courses
+whose binary hashes were not captured from the identified post-fix response run.
+The [autosave chunk](SEWER-SCRIPT-AUTOSAVE-VERIFICATION.json) proves saveable-UI
+deferral, game-owned retention/rollback, coalescing and exact fresh load. General
+dialogue/services and original autosave queue timing remain unclaimed.
 
-## Next action
+## Next action — continuation is running; poll before another UI course
 
-Run the continuous original opening and batch accumulated sanitizer gates. An
-ignored `assemble-continuous-opening.py` prepares `continuous-opening.json` for
-new game through original19 in one process, with the existing normal-input
-recipes. Unbound F8 advances only local read-only observer phases; original
-scripts own gameplay progression. Its generated Lua syntax passes; runtime is
-not yet accepted. Extend that same course through solo dungeon/shaman, reunion,
-Emperor, choices and physical exit, then fresh outdoor save/load. Preserve all
-failed attempts and source provenance. Do not splice separate shaman/late saves
-or broaden into unrelated services or exact combat arithmetic.
+`continuous-escort-continuation-01` is running from the genuine19 checkpoint,
+with exact whole-runtime entry restoration (zero differences). It has passed
+physical passage traversal, lower stairs and all three roomC waypoints, and
+moved north beyond2435 to clear Renault's marker. Original ambush/departure30
+and the whole course remain pending. Poll launcher session51391 (game PID67281)
+and inspect its actual state before taking further action. Run UI courses singly.
+
+Editable recipes under `scripts/data/oblivion_compat/`:
+`oblivion_sewer_continuous_escort_continuation.json` loads the genuine19 save;
+`oblivion_sewer_continuous_escort.json` prepares the full new-game prefix through30
+but that assembled version is unrun. Unbound F8 advances only local read-only
+observer phases. Observer wait/aim patterns are phase-scoped, preventing repeated
+waypoint names from matching old observations. Original scripts own progression.
+
+Continue by the next observed gameplay blocker. Then extend the joined course
+through solo dungeon/shaman, reunion, Emperor, choices and physical exit, and
+verify fresh outdoor save/load plus focused rendered sanitizer gameplay. Preserve
+failed attempts and provenance. Do not splice separate shaman/late saves or
+broaden into unrelated services or exact combat arithmetic.
 
 ## Reusable gameplay evidence
 

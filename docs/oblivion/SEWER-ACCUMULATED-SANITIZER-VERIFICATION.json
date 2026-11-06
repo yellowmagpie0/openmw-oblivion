@@ -1,0 +1,85 @@
+{
+  "scope": "Accumulated sewer implementation ASan/UBSan engine integration at a057b0af86. All engine cases execute with leak checking; instrumented runtime built but rendered gameplay is separate.",
+  "verification": "build/oblivion-compat/sewer-escape/native-topics-sanitizer-integration-01/verification.json",
+  "source": {
+    "head": "a057b0af864bf5b5916d88f4ee5f932cb54628b0",
+    "source_fingerprint": "c50772c351925ed9ab2b05b620f4215cb470003c007d629fbca84e2a7a5458c9"
+  },
+  "results": {
+    "engine": {
+      "executed": 2202,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "f523714821d22dbc4a8b0de5d70d6e58ff573b8db405f60b9ea8b281eb58d31e",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "a1b182ac57dd1624280407f3c4fa3afc7f783c151d4023588440885dd9844d3b",
+      "inventory_sha256": "ab486b8bc86d1212983e7bcb98e55d24d4017bfb5056485d484eb04f447a84a3",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "--build",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+        "--target",
+        "openmw-tests",
+        "openmw",
+        "esmtool",
+        "-j",
+        "4"
+      ],
+      "log": "engine-build.log",
+      "returncode": 0,
+      "seconds": 1547.121
+    },
+    {
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+        "--gtest_list_tests"
+      ],
+      "log": "engine-inventory.txt",
+      "returncode": 0,
+      "seconds": 1.469
+    },
+    {
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+        "--gtest_filter=*",
+        "--gtest_repeat=1",
+        "--gtest_shuffle=0",
+        "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/native-topics-sanitizer-integration-01/engine.xml"
+      ],
+      "log": "engine.log",
+      "returncode": 0,
+      "seconds": 325.35
+    }
+  ],
+  "environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "instrumented_runtime_built_sha256": "2d1e91b6697ed10b3dab19c65b2da59e709a14d4b17bfae7849a4d9c26f18275",
+  "rendered_runtime_acceptance": false,
+  "limits": [
+    "This is full engine unit/integration coverage, not a continuous rendered escape.",
+    "Prior component/Python passes retain their original provenance; no fresh results are inferred from compiling their libraries."
+  ],
+  "retained_prior_cancelled_gate": "default-open-sanitizer-integration-01 was stopped before tests; its objects were reused, not its result."
+}
