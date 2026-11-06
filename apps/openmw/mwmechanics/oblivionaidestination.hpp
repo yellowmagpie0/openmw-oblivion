@@ -23,7 +23,7 @@ namespace MWMechanics
         // Rebuilding an exhausted partial path can project the actor back
         // onto its platform before an allowed descent finishes. Keep that
         // physical movement until its target/context changes or it loses the
-        // fall permission, visibility or downward separation.
+        // fall permission or downward separation.
         return previousTarget != target || previousCell != cell || (repathSeconds == 0.f && !continuingDescent)
             || (destination - previousDestination).length2() > 64.f * 64.f;
     }
@@ -36,9 +36,15 @@ namespace MWMechanics
             return route[cursor];
         // An isolated platform may have no navigation points at all. The
         // authored fall permission still permits pursuing a visible target
-        // below it through ordinary movement and gravity.
-        if (destination.z() < position.z() - 64.f
-            && flags.has(ESM4::PackageFlag::AllowFalls) && visible)
+        // below it through ordinary movement and gravity. A consumed nonempty
+        // approach may also finish around an occluding platform edge. Requiring
+        // fresh sight there can strand the actor at the projected route end.
+        // The waypoint height allowance must not end a planned drop midway:
+        // replanning there can steer the actor back onto its upper platform.
+        // Finish that approach near the target floor instead.
+        const float minimumDrop = route.empty() ? 64.f : 16.f;
+        if (destination.z() < position.z() - minimumDrop
+            && flags.has(ESM4::PackageFlag::AllowFalls) && (visible || !route.empty()))
             return destination;
         return std::nullopt;
     }

@@ -15,7 +15,63 @@ coverage of recipient/fall fixes now passes as explicit composite evidence.
 The genuine prison-origin checkpoint chain now reaches the exterior and passes
 fresh outdoor reload. It remains composite evidence; full escape is not complete.
 
-## Current chunk — frame-synchronized early solo course
+## Current chunk — occluded first-ambush descent
+
+Original-new-game06 is terminal FAILED: original19/80HP, passage/descent and
+ambush24 passed; three assassins died, but0178c3 stalled above Glenroy and the
+stage26 gate timed out900seconds. Game0/launcher1, no engine findings. Preserve
+`full-escape-continuous-06-failure-verification.json`, ordinary diagnosticF5 and
+two read-only GDB snapshots. Its consumed two-point prefix ends beside the actor;
+target is720units away/below and out of sight. Original PACK0178e2 flags0x483004
+includeAllowFalls; original local PGRD node274 is in an8-node component without
+node64 at the target. No exact original-game navigation parity is claimed.
+
+New regression `CompletedPartialApproachCanFinishAnOccludedAllowedDrop` uses
+actual snapshot coordinates/route and fails against production baseline (step
+missing). Proposed movement fix: a consumed nonempty approach may finish an
+allowed downward step around an occluding edge; empty unseen paths stay blocked.
+Timer replans preserve that eligible approach; target/cell/movement changes keep
+normal invalidation. No relocation, ownership or save schema change; permission
+is reconstructed from the route after reload. First revision passes focused4,
+full2210 normal and2210 ASan/UBSan engine cases, exact inventories/0fail/0skip,
+sanitizer leak1; normal runtime SHA256ee06e0e9…57490. Actual fresh diagnostic-save
+recovery01 PASSES original26: assassin0178c3 killed by Baurus, all3 escorts alive,
+Player80HP/inventory unchanged, queues clear, actualF5 equals native snapshot,
+whole fresh entry exact0differences and inspected victory capture. Preserve this
+PASS; earlier sampling was not a terminal failure.
+
+However, recovery takes237.659 simulation seconds with repeated partial descents
+and returns to the platform. At actual intermediateZ-643.925, the remaining59.075
+unit drop loses the old64-unit eligibility and permits an upper-prefix replan.
+Standalone current-header red reproduces the missing step at that exact position.
+The engine regression now includes it. Revised completion band is16 for consumed
+nonempty approaches; empty routes retain64 and the visibility requirement. No
+extra history or state/schema fields. Focused green02 passes all4 cases and builds
+normal runtime225953a1…db552. Final full2210 normal and2210 ASan/UBSan engine gates
+pass, exact inventories/0fail/0skip, same stable tested source, sanitizer leak1.
+Actual normal02 and instrumented03 recovery both PASS original26 in4.316 simulation
+seconds (first revision237.659): Baurus kill,80HP/unchanged inventory, all3 escorts
+alive, all4 assassins dead, no dead bound owners, clear queues, parsed native save
+exact, whole fresh entry0differences and inspected captures. Instrumented runtime
+leak checking is disabled; engine leak coverage is separate.
+[Current proof](SEWER-OCCLUDED-COMBAT-DESCENT-VERIFICATION.json).
+
+Instrumented01 remains failed before gameplay (LD_PRELOAD was a linker script).
+Instrumented02 remains failed only at the10second SDL receipt limit despite real
+victory/F5 and eventual matching delivery; no whole-course pass inferred. Editable
+probe now explicitly uses90seconds; corrected instrumented03 passes all actions.
+Only this receipt timing changed after engine gates; C++/test hashes are unchanged.
+
+Editable recovery probe:
+`scripts/data/oblivion_compat/oblivion_sewer_occluded_combat_descent_resume.json`.
+Only focus/F5 controls: all movement, descent and victory belong to native NPCs.
+This bounded fix is ready to commit. No UI or verification helper live at this
+checkpoint. Next active course is `full-escape-continuous-07`: original new game
+through physical exterior, then fresh-load its own outdoor save. Inspect its
+actual process/status before starting another course. Full escape remains
+incomplete; loaded recovery is not uninterrupted-course acceptance.
+
+### Reusable early-solo verification
 
 Original new-game `full-escape-continuous-03` failed during the first ambush:
 Glenroy killed0178c4, then bound-gear cleanup threw `Invalid or dangling disposition
@@ -86,12 +142,11 @@ and2209 normal/sanitized gates retain their provenance. Recipe/proof committed
 03455a1358. Fresh default assembly `frame-feedback-full-assembly-01` contains67
 segments/11732 actions; Lua and4297 regex gates compile, no load flag.
 
-Current UI: `full-escape-continuous-06`, supervisor192502/runner192503/game192526,
-original new game/no load. Launch provenance in its `launch-verification.json`
-records recipe03455a1358, harnessef32f3b33e and unchanged runtimeef71da25…7292a.
-Opening observer1 is ready; this is launch evidence only. No build helper live.
-Preserve this single process; follow actual milestones and terminal receipts.
-Full uninterrupted escape and fresh reload of its own outdoor save remain due.
+Original-new-game06 used supervisor192502/runner192503/game192526, original new
+game/no load, recipe03455a1358/harnessef32f3b33e and runtimeef71da25…7292a. It is now
+terminal/failed as recorded above. Its ordinary stage19F5/80HP parses exactly to
+its native receipt snapshot, and the Emperor conversation was rendered/inspected.
+No whole-course acceptance inferred. Full uninterrupted escape/reload remains due.
 
 Accepted04 prefix used manifest `full-escape-bound-cleanup-fixed.json`.
 Same course/ordinary controls, actual no-load argv and new-game1. Original26

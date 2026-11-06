@@ -1,0 +1,479 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T17:49:45.355754+00:00",
+  "scope": "Complete physical NPC approach after a projected partial route, including an occluding platform edge and continued descent toward the target floor",
+  "status": "Verified bounded occluded-descent fix, normal/instrumented runtime and full normal/sanitized engine gates; uninterrupted full escape remains due",
+  "source_files": {
+    "apps/openmw/mwmechanics/oblivionai.cpp": "7484108580d9575f2560c2a2d58e25cdac82d296d970b684d4be668ce6efa2b7",
+    "apps/openmw/mwmechanics/oblivionaidestination.hpp": "ae64e7fcde0889d2289ff4b6cf9d1143b28368f3f286ed0b0223055b62928d19",
+    "apps/openmw_tests/mwworld/testoblivionai.cpp": "ba5571a28425b99918ab2bd7523c9b438fb68ad126c6fd6e22fd0149857e5421",
+    "scripts/data/oblivion_compat/oblivion_sewer_occluded_combat_descent_resume.json": "361e10cec47daedb2465a561f6a560c8780fceaf8c8085d5936657b413f595e6"
+  },
+  "parent_commit": "f56706b5585c095c6ac564c8ce1e4439dfd317a5",
+  "normal_runtime_sha256": "225953a16a8ea2c020165e3186adf8112704f8ccee90d90356dffcccb82db552",
+  "failed_original_new_game": {
+    "proof": "build/oblivion-compat/sewer-escape/full-escape-continuous-06-failure-verification.json",
+    "status": "FAILED stage26 wait900sec, launcher1/game0, no engine findings; retained unchanged"
+  },
+  "independent_records": {
+    "proof": "build/oblivion-compat/sewer-escape/first-ambush-authored-fallback-audit.json",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "package": "0178e2",
+    "flags": "0x483004",
+    "local_pgrd": "0150c6",
+    "local_route_274_to_64": false,
+    "limits": "Installed original records only; no claim of exact original-executable pathfinding parity"
+  },
+  "regressions": {
+    "engine_red": "build/oblivion-compat/sewer-escape/occluded-combat-descent-red-01/verification.json",
+    "engine_red_result": "Expected step ASSERT_TRUE fails against baseline",
+    "mid_descent_red": {
+      "scope": "Standalone actual header check only; not engine/runtime acceptance",
+      "compiler_argv": [
+        "c++",
+        "-std=c++20",
+        "-O0",
+        "-I.",
+        "build/oblivion-compat/sewer-escape/occluded-mid-descent-standalone-red-01/probe.cpp",
+        "-o",
+        "build/oblivion-compat/sewer-escape/occluded-mid-descent-standalone-red-01/probe"
+      ],
+      "source_sha256": "9a339d807c0d76166f6826dce5487ecf325fda4323347592b9c5924cad4a50d3",
+      "production_header_sha256": "1ba1949bed32d8c365cfdc6c302f5cee451736e86ab9acb3d736a134205f57f4",
+      "returncode": 1,
+      "result": "remaining_drop=59.0747 planned_step=0 expected=1\n",
+      "expected_failure_reproduced": true,
+      "runtime_witness": "occluded-combat-descent-rendered-01/native-victory-verification.json:237.6587simulationseconds"
+    },
+    "final_focused": {
+      "proof": "build/oblivion-compat/sewer-escape/occluded-combat-descent-green-02/verification.json",
+      "sha256": "776c1303396ee1ec414fc09da0a5cdb295805e4af0ec6e300d050778e58c0786",
+      "results": {
+        "engine": {
+          "executed": 4,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.CompletedPartialApproachCanFinishAnOccludedAllowedDrop:OblivionAiTest.AllowFallsPursuesBelowAnIsolatedPlatformWithoutNavigationPoints:OblivionAiTest.AllowedDescentPreservesCompletedPartialRouteAcrossRepathTimer:OblivionAiTest.TargetUsesCompleteAuthoredPassageOverContinuousDetour",
+          "binary_sha256": "e21c67cd8530eb2c3b02f998a1c0ad5e71b87656735ac69551c89476a48943f9",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e203eb3bba25efbbbe7af8a78867784f4af2538ae397ad54d6efb415b8974906",
+          "inventory_sha256": "eb22d0e99bfe17c3fc1a7e94a3890bd30adc08294c8b425e31bf880383a05ef3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "f56706b5585c095c6ac564c8ce1e4439dfd317a5",
+        "source_fingerprint": "d1cb08ca1283bc0c0f651da7f9eeec9bb7d237be4f32af9f5986b804366fd7f2"
+      },
+      "source_after": {
+        "head": "f56706b5585c095c6ac564c8ce1e4439dfd317a5",
+        "source_fingerprint": "d1cb08ca1283bc0c0f651da7f9eeec9bb7d237be4f32af9f5986b804366fd7f2"
+      }
+    }
+  },
+  "normal_first_revision": {
+    "course": "build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-01",
+    "scenario_sha256": "cb77285cb2c27f0db85fa3f75511df10a9e2bcc07a0b9ced3ff0bfd2458377da",
+    "passed": true,
+    "exit_code": 0,
+    "engine_findings": 0,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-06/last-assassin-diagnostic.omwsave",
+      "source_save_sha256": "52070276f816628a243d6214a69426c694369fc803b77ae772b03491e70725f1",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "save_receipt": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 195865,
+      "sequence": 3,
+      "tick": 1535,
+      "event": "save-complete",
+      "action_id": "observation-3",
+      "actor": "dynamic:player:0000000000000001",
+      "cause": "normal-save",
+      "deltas": {
+        "health": 0
+      },
+      "live": "live-3-3.json",
+      "live_sha256": "7cb0640082b8b41da90a56cc7e0384eb84fe2128c124d3b445274b6cd976e9a5",
+      "result": "committed",
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "4961452fb633916826d3edba88e2db6e85f845795c5eef4c23a9fc58fd9a5714",
+      "target": "dynamic:player:0000000000000001"
+    },
+    "parsed_save_equals_native_receipt": true,
+    "issued_delivered_inputs_match": true,
+    "input_count": 6,
+    "player_health": 80.0,
+    "player_inventory_unchanged": true,
+    "escorts_alive": true,
+    "remaining_assassin": {
+      "actor": "content:oblivion.esm:0178c3",
+      "base": "content:oblivion.esm:017617",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "content:oblivion.esm:032a17"
+    },
+    "queues": {
+      "native_combat_engagements": 0,
+      "pending_death_events": 0,
+      "physical_action_owners": 0,
+      "native_spell_casts": 0,
+      "native_magic_projectiles": 0
+    },
+    "chargen": {
+      "quest": "content:oblivion.esm:02466e",
+      "stage": 26,
+      "running": true,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26
+      ]
+    },
+    "simulation_seconds": 237.65869140625,
+    "wall_seconds": 373.783225,
+    "capture": "occluded-ambush-stage26.png",
+    "rendered_inspected": true
+  },
+  "normal_final_revision": {
+    "course": "build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-02",
+    "scenario_sha256": "2b32b2641180402aaaded070ac95dfa5da70451f3fe56f2bda6254ca1cba36ef",
+    "passed": true,
+    "exit_code": 0,
+    "engine_findings": 0,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-06/last-assassin-diagnostic.omwsave",
+      "source_save_sha256": "52070276f816628a243d6214a69426c694369fc803b77ae772b03491e70725f1",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "save_receipt": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 207461,
+      "sequence": 3,
+      "tick": 26,
+      "event": "save-complete",
+      "action_id": "observation-3",
+      "actor": "dynamic:player:0000000000000001",
+      "cause": "normal-save",
+      "deltas": {
+        "health": 0
+      },
+      "live": "live-3-3.json",
+      "live_sha256": "e5f47041ec3fd8fea9b1c4883d76bc2789096e80af217742dc239a95177deb37",
+      "result": "committed",
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "507a385128dfa6ab4a69cfa1407687a07786303a2754ecfa0e0baca913c09d57",
+      "target": "dynamic:player:0000000000000001"
+    },
+    "parsed_save_equals_native_receipt": true,
+    "issued_delivered_inputs_match": true,
+    "input_count": 6,
+    "player_health": 80.0,
+    "player_inventory_unchanged": true,
+    "escorts_alive": true,
+    "remaining_assassin": {
+      "actor": "content:oblivion.esm:0178c3",
+      "base": "content:oblivion.esm:017617",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "content:oblivion.esm:032a17"
+    },
+    "queues": {
+      "native_combat_engagements": 0,
+      "pending_death_events": 0,
+      "physical_action_owners": 0,
+      "native_spell_casts": 0,
+      "native_magic_projectiles": 0
+    },
+    "chargen": {
+      "quest": "content:oblivion.esm:02466e",
+      "stage": 26,
+      "running": true,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26
+      ]
+    },
+    "simulation_seconds": 4.31561279296875,
+    "wall_seconds": 41.954503,
+    "capture": "occluded-ambush-stage26.png",
+    "rendered_inspected": true
+  },
+  "behavior": "A consumed nonempty route may finish an authored AllowFalls downward approach despite edge occlusion. Its16unit floor completion band avoids pulling a still-descending actor back onto the upper prefix. Empty routes retain64unit and visibility guards. Target/cell/movement invalidation and actual collision/gravity remain authoritative. No relocation, ownership or save-schema change.",
+  "final_integration": {
+    "normal": {
+      "proof": "build/oblivion-compat/sewer-escape/occluded-combat-descent-engine-integration-02/verification.json",
+      "sha256": "b87a17b0dab877d655366134c5923d3b24e3d06e71d185bd0332e33567395346",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2210,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "e21c67cd8530eb2c3b02f998a1c0ad5e71b87656735ac69551c89476a48943f9",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "8f7c3f7f862f874ee78ccbd168af4731fa69a1de515d11187a09ea5eb9d507b4",
+          "inventory_sha256": "eb22d0e99bfe17c3fc1a7e94a3890bd30adc08294c8b425e31bf880383a05ef3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "f56706b5585c095c6ac564c8ce1e4439dfd317a5",
+        "source_fingerprint": "4a3bfbcd06266f4d3073af4db53f926401201cd311e28fc1346e24af39902b7e"
+      },
+      "source_after": {
+        "head": "f56706b5585c095c6ac564c8ce1e4439dfd317a5",
+        "source_fingerprint": "4a3bfbcd06266f4d3073af4db53f926401201cd311e28fc1346e24af39902b7e"
+      }
+    },
+    "sanitizer": {
+      "proof": "build/oblivion-compat/sewer-escape/occluded-combat-descent-sanitizer-integration-02/verification.json",
+      "sha256": "aae1fec461136c6bb152f7522b8ac76777432a03c019f96cb39065a508d56c9b",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2210,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "89b2221ab65e318436d8ceae99fbd4cf9e6f16fb2936f18b60a3b55a5260e211",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "0c5dfe0e1291e359fde442b8f8cbf50d6e73c4a62b13dcb03ffb8646262bb6c4",
+          "inventory_sha256": "eb22d0e99bfe17c3fc1a7e94a3890bd30adc08294c8b425e31bf880383a05ef3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "f56706b5585c095c6ac564c8ce1e4439dfd317a5",
+        "source_fingerprint": "4a3bfbcd06266f4d3073af4db53f926401201cd311e28fc1346e24af39902b7e"
+      },
+      "source_after": {
+        "head": "f56706b5585c095c6ac564c8ce1e4439dfd317a5",
+        "source_fingerprint": "4a3bfbcd06266f4d3073af4db53f926401201cd311e28fc1346e24af39902b7e"
+      },
+      "engine_leak_checking": true
+    },
+    "instrumented_recovery": {
+      "course": "build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-sanitized-03",
+      "scenario_sha256": "2e969d28910debecf9b72503145d12cdf26bba3f22d61c637468b5ddcd93c504",
+      "passed": true,
+      "exit_code": 0,
+      "game_pid": 218533,
+      "runtime_sha256": "f0bc03f4710587985617decc255c663438bc074ecbf97d419a06a0fa62633b16",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-06/last-assassin-diagnostic.omwsave",
+        "source_save_sha256": "52070276f816628a243d6214a69426c694369fc803b77ae772b03491e70725f1",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save_receipt": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 218533,
+        "sequence": 3,
+        "tick": 26,
+        "event": "save-complete",
+        "action_id": "observation-3",
+        "actor": "dynamic:player:0000000000000001",
+        "cause": "normal-save",
+        "deltas": {
+          "health": 0
+        },
+        "live": "live-3-3.json",
+        "live_sha256": "e5f47041ec3fd8fea9b1c4883d76bc2789096e80af217742dc239a95177deb37",
+        "result": "committed",
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-sanitized-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "a0eebcd8f6d6ccfeeadb66e0a948db288630e6a28488dd51cb46bf5553279e19",
+        "target": "dynamic:player:0000000000000001"
+      },
+      "parsed_save_equals_native_receipt": true,
+      "issued_delivered_inputs_match": true,
+      "receipt_timeout_seconds": 90,
+      "simulation_seconds": 4.31561279296875,
+      "wall_seconds": 233.273325,
+      "player_health": 80,
+      "player_inventory_unchanged": true,
+      "escorts_alive": true,
+      "all_first_ambush_assassins_dead": true,
+      "remaining_assassin": {
+        "actor": "content:oblivion.esm:0178c3",
+        "base": "content:oblivion.esm:017617",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a17"
+      },
+      "no_terminal_bound_owners": true,
+      "queues": {
+        "native_combat_engagements": 0,
+        "pending_death_events": 0,
+        "physical_action_owners": 0,
+        "native_spell_casts": 0,
+        "native_magic_projectiles": 0
+      },
+      "chargen": {
+        "quest": "content:oblivion.esm:02466e",
+        "stage": 26,
+        "running": true,
+        "completed_stages": [
+          5,
+          6,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          22,
+          23,
+          24,
+          26
+        ]
+      },
+      "capture": "occluded-ambush-stage26.png",
+      "rendered_inspected": true,
+      "manifest": "build/oblivion-compat/sewer-escape/occluded-combat-descent-recovery-sanitized-03.json",
+      "manifest_sha256": "73d3512e3112006661b31567ec7ceddc9cf4422b4c233e13a7dbe903b4bc05b3",
+      "generated_from_editable_probe": true,
+      "environment_overrides": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+      },
+      "runtime_leak_checking": false,
+      "scope": "Actual ASan/UBSan gameplay recovery; engine leak1 coverage is separate"
+    }
+  },
+  "earlier_revision_integration": {
+    "normal": "occluded-combat-descent-engine-integration-01:2210pass,0fail/skip",
+    "sanitizer": "occluded-combat-descent-sanitizer-integration-01:2210pass,0fail/skip,leak1",
+    "scope": "Original provenance only; final revision gates remain separate"
+  },
+  "python_reused": {
+    "proof": "docs/oblivion/SEWER-INPUT-FEEDBACK-HARNESS-VERIFICATION.json",
+    "result": "578pass,0fail/skip",
+    "scope": "Unchanged Python harness; added editable probe validated by actual normal-input runtime and Lua compilation"
+  },
+  "limits": "Loaded focused recoveries do not substitute for one uninterrupted original-new-game prison-to-exterior course and fresh reload of its own outdoor save. Full escape remains unproven.",
+  "post_engine_gate_probe_timing_change": {
+    "scope": "Input-receipt timing adjustment only; C++ and gameplay controls unchanged",
+    "source": "scripts/data/oblivion_compat/oblivion_sewer_occluded_combat_descent_resume.json",
+    "source_sha256_before": "19c85f6c3766ff96a1329e9069a499300e084c7e2bfb7c66b0fbb63d2631f5f3",
+    "source_sha256_after": "361e10cec47daedb2465a561f6a560c8780fceaf8c8085d5936657b413f595e6",
+    "field": "sdl_input_timeout_seconds",
+    "old_effective_seconds": 10,
+    "new_seconds": 90,
+    "reason": "Instrumented actual fight and F5 succeeded, but receipt exceeded10seconds; raw rendered-sanitized-02 remains failed. All issued inputs ultimately delivered.",
+    "new_variant": "build/oblivion-compat/sewer-escape/occluded-combat-descent-recovery-sanitized-03.json"
+  },
+  "retained_instrumented_failures": [
+    {
+      "course": "build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-sanitized-01",
+      "passed": false,
+      "game_exit_code": 1,
+      "actions_complete": false,
+      "failed_actions": [
+        {
+          "duration_seconds": 180.09477,
+          "passed": false,
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-sanitized-01/process.log",
+          "pattern": "Occluded ambush recovery ready",
+          "poll_interval_seconds": 0.1,
+          "start_offset": 0,
+          "type": "wait_log"
+        }
+      ],
+      "reason": "Wrong LD_PRELOAD selected linker script; before gameplay"
+    },
+    {
+      "course": "build/oblivion-compat/sewer-escape/occluded-combat-descent-rendered-sanitized-02",
+      "passed": false,
+      "game_exit_code": 0,
+      "actions_complete": false,
+      "failed_actions": [
+        {
+          "error": "TimeoutError: SDL input was not delivered before its deadline",
+          "passed": false,
+          "type": "key"
+        }
+      ],
+      "reason": "Native victory/F5 clean, but10second SDL receipt deadline failed; no capture/whole-course pass inferred"
+    }
+  ],
+  "loader_library_preflight": {
+    "scope": "Loader preflight only; not gameplay acceptance",
+    "failed_variant": "occluded-combat-descent-recovery-sanitized-01.json",
+    "failed_ld_preload": "/usr/lib/gcc/x86_64-redhat-linux/16/libasan.so",
+    "failure": "Compiler -print-file-name selected GNU linker script; child ended before gameplay",
+    "corrected_variant": "build/oblivion-compat/sewer-escape/occluded-combat-descent-recovery-sanitized-02.json",
+    "resolved_binary_dependency": "/usr/lib64/libasan.so.8.0.0",
+    "elf_magic_verified": true,
+    "ldd_output": "\tlinux-vdso.so.1 (0x00007f74a443f000)\n\tlibasan.so.8 => /lib64/libasan.so.8 (0x00007f74a3c00000)\n\tlibopenal.so.1 => /lib64/libopenal.so.1 (0x00007f74a3a31000)\n\tlibavcodec.so.62 => /lib64/libavcodec.so.62 (0x00007f74a2a00000)\n\tlibavformat.so.62 => /lib64/libavformat.so.62 (0x00007f74a2600000)\n\tlibavutil.so.60 => /lib64/libavutil.so.60 (0x00007f74a2405000)\n\tlibswscale.so.9 => /lib64/libswscale.so.9 (0x00007f74a38f7000)\n\tlibswresample.so.6 => /lib64/libswresample.so.6 (0x00007f74a43ef000)\n\tlibosgParticle.so.161 => /lib64/libosgParticle.so.161 (0x00007f74a439d000)\n\tlibosgViewer.so.161 => /lib64/libosgViewer.so.161 (0x00007f74a2917000)\n\tlibosgShadow.so.161 => /lib64/libosgShadow.so.161 (0x00007f74a431f000)\n\tlibboost_program_options.so.1.90.0 => /lib64/libboost_program_options.so.1.90.0 (0x00007f74a38b1000)\n\tlibboost_container.so.1.90.0 => /lib64/libboost_container.so.1.90.0 (0x00007f74a430b000)\n\tlibMyGUIEngine_d.so.3.4.3 => /home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3 (0x00007f749da00000)\n\tlibfreetype.so.6 => /lib64/libfreetype.so.6 (0x00007f74a2329000)\n\tlibz.so.1 => /lib64/libz.so.1 (0x00007f74a28ed000)\n\tlibSDL2-2.0.so.0 => /lib64/libSDL2-2.0.so.0 (0x00007f749d99c000)\n\tlibosgAnimation.so.161 => /lib64/libosgAnimation.so.161 (0x00007f749d905000)\n\tlibosgGA.so.161 => /lib64/libosgGA.so.161 (0x00007f749d87b000)\n\tlibosgText.so.161 => /lib64/libosgText.so.161 (0x00007f749d81f000)\n\tlibosgDB.so.161 => /lib64/libosgDB.so.161 (0x00007f749d705000)\n\tlibosgUtil.so.161 => /lib64/libosgUtil.so.161 (0x00007f749d572000)\n\tlibosgSim.so.161 => /lib64/libosgSim.so.161 (0x00007f749d4ee000)\n\tlibosg.so.161 => /lib64/libosg.so.161 (0x00007f749d200000)\n\tlibOpenThreads.so.21 => /lib64/libOpenThreads.so.21 (0x00007f74a38a7000)\n\tlibboost_iostreams.so.1.90.0 => /lib64/libboost_iostreams.so.1.90.0 (0x00007f74a28d7000)\n\tlibboost_random.so.1.90.0 => /lib64/libboost_random.so.1.90.0 (0x00007f74a28cf000)\n\tlibboost_regex.so.1.90.0 => /lib64/libboost_regex.so.1.90.0 (0x00007f749d1b7000)\n\tlibGL.so.1 => /lib64/libGL.so.1 (0x00007f749d144000)\n\tlibluajit-5.1.so.2 => /lib64/libluajit-5.1.so.2 (0x00007f749d0b0000)\n\tliblz4.so.1 => /lib64/liblz4.so.1 (0x00007f749d089000)\n\tlibsqlite3.so.0 => /lib64/libsqlite3.so.0 (0x00007f749cefd000)\n\tlibicuuc.so.77 => /lib64/libicuuc.so.77 (0x00007f749cc00000)\n\tlibicui18n.so.77 => /lib64/libicui18n.so.77 (0x00007f749c800000)\n\tlibicudata.so.77 => /lib64/libicudata.so.77 (0x00007f749a800000)\n\tlibyaml-cpp.so.0.8 => /lib64/libyaml-cpp.so.0.8 (0x00007f749cea9000)\n\tlibstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007f749a400000)\n\tlibm.so.6 => /lib64/libm.so.6 (0x00007f749c6e9000)\n\tlibubsan.so.1 => /lib64/libubsan.so.1 (0x00007f7499c00000)\n\tlibgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007f749ce7c000)\n\tlibc.so.6 => /lib64/libc.so.6 (0x00007f7499a07000)\n\tlibfmt.so.11 => /lib64/libfmt.so.11 (0x00007f749ce57000)\n\tlibvpx.so.9 => /lib64/libvpx.so.9 (0x00007f7499600000)\n\tlibwebpmux.so.3 => /lib64/libwebpmux.so.3 (0x00007f74a231c000)\n\tliblcms2.so.2 => /lib64/liblcms2.so.2 (0x00007f749c67e000)\n\tliblzma.so.5 => /lib64/liblzma.so.5 (0x00007f749ce21000)\n\tlibaribcaption.so.1 => /lib64/libaribcaption.so.1 (0x00007f749cbc1000)\n\tlibaribb24.so.0 => /lib64/libaribb24.so.0 (0x00007f74a2308000)\n\tlibdav1d.so.7 => /lib64/libdav1d.so.7 (0x00007f749a220000)\n\tlibopencore-amrwb.so.0 => /lib64/libopencore-amrwb.so.0 (0x00007f749d4d7000)\n\tlibrsvg-2.so.2 => /lib64/librsvg-2.so.2 (0x00007f7499000000)\n\tlibcairo.so.2 => /lib64/libcairo.so.2 (0x00007f749a6b6000)\n\tlibgobject-2.0.so.0 => /lib64/libgobject-2.0.so.0 (0x00007f74999a6000)\n\tlibglib-2.0.so.0 => /lib64/libglib-2.0.so.0 (0x00007f7498e9e000)\n\tlibxevdb.so.0 => /lib64/libxevdb.so.0 (0x00007f7499941000)\n\tlibzvbi.so.0 => /lib64/libzvbi.so.0 (0x00007f7499578000)\n\tlibsnappy.so.1 => /lib64/libsnappy.so.1 (0x00007f749cbb1000)\n\tlibaom.so.3 => /lib64/libaom.so.3 (0x00007f7498800000)\n\tlibcodec2.so.1.2 => /lib64/libcodec2.so.1.2 (0x00007f74986ac000)\n\tlibfdk-aac.so.2 => /lib64/libfdk-aac.so.2 (0x00007f74994de000)\n\tlibgsm.so.1 => /lib64/libgsm.so.1 (0x00007f749cba3000)\n\tlibilbc.so.3 => /lib64/libilbc.so.3 (0x00007f74994c9000)\n\tlibjxl.so.0.11 => /lib64/libjxl.so.0.11 (0x00007f7498200000)\n\tlibjxl_threads.so.0.11 => /lib64/libjxl_threads.so.0.11 (0x00007f749d4d1000)\n\tliblc3.so.1 => /lib64/liblc3.so.1 (0x00007f7498e75000)\n\tlibmp3lame.so.0 => /lib64/libmp3lame.so.0 (0x00007f7498dfb000)\n\tliboapv.so.2 => /lib64/liboapv.so.2 (0x00007f7498dde000)\n\tlibopencore-amrnb.so.0 => /lib64/libopencore-amrnb.so.0 (0x00007f7498db3000)\n\tlibopenjp2.so.7 => /lib64/libopenjp2.so.7 (0x00007f749863e000)\n\tlibopus.so.0 => /lib64/libopus.so.0 (0x00007f749818c000)\n\tlibrav1e.so.0 => /lib64/librav1e.so.0 (0x00007f7497e00000)\n\tlibspeex.so.1 => /lib64/libspeex.so.1 (0x00007f7498d94000)\n\tlibSvtAv1Enc.so.3 => /lib64/libSvtAv1Enc.so.3 (0x00007f7497600000)\n\tlibtheoraenc.so.1 => /lib64/libtheoraenc.so.1 (0x00007f7498d66000)\n\tlibtheoradec.so.1 => /lib64/libtheoradec.so.1 (0x00007f749862b000)\n\tlibtwolame.so.0 => /lib64/libtwolame.so.0 (0x00007f7498604000)\n\tlibvo-amrwbenc.so.0 => /lib64/libvo-amrwbenc.so.0 (0x00007f749816b000)\n\tlibvorbis.so.0 => /lib64/libvorbis.so.0 (0x00007f749813a000)\n\tlibvorbisenc.so.2 => /lib64/libvorbisenc.so.2 (0x00007f7497d68000)\n\tlibwebp.so.7 => /lib64/libwebp.so.7 (0x00007f7497cdf000)\n\tlibxeveb.so.0 => /lib64/libxeveb.so.0 (0x00007f749751e000)\n\tlibxvidcore.so.4 => /lib64/libxvidcore.so.4 (0x00007f7497412000)\n\tlibopenh264.so.8 => /lib64/libopenh264.so.8 (0x00007f74972f8000)\n\tlibvpl.so.2 => /lib64/libvpl.so.2 (0x00007f7497295000)\n\tlibva.so.2 => /lib64/libva.so.2 (0x00007f749725d000)\n\tlibxml2.so.2 => /lib64/libxml2.so.2 (0x00007f74970ee000)\n\tlibbz2.so.1 => /lib64/libbz2.so.1 (0x00007f74985f0000)\n\tlibdvdnav.so.4 => /lib64/libdvdnav.so.4 (0x00007f7498122000)\n\tlibdvdread.so.8 => /lib64/libdvdread.so.8 (0x00007f74970c8000)\n\tlibgme.so.0 => /lib64/libgme.so.0 (0x00007f7497016000)\n\tlibmodplug.so.1 => /lib64/libmodplug.so.1 (0x00007f7496e83000)\n\tlibopenmpt.so.0 => /lib64/libopenmpt.so.0 (0x00007f7496c00000)\n\tlibchromaprint.so.1 => /lib64/libchromaprint.so.1 (0x00007f749c66f000)\n\tlibbluray.so.3 => /lib64/libbluray.so.3 (0x00007f7496e3d000)\n\tlibgmp.so.10 => /lib64/libgmp.so.10 (0x00007f7496b57000)\n\tlibgnutls.so.30 => /lib64/libgnutls.so.30 (0x00007f7496800000)\n\tlibrabbitmq.so.4 => /lib64/librabbitmq.so.4 (0x00007f749810b000)\n\tlibrist.so.4 => /lib64/librist.so.4 (0x00007f7496b2c000)\n\tlibsrt.so.1.5 => /lib64/libsrt.so.1.5 (0x00007f74966f5000)\n\tlibssh.so.4 => /lib64/libssh.so.4 (0x00007f7496651000)\n\tlibsmbclient.so.0 => /lib64/libsmbclient.so.0 (0x00007f7496b00000)\n\tlibzmq.so.5 => /lib64/libzmq.so.5 (0x00007f74965b8000)\n\tlibva-drm.so.2 => /lib64/libva-drm.so.2 (0x00007f749a21c000)\n\tlibva-x11.so.2 => /lib64/libva-x11.so.2 (0x00007f74994c1000)\n\tlibvdpau.so.1 => /lib64/libvdpau.so.1 (0x00007f74994bb000)\n\tlibX11.so.6 => /lib64/libX11.so.6 (0x00007f7496463000)\n\tlibgcrypt.so.20 => /lib64/libgcrypt.so.20 (0x00007f74962d8000)\n\tlibdrm.so.2 => /lib64/libdrm.so.2 (0x00007f7496aea000)\n\tlibshaderc_shared.so.1 => /lib64/libshaderc_shared.so.1 (0x00007f7495e00000)\n\tlibsoxr.so.0 => /lib64/libsoxr.so.0 (0x00007f7496278000)\n\tlibXinerama.so.1 => /lib64/libXinerama.so.1 (0x00007f749993d000)\n\tlibXrandr.so.2 => /lib64/libXrandr.so.2 (0x00007f7498d57000)\n\tlibpng16.so.16 => /lib64/libpng16.so.16 (0x00007f749623b000)\n\tlibharfbuzz.so.0 => /lib64/libharfbuzz.so.0 (0x00007f7495cc4000)\n\tlibbrotlidec.so.1 => /lib64/libbrotlidec.so.1 (0x00007f7496e2e000)\n\tlibfontconfig.so.1 => /lib64/libfontconfig.so.1 (0x00007f7495c71000)\n\tlibzstd.so.1 => /lib64/libzstd.so.1 (0x00007f7495b87000)\n\tlibGLX.so.0 => /lib64/libGLX.so.0 (0x00007f749620a000)\n\tlibXext.so.6 => /lib64/libXext.so.6 (0x00007f7496ad6000)\n\tlibGLdispatch.so.0 => /lib64/libGLdispatch.so.0 (0x00007f7495b0f000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007f74a4441000)\n\tlibgio-2.0.so.0 => /lib64/libgio-2.0.so.0 (0x00007f749592f000)\n\tlibgdk_pixbuf-2.0.so.0 => /lib64/libgdk_pixbuf-2.0.so.0 (0x00007f74958ff000)\n\tlibcairo-gobject.so.2 => /lib64/libcairo-gobject.so.2 (0x00007f7497cd6000)\n\tlibpangocairo-1.0.so.0 => /lib64/libpangocairo-1.0.so.0 (0x00007f7496ac3000)\n\tlibpango-1.0.so.0 => /lib64/libpango-1.0.so.0 (0x00007f7495890000)\n\tlibXrender.so.1 => /lib64/libXrender.so.1 (0x00007f74961fd000)\n\tlibxcb.so.1 => /lib64/libxcb.so.1 (0x00007f7495866000)\n\tlibxcb-render.so.0 => /lib64/libxcb-render.so.0 (0x00007f7495857000)\n\tlibxcb-shm.so.0 => /lib64/libxcb-shm.so.0 (0x00007f74985e8000)\n\tlibpixman-1.so.0 => /lib64/libpixman-1.so.0 (0x00007f74957a6000)\n\tlibffi.so.8 => /lib64/libffi.so.8 (0x00007f7495796000)\n\tlibpcre2-8.so.0 => /lib64/libpcre2-8.so.0 (0x00007f74956e5000)\n\tlibvmaf.so.3 => /lib64/libvmaf.so.3 (0x00007f74955d7000)\n\tliblpcnetfreedv.so.0.5 => /lib64/liblpcnetfreedv.so.0.5 (0x00007f7494600000)\n\tlibjxl_cms.so.0.11 => /lib64/libjxl_cms.so.0.11 (0x00007f74955af000)\n\tlibhwy.so.1 => /lib64/libhwy.so.1 (0x00007f74955a0000)\n\tlibbrotlienc.so.1 => /lib64/libbrotlienc.so.1 (0x00007f74954f7000)\n\tlibogg.so.0 => /lib64/libogg.so.0 (0x00007f74954ed000)\n\tlibsharpyuv.so.0 => /lib64/libsharpyuv.so.0 (0x00007f74954e4000)\n\tlibmvec.so.1 => /lib64/libmvec.so.1 (0x00007f7494506000)\n\tlibmpg123.so.0 => /lib64/libmpg123.so.0 (0x00007f74944a7000)\n\tlibvorbisfile.so.3 => /lib64/libvorbisfile.so.3 (0x00007f74954d9000)\n\tlibudfread.so.3 => /lib64/libudfread.so.3 (0x00007f749449d000)\n\tlibp11-kit.so.0 => /lib64/libp11-kit.so.0 (0x00007f74942fa000)\n\tlibidn2.so.0 => /lib64/libidn2.so.0 (0x00007f74942a9000)\n\tlibunistring.so.5 => /lib64/libunistring.so.5 (0x00007f74940fb000)\n\tlibtasn1.so.6 => /lib64/libtasn1.so.6 (0x00007f74940e4000)\n\tlibhogweed.so.6 => /lib64/libhogweed.so.6 (0x00007f74940a1000)\n\tlibnettle.so.8 => /lib64/libnettle.so.8 (0x00007f749404a000)\n\tlibssl.so.3 => /lib64/libssl.so.3 (0x00007f7493f4f000)\n\tlibcrypto.so.3 => /lib64/libcrypto.so.3 (0x00007f7493800000)\n\tlibcjson.so.1 => /lib64/libcjson.so.1 (0x00007f7493f45000)\n\tlibgssapi_krb5.so.2 => /lib64/libgssapi_krb5.so.2 (0x00007f7493eea000)\n\tlibfido2.so.1 => /lib64/libfido2.so.1 (0x00007f7493eb1000)\n\tlibreplace-private-samba.so => /usr/lib64/samba/libreplace-private-samba.so (0x00007f74961f8000)\n\tlibsamba-errors.so.1 => /lib64/libsamba-errors.so.1 (0x00007f7493d94000)\n\tlibsamba-security-private-samba.so => /usr/lib64/samba/libsamba-security-private-samba.so (0x00007f74937b5000)\n\tlibmsrpc3-private-samba.so => /usr/lib64/samba/libmsrpc3-private-samba.so (0x00007f7493782000)\n\tliblibcli-lsa3-private-samba.so => /usr/lib64/samba/liblibcli-lsa3-private-samba.so (0x00007f74954d1000)\n\tlibsamba-hostconfig.so.0 => /lib64/libsamba-hostconfig.so.0 (0x00007f7493751000)\n\tlibtevent-util.so.0 => /lib64/libtevent-util.so.0 (0x00007f7493d8d000)\n\tlibsmbconf.so.0 => /lib64/libsmbconf.so.0 (0x00007f74936bb000)\n\tlibndr.so.6 => /lib64/libndr.so.6 (0x00007f7493d6d000)\n\tliblibsmb-private-samba.so => /usr/lib64/samba/liblibsmb-private-samba.so (0x00007f749364f000)\n\tlibsamba-util.so.0 => /lib64/libsamba-util.so.0 (0x00007f74935d7000)\n\tlibsamba-credentials.so.1 => /lib64/libsamba-credentials.so.1 (0x00007f74935b9000)\n\tlibndr-standard.so.0 => /lib64/libndr-standard.so.0 (0x00007f7493000000)\n\tlibgse-private-samba.so => /usr/lib64/samba/libgse-private-samba.so (0x00007f7493573000)\n\tlibdcerpc-binding.so.0 => /lib64/libdcerpc-binding.so.0 (0x00007f749354b000)\n\tlibdcerpc-samba-private-samba.so => /usr/lib64/samba/libdcerpc-samba-private-samba.so (0x00007f7492e47000)\n\tlibsamba-debug-private-samba.so => /usr/lib64/samba/libsamba-debug-private-samba.so (0x00007f749353f000)\n\tlibsamba3-util-private-samba.so => /usr/lib64/samba/libsamba3-util-private-samba.so (0x00007f7493533000)\n\tlibgenrand-private-samba.so => /usr/lib64/samba/libgenrand-private-samba.so (0x00007f749352c000)\n\tlibcli-smb-common-private-samba.so => /usr/lib64/samba/libcli-smb-common-private-samba.so (0x00007f74934e1000)\n\tlibsecrets3-private-samba.so => /usr/lib64/samba/libsecrets3-private-samba.so (0x00007f74934cc000)\n\tlibtevent.so.0 => /lib64/libtevent.so.0 (0x00007f74934b4000)\n\tlibtalloc.so.2 => /lib64/libtalloc.so.2 (0x00007f74934a5000)\n\tlibunwind.so.8 => /lib64/libunwind.so.8 (0x00007f749348a000)\n\tlibsodium.so.26 => /lib64/libsodium.so.26 (0x00007f7493412000)\n\tlibpgm-5.3.so.0 => /lib64/libpgm-5.3.so.0 (0x00007f74933c5000)\n\tlibXfixes.so.3 => /lib64/libXfixes.so.3 (0x00007f7492e3f000)\n\tlibX11-xcb.so.1 => /lib64/libX11-xcb.so.1 (0x00007f74933c1000)\n\tlibxcb-dri3.so.0 => /lib64/libxcb-dri3.so.0 (0x00007f7492e39000)\n\tlibgpg-error.so.0 => /lib64/libgpg-error.so.0 (0x00007f7492e0a000)\n\tlibSPIRV-Tools.so => /lib64/libSPIRV-Tools.so (0x00007f7492c6b000)\n\tlibSPIRV-Tools-opt.so => /lib64/libSPIRV-Tools-opt.so (0x00007f7492a00000)\n\tlibgomp.so.1 => /lib64/libgomp.so.1 (0x00007f74929a2000)\n\tlibgraphite2.so.3 => /lib64/libgraphite2.so.3 (0x00007f7492c4b000)\n\tlibbrotlicommon.so.1 => /lib64/libbrotlicommon.so.1 (0x00007f749297f000)\n\tlibgmodule-2.0.so.0 => /lib64/libgmodule-2.0.so.0 (0x00007f7492979000)\n\tlibmount.so.1 => /lib64/libmount.so.1 (0x00007f749291f000)\n\tlibselinux.so.1 => /lib64/libselinux.so.1 (0x00007f74928eb000)\n\tlibglycin-2.so.0 => /lib64/libglycin-2.so.0 (0x00007f7492400000)\n\tlibpangoft2-1.0.so.0 => /lib64/libpangoft2-1.0.so.0 (0x00007f74928cf000)\n\tlibfribidi.so.0 => /lib64/libfribidi.so.0 (0x00007f74928af000)\n\tlibthai.so.0 => /lib64/libthai.so.0 (0x00007f74928a3000)\n\tlibXau.so.6 => /lib64/libXau.so.6 (0x00007f749289e000)\n\tlibkrb5.so.3 => /lib64/libkrb5.so.3 (0x00007f749232e000)\n\tlibk5crypto.so.3 => /lib64/libk5crypto.so.3 (0x00007f7492886000)\n\tlibcom_err.so.2 => /lib64/libcom_err.so.2 (0x00007f7492880000)\n\tlibkrb5support.so.0 => /lib64/libkrb5support.so.0 (0x00007f749286f000)\n\tlibkeyutils.so.1 => /lib64/libkeyutils.so.1 (0x00007f7492869000)\n\tlibresolv.so.2 => /lib64/libresolv.so.2 (0x00007f7492856000)\n\tlibcbor.so.0.13 => /lib64/libcbor.so.0.13 (0x00007f7492842000)\n\tlibudev.so.1 => /lib64/libudev.so.1 (0x00007f74922e2000)\n\tlibstable-sort-private-samba.so => /usr/lib64/samba/libstable-sort-private-samba.so (0x00007f749283d000)\n\tlibndr-samba4-private-samba.so => /usr/lib64/samba/libndr-samba4-private-samba.so (0x00007f7492000000)\n\tlibnpa-tstream-private-samba.so => /usr/lib64/samba/libnpa-tstream-private-samba.so (0x00007f7492831000)\n\tlibcliauth-private-samba.so => /usr/lib64/samba/libcliauth-private-samba.so (0x00007f74922c7000)\n\tlibndr-samba-private-samba.so => /usr/lib64/samba/libndr-samba-private-samba.so (0x00007f7491e4a000)\n\tlibutil-tdb-private-samba.so => /usr/lib64/samba/libutil-tdb-private-samba.so (0x00007f7492829000)\n\tlibsamba-sockets-private-samba.so => /usr/lib64/samba/libsamba-sockets-private-samba.so (0x00007f74922a6000)\n\tlibgensec-private-samba.so => /usr/lib64/samba/libgensec-private-samba.so (0x00007f7492272000)\n\tlibdbwrap-private-samba.so => /usr/lib64/samba/libdbwrap-private-samba.so (0x00007f7492264000)\n\tlibsocket-blocking-private-samba.so => /usr/lib64/samba/libsocket-blocking-private-samba.so (0x00007f7492260000)\n\tlibcommon-auth-private-samba.so => /usr/lib64/samba/libcommon-auth-private-samba.so (0x00007f749224e000)\n\tlibsmbd-shim-private-samba.so => /usr/lib64/samba/libsmbd-shim-private-samba.so (0x00007f749224a000)\n\tlibserver-role-private-samba.so => /usr/lib64/samba/libserver-role-private-samba.so (0x00007f7492246000)\n\tlibtdb.so.1 => /lib64/libtdb.so.1 (0x00007f749222d000)\n\tlibtime-basic-private-samba.so => /usr/lib64/samba/libtime-basic-private-samba.so (0x00007f7492227000)\n\tlibsamba-cluster-support-private-samba.so => /usr/lib64/samba/libsamba-cluster-support-private-samba.so (0x00007f749220f000)\n\tlibserver-id-db-private-samba.so => /usr/lib64/samba/libserver-id-db-private-samba.so (0x00007f7491e44000)\n\tlibtalloc-report-printf-private-samba.so => /usr/lib64/samba/libtalloc-report-printf-private-samba.so (0x00007f7491e3f000)\n\tlibutil-reg-private-samba.so => /usr/lib64/samba/libutil-reg-private-samba.so (0x00007f7491e3a000)\n\tlibinterfaces-private-samba.so => /usr/lib64/samba/libinterfaces-private-samba.so (0x00007f7491e32000)\n\tlibCHARSET3-private-samba.so => /usr/lib64/samba/libCHARSET3-private-samba.so (0x00007f7491e2c000)\n\tlibsys-rw-private-samba.so => /usr/lib64/samba/libsys-rw-private-samba.so (0x00007f7491e27000)\n\tlibmessages-dgm-private-samba.so => /usr/lib64/samba/libmessages-dgm-private-samba.so (0x00007f7491e18000)\n\tlibmessages-util-private-samba.so => /usr/lib64/samba/libmessages-util-private-samba.so (0x00007f7491e14000)\n\tlibtdb-wrap-private-samba.so => /usr/lib64/samba/libtdb-wrap-private-samba.so (0x00007f7491e0d000)\n\tlibutil-setid-private-samba.so => /usr/lib64/samba/libutil-setid-private-samba.so (0x00007f7491e09000)\n\tlibldap.so.2 => /lib64/libldap.so.2 (0x00007f7491d9f000)\n\tlibcap.so.2 => /lib64/libcap.so.2 (0x00007f7491d92000)\n\tliblber.so.2 => /lib64/liblber.so.2 (0x00007f7491d80000)\n\tlibauthkrb5-private-samba.so => /usr/lib64/samba/libauthkrb5-private-samba.so (0x00007f7491d57000)\n\tlibsystemd.so.0 => /lib64/libsystemd.so.0 (0x00007f7491c1d000)\n\tlibldbsamba-private-samba.so => /usr/lib64/samba/libldbsamba-private-samba.so (0x00007f7491bee000)\n\tlibldb.so.2 => /lib64/libldb.so.2 (0x00007f7491bb4000)\n\tlibkrb5samba-private-samba.so => /usr/lib64/samba/libkrb5samba-private-samba.so (0x00007f7491ba3000)\n\tlibsamdb-common-private-samba.so => /usr/lib64/samba/libsamdb-common-private-samba.so (0x00007f7491b61000)\n\tlibndr-nbt.so.0 => /lib64/libndr-nbt.so.0 (0x00007f7491b34000)\n\tlibcli-cldap-private-samba.so => /usr/lib64/samba/libcli-cldap-private-samba.so (0x00007f7491b2a000)\n\tlibaddns-private-samba.so => /usr/lib64/samba/libaddns-private-samba.so (0x00007f7491b19000)\n\tlibcli-ldap-common-private-samba.so => /usr/lib64/samba/libcli-ldap-common-private-samba.so (0x00007f7491b0f000)\n\tlibasn1util-private-samba.so => /usr/lib64/samba/libasn1util-private-samba.so (0x00007f7491b04000)\n\tlibcli-ldap-private-samba.so => /usr/lib64/samba/libcli-ldap-private-samba.so (0x00007f7491aef000)\n\tlibcli-nbt-private-samba.so => /usr/lib64/samba/libcli-nbt-private-samba.so (0x00007f7491ae2000)\n\tlibiov-buf-private-samba.so => /usr/lib64/samba/libiov-buf-private-samba.so (0x00007f7491ade000)\n\tlibblkid.so.1 => /lib64/libblkid.so.1 (0x00007f7491a9f000)\n\tlibseccomp.so.2 => /lib64/libseccomp.so.2 (0x00007f7491a73000)\n\tlibdatrie.so.1 => /lib64/libdatrie.so.1 (0x00007f7491a6a000)\n\tlibndr-krb5pac.so.0 => /lib64/libndr-krb5pac.so.0 (0x00007f7491a46000)\n\tlibsamba-modules-private-samba.so => /usr/lib64/samba/libsamba-modules-private-samba.so (0x00007f7491a3e000)\n\tlibwbclient.so.0 => /lib64/libwbclient.so.0 (0x00007f7491a28000)\n\tlibsamdb.so.0 => /lib64/libsamdb.so.0 (0x00007f7491a07000)\n\tlibMESSAGING-SEND-private-samba.so => /usr/lib64/samba/libMESSAGING-SEND-private-samba.so (0x00007f7491a02000)\n\tlibjansson.so.4 => /lib64/libjansson.so.4 (0x00007f74919f1000)\n\tlibmsghdr-private-samba.so => /usr/lib64/samba/libmsghdr-private-samba.so (0x00007f74919ea000)\n\tlibevent-2.1.so.7 => /lib64/libevent-2.1.so.7 (0x00007f7491986000)\n\tlibsasl2.so.3 => /lib64/libsasl2.so.3 (0x00007f7491965000)\n\tlibquic-private-samba.so => /usr/lib64/samba/libquic-private-samba.so (0x00007f749195d000)\n\tlibngtcp2.so.16 => /lib64/libngtcp2.so.16 (0x00007f749190d000)\n\tlibngtcp2_crypto_gnutls.so.8 => /lib64/libngtcp2_crypto_gnutls.so.8 (0x00007f7491900000)\n\tlibsamba-security-trusts-private-samba.so => /usr/lib64/samba/libsamba-security-trusts-private-samba.so (0x00007f74918f9000)\n\tlibflag-mapping-private-samba.so => /usr/lib64/samba/libflag-mapping-private-samba.so (0x00007f74918f4000)\n\tlibclidns-private-samba.so => /usr/lib64/samba/libclidns-private-samba.so (0x00007f74918eb000)\n\tlibnetif-private-samba.so => /usr/lib64/samba/libnetif-private-samba.so (0x00007f74918e2000)\n\tlibcluster-private-samba.so => /usr/lib64/samba/libcluster-private-samba.so (0x00007f74918dd000)\n\tlibcrypt.so.2 => /lib64/libcrypt.so.2 (0x00007f74918a7000)\n"
+  }
+}

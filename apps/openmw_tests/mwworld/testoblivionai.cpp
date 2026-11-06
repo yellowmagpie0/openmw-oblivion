@@ -97,6 +97,45 @@ namespace
         EXPECT_TRUE(repath(true, destination, target, key(0x22282), .1f));
     }
 
+    TEST(OblivionAiTest, CompletedPartialApproachCanFinishAnOccludedAllowedDrop)
+    {
+        // Original-new-game06: assassin0178c3 consumes this projected prefix
+        // and remains still above Glenroy. The original grid has no connected
+        // route from node274 to64; package0178e2 permits physical falls.
+        const osg::Vec3f position(-372.854248f, 3159.95801f, -638.980469f);
+        const osg::Vec3f destination(22.0826473f, 2557.44336f, -703.f);
+        const std::array route{osg::Vec3f(-372.854279f, 3159.95801f, -634.998169f),
+            osg::Vec3f(-373.f, 3156.f, -634.998169f)};
+        const auto flags = ESM4::decodePackageFlags(0x483004);
+        const auto step = MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, destination, flags, false);
+        ASSERT_TRUE(step);
+        EXPECT_EQ(*step, destination);
+        // Actual recovery01 repeatedly reaches this lower position, then
+        // rebuilds the upper prefix: only59units remain, so the waypoint's
+        // 64-unit height tolerance must not terminate the physical descent.
+        const osg::Vec3f descending(-314.632263f, 3096.581543f, -643.925293f);
+        const auto descendingStep = MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), descending, destination, flags, false);
+        ASSERT_TRUE(descendingStep);
+        EXPECT_EQ(*descendingStep, destination);
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetNeedsRepath(
+            key(0x32a16), key(0x32a16), key(0x1fbb9), key(0x1fbb9),
+            destination, destination, 0.f, descendingStep.has_value()));
+        // A reload may rebuild the same prefix. Consume real route points
+        // before the final approach; no saved visibility history is required.
+        EXPECT_EQ(MWMechanics::oblivionResidentTargetStep(
+            route, 0, position, destination, flags, false), route.front());
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetStep(
+            {}, 0, position, destination, flags, false));
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, destination, {}, false));
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, position, flags, false));
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, position - osg::Vec3f(0, 0, 16), flags, false));
+    }
+
     PackageCandidate candidate(std::uint32_t id, AIPackageType type, std::size_t listIndex)
     {
         PackageCandidate result;

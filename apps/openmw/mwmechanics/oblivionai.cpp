@@ -5760,7 +5760,9 @@ namespace MWMechanics
         const auto packageFlags = authoredPackage ? authoredPackage->mPackageFlags : ESM4::PackageFlags{};
         const bool visibleBelow = destination.z() < position.z() - 64.f
             && packageFlags.has(ESM4::PackageFlag::AllowFalls) && mWorld.getLOS(actor, target);
-        const bool continuingDescent = navigation.mCursor >= navigation.mPoints.size() && visibleBelow;
+        const bool continuingDescent = navigation.mCursor >= navigation.mPoints.size()
+            && oblivionResidentTargetStep(navigation.mPoints, navigation.mCursor,
+                position, destination, packageFlags, visibleBelow).has_value();
         navigation.mRepath = std::max(0.f, navigation.mRepath - duration);
         const bool repath = oblivionResidentTargetNeedsRepath(navigation.mTarget, actorKey(target),
             navigation.mCell, cellKey(actor), navigation.mDestination, destination,
