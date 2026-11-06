@@ -15,6 +15,21 @@
 
 namespace MWMechanics
 {
+    inline std::optional<osg::Vec3f> oblivionResidentTargetStep(std::span<const osg::Vec3f> route,
+        std::size_t cursor, const osg::Vec3f& position, const osg::Vec3f& destination,
+        ESM4::PackageFlags flags, bool visible)
+    {
+        if (cursor < route.size())
+            return route[cursor];
+        // An isolated platform may have no navigation points at all. The
+        // authored fall permission still permits pursuing a visible target
+        // below it through ordinary movement and gravity.
+        if (destination.z() < position.z() - 64.f
+            && flags.has(ESM4::PackageFlag::AllowFalls) && visible)
+            return destination;
+        return std::nullopt;
+    }
+
     inline bool oblivionDestinationReached(const ESM::FormKey& cell, const osg::Vec3f& position,
         const ESM::FormKey& destinationCell, const osg::Vec3f& destination, float tolerance,
         ESM4::AIPackageType type = ESM4::AIPackageType::Unknown, float travelRadius = 0.f)

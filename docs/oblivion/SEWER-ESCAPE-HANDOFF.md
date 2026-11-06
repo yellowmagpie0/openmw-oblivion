@@ -42,24 +42,32 @@ rat death+1, health unchanged; actual victoryF5/capture before SIGINT during run
 shutdown. Raw launcher remains interrupted/-2; no whole-scenario pass inferred.
 All following main continuations use that actual F5 with exact native entry.
 
-Current rendered sanitizer `joined-recipient-rendered-sanitized-01`, supervisor145163,
-runner145164/game145187, must be polled to terminal before another UI.8 points and
-two real Glenroy assassin kills pass; Player100HP. Original54 wait is blocked by
-third assassin01774a isolated on upper ledge above Glenroy. Ordinary diagnosticF5
-recorded in `diagnostic-f5.json` at10:23:30UTC, no injected state. Snapshot shows
-1774a(3050.500,6786.964,-991.999), Glenroy(3045.055,6766.681,-1176.099), one genuine
-engagement and no third contact. Independent original package017d81 has flags81004,
-including AllowFalls; upper original PGRD nodes295/296 are isolated. Existing
-approachResidentTarget fall fallback wrongly requires a nonempty route, so empty
-navigation on this platform prevents the allowed physical descent. Current chunk:
-fix that observed empty-route fall case, test, replay same actual sanitizer save.
-No rendered54 acceptance yet. Runtime leak checking disabled; full2206 engine
-sanitizer/leak gate remains separate with its original provenance.
+Empty combat-route AllowFalls case is implemented and independently verified:
+red regression exposes the old empty-route restriction; focused green and full2207
+normal/ASan+UBSan engine tests pass, leak checking enabled for engine sanitizer.
+Actual stalled-save normal replay physically drops01774a fromZ-991.999 to-1183.027,
+Glenroy kills it, original52/54 fire, Player100HP/inventory unchanged, no pending
+combat/death/action. Exact fresh0differences and inspected stage54 capture.
+[Empty-route fall proof](SEWER-EMPTY-COMBAT-ROUTE-FALLS-VERIFICATION.json).
+
+No UI/helper remains live after this checkpoint. Raw initial sanitizer
+`joined-recipient-rendered-sanitized-01` fails54wait after2 genuine guard kills.
+Its ordinary diagnosticF5 is the reusable isolated-platform source; no injection.
+`isolated-platform-resume-sanitized-01` is deliberately interrupted/-2 after
+read-only GDB exposed a second variant, and retains another genuine diagnosticF5.
+GDB02 shows1774a combat partial path2points nearY6834/cursor2 exhausted, target
+GlenroyY6766/Z-1176. Repath timer rebuilds the already-consumed projected platform
+prefix and repeatedly pulls the actor back, interrupting its allowed descent.
+Next chunk: preserve that descent for a stable target/cell/destination rather than
+replanning solely because the timer expires. Keep target/cell/moved-destination,
+visibility/AllowFalls and active-route guards. Reuse original flags81004/package
+017d81 audit and real GDB snapshot. Normal empty-route pass is not rendered
+sanitizer acceptance for this remaining variant. No full escape claim.
 
 Uninterrupted course editable sources now prepared: selection
 `scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json`, assembler
 `scripts/assemble_oblivion_sewer_course.py --output build/oblivion-compat/sewer-escape/full-escape-continuous-versioned.json`.
-67 segments,11957 ordinary actions, original new-game/no load flag. Ctrl+F8 changes
+67 segments,11957 ordinary actions, original new-game/no load flag. F7+F8 changes
 only outer observer locals; plainF8 retains compound inner phases. Every Lua
 movement/aim observation is segment-scoped. Actual interrupted prefixes are cut
 at saved evidence, notably fifth patrol save and fourth Subterrane save; no later

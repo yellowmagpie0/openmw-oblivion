@@ -1,0 +1,192 @@
+{
+  "scope": "Allow authored falls when combat navigation has no route points; independently verified normal rendered descent and escort54. Does not close sanitizer partial-route replanning variant or full uninterrupted escape.",
+  "full_escape_complete": false,
+  "native_content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "packages": [
+      {
+        "record": "017d81",
+        "edid": "CGAssassinsGenericWait",
+        "flags": "0x81004",
+        "allow_falls": true,
+        "PKDT": "0410080006000000"
+      }
+    ]
+  },
+  "policy": "Keep real route points first. For an exhausted/empty route, an authored AllowFalls package may move toward a visible target more than64units below. Ordinary physics owns the descent; no relocation, phase/destination or save schema changes.",
+  "tests": {
+    "isolated-platform-falls-red-01": {
+      "passed": false,
+      "results": {},
+      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-red-01/verification.json"
+    },
+    "isolated-platform-falls-green-01": {
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.AllowFallsPursuesBelowAnIsolatedPlatformWithoutNavigationPoints",
+          "binary_sha256": "f654636d626da63dd59e3b1e1a65e1e9e761578d72af6a6e0ebf5b4be29ab74c",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3dc73b48385318947bdf0f84039855230a568e64c96114fe631c0e8f1b4a4746",
+          "inventory_sha256": "aea78f27e26c42ce69d5cacdd890d8ddfe7f4b8192bb72bcb76ee7ad0ef63398",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-green-01/verification.json"
+    },
+    "isolated-platform-falls-engine-integration-01": {
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2207,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f654636d626da63dd59e3b1e1a65e1e9e761578d72af6a6e0ebf5b4be29ab74c",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "4787877b0eca686f5fa964afe6d612a513040075b6315df4e9e3c31863541dd1",
+          "inventory_sha256": "aea78f27e26c42ce69d5cacdd890d8ddfe7f4b8192bb72bcb76ee7ad0ef63398",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-engine-integration-01/verification.json"
+    },
+    "isolated-platform-falls-sanitizer-integration-01": {
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2207,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "3b101d76f89384994b73305ab900831becf04a40e7cf423cfde987439d742172",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "a3b28bd4bcf600beff2d235e7db5c2de84654ce88ab79ca0ebe4ad9400b97802",
+          "inventory_sha256": "aea78f27e26c42ce69d5cacdd890d8ddfe7f4b8192bb72bcb76ee7ad0ef63398",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/isolated-platform-falls-sanitizer-integration-01/verification.json"
+    }
+  },
+  "normal_runtime": {
+    "scenario": "build/oblivion-compat/sewer-escape/isolated-platform-resume-normal-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-recipient-rendered-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "612ff511cbe7cf81312ec9fb35d7b7d4230ce0b2cf379554969b60a2800f5ad0",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "source_save": "build/oblivion-compat/sewer-escape/joined-recipient-rendered-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "612ff511cbe7cf81312ec9fb35d7b7d4230ce0b2cf379554969b60a2800f5ad0",
+    "save": "build/oblivion-compat/sewer-escape/isolated-platform-resume-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "save_sha256": "04ed9f93076d6ec1e8cd3998a20335d31f0826c98b5763bf403a7bf09fffa405",
+    "assassin_start": [
+      3050.499755859375,
+      6786.9638671875,
+      -991.9993896484375,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "assassin_end": [
+      3086.49365234375,
+      6760.609375,
+      -1183.0274658203125,
+      0.0,
+      0.0,
+      0.48575493693351746
+    ],
+    "life": {
+      "actor": "content:oblivion.esm:01774a",
+      "base": "content:oblivion.esm:0176db",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "content:oblivion.esm:032a16"
+    },
+    "quest": {
+      "quest": "content:oblivion.esm:02466e",
+      "stage": 54,
+      "running": true,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        34,
+        36,
+        40,
+        42,
+        43,
+        44,
+        45,
+        50,
+        52,
+        54
+      ]
+    },
+    "player_health": 100,
+    "player_inventory_unchanged": true,
+    "no_player_contact_or_magic_input": true,
+    "no_pending_death_action_or_combat": true,
+    "capture_inspected": "isolated-platform-escort54.png",
+    "input_receipts_identical": true,
+    "binary_sha256": "b941c84c2bd076eb6a968674aaf52fe5a65ae4e0a076b82c913d462615edb6a1"
+  },
+  "retained_sanitizer_findings": {
+    "initial": "joined-recipient-rendered-sanitized-01 fails stage54 wait;2 actual NPC kills,100PlayerHP, no sanitizer/unreviewed errors. Ordinary diagnosticF5 supplied source; first fresh comparison0diff. Original source executable SHA256d991f6d465b4932d50c15df9274c046991ecec2d361e6b97ecd3ab5c6b1f21e1.",
+    "retry": "isolated-platform-resume-sanitized-01 deliberately interrupted after repeated physical ledge oscillation. Ordinary diagnosticF5 and read-only GDB02 capture retained; no pass claimed.",
+    "gdb": "build/oblivion-compat/sewer-escape/platform-navigation-gdb-02.log",
+    "observed_route": "Assassin combat partial path has2 upper-platform points nearY6834, cursor2/exhausted, lower targetY6766/Z-1176. Replanning replaces completed prefix and repeatedly pulls actor back before allowed descent finishes. This is a separate remaining progress-preservation case.",
+    "leak_scope": "Full2207 engine ASan/UBSan gate has leak checking enabled; rendered courses disable runtime leak checking."
+  },
+  "remaining": [
+    "Preserve completed combat descent across stable-target replanning, verify instrumented physical continuation",
+    "Original uninterrupted new-game prison\u2192exterior course and fresh exterior reload"
+  ]
+}

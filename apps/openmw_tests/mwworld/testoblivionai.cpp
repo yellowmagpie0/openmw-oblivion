@@ -42,6 +42,29 @@ namespace
 {
     using namespace ESM4;
 
+    TEST(OblivionAiTest, AllowFallsPursuesBelowAnIsolatedPlatformWithoutNavigationPoints)
+    {
+        // Actual sanitized sewer standoff: assassin01774a on a disconnected
+        // upper platform, Glenroy below; original package017d81 allows falls.
+        const osg::Vec3f platform(3050.500f, 6786.964f, -991.999f);
+        const osg::Vec3f target(3045.055f, 6766.681f, -1176.099f);
+        const auto falls = ESM4::decodePackageFlags(0x81004);
+        const auto step = [&](std::span<const osg::Vec3f> route, std::size_t cursor,
+                              osg::Vec3f destination, ESM4::PackageFlags flags, bool visible) {
+            return MWMechanics::oblivionResidentTargetStep(route, cursor, platform, destination, flags, visible);
+        };
+        EXPECT_EQ(step({}, 0, target, falls, true), target);
+        const std::array route{platform};
+        EXPECT_EQ(step(route, 1, target, falls, true), target);
+        EXPECT_EQ(step(route, 0, target, {}, false), platform);
+        EXPECT_FALSE(step({}, 0, target, {}, true));
+        EXPECT_FALSE(step({}, 0, target, falls, false));
+        EXPECT_FALSE(step({}, 0, platform, falls, true));
+        EXPECT_FALSE(step({}, 0, platform + osg::Vec3f(0, 0, 100), falls, true));
+        EXPECT_FALSE(step({}, 0, platform - osg::Vec3f(0, 0, 64), falls, true));
+        EXPECT_TRUE(step({}, 0, platform - osg::Vec3f(0, 0, 65), falls, true));
+    }
+
     ESM::FormKey key(std::uint32_t id)
     {
         return ESM::FormKey::content("m14-test.esm", id);

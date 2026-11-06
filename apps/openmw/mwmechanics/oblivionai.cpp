@@ -5822,18 +5822,14 @@ namespace MWMechanics
                 break;
             ++navigation.mCursor;
         }
-        if (navigation.mCursor < navigation.mPoints.size())
-            faceAndMove(actor, navigation.mPoints[navigation.mCursor], true);
-        else if (!navigation.mPoints.empty() && destination.z() < position.z() - 64.f)
-        {
-            const auto* authored = package(live.mState.mPackage);
-            // An authored AllowFalls package can pursue a visible target
-            // below an exhausted surface route. Movement and gravity still
-            // own the drop; this neither relocates the actor nor bypasses walls.
-            if (authored && authored->mPackageFlags.has(ESM4::PackageFlag::AllowFalls)
-                && mWorld.getLOS(actor, target))
-                faceAndMove(actor, destination, true);
-        }
+        const auto* authored = package(live.mState.mPackage);
+        const auto flags = authored ? authored->mPackageFlags : ESM4::PackageFlags{};
+        const bool visibleBelow = navigation.mCursor >= navigation.mPoints.size()
+            && destination.z() < position.z() - 64.f
+            && flags.has(ESM4::PackageFlag::AllowFalls) && mWorld.getLOS(actor, target);
+        if (const auto next = oblivionResidentTargetStep(navigation.mPoints, navigation.mCursor,
+                position, destination, flags, visibleBelow))
+            faceAndMove(actor, *next, true);
 
     }
 
