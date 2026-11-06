@@ -13,26 +13,40 @@ Remaining: physical final sewer traversal, distinct MQ01 exit88/outdoors and fre
 outdoor reload, then prove a single-process new-game escape. Historical separate
 outdoor saves do not prove the remaining main-world join.
 
-## Current chunk — final assassin/Warrior/Baurus88 joined; final sewers next
+## Current chunk — connected final sewer entry; western encounter next
 
-Latest genuine main input:
-`build/oblivion-compat/sewer-escape/joined-sanctum-secret-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player Sanctum022282 at(3323.080,10368.780,-1439),101.971HP/max110,80MP,
-Warrior class023787/birthsign01fd9d, Strength55/Endurance55, one Amulet0250a0 and
-one Baurus sewer key01e702. Original CharacterGen88; **MQ01 remains80**, so exterior
-exit88 is not accepted. Final assassin01e703 is dead/Baurus032a17 killer after
-three native sword contacts; Player holds normal weapon block and receives two
-real dagger contacts. Native death handled, bound inventory/ability cleared,
-no combat/pending death/action owners. Native menu and final Baurus screenshots
-inspected; exact fresh entry and matching inputs.
-[Final battle/class proof](SEWER-JOINED-CLASS-CHOICE-VERIFICATION.json).
+Latest inspected main input:
+`build/oblivion-compat/sewer-escape/joined-final-sewers-entry-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player final Imperial Sewers03/0272f2,(-2595.823,1077.309,6878.335),101.971HP/max110,
+80MP, Warrior class/birthsign and one Amulet. Original key door02282e consumes only
+Baurus key01e702; Space0270e2 performs one real manhole teleport. Health/death counts
+unchanged, no combat/pending death/action, exact fresh entry0differences, capture
+inspected. [Final sewer entry](SEWER-JOINED-FINAL-SEWERS-ENTRY-VERIFICATION.json).
 
-Clean four-point ordinary secret passage course follows actual class88F5 and
-saves beyond the raised threshold with inventory/health unchanged, exact native
-fresh restore and inspected capture. Current normal UI `joined-final-sewers-entry-01`,
-supervisor143577, from that save: original11-point approach, Space02282e with real
-key, then Space0270e2 to final cell0272f2. Inspect actual process/status/report before
-another UI. No pass claimed yet. Normal game SHA256b2a22b98ba3baf33ef21323ca03b518773ffa3c0686fe44a2618b12a3d4640d1.
+Connected western rat victory F5 is independently verified: two real axe hits
+1.13626+3.37034 kill0666a7, Player health unchanged101.971, only axe condition-0.6,
+rat base death count+1, no combat/death/action pending. Raw runner SIGINT/-2 during
+shutdown remains interrupted, no whole-scenario pass inferred. Final actualF5 and
+capture precede interruption; exact entry0differences.
+[Western victory](SEWER-JOINED-FINAL-WESTERN-RAT-VERIFICATION.json).
+
+Current detached UI `joined-final-upper-tunnel-01`, supervisor144244, from that
+actual victory save: original27 bridge/lower-room/stair points, ordinary walking
+and axe inputs with read-only nearby-enemy aim, actualF5 at upper door approach.
+Inspect actual process/status/report before another UI. No upper-route pass yet.
+Next: upper door/traversal, MQ01 exit88, physical exterior/fresh reload, then
+uninterrupted new-game escape. Full escape remains incomplete. Prepared rendered
+sanitizer recipient course `joined-recipient-rendered-sanitized.json` for afterward.
+
+[Final battle/class proof](SEWER-JOINED-CLASS-CHOICE-VERIFICATION.json): Baurus032a17
+kills final assassin01e703 with three genuine sword contacts while Player blocks,
+taking two dagger hits. Original Warrior class023787/birthsign01fd9d,Strength55/
+Endurance55,101.971HP/max110,80MP; original CharacterGen88, **MQ01 remains80**.
+Amulet and Baurus key granted by original dialogue; bound foe cleanup and all
+combat/death/action queues clear. Four-point normal secret-passage traversal
+preserves health/inventory. Exact native fresh boundaries; captures inspected.
+Committed7d263cf859. Binary b2a22b98ba3baf33ef21323ca03b518773ffa3c0686fe44a2618b12a3d4640d1
+built94370948f1 plus fixture-only IDs; production unchanged04152787f5.
 
 [Sanctum/Amulet/death proof](SEWER-JOINED-SANCTUM-AMULET-VERIFICATION.json): clean
 physical door0226a2→022282/stage58, original59/65 scene, actual approach/side-step
