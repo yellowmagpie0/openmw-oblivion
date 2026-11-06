@@ -13,37 +13,27 @@ Remaining: join the genuine course through the solo dungeon/shaman, reunion,
 Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
 escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — genuine route reaches Natural Caverns
+## Current chunk — first cavern goblin defeated on genuine route
 
-Latest fully inspected main checkpoint:
-`build/oblivion-compat/sewer-escape/joined-cavern-entry-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Player in0380bd (Natural Caverns), position(-365.909,-13.118,40.271), health80 after
-three real Heal Minor Wounds casts. No pending deaths/actions/combat. Exact fresh
-native entry from original door save. Capture inspected.
-[Lower route/Caverns proof](SEWER-JOINED-CAVERN-ENTRY-VERIFICATION.json).
+Latest inspected main checkpoint:
+`build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Natural Caverns0380bd, Player(-349.433,728.894,-270.345), health80.
+First goblin03b526 is dead with Player killer, base03b525 count increases only0→1.
+No combat/pending death/action work. All three rock-detour/combat courses pass,
+each fresh native entry has zero differences. Capture inspected; corpse remains
+upright, so collapsed pose is not accepted.
+[Connected first goblin proof](SEWER-JOINED-FIRST-GOBLIN-VERIFICATION.json).
 
-Lower159832 and38174 are Player-killed; base02509b counts change only8→9→10.
-Initial skeleton159834 remains originally dead/null killer; no Player kill claimed.
-Final-rat raw01 dies at a late waypoint with no checkpoint accepted;02 hands over
-to combat earlier and passes. The20-point original door approach and real Space
-activation0381b8→0380bd complete all726 actions, exit0, no forbidden/unreviewed
-errors. Raw door scenario fails only a wrongly Lua-prefixed nativeM5 expected log.
-Corrected expected_log preserves actions/files byte-for-byte and matches original
-trace; raw failure retained, reviewed gameplay accepted, clean fresh healing follows.
-Corrected full door recipe has not been rerun independently as a whole.
+The earlier first approach raw course remains failed at pursuit proximity;
+its genuine pre-failure F5 supplies the accepted rock detour. No state splice.
+[Lower route and Caverns entry/healing](SEWER-JOINED-CAVERN-ENTRY-VERIFICATION.json)
+retains raw door expected-log failure and reviewed acceptance separately.
 
-`joined-first-cavern-goblin-course-01` passes original7-point approach but fails
-pursuit proximity before attacking: goblin03b526 moves behind a rock to(-366,655).
-Its genuine F5 at Player(183.510,555.661,-283.670), health80, no combat is retained;
-initial entry from healed Caverns save compares exactly. No goblin victory claimed.
-
-Current UI course `joined-first-goblin-rock-detour-01` (launcher8027) starts from
-that actual pursuit F5 and follows original PGRD03b511 nodes30,36,35,38 around the
-rock. Ignored recipe `joined-first-goblin-rock-detour.json`; current-target A* audit
-`current-first-goblin-pursuit-path.json` retains original master hash. Inspect its
-actual process/scenario before another UI course. Then finish actual first goblin,
-traps/loot and required shaman victory on this main route. Do not splice old shaman
-or outdoor saves into it. Full uninterrupted new-game escape remains unproven.
+Current runtime course `joined-cavern-western-bend-01` (launcher63718) follows
+nine original pathgrid points from the actual victory save back around the
+rock and through the western passage. Inspect process/scenario before another
+UI run. Next: traps/loot, remaining cavern encounters and required shaman victory,
+then reunion and original exit. Full uninterrupted new-game escape is unproven.
 
 Earlier accepted joins:
 [root entrance/combat](SEWER-JOINED-ROOT-ENTRANCE-VERIFICATION.json),
