@@ -13,31 +13,39 @@ Remaining: join the genuine course through the solo dungeon/shaman, reunion,
 Emperor/Amulet, choices and physical exterior, then prove a single-process new-game
 escape and fresh outdoor reload. Separate shaman/late saves do not prove this join.
 
-## Current chunk — connected log victory, healing chest and full recovery
+## Current chunk — northern patrol defeated on main route
 
 Latest inspected main checkpoint:
-`build/oblivion-compat/sewer-escape/joined-cavern-healing-potions-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Natural Caverns0380bd, Player(4555.649,1560.746,-470.438), health80. No active
-combat or pending death/action work. Three real Heal Minor Wounds casts restore
-5.020004→26.140007; six original downhill points reach051d72. Space takes its
-three009310 healing potions plus one00930e; chest empty. Three ordinary inventory
-uses consume exactly009310×3 and restore80; other potion preserved. Both courses
-cleanpass, native fresh entries compare with only recorded velocity projections.
-Life/death counts unchanged. Captures inspected.
-[Recovery/chest proof](SEWER-JOINED-CAVERN-RECOVERY-VERIFICATION.json).
+`build/oblivion-compat/sewer-escape/joined-cavern-patrol-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Natural Caverns0380bd, Player(4485.514,2678.936,-482.128), health77.120003.
+Goblin03b543 dead/Player killer, only base03b542 count0→1. No active combat or
+pending death/action work. Real finalF5 written and all SDL receipts through
+F5-down247 present; launcher terminated143 before up248/final report/capture.
+**Whole patrol course is not passed.** Native victory/actual save is accepted;
+source entry checked and fresh next course independently restores all native
+fields with only recorded velocity projections, observes the same dead goblin.
+[Patrol evidence](SEWER-JOINED-NORTHERN-PATROL-VERIFICATION.json).
 
-[Connected log encounter](SEWER-JOINED-LOG-ENCOUNTER-VERIFICATION.json) records
-16-point approach, original Space release of6 log bodies, Player kills03b518 and
-03b51a (only respective bases03b51d/0c9ffc count0→1). Neither environmental kill
-claimed. Genuine first-kill68-action F5 prefix and clean final continuation are
-explicit; later failed/death attempts remain failed. No state splice. Creature
-corpses remain upright. Dedicated C casts work; general combat casting not accepted.
+Eastern reinforcement01 was intentionally stopped after fixed waypoint2 was
+missed under combat knockback; no checkpoint accepted. Source patrol save intact.
+Current detached UI `joined-cavern-reinforcement-early-course-01`, supervisor106240,
+status `joined-cavern-reinforcement-early-course-01-launcher-status.json`.
+First two original eastern nodes,80-unit last-node handoff, then ordinary reactive
+combat03b541. Confirm actual process/status/scenario before another UI course.
+Detached launcher helper `launch-detached-course.py` avoids shell-session lifetime
+loss and writes terminal status separately. Next: reinforcing/eastern goblins,
+shaman victory, original reunion/exit, uninterrupted new-game escape/fresh load.
 
-Current UI `joined-cavern-patrol-course-01` (launcher4102) starts at actual recovered
-save, follows first6 original northern path points then ordinary combat03b543.
-Inspect process/scenario before another UI run. Next: patrol/reinforcing/eastern
-goblins, shaman victory, original reunion/exit, then uninterrupted new-game escape
-and fresh outdoor load. Full escape remains incomplete.
+[Recovery/chest proof](SEWER-JOINED-CAVERN-RECOVERY-VERIFICATION.json): normal
+threeC casts5.020004→26.140007, six downhill original points, original chest051d72
+Space take-all (009310×3,00930e×1), three actual inventory healing-potion uses→80.
+Both courses cleanpass; exact inventory deltas/empty chest, life/death unchanged.
+[Log encounter proof](SEWER-JOINED-LOG-ENCOUNTER-VERIFICATION.json): original
+Space releases6 log bodies, neither environmental kill claimed; Player kills
+03b518/03b51a via genuine first-kill F5 prefix and clean final continuation.
+Failed/death attempts remain failed; upright corpse limit; no state splicing.
+General combat casting not accepted, dedicated ordinary recovery casts proven.
+Full uninterrupted escape remains incomplete.
 
 Earlier cavern joins:
 [first goblin](SEWER-JOINED-FIRST-GOBLIN-VERIFICATION.json),
