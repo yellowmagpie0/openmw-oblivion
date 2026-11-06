@@ -10,8 +10,9 @@ health, quest, position or completion, skipped required encounters, or spliced
 save state qualifies. **Full escape remains incomplete.**
 
 Remaining: join the original gameplay continuously through shaman victory and
-the physical exterior, then fresh outdoor save/load. All2202 normal engine
-cases and all2202 ASan/UBSan engine cases pass at their recorded fingerprints.
+the physical exterior, then fresh outdoor save/load. All2203 normal engine cases
+pass after the camera fix. The prior2202 ASan/UBSan cases pass at their original
+fingerprint before that fix.
 The accumulated sanitizer gate enables leak checking and builds the instrumented
 runtime; fresh rendered sanitizer gameplay remains separate. Component3262 and
 Python560 coverage retain their original provenance, with no fresh pass inferred.
@@ -47,12 +48,25 @@ recorded animated-body world-velocity projection differences≤1e-5. Capture
 inspected; no health write or saved-state substitution.
 [SEWER-JOINED-HEALING-VERIFICATION.json](SEWER-JOINED-HEALING-VERIFICATION.json).
 
-`joined-room-rat-01` is RUNNING from that genuine healed save (launcher80994).
-It selects first person by ordinary R, then uses read-only camera/world aim and
-normal movement/power punch to approach and fight037e40/base02509b. That rat is
-alive at(1774.61,2717.20,-821.36). Course source is ignored
-`joined-room-rat.json`; Lua syntax passes, gameplay outcome remains pending.
-Poll the current process before another UI course. No build helper is live.
+`joined-room-rat-02` PASSES: normal R selects first person, a real power-punch
+contact kills original room rat037e40/base02509b, and Player remains62 health.
+No pending deaths/actions/combat engagements; actual CAM_/FIRS1 records the
+selected view. Entry has only the same10≤1e-5 body-velocity projection differences.
+Capture inspected. Raw01 failed before movement on overescaped observer regex;
+no engine error. [Room-rat proof](SEWER-JOINED-ROOM-RAT-VERIFICATION.json).
+
+Current genuine save:
+`build/oblivion-compat/sewer-escape/joined-room-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Player(1663.148,2739.201,-835.260), health62, all three encountered rats dead.
+
+`joined-key-loot-door-02` is RUNNING (launcher59093), joining navigation north
+and east to the key corpse, actual Take All, Club equipment and the original
+keyed transition into22ff6 in one process. Ignored source:
+`joined-key-loot-door-settled.json`. F8 changes only local read-only observation
+phase; unbound F7 requests a camera sample after3 onFrame observations. Raw01
+fails its initial facing gate before movement because fixed-time sampling acted
+on delayed camera matrices. Corrected02 uses frame settlement. No implementation
+change or broad test repeat. Poll it before another UI course; no helper is live.
 
 The source post-wall save remains available in `joined-wall-rats-06`, health38,
 position(585.390,3175.597,-855.278). Both authored wall rats are Player-killed,
