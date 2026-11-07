@@ -45,15 +45,19 @@ Retain all failed diagnostics:01 power-attack fatigue/death;02/03 no accepted
 immediate cast (the loaded spell was retained);04 every-attack healing exhausts
 mana/death;05 fixed cadence reaches missing fresh-cast gate alive near2HP;07
 priority/distance experiment dies. Reverted07 and verified current actions and
-observer exactly match passing06. No rendered game remains at this checkpoint.
+observer exactly match passing06. No rendered diagnostic remains; the new full20 run is described below.
 
-Next: commit this bounded fix, then launch original-new-game
-`full-escape-continuous-20` from `full20-assembly-02/full-escape.json`. The ignored
-`followup-full20-outdoor-reload.py`, `audit-full20-after-reload.py` and
-`capture-full20-reload-identity.py` are prepared, not launched. Record actual
-runtime identity immediately; monitor that same PID, especially source42's
-limited health margin. Keep all67 required sections/fights and own outdoor reload
-acceptance. Do not splice loaded06 or continuous19 into a later acceptance run.
+Fix committed04eeca330a. Original-new-game `full-escape-continuous-20` is now
+running from `full20-assembly-02/full-escape.json`: actual PID417401,
+driver417358, runtime identity captured13f2. Startup was verified live; section
+entry had not yet printed at the last poll. Revalidate actual /proc identity and
+monitor the same PID with `wait-course-progress.py full-escape-continuous-20 40`,
+especially source42's limited health margin. Ignored guarded follow-up417360,
+read-only final auditor417361 and reload-provenance watcher417362 are waiting;
+see `full20-orchestrator-pids.json` and their `full20-*-status.json` files.
+These are observed PIDs, not proof of future liveness. Keep all67 required
+sections/fights and own outdoor reload acceptance. Do not splice loaded06 or
+continuous19 into this acceptance run. No full20 completion has been claimed.
 
 Runtime snapshot: `rat-descending-recovery-runtime-snapshot-01`, ELF
 `13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`;
