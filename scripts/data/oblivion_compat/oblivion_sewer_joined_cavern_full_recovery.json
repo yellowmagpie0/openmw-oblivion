@@ -137,8 +137,8 @@
     {
       "type": "wait_log",
       "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
       "after_start": true,
+      "timeout_seconds": 180,
       "abort_on_failure": true
     },
     {
@@ -147,9 +147,9 @@
     },
     {
       "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
+      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
       "after_start": true,
+      "timeout_seconds": 30,
       "abort_on_failure": true
     },
     {
@@ -157,224 +157,37 @@
       "seconds": 1.5
     },
     {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
-      "timeout_seconds": 90,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
-      "timeout_seconds": 15,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
+      "type": "repeat_until_log",
+      "pattern": "West course phase 2:\\s*(?:Recovery health full)",
+      "after_start": false,
+      "maximum_iterations": 20,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "West course phase 2:\\s*(?:Recovery magicka ready)",
+          "after_start": true,
+          "timeout_seconds": 180,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "sleep",
+          "seconds": 1.5
+        }
+      ],
+      "cleanup_actions": []
     },
     {
       "type": "wait_log",

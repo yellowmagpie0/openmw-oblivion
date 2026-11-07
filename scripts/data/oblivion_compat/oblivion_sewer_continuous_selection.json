@@ -33,7 +33,7 @@
     {
       "segment": 5,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_post_wall_healing.json",
-      "action_count": 33,
+      "action_count": 32,
       "source_course": "joined-post-wall-healing-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -82,7 +82,7 @@
     {
       "segment": 12,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_post_zombie_healing.json",
-      "action_count": 10,
+      "action_count": 11,
       "source_course": "joined-post-zombie-healing-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -110,7 +110,7 @@
     {
       "segment": 16,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_west_encounters_prefix.json",
-      "action_count": 442,
+      "action_count": 435,
       "source_course": "joined-west-encounters-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -138,7 +138,7 @@
     {
       "segment": 20,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_root_entrance.json",
-      "action_count": 228,
+      "action_count": 229,
       "source_course": "joined-root-entrance-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -187,7 +187,7 @@
     {
       "segment": 27,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_entry_healing.json",
-      "action_count": 10,
+      "action_count": 11,
       "source_course": "joined-cavern-entry-healing-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -250,7 +250,7 @@
     {
       "segment": 36,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_combat_heal.json",
-      "action_count": 7,
+      "action_count": 8,
       "source_course": "joined-combat-heal-probe-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -264,14 +264,14 @@
     {
       "segment": 38,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_log_final.json",
-      "action_count": 75,
+      "action_count": 77,
       "source_course": "joined-log-final-two-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
     {
       "segment": 39,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_healing_chest.json",
-      "action_count": 265,
+      "action_count": 266,
       "source_course": "joined-cavern-healing-chest-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -299,7 +299,7 @@
     {
       "segment": 43,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_reinforcement_recovery.json",
-      "action_count": 17,
+      "action_count": 21,
       "source_course": "joined-reinforcement-recovery-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -313,7 +313,7 @@
     {
       "segment": 45,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_full_recovery.json",
-      "action_count": 69,
+      "action_count": 30,
       "source_course": "joined-cavern-full-recovery-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -327,7 +327,7 @@
     {
       "segment": 47,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_shaman_victory.json",
-      "action_count": 31,
+      "action_count": 35,
       "source_course": "joined-shaman-continuous-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

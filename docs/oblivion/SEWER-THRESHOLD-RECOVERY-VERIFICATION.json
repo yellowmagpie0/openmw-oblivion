@@ -1,0 +1,372 @@
+{
+  "scope": "Adaptive target-based ordinary spell recovery in steps5/16/45, with fresh magicka readiness across the selected ordinary recovery casts. Full escape remains incomplete.",
+  "changes": [
+    {
+      "segment": 5,
+      "old_actions": 33,
+      "new_actions": 32,
+      "original_health_target": 54
+    },
+    {
+      "segment": 16,
+      "old_actions": 442,
+      "new_actions": 435,
+      "original_health_target": 70
+    },
+    {
+      "segment": 45,
+      "old_actions": 69,
+      "new_actions": 30,
+      "original_health_target": 80
+    },
+    {
+      "segment": 12,
+      "old_actions": 10,
+      "new_actions": 11,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    },
+    {
+      "segment": 20,
+      "old_actions": 228,
+      "new_actions": 229,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    },
+    {
+      "segment": 22,
+      "old_actions": 605,
+      "new_actions": 605,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    },
+    {
+      "segment": 27,
+      "old_actions": 10,
+      "new_actions": 11,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    },
+    {
+      "segment": 36,
+      "old_actions": 7,
+      "new_actions": 8,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    },
+    {
+      "segment": 38,
+      "old_actions": 75,
+      "new_actions": 77,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    },
+    {
+      "segment": 39,
+      "old_actions": 265,
+      "new_actions": 266,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    },
+    {
+      "segment": 43,
+      "old_actions": 17,
+      "new_actions": 21,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    },
+    {
+      "segment": 47,
+      "old_actions": 31,
+      "new_actions": 35,
+      "change": "Fresh magicka readiness and native applied-cast receipt; partial/full health goals unchanged."
+    }
+  ],
+  "behavior": "Keep original54/70/80 health targets and final80 magicka target. Require fresh magicka readiness and native applied-effect release for each ordinary cast; continue to the actual target. No world/stat injection.",
+  "failed_full15": "All3 native Player rat kills pass; fixed3 casts from16HP reach40, below the original54HP target. Failed full15 retained.",
+  "recovery_audit": {
+    "adaptive_target_steps": [
+      5,
+      12,
+      16,
+      20,
+      22,
+      27,
+      39,
+      45,
+      48
+    ],
+    "partial_casts_intentional": [
+      36,
+      38,
+      43
+    ],
+    "section47": "Partial pre-fight casts retain their count, with fresh magicka readiness and applied receipts; post-victory adaptive recovery unchanged.",
+    "potion_controllers": "Unchanged; actual consumption/restoration gates remain."
+  },
+  "runtime_cases": [
+    {
+      "passed": true,
+      "scope": "Ordinary recovery phase diagnostic, not full sewer acceptance.",
+      "course": "threshold-recovery-wall-01",
+      "target_health": 54,
+      "entry_health": 16,
+      "final_health": 56.0,
+      "final_magicka": 40.84108352661133,
+      "native_applied_casts": 5,
+      "all_input_delivered": true,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 377639,
+        "sequence": 4,
+        "tick": 818,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-15/retained-saves/3-0022-Quicksave.omwsave",
+        "source_save_sha256": "300f5417b23d57b75deb32bb03f76c149cc30b2e7e72fb1b508f0f4a5eb0729c",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/0/linear_velocity/1",
+            0.02017393335700035,
+            0.0201739352196455
+          ],
+          [
+            "/native_animated_references/0/bodies/0/linear_velocity/2",
+            0.0016071273712441325,
+            0.0016071272548288107
+          ],
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/0",
+            0.014257173985242844,
+            0.014257173053920269
+          ],
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/1",
+            0.005366061814129353,
+            0.005366061348468065
+          ],
+          [
+            "/native_animated_references/0/bodies/3/linear_velocity/0",
+            0.05974448099732399,
+            0.05974447727203369
+          ],
+          [
+            "/native_animated_references/0/bodies/4/linear_velocity/2",
+            -0.0038002794608473778,
+            -0.0038002796936780214
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/2",
+            0.0007727323099970818,
+            0.0007727323682047427
+          ],
+          [
+            "/native_animated_references/0/bodies/7/linear_velocity/0",
+            0.08348389714956284,
+            0.08348390460014343
+          ],
+          [
+            "/native_animated_references/0/bodies/7/linear_velocity/1",
+            -0.08725792169570923,
+            -0.08725791424512863
+          ],
+          [
+            "/native_animated_references/0/bodies/8/linear_velocity/2",
+            0.008273132145404816,
+            0.00827313307672739
+          ],
+          [
+            "/native_animated_references/0/bodies/9/linear_velocity/2",
+            -0.00031757281976751983,
+            -0.0003175728488713503
+          ],
+          [
+            "/native_animated_references/0/bodies/10/linear_velocity/2",
+            -0.053238749504089355,
+            -0.053238753229379654
+          ]
+        ]
+      },
+      "saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/threshold-recovery-wall-01/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "a34bbba540235818a93538777ef30b28df3b698e2b34341471370d801f0a7cee",
+            "live_sha256": "c8667a330e950add28b4833674eece211f8ec59370553d3260cb3bdb6b6cc3ef",
+            "parsed_native_exact": true
+          }
+        ]
+      }
+    },
+    {
+      "passed": true,
+      "scope": "Ordinary recovery phase diagnostic, not full sewer acceptance.",
+      "course": "threshold-recovery-armored-01",
+      "target_health": 70,
+      "entry_health": 47.099998474121094,
+      "final_health": 75.26000213623047,
+      "final_magicka": 52.658348083496094,
+      "native_applied_casts": 4,
+      "all_input_delivered": true,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 377830,
+        "sequence": 4,
+        "tick": 647,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-13/retained-saves/3-0029-Quicksave.omwsave",
+        "source_save_sha256": "422ff54a9332e3fef9b1d6e39cba15b2412f47b26fd5216e6cd073cc72466606",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/threshold-recovery-armored-01/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "7ec7d9ff0edb7ed5d6af036b888e8387b858c5fa7b6efac0e4e033e1225ab4bc",
+            "live_sha256": "1d9fff39b2de6a741f3cee35a8151fb5a53633a3b807af1c1f71222ba24b3e2b",
+            "parsed_native_exact": true
+          }
+        ]
+      }
+    },
+    {
+      "passed": true,
+      "scope": "Section45 recovery phase only: ordinary healing and two magicka-recovery episodes; not full sewer acceptance.",
+      "course": "threshold-recovery-mana-01",
+      "entry_health": 56,
+      "entry_magicka": 40.84108352661133,
+      "final_health": 80.0,
+      "final_magicka": 80.0,
+      "native_applied_casts": 8,
+      "ordinary_depletion": {
+        "minimum_observed_magicka": 0.16770935058594,
+        "low_magicka_during_healing": true,
+        "low_magicka_at_full_health": true,
+        "subsequent_ready_wait_seconds": 11.445313
+      },
+      "both_episode_saves_full": true,
+      "all_input_delivered": true,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 377974,
+        "sequence": 5,
+        "tick": 2866,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 4,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/threshold-recovery-wall-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "a34bbba540235818a93538777ef30b28df3b698e2b34341471370d801f0a7cee",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/2",
+            -0.00010170535097131506,
+            -0.00010170534369535744
+          ],
+          [
+            "/native_animated_references/0/bodies/3/linear_velocity/0",
+            0.0854320153594017,
+            0.0854320228099823
+          ],
+          [
+            "/native_animated_references/0/bodies/3/linear_velocity/2",
+            -0.017189500853419304,
+            -0.017189498990774155
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/0",
+            0.14693108201026917,
+            0.14693106710910797
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/1",
+            -0.11766671389341354,
+            -0.11766672134399414
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/2",
+            0.007223042659461498,
+            0.007223042193800211
+          ],
+          [
+            "/native_animated_references/0/bodies/8/linear_velocity/2",
+            0.014386340044438839,
+            0.014386339113116264
+          ],
+          [
+            "/native_animated_references/0/bodies/9/linear_velocity/0",
+            0.004017139784991741,
+            0.004017139319330454
+          ],
+          [
+            "/native_animated_references/0/bodies/12/linear_velocity/2",
+            -0.009966172277927399,
+            -0.009966173209249973
+          ]
+        ]
+      },
+      "saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 2,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/threshold-recovery-mana-01/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "2dd133a0dcbe4794b9b6c1973544f26de5d7305cc81e8005a3405787501e2519",
+            "live_sha256": "a10396feb4a81e53fd8282379da56b3183ff8a53e421c8ab34778a94d81ddaae",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 4,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/threshold-recovery-mana-01/retained-saves/3-0004-Quicksave.omwsave",
+            "save_sha256": "503e6e276e7b444e95efc841b12bc6fe37fce325e4b2f3da6202ae3b19f855a0",
+            "live_sha256": "5dbfd1c16c37c3d1189974486ebc120a9d427ad01d871b8ab809d26c5ee599a8",
+            "parsed_native_exact": true
+          }
+        ]
+      }
+    }
+  ],
+  "focused_recipe_tests": {
+    "path": "build/oblivion-compat/sewer-escape/resource-aware-recovery-focused-01.log",
+    "executed": 18,
+    "passed": true
+  },
+  "assembled_full_course": {
+    "segments": 67,
+    "actions": 10399,
+    "path": "build/oblivion-compat/sewer-escape/resource-aware-recovery-full-assembly-01/full-escape.json"
+  },
+  "gate_reuse": "C++ unchanged since486f3860e2 normal2222/Python580/SAN2222 gates. These are controller/observer data changes; fresh Python integration accompanies the next full run.",
+  "full_escape_complete": false
+}

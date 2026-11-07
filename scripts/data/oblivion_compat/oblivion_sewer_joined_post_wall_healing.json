@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died during normal healing')\n if frames==5 then print('Post-wall healing ready health='..hp) end\n if hp>=54 then print('Post-wall recovery accepted health='..hp) end\n if frames%15==0 then print('Post-wall recovery health='..hp..' magicka='..Actor.stats.dynamic.magicka(self).current) end\nend}}}}\n"
+      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died during normal healing')\n if frames==5 then print('Post-wall healing ready health='..hp) end\n if Actor.stats.dynamic.magicka(self).current>=19 then print('Post-wall magicka ready') end\n if hp>=54 then print('Post-wall recovery accepted health='..hp) end\n if frames%15==0 then print('Post-wall recovery health='..hp..' magicka='..Actor.stats.dynamic.magicka(self).current) end\nend}}}}\n"
     }
   ],
   "command": [
@@ -146,28 +146,59 @@
       "hold_seconds": 0.2
     },
     {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
+      "type": "wait_log",
+      "pattern": "Post-wall magicka ready",
+      "after_start": true,
+      "timeout_seconds": 180,
+      "abort_on_failure": true
     },
     {
       "type": "key",
       "value": "c"
     },
     {
+      "type": "wait_log",
+      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
       "type": "sleep",
       "seconds": 12
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Post-wall recovery accepted",
+      "after_start": false,
+      "maximum_iterations": 20,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "Post-wall magicka ready",
+          "after_start": true,
+          "timeout_seconds": 180,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "sleep",
+          "seconds": 12
+        }
+      ],
+      "cleanup_actions": []
     },
     {
       "type": "wait_log",

@@ -9,7 +9,7 @@ quest injection, skipped required fights or spliced states. The selected course
 uses Warrior class/birthsign and melee plus ordinary healing; other character
 choices and full M15/S7/E1 remain separate gates.
 
-Remaining: continuous14 completion, own outdoor reload, whole native/input/save
+Remaining: fresh continuous-course completion, own outdoor reload, whole native/input/save
 audit and rendered review. Loaded diagnostics cannot replace continuous proof.
 The only reviewed native deferrals are5 distant Peryite tick1 SetUnconscious
 startup calls; no story-command waiver. Keep all failed runs failed.
@@ -30,11 +30,15 @@ fall; no deterministic before/after replay is claimed. The expanded geometry
 regression independently catches the old airborne floor crossing. Read-only
 observers now fail if a required live rat falls below the tutorial floor.
 
-Next blocker: section5 still casts exactly3 times before requiring60HP. From
-16HP it reaches40 and stops. Make fixed-cast recoveries with a final health target
-adaptive, preserving each target and ordinary casting/native-effect gates. Audit
-remaining selected recovery blocks for this same pattern before another full run.
-Use continuous15's genuine post-rat F5 as the focused input; no state injection.
+The fixed-cast recovery blocker is corrected in steps5/16/45, retaining the
+original54/70/80HP targets. All selected ordinary recovery casts now wait for
+fresh magicka readiness and a native applied-effect receipt; intentional partial
+heals retain their cast counts. Three real-save diagnostics pass:16→56HP,
+armored47.1→75.26HP, and low-magicka recovery to80HP/80MP. Four actual F5s are
+parsed/native exact, all automated input delivered, native ends0/0/0. Entry
+comparisons permit only animated-body velocity projection differences<=1e-5.
+[Recovery proof](SEWER-THRESHOLD-RECOVERY-VERIFICATION.json). All18 focused
+recipe tests pass; full67-section assembly has10399 actions. C++ is unchanged.
 Follow-up15 correctly stopped without outdoor reload. No rendered game remains.
 
 After focused recovery checks, regenerate a fresh full67-section new-game course

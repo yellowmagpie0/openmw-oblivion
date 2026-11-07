@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal previous=nil\nlocal n=0\nreturn {{engineHandlers={{onFrame=function()\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died during ordinary recovery')\n if not previous then previous=hp print('Joined zombie healing ready health='..hp) end\n if hp>previous+.01 then n=n+1 previous=hp print('Joined zombie healing step '..n..' health='..hp) end\n if hp>=79.99 then print('Joined zombie health restored') end\nend}}}}\n"
+      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal previous=nil\nlocal n=0\nreturn {{engineHandlers={{onFrame=function()\n local hp=Actor.stats.dynamic.health(self).current\n assert(not Actor.isDead(self) and hp>0,'Player died during ordinary recovery')\n if not previous then previous=hp print('Joined zombie healing ready health='..hp) end\n if hp>previous+.01 then n=n+1 previous=hp print('Joined zombie healing step '..n..' health='..hp) end\n if Actor.stats.dynamic.magicka(self).current>=19 then print('Joined zombie magicka ready') end\n if hp>=79.99 then print('Joined zombie health restored') end\nend}}}}\n"
     }
   ],
   "command": [
@@ -48,12 +48,19 @@
       "name": "OpenMW"
     },
     {
+      "type": "wait_log",
+      "pattern": "Joined zombie magicka ready",
+      "after_start": true,
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
       "type": "key",
       "value": "c"
     },
     {
       "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
+      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
       "timeout_seconds": 8,
       "after_start": true,
       "abort_on_failure": true
@@ -63,12 +70,19 @@
       "seconds": 1.5
     },
     {
+      "type": "wait_log",
+      "pattern": "Joined zombie magicka ready",
+      "after_start": true,
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
       "type": "key",
       "value": "c"
     },
     {
       "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
+      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
       "timeout_seconds": 8,
       "after_start": true,
       "abort_on_failure": true
@@ -78,12 +92,19 @@
       "seconds": 1.5
     },
     {
+      "type": "wait_log",
+      "pattern": "Joined zombie magicka ready",
+      "after_start": true,
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
       "type": "key",
       "value": "c"
     },
     {
       "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
+      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
       "timeout_seconds": 8,
       "after_start": true,
       "abort_on_failure": true
@@ -93,12 +114,19 @@
       "seconds": 1.5
     },
     {
+      "type": "wait_log",
+      "pattern": "Joined zombie magicka ready",
+      "after_start": true,
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
       "type": "key",
       "value": "c"
     },
     {
       "type": "wait_log",
-      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136",
+      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
       "timeout_seconds": 8,
       "after_start": true,
       "abort_on_failure": true

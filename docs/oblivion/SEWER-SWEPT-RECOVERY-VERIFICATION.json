@@ -96,7 +96,7 @@
     }
   },
   "runtime_limitation": "Old immutable snapshot checkpoint replay rat41-floor-baseline-01 did not reproduce the uninterrupted fall; its expected-breach diagnostic fails. Do not claim a deterministic before/after replay.",
-  "new_runtime": "continuous15 passes required rat prefix, then fails section5 because its fixed three healing casts cannot reach60HP from16HP. No full escape claim.",
+  "new_runtime": "continuous15 passes required rat prefix, then fails section5 because its fixed three healing casts cannot reach54HP from16HP. No full escape claim.",
   "integration_status": "All2222 normal engine,580 Python and2222 ASan/UBSan engine tests pass; sanitizer leak checking enabled. No rendered leak claim.",
   "recipe_tests": {
     "path": "build/oblivion-compat/sewer-escape/rat-support-sweep-manifest-tests-01.log",
