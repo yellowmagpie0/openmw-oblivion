@@ -10,9 +10,9 @@ no actor/health/position/quest injection, skipped required fights or spliced sta
 - Current full continuous run, its own outdoor reload, whole-state/input/native
   audit and rendered review. Retain only the5 independently reviewed distant
   Peryite tick1 SetUnconscious startup deferrals; no story-command waivers.
-- Current full ASan/UBSan integration for the rat-floor repair. Earlier faction
-  integration passed all2221 cases with engine leak checking enabled.
-  Other M15/S7/E1/character-choice gates remain separate.
+- Other M15/S7/E1/character-choice gates remain separate. Current rat-floor
+  integration passes all2222 normal and ASan/UBSan engine cases, with sanitizer
+  engine leak checking enabled.
 
 ## Current chunk and evidence
 
@@ -74,7 +74,9 @@ The early wall-rat blocker is repaired. Grounded overlap correction no longer
 lowers actors through their supporting floor. A synthetic geometry regression
 fails on the previous solver (z1→-19.2) and passes with the repair; airborne
 recovery remains checked. All9 actor-bounds and all2222 normal engine tests pass.
-Full current sanitizer integration is the remaining implementation gate.
+Full2222 ASan/UBSan engine tests also pass with engine leak checking enabled
+at44685d182f, fingerprint
+`a24bf96b69b2818e67eb85c53934fc928c3647b1f2ed6f3b73adededacef4e41`.
 [Repair proof](SEWER-RAT-FLOOR-REPAIR-VERIFICATION.json),
 [original diagnosis](SEWER-RAT-FLOOR-DIAGNOSIS.json).
 
@@ -90,7 +92,8 @@ separate recovery, then movement, fighting nearby threats before advancing.
 Source3 actions20→8; full selection remains67 sections, now10450 actions.
 The assembled2-section actions and observer exactly match the passing runtime;
 18 assembly/repeat tests and actual observer LuaJIT compile pass. Source2 retains
-the automatic landing sidestep, still needing fresh full-course runtime proof.
+the automatic landing sidestep: continuous12 now clears it without manual input
+and reaches original stage30. Complete-course acceptance remains pending.
 
 Full11 remains terminal failed at section3 with the old controller. Its recorded
 manual landing recovery is useful evidence, not full acceptance. Retain failures.
@@ -99,11 +102,26 @@ results keep their original fingerprints in the linked proofs; later manifest
 edits do not invalidate unchanged C++ checks. No source edits/commits while any
 `run_checks.py` helper is live.
 
-Next: run full2222 ASan/UBSan engine gate and regenerate a fresh original-new-game
-67-section course with the landing and rat corrections. Use immutable snapshots,
-one rendered game at a time. Accept only its continuous outdoor finish, own
-fresh-process outdoor reload, full native/input/save audit and rendered review.
-Commit bounded completed chunks; never push without request.
+## Live continuous acceptance run — recheck actual processes
+
+`full-escape-continuous-12` is a fresh original new game, immutable
+`rat-grounded-runtime-snapshot-01`, ELF89947e13…adb1d5, own resources and pinned
+normal libraries. Actual identity and mapped workspace hashes are in its
+`runtime-identity.json`. Full67/10450 recipe is
+`rat-grounded-full-assembly-01/full-escape.json`; entire emitted LuaJIT compiles.
+Game355239, driver355127, supervisor355126, archiver355240, watcher355241.
+It reached original stage30 at10:58:50UTC and section3 at10:59:01UTC. No manual
+input has been sent. This live run is not acceptance yet. Preserve healthy jobs;
+do not restart on observation timeout or modify its snapshot files.
+
+Next: monitor the continuous course, repairing only observed blockers. After it
+passes and the actual game exits, launch prepared
+`full12-own-outdoor-reload-assembly-01/course.json` as a fresh process using this
+run's own final outdoor save. It adds ordinary walking, own F5 and read-only rank
+inspection. Run `verify-full-escape.py` plus `audit-all-course-saves.py` on terminal
+passing outputs and inspect captures. The final audit must prove one PID through
+all67 sections, no injections/skipped fights, own outdoor reload, normal controls,
+state/input/save/native consistency. Commit bounded completed chunks; never push.
 
 ## Reusable route evidence and limits
 

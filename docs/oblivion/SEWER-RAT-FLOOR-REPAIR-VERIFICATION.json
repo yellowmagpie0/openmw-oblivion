@@ -70,6 +70,43 @@
         "head": "dc4e0247f3937addf797f035dc4d9bb380c5d48d",
         "source_fingerprint": "6b19aaf6923c1b0d34991f5ddc8fb1075832eb110047465b5d1a08f138165567"
       }
+    },
+    "broad_sanitizer": {
+      "path": "build/oblivion-compat/sewer-escape/rat-grounded-broad-sanitize-01",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2222,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "083fdc1e8a71a83b06cd35c773f044d1500e6e078e36a075f429b2f3a7f24be8",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "8d12ad3b2c06293cc1bd16ae4c336aad2fe95398b808d9b77c66e84d2f4d5a1f",
+          "inventory_sha256": "7ab500e1a7a44d82185e23caaeae0d487b87d8fea7beaa547580533de2ef49a8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "44685d182fefcad01c5522099b26f9fa79664447",
+        "source_fingerprint": "a24bf96b69b2818e67eb85c53934fc928c3647b1f2ed6f3b73adededacef4e41"
+      },
+      "source_after": {
+        "head": "44685d182fefcad01c5522099b26f9fa79664447",
+        "source_fingerprint": "a24bf96b69b2818e67eb85c53934fc928c3647b1f2ed6f3b73adededacef4e41"
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "scope": "Full engine suite on independent Xvfb. Engine leak checking, no rendered-game leak claim."
     }
   },
   "runtime": {
@@ -188,6 +225,6 @@
     "initial_invocation_failure": "manifest-tests-01: test_scenario_repeat needs scripts/tests on PYTHONPATH; corrected invocation passes."
   },
   "rendered_review": "Inspected actual final capture: Player alive with drawn fists on far side of broken wall, passage visible, HUD shows low health. Native state supplies all3 Player kills.",
-  "sanitizer_status": "Required full engine sanitizer gate pending after this implementation checkpoint.",
+  "sanitizer_status": "All2222 ASan/UBSan engine tests pass with leak checking enabled at44685d182f.",
   "full_escape_complete": false
 }
