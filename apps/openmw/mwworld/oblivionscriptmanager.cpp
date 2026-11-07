@@ -34,6 +34,7 @@
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loaddial.hpp>
 #include <components/esm4/loaddoor.hpp>
+#include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadflor.hpp>
 #include <components/esm4/loadfurn.hpp>
 #include <components/esm4/loadglob.hpp>
@@ -2084,6 +2085,35 @@ namespace MWWorld
             return std::int64_t(!left.isEmpty() && !right.isEmpty() && left.getCell() == right.getCell());
         }
 
+        if (name == "setownership")
+        {
+            if (arguments.size() > 1)
+                throw ObScript::RuntimeError("OBSV117", "SetOwnership accepts one optional NPC/faction owner", name);
+            const ObScript::Value requestedOwner = argument(0);
+            const auto* integer = std::get_if<std::int64_t>(&requestedOwner);
+            const auto* number = std::get_if<double>(&requestedOwner);
+            const bool defaultOwner = arguments.empty() || (integer && *integer == 0) || (number && *number == 0);
+            std::optional<ESM::FormKey> owner;
+            if (defaultOwner)
+                owner = mWorld.getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1));
+            else
+                owner = keyFromValue(requestedOwner);
+            const auto* npc = owner ? mStore.search<ESM4::Npc>(*owner) : nullptr;
+            const auto* faction = owner ? mStore.search<ESM4::Faction>(*owner) : nullptr;
+            const auto ownerId = owner ? mResolver.toFormId(*owner) : std::nullopt;
+            if (!ownerId || !ownerId->hasContentFile()
+                || ((!npc || (npc->mFlags & ESM4::Rec_Deleted))
+                    && (!faction || (faction->mFlags & ESM4::Rec_Deleted))))
+                throw ObScript::RuntimeError("OBSV117", "SetOwnership requires a resolved NPC/faction base", name);
+            const auto reference = objectKey();
+            const Ptr ptr = objectPtr();
+            auto* saved = referenceState(reference);
+            if (!ptr.isEmpty()) ptr.getCellRef().setOwner(ESM::RefId(*ownerId));
+            if (saved) saved->mOwner = *owner;
+            trace("setownership ref=" + reference.serialize() + " owner=" + owner->serialize()
+                + " applied=" + (!ptr.isEmpty() || saved ? "true" : "false"));
+            return std::int64_t(0);
+        }
         if (name == "lock" || name == "unlock")
         {
             const Ptr ptr = objectPtr();
@@ -3136,7 +3166,7 @@ namespace MWWorld
         static const std::set<std::string, std::less<>> deferred{
             "showmap",
             "cast", "addspell", "removespell",
-            "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
+            "setquestobject", "setfactionrank", "modfactionrank", "setcrimegold",
             "setunconscious" };
         if (deferred.contains(name))
         {

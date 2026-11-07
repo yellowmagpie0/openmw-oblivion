@@ -1,0 +1,157 @@
+{
+  "scope": "Original stage58 door ownership and own fresh-process reload; not complete sewer acceptance",
+  "passed": true,
+  "runs": {
+    "story-ownership-runtime-01": {
+      "passed": true,
+      "save_sha256": "51950003614f967c1aac1025dd0ae19540f0649e101269870caa95a967d4a8e0",
+      "native_save_exact": true,
+      "door": {
+        "key": "content:oblivion.esm:022812",
+        "base": "content:oblivion.esm:01cb91",
+        "cell": "content:oblivion.esm:022282",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          2814.9033203125,
+          7392.03125,
+          -1038.301025390625,
+          0.0,
+          -0.0,
+          1.5707963705062866
+        ],
+        "owner": "content:oblivion.esm:0150bc",
+        "lock_level": 100,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "locked": true,
+          "record_type": 1389317956,
+          "scale": 1.0
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 321894,
+        "sequence": 5,
+        "tick": 1170,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 4,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "all_inputs_delivered": true,
+      "scenario_actions": 31,
+      "unarchived_saves": [
+        3
+      ]
+    },
+    "story-ownership-reload-01": {
+      "passed": true,
+      "save_sha256": "04b2e542d1541ab6ba01bb5f5256e7492541430b17fc4e0ab532ca1e9ec6509c",
+      "native_save_exact": true,
+      "door": {
+        "key": "content:oblivion.esm:022812",
+        "base": "content:oblivion.esm:01cb91",
+        "cell": "content:oblivion.esm:022282",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          2814.9033203125,
+          7392.03125,
+          -1038.301025390625,
+          0.0,
+          -0.0,
+          1.5707963705062866
+        ],
+        "owner": "content:oblivion.esm:0150bc",
+        "lock_level": 100,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "locked": true,
+          "record_type": 1389317956,
+          "scale": 1.0
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 322229,
+        "sequence": 4,
+        "tick": 73,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "all_inputs_delivered": true,
+      "scenario_actions": 5,
+      "unarchived_saves": []
+    }
+  },
+  "entry_restore": {
+    "passed": true,
+    "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-ownership-runtime-01/retained-saves/3-0004-Quicksave.omwsave",
+    "source_save_sha256": "51950003614f967c1aac1025dd0ae19540f0649e101269870caa95a967d4a8e0",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "focused_checks": {
+    "engine": {
+      "executed": 2,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "OblivionOwnership.*",
+      "binary_sha256": "a4f38fe006433325d4b5add16245b0ca5cf58945fe207c65997552c261bea946",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "9fd2731333f36b8ba72742810a0eb3887bd88d630babd9d444b086c77edddf9f",
+      "inventory_sha256": "9138953d90ef6a1ccd9e0f50d398fe7a48d811c6c78c6e2b001934a37c5496ef",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "runtime": {
+    "openmw_sha256": "f651a62d7c2e9bfb61073b1b255ff2eb2587ef75cc6a50233776d4d8d7df33e9",
+    "resources_version": "0.52.0\n569eba4d47e59eee4c1128d468404da3eb34139b\n\n",
+    "resources_version_sha256": "1855eebad067d8d75e47ca711260df2d0339d019aa9ada7a2adc59fa55de6a43",
+    "immutable_libraries": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib",
+    "source": {
+      "head": "569eba4d47e59eee4c1128d468404da3eb34139b",
+      "source_fingerprint": "9c8c117dae6921014ddcf290cff826825b0690872be7af4bd5f54f436aaedc32"
+    },
+    "scope": "Current SetOwnership implementation; SetFactionRank and SetCrimeGold still deferred"
+  },
+  "retained_failed_attempts": [
+    "story-ownership-focused-01",
+    "story-ownership-focused-02",
+    "story-ownership-focused-03",
+    "story-ownership-focused-04"
+  ],
+  "integration_gates": "Broad normal and sanitizer gates pending; batch with remaining story commands",
+  "full_escape_complete": false
+}

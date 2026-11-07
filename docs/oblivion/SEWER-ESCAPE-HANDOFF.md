@@ -10,7 +10,7 @@ skipped required fights, restarted or spliced state qualifies.
 
 Remaining acceptance gaps:
 
-- Original story mutations: SetOwnership58, SetFactionRank80, exit SetCrimeGold.
+- Original story mutations: SetFactionRank80 and exit SetCrimeGold.
   Do not waive these unsupported events in the final native audit.
 - One uninterrupted new-game67-section course and its own outdoor reload.
 - Current implementation gates, native/input/save audit and rendered review of
@@ -40,13 +40,14 @@ No encounters/loot skipped. Full67/10460 LuaJIT and18 assembly/repeat Python pas
 The immutable runtime retains original normal2217/sanitized2217 evidence from
 [the follower chunk](SEWER-FOLLOWER-YIELD-VERIFICATION.json).
 
-Uncommitted SetOwnership implementation now uses the existing reference owner
-field and authored Player NPC identity. `story-ownership-focused-05` builds the
-runtime and passes2 exact-inventory engine cases, including encoding/content-
-index shift/default owner/invalid arguments. Attempts01–04 retain fixture failures
-and the caught proxy-vs-authored-Player identity bug. Original58 runtime/reload
-and broader integration gates remain before claiming this command complete.
-Files: script manager, new ownership test file and test CMake inventory.
+SetOwnership58 is implemented and verified through the original31-action Sanctum
+entry and its own fresh-process reload. Door022812 retains EmperorFaction0150bc
+and lock100; both actual final saves are receipt-hashed/parsed-native exact,
+whole reload entry0diff, all inputs delivered, native end0/0/0. Focused2 engine
+cases pass, including shifted content indices/default authored Player base and
+invalid argument rejection. One earlier runtime F5 was superseded before archive;
+only its final save is claimed. [Ownership proof](SEWER-OWNERSHIP-VERIFICATION.json).
+Broader normal/sanitizer integration gates will be batched with remaining commands.
 
 No build helper or rendered game is live at this handoff. Always recheck actual
 processes. Ignored `reunion-current-handles.json` may lag; actual reports/processes
@@ -54,9 +55,8 @@ are authoritative. Evidence paths below are under `build/oblivion-compat/sewer-e
 
 ## Next action
 
-1. Verify original SetOwnership58 through normal Sanctum entry using actual56
-   save `waiting-follower-yield-01/retained-saves/3-0003-Quicksave.omwsave`,
-   SHA37362b98…45d3ef. Use a newly pinned executable AND matching resources.
+1. Ownership58 runtime and reload are complete; retain their evidence and batch
+   broader integration gates with the two remaining native story commands.
 2. Implement shared-base faction-rank state/queries/save behavior for original
    final-assassin SetFactionRank80, and native bounty setter for exit SetCrimeGold.
    Original winning stages/targets: ignored `original-story-ownership-faction-commands.json`.
