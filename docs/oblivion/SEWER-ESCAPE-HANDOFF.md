@@ -69,10 +69,28 @@ F5seq59/60 both parsed/native exact in0380bd,59.1→80HP through3 ordinary casts
 Section entries1–28 ordered, same original PID/no loads, current input prefix
 contiguous; entry and healed captures reviewed.
 [Continuous cavern prefix](SEWER-CONTINUOUS-CAVERN-PREFIX-VERIFICATION.json).
-Run is now in28 at80HP. Remaining course includes cavern encounters/shaman,
-escort reunion and choices, later ambushes, Sanctum, final sewers/exterior and
-own fresh outdoor reload. Terminal every-save/input/native audits remain pending.
-Revalidate live progress on resume; do not substitute this prefix for completion.
+Continuous19 is now terminal failed at42, Player alive25.85HP. Source42's first
+waypoint wait timed out90seconds; actual Player moved to
+(5339.6343,3621.9546,-748.4127) and missed the waypoint gate. All6366 issued SDL
+inputs including ordinary shutdown delivered; native end0errors/0pending/
+5 reviewed Peryite deferrals. Own outdoor reload/auditor/provenance watcher
+correctly withheld follow-up. Original game/driver are gone; revalidate /proc.
+Actual last F5seq89 is retained for focused source42 reproduction. No manual
+input, loads or injection occurred in this failed new-game run.
+
+Before that failure, the full log encounter passed. Original03b49e releases6
+bodies once; native trap impacts31.5 damage on03b518/03b51a cause both deaths
+with killer=null. These are environmental victories, unlike prior loaded melee
+cases; do not relabel as Player kills. Selected actual F5seq77/78/83 parsed/native
+exact: both alive before release, dead after, final80HP. Five native healing
+casts in36–38. Rolling-log/final captures reviewed.
+[Log encounter proof](SEWER-JOINED-LOG-ENCOUNTER-VERIFICATION.json).
+
+Next chunk: inspect/reproduce source42's first waypoint miss from genuine89,
+correct the ordinary route/guard as evidence requires, verify actual recovery43
+and commit. Full67 physical exit, own fresh outdoor reload/walk and terminal
+save/input/native/rendered audits remain incomplete. Do not call continuous19 a
+pass or splice its states into a later acceptance run.
 
 Adjacent observation for later: source2 retains Magic-menu state, so source5's
 repeated relative page navigation visits Stats (actual capture reviewed). Minor

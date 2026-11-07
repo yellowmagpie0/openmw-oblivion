@@ -421,5 +421,105 @@
     "Cast requests can fail during combat; dedicated recovery proved supported selected spell and real magicka debits. No general combat casting acceptance claimed.",
     "No uninterrupted new-game-to-exterior proof yet.",
     "Data-only runtime recipes; prior normal/sanitizer engine evidence retains original provenance."
-  ]
+  ],
+  "continuous_new_game_environmental_case": {
+    "scope": "Continuous19 ordinary log release, actual environmental damage/deaths, five ordinary healing casts and selected exact checkpoints; full escape still pending",
+    "game_pid": 410270,
+    "no_loads": true,
+    "log_release": [
+      "[11:36:57.835 I] TES4 animated reference released: content:oblivion.esm:03b49e bodies=6"
+    ],
+    "trap_impacts": [
+      "[11:36:58.767 I] TES4 trap impact: reference=content:oblivion.esm:03b49e body=46 actor=content:oblivion.esm:03b518 speed=106.302 damage=31.5 pushback=100",
+      "[11:36:59.943 I] TES4 trap impact: reference=content:oblivion.esm:03b49e body=2b actor=content:oblivion.esm:03b51a speed=132.23 damage=31.5 pushback=100"
+    ],
+    "native_environmental_deaths": [
+      "[11:36:58.803 I] M15 native death callback: id=17 actor=content:oblivion.esm:03b518 killer=null handled=false",
+      "[11:36:59.973 I] M15 native death callback: id=18 actor=content:oblivion.esm:03b51a killer=null handled=false"
+    ],
+    "player_melee_kills_claimed": false,
+    "native_healing_casts": [
+      "[11:37:09.253 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=64.24 magicka=61",
+      "[11:37:27.107 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=71.28 magicka=58.0774",
+      "[11:37:44.387 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=78.32 magicka=54.3888",
+      "[11:37:50.761 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=39.2659",
+      "[11:37:52.842 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=21.1616"
+    ],
+    "selected_checkpoint_saves": [
+      {
+        "sequence": 77,
+        "save_sha256": "cadb8ebe9815ac2abe12ea9fe6667450e2dbc6ead19a9a10dc981bbb50638165",
+        "live_sha256": "208767608234f607d8acd0a80f7fb9cbb5b3e6dffc3c9a3d60ea4815cdb020a2",
+        "parsed_native_exact": true,
+        "health": 57.19999694824219,
+        "log_goblin_life": [
+          {
+            "actor": "content:oblivion.esm:03b518",
+            "base": "content:oblivion.esm:03b51d",
+            "phase": 0,
+            "recovery_remaining": 0.0,
+            "killer": "null"
+          },
+          {
+            "actor": "content:oblivion.esm:03b51a",
+            "base": "content:oblivion.esm:0c9ffc",
+            "phase": 0,
+            "recovery_remaining": 0.0,
+            "killer": "null"
+          }
+        ]
+      },
+      {
+        "sequence": 78,
+        "save_sha256": "b0071cfc0264f9257cea5b04ea73c29f8c0c6513531b67c7cb2209bf64c8242a",
+        "live_sha256": "c6e3dbd8268125c3b9ff8731ac1411d0e41de2e41c0184f2c8c07dfc076deaa7",
+        "parsed_native_exact": true,
+        "health": 57.19999694824219,
+        "log_goblin_life": [
+          {
+            "actor": "content:oblivion.esm:03b518",
+            "base": "content:oblivion.esm:03b51d",
+            "phase": 1,
+            "recovery_remaining": 0.0,
+            "killer": "null"
+          },
+          {
+            "actor": "content:oblivion.esm:03b51a",
+            "base": "content:oblivion.esm:0c9ffc",
+            "phase": 1,
+            "recovery_remaining": 0.0,
+            "killer": "null"
+          }
+        ]
+      },
+      {
+        "sequence": 83,
+        "save_sha256": "e14686feaa49dd94888f85acf7a9ebdad52deb639542a6f51558695846f48900",
+        "live_sha256": "2a9a43976e00362fef02620646db42e4540df2932d5d3754b7ce3f753148de34",
+        "parsed_native_exact": true,
+        "health": 80.0,
+        "log_goblin_life": [
+          {
+            "actor": "content:oblivion.esm:03b518",
+            "base": "content:oblivion.esm:03b51d",
+            "phase": 1,
+            "recovery_remaining": 0.0,
+            "killer": "null"
+          },
+          {
+            "actor": "content:oblivion.esm:03b51a",
+            "base": "content:oblivion.esm:0c9ffc",
+            "phase": 1,
+            "recovery_remaining": 0.0,
+            "killer": "null"
+          }
+        ]
+      }
+    ],
+    "all_terminal_saves_audit_pending": true,
+    "rendered_review": [
+      "segment35-rolling-logs.png",
+      "segment38-phase2-joined-final-log-goblin.png"
+    ]
+  }
 }
