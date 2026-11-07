@@ -10,8 +10,9 @@ no actor/health/position/quest injection, skipped required fights or spliced sta
 - Current full continuous run, its own outdoor reload, whole-state/input/native
   audit and rendered review. Retain only the5 independently reviewed distant
   Peryite tick1 SetUnconscious startup deferrals; no story-command waivers.
-- Current full ASan/UBSan engine integration. Other M15/S7/E1/character-choice
-  gates remain separate; do not call them accepted from this course.
+- Resolve the early rat encounter and pass the continuous course. Current full
+  ASan/UBSan engine integration passes all2221 cases with leak checking enabled.
+  Other M15/S7/E1/character-choice gates remain separate.
 
 ## Current chunk and evidence
 
@@ -54,7 +55,7 @@ Current gates under `build/oblivion-compat/sewer-escape/`:
 - `story-faction-python-02`: all580 Python pass. Retain original fingerprints;
   later changes are C++ regression expectations/docs, not Python implementation.
 
-The ongoing full11 exposed a controller-route obstruction at625.55,1204.32,
+Full11 exposed a controller-route obstruction at625.55,1204.32,
 -434.76: straight forward met a stone edge. A recorded ordinary X11 D key pair
 (09:57:15.519→09:57:16.068UTC) cleared it in the same PID. Original landing and
 roomC gates resumed, first ambush and original stage30 completed, segment3 ready.
@@ -65,44 +66,40 @@ Record the extra X11 input separately in its final audit; do not call it unatten
 waits for y1200 and includes that0.5s sidestep before the original landing gate;
 future assembly67/10462 and18 assembly/repeat tests plus LuaJIT compile pass.
 That revised automatic schedule is prepared, not independently runtime-accepted.
-Active full11 keeps its original67/10460 recipe and recorded manual correction.
+Failed full11 retains its original67/10460 recipe and recorded manual correction.
 
-## Live work — recheck actual processes
+## Current blocker and next action
 
-`full-escape-continuous-11` is a fresh original new game using immutable
-`story-faction-runtime-snapshot-01`: ELF009b22e4…8fd6dc, matching own resources
-version18c0cb4628, immutable normal libraries from `reunion-runtime-snapshot-01/lib`.
-Full67/10460 is regenerated in `story-faction-full-assembly-01/full-escape.json`;
-LuaJIT compile passes, new-game1/no load flag, no optional per-frame world report.
-Actual game PID335271, driver335211, supervisor335210, automatic archiver335298,
-watcher335299. It reached original stage30 and segment3 by09:59:14UTC; **not terminal acceptance**.
-Inspect launcher status, actual process state and incremental watch before acting.
-One healthy game only; do not restart on an observation timeout or overwrite its
-ELF/resources/libraries. Current handles JSON may lag actual processes.
+Full11 is terminal failed: Player died to rat037e41 while section3 walked toward
+its waypoint before attacking. Its genuine pre-wall F5 is retained as
+`full-escape-continuous-11/retained-saves/3-0020-Quicksave.omwsave`.
+The manual landing correction above remains useful evidence, not full acceptance.
 
-Sanitizer direct prebuild completed `build/m15-sanitize/openmw-tests`:
-exec session27400, log `story-faction-sanitizer-development-build-01.log`.
-It is not sanitizer test evidence. Actual cmake PID327133 is now gone and the
-log ends Built target openmw-tests. Full sanitizer helper can now start. Use independent Xvfb -displayfd
-for sanitizer gates; prior simultaneous xvfb-run collision lost X11 and failed79
-cases, retained. Engine sanitizer leak1; rendered probes leak0 unless stated.
-No tracked/nonignored edits or commits while any run_checks.py helper is live.
+Ignored diagnostic `wall-combat-route-02` uses that actual save. Short0.1s
+attacks,1.3s recovery and0.25s movement clear the first rat and reach the wall
+approach with40HP. The diagnostic nevertheless fails: rat037e42 is already at
+z=-8156 in its first F5, while the input started with that rat at z=-735.
+The later controller aims at the unreachable rat below the floor. Do not waive
+that kill or treat the wall-exit position marker as encounter completion.
+`wall-floor-trace-01` records read-only rat positions during the same normal-input
+approach to locate the fall; recheck actual processes before starting another game.
+Candidate controller edits remain ignored and are not adopted into source yet.
 
-## Next action
+`story-faction-broad-sanitize-01/verification.json` passes all2221 ASan/UBSan
+engine cases, no failures/skips, exact inventory, engine leak checking enabled.
+Source revision7342043f1f, fingerprint
+`2a2c696d312ac0ae53828ef44911bd24d8c7251c92da2d49207b9170ebab5e20`.
+This is engine-test evidence, not rendered leak coverage. Normal3265 component,
+2221 engine and580 Python gates retain their original provenance in the faction
+proof. No further broad rerun is needed for docs or controller-only edits.
 
-1. Check the live full course and sanitizer prebuild. Preserve healthy processes.
-   On observed failure, finish that bounded blocker and retain original failure.
-2. When sanitizer prebuild terminates, run full engine helper with ASan leak1 /
-   UBSan halt, separate Xvfb and fresh output. Existing ignored isolated launcher
-   has a hardcoded prior name; adapt a new ignored launcher/output first.
-3. If full67 passes, fresh-load that run's own actual outdoor archive, obtain a
-   new real F5 and inspect captures. `verify-full-escape.py` now also requires
-   ownership/faction/bounty state, once-only original writes and western-rat kill.
-   `compare-course-entry.py` records only the narrow89→90 default promotion when
-   appropriate; a90→90 own reload must compare without migration.
-4. Record exact current gate/runtime provenance and commit completed chunks.
-   Never push without explicit request. Full escape is complete only after all
-   remaining gates pass; the loaded diagnostic chain is not a substitute.
+Next: locate and repair the rat floor crossing, complete the three-rat diagnostic
+with native Player kills and save/input audits, adopt verified controller changes,
+and commit that bounded chunk. Then regenerate a fresh original-new-game67-section
+course with the automatic landing sidestep and rat fix. Accept only its continuous
+outdoor finish, own fresh-process outdoor reload, full audit and rendered review.
+Use immutable runtime snapshots; one rendered game at a time. No tracked edits
+or commits while any `run_checks.py` helper is live. Never push without request.
 
 ## Reusable route evidence and limits
 

@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "scope": "Shared-base native faction rank implementation, original59-62 stage80 encounter and own fresh-process class-checkpoint reload. Full continuous escape and sanitizer integration remain separate pending gates.",
+  "scope": "Shared-base native faction rank implementation, original59-62 stage80 encounter and own fresh-process class-checkpoint reload. Full continuous escape remains a separate pending gate.",
   "schema": 90,
   "behavior": "Ordered full base faction replacement; stable identities, signed ranks, explicit empty versus absent, immutable authored definitions. Script rank, both condition paths, reactions, primary and ownership/furniture queries share the authority. Incoming load uses incoming overrides without borrowing outgoing state.",
   "original_oracle": "SEWER-SETFACTIONRANK-ORACLE.json",
@@ -210,6 +210,43 @@
         "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
         "source_fingerprint": "3872c595cc07350ac3d9c94bc235f619d8e7307d1a26968a4dfd8e35deae389f"
       }
+    },
+    "broad_sanitizer": {
+      "path": "build/oblivion-compat/sewer-escape/story-faction-broad-sanitize-01",
+      "overall_helper_passed": true,
+      "results": {
+        "engine": {
+          "executed": 2221,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ab4e84656acb3ca6a927bb0509788eff3ac8b0ca0b7e4b83a0989c73c6c8d588",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "0028b2f7ffafe127794f77eb8cbac0e32be234b9cd12a55d8a1caff671aaa846",
+          "inventory_sha256": "8b31bd4067365de4da48919974bced95c2ce3460624bac742b2c42793c02b7fc",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "7342043f1f38c85cca010e75afdb98d2d12f12ff",
+        "source_fingerprint": "2a2c696d312ac0ae53828ef44911bd24d8c7251c92da2d49207b9170ebab5e20"
+      },
+      "source_after": {
+        "head": "7342043f1f38c85cca010e75afdb98d2d12f12ff",
+        "source_fingerprint": "2a2c696d312ac0ae53828ef44911bd24d8c7251c92da2d49207b9170ebab5e20"
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "scope": "All 2221 engine tests; independent Xvfb. Engine leak checking enabled; no rendered-game leak claim."
     }
   },
   "runs": {
@@ -412,7 +449,7 @@
     "story-faction-python-01": "One stale future-version90 expectation; advanced future rejection to91 and retained all prior checks.",
     "story-faction-broad-normal-01": "Full components pass3265; engine2220/2221. Duplicate-SNAM fixture conflated authored order with an already constructed native list. Corrected only after independent original loader/setter inspection; first-match primitive assertion retained, construction/GetFactionRank assertions added. Focused retry7 and full engine2221 pass."
   },
-  "sanitizer_status": "Direct separate-build precompilation ongoing; no current sanitizer acceptance claimed.",
-  "continuous_status": "Fresh full67/10460 original new-game course full-escape-continuous-11 now running in PID335271 with automatic save archiving. Not accepted until terminal course, own outdoor reload, input/native/state audit and rendered review pass.",
+  "sanitizer_status": "Full 2221-case ASan/UBSan engine integration passes at revision 7342043f1f with engine leak checking enabled.",
+  "continuous_status": "Full11 failed at the first wall rat: the original input controller walked into an attacking rat before fighting. Diagnostic wall-combat-route-02 improves the first approach but remains failed; rat037e42 fell below the floor and all-three-kill acceptance is absent.",
   "full_escape_complete": false
 }
