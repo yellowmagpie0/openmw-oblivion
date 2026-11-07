@@ -86,7 +86,79 @@
     },
     {
       "type": "sleep",
-      "seconds": 0.3
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_x",
+      "value": -1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_x",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_x",
+      "value": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_x",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": -1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
     },
     {
       "type": "gamepad_button",

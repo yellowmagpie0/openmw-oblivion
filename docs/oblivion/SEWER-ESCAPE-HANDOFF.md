@@ -92,7 +92,7 @@ separate recovery, then movement, fighting nearby threats before advancing.
 Source3 actions20→8; full selection remains67 sections, now10450 actions.
 The assembled2-section actions and observer exactly match the passing runtime;
 18 assembly/repeat tests and actual observer LuaJIT compile pass. Source2 retains
-the automatic landing sidestep: continuous12 now clears it without manual input
+the automatic landing sidestep: continuous12 clears it without manual input
 and reaches original stage30. Complete-course acceptance remains pending.
 
 Full11 remains terminal failed at section3 with the old controller. Its recorded
@@ -102,26 +102,35 @@ results keep their original fingerprints in the linked proofs; later manifest
 edits do not invalidate unchanged C++ checks. No source edits/commits while any
 `run_checks.py` helper is live.
 
-## Live continuous acceptance run — recheck actual processes
+## Current controller checkpoint and next action
 
-`full-escape-continuous-12` is a fresh original new game, immutable
-`rat-grounded-runtime-snapshot-01`, ELF89947e13…adb1d5, own resources and pinned
-normal libraries. Actual identity and mapped workspace hashes are in its
-`runtime-identity.json`. Full67/10450 recipe is
-`rat-grounded-full-assembly-01/full-escape.json`; entire emitted LuaJIT compiles.
-Game355239, driver355127, supervisor355126, archiver355240, watcher355241.
-It reached original stage30 at10:58:50UTC and section3 at10:59:01UTC. No manual
-input has been sent. This live run is not acceptance yet. Preserve healthy jobs;
-do not restart on observation timeout or modify its snapshot files.
+Full12 is terminal failed at section10, waiting for cuirass equipment. Its
+original new-game PID355239 cleared the automatic landing, first ambush/stage30,
+all3 native Player rat kills, healing, the keyed corpse/door and first substructure
+rat/chest. No manual inputs or injections. Native pre-gear F5seq27 is retained.
+No unreviewed runtime errors; game exit0. This remains a failed full course.
 
-Next: monitor the continuous course, repairing only observed blockers. After it
-passes and the actual game exits, launch prepared
-`full12-own-outdoor-reload-assembly-01/course.json` as a fresh process using this
-run's own final outdoor save. It adds ordinary walking, own F5 and read-only rank
-inspection. Run `verify-full-escape.py` plus `audit-all-course-saves.py` on terminal
-passing outputs and inspect captures. The final audit must prove one PID through
-all67 sections, no injections/skipped fights, own outdoor reload, normal controls,
-state/input/save/native consistency. Commit bounded completed chunks; never push.
+Section10 assumed fresh inventory-controller focus; the preceding UI can retain
+a different row. The original selection succeeds fresh, but an ordinary down
+input makes it select greaves first (inspected counterexample capture). The
+source now uses ordinary hat navigation R,L,D,R,U to reach the cuirass from any
+of the6 apparel slots at the course viewport. No world/UI mutation APIs.
+`gear-focus-correction-02` passes all armor/axe/potion gates from the actual full12
+save27 with a nonzero-focus prelude: whole entry0diff, native armor+axe equipped,
+healing potion consumed, health80, exact F5/native state, all input delivered,
+native end0/0/0. [Proof](SEWER-GEAR-FOCUS-VERIFICATION.json).
+Source10 actions52→68; full selection67/10466. All18 assembly/repeat tests pass.
+C++ unchanged; reuse2222 normal/SAN engine gates with original provenance.
+Inventory preview can T pose; final world view shows the drawn axe and full HUD.
+
+Next: assemble and launch fresh original-new-game continuous13 with both route
+corrections and gear-focus fix, immutable `rat-grounded-runtime-snapshot-01`.
+Accept only all67 sections in that same PID, its actual outdoor save and own
+fresh-process reload, ordinary movement continuation, full input/native/save
+audits and rendered review. Prepared full12 reload recipe can be retargeted to
+13 after regenerating it. `audit-all-course-saves.py` requires a terminal passing
+run. One rendered game at a time; recheck actual processes. No source edits or
+commits during `run_checks.py`. Commit bounded chunks; never push.
 
 ## Reusable route evidence and limits
 

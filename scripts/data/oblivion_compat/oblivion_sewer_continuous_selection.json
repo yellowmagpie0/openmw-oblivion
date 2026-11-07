@@ -68,7 +68,7 @@
     {
       "segment": 10,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_substructure_gear.json",
-      "action_count": 52,
+      "action_count": 68,
       "source_course": "joined-substructure-gear-06",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
