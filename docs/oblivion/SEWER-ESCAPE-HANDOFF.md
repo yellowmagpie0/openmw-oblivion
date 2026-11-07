@@ -1,6 +1,6 @@
 # Sewer regression closure handoff
 
-The immediate deliverable is bounded regression consolidation. **Original full
+The revised bounded regression deliverable is **closed**. **Original full
 sewer acceptance is incomplete.** Loaded checkpoint successes do not establish
 an uninterrupted new-game escape. The current patrol/eastern correction is
 finished; automated-player tactics are frozen. Do not begin the next chunk yet.
@@ -47,13 +47,23 @@ The manual checkpoint launcher passed rendered startup and ordinary F5/F9.
 The first smoke targeted the wrong display; its harness failure is retained.
 [Closure evidence](SEWER-REGRESSION-CLOSURE-VERIFICATION.json) records hashes,
 results and diagnostic paths. [Focused diagnostics](../../build/oblivion-compat/sewer-regression/focused-closure-01/RESULTS.md).
-One final integration attempt remains to be made after the artifact commit; no
-full attempt has been launched since the revised closure request.
+Final integration attempt **1/1 failed in section 37**: native Player death to
+log-cavern goblin `03b518`. This is classified as an automated-player failure;
+there was no engine crash or native error/pending work. The observer's Lua
+assertions report that same death. Sections 1–36 completed in one new-game PID,
+with no loads/manual inputs. All 74 actual F5s were retained byte-identically;
+the final retained save parsed exactly to its native snapshot. The five reviewed
+Peryite startup deferrals remained unchanged. Its own outdoor reload **could not
+run** because there was no successful exit; no substitute save was used.
+[Integration result and diagnostics](../../build/oblivion-compat/sewer-regression/integration-closure-01/RESULTS.md).
+No restart or further tactics tuning was made. The final attempt did not reach
+section 41; its correction remains demonstrated by focused evidence, not by a
+continuous pass. Artifact commit: `d16df5db06`.
 
 The correction preserves original approach points and uses ordinary attack,
 block, heal and movement. Patrol/guard kills are Player kills; the eastern goblin
 may die to actual shaman friendly fire. Do not relabel that killer. Historical
-continuous 21 failed41; [failure evidence](SEWER-CONTINUOUS-21-FAILURE.json).
+continuous 21 failed in section 41; [failure evidence](SEWER-CONTINUOUS-21-FAILURE.json).
 
 Known gameplay/presentation defects: upright creature corpses, stale/T-pose
 inventory preview, take-all-only loot, blank birthsign descriptions, held torch

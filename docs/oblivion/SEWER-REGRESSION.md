@@ -33,6 +33,8 @@ establish an uninterrupted new-game escape. Actor deaths retain their actual
 killers: the eastern goblin may legitimately die to the shaman's friendly fire;
 this is not relabeled as a Player kill. The required Player zombie, patrol,
 nearby guard, and western-rat victories remain explicit native checks.
+Story and exit use independent checkpoints. The older exit input predates the
+native faction replacement; the story/own-reload group checks that persistence.
 
 The existing full new-game course is a separate integration mode:
 

@@ -352,6 +352,186 @@
     "manual_F5_sha256": "48c37b4da938b7f37337af72096f72c68d8a04669cb1504b4502639c39e8f5e7",
     "manual_F5_health": 37.07862091064453,
     "F5_F9_and_rendered_review": true,
-    "native_receipt_audit": "Not enabled in manual launcher; this is a separate manual-tool smoke, not full native acceptance"
-  }
+    "native_receipt_audit": "Not enabled in manual launcher; this is a separate manual-tool smoke, not full native acceptance",
+    "shutdown_expectation": "Smoke02 expects normal exit0: SDL handles requested SIGTERM peacefully. Smoke01 had expected -15 in addition to its wrong-display failure."
+  },
+  "final_integration": {
+    "scope": "Terminal failure audit only; not a passing continuous course",
+    "implementation_commit": "d16df5db06f20ca3562f228d222b357fe03e7a83",
+    "attempt": 1,
+    "maximum_attempts": 1,
+    "result": {
+      "mode": "integration",
+      "status": "failed",
+      "complete": true,
+      "scope": "Reusable sewer regression/closure; focused checks do not establish full escape acceptance",
+      "full_escape_acceptance": false,
+      "rendered_review": "separate manual gate",
+      "runtime": {
+        "openmw": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f"
+      },
+      "checks": [
+        {
+          "status": "failed",
+          "classification": "automated_player",
+          "reason": "[16:45:26.711 I] M15 native death callback: id=17 actor=dynamic:player:0000000000000001 killer=content:oblivion.esm:03b518 handled=false",
+          "diagnostics": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/integration-closure-01/full/course",
+          "last_action": {
+            "type": "sleep",
+            "pattern": null,
+            "reason": null
+          },
+          "name": "continuous-new-game"
+        },
+        {
+          "name": "own-outdoor-reload",
+          "status": "could_not_run",
+          "classification": "upstream_failure",
+          "reason": "Parent course did not produce an accepted save; no substitute checkpoint used"
+        }
+      ],
+      "reused_evidence": [
+        "docs/oblivion/SEWER-DESCENDING-RECOVERY-VERIFICATION.json",
+        "docs/oblivion/SEWER-SETFACTIONRANK-VERIFICATION.json",
+        "docs/oblivion/SEWER-REINFORCEMENT-DEFENSE-VERIFICATION.json"
+      ],
+      "continuous_and_own_reload_passed": false
+    },
+    "runtime_identity": {
+      "game_pid": 431013,
+      "process_start_ticks": "182681406",
+      "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "exe_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f"
+    },
+    "scenario_exit_code": 0,
+    "native_end": {
+      "run_id": "sewer-regression",
+      "epoch": 3,
+      "pid": 431013,
+      "sequence": 81,
+      "tick": 30705,
+      "event": "run-end",
+      "error_count": 0,
+      "event_count": 80,
+      "pending_count": 0,
+      "unsupported_count": 5
+    },
+    "native_start_count": 1,
+    "native_load_count": 0,
+    "entered_sections": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ],
+    "completed_sections": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "Player_death": [
+      "[16:45:26.711 I] M15 native death callback: id=17 actor=dynamic:player:0000000000000001 killer=content:oblivion.esm:03b518 handled=false"
+    ],
+    "observer_death_assertions": {
+      "count": 3,
+      "first": "[16:45:26.690 E] L@0x1[scripts/tutorial_passage_observer.lua] onFrame failed. Lua error: [string \"scripts/tutorial_passage_observer.lua\"]:3205: Player died in joined Substructure",
+      "classification": "Automated observer reports actual Player death; not an independent engine crash"
+    },
+    "retained_receipts": 74,
+    "retained_save_copies": 74,
+    "all_archive_statuses_byte_identical": true,
+    "archive_running": false,
+    "last_genuine_save": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/integration-closure-01/full/course/retained-saves/3-0080-Quicksave.omwsave",
+      "sha256": "ff4ca155000806dca39f94c4ff537cb1b86642fe7b6604c396fbfc7eb1b2c608",
+      "native_snapshot_exact": true,
+      "health": 25.379993438720703
+    },
+    "issued_equals_delivered_until_stop": true,
+    "diagnostic_hashes": {
+      "build/oblivion-compat/sewer-regression/integration-closure-01/results.json": "11e366d6de78afeafdea94fc347a1e68abdbc10bff4cd84e2e9a8e079baebf6a",
+      "build/oblivion-compat/sewer-regression/integration-closure-01/full/course/scenario.json": "5f8588cf9d224fd67dd41b22c3423b19b2c9ff6e0326385aff07f79f6f3e3b01",
+      "build/oblivion-compat/sewer-regression/integration-closure-01/full/course/combat-events.jsonl": "ff363cb91dbf2792f2f653b206463a1f0e826878c28cfcb9ccd7fd7b4de91f21",
+      "build/oblivion-compat/sewer-regression/integration-closure-01/full/course/runtime-identity.json": "d51c9d9c456d52223d857b1eb1a0398194b395d9db5cfe77dfc3c2e85b6d6fdd",
+      "build/oblivion-compat/sewer-regression/integration-closure-01/full/assembly/course.json": "9b36e1f1f5e8e34142d6a174611aa789c7f64ddc63e3b2081fe1a44818a0ca4f"
+    },
+    "outdoor_reload": "could_not_run: continuous course failed before exit; no substitute save used",
+    "no_retry": true,
+    "next_chunk_started": false,
+    "reviewed_startup_deferrals": "Exactly five tick1 SetUnconscious deferrals from Peryite quest01ecbd, unchanged from prior reviewed new-game evidence",
+    "rendered_review": {
+      "segment36-joined-combat-heal-probe.png": "Cavern, rolling logs, equipped axe/HUD and nearby goblin visible; health visibly low. No exterior or completed escape in this run."
+    },
+    "patrol_correction_reached": false,
+    "entered_sections_verified_contiguous": true
+  },
+  "closure_complete": true,
+  "original_full_escape_acceptance": "incomplete"
 }
