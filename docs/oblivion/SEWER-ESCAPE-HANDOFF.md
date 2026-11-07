@@ -19,14 +19,24 @@ and input audit, and rendered inspection. Existing evidence keeps its provenance
 
 `full-escape-continuous-10` is live, game PID254562, runner254545,
 supervisor254532, read-only save archiver254608. Preserve this process.
-Actual argv has no load-save argument; config has new-game1; native events
-through opening19 contain one run-start, no load and only the5 audited Peryite
-startup deferrals. Original stages5/6/9/10/12/13/14/15/16/17/18/19 and actual
-outer segment2 observed. Stage19 archive12/native snapshot match exactly,
-80HP, Player still in the prison at the saved checkpoint; physical passage
-traversal and ambush are subsequent gates. Initial quicksave/autosave and
-stand-back save also match native snapshots. Prison/Emperor captures inspected.
-`full-escape-continuous-10/opening19-verification.json` retains exact provenance.
+Actual argv has no load-save argument; config has new-game1. Native events
+through original30 contain one run-start, no load and only the5 audited Peryite
+startup deferrals. Opening19 and actual passage/descent saves match their native
+snapshots. First ambush archive19/native match: all4 assassins killed by guards,
+all3 escorts alive, Renault script-dead/null killer/nonessential, death counts1,
+Player80HP/inventory unchanged, no bound gear on dead assassins and all combat
+queues clear. Original26/27/28/29/30 observed. Departure archive20/native match:
+CG30 retained despite later29 request, all3 escorts alive in022288, Glenroy
+Complete/Low at the authored arrival marker with no progress deficit. Player80HP;
+2 living early rats legitimately already engage Player. No supplemental inputs.
+Prison/dialogue/passage/victory/departure captures inspected.
+
+Scope remains opening chapter only. Same PID has completed segment3 and entered
+segment4 (remaining rats/wall exit). Native Rat victories and later solo course
+are not yet claimed. Current proofs: `full-escape-continuous-10/` files
+`opening19-verification.json`, `first-ambush-victory-verification.json`,
+`escort-departure30-verification.json`. Monitor's stage value is the last requested
+SetStage, not the native maximum completed stage; repeated23/29 is expected.
 
 Current binary SHA ff12ce92…c7f6d; full67 manifest SHA7c2e216a…9d0b85,
 `equipment-active-page-full-assembly-01/full-escape.json`. All paths below are
@@ -36,7 +46,7 @@ is observation history, not sufficient alone to prove a currently live process.
 Inspect actual process/launcher status. Current handles and prepared evidence:
 `menu-admission-current-work.json`. No build/test helper is live at this checkpoint.
 
-Next: same process through physical passage, first ambush and all remaining
+Next: same process through remaining solo combat, loot/healing and all later
 segments; then fresh-load its own outdoor save. No other rendered game or binary/
 resource overwrite while this UI is live. Do not restart on observation timeout.
 On terminal failure retain raw evidence, fix the actual failed gate, verify a
