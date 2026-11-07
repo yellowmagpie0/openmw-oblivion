@@ -1,0 +1,290 @@
+{
+  "scope": "Continuous17 original-new-game prefix through first rats, gear, authored corridor departure, Player zombie kill and full recovery. Remaining full escape requirements are not accepted by this artifact.",
+  "full_escape_complete": false,
+  "runtime_identity": {
+    "observed_utc": "2026-11-07T14:11:20.776481+00:00",
+    "game_pid": 398617,
+    "process_start_ticks": "179891690",
+    "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-descending-recovery-runtime-snapshot-01/openmw",
+    "exe_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+    "snapshot_manifest": {
+      "elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+      "verification": {
+        "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+        "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+      },
+      "resources_version": "0.52.0\n79a971c0b298fe5a3608e744e51004249bb93fab\n\n",
+      "scope": "Downward-only recovery sweep retaining grounded support guard and legacy lateral/upward overlap separation. Focused10 actor bounds pass; integration pending."
+    },
+    "loaded_libraries": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-17/sdl-input.so",
+        "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+        "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+        "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+        "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+        "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    ],
+    "scope": "Actual immutable runtime; gameplay acceptance separate."
+  },
+  "rat_recovery": {
+    "scope": "Original-new-game prefix through all3 native Player rat kills and original54HP recovery target. Full escape not accepted by this check.",
+    "game_pid": 398617,
+    "save_sequence": 23,
+    "save_sha256": "7811ac80b75213d10f8735a3b3b6c2478bf6ffcfafe9998ec27b313e2d53f6c5",
+    "parsed_native_exact": true,
+    "player_health": 58.0,
+    "rats": [
+      {
+        "actor": "content:oblivion.esm:037e40",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e41",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e42",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    ],
+    "rat_positions": {
+      "content:oblivion.esm:037e40": [
+        313.3840637207031,
+        3178.307373046875,
+        -802.0626831054688,
+        0.0,
+        0.0,
+        -1.4639695882797241
+      ],
+      "content:oblivion.esm:037e41": [
+        544.66943359375,
+        3006.774169921875,
+        -851.2435913085938,
+        0.0,
+        0.0,
+        -0.28187766671180725
+      ],
+      "content:oblivion.esm:037e42": [
+        138.5516815185547,
+        3271.5205078125,
+        -831.02783203125,
+        0.0,
+        0.0,
+        -2.5869479179382324
+      ]
+    },
+    "no_loads": true,
+    "manual_input_records": []
+  },
+  "zombie_recovery": {
+    "passed": true,
+    "scope": "Original-new-game continuous17 prefix through section12 and entry into13; full escape remains incomplete.",
+    "game_pid": 398617,
+    "no_loads": true,
+    "manual_inputs": [],
+    "segments_entered": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "checkpoints": [
+      {
+        "sequence": 29,
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-17/retained-saves/3-0029-Quicksave.omwsave",
+        "save_sha256": "5aad2d910524777a909ff7949862b2b5568f9632c2bc9e90ac7af61f16cf49f3",
+        "live_sha256": "3134632741e3f8f3732c52d329ce9f8d494e41fd9df8f8d2bb2e78e06aa03b94",
+        "parsed_native_exact": true,
+        "health": 36.39999771118164
+      },
+      {
+        "sequence": 30,
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-17/retained-saves/3-0030-Quicksave.omwsave",
+        "save_sha256": "df42db63dafe69f7cc8b52d8e7254ed0d4cd80d5c733c7b97169c9d8e897294f",
+        "live_sha256": "1ced2f16f4c94eb1d0f796b6fb73704f2ef09006e0e3ba3f7c0bd83d997b3f8b",
+        "parsed_native_exact": true,
+        "health": 80.0
+      }
+    ],
+    "runners": [
+      {
+        "actor": "content:oblivion.esm:0387da",
+        "cell": "content:oblivion.esm:01fbb9",
+        "phase": 6,
+        "interruption_reason": ""
+      },
+      {
+        "actor": "content:oblivion.esm:0387db",
+        "cell": "content:oblivion.esm:01fbb9",
+        "phase": 6,
+        "interruption_reason": ""
+      }
+    ],
+    "zombie": {
+      "actor": "content:oblivion.esm:0491fc",
+      "base": "content:oblivion.esm:051445",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "recovery_casts": [
+      {
+        "health": 43.44,
+        "magicka": 61.0
+      },
+      {
+        "health": 50.48,
+        "magicka": 54.1745
+      },
+      {
+        "health": 57.52,
+        "magicka": 47.4933
+      },
+      {
+        "health": 64.56,
+        "magicka": 40.7726
+      },
+      {
+        "health": 71.6,
+        "magicka": 34.0962
+      },
+      {
+        "health": 78.64,
+        "magicka": 27.3896
+      },
+      {
+        "health": 80.0,
+        "magicka": 20.7411
+      }
+    ],
+    "equipment": {
+      "0661c1": [
+        {
+          "base": "content:oblivion.esm:0661c1",
+          "count": 1,
+          "condition": 229.74998474121094,
+          "charge": -1.0,
+          "equipped_slots": 4,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        }
+      ],
+      "0661c3": [
+        {
+          "base": "content:oblivion.esm:0661c3",
+          "count": 1,
+          "condition": 162.84999084472656,
+          "charge": -1.0,
+          "equipped_slots": 8,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        }
+      ],
+      "090613": [
+        {
+          "base": "content:oblivion.esm:090613",
+          "count": 1,
+          "condition": 54.80000305175781,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        }
+      ]
+    },
+    "clear_native_queues": true
+  },
+  "rendered_review": {
+    "scope": "Direct inspection of actual continuous17 rendered captures; native and save acceptance separate.",
+    "complete": false,
+    "observations": [
+      {
+        "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-17/segment02-phase8-ambush-victory.png",
+        "sha256": "d9f16023bee725d852f582ff4738625e531c4deb091a2272d4b07f2d6ef08a5e",
+        "inspected_utc": "2026-11-07T14:18:44.237011+00:00",
+        "passed": true,
+        "notes": "Ambush chamber, Player and escort rendered. Persistent bodies visible with assassin bound gear removed; readable healthy HUD and scene textures, no error/menu overlay."
+      },
+      {
+        "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-17/segment10-joined-gear-healed-world.png",
+        "sha256": "cd3f65d0912426bd5064e3a702b90d1e08d986416fe8c7c5a3a9a3a33b681932",
+        "inspected_utc": "2026-11-07T14:28:23.428234+00:00",
+        "passed": true,
+        "notes": "Equipped war axe and armored first-person arm visible by looted chest; scene textures, lighting and readable healthy HUD present. Equipment state verified separately from save."
+      },
+      {
+        "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-17/segment12-joined-zombie-healed.png",
+        "sha256": "e08eb84043311145cb2fb6369206ccc080bb47ed70dc2dccf3b590b870d77ea5",
+        "inspected_utc": "2026-11-07T14:32:25.079835+00:00",
+        "passed": true,
+        "notes": "Living Player, equipped axe, full health HUD and textured zombie room visible. Zombie retains standing corpse pose, an existing creature-corpse limitation; actual death and Player killer proved from native save."
+      }
+    ]
+  },
+  "implementation_gate_provenance": "SEWER-DESCENDING-RECOVERY-VERIFICATION.json retains10 focused/2223 normal/2223 ASan-UBSan engine tests and unchanged580 Python evidence. C++ and controller data unchanged since those gates.",
+  "next": "Continue same PID398617 through all67, physical outdoor exit, own outdoor fresh-PID reload and ordinary walking, complete native/input/every-save audits and rendered review.",
+  "terminal_outcome": {
+    "passed": false,
+    "section": 15,
+    "reason": "Walking course ignored already-engaged038172 and approaching038171. Original038173 was killed;038171 delivered the Player killing blow.",
+    "last_actual_save_sequence": 32,
+    "save_health": 64.95999908447266,
+    "last_save_active_combat": [
+      {
+        "first": "content:oblivion.esm:038172",
+        "second": "dynamic:player:0000000000000001"
+      }
+    ],
+    "death_callback": "[08:32:44.801 I] M15 native death callback: id=d actor=dynamic:player:0000000000000001 killer=content:oblivion.esm:038171 handled=false",
+    "intentional_stop": "build/oblivion-compat/sewer-escape/full-escape-continuous-17/intentional-stop-01.json",
+    "outdoor_reload": "Correctly withheld",
+    "manual_game_input": false
+  }
+}
