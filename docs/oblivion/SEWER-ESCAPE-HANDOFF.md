@@ -58,14 +58,25 @@ and all failed variants remain historical, not replacement continuous acceptance
 Defense correction committedc6f8c86047. Fresh original-new-game
 `full-escape-continuous-21` is now running from
 `full21-assembly-02/full-escape.json`: actual gamePID422333, driver422305,
-13f2 runtime identity captured. Same actual PID verified live through section11.
-Original opening/ambush/escort departure and all3 native Player early-rat kills
-pass. Loot/Club/keyed traversal and Substructure rat pass; genuine F5seq28
-records80HP with0661c1/0661c3 armor and090613 axe equipped. Whole-run parsed-save,
-native/input and own outdoor reload audits remain pending; these prefix facts
-are not continuous escape acceptance. Fourteen captures reviewed so far in
-`full-escape-continuous-21/rendered-review-progress.json`, including the known
-T-pose/old-clothes inventory preview. No manual inputs or loads in this run.
+13f2 runtime identity captured. Same actual PID verified live through section28;
+first27 selected sections have passed continuously. Physical door0381b8 leads
+to Natural Caverns0380bd: genuine F5seq59 records59.1HP and save SHA256
+`4dd2c871c2a9dff95511c951963215ccd6f5bab1871c1d735080210c22b1f4dc`.
+Three ordinary casts then restore80HP before the first goblin approach. No
+manual inputs or loads. Native unsupported events remain exactly5 reviewed
+Peryite startup deferrals. Capture archiver422334 and watcher422335 reverified
+live. Twenty captures reviewed in `rendered-review-progress.json`, including
+actual cavern entrance and documented corpse/inventory appearance limitations.
+
+Original opening/ambush/escort departure, all3 early Player rat kills, Club/keyed
+traversal, armor/axe, Player zombie kill, northern/western threats and roots pass.
+Actual source19 root attacker is159838 (Player kill in F5seq45 at80HP after
+recovery);038818 is the later source21 side rat, not that actor. Keep identities
+separate. Current bounded action: monitor the goblin/log/reinforcement course,
+especially the corrected42. Remaining continuous sections28–67, own outdoor
+reload, whole parsed-save/native/input audits and final rendered review still
+block full escape acceptance. Gaps are shrinking; no scope expansion needed.
+
 Assembly01 is superseded and contains old inputs. Monitor the same actual PID with
 `wait-course-progress.py full-escape-continuous-21 40`. Avoid unnecessary manual
 menu inspection; prior low-health samples can already be superseded by a native
