@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "scope": "Uninterrupted original new-game10 through three Player rat kills, real healing, corpse loot, Club equipment and original keyed door. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "game_pid": 254562,
+  "runtime_openmw_sha256": "ff12ce922fa13e8500ab613cb6a1c7745f808da5563eba56c9243a26451c7f6d",
+  "course_manifest_sha256": "7c2e216a293fc69f1a8e14a4e6e73b2d56e4e9af548ac9d7e9b77ef2989d0b85",
+  "launch_provenance": "build/oblivion-compat/sewer-escape/full-escape-continuous-10/launch-provenance.json",
+  "original_new_game": true,
+  "loaded_save_argument": false,
+  "supplemental_inputs_delivered": false,
+  "actual_checkpoints": {
+    "rats_and_wall": {
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-10/retained-saves/3-0022-Quicksave.omwsave",
+      "save_sha256": "7eba1de48ad454adc4776c641e14ff3dfd23e597d2cf18c5895200fe5d03b5fd",
+      "native_snapshot_sha256": "58cde9c1640e20de6cb7d745a3e7e69e2cfb86e6e305b6d1fcbde4682d2e51be",
+      "parsed_save_equals_native_snapshot": true,
+      "health": 46.0,
+      "position": [
+        643.4854736328125,
+        3224.760986328125,
+        -867.6840209960938,
+        0.2001953125,
+        0.0,
+        -2.2450993061065674
+      ],
+      "rats": {
+        "037e40": {
+          "actor": "content:oblivion.esm:037e40",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "037e41": {
+          "actor": "content:oblivion.esm:037e41",
+          "base": "content:oblivion.esm:04e870",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "037e42": {
+          "actor": "content:oblivion.esm:037e42",
+          "base": "content:oblivion.esm:04e870",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      },
+      "queues": {
+        "native_combat_engagements": [],
+        "pending_death_events": [],
+        "physical_action_owners": [],
+        "native_spell_casts": [],
+        "native_magic_projectiles": []
+      }
+    },
+    "healing": {
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-10/retained-saves/3-0023-Quicksave.omwsave",
+      "save_sha256": "49e39810d824d845a8d3340aad620f4b3fc5c3791c96d4221cbd38c2affe2057",
+      "native_snapshot_sha256": "1f54a650d5ca12540043fe3b1a3b9065219b12c139b4bcf78dd424e67ea0a229",
+      "parsed_save_equals_native_snapshot": true,
+      "health_before": 46.0,
+      "health_after": 70.0,
+      "verified_native_cast_releases": 3,
+      "telemetry": [
+        "[18:36:31.438 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 5:\tPost-wall healing ready health=46",
+        "[18:37:02.877 I] M16 native cast begin: spell=content:oblivion.esm:000136 group=castself",
+        "[18:37:04.893 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=54 magicka=61",
+        "[18:37:16.242 I] M16 native cast begin: spell=content:oblivion.esm:000136 group=castself",
+        "[18:37:18.269 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=62 magicka=42.8965",
+        "[18:37:29.590 I] M16 native cast begin: spell=content:oblivion.esm:000136 group=castself",
+        "[18:37:31.547 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=70 magicka=24.793"
+      ]
+    },
+    "room_before_loot": {
+      "scope": "Actual full10 room traversal/pre-loot checkpoint only. Key/Club loot, equipment, door and full escape still unproven.",
+      "game_pid": 254562,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-10/retained-saves/3-0024-Quicksave.omwsave",
+      "save_sha256": "43dfd05b64f6087d26dc93ce8f1f8a24537be0edafe1fc2bb9d400a03df2fbf4",
+      "native_snapshot_sha256": "04d1d5b65166914c26fd3f498e8f8ec0783b84792a38f8d6c16f9fabd750712d",
+      "parsed_save_equals_native_snapshot": true,
+      "health": 70,
+      "player_position": [
+        1682.0872802734375,
+        3215.40625,
+        -867.3126220703125,
+        0.02871093712747097,
+        0.0,
+        1.5402342081069946
+      ],
+      "initial_key_club_counts": {
+        "159826": 0,
+        "159829": 0
+      }
+    },
+    "keyed_entry": {
+      "scope": "Uninterrupted original new-game10 through three Player rat kills, real healing, corpse loot, Club equipment and original keyed door. Full sewer escape remains incomplete.",
+      "full_escape_complete": false,
+      "game_pid": 254562,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-10/retained-saves/3-0025-Quicksave.omwsave",
+      "save_sha256": "8d118bf60141354ee4ebeebce47b37e3e6a06014bf412748687ffee759db34d6",
+      "native_snapshot_sha256": "aa021d3fb60752dbd9e3a8f4482f300716120cbbb4d47730c6366edb492a3bb3",
+      "parsed_save_equals_native_snapshot": true,
+      "player_health": 70.0,
+      "player_cell": "content:oblivion.esm:022ff6",
+      "player_position": [
+        14.077371597290039,
+        383.2737731933594,
+        134.47239685058594,
+        0.0,
+        0.0,
+        1.5707981586456299
+      ],
+      "corpse_empty": true,
+      "six_item_types_transferred_once": {
+        "content:oblivion.esm:00931a": 1,
+        "content:oblivion.esm:084aeb": 1,
+        "content:oblivion.esm:0888bf": 1,
+        "content:oblivion.esm:00000a": 3,
+        "content:oblivion.esm:159826": 1,
+        "content:oblivion.esm:159829": 1
+      },
+      "key_count": 1,
+      "club_count": 1,
+      "club_equipped_slots": 65536,
+      "early_three_player_rat_kills_retained": true,
+      "inventory_page_verified_after_one_left_trigger_cycle": [
+        "971 controller-axis 4 32767"
+      ],
+      "door_teleport": [
+        "[18:46:59.806 I] M5 door activation: result=teleport ref=content:oblivion.esm:0248b2 destination=FormId:0x1022ff6"
+      ],
+      "observations": [
+        "[18:41:19.117 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 1:\tJoined key waypoint 1 reached (1674.7703857421875, 3224.834716796875, -867.7681884765625)",
+        "[18:43:05.361 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 1:\tJoined key waypoint 2 reached (1912.4072265625, 3239.497802734375, -860.98797607421875)",
+        "[18:44:30.287 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 1:\tJoined key waypoint 3 reached (1968.04833984375, 3123.521728515625, -813.9083251953125)",
+        "[18:45:02.788 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 2:\tSewer corpse loot transferred types=6",
+        "[18:45:06.415 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 3:\tSewer loot restored key and Club once; corpse empty",
+        "[18:45:19.257 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 3:\tSewer equipment inventory sampled",
+        "[18:45:26.398 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 3:\tSewer equipment inventory sampled",
+        "[18:45:27.415 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 3:\tSewer equipment inventory sampled",
+        "[18:45:37.163 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 3:\tSewer Club equipped slot=16",
+        "[18:45:43.763 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 4:\tSewer keyed route ready; Club equipped and Iron Key retained",
+        "[18:47:02.231 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 7:\tKey course phase 4:\tSewer entered original keyed destination FormId:0x1022ff6"
+      ],
+      "supplemental_inputs_delivered": false,
+      "remaining": "Same PID through later encounters, traps, reunion, choices, Emperor death/Amulet, physical exterior and fresh reload of its own outdoor save."
+    }
+  },
+  "rendered_inspection": "build/oblivion-compat/sewer-escape/full-escape-continuous-10/rendered-inspection-notes.json",
+  "implementation_gates": "docs/oblivion/SEWER-EQUIPMENT-PAGE-VERIFICATION.json retains exact original 2210 normal/2210 ASan-UBSan engine and18 focused Python provenance. Implementation unchanged since its tested dirty source; later commits are evidence/handoff only.",
+  "preserved_failures": "Full09 and exploratory/sanitizer timing failures remain failed in original directories, described in SEWER-EQUIPMENT-PAGE-VERIFICATION.json. No loaded focused course substitutes for this original-new-game prefix.",
+  "remaining": "Same PID through later encounters, traps, reunion, choices, Emperor death/Amulet, physical exterior and fresh reload of its own outdoor save.",
+  "native_run_start_count_to_observation": 1,
+  "native_load_count_to_observation": 0,
+  "known_remote_startup_deferrals_to_observation": 5
+}

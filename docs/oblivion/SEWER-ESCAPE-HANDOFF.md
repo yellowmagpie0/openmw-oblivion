@@ -31,11 +31,22 @@ Complete/Low at the authored arrival marker with no progress deficit. Player80HP
 2 living early rats legitimately already engage Player. No supplemental inputs.
 Prison/dialogue/passage/victory/departure captures inspected.
 
-Scope remains opening chapter only. Same PID has completed segment3 and entered
-segment4 (remaining rats/wall exit). Native Rat victories and later solo course
-are not yet claimed. Current proofs: `full-escape-continuous-10/` files
-`opening19-verification.json`, `first-ambush-victory-verification.json`,
-`escort-departure30-verification.json`. Monitor's stage value is the last requested
+Actual uninterrupted solo prefix through keyed entry now passes. All3 early rats
+are native Player kills; wall-exit archive22 matches native snapshot,46HP and all
+combat queues clear. Real menu selection and3 native Heal Minor Wounds releases
+restore46→70; archive23/native exact. Physical room traversal archive24/native
+exact, Key/Club initially0. Corpse loot transfers6 item types once, corpse empty;
+actual Inventory selected after1 ordinary LT cycle, Club equipped, original keyed
+door0248b2 teleports once to022ff6. Archive25/native exact,70HP, Key/Club once,
+Club equipped and all3 early Player rat kills retained after cell change.
+[Continuous keyed-entry proof](SEWER-UNINTERRUPTED-KEYED-ENTRY-VERIFICATION.json).
+
+Same PID has completed segment8 and entered9 (first Substructure chest).
+Later combat, traps, reunion/choices, Emperor death/Amulet, exterior and own-save
+fresh reload remain unproven. Current proofs under `full-escape-continuous-10/`:
+`first-ambush-victory-verification.json`, `escort-departure30-verification.json`,
+`three-rat-victory-verification.json`, `post-wall-healing-verification.json`,
+`keyed-door-entry-verification.json`. Monitor's stage value is the last requested
 SetStage, not the native maximum completed stage; repeated23/29 is expected.
 
 Current binary SHA ff12ce92…c7f6d; full67 manifest SHA7c2e216a…9d0b85,
