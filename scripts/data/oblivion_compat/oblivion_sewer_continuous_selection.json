@@ -453,7 +453,7 @@
     {
       "segment": 65,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_final_western_rat.json",
-      "action_count": 10,
+      "action_count": 12,
       "source_course": "joined-final-western-rat-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(-2614.3,955.8,6876),util.vector3(-2615.5,827.8,6848),util.vector3(-2501.2,850.4,6812),util.vector3(-2418.9,852.3,6754),util.vector3(-2295.3,841.7,6676),util.vector3(-2133.7,852.3,6562),util.vector3(-2030,784.4,6542),util.vector3(-2006.4,684.8,6542),util.vector3(-1868.4,610.1,6524),util.vector3(-1162.4,599.3,6524),util.vector3(-1009.6,347.3,6542)}}\nlocal step=1\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x666a7))\n if rat and rat:isValid() then\n  if Actor.isDead(rat) then print('Joined western rat dead') end\n  local x,y=aim(rat.position+util.vector3(0,0,25))\n  print(string.format('Joined western rat aim x=%d y=%d',x,y))\n  if frame%30==0 then print('Joined rat health='..Actor.stats.dynamic.health(rat).current..' distance='..(rat.position-self.position):length()) end\n end\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Adaptive camera settled') end\n assert(not Actor.isDead(self),'Player died along escort route')\n if frame==5 then print('Adaptive route ready') end\n if step<=#points then\n  local d=points[step]-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<25 then\n   print('Adaptive waypoint '..step..' reached '..tostring(self.position))\n   step=step+1\n  end\n end\n if step>#points then\n  print('Adaptive route complete')\n  print('Adaptive route aim x=0 y=0')\n else\n  local p=points[step]\n  local x,y=aim(util.vector3(p.x,p.y,self.position.z+100))\n  print(string.format('Adaptive route aim x=%d y=%d point=%d',x,y,step))\n end\n if frame%30==0 then\n  print('Joined current cell '..self.cell.name)\n  print('Adaptive Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x32a16,0x32a17,0x32a18}}) do\n   local actor=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if actor and actor:isValid() then print('Adaptive escort '..id..' pos='..tostring(actor.position)) end\n  end\n end\nend}}}}\n"
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(-2614.3,955.8,6876),util.vector3(-2615.5,827.8,6848),util.vector3(-2501.2,850.4,6812),util.vector3(-2418.9,852.3,6754),util.vector3(-2295.3,841.7,6676),util.vector3(-2133.7,852.3,6562),util.vector3(-2030,784.4,6542),util.vector3(-2006.4,684.8,6542),util.vector3(-1868.4,610.1,6524),util.vector3(-1162.4,599.3,6524),util.vector3(-1009.6,347.3,6542),util.vector3(-890.28466796875,357.12738037109375,6582.0),util.vector3(-787.9590454101562,357.3546142578125,6612.0),util.vector3(-696.0276489257812,350.4856262207031,6612.0),util.vector3(-591.8425903320312,349.7661437988281,6582.0)}}\nlocal step=1\nlocal approachPath={{}}\nlocal approachCursor=1\nlocal approachFrame=-100\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x666a7))\n if rat and rat:isValid() then\n  if Actor.isDead(rat) then print('Joined western rat dead') end\n  if (rat.position-self.position):length()<=100 or Actor.isDead(rat) then print('Joined western rat in reach') print('Joined western rat approach aim x=0 y=0') end\n  if step>#points and not Actor.isDead(rat) and (rat.position-self.position):length()>100 then\n   if frame-approachFrame>=30 or #approachPath==0 then\n    approachFrame=frame\n    local status,path=nearby.findPath(self.position,rat.position,{{agentBounds=Actor.getPathfindingAgentBounds(self),includeFlags=nearby.NAVIGATOR_FLAGS.Walk+nearby.NAVIGATOR_FLAGS.OpenDoor,destinationTolerance=16}})\n    if status==nearby.FIND_PATH_STATUS.Success then approachPath=path approachCursor=1 end\n    print('Joined western rat navigation status '..tostring(status)..' points='..#path)\n   end\n   while approachPath[approachCursor] do\n    local delta=approachPath[approachCursor]-self.position\n    if math.sqrt(delta.x*delta.x+delta.y*delta.y)>20 or math.abs(delta.z)>64 then break end\n    approachCursor=approachCursor+1\n   end\n   local point=approachPath[approachCursor]\n   if point then\n    local x,y=aim(util.vector3(point.x,point.y,self.position.z+100))\n    print(string.format('Joined western rat approach aim x=%d y=%d',x,y))\n   end\n  end\n  local x,y=aim(rat.position+util.vector3(0,0,25))\n  print(string.format('Joined western rat aim x=%d y=%d',x,y))\n  if frame%30==0 then print('Joined rat health='..Actor.stats.dynamic.health(rat).current..' distance='..(rat.position-self.position):length()) end\n end\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Adaptive camera settled') end\n assert(not Actor.isDead(self),'Player died along escort route')\n if frame==5 then print('Adaptive route ready') end\n if step<=#points then\n  local d=points[step]-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<25 then\n   print('Adaptive waypoint '..step..' reached '..tostring(self.position))\n   step=step+1\n  end\n end\n if step>#points then\n  print('Adaptive route complete')\n  print('Adaptive route aim x=0 y=0')\n else\n  local p=points[step]\n  local x,y=aim(util.vector3(p.x,p.y,self.position.z+100))\n  print(string.format('Adaptive route aim x=%d y=%d point=%d',x,y,step))\n end\n if frame%30==0 then\n  print('Joined current cell '..self.cell.name)\n  print('Adaptive Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x32a16,0x32a17,0x32a18}}) do\n   local actor=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if actor and actor:isValid() then print('Adaptive escort '..id..' pos='..tostring(actor.position)) end\n  end\n end\nend}}}}\n"
     }
   ],
   "command": [
@@ -50,7 +50,7 @@
     },
     {
       "type": "repeat_until_log",
-      "pattern": "Adaptive route complete",
+      "pattern": "Adaptive waypoint 11 reached",
       "maximum_iterations": 600,
       "timeout_seconds": 1200,
       "actions": [
@@ -150,6 +150,152 @@
       "type": "screenshot",
       "name": "joined-western-rat-approach.png",
       "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Adaptive route complete",
+      "maximum_iterations": 600,
+      "timeout_seconds": 1200,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive route aim x=",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Adaptive route aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive camera settled",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive route aim x=",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Adaptive route aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive camera settled",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "key_hold",
+          "value": "w",
+          "seconds": 0.3
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Joined western rat in reach",
+      "after_start": true,
+      "maximum_iterations": 100,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "Joined western rat approach aim x=",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Joined western rat approach aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive camera settled",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "key_hold",
+          "value": "w",
+          "seconds": 0.15
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        }
+      ],
+      "abort_on_failure": true
     },
     {
       "type": "repeat_until_log",
