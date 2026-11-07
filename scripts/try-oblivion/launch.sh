@@ -132,7 +132,7 @@ export MESA_SHADER_CACHE_DIR="$RUN_DIR/cache/mesa"
 export TMPDIR="$RUN_DIR/work"
 
 printf '%s\n' "$HINT"
-printf 'Mouse: look | WASD: move | Space: activate | right mouse: inventory | F5/F9: quicksave/load | Esc: menu\n'
+printf 'Mouse: look | WASD: move | Space: activate | E: jump | F: draw/sheath | left mouse: attack | right mouse: block | C: cast | Tab: inventory | F5/F9: quicksave/load | Esc: menu\n'
 printf 'Saves: %s/userdata/saves\nLogs and settings: %s/config\n' "$RUN_DIR" "$RUN_DIR"
 printf 'Every launch starts fresh. This directory is retained after quitting; delete it manually when finished.\n'
 cd -- "$RUN_DIR/work"

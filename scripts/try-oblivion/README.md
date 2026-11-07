@@ -32,9 +32,10 @@ tutorial/dungeon/quest progression are not promised by these tryouts. See the
 [implementation reports](../../../docs/oblivion/README.md) for accepted scope;
 M15 is still in progress. The current executable may lag the source code.
 
-Mouse looks, WASD moves, Space activates, right mouse opens inventory, F5
-quicksaves, F9 quickloads, and Esc opens the menu. These are fresh-profile
-OpenMW bindings. The window is 1280×720 with sound enabled and mouse grabbing
+Mouse looks, WASD moves, Space activates, E jumps, and Tab opens inventory.
+F draws/sheathes a weapon, left mouse attacks, right mouse blocks, and C casts
+the selected spell. F5 quicksaves, F9 quickloads, and Esc opens the menu. These
+are fresh-profile Oblivion bindings. The window is 1280×720 with sound enabled and mouse grabbing
 disabled. For the horse, look down toward it before activating. At the
 waterfront, the recorded swim course backs up into the water from this start.
 
