@@ -120,6 +120,8 @@ save27 with a nonzero-focus prelude: whole entry0diff, native armor+axe equipped
 healing potion consumed, health80, exact F5/native state, all input delivered,
 native end0/0/0. [Proof](SEWER-GEAR-FOCUS-VERIFICATION.json).
 Source10 actions52→68; full selection67/10466. All18 assembly/repeat tests pass.
+Fresh `gear-focus-broad-python-01` passes all580 Python tests atc2d1a47d27,
+fingerprint `dce0132a5c0159c3c4860867936f1ccdb245c969c22cad22a49e3aeea6262f86`.
 C++ unchanged; reuse2222 normal/SAN engine gates with original provenance.
 Inventory preview can T pose; final world view shows the drawn axe and full HUD.
 
@@ -128,7 +130,11 @@ Continuous13 is now live: original new game,67/10466 actions, immutable
 workspace libraries are recorded in its `runtime-identity.json`; entire emitted
 LuaJIT compiles. Recipe `gear-focus-full-assembly-01/full-escape.json`.
 Game362460, driver362446, supervisor362439, archiver362461, watcher362462.
-It has reached original stage14; no manual input. Recheck actual processes.
+It has now passed section10 in the original new-game process and entered11.
+Actual F5seq28 is parsed/native exact: health80, both Rusty Iron armor pieces
+and war axe equipped, healing potion consumed. No loads/manual inputs. This
+closes the gear-context blocker in the continuous run, not the full escape.
+Prefix proof is in its `gear-prefix-verification.json`. Recheck actual processes.
 
 Next: monitor that same PID and repair only observed blockers. Guarded follow-up
 `followup-full13-outdoor-reload.py`, PID362597, status

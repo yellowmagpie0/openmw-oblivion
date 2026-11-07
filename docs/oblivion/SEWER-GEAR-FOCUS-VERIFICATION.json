@@ -69,5 +69,42 @@
   "retained_input_failure": "gear-focus-correction-01: direct physical D-pad button does not match hat-axis SDL mapping; delivery timeout retained. Correction02 uses established hat-axis inputs.",
   "gate_reuse": "C++ unchanged from the2222 normal and2222 ASan/UBSan engine gate at44685d182f. This changes declarative input navigation only.",
   "rendered_review": "Inspected gear-focus-correction-02/joined-gear-healed-world.png: Player alive at chest, axe drawn, health full. Inventory preview T pose remains a visual limitation.",
-  "full_escape_complete": false
+  "full_escape_complete": false,
+  "broad_python": {
+    "path": "build/oblivion-compat/sewer-escape/gear-focus-broad-python-01",
+    "passed": true,
+    "results": {
+      "python": {
+        "executed": 580,
+        "passed": true,
+        "log_sha256": "f8126124f299c51ef6c02deddc184dd79a697a0fe4ef07d1b3e20e2b1564409a"
+      }
+    },
+    "source_before": {
+      "head": "c2d1a47d272acac819293d435d795855fa627891",
+      "source_fingerprint": "dce0132a5c0159c3c4860867936f1ccdb245c969c22cad22a49e3aeea6262f86"
+    },
+    "source_after": {
+      "head": "c2d1a47d272acac819293d435d795855fa627891",
+      "source_fingerprint": "dce0132a5c0159c3c4860867936f1ccdb245c969c22cad22a49e3aeea6262f86"
+    }
+  },
+  "continuous13_prefix": {
+    "passed": true,
+    "scope": "Uninterrupted original-new-game prefix through section10 gear; full escape still live and incomplete.",
+    "game_pid": 362460,
+    "save_sequence": 28,
+    "save_sha256": "7f738b9a7d562ffcae699a3a792f88290a50b6082412999f5abadec362f798ad",
+    "parsed_native_exact": true,
+    "no_loads": true,
+    "manual_input": false,
+    "health": 80.0,
+    "equipment": {
+      "0661c1": 4,
+      "0661c3": 8,
+      "090613": 65536
+    },
+    "healing_potion_consumed": true,
+    "full_escape_complete": false
+  }
 }
