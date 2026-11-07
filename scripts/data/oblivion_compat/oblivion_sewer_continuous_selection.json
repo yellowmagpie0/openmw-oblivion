@@ -82,7 +82,7 @@
     {
       "segment": 12,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_post_zombie_healing.json",
-      "action_count": 24,
+      "action_count": 10,
       "source_course": "joined-post-zombie-healing-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -138,7 +138,7 @@
     {
       "segment": 20,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_root_entrance.json",
-      "action_count": 239,
+      "action_count": 228,
       "source_course": "joined-root-entrance-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -187,7 +187,7 @@
     {
       "segment": 27,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_entry_healing.json",
-      "action_count": 15,
+      "action_count": 10,
       "source_course": "joined-cavern-entry-healing-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -271,7 +271,7 @@
     {
       "segment": 39,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_healing_chest.json",
-      "action_count": 270,
+      "action_count": 265,
       "source_course": "joined-cavern-healing-chest-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

@@ -53,7 +53,8 @@
     },
     {
       "type": "wait_log",
-      "pattern": "Joined zombie healing step 1 ",
+      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+      "after_start": true,
       "timeout_seconds": 30,
       "abort_on_failure": true
     },
@@ -62,74 +63,30 @@
       "seconds": 12
     },
     {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined zombie healing step 2 ",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined zombie healing step 3 ",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined zombie healing step 4 ",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined zombie healing step 5 ",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined zombie healing step 6 ",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
+      "type": "repeat_until_log",
+      "pattern": "Joined zombie health restored",
+      "after_start": false,
+      "maximum_iterations": 20,
+      "timeout_seconds": 300,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "sleep",
+          "seconds": 12
+        }
+      ],
+      "cleanup_actions": []
     },
     {
       "type": "wait_log",

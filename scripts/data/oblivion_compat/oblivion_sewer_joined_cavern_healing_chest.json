@@ -53,7 +53,8 @@
     },
     {
       "type": "wait_log",
-      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 1 )",
+      "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+      "after_start": true,
       "timeout_seconds": 30,
       "abort_on_failure": true
     },
@@ -62,32 +63,30 @@
       "seconds": 12
     },
     {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 2 )",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 3 )",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 1.5
+      "type": "repeat_until_log",
+      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 3 |Joined zombie health restored)",
+      "after_start": false,
+      "maximum_iterations": 20,
+      "timeout_seconds": 300,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "sleep",
+          "seconds": 12
+        }
+      ],
+      "cleanup_actions": []
     },
     {
       "type": "key",
@@ -1646,7 +1645,7 @@
   "timeout_seconds": 1800,
   "expected_exit": 0,
   "expected_log": [
-    "West course phase 1:\\s*(?:Joined zombie healing step 3 )",
+    "West course phase 1:\\s*(?:Joined zombie healing step 3 |Joined zombie health restored)",
     "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
     "West course phase 2:\\s*(?:Joined corridor waypoint 6 reached)",
     "West course phase 3:\\s*(?:Healing chest transferred)"

@@ -1,0 +1,182 @@
+{
+  "scope": "Adaptive recovery controllers for selected sections12/20/27/39; C++ unchanged. Full continuous escape remains incomplete.",
+  "failed_course": "continuous13 is terminal failed at12 despite reaching80HP; it waits for a sixth health increase after reaching the cap on the fifth. Last real pre-heal F5seq29 is retained.",
+  "native_cap_evidence": "continuous13 logs fifth and sixth Minor Healing casts applied=1 health=80, with only five positive health observations. No actor/health/quest injection.",
+  "changes": [
+    {
+      "segment": 12,
+      "old": 24,
+      "new": 10,
+      "goal": "Joined zombie health restored"
+    },
+    {
+      "segment": 20,
+      "old": 239,
+      "new": 228,
+      "goal": "West course phase 1:\\s*(?:Joined zombie health restored)"
+    },
+    {
+      "segment": 27,
+      "old": 15,
+      "new": 10,
+      "goal": "Joined zombie health restored"
+    },
+    {
+      "segment": 39,
+      "old": 270,
+      "new": 265,
+      "goal": "West course phase 1:\\s*(?:Joined zombie healing step 3 |Joined zombie health restored)"
+    }
+  ],
+  "behavior": "Require a real applied Minor Healing cast, then repeat ordinary C input until the original full-health target. Section39 retains its shorter goal: three real gains or full health. All observers remain read-only. No fake health steps.",
+  "runtime_cases": [
+    {
+      "passed": true,
+      "scope": "Ordinary-input recovery diagnostic only, not full escape acceptance.",
+      "course": "adaptive-healing-01",
+      "entry_health": 47.099998474121094,
+      "final_health": 80.0,
+      "ordinary_cast_releases": 5,
+      "repeat_iterations": 4,
+      "all_input_delivered": true,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 363714,
+        "sequence": 4,
+        "tick": 852,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-13/retained-saves/3-0029-Quicksave.omwsave",
+        "source_save_sha256": "422ff54a9332e3fef9b1d6e39cba15b2412f47b26fd5216e6cd073cc72466606",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/adaptive-healing-01/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "75c73e3194a163d065b6b5900177423f013186c118161a7fa17c53fd7414933b",
+            "live_sha256": "c2f9f12f11915c3a921f5c2ba669daeb37edf9d72ea70ee9b0659e404a9154c1",
+            "parsed_native_exact": true
+          }
+        ]
+      }
+    },
+    {
+      "passed": true,
+      "scope": "Ordinary-input recovery diagnostic only, not full escape acceptance.",
+      "course": "adaptive-healing-partial-01",
+      "entry_health": 47.099998474121094,
+      "final_health": 68.22000122070312,
+      "ordinary_cast_releases": 3,
+      "repeat_iterations": 2,
+      "all_input_delivered": true,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 363870,
+        "sequence": 4,
+        "tick": 485,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-13/retained-saves/3-0029-Quicksave.omwsave",
+        "source_save_sha256": "422ff54a9332e3fef9b1d6e39cba15b2412f47b26fd5216e6cd073cc72466606",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/adaptive-healing-partial-01/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "8ee9e1041b88cf6756820cbbdf137b3caeb264ec64e8b7976779d2188e4b7acc",
+            "live_sha256": "d9aaea503eae7ca9bcf5264cf37be1341ef4ed5617581b9d49c5b73f6bef9fdc",
+            "parsed_native_exact": true
+          }
+        ]
+      }
+    },
+    {
+      "passed": true,
+      "scope": "Ordinary-input recovery diagnostic only, not full escape acceptance.",
+      "course": "adaptive-healing-full-cap-01",
+      "entry_health": 80,
+      "final_health": 80.0,
+      "ordinary_cast_releases": 1,
+      "repeat_iterations": 0,
+      "all_input_delivered": true,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 363988,
+        "sequence": 4,
+        "tick": 223,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/adaptive-healing-01/retained-saves/3-0003-Quicksave.omwsave",
+        "source_save_sha256": "75c73e3194a163d065b6b5900177423f013186c118161a7fa17c53fd7414933b",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/adaptive-healing-full-cap-01/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "ee639138ef0691932603b038247df2e71b04d51b746918a54a038d0e42a66914",
+            "live_sha256": "bd8638cc0f81c37b9a7866869d6f6b53d1011888eeb5996074f2b53377023171",
+            "parsed_native_exact": true
+          }
+        ]
+      }
+    }
+  ],
+  "focused_tests": {
+    "path": "build/oblivion-compat/sewer-escape/adaptive-healing-focused-python-02.log",
+    "executed": 18,
+    "passed": true
+  },
+  "full_assembly": {
+    "sections": 67,
+    "actions": 10431,
+    "path": "build/oblivion-compat/sewer-escape/adaptive-healing-full-assembly-01/full-escape.json"
+  },
+  "gate_reuse": "No C++ or Python implementation changes: retain2222 normal/SAN engine and580 Python gate provenance;18 focused recipe tests rerun for these data edits.",
+  "full_escape_complete": false,
+  "rendered_review": "Inspected adaptive-healing-01/joined-zombie-healed.png: full health HUD and drawn axe in the original corridor; upright zombie corpse remains the recorded visual limitation."
+}

@@ -125,28 +125,34 @@ fingerprint `dce0132a5c0159c3c4860867936f1ccdb245c969c22cad22a49e3aeea6262f86`.
 C++ unchanged; reuse2222 normal/SAN engine gates with original provenance.
 Inventory preview can T pose; final world view shows the drawn axe and full HUD.
 
-Continuous13 is now live: original new game,67/10466 actions, immutable
-`rat-grounded-runtime-snapshot-01` ELF89947e13…adb1d5. Actual identity/mapped
-workspace libraries are recorded in its `runtime-identity.json`; entire emitted
-LuaJIT compiles. Recipe `gear-focus-full-assembly-01/full-escape.json`.
-Game362460, driver362446, supervisor362439, archiver362461, watcher362462.
-It has now passed section10 in the original new-game process and entered11.
-Actual F5seq28 is parsed/native exact: health80, both Rusty Iron armor pieces
-and war axe equipped, healing potion consumed. No loads/manual inputs. This
-closes the gear-context blocker in the continuous run, not the full escape.
-Prefix proof is in its `gear-prefix-verification.json`. Recheck actual processes.
+## Current recovery checkpoint and next action
 
-Next: monitor that same PID and repair only observed blockers. Guarded follow-up
-`followup-full13-outdoor-reload.py`, PID362597, status
-`full13-outdoor-followup-status.json`, waits for a terminal passing full course
-and no live rendered game before launching
-`full13-own-outdoor-reload-assembly-01/course.json` into
-`full-escape-continuous-13-outdoor-reload-01`. It verifies an actual own outdoor
-F5/native match; a failed course stops the follow-up without restart. The reload
-adds ordinary walking, F5 and read-only faction inspection. It is prepared, not
-yet launched. Final `verify-full-escape.py`, `audit-all-course-saves.py` and
-rendered review remain required. One rendered game at a time; no source edits
-or commits during `run_checks.py`. Commit bounded chunks; never push.
+Continuous13 is terminal failed at12. Its original PID362460 passed the corrected
+landing, all3 Player rat kills, gear selection and a native Player zombie kill.
+F5seq29 retains the genuine pre-recovery47.1HP state. Five ordinary Minor Healing
+casts reached80HP; the sixth cast also applied at80, but the old controller waited
+for a sixth *health increase*, impossible at the cap. No unreviewed errors;
+native end0errors/0pending/5 reviewed distant Peryite deferrals. Follow-up13
+correctly stopped without launching a reload. Retain the failed full run.
+
+Selected recovery steps12/20/27/39 now use ordinary casts and native applied-effect
+receipts. Full-recovery steps stop at the original80HP target;39 retains three
+real health gains or full health. No observer/world mutation APIs or fake gain
+messages. [Recovery proof](SEWER-ADAPTIVE-RECOVERY-VERIFICATION.json):
+`adaptive-healing-01`47.1→80 with5 casts; `adaptive-healing-partial-01`47.1→68.22
+with3 casts; `adaptive-healing-full-cap-01`80→80 with1 applied cast and0 repeated
+iterations. All3 own F5s parsed/native exact, entries0diff, input delivered,
+native ends0/0/0. Final capture inspected. All18 focused recipe tests pass.
+Full selection remains67 sections, now10431 actions; other Lua/engine behavior
+unchanged. These diagnostics do not replace whole-course acceptance.
+
+Next: launch fresh original-new-game continuous14 using
+`adaptive-healing-full-assembly-01/full-escape.json` and the immutable
+`rat-grounded-runtime-snapshot-01`. Regenerate guarded own-save outdoor reload
+for14. Keep one rendered game at a time, preserve healthy jobs, and check actual
+processes. Accept only all67 sections in one PID, its own outdoor reload with
+ordinary movement, full input/native/save audits and rendered review. No source
+edits or commits during `run_checks.py`. Commit bounded chunks; never push.
 
 ## Reusable route evidence and limits
 
