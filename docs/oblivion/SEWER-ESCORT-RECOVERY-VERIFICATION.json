@@ -1,0 +1,218 @@
+{
+  "scope": "Ordinary combat response during escort departure and safe early healing. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "cause": "Continuous18 actual stage26 save19 retains80HP. During the passive stage30 wait rat037e42 hits Player repeatedly; save20 retains52HP. This refines the earlier attribution to the assassin ambush.",
+  "change": [
+    "Select Heal Minor Wounds through ordinary menus before departure wait. Explicit SDL controller mapping for standalone source2.",
+    "Draw fists and acknowledge actual stance; fight nearby rats while retaining original stage30 gate. Pursue known departure attacker037e42 to650 units; other rats retain350-unit proximity.",
+    "Use established centerline/platform approach before direct close-range aim; bound forward movement by actual60-unit displacement or3seconds.",
+    "Sheathe after area clearing, recover through actual casts with fresh magicka readiness, require fresh80HP observation before F5. Original later rat death gates retained."
+  ],
+  "runtime_cases": [
+    {
+      "course": "escort-recovery-partial-06",
+      "scope": "Earlier controller adverse combat/healing check from genuine stage30 52HP save; precedes final menu-order, route and pursuit refinements",
+      "game_pid": 407842,
+      "runtime_elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-18/retained-saves/3-0020-Quicksave.omwsave",
+        "source_save_sha256": "2674c6578d38aa8648877572ddb607a36b186c8c7f15884ed09e5483959a8793",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/0",
+            -0.008974886499345303,
+            -0.008974887430667877
+          ],
+          [
+            "/native_animated_references/0/bodies/3/linear_velocity/2",
+            0.020626172423362732,
+            0.02062617428600788
+          ],
+          [
+            "/native_animated_references/0/bodies/4/linear_velocity/0",
+            0.11730094254016876,
+            0.11730094999074936
+          ],
+          [
+            "/native_animated_references/0/bodies/7/linear_velocity/1",
+            0.004996494390070438,
+            0.004996494855731726
+          ],
+          [
+            "/native_animated_references/0/bodies/7/linear_velocity/2",
+            -0.01091640442609787,
+            -0.010916403494775295
+          ]
+        ]
+      },
+      "all_actual_saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/escort-recovery-partial-06/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "0b991670d8e807b5d1a21c6f832c6a831c495b1055d5c0f8464f86c9bbaa8269",
+            "live_sha256": "a53af32234747eb2467ed391e49210c6ed28ed115032c06b930c30c06aa78bc8",
+            "parsed_native_exact": true
+          }
+        ]
+      },
+      "input_delivered_exact": true,
+      "input_sha256": "faa712a9985116fc50847fed368b7c3b6deb845cda406a3b970b5e94d4932892",
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 407842,
+        "sequence": 4,
+        "tick": 387,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "rat_037e42_player_kill": true,
+      "new_native_stage30": 0,
+      "healing_casts": [
+        [
+          "54",
+          "61"
+        ],
+        [
+          "62",
+          "51.1425"
+        ],
+        [
+          "70",
+          "41.4642"
+        ],
+        [
+          "78",
+          "31.7859"
+        ],
+        [
+          "80",
+          "22.1077"
+        ]
+      ],
+      "final_health": 80,
+      "rendered_review": [
+        "heal-selected.png",
+        "phase8-escort-departed.png"
+      ]
+    },
+    {
+      "course": "escort-recovery-departure-06",
+      "scope": "Final source2 phase8 departure and recovery actions from genuine stage26 save",
+      "game_pid": 409522,
+      "runtime_elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-18/retained-saves/3-0019-Quicksave.omwsave",
+        "source_save_sha256": "a1623cd9ecb823e1def4678b4d34f3966d2707de8bb2ae85289a7a3ca49f0ac1",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "all_actual_saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/escort-recovery-departure-06/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "2318de36727ab49e09fa523b56f7bece9a536befc33640c5e27537aca1d64fa1",
+            "live_sha256": "1bb7778f646cefc68764d52c02c63fefe26b8ac60e0e939a43aa2551ce9ad0f2",
+            "parsed_native_exact": true
+          }
+        ]
+      },
+      "input_delivered_exact": true,
+      "input_sha256": "ef2d03ca99079f92e0730a9da6343550b3cbf6a6370ef38da57e0a9806951dd8",
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 409522,
+        "sequence": 4,
+        "tick": 641,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "rat_037e42_player_kill": true,
+      "new_native_stage30": 1,
+      "healing_casts": [
+        [
+          "80",
+          "61"
+        ]
+      ],
+      "final_health": 80,
+      "rendered_review": [
+        "heal-selected.png",
+        "phase8-escort-departed.png"
+      ]
+    }
+  ],
+  "evidence_root": "build/oblivion-compat/sewer-escape",
+  "runtime_audit": "build/oblivion-compat/sewer-escape/escort-recovery-runtime-verification.json",
+  "focused_tests": {
+    "count": 18,
+    "passed": true,
+    "command": "PYTHONPATH=scripts/tests python3 -m unittest test_oblivion_sewer_course_assembly test_scenario_repeat"
+  },
+  "integration_python": {
+    "count": 580,
+    "passed": true,
+    "evidence": "build/oblivion-compat/sewer-escape/escort-recovery-broad-python-03",
+    "source": {
+      "head": "1b4a888c745ff8bbe99049815e6a026700191dae",
+      "source_fingerprint": "9b86e64d6206360a3052d7f1b564e42e2f15b8d96ad87ad73c55215a71994bd5"
+    }
+  },
+  "assembly": {
+    "sections": 67,
+    "actions": 10262,
+    "observer_luajit_compile_passed": true,
+    "evidence": "build/oblivion-compat/sewer-escape/full19-assembly-02"
+  },
+  "engine_evidence_reused": {
+    "reason": "C++ unchanged; controller JSON only",
+    "proof": "docs/oblivion/SEWER-DESCENDING-RECOVERY-VERIFICATION.json",
+    "normal": 2223,
+    "asan_ubsan": 2223
+  },
+  "failed_attempts_retained": [
+    {
+      "course": "escort-recovery-partial-03/04",
+      "failure": "Player death; combat guard omitted drawing fists. Early movement stop also constrained approach."
+    },
+    {
+      "course": "escort-recovery-partial-05",
+      "failure": "Rat killed, then SDL controller barrier rejects multiple open controllers from stale previous driver. Explicit terminal-worker cleanup before06."
+    },
+    {
+      "course": "escort-recovery-departure-03",
+      "failure": "Harness passed but final health66 contradicts recovery acceptance: rat approached during menu selection and historical80HP message satisfied final wait. Not counted as acceptance."
+    },
+    {
+      "course": "escort-recovery-departure-04",
+      "failure": "Player alive80 but direct distant-rat approach stalls at platform edge; rendered evidence retained."
+    },
+    {
+      "course": "escort-recovery-departure-05",
+      "failure": "Playerkill42 and original30 pass, but broad650-unit pursuit stalls at wall gap. Narrowed distant pursuit to observed42; other enemies handled by original later sections."
+    }
+  ],
+  "limitations": "Scoped loaded checks are not continuous acceptance. Must still finish original-new-game all67, physical outdoor exit, own fresh-PID outdoor reload/walk and every-save/native/input/rendered audits."
+}
