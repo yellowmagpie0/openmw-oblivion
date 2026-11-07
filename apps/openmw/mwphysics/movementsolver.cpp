@@ -586,6 +586,13 @@ namespace MWPhysics
             if (std::abs(positionDelta.z()) > contactCallback.mMaxZ)
                 positionDelta *= contactCallback.mMaxZ / std::abs(positionDelta.z());
 
+            // A smaller overlap is not necessarily a safe destination: a stair
+            // lip can reject a grounded hull down through its supporting floor.
+            // Let movement/stepping handle descents; overlap recovery may move
+            // grounded actors sideways or up, but must not lower their feet.
+            if (actor.mIsOnGround && positionDelta.z() < 0)
+                positionDelta.setZ(0);
+
             auto contactCallback2 = gatherContacts(positionDelta);
             // successfully moved further out from contact (does not have to be in open space, just less inside of
             // things)

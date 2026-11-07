@@ -1,0 +1,193 @@
+{
+  "scope": "Repair grounded overlap rejection and verify the three-rat wall encounter. Full continuous escape remains incomplete.",
+  "implementation": "Grounded overlap rejection clamps downward recovery to zero before contact evaluation; sideways/upward recovery and airborne downward rejection remain. Gravity and stair movement retain descent ownership.",
+  "regression": {
+    "before": "rat-grounded-regression-before-02",
+    "failure": "Grounded actor starts z1, rejected to z-19.2 through supporting floor. Airborne comparison passes.",
+    "initial_fixture_failure": "rat-grounded-regression-before-01: missing Static class registration, fixed without production workaround."
+  },
+  "checks": {
+    "focused": {
+      "path": "build/oblivion-compat/sewer-escape/rat-grounded-focused-01",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 9,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorBoundsTest.*",
+          "binary_sha256": "7e800b7297303714677fb111caa071f67507222a6d4436d956ebd72d4572bcad",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9062d5500a53ed9bff7f9f65441fbea3dde70fb452fa4bfebd82ef49d0c2a0fd",
+          "inventory_sha256": "7ab500e1a7a44d82185e23caaeae0d487b87d8fea7beaa547580533de2ef49a8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "dc4e0247f3937addf797f035dc4d9bb380c5d48d",
+        "source_fingerprint": "6b19aaf6923c1b0d34991f5ddc8fb1075832eb110047465b5d1a08f138165567"
+      },
+      "source_after": {
+        "head": "dc4e0247f3937addf797f035dc4d9bb380c5d48d",
+        "source_fingerprint": "6b19aaf6923c1b0d34991f5ddc8fb1075832eb110047465b5d1a08f138165567"
+      }
+    },
+    "broad_normal": {
+      "path": "build/oblivion-compat/sewer-escape/rat-grounded-broad-normal-01",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2222,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7e800b7297303714677fb111caa071f67507222a6d4436d956ebd72d4572bcad",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "24d8a48c0e55ff1b49913fe89423f923b9ac962a8b06bfb9724fdfdbe37d1421",
+          "inventory_sha256": "7ab500e1a7a44d82185e23caaeae0d487b87d8fea7beaa547580533de2ef49a8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "dc4e0247f3937addf797f035dc4d9bb380c5d48d",
+        "source_fingerprint": "6b19aaf6923c1b0d34991f5ddc8fb1075832eb110047465b5d1a08f138165567"
+      },
+      "source_after": {
+        "head": "dc4e0247f3937addf797f035dc4d9bb380c5d48d",
+        "source_fingerprint": "6b19aaf6923c1b0d34991f5ddc8fb1075832eb110047465b5d1a08f138165567"
+      }
+    }
+  },
+  "runtime": {
+    "passed": true,
+    "scope": "Three required wall rats through ordinary combat, physical passage, exact entry/save audit; not full continuous escape acceptance",
+    "source_actions_and_observer_match_runtime": true,
+    "actions": 28,
+    "input_issued_delivered_exact": true,
+    "native_end": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 349633,
+      "sequence": 5,
+      "tick": 1148,
+      "event": "run-end",
+      "error_count": 0,
+      "event_count": 4,
+      "pending_count": 0,
+      "unsupported_count": 0
+    },
+    "entry_verification": {
+      "passed": true,
+      "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-11/retained-saves/3-0020-Quicksave.omwsave",
+      "source_save_sha256": "c4c35665e3a86845132b49d9fa4702069bc4ba430abfa9aed6a6387d7b886d9b",
+      "whole_state_restore": true,
+      "schema_migration": null,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": [
+        [
+          "/native_animated_references/0/bodies/0/linear_velocity/0",
+          -0.053052980452775955,
+          -0.05305297672748566
+        ],
+        [
+          "/native_animated_references/0/bodies/6/linear_velocity/0",
+          0.014838655479252338,
+          0.014838654547929764
+        ],
+        [
+          "/native_animated_references/0/bodies/6/linear_velocity/1",
+          0.0007473621517419815,
+          0.0007473620935343206
+        ],
+        [
+          "/native_animated_references/0/bodies/11/linear_velocity/1",
+          -0.07039953023195267,
+          -0.07039952278137207
+        ],
+        [
+          "/native_animated_references/0/bodies/11/linear_velocity/2",
+          0.010351177304983139,
+          0.010351176373660564
+        ]
+      ]
+    },
+    "saves": [
+      {
+        "sequence": 3,
+        "sha256": "38b4f09b9e2c6cd5f679ce3b2fe378e27dec6dff4492ce55a9a21e37173cd332",
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-grounded-runtime-01/retained-saves/3-0003-Quicksave.omwsave",
+        "native_save_exact": true
+      },
+      {
+        "sequence": 4,
+        "sha256": "c3f661c24655b79e21715069f13901fac0e9f5a83cb273ba35dab09b01b10d3c",
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-grounded-runtime-01/retained-saves/3-0004-Quicksave.omwsave",
+        "native_save_exact": true
+      }
+    ],
+    "rat_life": [
+      {
+        "actor": "content:oblivion.esm:037e40",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e41",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e42",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    ],
+    "player_health": 18.0,
+    "player_position": [
+      625.0159301757812,
+      3190.53515625,
+      -866.6024169921875,
+      0.23125003278255463,
+      0.0,
+      -1.4453123807907104
+    ],
+    "cell": "content:oblivion.esm:01fbb9"
+  },
+  "snapshot": {
+    "verification": {
+      "head": "dc4e0247f3937addf797f035dc4d9bb380c5d48d",
+      "source_fingerprint": "6b19aaf6923c1b0d34991f5ddc8fb1075832eb110047465b5d1a08f138165567"
+    },
+    "elf_sha256": "89947e13c5d2c072a2a0358cb58120c9fa430345a60e487a1283e24b26adb1d5"
+  },
+  "manifest_checks": {
+    "path": "build/oblivion-compat/sewer-escape/rat-grounded-manifest-tests-02.log",
+    "passed": true,
+    "executed": 18,
+    "lua_jit_compile": true,
+    "initial_invocation_failure": "manifest-tests-01: test_scenario_repeat needs scripts/tests on PYTHONPATH; corrected invocation passes."
+  },
+  "rendered_review": "Inspected actual final capture: Player alive with drawn fists on far side of broken wall, passage visible, HUD shows low health. Native state supplies all3 Player kills.",
+  "sanitizer_status": "Required full engine sanitizer gate pending after this implementation checkpoint.",
+  "full_escape_complete": false
+}

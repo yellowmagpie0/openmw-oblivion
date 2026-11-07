@@ -1,4 +1,7 @@
 #include <apps/openmw/mwphysics/stepper.hpp>
+#include <apps/openmw/mwphysics/movementsolver.hpp>
+#include <apps/openmw/mwphysics/physicssystem.hpp>
+#include "../mwworld/oblivionworldfixture.hpp"
 #include <apps/openmw/mwphysics/collisiontype.hpp>
 #include <BulletCollision/CollisionShapes/btCapsuleShape.h>
 #include <apps/openmw/mwmechanics/oblivionmelee.hpp>
@@ -557,4 +560,60 @@ TEST(ActorBoundsTest, CapsuleStepsAcrossLowThresholdUnderOverhang)
         world.removeCollisionObject(&threshold);
         world.removeCollisionObject(&floor);
     }
+}
+
+TEST(ActorBoundsTest, GroundedOverlapRejectionDoesNotPushActorThroughSupportingFloor)
+{
+    MWClass::Static::registerSelf();
+    TestingOpenMW::NativeWorldFixture fixture;
+    const BoundsActorClass type(false);
+    btDefaultCollisionConfiguration configuration;
+    btCollisionDispatcher dispatcher(&configuration);
+    btDbvtBroadphase broadphase;
+    btCollisionWorld world(&dispatcher, &broadphase, &configuration);
+    MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+    btBoxShape floorShape(btVector3(100, 100, 10));
+    btBoxShape lipShape(btVector3(100, 100, 20));
+    btCollisionObject floor, lip;
+    const auto add = [&](btCollisionObject& object, btCollisionShape& shape, float z) {
+        object.setCollisionShape(&shape);
+        object.setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0, 0, z)));
+        world.addCollisionObject(&object, MWPhysics::CollisionType_World, MWPhysics::CollisionType_Actor);
+    };
+    add(floor, floorShape, -10);
+    add(lip, lipShape, 45);
+    ESM::Static base;
+    base.blank();
+    ESM::CellRef reference;
+    reference.blank();
+    reference.mPos.pos[2] = 1;
+    MWWorld::LiveCellRef<ESM::Static> live(reference, &base);
+    live.mClass = &type;
+    osg::ref_ptr<Resource::BulletShape> source = new Resource::BulletShape;
+    source->mCollisionBox.mExtents = osg::Vec3f(20, 30, 22);
+    source->mCollisionBox.mCenter = osg::Vec3f(0, 0, 22);
+    {
+        MWPhysics::Actor actor(MWWorld::Ptr(&live), source, &scheduler, false,
+            DetourNavigator::CollisionShapeType::Aabb, {});
+        for (bool grounded : {false, true})
+        {
+            SCOPED_TRACE(grounded);
+            actor.setOnGround(grounded);
+            MWPhysics::ActorFrameData frame(actor, false, false, 1.f, -1000.f, false);
+            frame.mMovement = osg::Vec3f(0, 1, 0);
+            frame.mPosition = osg::Vec3f(0, 0, 1);
+            frame.mStuckFrames = 0;
+            const auto transform = actor.getCollisionObject()->getWorldTransform();
+            MWPhysics::MovementSolver::unstuck(frame, &world);
+            // A smaller overlap with the lip can still put the actor below its
+            // supporting floor. Falling actors retain downward depenetration.
+            if (grounded)
+                EXPECT_GE(frame.mPosition.z(), 1.f);
+            else
+                EXPECT_LT(frame.mPosition.z(), 0.f);
+            EXPECT_EQ(actor.getCollisionObject()->getWorldTransform(), transform);
+        }
+    }
+    world.removeCollisionObject(&lip);
+    world.removeCollisionObject(&floor);
 }

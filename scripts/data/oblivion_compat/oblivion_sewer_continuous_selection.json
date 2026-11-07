@@ -19,7 +19,7 @@
     {
       "segment": 3,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_first_wall_rat.json",
-      "action_count": 20,
+      "action_count": 8,
       "source_course": "joined-wall-rats-03",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
