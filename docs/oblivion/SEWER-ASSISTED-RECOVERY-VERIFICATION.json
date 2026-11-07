@@ -1,0 +1,491 @@
+{
+  "scope": "Ordinary assisted self-healing in failed continuous18; not full escape acceptance.",
+  "full_escape_complete": false,
+  "original_game_pid": 401988,
+  "manual_review": [
+    {
+      "record": "build/oblivion-compat/sewer-escape/full-escape-continuous-18/manual-early-rat-recovery-input-01.json",
+      "sha256": "c76e6bf2e1ca72d41cee92013ab68468a2b08d78b12f4dbee0b6979158934fc4",
+      "action_signature": "5fb80fa1f27847a2f3810f3ea097f1799d600481f669e82f795603e57fcee922",
+      "scope": "Reviewed ordinary X11 inventory/spell selection, six self-heals and normal F5. Driver temporarily paused and resumed; no game restart or world/stat/quest injection.",
+      "actions": [
+        {
+          "utc": "2026-11-07T15:09:22.537215+00:00",
+          "process_action": "SIGSTOP",
+          "pid": 401964
+        },
+        {
+          "utc": "2026-11-07T15:09:22.537312+00:00",
+          "command": [
+            "xdotool",
+            "mouseup",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:09:22.548279+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "w",
+            "Shift_L",
+            "F7"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:09:22.591562+00:00",
+          "command": [
+            "xdotool",
+            "key",
+            "Tab"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:10:37.440305+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "Tab"
+          ],
+          "returncode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "utc": "2026-11-07T15:10:37.758638+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "Tab"
+          ],
+          "returncode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "utc": "2026-11-07T15:11:54.830331+00:00",
+          "command": [
+            "xdotool",
+            "mousemove",
+            "370",
+            "23"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:11:54.934111+00:00",
+          "command": [
+            "xdotool",
+            "mousedown",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:11:55.141301+00:00",
+          "command": [
+            "xdotool",
+            "mouseup",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:12:19.947173+00:00",
+          "command": [
+            "xdotool",
+            "mousemove",
+            "125",
+            "246"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:12:20.053019+00:00",
+          "command": [
+            "xdotool",
+            "mousedown",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:12:20.259886+00:00",
+          "command": [
+            "xdotool",
+            "mouseup",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:12:20.566415+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "Tab"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:12:20.835416+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "Tab"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:12:21.160355+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:12:21.429597+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:05.601407+00:00",
+          "command": [
+            "xdotool",
+            "mousemove",
+            "130",
+            "245"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:05.708546+00:00",
+          "command": [
+            "xdotool",
+            "mousedown",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:05.832332+00:00",
+          "command": [
+            "xdotool",
+            "mouseup",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:05.938742+00:00",
+          "command": [
+            "xdotool",
+            "mousedown",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:06.063756+00:00",
+          "command": [
+            "xdotool",
+            "mouseup",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:06.370378+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "Escape"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:06.639555+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "Escape"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:24.659844+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:13:24.979002+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:14:57.202145+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:14:57.520397+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:15:10.340305+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:15:10.660433+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:15:35.130245+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:15:35.448848+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:15:48.268206+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:15:48.587006+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:32.671599+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:32.989022+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "c"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:34.208048+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "Tab"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:34.525986+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "Tab"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:34.744390+00:00",
+          "command": [
+            "xdotool",
+            "mousemove",
+            "262",
+            "23"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:34.852479+00:00",
+          "command": [
+            "xdotool",
+            "mousedown",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:35.061524+00:00",
+          "command": [
+            "xdotool",
+            "mouseup",
+            "1"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:35.267538+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "Escape"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:35.584777+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "Escape"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:36.009853+00:00",
+          "command": [
+            "xdotool",
+            "keydown",
+            "F5"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:16:36.331400+00:00",
+          "command": [
+            "xdotool",
+            "keyup",
+            "F5"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T15:17:12.200147+00:00",
+          "process_action": "SIGCONT",
+          "pid": 401964
+        }
+      ],
+      "native_healing_effects": [
+        {
+          "health": 40.0,
+          "magicka": 61.0,
+          "line": "[09:13:25.367 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=40 magicka=61"
+        },
+        {
+          "health": 48.0,
+          "magicka": 61.0,
+          "line": "[09:14:57.979 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=48 magicka=61"
+        },
+        {
+          "health": 56.0,
+          "magicka": 50.9648,
+          "line": "[09:15:10.985 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=56 magicka=50.9648"
+        },
+        {
+          "health": 64.0,
+          "magicka": 50.4324,
+          "line": "[09:15:35.965 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=64 magicka=50.4324"
+        },
+        {
+          "health": 72.0,
+          "magicka": 40.5765,
+          "line": "[09:15:49.062 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=72 magicka=40.5765"
+        },
+        {
+          "health": 80.0,
+          "magicka": 61.0,
+          "line": "[09:16:33.047 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=61"
+        }
+      ],
+      "manual_save_receipt": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 401988,
+        "sequence": 21,
+        "tick": 4374,
+        "event": "save-complete",
+        "action_id": "observation-21",
+        "actor": "dynamic:player:0000000000000001",
+        "cause": "normal-save",
+        "deltas": {
+          "health": 28
+        },
+        "live": "live-3-21.json",
+        "live_sha256": "8dcfe6bbbd27ac702c67bf9f843067b30ad00a5a973c4fcfd26be086643ebc09",
+        "result": "committed",
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-18/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "255539c20b15f82d9ba123c4877b15e0fd9513267f6d9f056ef648923c8ad755",
+        "target": "dynamic:player:0000000000000001"
+      },
+      "retained_save_sha256": "255539c20b15f82d9ba123c4877b15e0fd9513267f6d9f056ef648923c8ad755",
+      "parsed_native_exact": true,
+      "original_driver_resumed_at": "[09:17:37.496 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape outer segment 4 ready"
+    }
+  ],
+  "audit_negative_checks": [
+    {
+      "case": "unreviewed_command",
+      "rejected": true,
+      "reason": "Unreviewed early recovery input sequence"
+    },
+    {
+      "case": "wrong_game_pid",
+      "rejected": true,
+      "reason": "Early recovery belongs to another run"
+    }
+  ],
+  "failed_course_outcome": "Continued in same original PID through all3 native Player wall-rat kills, then failed Club equipment selection at7 while alive. No outdoor reload or acceptance audit.",
+  "next": "Use safe ordinary healing earlier when needed; retain full67 original sections/fights and own outdoor reload requirements."
+}

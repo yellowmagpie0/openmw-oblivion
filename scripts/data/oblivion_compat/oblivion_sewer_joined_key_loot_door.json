@@ -1221,18 +1221,13 @@
       "minimum_entropy": 0.02
     },
     {
-      "type": "gamepad_axis",
-      "axis": "dpad_x",
-      "value": 1
+      "type": "gamepad_button",
+      "value": "rightshoulder",
+      "hold_seconds": 0.2
     },
     {
       "type": "sleep",
       "seconds": 0.2
-    },
-    {
-      "type": "gamepad_axis",
-      "axis": "dpad_x",
-      "value": 0
     },
     {
       "type": "gamepad_button",
@@ -1244,6 +1239,15 @@
       "pattern": "Key course phase 3:\\s*(?:Sewer Club equipped)",
       "timeout_seconds": 120,
       "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_button",
+      "value": "leftshoulder",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
     },
     {
       "type": "screenshot",

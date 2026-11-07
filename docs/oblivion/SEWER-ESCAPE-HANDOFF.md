@@ -47,18 +47,54 @@ while a threat remains nearby. Later source16 death gates remain intact.
   inspected. Retain the first failed focused controller (180-unit aim gap and
   quick swings). All18 focused and fresh580 Python tests pass; C++ unchanged.
 
-Current: continuous18 is live from original new game, PID401988, driver401964.
-Manifest `west-threat-full-assembly-02/full-escape.json`,67 sections/10231 actions
-with generated Lua syntax checked. Fix committed31b64b22f4. Actual runtime identity
-is in `full-escape-continuous-18/runtime-identity.json`; automatic archive/watch
-attached. No manual input. Guarded own-outdoor follow-up PID401966 and read-only
-post-run auditor PID401967 are waiting for complete course success.
+Continuous18 is terminal failed at7, with the Player alive. Its first ambush left
+52HP; the first rat reduced this to32HP. A separately recorded ordinary manual
+recovery paused driver401964, used the actual inventory to select Heal Minor
+Wounds, applied6 native casts32→80HP, made actual F5seq21 (parsed/native exact),
+and resumed the same original-new-game PID401988/driver. All3 wall rats were then
+native Player kills and the original course advanced through5/6. No save loads,
+actor/health/quest injection or skipped fights. This was assisted, not unattended.
+The reviewed45-action record/signature and strict native manual audit are under
+`full-escape-continuous-18/`; the local verifier supports only that exact record.
+[Assisted recovery proof](SEWER-ASSISTED-RECOVERY-VERIFICATION.json) includes
+native casts/F5 and negative checks rejecting an unreviewed command/wrong PID.
 
-Next action: monitor this exact PID/course. Do not restart a healthy game or
-replace live resources. Loaded tests do not replace continuous acceptance or
-permit skipped encounters. If health falls under live attack during a later
-walking step, inspect/respond promptly; ordinary manual corrections are allowed
-only with separate actual-input records and a corresponding strict audit.
+The run failed waiting for Club equipment: phase3's All-tab focus was row0, so
+D-pad Right selected the potion instead of the Club. Native end0errors/0pending/
+5 reviewed deferrals; original game/driver are gone and outdoor follow-up/auditor
+correctly withheld acceptance. Actual F5seq25 is *pre-loot*, not an equipment
+checkpoint. The first equipment-only diagnostic therefore failed its initial
+loot-owned precondition; retain it as failed.
+
+The Club focus correction is verified: source7 uses the Weapon filter to equip
+the original Club, restores All, and retains all ownership/equipment/keyed-door
+gates. Source7 selection84 actions (was83); full67 assembly10232 actions and
+observer syntax pass. All18 focused and fresh580 Python tests pass, C++ unchanged.
+[Club proof](SEWER-CLUB-FOCUS-VERIFICATION.json):
+
+- `club-focus-course-01` passes original loot/equipment/keyed exit from actual
+  continuous18 seq25. Two actual F5s parsed/native exact; entry0diff, input
+  delivered, native end0/0/0, Club/door captures inspected.
+- `club-focus-04` passes a fresh-process equipment phase from the first course's
+  actual post-loot/pre-equip F5seq3. Entry0diff; actual F5 exact, original Club
+  equipped, all item counts (including potion) and76HP unchanged. Original shared
+  frame-barrier wrapper retained. Actual runtime13f2 captured; no rendered game
+  remains.
+- Keep failed diagnostics failed:01 used a pre-loot save for equipment only;02
+  copied settings rewritten on exit and failed duplicate-setting startup;03
+  omitted the shared frame-barrier logger from its extracted observer. They are
+  harness setup failures, not equipment acceptance. Use pristine manifest settings
+  for future runs, not settings files rewritten by a terminated game.
+
+Current chunk completed: commit the Club/data/recovery evidence; then implement
+ordinary safe post-ambush recovery before another fresh full acceptance run.
+
+Before the next original-new-game acceptance run, address the observed variable
+post-ambush health with ordinary early healing; the manual intervention proved
+it works but should be recorded honestly if used again. Consider recovery while
+still safe after the assassin fight, before committing to the rat route. Keep all
+67 original sections/fights and own outdoor reload acceptance intact. Do not
+start another full run until the equipment correction is proven.
 
 Current engine snapshot: `rat-descending-recovery-runtime-snapshot-01`, ELF
 `13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`.

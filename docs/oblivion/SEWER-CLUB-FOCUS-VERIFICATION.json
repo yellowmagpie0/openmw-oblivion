@@ -1,0 +1,287 @@
+{
+  "scope": "Stable ordinary Club equipment through Weapon filter with retained inventory focus; full escape remains incomplete.",
+  "full_escape_complete": false,
+  "change": "Replace row-dependent D-pad Right selection with Weapon filter, equip original Club, restore All. Original ownership, equipment and keyed-door gates retained.",
+  "runtime_cases": [
+    {
+      "course": "club-focus-course-01",
+      "passed": true,
+      "scope": "Original full loot/equipment/keyed exit",
+      "runtime_identity": {
+        "observed_utc": "2026-11-07T15:30:21.818959+00:00",
+        "game_pid": 403866,
+        "process_start_ticks": "180364876",
+        "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-descending-recovery-runtime-snapshot-01/openmw",
+        "exe_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+        "snapshot_manifest": {
+          "elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+          "verification": {
+            "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+            "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+          },
+          "resources_version": "0.52.0\n79a971c0b298fe5a3608e744e51004249bb93fab\n\n",
+          "scope": "Downward-only recovery sweep retaining grounded support guard and legacy lateral/upward overlap separation. Focused10 actor bounds pass; integration pending."
+        },
+        "loaded_libraries": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/club-focus-course-01/sdl-input.so",
+            "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+            "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+            "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+            "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+            "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+          }
+        ],
+        "scope": "Actual immutable runtime; gameplay acceptance separate."
+      },
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-18/retained-saves/3-0025-Quicksave.omwsave",
+        "source_save_sha256": "ce42c757edc0310ee92b7c4169961742e1a2d26355c98ca06ba6427c9951e432",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "all_actual_saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 2,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/club-focus-course-01/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "e2b1b89640446f7153ee773a610ed99235e248038ade62eca3fabbefd425d0fd",
+            "live_sha256": "c3e863d5bdc5771a5d21c9e6f4e4a300c3b403b5a8b1b18892ff948e7386fbac",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 4,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/club-focus-course-01/retained-saves/3-0004-Quicksave.omwsave",
+            "save_sha256": "ee556eeab69d39eff2f31a312b1035234fc22c98c06622046fecb69c2d4eeacb",
+            "live_sha256": "a677b16001579e59c440b4841a4cbc147e0ec2b2e155e205e42082289f94f7e4",
+            "parsed_native_exact": true
+          }
+        ]
+      },
+      "equipped_club": {
+        "base": "content:oblivion.esm:159829",
+        "count": 1,
+        "condition": 70.0,
+        "charge": -1.0,
+        "equipped_slots": 65536,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      },
+      "health": 76.0,
+      "cell": "content:oblivion.esm:022ff6",
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 403866,
+        "sequence": 5,
+        "tick": 331,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 4,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "automated_input_delivered": true
+    },
+    {
+      "course": "club-focus-04",
+      "passed": true,
+      "scope": "Fresh-process actual post-loot/pre-equipment phase, original frame-barrier wrapper retained",
+      "runtime_identity": {
+        "observed_utc": "2026-11-07T15:43:30.632757+00:00",
+        "game_pid": 404682,
+        "process_start_ticks": "180445070",
+        "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-descending-recovery-runtime-snapshot-01/openmw",
+        "exe_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+        "snapshot_manifest": {
+          "elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+          "verification": {
+            "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+            "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+          },
+          "resources_version": "0.52.0\n79a971c0b298fe5a3608e744e51004249bb93fab\n\n",
+          "scope": "Downward-only recovery sweep retaining grounded support guard and legacy lateral/upward overlap separation. Focused10 actor bounds pass; integration pending."
+        },
+        "loaded_libraries": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/club-focus-04/sdl-input.so",
+            "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+            "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+            "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+            "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+            "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+          }
+        ],
+        "scope": "Actual immutable runtime; gameplay acceptance separate."
+      },
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/club-focus-course-01/retained-saves/3-0003-Quicksave.omwsave",
+        "source_save_sha256": "e2b1b89640446f7153ee773a610ed99235e248038ade62eca3fabbefd425d0fd",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "all_actual_saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/club-focus-04/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "b0dd7167c87754cc73fa5aa26271f40b5f3ce0698f426872ae51b4941e9cfe9b",
+            "live_sha256": "b9c2305ea75d26125b3f75c635ffc035a09e0f9c4e1211e6eb83630ad1e96356",
+            "parsed_native_exact": true
+          }
+        ]
+      },
+      "equipped_club": {
+        "base": "content:oblivion.esm:159829",
+        "count": 1,
+        "condition": 70.0,
+        "charge": -1.0,
+        "equipped_slots": 65536,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      },
+      "health": 76.0,
+      "cell": "content:oblivion.esm:01fbb9",
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 404682,
+        "sequence": 4,
+        "tick": 12,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "automated_input_delivered": true
+    }
+  ],
+  "inventory_preservation": {
+    "all_counts_equal": true,
+    "counts": {
+      "content:oblivion.esm:00931a": 1,
+      "content:oblivion.esm:084aeb": 1,
+      "content:oblivion.esm:0888bf": 1,
+      "content:oblivion.esm:0be335": 1,
+      "content:oblivion.esm:02731a": 1,
+      "content:oblivion.esm:027319": 1,
+      "content:oblivion.esm:027318": 1,
+      "content:oblivion.esm:00000a": 3,
+      "content:oblivion.esm:159826": 1,
+      "content:oblivion.esm:159829": 1
+    },
+    "health_before_after": 76,
+    "scope": "Exact genuine pre-equipment entry vs fresh equipment F5; potion retained, no consumable used."
+  },
+  "retained_failed_checks": [
+    {
+      "course": "full-escape-continuous-18",
+      "reason": "Original controller failed Club-equipment gate while Player alive; All-tab row focus selected a different item."
+    },
+    {
+      "course": "club-focus-01",
+      "reason": "Equipment-only input was actually pre-loot; initial ownership precondition failed."
+    },
+    {
+      "course": "club-focus-02",
+      "reason": "Copied rewritten runtime settings had a duplicate setting; startup failed before load."
+    },
+    {
+      "course": "club-focus-03",
+      "reason": "Extracted phase omitted original shared Key-camera frame-barrier logger; observation wait failed. Corrected04 retains original wrapper."
+    }
+  ],
+  "python_integration": {
+    "path": "build/oblivion-compat/sewer-escape/club-focus-broad-python-01/verification.json",
+    "source": {
+      "head": "cf3b58f95634fd3dcaeb9dab115e6cfa76cee80d",
+      "source_fingerprint": "ee5b5d5f41196297f5e2bf5d20539e4bb7a7279c75fc532edf462c3d85a470b2"
+    },
+    "results": {
+      "python": {
+        "executed": 580,
+        "passed": true,
+        "log_sha256": "99dfefd8fef90846dedf43dbfd8180dc529656ce84f34fbed14473c800661edd"
+      }
+    }
+  },
+  "focused_tests": {
+    "path": "build/oblivion-compat/sewer-escape/club-focus-focused-01.log",
+    "executed": 18,
+    "passed": true
+  },
+  "engine_gate_reuse": "C++ unchanged;2223 normal/2223 ASan-UBSan engine provenance retained in SEWER-DESCENDING-RECOVERY-VERIFICATION.json.",
+  "rendered_review": [
+    {
+      "path": "build/oblivion-compat/sewer-escape/club-focus-course-01/phase3-club-equipped-world.png",
+      "sha256": "3a68abf8eacbf9652b3b38c65bfbb7d744f86e2bc33ef9a585db39da190c134f",
+      "inspected": true,
+      "notes": "Club visible on Player and HUD in textured key room; close third-person camera partly occludes view."
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/club-focus-course-01/phase4-key-door-destination.png",
+      "sha256": "a5f90359d2a037e5159e4f550b5e32e9467c80faf05623f5603277c85d3b7539",
+      "inspected": true,
+      "notes": "Dim textured destination door and Imperial Substructure location label visible; not a black frame."
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/club-focus-04/phase3-inventory-before-equip.png",
+      "sha256": "bb6c6cf10af4d7409199f6b3d50d63754e186222500e755a5e739466c9964430",
+      "inspected": true,
+      "notes": "Fresh inventory starts on top apparel row; retained item counts visible before Weapon-filter selection."
+    }
+  ],
+  "full_course_preparation": {
+    "segments": 67,
+    "actions": 10232,
+    "observer_syntax": "luajit -b passed; preparation only"
+  },
+  "remaining": "Ordinary early recovery for variable post-ambush health, new original-new-game full67 course, physical exterior exit, own outdoor reload/walk and complete native/input/every-save/rendered audits."
+}
