@@ -41,12 +41,18 @@ other rats beyond the wall to their original later sections. No state injection.
   harness with final66HP, the platform/gap navigation stalls, and the earlier
   missing-stance/controller setup failures. No acceptance was inferred from them.
 
-Next: original-new-game `full-escape-continuous-19` using the pinned13f2 runtime,
-all67 sections, guarded own-outdoor reload and read-only terminal auditor. The
-prepared manifest is `full19-assembly-02/full-escape.json` under the evidence root.
-No rendered game is live at this checkpoint. Record actual runtime identity
-immediately after launch and use the read-only progress monitor throughout.
-Do not weaken fights, splice saves or accept a loaded diagnostic as the full run.
+Correction committed97778d7ce8. Original-new-game `full-escape-continuous-19`
+is now running in actual PID410270 (driver410242), pinned13f2 runtime. Actual
+`runtime-identity.json` captured; first observed section1 at80HP. Manifest:
+`full19-assembly-02/full-escape.json` under the evidence root. Guarded own-outdoor
+reload PID410244 and read-only terminal auditor PID410245 are waiting for this
+run; their status files are `full19-outdoor-followup-status.json` and
+`full19-acceptance-audit-status.json`. These PIDs are historical observations:
+revalidate actual /proc identities before acting. Next action: monitor this
+same original PID with `wait-course-progress.py full-escape-continuous-19 40`.
+All67 sections, physical exit, own reload/walk and audits remain unaccepted.
+Do not restart a healthy job, weaken fights, splice saves or substitute a loaded
+diagnostic for full acceptance. Capture reload's actual identity when it starts.
 
 Earlier continuous17/18 evidence remains linked in
 [recovery prefix](SEWER-CONTINUOUS-RECOVERY-PREFIX-VERIFICATION.json),
