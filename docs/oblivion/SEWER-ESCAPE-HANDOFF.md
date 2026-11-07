@@ -42,12 +42,21 @@ recipe tests pass; full67-section assembly has10399 actions. C++ is unchanged.
 Follow-up15 correctly stopped without outdoor reload. Recovery committed81c9629a80;
 fresh580 Python tests pass, fingerprint
 `662012fac3ad6f70bb59cc46149d09566444f17882b20ecbd0d243306491f2cb`.
-Continuous16 is now live, original-new-game PID380028, immutable swept-recovery
-ELF5fb2d043179117857bc19c4c9b832601910b379cfafe94a488a2e79e87ef1e5a.
-Its actual runtime identity, automatic archive/watch and guarded own-outdoor
-reload are under `build/oblivion-compat/sewer-escape/`. No manual input so far.
+Continuous16 passed all3 native Player rat kills, post-wall recovery to56HP,
+looting and equipment, then stopped at11: both authored corridor runners reached
+terminal `bounded-repath-exhausted`. Actual post-heal F5seq23 is parsed/native
+exact; no loads. Original-new-game PID380028 ended after an ordinary diagnostic
+F5seq29. That extra input and intentional stop are separately recorded; this is
+not continuous acceptance. No outdoor reload was launched.
 
-Monitor continuous16 and its guarded own-outdoor reload. Accept only all67 in one PID, actual outdoor
+Current chunk: diagnose the runner stalls using genuine pre-corridor F5seq28.
+Compare earlier grounded solver89947 against swept solver5fb2 with the same
+ordinary phase1 route and readonly observer. Do not assume the new physics
+correction caused the failure until that comparison supplies evidence. The
+baseline diagnostic is `runner16-grounded-baseline-01`; matched swept manifest is
+prepared. Never reset terminal actor packages or splice a diagnostic into proof.
+
+After the runner correction, launch another fresh full route and guarded own-outdoor reload. Accept only all67 in one PID, actual outdoor
 save/reload and ordinary walking, all input/native/save audits and rendered review.
 Keep one rendered game at a time, preserve healthy jobs, never overwrite live
 snapshots, and make no source edits/commits while `run_checks.py` is live.

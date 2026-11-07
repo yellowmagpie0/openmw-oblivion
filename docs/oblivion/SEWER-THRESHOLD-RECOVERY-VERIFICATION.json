@@ -383,5 +383,39 @@
         "log_sha256": "8c314b94bd851290ec826261a941db23d398a232f610e8efa41f3d67cc19449c"
       }
     }
+  },
+  "continuous16_prefix": {
+    "scope": "Original-new-game continuous16 prefix only: all3 native Player rat kills and original54HP recovery target. Full escape not yet accepted.",
+    "game_pid": 380028,
+    "save_sequence": 23,
+    "save_sha256": "aaafa0524309586664657fcb91c0f37e6b18d85de0d2acceaff75fc8f8a3ce00",
+    "parsed_native_exact": true,
+    "player_health": 56.0,
+    "rats": [
+      {
+        "actor": "content:oblivion.esm:037e40",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e41",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e42",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    ],
+    "no_loads": true,
+    "manual_input_records": [],
+    "terminal_outcome": "Incomplete at section11: two authored corridor runners reached bounded-repath-exhausted. Intentional stop after ordinary diagnostic F5seq29; no outdoor reload."
   }
 }
