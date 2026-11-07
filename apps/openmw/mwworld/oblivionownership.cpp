@@ -127,7 +127,7 @@ namespace MWWorld
             // Raw bit8 filters Player membership in this exact native query;
             // it is independent of the named Hidden/Evil/SpecialCombat flags.
             if (!player || !(faction->mFactionFlags.value_or(0) & 8))
-                for (const auto& membership : base->mFactions)
+                for (const auto& membership : world.getOblivionActorFactions(*baseKey))
                     if (ESM::FormId::fromUint32(membership.faction) == cell->mOwner)
                     {
                         input.mActorFactionRank = membership.rank;

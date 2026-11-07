@@ -160,6 +160,7 @@
 #include "apps/openmw/mwstate/saveadmission.hpp"
 
 #include "oblivionworldfixture.hpp"
+#include <components/esm4/factionrules.hpp>
 #include <components/esm4/loadlvsp.hpp>
 
 namespace
@@ -35533,16 +35534,26 @@ TEST(OblivionWorldTest, NativeNpcAndCreatureFactionConditionsReadFirstSignedBase
     for (int rank = -128; rank < 128; ++rank)
     {
         SCOPED_TRACE(rank);
-        // A later duplicate with the opposite membership cannot replace the first.
+        // A query over an already constructed native list reads its first
+        // signed match. The store fields below instead contain authored SNAM
+        // entries: native NPC load5280FD..528122 calls4675E0 for each one.
         const std::vector<ESM4::ActorFaction> entries{{0x851, 0, 0, 0, 0},
             {0x850, static_cast<std::int8_t>(rank), 0, 0, 0},
             {0x850, static_cast<std::int8_t>(rank == -1 ? 0 : -1), 0, 0, 0}};
+        EXPECT_EQ(ESM4::factionMembership(entries, {}, 0x850, false, 0xff), rank != -1);
         npcBase.mFactions = entries; creatureBase.mFactions = entries;
         store.getWritable<ESM4::Npc>().insertStatic(npcBase, npcBase.mFormKey);
         store.getWritable<ESM4::Creature>().insertStatic(creatureBase, creatureBase.mFormKey);
         for (const auto& actor : {npc, creature})
+        {
+            // Construction updates the newly inserted -1 to0, or removes
+            // the previously inserted membership at the later -1. Preserve
+            // the first-match query rule without treating SNAM as a live list.
             EXPECT_EQ(ai.evaluateDialogueConditions(actor, {}, std::span(&condition, 1)),
-                rank == -1 ? ESM4::ConditionResult::False : ESM4::ConditionResult::True);
+                rank == -1 ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+            EXPECT_EQ(world.getOblivionFactionRank(actor.getCellRef().getFormKey(), factionKey),
+                rank == -1 ? 0 : -1);
+        }
     }
     condition.mParameter1.mReferenceKey = ESM::FormKey::content("headless.esm", 0x852);
     EXPECT_EQ(ai.evaluateDialogueConditions(npc, {}, std::span(&condition, 1)), ESM4::ConditionResult::False);

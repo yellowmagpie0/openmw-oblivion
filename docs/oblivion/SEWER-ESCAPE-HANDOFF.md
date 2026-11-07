@@ -2,124 +2,112 @@
 
 ## Target and remaining acceptance
 
-Play the original opening in one new-game process from prison through all67
-selected sections and the physical sewer exit, then fresh-load that process's
-own outdoor save. Use ordinary controls; no actor/health/position/quest injection,
-skipped required fights, restarted or spliced state qualifies.
-**Full escape remains incomplete.** Loaded courses below are diagnostic evidence.
+One original new-game process through all67 selected sections, physical sewer
+exit and then fresh-process load of that run's own outdoor save. Ordinary input;
+no actor/health/position/quest injection, skipped required fights or spliced states.
+**Full escape remains incomplete.** Remaining gates:
 
-Remaining acceptance gaps:
+- Current full continuous run, its own outdoor reload, whole-state/input/native
+  audit and rendered review. Retain only the5 independently reviewed distant
+  Peryite tick1 SetUnconscious startup deferrals; no story-command waivers.
+- Current full ASan/UBSan engine integration. Other M15/S7/E1/character-choice
+  gates remain separate; do not call them accepted from this course.
 
-- Original story mutation: shared-base SetFactionRank80.
-  Do not waive these unsupported events in the final native audit.
-- One uninterrupted new-game67-section course and its own outdoor reload.
-- Current implementation gates, native/input/save audit and rendered review of
-  that actual run; other M15/S7/E1/character-choice gates remain separate.
+## Current chunk and evidence
 
-## Current bounded chunk
+All three remaining story commands now have normal-input and own-reload proof:
 
-The editable course now physically reaches the exterior from a genuine prison-
-origin checkpoint chain. Last chunk is verified in `final-three-02`: original65–67
-passes all120 top-level actions, western rat0666a7 is a native Player kill,
-upper tunnel/exit review/original04bed7 physical exit and distinct MQ01 exit88.
-Player outside Tamriel005e3d alive35.14HP, Warrior class023787/birthsign01fd9d,
-Amulet0250a0 once, Baurus key01e702 gone, armor/axe equipped, chargen tracking off.
-Its actual outdoor save8 SHA9b79b885…221ae fresh-loads in another process;
-whole entry0diff, same health/inventory and a new actual F5. All6 actual saves
-across both runs are receipt-hashed/parsed-native exact. All input delivered,
-observer findings0, native error0/pending0. Source native unsupported1 is the
-unimplemented exit SetCrimeGold; fresh reload unsupported0. This is not clean
-full native acceptance. [Rat/exit/reload proof](SEWER-WESTERN-RAT-EXIT-VERIFICATION.json).
+- SetOwnership58: actual31-action Sanctum entry/reload retains door022812 owner
+  EmperorFaction0150bc and lock100. [Proof](SEWER-OWNERSHIP-VERIFICATION.json).
+- SetCrimeGold exit: original67's76actions and own outdoor reload pass; actual
+  script resets legal bounty without replacing AV37 modifiers. All3 actual F5s
+  receipt-hashed/parsed-native exact, entry0diff, native end0/0/0. Reload naturally
+  completes MQ01 stages90/100 through its original five-second timer; completed88
+  remains. [Proof](SEWER-SETCRIMEGOLD-VERIFICATION.json).
+- SetFactionRank80: original59–62 all247actions pass from the real Owner58 save,
+  plus own fresh-process class-checkpoint reload. Base01e6ff retains ordered
+  [[014a20,1],[0227bc,0]], subsequent aggression50, native final-assassin death,
+  Warrior class/birthsign, Amulet once, Player28.04HP and original door owner/lock.
+  All7 actual saves receipt-hashed/parsed-native exact; both entries0diff (the
+  initial89→90 promotion adds only version and7 null faction defaults). Reload
+  read-only GetFactionRank returns1; original write once, no replay. Both runs
+  native end0/0/0, all input delivered. [Proof](SEWER-SETFACTIONRANK-VERIFICATION.json),
+  [independent original setter/loader proof](SEWER-SETFACTIONRANK-ORACLE.json).
 
-Source65 keeps its original11 safe approach points/checkpoint, then first4
-original66 bridge vectors. It uses read-only walk-only navigation with actual
-Player bounds, ordinary mouse/W inputs until the same rat is within100, then
-existing attacks. Source66 resumes at original6th point. The obstructed former
-5th bridge vector is replaced by physical navigation around its stone corner.
-No encounters/loot skipped. Full67/10460 LuaJIT and18 assembly/repeat Python pass.
-The immutable runtime retains original normal2217/sanitized2217 evidence from
-[the follower chunk](SEWER-FOLLOWER-YIELD-VERIFICATION.json).
+Schema90 owns ordered full shared-base faction replacement with stable identities;
+absent retains authored content, explicit empty retains removal. Script rank,
+conditions, reactions, primary faction and ownership/furniture views use the same
+saved authority. Incoming load cannot borrow outgoing factions. Authored records
+remain immutable. Native first-signed-match query remains checked separately from
+SNAM construction: original loader5280FD..528122 dispatches each entry to4675E0.
 
-SetOwnership58 is implemented and verified through the original31-action Sanctum
-entry and its own fresh-process reload. Door022812 retains EmperorFaction0150bc
-and lock100; both actual final saves are receipt-hashed/parsed-native exact,
-whole reload entry0diff, all inputs delivered, native end0/0/0. Focused2 engine
-cases pass, including shifted content indices/default authored Player base and
-invalid argument rejection. One earlier runtime F5 was superseded before archive;
-only its final save is claimed. [Ownership proof](SEWER-OWNERSHIP-VERIFICATION.json).
-Broader normal/sanitizer integration gates will be batched with remaining commands.
+Current gates under `build/oblivion-compat/sewer-escape/`:
 
-SetCrimeGold is implemented using the native requested-minus-queried-bounty delta
-and owned normal/Player alternate buckets, preserving AV37 modifiers. Focused4
-engine,12 original-instruction cases and18 assembly/repeat Python pass. Original67
-exit76actions and its own outdoor reload5actions pass with all3 actual F5s
-receipt-hashed/parsed-native exact, both whole entry0diff, all input delivered and
-native end0/0/0. Outdoor save4 SHAa468527d…8e10ff8; Player35.14HP/bounty0.
-Reload naturally completes MQ01 stages90/100 via original five-second timer;
-completed88 retained, no exit/bounty replay. Earlier focused recipe missing hat
-mapping failed and remains failed; editable67 now carries the established map.
-[Crime-gold proof](SEWER-SETCRIMEGOLD-VERIFICATION.json),
-[original instruction oracle](SEWER-SETCRIMEGOLD-ORACLE.json).
+- `story-faction-focused-01`:188 runtime-state components +6 engine pass.
+- `story-faction-focused-02`:6 strengthened engine cases pass.
+- `story-faction-focused-03`:7 engine cases pass, including all256 signed ranks
+  on NPC/creature source construction and first-match primitive queries.
+- `story-faction-broad-normal-01`: all3265 components pass. Its2220/2221 engine
+  failure remains recorded; corrected duplicate-SNAM fixture is explained in
+  the proof. No production change was needed after that run.
+- `story-faction-broad-normal-02`: all2221 engine pass.
+- `story-faction-python-02`: all580 Python pass. Retain original fingerprints;
+  later changes are C++ regression expectations/docs, not Python implementation.
 
-No build helper or rendered game is live at this handoff. Always recheck actual
-processes. Ignored `reunion-current-handles.json` may lag; actual reports/processes
-are authoritative. Evidence paths below are under `build/oblivion-compat/sewer-escape/`.
+## Live work — recheck actual processes
+
+`full-escape-continuous-11` is a fresh original new game using immutable
+`story-faction-runtime-snapshot-01`: ELF009b22e4…8fd6dc, matching own resources
+version18c0cb4628, immutable normal libraries from `reunion-runtime-snapshot-01/lib`.
+Full67/10460 is regenerated in `story-faction-full-assembly-01/full-escape.json`;
+LuaJIT compile passes, new-game1/no load flag, no optional per-frame world report.
+Actual game PID335271, driver335211, supervisor335210, automatic archiver335298,
+watcher335299. It reached original stage19 at09:47:52UTC; **not terminal acceptance**.
+Inspect launcher status, actual process state and incremental watch before acting.
+One healthy game only; do not restart on an observation timeout or overwrite its
+ELF/resources/libraries. Current handles JSON may lag actual processes.
+
+Sanitizer direct prebuild is still preparing `build/m15-sanitize/openmw-tests`:
+exec session27400, log `story-faction-sanitizer-development-build-01.log`.
+It is not sanitizer test evidence. Wait until its actual build terminates before
+starting a helper in the same build directory. Use independent Xvfb -displayfd
+for sanitizer gates; prior simultaneous xvfb-run collision lost X11 and failed79
+cases, retained. Engine sanitizer leak1; rendered probes leak0 unless stated.
+No tracked/nonignored edits or commits while any run_checks.py helper is live.
 
 ## Next action
 
-1. Ownership58 and exit SetCrimeGold runtime/reloads are complete; retain their
-   focused evidence and batch broader integration gates with faction-rank work.
-2. Implement shared-base faction-rank state/queries/save behavior for original
-   final-assassin SetFactionRank80. Full replacement membership with stable
-   faction identities must retain ordering and signed ranks, including empty-list
-   override versus unchanged content. Existing save schema89 lacks this state.
-   Cover shared references, condition/reaction consumers, old saves and fresh
-   reload; keep authored record definitions immutable. Original command/basic
-   shared-base ownership inspected independently in pinned executable.
-   Ignored `original-story-ownership-faction-commands.json`,
-   `original-story-command-handler-addresses.json`,
-   `original-setfactionrank-execute.txt`, `original-faction-rank-setter.txt`.
-3. Batch focused checks during changes and broad required normal/sanitizer gates
-   at integration. No tracked/nonignored edits or commits while run_checks.py lives.
-   Allocate independent Xvfb servers with -displayfd; one prior simultaneous
-   xvfb-run gate lost X11 and failed79 cases, preserved, isolated retry passed.
-4. Regenerate full67 from committed editable sources. Its optional per-frame
-   whole-world script report is now disabled; actual F5/native receipts remain.
-   Do not reuse older prepared full manifests. Run a fresh `full-escape-continuous-11`
-   only if that output does not exist. Preserve healthy live games on observation
-   timeouts. Attach read-only save archiver immediately.
-5. On success reload that actual outdoor save in a fresh process, audit with
-   ignored `verify-full-escape.py`, inspect captures and requirements. Audit
-   currently allows only5 independently reviewed distant Peryite startup
-   SetUnconscious deferrals. Full escape is not complete until all gates pass.
+1. Check the live full course and sanitizer prebuild. Preserve healthy processes.
+   On observed failure, finish that bounded blocker and retain original failure.
+2. When sanitizer prebuild terminates, run full engine helper with ASan leak1 /
+   UBSan halt, separate Xvfb and fresh output. Existing ignored isolated launcher
+   has a hardcoded prior name; adapt a new ignored launcher/output first.
+3. If full67 passes, fresh-load that run's own actual outdoor archive, obtain a
+   new real F5 and inspect captures. `verify-full-escape.py` now also requires
+   ownership/faction/bounty state, once-only original writes and western-rat kill.
+   `compare-course-entry.py` records only the narrow89→90 default promotion when
+   appropriate; a90→90 own reload must compare without migration.
+4. Record exact current gate/runtime provenance and commit completed chunks.
+   Never push without explicit request. Full escape is complete only after all
+   remaining gates pass; the loaded diagnostic chain is not a substitute.
 
-## Reusable evidence and runtime handling
+## Reusable route evidence and limits
 
-- `d59607ee68`: [native awareness conditions/controller map](SEWER-REUNION-DETECTION-VERIFICATION.json),
-  independent [original GetDetected wrapper](SEWER-GETDETECTED-ORACLE.json).
-  Full3263 component/2216 normal engine/578 Python and2216 sanitized engine pass.
-- `aa477189fa`: [waiting follower yielding](SEWER-FOLLOWER-YIELD-VERIFICATION.json),
-  focused43/full2217 normal/full2217 ASan-UBSan engine; stage50→52/54/56 passive
-  actual F5 native-exact38.50HP/all escorts alive/whole entry0diff.
-- `569eba4d47`: [visible manhole targeting](SEWER-MANHOLE-TARGET-VERIFICATION.json),
-  actual0270e2→0272f2 entry,37.08HP, native-exact F5, whole entry0diff, no findings.
-- `follower-yield-runtime-snapshot-01`: immutable normal ELF with its own matching
-  resources/version d59607ee68. Copied immutable normal libs are in snapshot01/lib.
-  A previous pairing with6be7e3f695 resources was wrong; raw mismatch errors remain.
-- Do not overwrite any live rendered process's executable/resources/shared libs.
-  Only one rendered game. Engine suite leak1; rendered probes leak0 unless stated.
-  Commit self-contained verified chunks; never push without explicit request.
+Original65–67 `final-three-02` physically reaches outside and its own outdoor
+save reloads. Source65 keeps11 safe points +4 raised-bridge points, then read-only
+navigation with real Player bounds and ordinary mouse/W to reach the western rat.
+Source66 resumes after the obstructed wall point; source64 aims at an actual
+visible manhole surface before Space. No encounters/loot skipped.
+[Route proof](SEWER-WESTERN-RAT-EXIT-VERIFICATION.json),
+[manhole proof](SEWER-MANHOLE-TARGET-VERIFICATION.json),
+[follower yielding](SEWER-FOLLOWER-YIELD-VERIFICATION.json),
+[native detection/controller map](SEWER-REUNION-DETECTION-VERIFICATION.json).
 
-## Known limits
-
-Held torches light the renderer but are omitted from native perception lighting.
-Creature corpses may remain upright; armor mechanics work but paperdoll appearance
-can lag. Birthsign descriptions are blank; loot is take-all only. UI courses are
-silent and linked conversations synchronous. General NPC spell fallback/Player
-Flare remain unsupported. The outdoor capture was reviewed: water/terrain/lighting
-are visibly rough; no complete exterior rendering or wilderness playthrough claim.
-Other character choices and unrelated full milestone gates remain open.
-
-Detailed preceding checkpoints and retained failures:
-[2026-11-07 checkpoint archive](SEWER-ESCAPE-CHECKPOINTS-2026-11-07.md) and
-[earlier history](SEWER-ESCAPE-HISTORY.md). Keep their original provenance.
+Known limits: held torch omitted from perception light; creature corpses may stay
+upright; armor appearance can lag; birthsign descriptions blank; loot take-all
+only; silent/synchronous dialogue; general NPC spell fallback/Player Flare missing.
+Post-class capture briefly showed an indoor breath bar; own reload cleared it.
+Outdoor terrain/water/lighting remain visibly rough; no complete wilderness or
+exterior-rendering claim. Historical detail:
+[2026-11-07 checkpoints](SEWER-ESCAPE-CHECKPOINTS-2026-11-07.md),
+[earlier history](SEWER-ESCAPE-HISTORY.md).

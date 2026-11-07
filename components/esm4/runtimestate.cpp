@@ -1152,10 +1152,19 @@ namespace ESM4
 
     void RuntimeActorBaseOverride::validate() const
     {
-        if (mBase.isNull() || (mValues.empty() && !mEssential) || mValues.size() > 72
+        if (mBase.isNull() || (mValues.empty() && !mEssential && !mFactions) || mValues.size() > 72
             || (mKind != ActorBaseKind::Npc && mKind != ActorBaseKind::Creature))
             throw std::runtime_error("Invalid TES4 native actor base override");
         std::set<std::uint8_t> seen;
+        if (mFactions)
+        {
+            if (mFactions->size() > sMaximumCollectionSize)
+                throw std::runtime_error("TES4 actor base faction list exceeds limit");
+            std::set<ESM::FormKey> factions;
+            for (const auto& faction : *mFactions)
+                if (!faction.mFaction.isContent() || !factions.insert(faction.mFaction).second)
+                    throw std::runtime_error("Invalid or duplicate TES4 actor base faction");
+        }
         try
         {
             for (const auto& value : mValues)
@@ -2029,6 +2038,8 @@ namespace ESM4
             base.validate();
             if (mVersion < 84 && base.mEssential)
                 throw std::runtime_error("Essential base overrides require runtime-state version84");
+            if (mVersion < 90 && base.mFactions)
+                throw std::runtime_error("Faction base overrides require runtime-state version90");
             if (!overriddenBases.insert(base.mBase).second)
                 throw std::runtime_error("Duplicate TES4 native actor base override");
         }
@@ -3427,6 +3438,19 @@ namespace ESM4
                 }
                 if (mVersion >= 84)
                     writer.integer<std::uint8_t>(base.mEssential ? (*base.mEssential ? 2 : 1) : 0);
+                if (mVersion >= 90)
+                {
+                    writer.integer<std::uint8_t>(base.mFactions.has_value());
+                    if (base.mFactions)
+                    {
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(base.mFactions->size()));
+                        for (const auto& faction : *base.mFactions)
+                        {
+                            writeKey(writer, faction.mFaction);
+                            writer.integer(faction.mRank);
+                        }
+                    }
+                }
             }
         }
         if (mVersion >= 12)
@@ -4611,6 +4635,24 @@ namespace ESM4
                     if (essential > 2)
                         throw std::runtime_error("Invalid TES4 essential base flag");
                     if (essential) base.mEssential = essential == 2;
+                }
+                if (result.mVersion >= 90)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1) throw std::runtime_error("Invalid TES4 base faction presence");
+                    if (present)
+                    {
+                        base.mFactions.emplace();
+                        const auto factionCount = reader.count();
+                        for (std::uint32_t j = 0; j < factionCount; ++j)
+                        {
+                            const auto text = reader.string();
+                            const auto faction = ESM::FormKey::deserialize(text);
+                            if (!faction.isContent() || faction.serialize() != text)
+                                throw std::runtime_error("Invalid or noncanonical TES4 base faction identity");
+                            base.mFactions->push_back({faction, reader.integer<std::int8_t>()});
+                        }
+                    }
                 }
                 result.mNativeActorBases.push_back(std::move(base));
             }
@@ -6077,6 +6119,23 @@ namespace ESM4
                 stream << ']';
                 if (mVersion >= 84)
                     stream << ",\"essential\":" << (base.mEssential ? (*base.mEssential ? "true" : "false") : "null");
+                if (mVersion >= 90)
+                {
+                    stream << ",\"factions\":";
+                    if (!base.mFactions) stream << "null";
+                    else
+                    {
+                        stream << '[';
+                        for (std::size_t j = 0; j < base.mFactions->size(); ++j)
+                        {
+                            if (j) stream << ',';
+                            const auto& faction = (*base.mFactions)[j];
+                            stream << "[\"" << escapeJson(faction.mFaction.serialize()) << "\","
+                                   << static_cast<int>(faction.mRank) << ']';
+                        }
+                        stream << ']';
+                    }
+                }
                 stream << '}';
             }
             stream << ']';

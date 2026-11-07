@@ -2745,23 +2745,8 @@ namespace MWWorld
             if (const auto* to = race(destination, targetNpc))
                 if (const auto value = from->mDisposition.find(to->mId); value != from->mDisposition.end())
                     raceReaction = value->second;
-        const auto nativeFactions = [](const auto& authored) {
-            std::vector<ESM4::ActorFaction> result;
-            // NPC SNAM loading calls 4675E0: new membership at the head,
-            // existing membership updates in place; rank -1 removes it only
-            // when it already exists. Keep the editable record order intact.
-            for (const auto& entry : authored)
-            {
-                if (ESM::FormId::fromUint32(entry.faction).isZeroOrUnset()) continue;
-                const auto found = std::ranges::find(result, entry.faction, &ESM4::ActorFaction::faction);
-                if (found == result.end()) result.insert(result.begin(), entry);
-                else if (entry.rank == -1) result.erase(found);
-                else found->rank = entry.rank;
-            }
-            return result;
-        };
-        const auto sourceFactions = nativeFactions(sourceNpc ? sourceNpc->mFactions : sourceCreature->mFactions);
-        const auto targetFactions = nativeFactions(targetNpc ? targetNpc->mFactions : targetCreature->mFactions);
+        const auto sourceFactions = getOblivionActorFactions(*sourceBase);
+        const auto targetFactions = getOblivionActorFactions(*targetBase);
         std::int32_t sameReaction = 0, otherReaction = 10000, sameRank = -1, otherRank = -1;
         for (const auto& from : sourceFactions)
         {
@@ -3057,6 +3042,86 @@ namespace MWWorld
                 for (const auto& entry : found->second)
                     if (entry.mTarget == other) return entry.mCount;
         return 0;
+    }
+
+    std::vector<ESM4::ActorFaction> World::getOblivionActorFactions(const ESM::FormKey& base) const
+    {
+        std::vector<ESM4::ActorFaction> result;
+        if (mGameProfile != ESM::GameProfile::Oblivion) return result;
+        const std::vector<ESM4::RuntimeActorFaction>* factions = nullptr;
+        if (mPendingOblivionRuntimeState)
+        {
+            const auto& bases = mPendingOblivionRuntimeState->mNativeActorBases;
+            const auto found = std::ranges::find(bases, base, &ESM4::RuntimeActorBaseOverride::mBase);
+            if (found != bases.end() && found->mFactions) factions = &*found->mFactions;
+        }
+        else if (mOblivionCombat) factions = mOblivionCombat->getBaseFactions(base);
+        if (factions)
+        {
+            ESM::FormKeyResolver resolver(mContentFiles);
+            for (const auto& membership : *factions)
+            {
+                const auto id = resolver.toFormId(membership.mFaction);
+                if (!id) throw std::runtime_error("Saved native faction has no content identity");
+                result.push_back({id->toUint32(), membership.mRank, 0, 0, 0});
+            }
+            return result;
+        }
+        const auto* npc = mStore.search<ESM4::Npc>(base);
+        const auto* creature = mStore.search<ESM4::Creature>(base);
+        const auto authored = npc ? std::span<const ESM4::ActorFaction>(npc->mFactions)
+            : creature ? std::span<const ESM4::ActorFaction>(creature->mFactions)
+                       : std::span<const ESM4::ActorFaction>{};
+        // Native SNAM construction uses the same list setter as the command:
+        // insert at head, update in place, remove existing entries at rank -1.
+        for (const auto& entry : authored)
+        {
+            if (ESM::FormId::fromUint32(entry.faction).isZeroOrUnset()) continue;
+            const auto found = std::ranges::find(result, entry.faction, &ESM4::ActorFaction::faction);
+            if (found == result.end()) result.insert(result.begin(), entry);
+            else if (entry.rank == -1) result.erase(found);
+            else found->rank = entry.rank;
+        }
+        return result;
+    }
+
+    std::int8_t World::getOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction) const
+    {
+        const auto base = getOblivionReferenceBaseKey(actor);
+        const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(faction);
+        if (!base || !id || !mStore.search<ESM4::Faction>(faction)) return -1;
+        const auto entries = getOblivionActorFactions(*base);
+        const auto found = std::ranges::find(entries, id->toUint32(), &ESM4::ActorFaction::faction);
+        return found == entries.end() ? -1 : found->rank;
+    }
+
+    bool World::setOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction, std::int32_t rank)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat) return false;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        const auto base = getOblivionReferenceBaseKey(actor);
+        const auto* definition = mStore.search<ESM4::Faction>(faction);
+        if (!base || !definition || (definition->mFlags & ESM4::Rec_Deleted)) return false;
+        const auto* npc = mStore.search<ESM4::Npc>(*base);
+        const auto* creature = mStore.search<ESM4::Creature>(*base);
+        if ((!npc && !creature) || (npc && (npc->mFlags & ESM4::Rec_Deleted))
+            || (creature && (creature->mFlags & ESM4::Rec_Deleted))) return false;
+        ESM::FormKeyResolver resolver(mContentFiles);
+        const auto id = resolver.toFormId(faction);
+        if (!id) return false;
+        auto entries = getOblivionActorFactions(*base);
+        const auto found = std::ranges::find(entries, id->toUint32(), &ESM4::ActorFaction::faction);
+        const auto stored = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(rank));
+        if (found == entries.end()) entries.insert(entries.begin(), {id->toUint32(), stored, 0, 0, 0});
+        else if (stored == -1) entries.erase(found);
+        else found->rank = stored;
+        std::vector<ESM4::RuntimeActorFaction> replacement;
+        for (const auto& entry : entries)
+            replacement.push_back({resolver.toFormKey(ESM::FormId::fromUint32(entry.faction)), entry.rank});
+        mOblivionCombat->setBaseFactions(*base,
+            creature ? ESM4::ActorBaseKind::Creature : ESM4::ActorBaseKind::Npc, std::move(replacement));
+        return true;
     }
 
     std::optional<bool> World::getOblivionEssentialOverride(const ESM::FormKey& base) const

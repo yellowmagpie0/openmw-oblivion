@@ -36,6 +36,7 @@
 #include <components/esm4/physicalcombat.hpp>
 #include <components/esm4/ability.hpp>
 #include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadfact.hpp>
 #include "../mwworld/class.hpp"
 #include "../mwworld/ptr.hpp"
 #include "../mwworld/player.hpp"
@@ -4419,12 +4420,29 @@ namespace MWMechanics
         return saved ? saved->mEssential : std::nullopt;
     }
 
+    const std::vector<ESM4::RuntimeActorFaction>* OblivionCombatService::getBaseFactions(const ESM::FormKey& base) const
+    {
+        const auto* saved = findActorBase(base);
+        return saved && saved->mFactions ? &*saved->mFactions : nullptr;
+    }
+
     void OblivionCombatService::setBaseEssential(const ESM::FormKey& base, ESM4::ActorBaseKind kind, bool essential)
     {
         auto candidate = findActorBase(base) ? *findActorBase(base) : ESM4::RuntimeActorBaseOverride{base, kind, {}};
         if (candidate.mKind != kind)
             throw std::invalid_argument("native essential base kind mismatch");
         candidate.mEssential = essential;
+        candidate.validate();
+        mActorBases.insert_or_assign(base, std::move(candidate));
+    }
+
+    void OblivionCombatService::setBaseFactions(const ESM::FormKey& base, ESM4::ActorBaseKind kind,
+        std::vector<ESM4::RuntimeActorFaction> factions)
+    {
+        auto candidate = findActorBase(base) ? *findActorBase(base) : ESM4::RuntimeActorBaseOverride{base, kind, {}};
+        if (candidate.mKind != kind)
+            throw std::invalid_argument("native faction base kind mismatch");
+        candidate.mFactions = std::move(factions);
         candidate.validate();
         mActorBases.insert_or_assign(base, std::move(candidate));
     }
@@ -7713,6 +7731,13 @@ namespace MWMechanics
                 ? false : nativeBaseIsCreature(base.mBase, store);
             if (creature != (base.mKind == ESM4::ActorBaseKind::Creature))
                 throw std::invalid_argument("native actor base override kind mismatch: " + base.mBase.serialize());
+            if (base.mFactions)
+                for (const auto& membership : *base.mFactions)
+                {
+                    const auto* faction = store.search<ESM4::Faction>(membership.mFaction);
+                    if (!faction || (faction->mFlags & ESM4::Rec_Deleted))
+                        throw std::invalid_argument("saved actor base faction is unresolved");
+                }
         }
         for (const auto& [base, count] : state.mNativeDeathCounts)
             if (base != ESM::FormKey::dynamic("player-base", 1))

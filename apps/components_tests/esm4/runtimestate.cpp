@@ -165,6 +165,51 @@ namespace
         }
     }
 
+    TEST(ESM4RuntimeState, FactionBaseReplacementRetainsSignedRanksOrderAndExplicitEmpty)
+    {
+        for (const auto kind : {ESM4::ActorBaseKind::Npc, ESM4::ActorBaseKind::Creature})
+        {
+            auto state = makeState();
+            ESM4::RuntimeActorBaseOverride base{ESM::FormKey::content("oblivion.esm", 0x800), kind, {}};
+            base.mFactions = {{ESM::FormKey::content("knights.esp", 0x801), -128},
+                {ESM::FormKey::content("oblivion.esm", 0x802), 127},
+                {ESM::FormKey::content("oblivion.esm", 0x803), -1}};
+            for (bool empty : {false, true})
+            {
+                if (empty) base.mFactions->clear();
+                state.mNativeActorBases = {base};
+                const auto decoded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+                EXPECT_EQ(decoded.mNativeActorBases, state.mNativeActorBases);
+                EXPECT_EQ(decoded.canonicalJson(), state.canonicalJson());
+                state.mVersion = 89;
+                EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+                state.mVersion = 90;
+            }
+            state.mVersion = 89;
+            state.mNativeActorBases.front().mFactions.reset();
+            state.mNativeActorBases.front().mEssential = false;
+            auto legacy = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_FALSE(legacy.mNativeActorBases.front().mFactions);
+            legacy.mVersion = 90;
+            EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary()).mNativeActorBases,
+                legacy.mNativeActorBases);
+        }
+    }
+
+    TEST(ESM4RuntimeState, FactionBaseReplacementRejectsDuplicateAndNoncontentIdentities)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorBaseOverride base{ESM::FormKey::content("oblivion.esm", 0x800), ESM4::ActorBaseKind::Npc, {}};
+        const ESM4::RuntimeActorFaction faction{ESM::FormKey::content("oblivion.esm", 0x801), 1};
+        base.mFactions = {faction, faction}; state.mNativeActorBases = {base};
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        for (const auto key : {ESM::FormKey{}, ESM::FormKey::dynamic("faction", 1)})
+        {
+            state.mNativeActorBases.front().mFactions = {{key, 1}};
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        }
+    }
+
     TEST(ESM4RuntimeState, binaryRoundTripPreservesEveryStateFamily)
     {
         const ESM4::RuntimeState expected = makeState();

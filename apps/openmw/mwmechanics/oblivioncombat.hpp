@@ -961,7 +961,10 @@ namespace MWMechanics
         // actors change too; newly published references inherit the override.
         // No pointers survive the call. Event/cache policy remains caller-owned.
         std::optional<bool> getBaseEssential(const ESM::FormKey& base) const;
+        const std::vector<ESM4::RuntimeActorFaction>* getBaseFactions(const ESM::FormKey& base) const;
         void setBaseEssential(const ESM::FormKey& base, ESM4::ActorBaseKind kind, bool essential);
+        void setBaseFactions(const ESM::FormKey& base, ESM4::ActorBaseKind kind,
+            std::vector<ESM4::RuntimeActorFaction> factions);
         void setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,
             std::int32_t requested, std::span<const MWWorld::Ptr> residents);
         // Batch native attribute/skill form writes. Resource form inputs,

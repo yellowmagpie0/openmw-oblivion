@@ -2687,8 +2687,20 @@ namespace MWWorld
             trace("addachievement pc-noop");
             return std::int64_t(0);
         }
-        if (name == "getfactionrank")
-            return std::int64_t(-1);
+        if (name == "getfactionrank" || name == "setfactionrank")
+        {
+            const bool setting = name == "setfactionrank";
+            if (arguments.size() != (setting ? 2 : 1))
+                throw ObScript::RuntimeError("OBSV117", "Faction rank requires a faction and, for SetFactionRank, a rank", name);
+            const auto faction = keyFromValue(argument(0));
+            if (!setting)
+                return std::int64_t(faction ? mWorld.getOblivionFactionRank(objectKey(), *faction) : -1);
+            if (!faction || !mWorld.setOblivionFactionRank(objectKey(), *faction, boundedCount(argument(1))))
+                throw ObScript::RuntimeError("OBSV117", "SetFactionRank requires a resolved actor and faction", name);
+            trace("setfactionrank ref=" + objectKey().serialize() + " faction=" + faction->serialize()
+                + " rank=" + std::to_string(mWorld.getOblivionFactionRank(objectKey(), *faction)));
+            return std::int64_t(0);
+        }
         if (name == "getdestroyed")
         {
             const ESM4::RuntimeReferenceState* state = referenceState(objectKey());
@@ -3196,7 +3208,7 @@ namespace MWWorld
         static const std::set<std::string, std::less<>> deferred{
             "showmap",
             "cast", "addspell", "removespell",
-            "setquestobject", "setfactionrank", "modfactionrank",
+            "setquestobject", "modfactionrank",
             "setunconscious" };
         if (deferred.contains(name))
         {

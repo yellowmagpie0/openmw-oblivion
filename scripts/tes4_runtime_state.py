@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 89
+CURRENT_VERSION = 90
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -932,7 +932,22 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         essential = base_override.get("essential")
         if essential is not None and (version < 84 or type(essential) is not bool):
             raise RuntimeStateError("Invalid or unsupported essential base override")
-        if len(values) > 72 or (not values and essential is None):
+        factions = base_override.get("factions")
+        if factions is not None:
+            if version < 90:
+                raise RuntimeStateError("Faction base overrides require version90")
+            entries = check_collection(factions, "actor base factions")
+            seen_factions = set()
+            for entry in entries:
+                if not isinstance(entry, list) or len(entry) != 2:
+                    raise RuntimeStateError("Invalid actor base faction")
+                faction, rank = entry
+                native_key(faction)
+                if (not faction.startswith("content:") or faction in seen_factions
+                        or type(rank) is not int or not -128 <= rank <= 127):
+                    raise RuntimeStateError("Invalid or duplicate actor base faction")
+                seen_factions.add(faction)
+        if len(values) > 72 or (not values and essential is None and factions is None):
             raise RuntimeStateError("Invalid TES4 native actor base value count")
         seen_values: set[int] = set()
         for entry in values:
@@ -2971,6 +2986,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if essential > 2:
                     raise RuntimeStateError("Invalid essential base override")
                 base["essential"] = None if essential == 0 else essential == 2
+            if version >= 90:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid base faction presence")
+                base["factions"] = [[reader.string(), reader.unpack("<b")] for _ in range(reader.count())] if present else None
             result["native_actor_bases"].append(base)
     if version >= 12:
         result["native_actor_life"] = [
@@ -3790,6 +3810,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             if version >= 84:
                 essential = base.get("essential")
                 writer.pack("<B", 0 if essential is None else 2 if essential else 1)
+            if version >= 90:
+                factions = base.get("factions")
+                writer.pack("<B", factions is not None)
+                if factions is not None:
+                    writer.pack("<I", len(factions))
+                    for faction, rank in factions:
+                        writer.string(faction)
+                        writer.pack("<b", rank)
     if version >= 12:
         lives = sorted(state.get("native_actor_life", []), key=lambda life: life["actor"])
         writer.pack("<I", len(lives))
@@ -4665,6 +4693,9 @@ def _upgrade_base_essential(state: dict[str, Any]) -> None:
         if state.get("schema_version", 1) < 84 and base.get("essential") is not None:
             raise RuntimeStateError("Legacy runtime cannot contain essential base overrides")
         base.setdefault("essential", None)
+        if state.get("schema_version", 1) < 90 and base.get("factions") is not None:
+            raise RuntimeStateError("Legacy runtime cannot contain faction base overrides")
+        base.setdefault("factions", None)
 
 
 def _upgrade_process_alerts(state: dict[str, Any]) -> None:

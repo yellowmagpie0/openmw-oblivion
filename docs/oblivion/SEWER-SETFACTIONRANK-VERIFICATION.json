@@ -1,0 +1,418 @@
+{
+  "passed": true,
+  "scope": "Shared-base native faction rank implementation, original59-62 stage80 encounter and own fresh-process class-checkpoint reload. Full continuous escape and sanitizer integration remain separate pending gates.",
+  "schema": 90,
+  "behavior": "Ordered full base faction replacement; stable identities, signed ranks, explicit empty versus absent, immutable authored definitions. Script rank, both condition paths, reactions, primary and ownership/furniture queries share the authority. Incoming load uses incoming overrides without borrowing outgoing state.",
+  "original_oracle": "SEWER-SETFACTIONRANK-ORACLE.json",
+  "runtime": {
+    "openmw_sha256": "009b22e4b28973a075566e6748f706cb731341bbc54755c81e44fac7408fd6dc",
+    "source": {
+      "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+      "source_fingerprint": "3872c595cc07350ac3d9c94bc235f619d8e7307d1a26968a4dfd8e35deae389f"
+    },
+    "resources_version": "0.52.0\n18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b\n\n",
+    "immutable_libraries": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib",
+    "schema": 90,
+    "scope": "Current native story commands including shared-base faction membership and primary-query projection; actual original stage80 runtime/reload and broader gates pending"
+  },
+  "current_game_binary_matches_runtime_snapshot": true,
+  "checks": {
+    "focused_initial": {
+      "path": "build/oblivion-compat/sewer-escape/story-faction-focused-01",
+      "overall_helper_passed": true,
+      "results": {
+        "components": {
+          "executed": 188,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.*:OblivionDialogueMenu.ScriptFactionRank*:OblivionDialogueMenu.ScriptSetCrimeGold*:OblivionDialogueMenu.*Faction*:OblivionDialogueMenu.OwnedCell*:OblivionOwnership.*",
+          "binary_sha256": "05fe9f38230a48b3351ab1ccc9144f20ce7f77521434bc599dc6b6bbd7fad0d3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "1746fddbaec30d432ff8f853338741a6dcd5d8a1e590237dfb6e320b7a63367b",
+          "inventory_sha256": "bcca2c62967023f88897753f8f3969b035b39b892358cb1409ea238dafe078f6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 6,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.*:OblivionDialogueMenu.ScriptFactionRank*:OblivionDialogueMenu.ScriptSetCrimeGold*:OblivionDialogueMenu.*Faction*:OblivionDialogueMenu.OwnedCell*:OblivionOwnership.*",
+          "binary_sha256": "629c9706db67c6af74c4c5938633bfb511cc30cd1aa30fc80fab14cd6a1411e6",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "583096b529dd8a797d9c920fbb90d6383a5c92b51f21ae017b0cf9d305ba70a6",
+          "inventory_sha256": "8b31bd4067365de4da48919974bced95c2ce3460624bac742b2c42793c02b7fc",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "1119106a078b3bb43ec2af0124a61f8350594ef6b737858cb3de268117547662"
+      },
+      "source_after": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "1119106a078b3bb43ec2af0124a61f8350594ef6b737858cb3de268117547662"
+      }
+    },
+    "focused_consumers": {
+      "path": "build/oblivion-compat/sewer-escape/story-faction-focused-02",
+      "overall_helper_passed": true,
+      "results": {
+        "engine": {
+          "executed": 6,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogueMenu.ScriptFactionRank*:OblivionDialogueMenu.ScriptSetCrimeGold*:OblivionDialogueMenu.*Faction*:OblivionDialogueMenu.OwnedCell*:OblivionOwnership.*",
+          "binary_sha256": "d15ca95daf2866d616e8548f11f70de03b96f8f5048aed46bfd992d9e4793db5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "4a548f6f2e1d349811d23cb90a2f3205fb98989af389c02024fe69c4617ee61e",
+          "inventory_sha256": "8b31bd4067365de4da48919974bced95c2ce3460624bac742b2c42793c02b7fc",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "3872c595cc07350ac3d9c94bc235f619d8e7307d1a26968a4dfd8e35deae389f"
+      },
+      "source_after": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "3872c595cc07350ac3d9c94bc235f619d8e7307d1a26968a4dfd8e35deae389f"
+      }
+    },
+    "focused_construction": {
+      "path": "build/oblivion-compat/sewer-escape/story-faction-focused-03",
+      "overall_helper_passed": true,
+      "results": {
+        "engine": {
+          "executed": 7,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.NativeNpcAndCreatureFactionConditionsReadFirstSignedBaseMembership:OblivionDialogueMenu.ScriptFactionRank*:OblivionDialogueMenu.ScriptSetCrimeGold*:OblivionDialogueMenu.*Faction*:OblivionDialogueMenu.OwnedCell*:OblivionOwnership.*",
+          "binary_sha256": "22309745306b5385c1ab2d1a495f6fb6f5167bd4e9f569519e3016b23c01c431",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "7902a63ca01cc7bd06ee75b649eed2fd505e397431acaaf4853c26d1646e40be",
+          "inventory_sha256": "8b31bd4067365de4da48919974bced95c2ce3460624bac742b2c42793c02b7fc",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "21605bad5560c96231cc44e111dea78542032c59579fbdb0f747a846706a52d8"
+      },
+      "source_after": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "21605bad5560c96231cc44e111dea78542032c59579fbdb0f747a846706a52d8"
+      }
+    },
+    "full_components": {
+      "path": "build/oblivion-compat/sewer-escape/story-faction-broad-normal-01",
+      "overall_helper_passed": false,
+      "results": {
+        "components": {
+          "executed": 3265,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6f03d6ff56134b311de9641e01d58648c195603916347a849b5eb9fae5c5590c",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6659951805401ac487b49038dc689b8b29b10a53bc303aaa04d1c18790812366",
+          "inventory_sha256": "72928237db70181b26701021f43406670a8bba47b441be70f49bf4edbc9bb2a1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "f44bf0327999b84432222364040e67045570a0c4dc1f07a727f4a1a3cfa01166"
+      },
+      "source_after": null
+    },
+    "full_engine": {
+      "path": "build/oblivion-compat/sewer-escape/story-faction-broad-normal-02",
+      "overall_helper_passed": true,
+      "results": {
+        "engine": {
+          "executed": 2221,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "22309745306b5385c1ab2d1a495f6fb6f5167bd4e9f569519e3016b23c01c431",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "f7d00d50853c3a0aaef464a97f37ffddb8674141485824c82008154f7ccfbd66",
+          "inventory_sha256": "8b31bd4067365de4da48919974bced95c2ce3460624bac742b2c42793c02b7fc",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "21605bad5560c96231cc44e111dea78542032c59579fbdb0f747a846706a52d8"
+      },
+      "source_after": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "21605bad5560c96231cc44e111dea78542032c59579fbdb0f747a846706a52d8"
+      }
+    },
+    "full_python": {
+      "path": "build/oblivion-compat/sewer-escape/story-faction-python-02",
+      "overall_helper_passed": true,
+      "results": {
+        "python": {
+          "executed": 580,
+          "passed": true,
+          "log_sha256": "44a1d1a586ad649f394f42f967e5b291c10cf1474232ff57f7fafcfbdf335db1"
+        }
+      },
+      "source_before": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "3872c595cc07350ac3d9c94bc235f619d8e7307d1a26968a4dfd8e35deae389f"
+      },
+      "source_after": {
+        "head": "18c0cb4628d43e9fc3e7b39ac0e7f9e21bc25c8b",
+        "source_fingerprint": "3872c595cc07350ac3d9c94bc235f619d8e7307d1a26968a4dfd8e35deae389f"
+      }
+    }
+  },
+  "runs": {
+    "story-faction-runtime-01": {
+      "passed": true,
+      "scope": "Original59-62 through authored faction command and class choice, or own fresh-process reload; not continuous escape acceptance",
+      "course": "story-faction-runtime-01",
+      "actions": 247,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 328477,
+        "sequence": 14,
+        "tick": 1848,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 13,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "all_input_delivered": true,
+      "no_observer_findings": true,
+      "saves": [
+        {
+          "sequence": 3,
+          "sha256": "1c5a92cee7c63f1d97c40e6a26f8afadbfde38d222cfb626529eed8cb7d6e049",
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-faction-runtime-01/retained-saves/3-0003-Quicksave.omwsave",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 4,
+          "sha256": "849f02ae8fdb6298b4a5edd9cd27bf223740829ee71d55308d2dc9929f48acfa",
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-faction-runtime-01/retained-saves/3-0004-Quicksave.omwsave",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 5,
+          "sha256": "79a54971a2acecf6ba25fd100798deb6c6538de8252ba7c8237060085d299114",
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-faction-runtime-01/retained-saves/3-0005-Quicksave.omwsave",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 6,
+          "sha256": "f4e02b20b546e2f1a31ed0241a5e7d3a94f35aad3fdf7537072b6538e8fbf91c",
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-faction-runtime-01/retained-saves/3-0006-Quicksave.omwsave",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 12,
+          "sha256": "3d7b975f90f5b63dc8bd6fd69b1c44262bde1359acd9690af41d55896eff471b",
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-faction-runtime-01/retained-saves/3-0012-Autosave.omwsave",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 13,
+          "sha256": "499b2dc575eb09fd1d170591fefec1cbd53e91bf9c5eb2c71bcd8c49e446e3c4",
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-faction-runtime-01/retained-saves/3-0013-Quicksave.omwsave",
+          "native_save_exact": true
+        }
+      ],
+      "faction_base": {
+        "base": "content:oblivion.esm:01e6ff",
+        "kind": 0,
+        "values": [
+          [
+            33,
+            0,
+            50
+          ]
+        ],
+        "essential": null,
+        "factions": [
+          [
+            "content:oblivion.esm:014a20",
+            1
+          ],
+          [
+            "content:oblivion.esm:0227bc",
+            0
+          ]
+        ]
+      },
+      "retained_door_owner": "content:oblivion.esm:0150bc",
+      "door_lock": 100,
+      "cell": "content:oblivion.esm:022282",
+      "health": 28.035667419433594,
+      "class": "content:oblivion.esm:023787",
+      "birthsign": "content:oblivion.esm:01fd9d",
+      "CG_stage": 88,
+      "final_assassin_life": {
+        "actor": "content:oblivion.esm:01e703",
+        "base": "content:oblivion.esm:01e6ff",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a17"
+      },
+      "original_faction_command_count": 1,
+      "read_only_reload_rank1_count": 0,
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-ownership-runtime-01/retained-saves/3-0004-Quicksave.omwsave",
+        "source_save_sha256": "51950003614f967c1aac1025dd0ae19540f0649e101269870caa95a967d4a8e0",
+        "whole_state_restore": true,
+        "schema_migration": {
+          "from": 89,
+          "to": 90,
+          "defaulted_base_factions": 7,
+          "scope": "Version promotion and absent optional shared-base faction replacements only"
+        },
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    },
+    "story-faction-reload-01": {
+      "passed": true,
+      "scope": "Original59-62 through authored faction command and class choice, or own fresh-process reload; not continuous escape acceptance",
+      "course": "story-faction-reload-01",
+      "actions": 5,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 334602,
+        "sequence": 4,
+        "tick": 88,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "all_input_delivered": true,
+      "no_observer_findings": true,
+      "saves": [
+        {
+          "sequence": 3,
+          "sha256": "c9014e7bc0eb4e9213f595b949c575f3a6b22feef600067ff69b766863ec4597",
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-faction-reload-01/retained-saves/3-0003-Quicksave.omwsave",
+          "native_save_exact": true
+        }
+      ],
+      "faction_base": {
+        "base": "content:oblivion.esm:01e6ff",
+        "kind": 0,
+        "values": [
+          [
+            33,
+            0,
+            50
+          ]
+        ],
+        "essential": null,
+        "factions": [
+          [
+            "content:oblivion.esm:014a20",
+            1
+          ],
+          [
+            "content:oblivion.esm:0227bc",
+            0
+          ]
+        ]
+      },
+      "retained_door_owner": "content:oblivion.esm:0150bc",
+      "door_lock": 100,
+      "cell": "content:oblivion.esm:022282",
+      "health": 28.035667419433594,
+      "class": "content:oblivion.esm:023787",
+      "birthsign": "content:oblivion.esm:01fd9d",
+      "CG_stage": 88,
+      "final_assassin_life": {
+        "actor": "content:oblivion.esm:01e703",
+        "base": "content:oblivion.esm:01e6ff",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a17"
+      },
+      "original_faction_command_count": 0,
+      "read_only_reload_rank1_count": 1,
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-faction-runtime-01/retained-saves/3-0013-Quicksave.omwsave",
+        "source_save_sha256": "499b2dc575eb09fd1d170591fefec1cbd53e91bf9c5eb2c71bcd8c49e446e3c4",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    }
+  },
+  "save_receipts_parsed_exact": 7,
+  "subsequent_base_mutation": "Original stage80 SetAV aggression50 updates the same01e6ff base override while retaining both faction memberships.",
+  "rendered_review": [
+    "story-faction-runtime-01/segment04-after-class-choice.png",
+    "story-faction-reload-01/faction-reload.png"
+  ],
+  "rendered_findings": "Class dialogue, Baurus alive with sword, corpse and held Player axe visible. The post-class capture briefly shows a breath bar indoors; fresh reload capture clears it. Existing armor appearance and silent-dialogue limits remain.",
+  "retained_failures": {
+    "story-faction-development-build-01.log": "Private base lookup API caused compile failure; replaced with narrow public faction getter.",
+    "faction-prebuild-python-01.log": "13 current-fixture schema admission errors; pins/default review corrected.",
+    "story-faction-python-01": "One stale future-version90 expectation; advanced future rejection to91 and retained all prior checks.",
+    "story-faction-broad-normal-01": "Full components pass3265; engine2220/2221. Duplicate-SNAM fixture conflated authored order with an already constructed native list. Corrected only after independent original loader/setter inspection; first-match primitive assertion retained, construction/GetFactionRank assertions added. Focused retry7 and full engine2221 pass."
+  },
+  "sanitizer_status": "Direct separate-build precompilation ongoing; no current sanitizer acceptance claimed.",
+  "continuous_status": "Fresh full67/10460 original new-game course full-escape-continuous-11 now running in PID335271 with automatic save archiving. Not accepted until terminal course, own outdoor reload, input/native/state audit and rendered review pass.",
+  "full_escape_complete": false
+}

@@ -219,7 +219,9 @@ namespace MWMechanics
                 {
                     input.mOwnerKind = ESM4::CrimeOwnerKind::Faction;
                     if (!player || !(faction->mFactionFlags.value_or(0) & 8u))
-                        for (const auto& membership : npc->mFactions)
+                        for (const auto& membership : world.getOblivionActorFactions(player
+                            ? world.getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1)).value_or(ESM::FormKey{})
+                            : baseKey))
                             if (ESM::FormId::fromUint32(membership.faction) == cell->mOwner)
                             {
                                 input.mActorFactionRank = membership.rank;
@@ -1585,35 +1587,18 @@ namespace MWMechanics
                     ? 1.0
                     : 0.0);
             }
+            if (function == "GetFactionRank")
+                return value(mWorld.getOblivionFactionRank(subjectKey, parameterKey));
             if (function == "GetInFaction")
             {
-                if (const MWWorld::Ptr loaded = loadedPtrFor(subjectKey); !loaded.isEmpty())
-                {
-                    const std::optional<ESM::FormId> factionId = resolver.toFormId(parameterKey);
-                    if (!factionId)
-                        return value(0.0);
-                    if (loaded != mWorld.getPlayerPtr() && nativeActor(loaded))
-                    {
-                        const auto entries = loaded.getClass().getType() == ESM::REC_NPC_4
-                            ? std::span<const ESM4::ActorFaction>(loaded.get<ESM4::Npc>()->mBase->mFactions)
-                            : std::span<const ESM4::ActorFaction>(loaded.get<ESM4::Creature>()->mBase->mFactions);
-                        return value(mWorld.mStore.search<ESM4::Faction>(parameterKey)
-                            && ESM4::factionMembership(entries, {}, factionId->toUint32(), false, 0) ? 1.0 : 0.0);
-                    }
-                    if (loaded.getClass().isNpc())
-                        return value(loaded.getClass().getNpcStats(loaded).isInFaction(ESM::RefId(*factionId))
-                                ? 1.0
-                                : 0.0);
-                    return value(loaded.getClass().getPrimaryFaction(loaded) == ESM::RefId(*factionId) ? 1.0 : 0.0);
-                }
-                const std::optional<ESM::FormId> factionId = resolver.toFormId(parameterKey);
-                if (!factionId)
-                    return value(0.0);
-                const auto factions = npc ? std::span<const ESM4::ActorFaction>(npc->mFactions)
-                    : creature ? std::span<const ESM4::ActorFaction>(creature->mFactions)
-                               : std::span<const ESM4::ActorFaction>{};
-                return value(mWorld.mStore.search<ESM4::Faction>(parameterKey)
-                    && ESM4::factionMembership(factions, {}, factionId->toUint32(), false, 0) ? 1.0 : 0.0);
+                const auto id = resolver.toFormId(parameterKey);
+                const auto base = mWorld.getOblivionReferenceBaseKey(subjectKey);
+                const auto* faction = mWorld.mStore.search<ESM4::Faction>(parameterKey);
+                if (!id || !base || !faction) return value(0.0);
+                const auto entries = mWorld.getOblivionActorFactions(*base);
+                return value(ESM4::factionMembership(entries, {}, id->toUint32(),
+                    ESM4::runtimeReferenceKey(subjectKey) == ESM::FormKey::dynamic("player", 1),
+                    faction->mFactionFlags.value_or(0)) ? 1.0 : 0.0);
             }
             if (function == "GetDeadCount")
             {
@@ -2177,30 +2162,16 @@ namespace MWMechanics
             const auto nativeStats = [&]() -> const CreatureStats& {
                 return subjectPtr.getClass().getCreatureStats(subjectPtr);
             };
-            const auto nativeNpcStats = [&]() -> const NpcStats* {
-                return subjectPtr.getClass().isNpc() ? &subjectPtr.getClass().getNpcStats(subjectPtr) : nullptr;
-            };
+            const auto subjectKey = subjectPtr == mWorld.getPlayerPtr()
+                ? ESM::FormKey::dynamic("player", 1) : subjectPtr.getCellRef().getFormKey();
             const auto factionMatches = [&](const ESM::FormKey& factionKey) {
-                if (factionKey.isNull())
-                    return false;
-                const ESM::RefId faction = ESM::RefId(factionKey.isContent()
-                        ? ESM::FormKeyResolver(mWorld.mContentFiles).toFormId(factionKey).value_or(ESM::FormId{})
-                        : ESM::FormId{});
-                if (faction.empty())
-                    return false;
-                if (subjectPtr != mWorld.getPlayerPtr() && nativeActor(subjectPtr))
-                {
-                    const auto* definition = mWorld.mStore.search<ESM4::Faction>(factionKey);
-                    if (!definition)
-                        return false;
-                    const auto entries = subjectPtr.getClass().getType() == ESM::REC_NPC_4
-                        ? std::span<const ESM4::ActorFaction>(subjectPtr.get<ESM4::Npc>()->mBase->mFactions)
-                        : std::span<const ESM4::ActorFaction>(subjectPtr.get<ESM4::Creature>()->mBase->mFactions);
-                    return ESM4::factionMembership(entries, {}, faction.getIf<ESM::FormId>()->toUint32(), false, 0);
-                }
-                if (const NpcStats* stats = nativeNpcStats())
-                    return stats->isInFaction(faction);
-                return subjectPtr.getClass().getPrimaryFaction(subjectPtr) == faction;
+                const auto base = mWorld.getOblivionReferenceBaseKey(subjectKey);
+                const auto id = ESM::FormKeyResolver(mWorld.mContentFiles).toFormId(factionKey);
+                const auto* faction = mWorld.mStore.search<ESM4::Faction>(factionKey);
+                if (!base || !id || !faction) return false;
+                const auto entries = mWorld.getOblivionActorFactions(*base);
+                return ESM4::factionMembership(entries, {}, id->toUint32(),
+                    subjectPtr == mWorld.getPlayerPtr(), faction->mFactionFlags.value_or(0));
             };
             const auto playerPtr = mWorld.getPlayerPtr();
             const auto playerNpcStats = [&]() -> const NpcStats* {
@@ -2406,6 +2377,8 @@ namespace MWMechanics
                 return value(sleeping() ? 1.0 : 0.0);
             if (function == "GetAttacked")
                 return value(nativeStats().getAttacked() ? 1.0 : 0.0);
+            if (function == "GetFactionRank")
+                return value(mWorld.getOblivionFactionRank(subjectKey, parameterKey));
             if (function == "GetInFaction")
                 return value(factionMatches(parameterKey) ? 1.0 : 0.0);
             if (function == "GetQuestVariable")
@@ -2881,28 +2854,11 @@ namespace MWMechanics
                 return true;
             if (owner == live.mState.mActor || owner == live.mState.mBase)
                 return true;
-            if (const MWWorld::Ptr actor = loadedPtrFor(live.mState.mActor); !actor.isEmpty())
-            {
-                if (actor.getClass().isNpc())
-                {
-                    if (actor.getClass().getNpcStats(actor).isInFaction(
-                            ESM::RefId(resolver.toFormId(owner).value_or(ESM::FormId{}))))
-                        return true;
-                }
-                else if (actor.getClass().getPrimaryFaction(actor)
-                    == ESM::RefId(resolver.toFormId(owner).value_or(ESM::FormId{})))
-                    return true;
-            }
             const ESM::FormId ownerId = resolver.toFormId(owner).value_or(ESM::FormId{});
-            if (const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))
-                return std::any_of(npc->mFactions.begin(), npc->mFactions.end(), [ownerId](const auto& faction) {
-                    return ESM::FormId::fromUint32(faction.faction) == ownerId;
-                });
-            if (const ESM4::Creature* creature = mWorld.mStore.search<ESM4::Creature>(live.mState.mBase))
-                return std::any_of(creature->mFactions.begin(), creature->mFactions.end(), [ownerId](const auto& faction) {
-                    return ESM::FormId::fromUint32(faction.faction) == ownerId;
-                });
-            return false;
+            const auto entries = mWorld.getOblivionActorFactions(live.mState.mBase);
+            return std::any_of(entries.begin(), entries.end(), [ownerId](const auto& faction) {
+                return ESM::FormId::fromUint32(faction.faction) == ownerId && faction.rank != -1;
+            });
         };
         const auto usableFurniture = [&](const StableLocation& furniture) {
             return furniture.mType == ESM::REC_FURN4 && !furniture.mLocked && actorOwns(furniture.mOwner);
@@ -3323,8 +3279,11 @@ namespace MWMechanics
             const ESM::FormKey ownerKey = owner.getIf<ESM::FormId>() != nullptr
                 ? resolver.toFormKey(*owner.getIf<ESM::FormId>())
                 : ESM::FormKey{};
-            const ESM::RefId primaryFaction = actor.getClass().getPrimaryFaction(actor);
-            return owner == primaryFaction || ownerKey == actorKey(actor) || ownerKey == baseKey(actor);
+            if (ownerKey == actorKey(actor) || ownerKey == baseKey(actor)) return true;
+            const auto factions = mWorld.getOblivionActorFactions(baseKey(actor));
+            return std::any_of(factions.begin(), factions.end(), [&](const auto& faction) {
+                return faction.rank != -1 && ESM::RefId(ESM::FormId::fromUint32(faction.faction)) == owner;
+            });
         };
         const auto resolveSleepFurniture = [&](const std::optional<MWWorld::Ptr>& reference)
             -> std::optional<osg::Vec3f> {
@@ -4976,23 +4935,13 @@ namespace MWMechanics
             }
             return ESM::FormKey::content(mWorld.mContentFiles[contentFile], value.mIndex) == owner;
         };
-        if (actor != nullptr && !actor->isEmpty())
-        {
-            const ESM::RefId faction = actor->getClass().getPrimaryFaction(*actor);
-            if (const ESM::FormId* id = faction.getIf<ESM::FormId>(); id != nullptr && matchesFaction(*id))
-                return true;
-        }
-
-        const auto containsFaction = [&matchesFaction](const auto* base) {
-            return base != nullptr
-                && std::any_of(base->mFactions.begin(), base->mFactions.end(), [&matchesFaction](const auto& item) {
-                       return item.faction != 0 && matchesFaction(ESM::FormId::fromUint32(item.faction));
-                   });
-        };
-        if (containsFaction(mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))
-            || containsFaction(mWorld.mStore.search<ESM4::Creature>(live.mState.mBase)))
-            return true;
-        return false;
+        const auto base = actor && !actor->isEmpty()
+            ? mWorld.getOblivionReferenceBaseKey(actorKey(*actor)).value_or(live.mState.mBase)
+            : live.mState.mBase;
+        const auto entries = mWorld.getOblivionActorFactions(base);
+        return std::any_of(entries.begin(), entries.end(), [&matchesFaction](const auto& item) {
+            return item.faction != 0 && item.rank != -1 && matchesFaction(ESM::FormId::fromUint32(item.faction));
+        });
     }
 
     bool OblivionAiService::hasCellOwnershipPermission(

@@ -5052,3 +5052,43 @@ class DailyPackage89Tests(unittest.TestCase):
         state = self.make_state(); state['daily_package_completions'] *= 2
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.encode_payload(state)
+
+class FactionBase90Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_state()
+        state.update(schema_version=90, ai_rng_state=1)
+        state['native_actor_bases'] = [{'base': 'content:oblivion.esm:000800',
+            'kind': 0, 'values': [], 'essential': None,
+            'factions': [['content:oblivion.esm:000803', -128],
+                         ['content:oblivion.esm:000801', 127],
+                         ['content:oblivion.esm:000802', -1]]}]
+        return state
+
+    def test_order_rank_empty_and_legacy_roundtrip(self):
+        state = self.make_state()
+        for factions in [state['native_actor_bases'][0]['factions'], []]:
+            state['native_actor_bases'][0]['factions'] = factions
+            payload = state_io.encode_payload(state)
+            decoded = state_io.decode_payload(payload)
+            self.assertEqual(decoded['native_actor_bases'], state['native_actor_bases'])
+            self.assertEqual(state_io.encode_payload(decoded), payload)
+            state['schema_version'] = 89
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+            state.update(schema_version=90, ai_rng_state=1)
+        state['schema_version'] = 89
+        state['native_actor_bases'][0].update(factions=None, essential=False)
+        decoded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn('factions', decoded['native_actor_bases'][0])
+        decoded['schema_version'] = 90
+        self.assertIsNone(state_io.decode_payload(state_io.encode_payload(decoded))['native_actor_bases'][0]['factions'])
+
+    def test_invalid_and_duplicate_memberships_reject(self):
+        for factions in [[['null', 1]], [['dynamic:faction:0000000000000001', 1]],
+                         [['content:oblivion.esm:000801', 128]],
+                         [['content:oblivion.esm:000801', True]],
+                         [['content:oblivion.esm:000801', -129]],
+                         [['content:oblivion.esm:000801', 1]] * 2]:
+            state = self.make_state(); state['native_actor_bases'][0]['factions'] = factions
+            with self.subTest(factions=factions), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)

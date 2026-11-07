@@ -73,7 +73,7 @@ namespace ESM4
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
     // v87 retains pending native spells and once-only release ownership.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 89;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 90;
 
     struct RuntimeContentIdentity
     {
@@ -406,6 +406,13 @@ namespace ESM4
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;
     };
 
+    struct RuntimeActorFaction
+    {
+        ESM::FormKey mFaction;
+        std::int8_t mRank = -1;
+        friend bool operator==(const RuntimeActorFaction&, const RuntimeActorFaction&) = default;
+    };
+
     struct RuntimeActorBaseOverride
     {
         ESM::FormKey mBase;
@@ -413,6 +420,9 @@ namespace ESM4
         std::vector<ActorBaseValueSet> mValues;
         // v84: shared base flag, independent of cached reference statistics.
         std::optional<bool> mEssential;
+        // v90: ordered shared-base membership replacement. Empty differs from
+        // absent (use authored content). Stable identities survive load order.
+        std::optional<std::vector<RuntimeActorFaction>> mFactions = std::nullopt;
 
         void validate() const;
         friend bool operator==(const RuntimeActorBaseOverride&, const RuntimeActorBaseOverride&) = default;

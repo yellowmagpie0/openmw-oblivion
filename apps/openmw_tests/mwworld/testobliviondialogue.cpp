@@ -234,17 +234,10 @@ namespace
             return state.mScriptEventSequence;
         }
     };
-}
-
-TEST(OblivionDialogueMenu, ScriptSetCrimeGoldRoutesActorBountyAndPreservesFractionalDeltaAcrossSave)
-{
-    for (bool shifted : {false, true})
+    void prepareSaveableMenuPlayer(MenuFixture& f)
     {
-        MenuFixture f(ESM4::INFO_SayOnce, shifted);
         auto& world = f.mFixture.mWorld;
         auto& store = world.getStore();
-        auto& combat = *world.getOblivionCombatService();
-        auto& scripts = *world.getOblivionScriptManager();
         const auto file = f.mActor.get<ESM4::Npc>()->mBase->mId.mContentFile;
         ESM4::Class cls{};
         cls.mId = {0xb30, file};
@@ -272,7 +265,21 @@ TEST(OblivionDialogueMenu, ScriptSetCrimeGoldRoutesActorBountyAndPreservesFracti
         auto source = *f.mActor.get<ESM4::Npc>()->mBase;
         source.mId = {7, file + 1}; source.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
         store.getWritable<ESM4::Npc>().insertStatic(source, source.mFormKey);
-        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        if (!world.initializeOblivionPlayerActor()) throw std::runtime_error("cannot initialize saveable menu Player");
+    }
+
+}
+
+TEST(OblivionDialogueMenu, ScriptSetCrimeGoldRoutesActorBountyAndPreservesFractionalDeltaAcrossSave)
+{
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        auto& combat = *world.getOblivionCombatService();
+        auto& scripts = *world.getOblivionScriptManager();
+        prepareSaveableMenuPlayer(f);
         const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(store);
         for (int scenario : {0, 1, 2}) // NPC, Player normal realm, Player alternate realm.
         {
@@ -307,6 +314,91 @@ TEST(OblivionDialogueMenu, ScriptSetCrimeGoldRoutesActorBountyAndPreservesFracti
             EXPECT_THROW(scripts.call("SetCrimeGold", {}, {std::int64_t{1}, std::int64_t{2}}, context, {}),
                 ObScript::RuntimeError);
         }
+    }
+}
+
+TEST(OblivionDialogueMenu, ScriptFactionRankSharesBaseAndRestoresMembershipWithoutEditingContent)
+{
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        prepareSaveableMenuPlayer(f);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        auto& combat = *world.getOblivionCombatService();
+        auto& scripts = *world.getOblivionScriptManager();
+        auto base = *f.mActor.get<ESM4::Npc>()->mBase;
+        ESM4::Faction existing{};
+        existing.mId = {0xd04, base.mId.mContentFile}; existing.mFormKey = key(0xd04);
+        existing.mFactionFlags = 0;
+        store.getWritable<ESM4::Faction>().insertStatic(existing, existing.mFormKey);
+        base.mFactions = {{existing.mId.toUint32(), 2, 0, 0, 0}};
+        base.mFaction = base.mFactions.front();
+        store.getWritable<ESM4::Npc>().insertStatic(base, base.mFormKey);
+        const auto file = base.mId.mContentFile;
+        ESM4::Faction faction{};
+        faction.mId = {0xd00, file}; faction.mFormKey = key(0xd00); faction.mFactionFlags = 0;
+        store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+        auto otherBase = base; otherBase.mId = {0xd01, file}; otherBase.mFormKey = key(0xd01);
+        otherBase.mEditorId = "OtherActor";
+        store.getWritable<ESM4::Npc>().insertStatic(otherBase, otherBase.mFormKey);
+        for (unsigned id : {0xd02u, 0xd03u})
+        {
+            ESM4::ActorCharacter placed{};
+            placed.mId = {id, file}; placed.mFormKey = key(id);
+            placed.mBaseObj = id == 0xd02 ? base.mId : otherBase.mId;
+            placed.mBaseKey = id == 0xd02 ? base.mFormKey : otherBase.mFormKey;
+            store.getWritable<ESM4::ActorCharacter>().insertStatic(placed, placed.mFormKey);
+        }
+        ObScript::RuntimeContext context; context.mSelf = f.mActor.getCellRef().getFormKey();
+        const ObScript::Value fact = ObScript::ReferenceValue{faction.mFormKey, {}};
+        const auto checkRank = [&](int rank) {
+            EXPECT_EQ(world.getOblivionFactionRank(context.mSelf, faction.mFormKey), rank);
+            EXPECT_EQ(world.getOblivionFactionRank(key(0xd02), faction.mFormKey), rank);
+            EXPECT_EQ(world.getOblivionFactionRank(key(0xd03), faction.mFormKey), -1);
+            EXPECT_EQ(ObScript::asInteger(scripts.call("GetFactionRank", {}, {fact}, context, {})), rank);
+            ESM4::PackageCondition condition{};
+            condition.mFunction = 73; condition.mParameter1.mReferenceKey = faction.mFormKey;
+            condition.mOperator = ESM4::ConditionOperator::Equal; condition.mComparisonValue = rank;
+            EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(f.mActor, world.getPlayerPtr(),
+                std::span(&condition, 1)), ESM4::ConditionResult::True);
+            condition.mFunction = 71; condition.mComparisonValue = rank != -1;
+            EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(f.mActor, world.getPlayerPtr(),
+                std::span(&condition, 1)), ESM4::ConditionResult::True);
+        };
+        checkRank(-1);
+        scripts.call("SetFactionRank", {}, {fact, std::int64_t{1}}, context, {});
+        checkRank(1);
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFaction(f.mActor), ESM::RefId(faction.mId));
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFactionRank(f.mActor), 1);
+        EXPECT_EQ(world.getOblivionFactionRank(context.mSelf, existing.mFormKey), 2);
+        EXPECT_EQ(store.search<ESM4::Npc>(base.mFormKey)->mFactions.size(), base.mFactions.size());
+        const auto saved = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+        EXPECT_NO_THROW(world.prepareOblivionSaveState(saved));
+        scripts.call("SetFactionRank", {}, {fact, std::int64_t{-1}}, context, {});
+        checkRank(-1);
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFaction(f.mActor), ESM::RefId(existing.mId));
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFactionRank(f.mActor), 2);
+        ASSERT_TRUE(world.setOblivionFactionRank(context.mSelf, existing.mFormKey, -1));
+        EXPECT_TRUE(f.mActor.getClass().getPrimaryFaction(f.mActor).empty());
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFactionRank(f.mActor), -1);
+        const auto empty = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+        const auto* replacement = combat.getBaseFactions(base.mFormKey);
+        ASSERT_TRUE(replacement); EXPECT_TRUE(replacement->empty());
+        combat.restore(saved, store); checkRank(1);
+        combat.restore(empty, store); checkRank(-1);
+        // Absent -1 inserts the native signed byte; a second -1 removes it.
+        scripts.call("SetFactionRank", {}, {fact, std::int64_t{-1}}, context, {});
+        ASSERT_EQ(world.getOblivionActorFactions(base.mFormKey).size(), 1);
+        scripts.call("SetFactionRank", {}, {fact, std::int64_t{257}}, context, {});
+        checkRank(1);
+        const auto before = world.captureOblivionRuntimeState().mNativeActorBases;
+        EXPECT_THROW(scripts.call("SetFactionRank", {}, {ObScript::ReferenceValue{base.mFormKey, {}},
+            std::int64_t{1}}, context, {}), ObScript::RuntimeError);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mNativeActorBases, before);
+        auto bad = saved;
+        bad.mNativeActorBases.front().mFactions->front().mFaction = base.mFormKey;
+        EXPECT_THROW(world.prepareOblivionSaveState(bad), std::exception);
     }
 }
 

@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <set>
 
 #include <components/esm4/loadarmo.hpp>
@@ -387,16 +388,30 @@ namespace MWClass
         return ptr.get<ESM4::Npc>()->mBase->mAIData.aggression;
     }
 
+    static std::optional<ESM4::ActorFaction> currentPrimaryFaction(const MWWorld::ConstPtr& ptr)
+    {
+        const auto* base = ptr.get<ESM4::Npc>()->mBase;
+        const auto* world = dynamic_cast<const MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+        if (world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto factions = world->getOblivionActorFactions(base->mFormKey);
+            const auto found = std::find_if(factions.begin(), factions.end(),
+                [](const auto& faction) { return faction.rank != -1; });
+            return found == factions.end() ? std::nullopt : std::optional(*found);
+        }
+        return base->mFaction.faction == 0 ? std::nullopt : std::optional(base->mFaction);
+    }
+
     ESM::RefId ESM4Npc::getPrimaryFaction(const MWWorld::ConstPtr& ptr) const
     {
-        return ESM::RefId(ESM::FormId::fromUint32(ptr.get<ESM4::Npc>()->mBase->mFaction.faction));
+        const auto faction = currentPrimaryFaction(ptr);
+        return faction ? ESM::RefId(ESM::FormId::fromUint32(faction->faction)) : ESM::RefId{};
     }
 
     int ESM4Npc::getPrimaryFactionRank(const MWWorld::ConstPtr& ptr) const
     {
-        if (ptr.get<ESM4::Npc>()->mBase->mFaction.faction == 0)
-            return -1;
-        return ptr.get<ESM4::Npc>()->mBase->mFaction.rank;
+        const auto faction = currentPrimaryFaction(ptr);
+        return faction ? faction->rank : -1;
     }
 
     std::unique_ptr<MWWorld::Action> ESM4Npc::activate(

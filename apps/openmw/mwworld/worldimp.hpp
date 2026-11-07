@@ -62,6 +62,7 @@ namespace ESM
 
 namespace ESM4
 {
+    struct ActorFaction;
     enum class ActorDrawState : std::uint8_t;
     enum class MeleeReactionKind : std::uint8_t;
     struct RuntimeInventoryItem;
@@ -477,6 +478,9 @@ namespace MWWorld
         bool setOblivionFactionReaction(const ESM::FormKey& from, const ESM::FormKey& to, std::int32_t value);
         bool setOblivionEssential(const ESM::FormKey& base, bool essential);
         std::optional<bool> getOblivionEssentialOverride(const ESM::FormKey& base) const;
+        std::vector<ESM4::ActorFaction> getOblivionActorFactions(const ESM::FormKey& base) const;
+        std::int8_t getOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction) const;
+        bool setOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction, std::int32_t rank);
         bool setOblivionAlerted(const ESM::FormKey& actor, std::int32_t value);
         bool getOblivionAlerted(const ESM::FormKey& actor) const;
         std::optional<bool> getOblivionVampire(const ESM::FormKey& actor) const;
