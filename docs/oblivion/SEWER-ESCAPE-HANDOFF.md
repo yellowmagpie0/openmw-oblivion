@@ -61,9 +61,18 @@ sections14–16 pass in original PID410270. All8 actual F5s32–39 parsed/native
 exact; northern038171/72/73 and western038176 all persistent Player kills. Route
 end44.28HP, four native applied heals to72.44HP, final66.80HP. Recovery and victory
 captures reviewed. See `west-continuous-checkpoint.json` and updated
-[west proof](SEWER-WEST-THREAT-RESPONSE-VERIFICATION.json). Actual run has reached18
-at61.16HP; revalidate live progress on resume. This clears continuous17's fatal
-section15 gap; full escape/own reload/terminal audits remain pending.
+[west proof](SEWER-WEST-THREAT-RESPONSE-VERIFICATION.json). This clears
+continuous17's fatal section15 gap.
+
+Latest checkpoint: original Natural Caverns door0381b8 teleports once; actual
+F5seq59/60 both parsed/native exact in0380bd,59.1→80HP through3 ordinary casts.
+Section entries1–28 ordered, same original PID/no loads, current input prefix
+contiguous; entry and healed captures reviewed.
+[Continuous cavern prefix](SEWER-CONTINUOUS-CAVERN-PREFIX-VERIFICATION.json).
+Run is now in28 at80HP. Remaining course includes cavern encounters/shaman,
+escort reunion and choices, later ambushes, Sanctum, final sewers/exterior and
+own fresh outdoor reload. Terminal every-save/input/native audits remain pending.
+Revalidate live progress on resume; do not substitute this prefix for completion.
 
 Adjacent observation for later: source2 retains Magic-menu state, so source5's
 repeated relative page navigation visits Stats (actual capture reviewed). Minor
@@ -79,7 +88,9 @@ revalidate actual /proc identities before acting. Next action: monitor this
 same original PID with `wait-course-progress.py full-escape-continuous-19 40`.
 All67 sections, physical exit, own reload/walk and audits remain unaccepted.
 Do not restart a healthy job, weaken fights, splice saves or substitute a loaded
-diagnostic for full acceptance. Capture reload's actual identity when it starts.
+diagnostic for full acceptance. Read-only provenance watcher412528 is waiting
+for the own outdoor reload and will capture its actual runtime identity promptly;
+status `full19-reload-identity-status.json`. Revalidate that worker if needed.
 
 Earlier continuous17/18 evidence remains linked in
 [recovery prefix](SEWER-CONTINUOUS-RECOVERY-PREFIX-VERIFICATION.json),
