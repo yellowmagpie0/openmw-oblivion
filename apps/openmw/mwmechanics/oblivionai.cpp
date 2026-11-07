@@ -1529,7 +1529,7 @@ namespace MWMechanics
                     result.mDetected = found->second.mDetected;
                 }
                 return value(function == "GetDetectionLevel" ? result.mLevel
-                                                               : result.mDetected ? 1.0 : 0.0);
+                                                               : ESM4::nativeGetDetected(result) ? 1.0 : 0.0);
             }
             if (function == "GetKnockedState" || function == "IsLeftUp" || function == "IsFacingUp"
                 || function == "IsWeaponOut" || function == "GetWeaponAnimType")
@@ -2400,7 +2400,7 @@ namespace MWMechanics
                 const MWWorld::Ptr comparison = comparisonPtr();
                 if (comparison.isEmpty())
                     return ESM4::ConditionValue::missing();
-                return value(detection(subjectPtr, comparison).mDetected ? 1.0 : 0.0);
+                return value(ESM4::nativeGetDetected(detection(subjectPtr, comparison)) ? 1.0 : 0.0);
             }
             if (function == "GetSleeping")
                 return value(sleeping() ? 1.0 : 0.0);

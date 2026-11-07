@@ -1,0 +1,357 @@
+{
+  "passed": true,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "opcode": "0x102d",
+  "native_eval": "0x4f6400",
+  "native_execute": "0x502810",
+  "native_awareness_query": "0x5f6540",
+  "scope": "Complete original GetDetected Eval wrapper, validated actor receiver/target dispatch and signed query threshold. Original awareness/lighting/sound calculation is a declared boundary, not a live perception test.",
+  "boundary_stubs": [
+    "virtual IsActor returns stated case flags",
+    "target sneaking=false, both Player and NPC dispatch",
+    "native awareness query returns case signed value, captures this/target/flags",
+    "unused console diagnostic float returns0; console mode disabled"
+  ],
+  "cases": [
+    {
+      "awareness_query": -2147483648,
+      "target_is_Player": false,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": -2147483648,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": -100,
+      "target_is_Player": false,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": -100,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": -1,
+      "target_is_Player": false,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": -1,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 0,
+      "target_is_Player": false,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 0,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 1,
+      "target_is_Player": false,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 1.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 1,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 1.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 11,
+      "target_is_Player": false,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 1.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 11,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 1.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 42,
+      "target_is_Player": false,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 1.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 42,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 1.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 2147483647,
+      "target_is_Player": false,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 1.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 2147483647,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": true,
+      "result": 1.0,
+      "query_calls": [
+        {
+          "observer": 33558528,
+          "target": 33562624,
+          "flags": [
+            0,
+            0,
+            33562624,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "awareness_query": 11,
+      "target_is_Player": true,
+      "parent_is_actor": false,
+      "target_is_actor": true,
+      "result": 0.0,
+      "query_calls": []
+    },
+    {
+      "awareness_query": 11,
+      "target_is_Player": true,
+      "parent_is_actor": true,
+      "target_is_actor": false,
+      "result": 0.0,
+      "query_calls": []
+    }
+  ],
+  "conclusion": "Actor receiver is query observer; argument actor is query target. Positive signed native awareness returns1; zero/negative returns0. No additional cone/LOS gate is applied by wrapper.",
+  "metadata": {
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "image_base": 4194304,
+    "command": "GetDetected",
+    "descriptors": [
+      {
+        "descriptor_va": "0xb0cfc8",
+        "name_va": "0xa4f974",
+        "opcode": "0x102d",
+        "parent": 1,
+        "params": 1,
+        "execute": "0x502810",
+        "parse": "0x4fde30",
+        "evaluate": "0x4f6400"
+      }
+    ]
+  },
+  "runtime_acceptance": false,
+  "implementation_scope": "Script, dialogue, idle and package GetDetected conditions follow positive awareness in existing normalized native projection. Visual combat acquisition and saved vector fields remain separate; no save-schema change. Illumination still approximates ambient/placed lights and omits held torches."
+}

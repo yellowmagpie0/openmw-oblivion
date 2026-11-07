@@ -15,7 +15,38 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — continue after verified shaman victory
+## Current checkpoint — reunion/birthsign verified; third ambush escort next
+
+Native GetDetected and explicit test-controller hat mapping are verified and ready
+for commit. Full normal3263 component/2216 engine/578 Python and full2216
+ASan/UBSan engine checks pass, exact inventories0fail/0skip, same tested source
+fingerprint30b8308c…3280f1 at HEAD6be7e3f695. Actual normal and sanitized original
+6-action reunion reach40/42 with native-exact80HP/80MP saves, all escorts alive,
+whole entry0diff, all inputs delivered and native end0error/0pending/0unsupported.
+Sanitized runtimec79bdf25…eef291 loads actual sanitized MyGUI978656d3…cd67;
+engine leaks checked, rendered leaks disabled. Original86-action Warrior menu
+passes with explicit SDL mapping; native birthsign01fd9d/100HP, real F5
+SHA6522bb58…b996dd, whole entry0diff, all inputs and native end clear. Capture
+review confirms Warrior selected; blank description remains a known limit.
+[Reunion/controller verification](SEWER-REUNION-DETECTION-VERIFICATION.json).
+
+Next bounded chunk is the third-ambush escort movement stall. Actual original
+53–55 route inputs complete in `remaining-after-birthsign-01`, then54/56 waits
+fail at CharacterGen50. Player alive38.50HP; attacker01772e dead by Glenroy;
+all3 escorts alive, no active engagements/pending physical actions. Actual last
+save23 SHA35afa2ee…25839 retains that state. Glenroy about2685,6346 is outside
+16-unit arrival of original PGRD0164b3 node160=(2695.93,6367.36,-1182);
+Baurus stationary2726,6437 and Emperor2645,6445. Read-only debugger confirms
+native Path steering node160; no route/actor mutation. Investigate whether the
+stationary Follow actor cannot proactively yield; do not blindly loosen waypoint
+requirements. First run remains failed with0 observer findings/native end clear.
+Fresh reload diagnostic `escort-route-reload-01` restores whole state0diff and
+immediately reproduces the cluster, but report overhead allows only172 ticks in
+180sec; this is not an equal-simulation-time proof. Failed raw attempts retained.
+No helper or rendered game is live at this checkpoint. Ignored current handles:
+`reunion-current-handles.json`; inspect actual processes before reuse.
+
+## Earlier bounded checkpoints
 
 `cavern-fire-bypass-01` and `cavern-log-trap-outcome-01` are terminal. No build
 helper is live. Bounded
@@ -139,12 +170,56 @@ Destination capture inspected.18 focused Python and full67/10477 LuaJIT compile
 pass; unchanged engine/fire gates retain original provenance.
 [Post-shaman route proof](SEWER-POST-SHAMAN-ROUTE-VERIFICATION.json).
 
-Current `remaining-after-subterrane-01` game284139 runs original49–67 from actual
-Subterrane archive5 SHAe1f5ca4b…047dc0,80HP/80MP/shaman Player-dead. Archiver284188/
-watcher284189 attached; inspect actual processes. Finish reunion/story/choices/
-exterior, then regenerate/run full67 in one original-new-game PID and reload its
-own outdoor save fresh. Full escape remains incomplete; loaded continuations
-do not substitute.
+`remaining-after-subterrane-01` is terminal FAILED at original51's passive180sec
+stage42 wait after original49/50 passed. All3 escorts alive/reached their markers,
+CharacterGen38/inAmbushBRoom1; observer findings0. Actual latest archive9 is the
+unchanged input for focused reunion diagnostics; inspect receipt hash before use.
+Raw `remaining-after-subterrane-01-failure-verification.json` retained.
+
+Current chunk: correct native GetDetected condition adapter. Walking40/running40
+and A25/W140 reach real positions but cannot trigger40; actual pose diagnostic
+shows Glenroy moves ahead of the approaching Player. Positive awareness9/11,
+LOStrue but visual cone false. Torch03 actually equips02cf9f and visibly lights
+room, yet perception omits carried lights; that adjacent illumination gap remains
+recorded, not required for the immediate positive-awareness condition correction.
+Torch01 wrong first Misc item and Torch02 unacknowledged D-pad-button attempt
+remain failed (hat-axis navigation works; no UI hang proven). No runtime is live.
+
+Original executable SHAa8f31384…b7dc6 independently verified; actual opcode102d
+Execute00502810/Eval004f6400 calls query005f6540 with receiver=observer/argument=
+target and tests signed result>0 without adding another cone/LOS gate.18 isolated
+original wrapper cases PASS; underlying awareness query/actor virtuals are declared
+boundary stubs, not original live perception proof.
+[Original wrapper oracle](SEWER-GETDETECTED-ORACLE.json).
+Current C++ change derives script/condition GetDetected from positive awareness
+(score>50 in existing50+awareness saved projection), while preserving visual
+combat acquisition, normalized GetDetectionLevel/vector storage and save schema.
+Focused01 built runtime and passed9 component/2 of3 engine cases. New NPC/creature
+behind-observer script/dialogue/idle query and visual-combat separation pass. Cached
+reference fixture used arbitrary scores below50 for intended positives; corrected
+to50+signed awareness. Focused02 caught a synthetic visual=true/LOS=false
+admission error; focused03 uses valid nonvisual vectors, preserving distinct signed
+awareness/LOS bindings. Focused03 passes all3 engine cases (0fail/0skip, exact
+inventory); focused01 supplies9 passing component cases. Immutable snapshot01
+allows runtime checks concurrently without overwriting a live binary/resource. Inspect actual helper
+processes; no tracked/nonignored edits or commits while a helper runs.
+Reunion source51 restored to original6 ordinary-input actions, no torch/movement
+workaround shipped. Actual `reunion-native-detection-02` PASS from archive9 reaches
+original40/42, native-exact actual F5 SHA7e5e0050…5e68b6,80HP/80MP/all escorts alive,
+whole entry0diff, all input delivered, native end0error/0pending/0unsupported.
+Snapshot ELFc6a3d391…85a7c and copied actual MyGUI/Bullet libs are immutable.
+Snapshot startup01 lacked adjacent defaults.bin; raw failed launch retained, fixed
+with same-build defaults/config. `remaining-after-native-reunion-01` is terminal FAILED at first dialogue D-pad
+receipt. Background-event/focus attempt also failed; actual SDL monitor shows
+hat0 Down=4 but automatic mapping expects button12. Explicit per-course
+SDL_GAMECONTROLLERCONFIG maps D-pad to hat0 in full opening and birthsign
+editable recipes. `birthsign-controller-hat-01` passes from the actual42 save,
+with snapshot ELF/resources/libraries. Broad normal/sanitizer and actual
+sanitized reunion now pass; see current checkpoint and linked proof.
+
+After reunion42, continue original52–67 through choices/story/exterior, then run
+full67 in one original-new-game PID and reload its own outdoor save fresh. Full
+escape remains incomplete; loaded continuations do not substitute.
 
 `remaining-continuity-04` is terminal FAILED at original40 potion menu:
 original22–39 completed in one loaded process, but remembered Magic +3RS selects

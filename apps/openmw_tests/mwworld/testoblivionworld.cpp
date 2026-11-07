@@ -36105,7 +36105,7 @@ TEST(OblivionWorldTest, DialogueReferenceConditionsBindTheOppositeContextAfterRu
             // These assertions check binding through the real detector, whose
             // formula is independently tested elsewhere.
             const auto detection = ai.detection(subject, comparison);
-            for (const auto [function, expected] : {std::pair{45, detection.mDetected ? 1.0 : 0.0},
+            for (const auto [function, expected] : {std::pair{45, ESM4::nativeGetDetected(detection) ? 1.0 : 0.0},
                      std::pair{180, detection.mLevel}})
             {
                 condition.mFunction = function;
@@ -36165,10 +36165,16 @@ TEST(OblivionWorldTest, UnloadedReferenceConditionsBindExplicitAndOppositeActors
         saved.mActorAi.push_back(actor);
     }
     saved.mActorAi[0].mTarget = actors[1];
+    const auto detectionScore = [](std::size_t observer, std::size_t target) {
+        return 50.0 + (observer > target ? 1.0 : -1.0) * double(10 * observer + target + 1);
+    };
     for (std::size_t i = 0; i < actors.size(); ++i)
         for (std::size_t j = 0; j < actors.size(); ++j)
             if (i != j)
-                saved.mDetectionVectors.push_back({actors[i], actors[j], double(10 * i + j), i > j, i > j || j == 2});
+                // Native scores project 50 + signed awareness. Deliberately
+                // leave visual acquisition false to test cached awareness independently.
+                saved.mDetectionVectors.push_back(
+                    {actors[i], actors[j], detectionScore(i, j), false, i > j || j == 2});
     for (const bool runOnTarget : {false, true})
         for (std::size_t argument = 0; argument <= actors.size(); ++argument)
         {
@@ -36177,7 +36183,7 @@ TEST(OblivionWorldTest, UnloadedReferenceConditionsBindExplicitAndOppositeActors
             for (const auto [function, expected] : {std::pair{1, double(100 * (subject > comparison
                          ? subject - comparison : comparison - subject))},
                      std::pair{32, 1.0}, std::pair{136, subject == comparison ? 1.0 : 0.0},
-                     std::pair{180, subject == comparison ? 0.0 : double(10 * subject + comparison)},
+                     std::pair{180, subject == comparison ? 0.0 : detectionScore(subject, comparison)},
                      std::pair{45, subject > comparison ? 1.0 : 0.0},
                      std::pair{27, subject != comparison && (subject > comparison || comparison == 2) ? 1.0 : 0.0}})
                 for (const bool matches : {false, true})
@@ -37221,6 +37227,33 @@ TEST(OblivionWorldTest, AutonomousPlayerCombatRequiresHostilityResidenceAndDetec
         const auto standing = ai.detection(actor, player);
         EXPECT_TRUE(standing.mDetected);
         EXPECT_GT(standing.mLevel, sneaking.mLevel);
+        // A positive awareness query remains GetDetected even behind the
+        // observer. Visual combat acquisition retains its independent cone.
+        auto observerPosition = actor.getRefData().getPosition();
+        auto turnedAway = observerPosition;
+        turnedAway.rot[2] = osg::PI;
+        actor.getRefData().setPosition(turnedAway);
+        const auto heard = ai.detection(actor, player);
+        ASSERT_GT(heard.mLevel, 50);
+        EXPECT_FALSE(heard.mDetected);
+        EXPECT_FALSE(acquire());
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        const auto ref = [](const ESM::FormKey& value) -> ObScript::Value {
+            return ObScript::ReferenceValue{value, {}};
+        };
+        EXPECT_EQ(ObScript::asInteger(host.call("GetDetected", ref(key), {ref(playerKey)}, {}, {})), 1);
+        ESM4::PackageCondition detected{};
+        detected.mFunction = 45;
+        detected.mParameter1.mIsFormId = true;
+        detected.mParameter1.mReferenceKey = playerKey;
+        detected.mOperator = ESM4::ConditionOperator::Equal;
+        detected.mComparisonValue = 1;
+        EXPECT_EQ(ai.evaluateDialogueConditions(actor, player, std::span(&detected, 1)),
+            ESM4::ConditionResult::True);
+        MWMechanics::OblivionAiService::DialogueConditionInputs idleInputs;
+        EXPECT_EQ(ai.evaluateNativeIdleConditions(actor, std::span(&detected, 1), idleInputs),
+            ESM4::ConditionResult::True);
+        actor.getRefData().setPosition(observerPosition);
         // The controller has already consumed mPosition when other actors
         // evaluate detection. Its retained movement must still make noise.
         auto& playerMovement = player.getClass().getMovementSettings(player);

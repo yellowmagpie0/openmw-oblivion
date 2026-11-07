@@ -2488,7 +2488,7 @@ namespace MWWorld
                     return std::int64_t(oblivionAi()->getLOS(observer, detected));
                 const ESM4::DetectionResult result = oblivionAi()->detection(observer, detected);
                 return name == "getdetectionlevel" ? ObScript::Value(result.mLevel)
-                                                      : ObScript::Value(std::int64_t(result.mDetected));
+                                                      : ObScript::Value(std::int64_t(ESM4::nativeGetDetected(result)));
             }
             if (name == "getlos" || name == "getlineofsight")
                 return std::int64_t(mWorld.getLOS(observer, detected));
