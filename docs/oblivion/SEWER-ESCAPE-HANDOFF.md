@@ -47,11 +47,18 @@ while a threat remains nearby. Later source16 death gates remain intact.
   inspected. Retain the first failed focused controller (180-unit aim gap and
   quick swings). All18 focused and fresh580 Python tests pass; C++ unchanged.
 
-Next: launch prepared `west-threat-full-assembly-02/full-escape.json` as
-continuous18,67 sections/10231 actions with generated Lua syntax checked. Own
-outdoor reload and read-only post-run auditor are prepared. No rendered game
-remains at this checkpoint. Monitor the exact new PID; loaded tests do not replace
-continuous acceptance or permit skipped encounters.
+Current: continuous18 is live from original new game, PID401988, driver401964.
+Manifest `west-threat-full-assembly-02/full-escape.json`,67 sections/10231 actions
+with generated Lua syntax checked. Fix committed31b64b22f4. Actual runtime identity
+is in `full-escape-continuous-18/runtime-identity.json`; automatic archive/watch
+attached. No manual input. Guarded own-outdoor follow-up PID401966 and read-only
+post-run auditor PID401967 are waiting for complete course success.
+
+Next action: monitor this exact PID/course. Do not restart a healthy game or
+replace live resources. Loaded tests do not replace continuous acceptance or
+permit skipped encounters. If health falls under live attack during a later
+walking step, inspect/respond promptly; ordinary manual corrections are allowed
+only with separate actual-input records and a corresponding strict audit.
 
 Current engine snapshot: `rat-descending-recovery-runtime-snapshot-01`, ELF
 `13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`.
