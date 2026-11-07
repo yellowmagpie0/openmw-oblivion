@@ -32,11 +32,26 @@ was intentionally stopped after death; no outdoor reload or acceptance audit
 was launched. Actual game/driver are gone. Source31/32 are genuine pre/post-northern
 rat checkpoints for focused testing; never reset actors or splice continuations.
 
-Current chunk: make source15 follow its original five waypoints while responding
-to nearby038171/038172 through ordinary aiming, attacks and bounded movement.
-Retain the later source16 required-death gates; a distant enemy need not be chased
-through walls before its original route. Prove the north-to-west course from the
-actual pre-fight save, then launch another original-new-game full67 course.
+The source15 threat-response correction is now verified. It retains the original
+five waypoints/radii, aims at nearby038171/038172 within350 units, uses ordinary
+one-second held swings and bounded forward steps, and holds route completion
+while a threat remains nearby. Later source16 death gates remain intact.
+[Threat-response proof](SEWER-WEST-THREAT-RESPONSE-VERIFICATION.json):
+
+- Genuine pre-fight F5seq31→original14–16 passes: all three northern rats plus
+  western038176 are native Player kills. Route end44.28HP; ordinary recovery
+  reaches72.44HP; final66.8HP. All8 actual F5s parsed/native exact.
+- Genuine active-pursuer F5seq32→source15 passes: native pursuer engagement
+  restored, both extra rats are Player kills,64.96→49.92HP alive. Actual F5 exact.
+- Both entries0diff, automated inputs delivered, native ends0/0/0, captures
+  inspected. Retain the first failed focused controller (180-unit aim gap and
+  quick swings). All18 focused and fresh580 Python tests pass; C++ unchanged.
+
+Next: launch prepared `west-threat-full-assembly-02/full-escape.json` as
+continuous18,67 sections/10231 actions with generated Lua syntax checked. Own
+outdoor reload and read-only post-run auditor are prepared. No rendered game
+remains at this checkpoint. Monitor the exact new PID; loaded tests do not replace
+continuous acceptance or permit skipped encounters.
 
 Current engine snapshot: `rat-descending-recovery-runtime-snapshot-01`, ELF
 `13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`.

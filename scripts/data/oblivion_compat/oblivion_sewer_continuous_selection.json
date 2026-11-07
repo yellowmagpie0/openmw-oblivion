@@ -103,7 +103,7 @@
     {
       "segment": 15,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_west_approach.json",
-      "action_count": 175,
+      "action_count": 7,
       "source_course": "joined-substructure-west-approach-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

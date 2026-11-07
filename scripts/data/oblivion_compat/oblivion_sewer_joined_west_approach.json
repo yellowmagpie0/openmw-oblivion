@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(-299.9357604980469,3430.19091796875,-264.0),util.vector3(-329.5753173828125,3592.852294921875,-248.0),util.vector3(-458.577880859375,3824.40234375,-258.0),util.vector3(-492.0541076660156,4163.08740234375,-258.0),util.vector3(-619.494873046875,4200.21728515625,-230.0)}}\nlocal step=1\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n assert(not Actor.isDead(self),'Player died on joined corridor')\n if frame==5 then\n  local armor=0 local axe=false\n  for _,item in pairs(Actor.getEquipment(self)) do\n   if item.recordId==core.getFormId('Oblivion.esm',0x661c1) or item.recordId==core.getFormId('Oblivion.esm',0x661c3) then armor=armor+1 end\n   if item.recordId==core.getFormId('Oblivion.esm',0x90613) then axe=true end\n  end\n  assert(armor==2 and axe,'Joined chest gear missing') print('Joined corridor ready')\n end\n if step<=#points then\n  local p=points[step]\n  local d=p-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<55 then print('Joined corridor waypoint '..step..' reached '..tostring(self.position)) step=step+1\n  else\n   local x,y,f=aim(util.vector3(p.x,p.y,self.position.z+100))\n   print(string.format('Joined corridor waypoint %d aim x=%d y=%d',step,x,y))\n   if f then print('Joined corridor waypoint '..step..' facing') end\n  end\n end\n if frame%15==0 then\n  print('Joined corridor Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x38172,0x38171,0x38175,0x38176,0x38818}}) do\n   local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if obj and obj:isValid() then print('Joined room actor '..id..' pos='..tostring(obj.position)..' dead='..tostring(Actor.isDead(obj))..' health='..Actor.stats.dynamic.health(obj).current) end\n  end\n end\nend}}}}\n"
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(-299.9357604980469,3430.19091796875,-264.0),util.vector3(-329.5753173828125,3592.852294921875,-248.0),util.vector3(-458.577880859375,3824.40234375,-258.0),util.vector3(-492.0541076660156,4163.08740234375,-258.0),util.vector3(-619.494873046875,4200.21728515625,-230.0)}}\nlocal step=1\nlocal movingTime=0\nlocal wasMoving=false\nlocal locked=nil\nreturn {{engineHandlers={{onFrame=function(dt)\n frame=frame+1\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Substructure camera settled') end\n assert(not Actor.isDead(self),'Player died on joined corridor')\n if frame==5 then\n  local armor=0 local axe=false\n  for _,item in pairs(Actor.getEquipment(self)) do\n   if item.recordId==core.getFormId('Oblivion.esm',0x661c1) or item.recordId==core.getFormId('Oblivion.esm',0x661c3) then armor=armor+1 end\n   if item.recordId==core.getFormId('Oblivion.esm',0x90613) then axe=true end\n  end\n  assert(armor==2 and axe,'Joined chest gear missing') print('Joined corridor ready')\n end\n local target,distance=nil,nil\n for _,id in ipairs({{0x38171,0x38172}}) do\n  local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n  assert(rat and rat:isValid(),'Original west-approach rat missing')\n  if rat.enabled and not Actor.isDead(rat) and rat.cell and rat.cell.id==self.cell.id then\n   local dist=(rat.position-self.position):length()\n   if not distance or dist<distance then target,distance=rat,dist end\n  end\n end\n if locked and locked:isValid() and locked.enabled and not Actor.isDead(locked)\n  and locked.cell and locked.cell.id==self.cell.id\n  and (locked.position-self.position):length()<=180 then\n  target=locked distance=(locked.position-self.position):length()\n else locked=target end\n local nearThreat=target and distance<=350\n if step<=#points then\n  local p=points[step]\n  local delta=p-self.position\n  if math.sqrt(delta.x*delta.x+delta.y*delta.y)<55 and not nearThreat then\n   print('Joined corridor waypoint '..step..' reached '..tostring(self.position)) step=step+1\n  end\n end\n local cleared=step>#points and not nearThreat\n if cleared then\n  print('Joined west approach cleared')\n  print('Joined west course aim x=0 y=0')\n  print('Joined west course facing')\n else\n  local approach\n  if nearThreat then approach=target.position+util.vector3(0,0,100)\n  elseif step<=#points then approach=util.vector3(points[step].x,points[step].y,self.position.z+100)\n  else approach=target.position+util.vector3(0,0,100) end\n  local x,y,facing=aim(approach)\n  print(string.format('Joined west course aim x=%d y=%d',x,y))\n  if facing then print('Joined west course facing') end\n end\n if nearThreat then print('Joined west nearby threat '..tostring(target.recordId)..' distance='..distance) end\n local moving=self.controls.movement>0\n if moving then\n  if not wasMoving then movingTime=0 end\n  movingTime=movingTime+dt\n  if movingTime>=.25 or (target and distance<=150) or cleared then print('Joined west movement segment stop') end\n end\n wasMoving=moving\n if frame%15==0 then\n  print('Joined corridor Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x38172,0x38171,0x38175,0x38176,0x38818}}) do\n   local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if obj and obj:isValid() then print('Joined room actor '..id..' pos='..tostring(obj.position)..' dead='..tostring(Actor.isDead(obj))..' health='..Actor.stats.dynamic.health(obj).current) end\n  end\n end\nend}}}}\n"
     }
   ],
   "command": [
@@ -49,1044 +49,152 @@
       "name": "OpenMW"
     },
     {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 1 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 1 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 1 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 1 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 1 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 1 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 1 facing",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 1 reached",
-      "timeout_seconds": 90,
+      "type": "repeat_until_log",
+      "pattern": "Joined west approach cleared",
       "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 2 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 2 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 2 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 2 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 2 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
+      "maximum_iterations": 240,
+      "timeout_seconds": 1800,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "Joined west course aim x=",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Joined west course aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Substructure camera settled",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "repeat_until_log",
+          "pattern": "Joined west course facing|Joined west approach cleared",
+          "after_start": true,
+          "maximum_iterations": 16,
+          "timeout_seconds": 120,
+          "abort_on_failure": true,
+          "actions": [
+            {
+              "type": "wait_log",
+              "pattern": "Joined west course aim x=",
+              "after_start": true,
+              "timeout_seconds": 30,
+              "abort_on_failure": true
+            },
+            {
+              "type": "mouse_move",
+              "x": 0,
+              "y": 0,
+              "from_log": {
+                "path": "process.log",
+                "pattern": "Joined west course aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+              }
+            },
+            {
+              "type": "key_down",
+              "value": "F7"
+            },
+            {
+              "type": "wait_log",
+              "pattern": "Substructure camera settled",
+              "after_start": true,
+              "timeout_seconds": 30,
+              "abort_on_failure": true
+            },
+            {
+              "type": "key_up",
+              "value": "F7"
+            }
+          ],
+          "cleanup_actions": [
+            {
+              "type": "key_up",
+              "value": "w"
+            },
+            {
+              "type": "key_up",
+              "value": "F7"
+            },
+            {
+              "type": "mouse_up",
+              "button": 1
+            }
+          ]
+        },
+        {
+          "type": "mouse_down",
+          "button": 1
+        },
+        {
+          "type": "sleep",
+          "seconds": 1.0
+        },
+        {
+          "type": "mouse_up",
+          "button": 1
+        },
+        {
+          "type": "sleep",
+          "seconds": 1.3
+        },
+        {
+          "type": "key_down",
+          "value": "w"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Joined west movement segment stop",
+          "after_start": true,
+          "timeout_seconds": 10,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "mouse_up",
+          "button": 1
+        }
+      ]
     },
     {
       "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 2 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 2 facing",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 2 reached",
-      "timeout_seconds": 90,
+      "pattern": "Joined west approach cleared",
       "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 3 aim x=",
       "timeout_seconds": 30,
-      "after_start": true,
       "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 3 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 3 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 3 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 3 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 3 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 3 facing",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 3 reached",
-      "timeout_seconds": 90,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 4 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 4 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 4 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 4 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 4 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 4 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 4 facing",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 4 reached",
-      "timeout_seconds": 90,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 5 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 5 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 5 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 5 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 5 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 5 aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined corridor waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Substructure camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 5 facing",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined corridor waypoint 5 reached",
-      "timeout_seconds": 90,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
     },
     {
       "type": "key",
@@ -1103,10 +211,11 @@
     }
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 900,
+  "timeout_seconds": 2400,
   "expected_exit": 0,
   "expected_log": [
-    "Joined corridor waypoint 5 reached"
+    "Joined corridor waypoint 5 reached",
+    "Joined west approach cleared"
   ],
   "forbidden_log": [
     "Unsupported ObScript command",

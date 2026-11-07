@@ -1,0 +1,339 @@
+{
+  "scope": "Ordinary combat-aware source15 western approach and original14\u201316 continuation; not full escape acceptance.",
+  "full_escape_complete": false,
+  "change": "Keep original five waypoints/radii. Aim at known nearby threats within350 units, use ordinary one-second held swings and bounded forward steps, and hold waypoint completion while a threat remains nearby. Actor/stat/quest data are read only. Later source16 death gates retained.",
+  "source_manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_west_approach.json",
+  "source_manifest_sha256": "1e11a060079b3870037f03d452221bdb01215310f27588165fc9aabeb3f06582",
+  "original_waypoints_source": "39a9ad5ea4",
+  "original_waypoints_unchanged": true,
+  "failed_original_full_course": "SEWER-CONTINUOUS-RECOVERY-PREFIX-VERIFICATION.json records original continuous17 Player death at15 under038172/038171 pursuit.",
+  "retained_failed_focus": {
+    "course": "west-threat-course-01",
+    "passed": false,
+    "reason": "Initial180-unit aiming threshold remained on route while the pursuer landed hits around205 units. Quick0.1-second swings of the worn axe also prolonged combat. Player died; retained as failed."
+  },
+  "runtime_cases": [
+    {
+      "course": "west-threat-course-02",
+      "scope": "Original14\u201316 north/west route and70HP recovery",
+      "passed": true,
+      "runtime_identity": {
+        "observed_utc": "2026-11-07T14:45:34.805525+00:00",
+        "game_pid": 400757,
+        "process_start_ticks": "180092299",
+        "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-descending-recovery-runtime-snapshot-01/openmw",
+        "exe_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+        "snapshot_manifest": {
+          "elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+          "verification": {
+            "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+            "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+          },
+          "resources_version": "0.52.0\n79a971c0b298fe5a3608e744e51004249bb93fab\n\n",
+          "scope": "Downward-only recovery sweep retaining grounded support guard and legacy lateral/upward overlap separation. Focused10 actor bounds pass; integration pending."
+        },
+        "loaded_libraries": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+            "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+            "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+            "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+            "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/sdl-input.so",
+            "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+          }
+        ],
+        "scope": "Actual immutable runtime; gameplay acceptance separate."
+      },
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-17/retained-saves/3-0031-Quicksave.omwsave",
+        "source_save_sha256": "9425004e48612ff4da3141edb3df0fd467ebdbdeb3bdb63b0841a42700621430",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "all_saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 8,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "9beb0204a6d0c1dcdc18cfc9a4b881c9c55fc36e68b08312c30148cbd338f045",
+            "live_sha256": "087cc9b0e6fca56079aa9fb0f75927c60778347eb777e70f1e81459c4ca91b1c",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 4,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/retained-saves/3-0004-Quicksave.omwsave",
+            "save_sha256": "10eea998f0b7897b3e20fb5135df677252421a633477bdfc7ac953316e7d26fc",
+            "live_sha256": "83cc9b1e0bafee1d2d294265d592b7bf50d4d1d06199e7e043af7baf5eaff1b3",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 5,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/retained-saves/3-0005-Quicksave.omwsave",
+            "save_sha256": "b15ed3bf6c5a1804c1cdf98b8bf56171aeae31a16dd20710a96e8485c437a847",
+            "live_sha256": "3bf9d2ca02fe074d8e1329ceed619eb7d61ce1467711a55aec9287ecb49f8532",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 6,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/retained-saves/3-0006-Quicksave.omwsave",
+            "save_sha256": "fa53f8ebb3d1aa6d12456d68f7fce5b99352f99f2c0e21060455475775cef77c",
+            "live_sha256": "1573a96d80bcb2d262067cef7c81b5ebc30663fb799d82bfb9d78ddc53fc5bae",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 7,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/retained-saves/3-0007-Quicksave.omwsave",
+            "save_sha256": "e8328b070e789280fe796afa0ecd28c34a58fc8b413b0314eb684b4b65c93378",
+            "live_sha256": "9b75b3d18b1d5e71f82e71a19cc96feb0595f057458c0244af239247b2207da1",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 8,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/retained-saves/3-0008-Quicksave.omwsave",
+            "save_sha256": "7bb93ec2be8a8fbf97cfbf611c93a4e4fcf5dd9bab7c1bf54fedbdcc4fd22503",
+            "live_sha256": "9fd07840e138dd56f4c25463303b31cf107e4bd83ee4035eb06457ad735782ce",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 9,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/retained-saves/3-0009-Quicksave.omwsave",
+            "save_sha256": "6ef3c9954fb32b39036b931f1217e88852214fbc76e3336c5e97f00ec166f9e7",
+            "live_sha256": "7199c9b53f37837be0d449d50522f14c36562731afbeb8418acfd2f3b68a691e",
+            "parsed_native_exact": true
+          },
+          {
+            "sequence": 10,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-course-02/retained-saves/3-0010-Quicksave.omwsave",
+            "save_sha256": "6238880561eadc34bd74c3fab86b7a8c0ef06293ebb8f91e4fcb3424cbc32b87",
+            "live_sha256": "5a8ec4ffebffd7cdd3ae950b324d7f565088c3df32314fe1ae2a5c81c03c58e8",
+            "parsed_native_exact": true
+          }
+        ]
+      },
+      "final_health": 66.80001068115234,
+      "native_player_kills": [
+        {
+          "actor": "content:oblivion.esm:038171",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:038172",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:038173",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:038176",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ],
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 400757,
+        "sequence": 11,
+        "tick": 5245,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 10,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "all_automated_input_delivered": true,
+      "manual_game_input": false,
+      "final_engagements": [],
+      "route_end_health": 44.280006408691406,
+      "recovery_health": 72.44001007080078
+    },
+    {
+      "course": "west-threat-active-pursuer-01",
+      "scope": "Source15 only from the actual engaged-pursuer save",
+      "passed": true,
+      "runtime_identity": {
+        "observed_utc": "2026-11-07T14:53:42.771179+00:00",
+        "game_pid": 401397,
+        "process_start_ticks": "180140780",
+        "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-descending-recovery-runtime-snapshot-01/openmw",
+        "exe_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+        "snapshot_manifest": {
+          "elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+          "verification": {
+            "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+            "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+          },
+          "resources_version": "0.52.0\n79a971c0b298fe5a3608e744e51004249bb93fab\n\n",
+          "scope": "Downward-only recovery sweep retaining grounded support guard and legacy lateral/upward overlap separation. Focused10 actor bounds pass; integration pending."
+        },
+        "loaded_libraries": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+            "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+            "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+            "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+            "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-active-pursuer-01/sdl-input.so",
+            "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+          }
+        ],
+        "scope": "Actual immutable runtime; gameplay acceptance separate."
+      },
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-17/retained-saves/3-0032-Quicksave.omwsave",
+        "source_save_sha256": "2c3c358a9ddca64fcbaab106152c452c2e7a2f3cfe41598f2c581965ad228d54",
+        "whole_state_restore": true,
+        "schema_migration": null,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "all_saves": {
+        "passed": true,
+        "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+        "count": 1,
+        "saves": [
+          {
+            "sequence": 3,
+            "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/west-threat-active-pursuer-01/retained-saves/3-0003-Quicksave.omwsave",
+            "save_sha256": "be05c98d02db6b266221273f104b8ce470d2bd0466fdc27dbd5299baafb1cea3",
+            "live_sha256": "4714a94e2db4fd4b07330b4f1c7334a2bba7749be343bf286de3e5067eb405c3",
+            "parsed_native_exact": true
+          }
+        ]
+      },
+      "final_health": 49.920005798339844,
+      "native_player_kills": [
+        {
+          "actor": "content:oblivion.esm:038171",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:038172",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:038173",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ],
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 401397,
+        "sequence": 4,
+        "tick": 2868,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "all_automated_input_delivered": true,
+      "manual_game_input": false,
+      "final_engagements": [],
+      "entry_health": 64.95999908447266,
+      "entry_pursuer_engaged": true
+    }
+  ],
+  "focused_recipe_tests": {
+    "path": "build/oblivion-compat/sewer-escape/west-threat-focused-02.log",
+    "executed": 18,
+    "passed": true
+  },
+  "python_integration": {
+    "path": "build/oblivion-compat/sewer-escape/west-threat-broad-python-01/verification.json",
+    "source": {
+      "head": "39a9ad5ea47f7d9fb38c825989d574ec7ce9402f",
+      "source_fingerprint": "419a3ec8c5808ac04d5e70d0b866dbf9270996e551ce672d9538d904848e7a62"
+    },
+    "results": {
+      "python": {
+        "executed": 580,
+        "passed": true,
+        "log_sha256": "1def2802332c2da1f887b3b7d00260ffed70038454862e4078261f8f70239506"
+      }
+    }
+  },
+  "engine_gate_reuse": "C++ unchanged: retain2223 normal/2223 ASan-UBSan engine gates with original fingerprints in SEWER-DESCENDING-RECOVERY-VERIFICATION.json; no new engine build required for controller data.",
+  "rendered_review": [
+    {
+      "path": "build/oblivion-compat/sewer-escape/west-threat-course-02/segment02-joined-west-loop-approach.png",
+      "sha256": "a872877739261fc0a77263feb1e4c6f5a544c1b032f73d04e5155f2686f4a95a",
+      "inspected": true,
+      "passed": true,
+      "notes": "Living Player with axe at original route end; textured geometry and readable HUD."
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/west-threat-course-02/segment03-phase6-joined-northern-rat-victory.png",
+      "sha256": "6dbce5fac821bacf9191b7f434abbafcdc945e4aba4eddf0e9e449b369c694ac",
+      "inspected": true,
+      "passed": true,
+      "notes": "Living Player, axe and healthy HUD in western rat room; standing dead-rat pose remains a known limitation, death proved from native state."
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/west-threat-active-pursuer-01/joined-west-loop-approach.png",
+      "sha256": "383635234959e962af149beda5dad3844b6e5bb8f94d2b2c8d91783041754b5d",
+      "inspected": true,
+      "passed": true,
+      "notes": "Living Player with axe at original route end; HUD health corresponds to the49.92HP native save."
+    }
+  ],
+  "prepared_full_course": {
+    "path": "build/oblivion-compat/sewer-escape/west-threat-full-assembly-02/full-escape.json",
+    "segments": 67,
+    "actions": 10231,
+    "generated_observer_syntax": "luajit -b passed; preparation only"
+  },
+  "remaining": "New original-new-game full67 course, physical exterior exit, own fresh-PID outdoor reload/walk, every-save/input/native audits and rendered review."
+}
