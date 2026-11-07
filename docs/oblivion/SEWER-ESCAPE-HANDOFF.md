@@ -74,6 +74,22 @@ Implement their state/save behavior; do not waive these in final audit. Attach/r
 or overwrite of its snapshot files. Ignored current handles:
 `reunion-current-handles.json`; inspect actual processes before reuse.
 
+Current manhole correction is verified in `manhole-visible-target-01`: original
+last3 waypoints retained; observer samples actual visible mesh points, normal
+mouse/F7 corrections bounded12/90sec, fresh crosshair identity required before
+Space. Original0270e2 teleports once into0272f2. Actual F5/native exact,
+Player37.08HP, whole entry0diff, all inputs, no observer findings/native end clear.
+Complete matching snapshot resources used. Raw fixed-bounds candidate remains
+failed at target readiness; raw earlier diagnostic remains failed despite its
+actual teleport (resource error/missing skipped-waypoint expectation).
+[Manhole targeting proof](SEWER-MANHOLE-TARGET-VERIFICATION.json).
+Source64 now38 top-level actions, all11 physical points retained. Full67/10458
+LuaJIT and18 focused Python cases pass. Optional whole-world per-update script
+report removed from editable full opening; F5/native snapshots/events remain.
+C++ unchanged, reuse current normal/sanitizer2217 gates. Next continue65–67 from
+actual manhole save, implement the two original story command state gaps, then
+run full67 new game and its own outdoor reload. Full escape remains incomplete.
+
 ## Earlier bounded checkpoints
 
 `cavern-fire-bypass-01` and `cavern-log-trap-outcome-01` are terminal. No build

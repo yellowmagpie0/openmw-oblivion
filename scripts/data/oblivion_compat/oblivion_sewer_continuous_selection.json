@@ -446,7 +446,7 @@
     {
       "segment": 64,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_final_sewers_entry.json",
-      "action_count": 57,
+      "action_count": 38,
       "source_course": "joined-final-sewers-entry-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

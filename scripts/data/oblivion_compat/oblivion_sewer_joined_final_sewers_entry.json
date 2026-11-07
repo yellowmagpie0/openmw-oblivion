@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(3603.7,10369.5,-1440),util.vector3(3988.6,10366.7,-1440),util.vector3(4104.5,10363.8,-1440),util.vector3(4102.1,10123.6,-1440),util.vector3(4092.4,9863.1,-1440),util.vector3(4109.3,9732,-1440),util.vector3(4101.8,9478.6,-1440),util.vector3(4438,9350.4,-1440),util.vector3(4653.9,9346.8,-1440),util.vector3(4890.9,9343.3,-1440),util.vector3(5011.9,9344.1,-1440)}}\nlocal step=1\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n if self.cell and self.cell.id==core.getFormId('Oblivion.esm',0x272f2) then\n  print('Joined Player entered Imperial Sewers03') return\n end\n for _,row in ipairs({{{{0x2282e,'Joined sewer key door'}},{{0x270e2,'Joined sewer manhole'}}}}) do\n  local o=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',row[1]))\n  if o and o:isValid() then\n   local x,y=aim(o.position)\n   print(string.format('%s aim x=%d y=%d',row[2],x,y))\n  end\n end\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Adaptive camera settled') end\n assert(not Actor.isDead(self),'Player died along escort route')\n if frame==5 then print('Adaptive route ready') end\n if step<=#points then\n  local d=points[step]-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<25 then\n   print('Adaptive waypoint '..step..' reached '..tostring(self.position))\n   step=step+1\n  end\n end\n if step>#points then\n  print('Adaptive route complete')\n  print('Adaptive route aim x=0 y=0')\n else\n  local p=points[step]\n  local x,y=aim(util.vector3(p.x,p.y,self.position.z+100))\n  print(string.format('Adaptive route aim x=%d y=%d point=%d',x,y,step))\n end\n if frame%30==0 then\n  print('Joined current cell '..self.cell.name)\n  print('Adaptive Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x32a16,0x32a17,0x32a18}}) do\n   local actor=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if actor and actor:isValid() then print('Adaptive escort '..id..' pos='..tostring(actor.position)) end\n  end\n end\nend}}}}\n"
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal input=require('openmw.input')\nlocal frame=0\nlocal sampleFrame=nil\nlocal held=false\nlocal function aim(p)\n local t=camera.getViewTransform():inverse()\n local origin=t:apply(util.vector3(0,0,0))\n local f=t:apply(util.vector3(0,0,-1))-origin\n local d=p-origin\n local yaw=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=math.atan2(f.z,math.sqrt(f.x*f.x+f.y*f.y))-math.atan2(d.z,math.sqrt(d.x*d.x+d.y*d.y))\n local gain=camera.getMode()==camera.MODE.FirstPerson and 1 or 2\n local function units(a) return math.max(-8192,math.min(8192,math.floor(a*5120+.5))) end\n return units(yaw*gain),units(pitch),math.abs(yaw)<.04 and math.abs(pitch)<.04\nend\nlocal points={{util.vector3(3603.7,10369.5,-1440),util.vector3(3988.6,10366.7,-1440),util.vector3(4104.5,10363.8,-1440),util.vector3(4102.1,10123.6,-1440),util.vector3(4092.4,9863.1,-1440),util.vector3(4109.3,9732,-1440),util.vector3(4101.8,9478.6,-1440),util.vector3(4438,9350.4,-1440),util.vector3(4653.9,9346.8,-1440),util.vector3(4890.9,9343.3,-1440),util.vector3(5011.9,9344.1,-1440)}}\nlocal step=1\nreturn {{engineHandlers={{onFrame=function()\n frame=frame+1\n if self.cell and self.cell.id==core.getFormId('Oblivion.esm',0x272f2) then\n  print('Joined Player entered Imperial Sewers03') return\n end\n for _,row in ipairs({{{{0x2282e,'Joined sewer key door'}},{{0x270e2,'Joined sewer manhole'}}}}) do\n  local o=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',row[1]))\n  if o and o:isValid() then\n   local anchor=o.position\n   if row[1]==0x270e2 and step>#points then\n    local bounds=o:getBoundingBox()\n    local origin=camera.getViewTransform():inverse():apply(util.vector3(0,0,0))\n    local found=false\n    for _,z in ipairs({{0.75,0,-0.75}}) do\n     if found then break end\n     for _,x in ipairs({{0,-0.5,0.5}}) do\n      if found then break end\n      for _,y in ipairs({{0,-0.5,0.5}}) do\n       local point=bounds.center+util.vector3(x*bounds.halfSize.x,y*bounds.halfSize.y,z*bounds.halfSize.z)\n       local ray=nearby.castRenderingRay(origin,point,{{ignore=self}})\n       if ray.hitObject and ray.hitObject.id==o.id then anchor=point found=true break end\n      end\n     end\n    end\n   end\n   local x,y=aim(anchor)\n   if row[1]==0x270e2 and step>#points then\n    local t=camera.getViewTransform():inverse()\n    local origin=t:apply(util.vector3(0,0,0))\n    local ray=nearby.castRenderingRay(origin,t:apply(util.vector3(0,0,-300)),{{ignore=self}})\n    if ray.hitObject and ray.hitObject.id==o.id then print('Joined sewer manhole targeted') end\n   end\n   print(string.format('%s aim x=%d y=%d',row[2],x,y))\n  end\n end\n local down=input.isKeyPressed(input.KEY.F7)\n if down and not held then sampleFrame=frame+3 end\n if not down then sampleFrame=nil end\n held=down\n if sampleFrame and frame>=sampleFrame then print('Adaptive camera settled') end\n assert(not Actor.isDead(self),'Player died along escort route')\n if frame==5 then print('Adaptive route ready') end\n if step<=#points then\n  local d=points[step]-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<25 then\n   print('Adaptive waypoint '..step..' reached '..tostring(self.position))\n   step=step+1\n  end\n end\n if step>#points then\n  print('Adaptive route complete')\n  print('Adaptive route aim x=0 y=0')\n else\n  local p=points[step]\n  local x,y=aim(util.vector3(p.x,p.y,self.position.z+100))\n  print(string.format('Adaptive route aim x=%d y=%d point=%d',x,y,step))\n end\n if frame%30==0 then\n  print('Joined current cell '..self.cell.name)\n  print('Adaptive Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x32a16,0x32a17,0x32a18}}) do\n   local actor=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if actor and actor:isValid() then print('Adaptive escort '..id..' pos='..tostring(actor.position)) end\n  end\n end\nend}}}}\n"
     }
   ],
   "command": [
@@ -387,128 +387,51 @@
       "abort_on_failure": true
     },
     {
-      "type": "wait_log",
-      "pattern": "Joined sewer manhole aim x=",
-      "timeout_seconds": 30,
+      "type": "repeat_until_log",
+      "pattern": "Joined sewer manhole targeted",
       "after_start": true,
+      "maximum_iterations": 12,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "Joined sewer manhole aim x=",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Joined sewer manhole aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "Adaptive camera settled",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "F7"
+        }
+      ],
       "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined sewer manhole aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Adaptive camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined sewer manhole aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined sewer manhole aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Adaptive camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined sewer manhole aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined sewer manhole aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Adaptive camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Joined sewer manhole aim x=",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "Joined sewer manhole aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "Adaptive camera settled",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
     },
     {
       "type": "key",

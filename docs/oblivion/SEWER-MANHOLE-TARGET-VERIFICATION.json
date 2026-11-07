@@ -1,0 +1,48 @@
+{
+  "scope": "Original64 post-key-door last3 waypoints and manhole activation from genuine failed-continuation save18; not full escape acceptance",
+  "passed": true,
+  "save_sha256": "70eb26795543648ee6e07c0adee722c37597ef661a834388492d0335c4ed5a6c",
+  "native_save_exact": true,
+  "whole_entry": {
+    "passed": true,
+    "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-after-marker-g-01/retained-saves/3-0018-Quicksave.omwsave",
+    "source_save_sha256": "fb1df0809ce951fe3f0de1ab457758dd72346e2c05d7194cc4e9b976e2c4b9ea",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "cell": "content:oblivion.esm:0272f2",
+  "health": 37.07862091064453,
+  "native_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 317950,
+    "sequence": 4,
+    "tick": 498,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 3,
+    "pending_count": 0,
+    "unsupported_count": 0
+  },
+  "input_delivery_exact": true,
+  "no_observer_findings": true,
+  "resources_version": "0.52.0\nd59607ee6858db52fc0daa8072724c2a82d73ea9\n\n",
+  "source": "scripts/data/oblivion_compat/oblivion_sewer_joined_final_sewers_entry.json",
+  "focused_recipe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/manhole-visible-target-assembly-01/course.json",
+  "retained_failed_attempts": [
+    "remaining-after-marker-g-01",
+    "manhole-approach-diagnostic-01",
+    "manhole-targeted-01"
+  ],
+  "checks": {
+    "python_assembly_repeat": 18,
+    "full_assembly_segments": 67,
+    "full_assembly_actions": 10458,
+    "luajit_compile": true
+  },
+  "behavior": "Read-only visible-surface sampling, bounded normal mouse corrections and fresh crosshair identity before Space. All physical approach points retained. Key door targeting unchanged.",
+  "full_opening_reporting": "Remove optional per-update whole-world report; actual F5/native receipt snapshots, native event stream and error/unsupported observations remain enabled.",
+  "engine_evidence_reuse": "C++ unchanged since aa477189fa; full2217 normal and2217 ASan/UBSan engine inventories retain original fingerprints/provenance.",
+  "full_escape_complete": false
+}

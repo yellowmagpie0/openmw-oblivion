@@ -413,7 +413,6 @@
   "virtual_gamepad": true,
   "environment": {
     "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
-    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
     "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
     "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
     "OPENMW_M15_EPOCH": "3",
