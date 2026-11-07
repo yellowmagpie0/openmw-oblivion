@@ -48,74 +48,22 @@
       "name": "OpenMW"
     },
     {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 1 )",
-      "timeout_seconds": 30,
+      "type": "repeat_until_log",
+      "pattern": "West course phase 1:\\s*(?:Joined zombie health restored)",
+      "maximum_iterations": 20,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "sleep",
+          "seconds": 12
+        }
+      ],
+      "cleanup_actions": [],
       "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 2 )",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 3 )",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 4 )",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
-    },
-    {
-      "type": "key",
-      "value": "c"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 1:\\s*(?:Joined zombie healing step 5 )",
-      "timeout_seconds": 30,
-      "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 12
     },
     {
       "type": "wait_log",

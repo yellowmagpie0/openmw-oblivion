@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "scope": "Original22 recovery driver follows actual full health; full uninterrupted sewer escape incomplete.",
+  "full_escape_complete": false,
+  "failure": "build/oblivion-compat/sewer-escape/remaining-continuity-03-failure-verification.json",
+  "source_change": "Replace five fixed casts with bounded20-attempt/300sec repeat of ordinary C and12sec recovery until existing79.99 full-health observation. Preserve full physical route and all other gates. Source619\u2192605 actions; selection22 updated accordingly.",
+  "source_manifest_sha256": "18374a299719586e53ce8f65c39bac9e5becf1230213caa37bbd731b3b74846c",
+  "focused_course": "build/oblivion-compat/sewer-escape/root-descent-healing-feedback-01",
+  "actions_complete": true,
+  "input_archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-03/retained-saves/3-0023-Quicksave.omwsave",
+  "input_save_sha256": "8bb7c6fdd21e0d32141855245c441a1b302510de56d050612d13aed9f1c3bd3a",
+  "whole_entry": {
+    "passed": true,
+    "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-03/retained-saves/3-0023-Quicksave.omwsave",
+    "source_save_sha256": "8bb7c6fdd21e0d32141855245c441a1b302510de56d050612d13aed9f1c3bd3a",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "health_before": 43.900001525878906,
+  "health_after": 80,
+  "loop_iterations": 6,
+  "loop_seconds": 78.514461,
+  "native_heal_releases": [
+    {
+      "health": 50.94,
+      "magicka": 61.0
+    },
+    {
+      "health": 57.98,
+      "magicka": 52.8164
+    },
+    {
+      "health": 65.02,
+      "magicka": 45.6609
+    },
+    {
+      "health": 72.06,
+      "magicka": 38.4374
+    },
+    {
+      "health": 79.1,
+      "magicka": 31.2057
+    },
+    {
+      "health": 80.0,
+      "magicka": 24.0407
+    }
+  ],
+  "inventory_cell_position_unchanged": true,
+  "all_input_bytes_delivered": true,
+  "actual_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/root-descent-healing-feedback-01/retained-saves/3-0003-Quicksave.omwsave",
+  "save_sha256": "2b1e5f263eac25aa6da2474129ed7a5bdf3f866163229f5073adffd8b508184f",
+  "native_snapshot_sha256": "e352d3425b8c08b74320d386dc429b3d898248dc0e84cdd1397cfa86607d221e",
+  "parsed_save_equals_native_snapshot": true,
+  "queues": {
+    "native_combat_engagements": [],
+    "pending_death_events": [],
+    "physical_action_owners": [],
+    "native_spell_casts": [],
+    "native_magic_projectiles": []
+  },
+  "native_run_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 263051,
+    "sequence": 4,
+    "tick": 1143,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 3,
+    "pending_count": 0,
+    "unsupported_count": 0
+  },
+  "rendered_inspection": "phase1-joined-zombie-healed.png inspected: full health HUD, axe and passage visible; native checks establish exact80HP.",
+  "python": {
+    "log": "build/oblivion-compat/sewer-escape/root-descent-healing-python-focused-01.log",
+    "tests": 18,
+    "failures": 0,
+    "skips": 0
+  },
+  "full_assembly": {
+    "segments": 67,
+    "actions": 11545,
+    "compile": "build/oblivion-compat/sewer-escape/root-descent-healing-full-assembly-01/luajit-syntax-verification.json"
+  },
+  "runtime_openmw_sha256": "ff12ce922fa13e8500ab613cb6a1c7745f808da5563eba56c9243a26451c7f6d",
+  "implementation_gates": "Data-only driver/selection change. Reuse unchanged2210 normal/2210 ASan-UBSan engine provenance in SEWER-EQUIPMENT-PAGE-VERIFICATION.json; no fresh sanitizer runtime claim.",
+  "remaining": "Continue original22\u201367 diagnostic from genuine prehealing save, restore known Magic GUI category using recorded normal inputs, then final mandatory original-new-game67-segment PID and own outdoor fresh reload."
+}

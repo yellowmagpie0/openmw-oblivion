@@ -152,7 +152,7 @@
     {
       "segment": 22,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_root_descent.json",
-      "action_count": 619,
+      "action_count": 605,
       "source_course": "joined-root-descent-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

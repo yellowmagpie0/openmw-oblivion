@@ -15,7 +15,35 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — continue later route after proven runner departure
+## Current chunk — continue root descent after feedback healing fix
+
+Source22 healing correction is complete: five fixed casts reached only79.1HP
+from43.9, then old driver stopped casting and waited for full health.
+`remaining-continuity-03` is terminal FAILED at that gate, game0/launcher1,
+no runtime findings, end0error/0pending/0unsupported. Original10–21 completed
+in that loaded diagnostic; original22 stopped before descent. Real saves3/4/5
+prove gear76HP, Player zombie0491fc victory43.1HP, recovery80HP, all native-exact
+with clear queues. Raw failure: `remaining-continuity-03-failure-verification.json`.
+Preserve its genuine prehealing archive23 SHA8bb7c6fd…3bd3a,43.9HP.
+
+Source22 now repeats ordinary C +12sec recovery until existing79.99 full-health
+gate, bounded20 attempts/300sec. Physical route/other gates unchanged;619→605
+actions and selection updated. `root-descent-healing-feedback-01` passes from
+actual archive23:6 native releases43.9→80, inventory/cell/position unchanged,
+whole loaded entry0diff, native-exact F5, all input bytes delivered,
+end0error/0pending/0unsupported. Capture inspected.18 focused Python and
+full67/11545-action LuaJIT compilation pass; unchanged engine gates retain
+original provenance. [Recovery proof](SEWER-ROOT-DESCENT-HEALING-VERIFICATION.json).
+
+Next prepared diagnostic: `remaining-from-root-descent-assembly-01/remaining.json`,
+original22–67 from genuine archive23. Recorded ordinary Tab/3RS/B inputs restore
+the known Magic inventory category from original10; inspect seeded capture.
+This preserves later GUI context rather than masking it through a fresh load.
+Check actual processes/status and `menu-admission-current-work.json` before
+launching. Focused recovery is terminal; no later descent/escape acceptance.
+Final acceptance remains one original-new-game67-segment PID and fresh reload
+of its own outdoor save. All evidence paths below are relative to
+`build/oblivion-compat/sewer-escape/` unless stated otherwise.
 
 Runner departure correction is complete. Source11 retains267 input actions,
 route and actual-cell departure criteria; wait120→1200sec, total1200→2400sec,
@@ -31,14 +59,6 @@ Failed `remaining-continuity-01` remains terminal FAILED in source11 at old
 120sec departure wait; sources9/10 passed at1fps with native-exact saves and
 real potion56→76, armor/axe equipped. Preserve raw evidence and
 `remaining-continuity-01-failure-verification.json`.
-
-Next prepared diagnostic: `remaining-continuity-after-runners-assembly-01/remaining.json`,
-original sources10–67 from genuine remaining diagnostic chest save3 SHA0289a23a…e19e.
-Starts before gear/potion to retain real Magic inventory filter for later
-continuity; normal60fps limit, no injected state. Check actual process/status
-and `menu-admission-current-work.json` before launching. Runner focus is terminal;
-no zombie/full escape acceptance from it. Final acceptance remains one original
-new-game67-segment PID and fresh reload of its own outdoor save.
 
 Chest correction `45171111df` is complete: same real full10 save26, default-speed
 chest/gear passes; separate1fps chest reaches90-unit range in112.10sec, all8 types
