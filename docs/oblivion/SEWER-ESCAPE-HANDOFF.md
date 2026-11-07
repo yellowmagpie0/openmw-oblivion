@@ -65,13 +65,44 @@ claimed. Dedicated normal/sanitized fire-contact/reload coverage remains intact.
 broad engine evidence keeps its original provenance.
 [Route and victory-outcome proof](SEWER-LOG-ROUTE-VERIFICATION.json).
 
-Current continuation `remaining-after-logs-01`, game280575, runs original39–67
-from the clean melee replay's actual final F5 (SHAd95eb16c…705d01,10.57HP).
-Read-only archiver280630 and watcher280631 are attached. Inspect actual processes;
-never infer liveness from this handoff. Normal chest/potion route must recover
-from this health before later encounters. Fresh All matches original10's exitAll.
-After the loaded continuation, final acceptance remains one original-new-game
-67-segment PID and a fresh reload of that run's own outdoor save.
+`remaining-after-logs-01` is terminal FAILED at original43: original39 chest and
+40 three actual healing potions recover10.57→80; original41 patrol dies to Player,
+then42 reinforcement03b541 dies but eastern03b52f is engaged. Actual save17 is
+5.03HP; Player dies22:10:21.669 before43's first C. Raw report retains2257 forbidden
+and13542 unreviewed error findings, not a clean observer result. Whole entry only
+2 tiny permitted body-velocity projections; all actual F5s retained. See ignored
+`remaining-after-logs-01-failure-verification.json`.
+
+Original40–45 bounded correction is verified in `reinforcement-healing-07`:
+all6 segments/481 top-level actions PASS, all issued inputs delivered, no observer
+findings, native end0error/0pending/0unsupported. Actual3 health potions recover
+31.69→80 and restore Magic→Misc→All before close. Original41/42/44 now approach
+only until the same target is in reach and keep ordinary LMB attacks/camera
+tracking active until native death. All3 goblins03b543/03b541/03b52f are native
+Player kills. Original43's original4-cast recovery is retained. Original45 still
+requires both remaining supplies consumed and full80HP/80MP recovery; potion
+observation accounts for actual MP cap instead of impossible +40 from46/80.
+No engine/damage changes or world-state injection. All actual F5s receipt-hashed;
+first potion, first recorded deaths and final F5 parsed-native exact. Whole entry
+only3 tiny permitted body-velocity projections. Final combat/death/action/cast/
+projectile queues clear. Captures inspected.18 focused Python and full67/11111
+LuaJIT compile pass; unchanged engine/fire gates retain original provenance.
+[Patrol/recovery proof](SEWER-CAVERN-PATROL-RECOVERY-VERIFICATION.json).
+
+Failed focused attempts01–06 remain retained:01 early C during melee,02 extra
+casts unaffordable,03 both later goblins defeated but impossible capped-MP
+observation,04 wrong pre-loot fixture explicitly stopped after missing-potion
+assertion (not observation timeout),05 old fixed patrol inputs caused death,
+06 patrol passed but old later fixed fights caused eastern-fight death. Interim
+four-heals-between-attacks and single-recovery-cast candidates were replaced by
+the demonstrated active-target combat inputs, not shipped as the final change.
+
+Current `remaining-after-recovery-01` game282620 runs original46–67 from actual
+full-recovery archive11 SHAd8a2a0c6…21dca5 (80HP/80MP, all3 goblins dead).
+Archiver282668/watcher282669 attached; inspect actual processes. Complete shaman,
+reunion/story/choices and exterior from this genuine checkpoint, then regenerate
+and run full67 in one original-new-game PID plus its own outdoor fresh reload.
+Full escape acceptance remains incomplete; loaded continuations do not substitute.
 
 `remaining-continuity-04` is terminal FAILED at original40 potion menu:
 original22–39 completed in one loaded process, but remembered Magic +3RS selects
@@ -97,8 +128,8 @@ LuaJIT pass; unchanged engine gates keep original provenance.
 Separate producer/consumer checks do not prove continuous10→40 with reset;
 that remains for final full run. No synthetic actor/quest/health state used.
 
-The bounded route fix is verified; original39–67 continuation is running with the All
-category precondition now produced by original10. Actual late chest42 remains
+The bounded route fix is committed b0c21ce2bc; loaded39–42 succeeded before the
+reinforcement recovery failure. The All category precondition matches original10. Actual late chest42 remains
 useful for focused potion diagnostics. This loaded diagnostic
 cannot substitute for final original-new-game67-segment PID and fresh reload
 of its own outdoor save. Actual handles/progress: `menu-admission-current-work.json`;

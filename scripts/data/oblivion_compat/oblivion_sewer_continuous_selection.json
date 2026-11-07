@@ -278,21 +278,21 @@
     {
       "segment": 40,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_healing_potions.json",
-      "action_count": 17,
+      "action_count": 20,
       "source_course": "joined-cavern-healing-potions-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
     {
       "segment": 41,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_northern_patrol.json",
-      "action_count": 386,
+      "action_count": 219,
       "source_course": "joined-cavern-patrol-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
     {
       "segment": 42,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_reinforcement.json",
-      "action_count": 282,
+      "action_count": 83,
       "source_course": "joined-cavern-reinforcement-early-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -306,7 +306,7 @@
     {
       "segment": 44,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_engaged_eastern.json",
-      "action_count": 82,
+      "action_count": 8,
       "source_course": "joined-engaged-eastern-fight-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

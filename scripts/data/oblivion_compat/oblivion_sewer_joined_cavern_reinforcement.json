@@ -500,1188 +500,133 @@
       "name": "OpenMW"
     },
     {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 1 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 1 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 2 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 2 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 3 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 3 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 4 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 4 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 5 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 5 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 6 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 6 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key",
-      "value": "F5"
-    },
-    {
-      "type": "sleep",
-      "seconds": 1
-    },
-    {
-      "type": "wait_log",
+      "type": "repeat_until_log",
       "pattern": "West course phase 2:\\s*(?:Joined northern rat in reach)",
-      "timeout_seconds": 5,
-      "after_start": true,
+      "maximum_iterations": 30,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "key_hold",
+          "value": "w",
+          "seconds": 0.5
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "mouse_up",
+          "button": 1
+        }
+      ],
       "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
     },
     {
       "type": "mouse_down",
       "button": 1
     },
     {
-      "type": "sleep",
-      "seconds": 3
-    },
-    {
-      "type": "mouse_up",
-      "button": 1
-    },
-    {
-      "type": "sleep",
-      "seconds": 2
-    },
-    {
-      "type": "key",
-      "value": "F5"
-    },
-    {
-      "type": "sleep",
-      "seconds": 1
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 7 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 7 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "mouse_down",
-      "button": 1
-    },
-    {
-      "type": "sleep",
-      "seconds": 3
-    },
-    {
-      "type": "mouse_up",
-      "button": 1
-    },
-    {
-      "type": "sleep",
-      "seconds": 2
-    },
-    {
-      "type": "key",
-      "value": "F5"
-    },
-    {
-      "type": "sleep",
-      "seconds": 1
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 8 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 8 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "mouse_down",
-      "button": 1
-    },
-    {
-      "type": "sleep",
-      "seconds": 3
-    },
-    {
-      "type": "mouse_up",
-      "button": 1
-    },
-    {
-      "type": "sleep",
-      "seconds": 2
-    },
-    {
-      "type": "key",
-      "value": "F5"
-    },
-    {
-      "type": "sleep",
-      "seconds": 1
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "key_down",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 9 stop)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "w"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Live approach segment 9 released)",
-      "timeout_seconds": 10,
-      "after_start": false,
-      "abort_on_failure": true
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "mouse_move",
-      "x": 0,
-      "y": 0,
-      "from_log": {
-        "path": "process.log",
-        "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
-      }
-    },
-    {
-      "type": "key_down",
-      "value": "F7"
-    },
-    {
-      "type": "wait_log",
-      "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
-      "timeout_seconds": 30,
-      "after_start": true,
-      "abort_on_failure": true
-    },
-    {
-      "type": "key_up",
-      "value": "F7"
-    },
-    {
-      "type": "mouse_down",
-      "button": 1
-    },
-    {
-      "type": "sleep",
-      "seconds": 3
-    },
-    {
-      "type": "mouse_up",
-      "button": 1
-    },
-    {
-      "type": "sleep",
-      "seconds": 2
-    },
-    {
-      "type": "key",
-      "value": "F5"
-    },
-    {
-      "type": "sleep",
-      "seconds": 1
-    },
-    {
-      "type": "wait_log",
+      "type": "repeat_until_log",
       "pattern": "West course phase 2:\\s*(?:Joined northern rat dead)",
-      "timeout_seconds": 10,
-      "after_start": false,
+      "maximum_iterations": 30,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=)",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "West course phase 2:\\s*(?:Joined northern rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+))"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "F7"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "West course phase 2:\\s*(?:Substructure camera settled)",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "F7"
+        },
+        {
+          "type": "mouse_up",
+          "button": 1
+        }
+      ],
       "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
     },
     {
       "type": "screenshot",
