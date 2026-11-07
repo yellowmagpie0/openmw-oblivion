@@ -123,14 +123,24 @@ Source10 actions52→68; full selection67/10466. All18 assembly/repeat tests pas
 C++ unchanged; reuse2222 normal/SAN engine gates with original provenance.
 Inventory preview can T pose; final world view shows the drawn axe and full HUD.
 
-Next: assemble and launch fresh original-new-game continuous13 with both route
-corrections and gear-focus fix, immutable `rat-grounded-runtime-snapshot-01`.
-Accept only all67 sections in that same PID, its actual outdoor save and own
-fresh-process reload, ordinary movement continuation, full input/native/save
-audits and rendered review. Prepared full12 reload recipe can be retargeted to
-13 after regenerating it. `audit-all-course-saves.py` requires a terminal passing
-run. One rendered game at a time; recheck actual processes. No source edits or
-commits during `run_checks.py`. Commit bounded chunks; never push.
+Continuous13 is now live: original new game,67/10466 actions, immutable
+`rat-grounded-runtime-snapshot-01` ELF89947e13…adb1d5. Actual identity/mapped
+workspace libraries are recorded in its `runtime-identity.json`; entire emitted
+LuaJIT compiles. Recipe `gear-focus-full-assembly-01/full-escape.json`.
+Game362460, driver362446, supervisor362439, archiver362461, watcher362462.
+It has reached original stage14; no manual input. Recheck actual processes.
+
+Next: monitor that same PID and repair only observed blockers. Guarded follow-up
+`followup-full13-outdoor-reload.py`, PID362597, status
+`full13-outdoor-followup-status.json`, waits for a terminal passing full course
+and no live rendered game before launching
+`full13-own-outdoor-reload-assembly-01/course.json` into
+`full-escape-continuous-13-outdoor-reload-01`. It verifies an actual own outdoor
+F5/native match; a failed course stops the follow-up without restart. The reload
+adds ordinary walking, F5 and read-only faction inspection. It is prepared, not
+yet launched. Final `verify-full-escape.py`, `audit-all-course-saves.py` and
+rendered review remain required. One rendered game at a time; no source edits
+or commits during `run_checks.py`. Commit bounded chunks; never push.
 
 ## Reusable route evidence and limits
 
