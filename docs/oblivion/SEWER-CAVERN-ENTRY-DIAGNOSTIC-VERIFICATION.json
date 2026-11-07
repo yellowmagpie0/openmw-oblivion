@@ -1,0 +1,116 @@
+{
+  "scope": "Loaded diagnostic original22\u201327 completed in one current game process. Original new-game uninterrupted full escape remains incomplete.",
+  "game_pid": 263479,
+  "saves": [
+    {
+      "sequence": 13,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-04/retained-saves/3-0013-Quicksave.omwsave",
+      "save_sha256": "24f813a976153d822da708888613dcea4c040968832835e81708fe973eb3bd73",
+      "native_snapshot_sha256": "defe9396cd1e2623277ed1f3613ce839e3ea108abc380989e1cd9c7f5ca63581",
+      "parsed_save_equals_native_snapshot": true,
+      "health": 62.900001525878906,
+      "cell": "content:oblivion.esm:0380bd",
+      "position": [
+        -365.9091491699219,
+        -13.117950439453125,
+        40.27142333984375,
+        0.0,
+        0.0,
+        1.5000009536743164
+      ],
+      "lower_room_Player_kills": [
+        {
+          "actor": "content:oblivion.esm:038174",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:159832",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ],
+      "queues": {
+        "native_combat_engagements": [],
+        "pending_death_events": [],
+        "physical_action_owners": [],
+        "native_spell_casts": [],
+        "native_magic_projectiles": []
+      }
+    },
+    {
+      "sequence": 14,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-04/retained-saves/3-0014-Quicksave.omwsave",
+      "save_sha256": "46f09b851d0b68465c3e433c0752612e513655939fcb973b577fb858eac9e46d",
+      "native_snapshot_sha256": "a502340a44ee34420d2a966a4cf86a0b57d8eb07048cd1f5eb7e4226b8f6e279",
+      "parsed_save_equals_native_snapshot": true,
+      "health": 80.0,
+      "cell": "content:oblivion.esm:0380bd",
+      "position": [
+        -365.9091491699219,
+        -13.117950439453125,
+        40.27142333984375,
+        0.0,
+        0.0,
+        1.5000009536743164
+      ],
+      "lower_room_Player_kills": [
+        {
+          "actor": "content:oblivion.esm:038174",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:159832",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ],
+      "queues": {
+        "native_combat_engagements": [],
+        "pending_death_events": [],
+        "physical_action_owners": [],
+        "native_spell_casts": [],
+        "native_magic_projectiles": []
+      }
+    }
+  ],
+  "entry": {
+    "passed": true,
+    "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-03/retained-saves/3-0023-Quicksave.omwsave",
+    "source_save_sha256": "8bb7c6fdd21e0d32141855245c441a1b302510de56d050612d13aed9f1c3bd3a",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "seeded_magic_category": "seeded-magic-category.png inspected; Inventory/Magic active via normal Tab/3RS/B inputs.",
+  "door": "Original0381b8 teleport to0380bd recorded once before current cavern prefix.",
+  "rendered": "Entry/recovery captures inspected separately.",
+  "schema_version": 1,
+  "full_escape_complete": false,
+  "source_revision": "8ceb69148d",
+  "original_segments_completed": [
+    22,
+    23,
+    24,
+    25,
+    26,
+    27
+  ],
+  "earlier_loaded_prefix_provenance": "build/oblivion-compat/sewer-escape/remaining-continuity-03/root-prehealing-checkpoint-verification.json",
+  "rendered_inspection": [
+    "segment05-phase2-actual-natural-caverns-entry.png: Natural Caverns entrance, drawn axe, reduced health HUD.",
+    "segment06-joined-zombie-healed.png: Same cavern location, full health HUD after3 native casts.",
+    "seeded-magic-category.png: Inventory/Magic category active."
+  ],
+  "runtime_openmw_sha256": "ff12ce922fa13e8500ab613cb6a1c7745f808da5563eba56c9243a26451c7f6d",
+  "remaining": "Current live process continues original28\u201367. Final acceptance still requires original-new-game67 segments in one PID and its own outdoor fresh reload. No terminal whole-course or all-input completion claim for this live prefix."
+}

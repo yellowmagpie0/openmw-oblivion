@@ -15,7 +15,7 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — continue root descent after feedback healing fix
+## Current chunk — continuous cavern encounters and traps
 
 Source22 healing correction is complete: five fixed casts reached only79.1HP
 from43.9, then old driver stopped casting and waited for full health.
@@ -35,14 +35,20 @@ end0error/0pending/0unsupported. Capture inspected.18 focused Python and
 full67/11545-action LuaJIT compilation pass; unchanged engine gates retain
 original provenance. [Recovery proof](SEWER-ROOT-DESCENT-HEALING-VERIFICATION.json).
 
-Next prepared diagnostic: `remaining-from-root-descent-assembly-01/remaining.json`,
-original22–67 from genuine archive23. Recorded ordinary Tab/3RS/B inputs restore
-the known Magic inventory category from original10; inspect seeded capture.
-This preserves later GUI context rather than masking it through a fresh load.
-Check actual processes/status and `menu-admission-current-work.json` before
-launching. Focused recovery is terminal; no later descent/escape acceptance.
-Final acceptance remains one original-new-game67-segment PID and fresh reload
-of its own outdoor save. All evidence paths below are relative to
+`remaining-continuity-04` is live, game263479, original22–67 from genuine
+archive23. Corrected recovery passed in continuation. Original22–27 completed:
+full physical descent, native Player lower-rat kills159832/038174, original
+0381b8 door teleports once to Natural Caverns0380bd. Actual entry13/native
+exact62.9HP, recovery14/native exact80HP, all combat/spell queues clear. Entry
+restore0diff; recorded ordinary Tab/3RS/B restores known Magic inventory
+category, inspected. Entry/recovery captures inspected.
+[Cavern checkpoint proof](SEWER-CAVERN-ENTRY-DIAGNOSTIC-VERIFICATION.json).
+
+Next: preserve live game; inspect original28+ goblins, log trap, healing and
+shaman. Actual current handles: `menu-admission-current-work.json`, actual
+launcher status/processes authoritative. This loaded diagnostic is not full
+acceptance. Final acceptance remains one original-new-game67-segment PID and
+fresh reload of its own outdoor save. All evidence paths below are relative to
 `build/oblivion-compat/sewer-escape/` unless stated otherwise.
 
 Runner departure correction is complete. Source11 retains267 input actions,
