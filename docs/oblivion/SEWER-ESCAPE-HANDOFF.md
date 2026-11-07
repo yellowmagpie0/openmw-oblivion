@@ -86,8 +86,11 @@ observer syntax pass. All18 focused and fresh580 Python tests pass, C++ unchange
   harness setup failures, not equipment acceptance. Use pristine manifest settings
   for future runs, not settings files rewritten by a terminated game.
 
-Current chunk completed: commit the Club/data/recovery evidence; then implement
-ordinary safe post-ambush recovery before another fresh full acceptance run.
+Club/data/recovery evidence committed9a19926906. Next chunk: implement ordinary
+safe post-ambush recovery before another fresh full acceptance run. There is no
+live rendered game, acceptance follow-up or source-fingerprint gate at this
+checkpoint. The read-only `wait-course-progress.py` monitor returns early on
+health drops; use it to avoid overlooking damage while waiting on later gates.
 
 Before the next original-new-game acceptance run, address the observed variable
 post-ambush health with ordinary early healing; the manual intervention proved
