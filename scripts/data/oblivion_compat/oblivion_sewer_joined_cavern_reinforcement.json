@@ -108,6 +108,10 @@
             ],
             "attack": [
               {
+                "type": "mouse_down",
+                "button": 3
+              },
+              {
                 "type": "wait_log",
                 "pattern": "West course phase 1:\\s*(?:Reinforcement controlled aim x=)",
                 "after_start": true,
@@ -139,6 +143,10 @@
                 "value": "F7"
               },
               {
+                "type": "mouse_up",
+                "button": 3
+              },
+              {
                 "type": "mouse_down",
                 "button": 1
               },
@@ -153,21 +161,6 @@
               {
                 "type": "sleep",
                 "seconds": 0.7
-              },
-              {
-                "type": "key_down",
-                "value": "w"
-              },
-              {
-                "type": "wait_log",
-                "pattern": "West course phase 1:\\s*(?:Reinforcement controlled movement stop)",
-                "after_start": true,
-                "timeout_seconds": 10,
-                "abort_on_failure": true
-              },
-              {
-                "type": "key_up",
-                "value": "w"
               }
             ],
             "move": [

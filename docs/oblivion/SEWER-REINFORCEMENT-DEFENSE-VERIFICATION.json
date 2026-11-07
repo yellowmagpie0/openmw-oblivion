@@ -1,0 +1,126 @@
+{
+  "passed": true,
+  "scope": "Bounded ordinary-input source42 defense and42\u201345 recovery; not full continuous escape acceptance",
+  "source": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_reinforcement.json",
+  "source_sha256": "4c64b93ad5a5c9c2fe16e93f20a5047d627ced732b1411247fbe25dbdde38b93",
+  "change": "Block during fresh re-aim, release before light strike, remove redundant forward step when already in melee range. Observer Lua, original waypoints/radii, phase2, engine combat formulas and later death/recovery gates unchanged.",
+  "original_failure": {
+    "course": "build/oblivion-compat/sewer-escape/post-log-recovery-01",
+    "result": "Source39 recovery passed from genuine29.34HP; source42 killed03b541, then Player died to03b52f. Stopped only after verified native Player death. Retain failed.",
+    "resources": "Before patrol80HP/80MP; Rusty Iron War Axe condition39.5. Normal healing worked; not a missing-spell or menu failure.",
+    "last_attack_iteration_seconds": 3.67768
+  },
+  "cases": [
+    {
+      "course": "build/oblivion-compat/sewer-escape/reinforcement-defensive-01",
+      "audit": "build/oblivion-compat/sewer-escape/reinforcement-defensive-01/reinforcement-defensive-verification.json",
+      "audit_sha256": "0d5e6eea3cfe7e8f376a494db9896587df535b93470dbc606d0082400080636c",
+      "input_save_sha256": "e9374182da07dfee6231dd90addb88d7be9efe665774410a933cd3d886b86541",
+      "whole_entry_restore": true,
+      "permitted_body_velocity_differences": 5,
+      "actual_F5_saves": 6,
+      "all_saves_exact": true,
+      "all_inputs_delivered": true,
+      "game_pid": 421378,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 421378,
+        "sequence": 9,
+        "tick": 915,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 8,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "reinforcement_waypoints": [
+        "[13:38:42.256 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 1:\tWest course phase 1:\tJoined corridor waypoint 1 reached (4569.09423828125, 2867.177734375, -455.128662109375)",
+        "[13:38:46.948 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 1:\tWest course phase 1:\tJoined corridor waypoint 2 reached (4681.21630859375, 3015.258056640625, -435.662994384765625)"
+      ],
+      "branch_counts": {
+        "move": 5
+      },
+      "native_blocked_hit_count": 0,
+      "route_end_health": 80,
+      "final_health": 80,
+      "final_magicka": 80,
+      "inventory_count_changes": {
+        "content:oblivion.esm:00931a": -1,
+        "content:oblivion.esm:00930e": -1
+      },
+      "rendered_review": [
+        "segment01-phase1-joined-cavern-reinforcement-approach.png",
+        "segment01-phase2-joined-first-cavern-goblin-victory.png",
+        "segment04-phase2-joined-cavern-full-recovery.png"
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/sewer-escape/reinforcement-defensive-02",
+      "audit": "build/oblivion-compat/sewer-escape/reinforcement-defensive-02/reinforcement-defensive-verification.json",
+      "audit_sha256": "7ad301b9ac3288f73ab6ef0ad9aa7c6439a1582c754936c4a63cc4d941eb0605",
+      "input_save_sha256": "6e31fb8afce47b9b033f752e8bc9877d44e7457a37dfcd76cef3044fd5216188",
+      "whole_entry_restore": true,
+      "permitted_body_velocity_differences": 2,
+      "actual_F5_saves": 6,
+      "all_saves_exact": true,
+      "all_inputs_delivered": true,
+      "game_pid": 421684,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 421684,
+        "sequence": 9,
+        "tick": 1676,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 8,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "reinforcement_waypoints": [
+        "[13:45:06.482 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 1:\tWest course phase 1:\tJoined corridor waypoint 1 reached (4574.73291015625, 2858.4921875, -455.137237548828125)",
+        "[13:45:26.010 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 1:\tWest course phase 1:\tJoined corridor waypoint 2 reached (4683.45068359375, 3017.286376953125, -435.81707763671875)"
+      ],
+      "branch_counts": {
+        "attack": 30,
+        "heal": 7,
+        "move": 9
+      },
+      "native_blocked_hit_count": 4,
+      "route_end_health": 20.727985382080078,
+      "final_health": 80,
+      "final_magicka": 80,
+      "inventory_count_changes": {
+        "content:oblivion.esm:00931a": -1,
+        "content:oblivion.esm:00930e": -1
+      },
+      "rendered_review": [
+        "segment01-phase1-joined-cavern-reinforcement-approach.png",
+        "segment01-phase2-joined-first-cavern-goblin-victory.png",
+        "segment04-phase2-joined-cavern-full-recovery.png"
+      ]
+    }
+  ],
+  "focused_checks": {
+    "commands": [
+      "python3 -m unittest discover -s scripts/tests -p test_scenario_log_branch.py",
+      "python3 -m unittest discover -s scripts/tests -p test_oblivion_sewer_course_assembly.py"
+    ],
+    "passed": 13,
+    "failures": 0,
+    "skips": 0
+  },
+  "full_course_preparation": {
+    "manifest": "build/oblivion-compat/sewer-escape/full21-assembly-02/full-escape.json",
+    "segments": 67,
+    "top_level_actions": 10195,
+    "LuaJIT_bytecode_compilation": "passed; /usr/bin/luajit-2.1.1767980792 -b full-escape-continuous-observer.lua full-observer.luac",
+    "runtime_acceptance": false
+  },
+  "reused_implementation_gates": {
+    "python": "587 passing at reinforcement-response-broad-python-02; runner implementation unchanged by this manifest-only correction",
+    "engine": "2223 normal and2223 ASan/UBSan with original provenance in SEWER-DESCENDING-RECOVERY-VERIFICATION.json; C++ unchanged"
+  },
+  "remaining": "One original new-game PID through all67 sections and physical exit, own outdoor fresh reload/walking, all save/native/input audits and rendered review."
+}

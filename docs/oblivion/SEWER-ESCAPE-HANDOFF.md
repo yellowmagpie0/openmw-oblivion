@@ -27,25 +27,41 @@ therefore produced no native cast receipt. Keep this failed; the recorded
 [Failure audit](SEWER-CONTINUOUS-20-FAILURE.json). Outdoor reload/audit correctly
 withheld. Do not change gameplay based on this test intervention.
 
-Fresh-process `post-log-recovery-01` is running sources39–45 from continuous20's
-genuine F5seq82, SHA256
-`fd2aba1eee114526fbe9e0eff303b1ed8bb23921f24a712906b0ebb0e6c2d0a3`.
-Actual PID420653 was verified live and its13f2 runtime identity captured.
-Whole entry restores within5 permitted body-velocity projections; initial
-ordinary Minor Healing raises29.34→36.38HP. This is diagnostic continuation,
-not continuous escape acceptance. Revalidate /proc identity and monitor the
-same PID; finish native/save/input/rendered audits if it passes. Then launch a
-fresh all67 original-new-game run without the unnecessary manual inspection.
-Do not restart a healthy diagnostic or splice its state into full acceptance.
+Fresh-process `post-log-recovery-01` proved source39's three ordinary healing
+casts from the genuine29.34HP save82 and proceeded through chest/potions/patrol,
+but failed42: Player killed03b541 then died to03b52f. The diagnostic was stopped
+only after verified native Player death. Both80HP/80MP and normal casting were
+available; no missing-spell or menu bug. Each attack iteration spent about3.7s
+re-aiming, swinging and redundantly tapping forward inside melee range.
 
-The source42 correction remains committed04eeca330a and verified by
-[reinforcement response](SEWER-REINFORCEMENT-RESPONSE-VERIFICATION.json).
-It preserves both original waypoints/radii and phase2, uses ordinary bounded
-move/light-attack/heal decisions, and kills both pursuers with Player. Original
-43–45 gates recover80HP/80MP. All6 actual F5s exact, inputs delivered, native
-end0/0/0,3 captures reviewed. Fresh587 Python tests pass; unchanged C++ reuses
-2223 normal and2223 ASan/UBSan engines with their original provenance. All67
-assembly10195 actions and Lua compilation pass. Failed variants remain failed.
+The bounded source42 correction now blocks during re-aim, releases before the
+light strike and omits that redundant forward tap. All observer Lua, original
+two waypoint radii, phase2 and later death/recovery gates are byte-identical.
+Engine combat formulas unchanged. [Defense proof](SEWER-REINFORCEMENT-DEFENSE-VERIFICATION.json).
+
+- `reinforcement-defensive-01`: genuine failed diagnostic F5seq8. Later-arriving
+  pursuers are killed in the original follow-on fights; no new attack-branch
+  coverage claimed. All6 actual F5s exact; entry5 permitted velocity differences.
+- `reinforcement-defensive-02`: genuine continuous19 F5seq89, both already
+  engaged. Player kills both, leaves route at20.73HP, then original43–45 gates
+  restore80HP/80MP. Actual30 attack/7 heal/9 move branches and4 native blocked
+  hits. All6 actual F5s exact; entry2 permitted velocity differences.
+
+Both terminalpassed/actionscomplete/exit0, no manual input, all issued inputs
+delivered, native end0errors/0pending/0unsupported; all6 captures reviewed.
+Focused branch/assembly tests13 pass. Runner unchanged: reuse587 Python;
+C++ unchanged: reuse2223 normal and2223 ASan/UBSan engines with original
+provenance in the physics proof. All67 assembly10195 actions and LuaJIT bytecode
+compilation pass. Earlier [source42 proof](SEWER-REINFORCEMENT-RESPONSE-VERIFICATION.json)
+and all failed variants remain historical, not replacement continuous acceptance.
+
+Next: launch the prepared fresh original-new-game course
+`full21-assembly-02/full-escape.json` as `full-escape-continuous-21`.
+Assembly01 is superseded and contains the old inputs. The02 manifest contains
+the proven defensive controls. No full21 process has been launched yet.
+Prepared guarded own-outdoor reload/auditor/identity scripts use full21 names;
+start them only alongside the actual full run. Preserve all67 sections/fights,
+physical exit and own outdoor reload; no diagnostic state splicing.
 
 Runtime snapshot: `rat-descending-recovery-runtime-snapshot-01`, ELF
 `13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`;
