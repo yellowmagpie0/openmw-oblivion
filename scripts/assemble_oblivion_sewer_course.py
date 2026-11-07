@@ -39,12 +39,13 @@ def scope(a,phase):
   if a['pattern']=='Applied TES4 runtime state:' or a['pattern'].startswith('acceptance-command '):return None
   a['pattern']=scoped_pattern(a['pattern'],phase)
   if a['pattern'].startswith('Escape segment') and 'ready' in a['pattern'].lower():a['timeout_seconds']=max(a.get('timeout_seconds',0),120)
- if a['type']=='repeat_until_log':
+ if a['type'] in ('repeat_until_log','branch_on_log'):
   a['pattern']=scoped_pattern(a['pattern'],phase)
  if a['type']=='mouse_move' and 'from_log'in a:a['from_log']['pattern']=f'Escape segment {phase}:\\s*(?:'+a['from_log']['pattern']+')'
  if a['type']=='screenshot':a['name']=f'segment{phase:02d}-'+a['name']
  for k in ['actions','cleanup_actions']:
   if k in a:a[k]=scope_actions(a[k],phase)
+ if 'cases' in a:a['cases']={name:scope_actions(children,phase) for name,children in a['cases'].items()}
  return a
 
 def scope_actions(items,phase):
@@ -120,6 +121,8 @@ def record_types(action):
  types.add(action['type'])
  for field in ['actions','cleanup_actions']:
   for child in action.get(field,[]):record_types(child)
+ for children in action.get('cases',{}).values():
+  for child in children:record_types(child)
 for action in actions:record_types(action)
 args.output.write_text(json.dumps(m,indent=2)+'\n');(r/'full-escape-continuous-observer.lua').write_text(code.format());(r/'full-escape-assembly.json').write_text(json.dumps({'scope':'Prepared only, no runtime acceptance','focused':bool(args.selection),'selection':str(selection),'segments':provenance,'actions':len(actions),'action_types':sorted(types),'rule':('Focused genuine-checkpoint load. ' if args.selection else 'One original new-game process. ')+'Ordinary controls with read-only segment/camera observations and frame barriers; no health, position or quest injection. F7+F8 changes observer locals only. Original stage24 wall activation exclusion removed based on independent prior audit.'},indent=2)+'\n')
 print(len(chain),'segments',len(actions),'actions',sorted(types));assert 'command' not in types

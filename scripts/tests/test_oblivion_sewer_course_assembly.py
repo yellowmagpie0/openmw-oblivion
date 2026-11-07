@@ -64,6 +64,9 @@ class SewerCourseAssemblyTest(unittest.TestCase):
             for field in ('actions', 'cleanup_actions'):
                 for child in action.get(field, []):
                     check(child)
+            for children in action.get('cases', {}).values():
+                for child in children:
+                    check(child)
         for action in self.actions:
             check(action)
         self.assertGreater(count, 0)
@@ -91,6 +94,8 @@ class SewerCourseAssemblyTest(unittest.TestCase):
                     self.assertTrue(following[1]['after_start'])
                 for field in ('actions', 'cleanup_actions'):
                     check(action.get(field, []))
+                for children in action.get('cases', {}).values():
+                    check(children)
         check(self.actions)
         self.assertGreater(motions, 0)
 

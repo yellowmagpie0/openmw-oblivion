@@ -292,7 +292,7 @@
     {
       "segment": 42,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_reinforcement.json",
-      "action_count": 83,
+      "action_count": 16,
       "source_course": "joined-cavern-reinforcement-early-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

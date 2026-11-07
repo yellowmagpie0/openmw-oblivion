@@ -37,6 +37,14 @@ def validation_actions(actions, _depth=0):
                 if not isinstance(nested, list) or any(not isinstance(a, dict) for a in nested):
                     raise ValueError(f'repeat_until_log {field} must be an action list')
                 yield from validation_actions(nested, _depth + 1)
+        if isinstance(action, dict) and action.get('type') == 'branch_on_log':
+            cases = action.get('cases')
+            if not isinstance(cases, dict) or not cases:
+                raise ValueError('branch_on_log requires nonempty cases')
+            for name, nested in cases.items():
+                if not isinstance(name, str) or not name or not isinstance(nested, list):
+                    raise ValueError('branch_on_log cases must map names to action lists')
+                yield from validation_actions(nested, _depth + 1)
 
 
 def scancode(value):
@@ -162,7 +170,7 @@ def validate(manifest):
     for action in actions:
         if not isinstance(action, dict):
             raise ValueError('Scenario actions must be objects')
-        if action.get('type') == 'repeat_until_log':
+        if action.get('type') in ('repeat_until_log', 'branch_on_log'):
             continue  # The scenario validator checks loop bounds and read-only scope.
         if action.get("type") in GAMEPAD_ACTIONS:
             if not manifest.get("virtual_gamepad", False):

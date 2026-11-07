@@ -16,114 +16,66 @@ startup calls; no story-command waiver. Keep all failed runs failed.
 
 ## Current checkpoint and next action
 
-The bounded escort-wait combat/recovery correction is verified. Continuous18's
-actual stage26 save19 has80HP; rat037e42 attacks during the former passive
-stage30 wait, leaving52HP in save20. Earlier attribution of that loss to the
-assassin ambush was incorrect. Source2 now selects Minor Healing while safe,
-draws/acknowledges fists, responds to the departure pursuer, retains original30,
-sheathes and heals to a fresh80HP observation before saving. The approach uses
-the established centerline route; distant pursuit applies only to037e42, leaving
-other rats beyond the wall to their original later sections. No state injection.
-[Escort recovery proof](SEWER-ESCORT-RECOVERY-VERIFICATION.json).
+Continuous19 is terminal failed at42, Player alive25.85HP. Original PID410270
+ended normally after the90-second first-waypoint wait failed. All6366 SDL inputs
+including shutdown delivered; native end0errors/0pending/5 reviewed startup
+deferrals. No loads/manual input/injection; outdoor follow-up correctly withheld.
+Its genuine last F5seq89 has74.3HP, dead patrol03b543 and both03b541/03b52f alive
+and engaged. Hits/knockback moved Player off the initial fixed heading; it missed
+the original25-unit XY radius and kept walking. Lower elevation came later.
 
-- Final `escort-recovery-departure-06`: genuine stage26 entry0diff; ordinary
-  Player kill037e42, original30 once, actual healing to80HP, final actual F5
-  parsed/native exact. All inputs delivered; native end0/0/0; capture reviewed.
-- Earlier adverse `escort-recovery-partial-06`: genuine stage30 52HP entry,
-  Player kill037e42, five actual casts46→80HP; actual F5 exact. Entry differs
-  only by five permitted body-velocity projections<=1e-5. This check predates
-  final menu-order/route/pursuit refinements; final departure06 tests those.
-- All18 focused and fresh580 Python tests pass. Source2 now102 actions; full67
-  assembly10262 actions and Lua compilation pass. C++ unchanged: reuse2223
-  normal and2223 ASan/UBSan engines with provenance in
-  [physics proof](SEWER-DESCENDING-RECOVERY-VERIFICATION.json).
-- Failed attempts remain failed, including departure03's superficially green
-  harness with final66HP, the platform/gap navigation stalls, and the earlier
-  missing-stance/controller setup failures. No acceptance was inferred from them.
+The bounded source42 correction is verified in `reinforcement-response-06` from
+that exact89: conditional ordinary move/light-attack/heal decisions, re-aimed
+bounded steps, original two waypoints/radii and phase2 preserved. Both pursuers
+are Player kills; source43–45 death/potion/full-resource gates pass. Route ends
+at8.92HP, then normal recovery reaches80HP/80MP. All6 actual F5s parsed/native
+exact, entry differs only in2 permitted body-velocity projections<=1e-5, every
+input delivered, native end0/0/0. Three rendered captures reviewed.
+[Reinforcement response proof](SEWER-REINFORCEMENT-RESPONSE-VERIFICATION.json).
 
-Correction committed97778d7ce8. Original-new-game `full-escape-continuous-19`
-is now running in actual PID410270 (driver410242), pinned13f2 runtime. Actual
-`runtime-identity.json` captured. Latest verified checkpoint: original30, native
-Playerkill037e42, ordinary healing to80HP, actual F5seq20 parsed/native exact,
-then section3 descent at80HP. No loads/manual input. The new recovery fix is now
-proven in the uninterrupted prefix as well as loaded diagnostics; full escape
-remains incomplete. Checkpoint SHA256:
-`3d4ecff88e1d6abdb168b7be416389c84d8879b767526c6e95946bffb17e9cdc`.
-See `escort-recovery-continuous-checkpoint.json` and updated recovery proof.
-Later verified checkpoint: all3 early rat deaths, post-wall healing to72HP,
-original Club equipped and keyed-door traversal into022ff6. Actual F5seq26
-parsed/native exact at66HP, Clubcount1/equipped_slots65536; both menu/world-door
-captures reviewed. SHA256
-`eebd258fb13181e365c51a264ac6d017cd27c311fbe43cedfb66c9b89cf8f803`.
-See `club-continuous-checkpoint.json` and updated Club proof. Actual run has
-advanced beyond9, without manual input or loads. Latest verified encounter group:
-sections14–16 pass in original PID410270. All8 actual F5s32–39 parsed/native
-exact; northern038171/72/73 and western038176 all persistent Player kills. Route
-end44.28HP, four native applied heals to72.44HP, final66.80HP. Recovery and victory
-captures reviewed. See `west-continuous-checkpoint.json` and updated
-[west proof](SEWER-WEST-THREAT-RESPONSE-VERIFICATION.json). This clears
-continuous17's fatal section15 gap.
+The small `branch_on_log` runner action waits for a fresh complete observation,
+selects its latest named choice, permits only normal controls/read-only waits,
+and records the chosen nested inputs. It lets the guard attack while mana
+regenerates instead of waiting idle for an unavailable heal. All25 focused and
+fresh587 Python tests pass. C++ unchanged: reuse2223 normal and2223 ASan/UBSan
+engines with original provenance in the physics proof. All67 assembly10195
+actions and Lua compilation pass. Source42 now16 top-level actions (was83).
 
-Latest checkpoint: original Natural Caverns door0381b8 teleports once; actual
-F5seq59/60 both parsed/native exact in0380bd,59.1→80HP through3 ordinary casts.
-Section entries1–28 ordered, same original PID/no loads, current input prefix
-contiguous; entry and healed captures reviewed.
-[Continuous cavern prefix](SEWER-CONTINUOUS-CAVERN-PREFIX-VERIFICATION.json).
-Continuous19 is now terminal failed at42, Player alive25.85HP. Source42's first
-waypoint wait timed out90seconds; actual Player moved to
-(5339.6343,3621.9546,-748.4127) and missed the waypoint gate. All6366 issued SDL
-inputs including ordinary shutdown delivered; native end0errors/0pending/
-5 reviewed Peryite deferrals. Own outdoor reload/auditor/provenance watcher
-correctly withheld follow-up. Original game/driver are gone; revalidate /proc.
-Actual last F5seq89 is retained for focused source42 reproduction. No manual
-input, loads or injection occurred in this failed new-game run.
+Retain all failed diagnostics:01 power-attack fatigue/death;02/03 no accepted
+immediate cast (the loaded spell was retained);04 every-attack healing exhausts
+mana/death;05 fixed cadence reaches missing fresh-cast gate alive near2HP;07
+priority/distance experiment dies. Reverted07 and verified current actions and
+observer exactly match passing06. No rendered game remains at this checkpoint.
 
-Before that failure, the full log encounter passed. Original03b49e releases6
-bodies once; native trap impacts31.5 damage on03b518/03b51a cause both deaths
-with killer=null. These are environmental victories, unlike prior loaded melee
-cases; do not relabel as Player kills. Selected actual F5seq77/78/83 parsed/native
-exact: both alive before release, dead after, final80HP. Five native healing
-casts in36–38. Rolling-log/final captures reviewed.
-[Log encounter proof](SEWER-JOINED-LOG-ENCOUNTER-VERIFICATION.json).
+Next: commit this bounded fix, then launch original-new-game
+`full-escape-continuous-20` from `full20-assembly-02/full-escape.json`. The ignored
+`followup-full20-outdoor-reload.py`, `audit-full20-after-reload.py` and
+`capture-full20-reload-identity.py` are prepared, not launched. Record actual
+runtime identity immediately; monitor that same PID, especially source42's
+limited health margin. Keep all67 required sections/fights and own outdoor reload
+acceptance. Do not splice loaded06 or continuous19 into a later acceptance run.
 
-Next chunk: inspect/reproduce source42's first waypoint miss from genuine89,
-correct the ordinary route/guard as evidence requires, verify actual recovery43
-and commit. Full67 physical exit, own fresh outdoor reload/walk and terminal
-save/input/native/rendered audits remain incomplete. Do not call continuous19 a
-pass or splice its states into a later acceptance run.
+Runtime snapshot: `rat-descending-recovery-runtime-snapshot-01`, ELF
+`13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`;
+pinned libs `reunion-runtime-snapshot-01/lib`. One rendered game/controller driver
+at a time. Revalidate /proc before cleanup; preserve healthy jobs/snapshots. No
+tracked/nonignored edits or commits during `run_checks.py`. Commit bounded
+chunks; never push without request.
 
-Adjacent observation for later: source2 retains Magic-menu state, so source5's
-repeated relative page navigation visits Stats (actual capture reviewed). Minor
-Healing remains selected from2 and its native cast succeeds64→72HP. Do not claim
-a fresh spell selection at5. No required progression gate failed; keep the healthy
-run intact. Loot opens Inventory normally and Club equipment subsequently passes.
-Manifest:
-`full19-assembly-02/full-escape.json` under the evidence root. Guarded own-outdoor
-reload PID410244 and read-only terminal auditor PID410245 are waiting for this
-run; their status files are `full19-outdoor-followup-status.json` and
-`full19-acceptance-audit-status.json`. These PIDs are historical observations:
-revalidate actual /proc identities before acting. Next action: monitor this
-same original PID with `wait-course-progress.py full-escape-continuous-19 40`.
-All67 sections, physical exit, own reload/walk and audits remain unaccepted.
-Do not restart a healthy job, weaken fights, splice saves or substitute a loaded
-diagnostic for full acceptance. Read-only provenance watcher412528 is waiting
-for the own outdoor reload and will capture its actual runtime identity promptly;
-status `full19-reload-identity-status.json`. Revalidate that worker if needed.
+Reusable continuous19 prefix evidence: [early recovery](SEWER-ESCORT-RECOVERY-VERIFICATION.json),
+[Club/keyed exit](SEWER-CLUB-FOCUS-VERIFICATION.json),
+[northern/western rats](SEWER-WEST-THREAT-RESPONSE-VERIFICATION.json),
+[physical cavern entry](SEWER-CONTINUOUS-CAVERN-PREFIX-VERIFICATION.json),
+[log encounter](SEWER-JOINED-LOG-ENCOUNTER-VERIFICATION.json).
+The logs released6 bodies once and dealt31.5 damage to each03b518/03b51a;
+both environmental deaths have killer=null. Do not relabel them as Player kills.
+All failed full runs remain failed. Historical details remain in the linked
+proofs and [checkpoint history](SEWER-ESCAPE-CHECKPOINTS-2026-11-07.md).
 
-Earlier continuous17/18 evidence remains linked in
-[recovery prefix](SEWER-CONTINUOUS-RECOVERY-PREFIX-VERIFICATION.json),
-[west threat response](SEWER-WEST-THREAT-RESPONSE-VERIFICATION.json),
-[assisted18 recovery](SEWER-ASSISTED-RECOVERY-VERIFICATION.json) and
-[Club selection](SEWER-CLUB-FOCUS-VERIFICATION.json). Continuous18's manual input
-was explicitly assisted; its original PID later failed Club equipment, since
-fixed. Both full runs remain failed. Current engine snapshot is
-`rat-descending-recovery-runtime-snapshot-01`, ELF
-`13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`.
-
-Keep one rendered game and one virtual-controller driver at a time. Release stale
-workers only after confirming their actual game is terminal. Preserve healthy
-jobs and immutable snapshots. Do not edit tracked/nonignored files or commit
-while `run_checks.py` is live. Commit bounded chunks; never push without request.
+Adjacent UI observation: source2 retains Magic-menu state, so source5's relative
+navigation visits Stats; MinorHealing remains selected and actual casting works.
+Do not claim a new spell selection there. Loot subsequently opens Inventory
+normally and Club equipment passes. No gate was waived for this observation.
 
 ## Current recovery correction
 

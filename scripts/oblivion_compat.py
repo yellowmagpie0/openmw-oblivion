@@ -51,7 +51,7 @@ SCENARIO_ACTION_TYPES = {
     "mouse_up", "focus_window", "command", "assert_file", "m14_checkpoint", "m14_assert_events",
     "m14_observe", "m14_actor_distance", "m14_actor_state_delta", "m14_advance_clock",
     "m14_obstruction", "m14_debug_navigation", "m14_console",
-    "m15_snapshot", "repeat_until_log",
+    "m15_snapshot", "repeat_until_log", "branch_on_log",
 }
 FORBIDDEN_M14_ACTION_TYPES = {
     "select_actor", "select_package", "advance_phase", "set_phase", "move_actor", "teleport_actor",
@@ -541,11 +541,34 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             allowed = (sdl_offscreen_replay.INPUT_ACTIONS | sdl_offscreen_replay.GAMEPAD_ACTIONS
                        | {"sleep", "wait_log"}) - {"type", "type_held"}
             for field in ("actions", "cleanup_actions"):
-                permitted = allowed | {"repeat_until_log"} if field == "actions" else allowed
+                permitted = allowed | {"repeat_until_log", "branch_on_log"} if field == "actions" else allowed
                 if any(a.get("type") not in permitted for a in action.get(field, [])):
                     raise ValueError("repeat_until_log permits only normal input and read-only waits; cleanup cannot loop")
             if "after_start" in action and type(action["after_start"]) is not bool:
                 raise ValueError("repeat_until_log after_start must be a boolean")
+        if action_type == "branch_on_log":
+            if not (raw.get("sdl_offscreen_input") or raw.get("sdl_xvfb_input")):
+                raise ValueError("branch_on_log requires isolated SDL input")
+            pattern = action.get("pattern")
+            if not isinstance(pattern, str) or not pattern:
+                raise ValueError("branch_on_log requires a pattern with named choice group")
+            try:
+                compiled = re.compile(pattern, re.MULTILINE)
+            except re.error as error:
+                raise ValueError(f"Invalid branch_on_log pattern: {error}") from error
+            if set(compiled.groupindex) != {"choice"}:
+                raise ValueError("branch_on_log requires exactly one named choice group")
+            path = action.get("path", "process.log")
+            if not isinstance(path, str) or not path or Path(path).is_absolute() or ".." in Path(path).parts:
+                raise ValueError("branch_on_log requires an output-relative log path")
+            timeout = action.get("timeout_seconds")
+            if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0:
+                raise ValueError("branch_on_log timeout_seconds must be positive and finite")
+            allowed = (sdl_offscreen_replay.INPUT_ACTIONS | sdl_offscreen_replay.GAMEPAD_ACTIONS
+                       | {"sleep", "wait_log", "repeat_until_log", "branch_on_log"}) - {"type", "type_held"}
+            for children in action["cases"].values():
+                if any(child.get("type") not in allowed for child in children):
+                    raise ValueError("branch_on_log permits only normal input and read-only waits")
         if action_type == "wait_log" and (not isinstance(action.get("pattern"), str) or not action["pattern"]):
             raise ValueError(f"Scenario action {index} wait_log requires a non-empty pattern")
         if action_type == "wait_log" and "after_start" in action and not isinstance(action["after_start"], bool):
@@ -1374,6 +1397,47 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         return m15_session.snapshot(action)
     action_type = action.get("type")
     started = time.monotonic()
+    if action_type == "branch_on_log":
+        if offscreen_input is None:
+            raise ValueError("branch_on_log requires isolated SDL input")
+        pattern = re.compile(action["pattern"], re.MULTILINE)
+        log_path = output / action.get("path", "process.log")
+        start_offset = log_path.stat().st_size if log_path.exists() else 0
+        deadline = started + action["timeout_seconds"]
+        if _repeat_deadline is not None:
+            deadline = min(deadline, _repeat_deadline)
+        match = None
+        while time.monotonic() < deadline:
+            if log_path.is_file():
+                with log_path.open("rb") as stream:
+                    stream.seek(start_offset)
+                    data = stream.read()
+                # A partially written observation must not select an input.
+                data = data[:data.rfind(b"\n") + 1]
+                matches = list(pattern.finditer(data.decode("utf-8", errors="replace")))
+                if matches:
+                    match = matches[-1]
+                    break
+            time.sleep(.05)
+        results = []
+        choice = match.group("choice") if match else None
+        if match and choice not in action["cases"]:
+            raise ValueError(f"Unrecognized observed input choice: {choice!r}")
+        if match:
+            for child in action["cases"][choice]:
+                if time.monotonic() >= deadline:
+                    break
+                result = _run_action(child, environment=environment, output=output,
+                                     offscreen_input=offscreen_input, _repeat_deadline=deadline)
+                results.append(result)
+                if not result["passed"]:
+                    break
+        passed = (match is not None and time.monotonic() < deadline
+                  and len(results) == len(action["cases"][choice])
+                  and all(result["passed"] for result in results))
+        return {"type": action_type, "passed": passed, "choice": choice,
+                "observation": match.group(0) if match else None, "start_offset": start_offset,
+                "actions": results, "duration_seconds": round(time.monotonic() - started, 6)}
     if action_type == "repeat_until_log":
         if offscreen_input is None:
             raise ValueError("repeat_until_log requires isolated SDL input")
