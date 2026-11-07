@@ -50,6 +50,19 @@ proven in the uninterrupted prefix as well as loaded diagnostics; full escape
 remains incomplete. Checkpoint SHA256:
 `3d4ecff88e1d6abdb168b7be416389c84d8879b767526c6e95946bffb17e9cdc`.
 See `escort-recovery-continuous-checkpoint.json` and updated recovery proof.
+Later verified checkpoint: all3 early rat deaths, post-wall healing to72HP,
+original Club equipped and keyed-door traversal into022ff6. Actual F5seq26
+parsed/native exact at66HP, Clubcount1/equipped_slots65536; both menu/world-door
+captures reviewed. SHA256
+`eebd258fb13181e365c51a264ac6d017cd27c311fbe43cedfb66c9b89cf8f803`.
+See `club-continuous-checkpoint.json` and updated Club proof. Actual run has
+advanced to9, without manual input or loads. Revalidate live progress on resume.
+
+Adjacent observation for later: source2 retains Magic-menu state, so source5's
+repeated relative page navigation visits Stats (actual capture reviewed). Minor
+Healing remains selected from2 and its native cast succeeds64→72HP. Do not claim
+a fresh spell selection at5. No required progression gate failed; keep the healthy
+run intact. Loot opens Inventory normally and Club equipment subsequently passes.
 Manifest:
 `full19-assembly-02/full-escape.json` under the evidence root. Guarded own-outdoor
 reload PID410244 and read-only terminal auditor PID410245 are waiting for this

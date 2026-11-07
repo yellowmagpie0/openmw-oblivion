@@ -283,5 +283,34 @@
     "actions": 10232,
     "observer_syntax": "luajit -b passed; preparation only"
   },
-  "remaining": "Ordinary early recovery for variable post-ambush health, new original-new-game full67 course, physical exterior exit, own outdoor reload/walk and complete native/input/every-save/rendered audits."
+  "remaining": "Ordinary early recovery for variable post-ambush health, new original-new-game full67 course, physical exterior exit, own outdoor reload/walk and complete native/input/every-save/rendered audits.",
+  "continuous_new_game_checkpoint": {
+    "scope": "Original new-game continuous19 Club equipment and keyed-door checkpoint only; full escape pending",
+    "game_pid": 410270,
+    "sequence": 26,
+    "save_sha256": "eebd258fb13181e365c51a264ac6d017cd27c311fbe43cedfb66c9b89cf8f803",
+    "live_sha256": "7096e4ddc69fd15e193a21122de3cf6e01e2549630faadccdedef3cdffd3dbd6",
+    "parsed_native_exact": true,
+    "club": {
+      "base": "content:oblivion.esm:159829",
+      "count": 1,
+      "condition": 69.16000366210938,
+      "charge": -1.0,
+      "equipped_slots": 65536,
+      "hotkey": -1,
+      "owner": "null",
+      "remaining_usage_time": -1.0,
+      "ownership_rank": null,
+      "ownership_global": "null",
+      "extra_scale": null,
+      "bound_source": null
+    },
+    "cell": "content:oblivion.esm:022ff6",
+    "health": 66.0,
+    "no_loads": true,
+    "rendered_review": [
+      "segment07-phase3-club-equipped-menu.png",
+      "segment07-phase4-key-door-destination.png"
+    ]
+  }
 }
