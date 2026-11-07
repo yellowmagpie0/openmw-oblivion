@@ -43,7 +43,14 @@ other rats beyond the wall to their original later sections. No state injection.
 
 Correction committed97778d7ce8. Original-new-game `full-escape-continuous-19`
 is now running in actual PID410270 (driver410242), pinned13f2 runtime. Actual
-`runtime-identity.json` captured; first observed section1 at80HP. Manifest:
+`runtime-identity.json` captured. Latest verified checkpoint: original30, native
+Playerkill037e42, ordinary healing to80HP, actual F5seq20 parsed/native exact,
+then section3 descent at80HP. No loads/manual input. The new recovery fix is now
+proven in the uninterrupted prefix as well as loaded diagnostics; full escape
+remains incomplete. Checkpoint SHA256:
+`3d4ecff88e1d6abdb168b7be416389c84d8879b767526c6e95946bffb17e9cdc`.
+See `escort-recovery-continuous-checkpoint.json` and updated recovery proof.
+Manifest:
 `full19-assembly-02/full-escape.json` under the evidence root. Guarded own-outdoor
 reload PID410244 and read-only terminal auditor PID410245 are waiting for this
 run; their status files are `full19-outdoor-followup-status.json` and

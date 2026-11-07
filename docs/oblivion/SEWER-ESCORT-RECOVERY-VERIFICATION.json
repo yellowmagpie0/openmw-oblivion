@@ -214,5 +214,42 @@
       "failure": "Playerkill42 and original30 pass, but broad650-unit pursuit stalls at wall gap. Narrowed distant pursuit to observed42; other enemies handled by original later sections."
     }
   ],
-  "limitations": "Scoped loaded checks are not continuous acceptance. Must still finish original-new-game all67, physical outdoor exit, own fresh-PID outdoor reload/walk and every-save/native/input/rendered audits."
+  "limitations": "Scoped loaded checks are not continuous acceptance. Must still finish original-new-game all67, physical outdoor exit, own fresh-PID outdoor reload/walk and every-save/native/input/rendered audits.",
+  "continuous_new_game_checkpoint": {
+    "scope": "Original-new-game PID410270 reaches stage30, Playerkill037e42, normal healing80HP and section3 with no loads/manual assistance. This is prefix evidence only; terminal full67/native/input/every-save/reload audits remain pending.",
+    "game_pid": 410270,
+    "save": "build/oblivion-compat/sewer-escape/full-escape-continuous-19/retained-saves/3-0020-Quicksave.omwsave",
+    "receipt": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 410270,
+      "sequence": 20,
+      "tick": 2712,
+      "event": "save-complete",
+      "action_id": "observation-20",
+      "actor": "dynamic:player:0000000000000001",
+      "cause": "normal-save",
+      "deltas": {
+        "health": 0
+      },
+      "live": "live-3-20.json",
+      "live_sha256": "79d4faa518d6d0e83e1cede87125bdf5dc8ecfd42f6e3288e79c34b4840556d7",
+      "result": "committed",
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-19/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "3d4ecff88e1d6abdb168b7be416389c84d8879b767526c6e95946bffb17e9cdc",
+      "target": "dynamic:player:0000000000000001"
+    },
+    "parsed_native_exact": true,
+    "health": 80.0,
+    "cell": "content:oblivion.esm:01fbb9",
+    "position": [
+      -18.37589454650879,
+      2696.21923828125,
+      -703.0231323242188,
+      0.4759765565395355,
+      0.0,
+      0.03750000149011612
+    ],
+    "rendered_review": "segment02-phase8-escort-departed.png inspected; player/HUD/corridor and persistent rat corpse rendered. Existing upright corpse-pose limitation retained."
+  }
 }
