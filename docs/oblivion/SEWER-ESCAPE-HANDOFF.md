@@ -10,7 +10,7 @@ skipped required fights, restarted or spliced state qualifies.
 
 Remaining acceptance gaps:
 
-- Original story mutations: SetFactionRank80 and exit SetCrimeGold.
+- Original story mutation: shared-base SetFactionRank80.
   Do not waive these unsupported events in the final native audit.
 - One uninterrupted new-game67-section course and its own outdoor reload.
 - Current implementation gates, native/input/save audit and rendered review of
@@ -49,17 +49,36 @@ invalid argument rejection. One earlier runtime F5 was superseded before archive
 only its final save is claimed. [Ownership proof](SEWER-OWNERSHIP-VERIFICATION.json).
 Broader normal/sanitizer integration gates will be batched with remaining commands.
 
+SetCrimeGold is implemented using the native requested-minus-queried-bounty delta
+and owned normal/Player alternate buckets, preserving AV37 modifiers. Focused4
+engine,12 original-instruction cases and18 assembly/repeat Python pass. Original67
+exit76actions and its own outdoor reload5actions pass with all3 actual F5s
+receipt-hashed/parsed-native exact, both whole entry0diff, all input delivered and
+native end0/0/0. Outdoor save4 SHAa468527d…8e10ff8; Player35.14HP/bounty0.
+Reload naturally completes MQ01 stages90/100 via original five-second timer;
+completed88 retained, no exit/bounty replay. Earlier focused recipe missing hat
+mapping failed and remains failed; editable67 now carries the established map.
+[Crime-gold proof](SEWER-SETCRIMEGOLD-VERIFICATION.json),
+[original instruction oracle](SEWER-SETCRIMEGOLD-ORACLE.json).
+
 No build helper or rendered game is live at this handoff. Always recheck actual
 processes. Ignored `reunion-current-handles.json` may lag; actual reports/processes
 are authoritative. Evidence paths below are under `build/oblivion-compat/sewer-escape/`.
 
 ## Next action
 
-1. Ownership58 runtime and reload are complete; retain their evidence and batch
-   broader integration gates with the two remaining native story commands.
+1. Ownership58 and exit SetCrimeGold runtime/reloads are complete; retain their
+   focused evidence and batch broader integration gates with faction-rank work.
 2. Implement shared-base faction-rank state/queries/save behavior for original
-   final-assassin SetFactionRank80, and native bounty setter for exit SetCrimeGold.
-   Original winning stages/targets: ignored `original-story-ownership-faction-commands.json`.
+   final-assassin SetFactionRank80. Full replacement membership with stable
+   faction identities must retain ordering and signed ranks, including empty-list
+   override versus unchanged content. Existing save schema89 lacks this state.
+   Cover shared references, condition/reaction consumers, old saves and fresh
+   reload; keep authored record definitions immutable. Original command/basic
+   shared-base ownership inspected independently in pinned executable.
+   Ignored `original-story-ownership-faction-commands.json`,
+   `original-story-command-handler-addresses.json`,
+   `original-setfactionrank-execute.txt`, `original-faction-rank-setter.txt`.
 3. Batch focused checks during changes and broad required normal/sanitizer gates
    at integration. No tracked/nonignored edits or commits while run_checks.py lives.
    Allocate independent Xvfb servers with -displayfd; one prior simultaneous

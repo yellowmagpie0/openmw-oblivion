@@ -236,6 +236,80 @@ namespace
     };
 }
 
+TEST(OblivionDialogueMenu, ScriptSetCrimeGoldRoutesActorBountyAndPreservesFractionalDeltaAcrossSave)
+{
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        auto& combat = *world.getOblivionCombatService();
+        auto& scripts = *world.getOblivionScriptManager();
+        const auto file = f.mActor.get<ESM4::Npc>()->mBase->mId.mContentFile;
+        ESM4::Class cls{};
+        cls.mId = {0xb30, file};
+        cls.mData.mFavoredAttributes = {0, 1};
+        for (std::size_t i = 0; i < 7; ++i) cls.mData.mMajorSkills[i] = 12 + i;
+        store.getWritable<ESM4::Class>().insertStatic(cls, key(0xb30));
+        ESM::Race sharedRace; sharedRace.blank(); sharedRace.mId = ESM::RefId(ESM::FormId{0x810, file});
+        store.getWritable<ESM::Race>().insertStatic(sharedRace);
+        ESM::Class sharedClass; sharedClass.blank(); sharedClass.mId = ESM::RefId(cls.mId);
+        store.getWritable<ESM::Class>().insertStatic(sharedClass);
+        auto playerBase = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        playerBase.mRace = sharedRace.mId; playerBase.mClass = sharedClass.mId;
+        auto prepared = store.preparePlayerRecord(playerBase);
+        world.getPlayer().set(prepared.commit());
+        ESM4::Cell cell{};
+        cell.mId = ESM::RefId(ESM::FormId{0xb31, file});
+        cell.mFormKey = key(0xb31);
+        cell.mEditorId = "CrimeGoldRoom";
+        cell.mCellFlags = ESM4::CELL_Interior;
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        auto& room = world.getWorldModel().getCell(cell.mId);
+        f.mActor = f.mActor.getCell()->moveTo(f.mActor, &room);
+        world.getWorldModel().registerPtr(f.mActor);
+        world.getPlayer().setCell(&room);
+        auto source = *f.mActor.get<ESM4::Npc>()->mBase;
+        source.mId = {7, file + 1}; source.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+        store.getWritable<ESM4::Npc>().insertStatic(source, source.mFormKey);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(store);
+        for (int scenario : {0, 1, 2}) // NPC, Player normal realm, Player alternate realm.
+        {
+            SCOPED_TRACE(scenario);
+            const bool player = scenario != 0;
+            const auto actor = player ? world.getPlayerPtr() : f.mActor;
+            const auto actorKey = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+            auto values = *combat.findActorValues(actorKey);
+            values.mBounty = ESM4::CrimeBountyState{.25f, player ? .5f : 0.f};
+            values.mPlayerInShiveringIsles = scenario == 2;
+            values.mValues[37].mModifiers = {.5f, -3.25f, -.25f};
+            if (player) combat.publishPlayerValues(world.getPlayer(), values, settings);
+            else combat.publishNonPlayerValues(actor, values);
+            ObScript::RuntimeContext context; context.mSelf = actorKey;
+            scripts.call("SetCrimeGold", {}, {std::int64_t{10}}, context, {});
+            const auto* changed = combat.findActorValues(actorKey);
+            ASSERT_TRUE(changed && changed->mBounty);
+            EXPECT_EQ(changed->mValues[37].mModifiers, values.mValues[37].mModifiers);
+            EXPECT_EQ(changed->mBounty->mNormal, scenario == 2 ? .25f : 9.25f);
+            EXPECT_EQ(changed->mBounty->mShiveringIsles, scenario == 2 ? 9.5f : player ? .5f : 0.f);
+            EXPECT_DOUBLE_EQ(ObScript::asNumber(scripts.call("GetCrimeGold", {}, {}, context, {})),
+                scenario == 2 ? 9.5 : 9.25);
+            const auto snapshot = world.captureOblivionRuntimeState();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(snapshot.serializeBinary());
+            const auto saved = std::ranges::find(restored.mNativeActorValues, actorKey,
+                &ESM4::RuntimeActorValues::mActor);
+            ASSERT_NE(saved, restored.mNativeActorValues.end());
+            EXPECT_EQ(saved->mBounty, changed->mBounty);
+            scripts.call("SetCrimeGold", {}, {std::int64_t{-5}}, context, {});
+            EXPECT_EQ(combat.crimeBounty(actorKey), scenario == 2 ? -5.f : 0.f);
+            EXPECT_THROW(scripts.call("SetCrimeGold", {}, {}, context, {}), ObScript::RuntimeError);
+            EXPECT_THROW(scripts.call("SetCrimeGold", {}, {std::int64_t{1}, std::int64_t{2}}, context, {}),
+                ObScript::RuntimeError);
+        }
+    }
+}
+
 TEST(OblivionDialogueMenu, ActualLoaderResolvesChoicesAfterResultsAndRejectsStaleCallbacks)
 {
     for (const bool shifted : {false, true})

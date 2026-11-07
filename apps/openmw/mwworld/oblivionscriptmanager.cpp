@@ -1,4 +1,5 @@
 #include "oblivionscriptmanager.hpp"
+#include "oblivionactorstats.hpp"
 #include "oblivioninteraction.hpp"
 #include "oblivioncharactergen.hpp"
 #include "obliviondooranimation.hpp"
@@ -2711,6 +2712,35 @@ namespace MWWorld
                 observation->record("scene-complex-command", {{"value", combat->sceneIsComplex()}});
             return std::int64_t(0);
         }
+        if (name == "setcrimegold")
+        {
+            if (arguments.size() != 1)
+                throw ObScript::RuntimeError("OBSV115", "SetCrimeGold requires one integer amount", name);
+            const auto requested = boundedCount(argument(0));
+            const Ptr actor = objectPtr();
+            if (actor.isEmpty() || !actor.getClass().isActor())
+                return std::int64_t(0);
+            ensureDispositionActor(objectKey());
+            auto* combat = mWorld.getOblivionCombatService();
+            const auto* current = combat ? combat->findActorValues(ESM4::runtimeReferenceKey(objectKey())) : nullptr;
+            if (!current || !current->mBounty)
+                throw ObScript::RuntimeError("OBSV115", "SetCrimeGold requires owned native bounty storage", name);
+            auto values = *current;
+            const bool player = values.mOwner == ESM4::ActorValueOwner::Player;
+            // The original wrapper subtracts the legal query (including its
+            // positive sub-one minimum), then adds that delta to raw storage.
+            const float old = ESM4::queryCrimeBounty(*values.mBounty, player, values.mPlayerInShiveringIsles);
+            const float delta = static_cast<float>(double(requested) - old);
+            values.mBounty = ESM4::modifyCrimeBounty(
+                *values.mBounty, delta, player, values.mPlayerInShiveringIsles).mState;
+            if (player)
+                combat->publishPlayerValues(mWorld.getPlayer(), std::move(values),
+                    resolveOblivionPlayerDynamicBaseSettings(mStore));
+            else
+                combat->publishNonPlayerValues(actor, std::move(values));
+            trace("setcrimegold ref=" + objectKey().serialize() + " requested=" + std::to_string(requested));
+            return std::int64_t(0);
+        }
         if (name == "getcrimegold" || name == "canpaycrimegold")
         {
             const Ptr actor = objectPtr();
@@ -3166,7 +3196,7 @@ namespace MWWorld
         static const std::set<std::string, std::less<>> deferred{
             "showmap",
             "cast", "addspell", "removespell",
-            "setquestobject", "setfactionrank", "modfactionrank", "setcrimegold",
+            "setquestobject", "setfactionrank", "modfactionrank",
             "setunconscious" };
         if (deferred.contains(name))
         {
