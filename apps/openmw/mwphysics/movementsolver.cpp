@@ -561,11 +561,13 @@ namespace MWPhysics
 
         auto gatherContacts = [&](btVector3 newOffset) -> ContactCollectionCallback {
             goodPosition = refPosition + Misc::Convert::toOsg(addMarginToDelta(newOffset));
-            if (newOffset.length2() > 0)
+            if (newOffset.z() < 0)
             {
-                // Reduced penetration at the destination does not prove that
-                // the recovery path is clear. In particular, a falling actor
-                // can otherwise be rejected through the floor under a lip.
+                // Downward recovery must not cross a supporting floor, even
+                // when that would reduce penetration with an overhead lip.
+                // Retain contact-based lateral/upward separation: sweeping
+                // those paths from an already overlapping hull can reject
+                // legitimate recovery against another initial contact.
                 newTransform.setOrigin(Misc::Convert::toBullet(refPosition));
                 actor.mCollisionObject->setWorldTransform(newTransform);
                 ActorTracer recovery;

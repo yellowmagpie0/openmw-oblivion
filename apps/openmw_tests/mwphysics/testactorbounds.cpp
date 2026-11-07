@@ -562,6 +562,55 @@ TEST(ActorBoundsTest, CapsuleStepsAcrossLowThresholdUnderOverhang)
     }
 }
 
+TEST(ActorBoundsTest, GroundedOverlapRecoveryRetainsLateralSeparationBetweenOverlappingWalls)
+{
+    MWClass::Static::registerSelf();
+    TestingOpenMW::NativeWorldFixture fixture;
+    const BoundsActorClass type(false);
+    btDefaultCollisionConfiguration configuration;
+    btCollisionDispatcher dispatcher(&configuration);
+    btDbvtBroadphase broadphase;
+    btCollisionWorld world(&dispatcher, &broadphase, &configuration);
+    MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+    btBoxShape wallShape(btVector3(10, 100, 100));
+    btCollisionObject wall, oppositeWall;
+    const auto add = [&](btCollisionObject& object, float x) {
+        object.setCollisionShape(&wallShape);
+        object.setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(x, 0, 0)));
+        world.addCollisionObject(&object, MWPhysics::CollisionType_World, MWPhysics::CollisionType_Actor);
+    };
+    add(wall, -20);
+    add(oppositeWall, 25);
+    ESM::Static base;
+    base.blank();
+    ESM::CellRef reference;
+    reference.blank();
+    reference.mPos.pos[2] = 1;
+    MWWorld::LiveCellRef<ESM::Static> live(reference, &base);
+    live.mClass = &type;
+    osg::ref_ptr<Resource::BulletShape> source = new Resource::BulletShape;
+    source->mCollisionBox.mExtents = osg::Vec3f(20, 30, 22);
+    source->mCollisionBox.mCenter = osg::Vec3f(0, 0, 22);
+    {
+        MWPhysics::Actor actor(MWWorld::Ptr(&live), source, &scheduler, false,
+            DetourNavigator::CollisionShapeType::Aabb, {});
+        actor.setOnGround(true);
+        MWPhysics::ActorFrameData frame(actor, false, false, 1.f, -1000.f, false);
+        // Both walls initially overlap the hull. Preserve the solver's
+        // velocity-filtered separation from the deeper contact: a sweep from
+        // this penetrated start must not veto it at the opposite wall.
+        frame.mMovement = osg::Vec3f(-1, 0, 0);
+        frame.mPosition = osg::Vec3f(0, 0, 1);
+        const auto transform = actor.getCollisionObject()->getWorldTransform();
+        MWPhysics::MovementSolver::unstuck(frame, &world);
+        EXPECT_GT(frame.mPosition.x(), 9.f);
+        EXPECT_FLOAT_EQ(frame.mPosition.z(), 1.f);
+        EXPECT_EQ(actor.getCollisionObject()->getWorldTransform(), transform);
+    }
+    world.removeCollisionObject(&oppositeWall);
+    world.removeCollisionObject(&wall);
+}
+
 TEST(ActorBoundsTest, GroundedOverlapRejectionDoesNotPushActorThroughSupportingFloor)
 {
     MWClass::Static::registerSelf();
@@ -615,12 +664,16 @@ TEST(ActorBoundsTest, GroundedOverlapRejectionDoesNotPushActorThroughSupportingF
                 // falling actors may still recover downward into open air.
                 EXPECT_GE(frame.mPosition.z(), floorHeight - .01f);
                 if (grounded)
+                {
                     EXPECT_GE(frame.mPosition.z(), 1.f);
+                }
                 else
                 {
                     EXPECT_LT(frame.mPosition.z(), 1.f);
                     if (floorHeight < 0)
+                    {
                         EXPECT_LT(frame.mPosition.z(), 0.f);
+                    }
                 }
                 EXPECT_EQ(actor.getCollisionObject()->getWorldTransform(), transform);
             }

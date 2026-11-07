@@ -1,0 +1,437 @@
+{
+  "scope": "Preserve downward floor protection while restoring lateral/upward overlap separation required by authored corridor runner departure. Full sewer escape incomplete.",
+  "full_escape_complete": false,
+  "change": "Sweep only negative-z unstuck corrections. Retain grounded negative-z clamp and contact-improvement tests for all candidates. This is floor protection, not a general guarantee against crossing every obstacle during overlap recovery.",
+  "geometry_regression": {
+    "negative": "build/oblivion-compat/sewer-escape/runner-lateral-recovery-before-01/verification.json",
+    "observed_failure": "Unrestricted sweep blocks lateral separation (x0) and chooses upward fallback (z11.2 instead of1).",
+    "corrected": {
+      "path": "build/oblivion-compat/sewer-escape/runner-lateral-recovery-focused-01/verification.json",
+      "sha256": "59ecd8b1bafc4857eb637a47730708f134b2c3182ad2d3bec3a519a481521fd4",
+      "source": {
+        "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+        "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+      },
+      "result": {
+        "executed": 10,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ActorBoundsTest.*",
+        "binary_sha256": "d0d005dd0bc29af09abcb7b54aa8090c670a84666af9a7cca8b823347d24a73e",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "20094aa1a3f0e0161947a802fb7c3ff6bb958f2f0b30c67c7649e0070b60ab46",
+        "inventory_sha256": "5dcea304028205fc60d2f26daeee3faace04dca00dcc412943e19c8a2cc45e0c",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "coverage": "New lateral overlap regression plus existing grounded/airborne supporting-floor and free-air recovery cases."
+  },
+  "matched_runtime": {
+    "scope": "Matched genuine pre-corridor save: grounded baseline passes, unrestricted sweep stalls, downward-only sweep passes. Full escape incomplete.",
+    "cases": [
+      {
+        "course": "runner16-grounded-baseline-01",
+        "passed": true,
+        "exit_code": 0,
+        "actions_complete": true,
+        "missing_expected_log": [],
+        "all_input_delivered": true,
+        "entry": {
+          "passed": true,
+          "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-16/retained-saves/3-0028-Quicksave.omwsave",
+          "source_save_sha256": "a42a1a04f0a544517b5217046901170a3a520cc86c950690f9ca8a5730b37787",
+          "whole_state_restore": true,
+          "schema_migration": null,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        },
+        "runtime": {
+          "observed_utc": "2026-11-07T13:49:37.884886+00:00",
+          "game_pid": 381609,
+          "process_start_ticks": "179758563",
+          "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-grounded-runtime-snapshot-01/openmw",
+          "exe_sha256": "89947e13c5d2c072a2a0358cb58120c9fa430345a60e487a1283e24b26adb1d5",
+          "snapshot_manifest": {
+            "verification": {
+              "head": "dc4e0247f3937addf797f035dc4d9bb380c5d48d",
+              "source_fingerprint": "6b19aaf6923c1b0d34991f5ddc8fb1075832eb110047465b5d1a08f138165567"
+            },
+            "elf_sha256": "89947e13c5d2c072a2a0358cb58120c9fa430345a60e487a1283e24b26adb1d5"
+          },
+          "loaded_libraries": [
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+              "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+              "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+              "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+              "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/runner16-grounded-baseline-01/sdl-input.so",
+              "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+            }
+          ],
+          "scope": "Actual immutable runtime; gameplay acceptance separate."
+        },
+        "save_sha256": "75c46c7f05f5bd84a167c9d3d57debc63d1abf3a667880e8fe9cf36e9d1c6817",
+        "parsed_native_exact": true,
+        "rats": [
+          {
+            "actor": "content:oblivion.esm:0387da",
+            "cell": "content:oblivion.esm:01fbb9",
+            "phase": 2,
+            "reason": "",
+            "position": [
+              1647.642333984375,
+              2919.158447265625,
+              -868.47998046875,
+              0.0,
+              0.0,
+              -2.0292348861694336
+            ],
+            "no_progress_seconds": 0.0
+          },
+          {
+            "actor": "content:oblivion.esm:0387db",
+            "cell": "content:oblivion.esm:01fbb9",
+            "phase": 2,
+            "reason": "",
+            "position": [
+              2176.0,
+              2944.0,
+              -857.3624877929688,
+              0.0,
+              0.0,
+              -2.0257396697998047
+            ],
+            "no_progress_seconds": 0.0
+          }
+        ],
+        "native_end": [
+          {
+            "run_id": "tutorial-player-intervention",
+            "epoch": 3,
+            "pid": 381609,
+            "sequence": 4,
+            "tick": 688,
+            "event": "run-end",
+            "error_count": 0,
+            "event_count": 3,
+            "pending_count": 0,
+            "unsupported_count": 0
+          }
+        ]
+      },
+      {
+        "course": "runner16-swept-diagnostic-01",
+        "passed": false,
+        "exit_code": 0,
+        "actions_complete": true,
+        "missing_expected_log": [
+          "Original corridor runners departed"
+        ],
+        "all_input_delivered": true,
+        "entry": {
+          "passed": true,
+          "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-16/retained-saves/3-0028-Quicksave.omwsave",
+          "source_save_sha256": "a42a1a04f0a544517b5217046901170a3a520cc86c950690f9ca8a5730b37787",
+          "whole_state_restore": true,
+          "schema_migration": null,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        },
+        "runtime": {
+          "observed_utc": "2026-11-07T13:51:44.395289+00:00",
+          "game_pid": 381839,
+          "process_start_ticks": "179770455",
+          "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-support-sweep-runtime-snapshot-01/openmw",
+          "exe_sha256": "5fb2d043179117857bc19c4c9b832601910b379cfafe94a488a2e79e87ef1e5a",
+          "snapshot_manifest": {
+            "elf_sha256": "5fb2d043179117857bc19c4c9b832601910b379cfafe94a488a2e79e87ef1e5a",
+            "verification": {
+              "head": "4425d0653327f22fcf354e6f1becccebab38952d",
+              "source_fingerprint": "f6affa109b075f36d34a5e7499037ae4c02aac6650ea3b787ef3710577a6adb9"
+            },
+            "resources_version": "0.52.0\n4425d0653327f22fcf354e6f1becccebab38952d\n\n",
+            "scope": "Current swept overlap correction plus expanded floor regression; subsequent Lua adds read-only live-rat floor assertions."
+          },
+          "loaded_libraries": [
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+              "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+              "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+              "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+              "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/runner16-swept-diagnostic-01/sdl-input.so",
+              "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+            }
+          ],
+          "scope": "Actual immutable runtime; gameplay acceptance separate."
+        },
+        "save_sha256": "35798b960ade8fea6c1adb4350ce16e88898f839fab1dd79cca6020f6d502237",
+        "parsed_native_exact": true,
+        "rats": [
+          {
+            "actor": "content:oblivion.esm:0387da",
+            "cell": "content:oblivion.esm:022ff6",
+            "phase": 12,
+            "reason": "bounded-repath-exhausted",
+            "position": [
+              560.718994140625,
+              497.1337585449219,
+              131.5326385498047,
+              0.0,
+              0.0,
+              -1.8031110763549805
+            ],
+            "no_progress_seconds": 30.033218383789062
+          },
+          {
+            "actor": "content:oblivion.esm:0387db",
+            "cell": "content:oblivion.esm:022ff6",
+            "phase": 2,
+            "reason": "",
+            "position": [
+              516.6417236328125,
+              606.1056518554688,
+              164.4812469482422,
+              0.0,
+              0.0,
+              2.960418939590454
+            ],
+            "no_progress_seconds": 0.03333333507180214
+          }
+        ],
+        "native_end": [
+          {
+            "run_id": "tutorial-player-intervention",
+            "epoch": 3,
+            "pid": 381839,
+            "sequence": 4,
+            "tick": 995,
+            "event": "run-end",
+            "error_count": 0,
+            "event_count": 3,
+            "pending_count": 0,
+            "unsupported_count": 0
+          }
+        ]
+      },
+      {
+        "course": "runner16-descending-recovery-01",
+        "passed": true,
+        "exit_code": 0,
+        "actions_complete": true,
+        "all_input_delivered": true,
+        "entry": {
+          "passed": true,
+          "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-16/retained-saves/3-0028-Quicksave.omwsave",
+          "source_save_sha256": "a42a1a04f0a544517b5217046901170a3a520cc86c950690f9ca8a5730b37787",
+          "whole_state_restore": true,
+          "schema_migration": null,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        },
+        "runtime": {
+          "observed_utc": "2026-11-07T13:57:54.940028+00:00",
+          "game_pid": 382654,
+          "process_start_ticks": "179808249",
+          "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-descending-recovery-runtime-snapshot-01/openmw",
+          "exe_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+          "snapshot_manifest": {
+            "elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+            "verification": {
+              "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+              "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+            },
+            "resources_version": "0.52.0\n79a971c0b298fe5a3608e744e51004249bb93fab\n\n",
+            "scope": "Downward-only recovery sweep retaining grounded support guard and legacy lateral/upward overlap separation. Focused10 actor bounds pass; integration pending."
+          },
+          "loaded_libraries": [
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+              "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+              "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+              "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+              "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+            },
+            {
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/runner16-descending-recovery-01/sdl-input.so",
+              "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+            }
+          ],
+          "scope": "Actual immutable runtime; gameplay acceptance separate."
+        },
+        "saves": {
+          "passed": true,
+          "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+          "count": 1,
+          "saves": [
+            {
+              "sequence": 3,
+              "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/runner16-descending-recovery-01/retained-saves/3-0003-Quicksave.omwsave",
+              "save_sha256": "54374a36811eb3221db19f1e986c7b454b7ee0c8fd48d3ed6d2eeeb591b3feba",
+              "live_sha256": "d27f709a8d12e621f0f0b0813d223035d2afc8ef4c1fb99b473a74c3cf6c30e0",
+              "parsed_native_exact": true
+            }
+          ]
+        },
+        "rats": [
+          {
+            "actor": "content:oblivion.esm:0387da",
+            "cell": "content:oblivion.esm:01fbb9",
+            "phase": 2,
+            "reason": "",
+            "position": [
+              1443.8740234375,
+              2943.54345703125,
+              -868.0524291992188,
+              0.0,
+              0.0,
+              -2.0286779403686523
+            ]
+          },
+          {
+            "actor": "content:oblivion.esm:0387db",
+            "cell": "content:oblivion.esm:01fbb9",
+            "phase": 2,
+            "reason": "",
+            "position": [
+              2176.0,
+              2944.0,
+              -857.3624877929688,
+              0.0,
+              0.0,
+              -2.0284271240234375
+            ]
+          }
+        ],
+        "native_end": [
+          {
+            "run_id": "tutorial-player-intervention",
+            "epoch": 3,
+            "pid": 382654,
+            "sequence": 4,
+            "tick": 678,
+            "event": "run-end",
+            "error_count": 0,
+            "event_count": 3,
+            "pending_count": 0,
+            "unsupported_count": 0
+          }
+        ]
+      }
+    ]
+  },
+  "rendered_inspection": "runner16-descending-recovery-01/runner-outcome.png inspected: living Player, drawn axe, corridor geometry and healthy HUD, no menu/error overlay. Rat departure proved separately from native save.",
+  "normal_integration": {
+    "path": "build/oblivion-compat/sewer-escape/runner-recovery-broad-normal-01/verification.json",
+    "sha256": "e6bb5f030c5dfc628ed2c1f5690c99e332f1606166854fc5f78d66efcf0c3123",
+    "source": {
+      "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+      "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+    },
+    "result": {
+      "executed": 2223,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "d0d005dd0bc29af09abcb7b54aa8090c670a84666af9a7cca8b823347d24a73e",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "a79567c8d5d68ef52bc9f02d7cd032aba34b576c8b5b5789112f689e79d98e3e",
+      "inventory_sha256": "5dcea304028205fc60d2f26daeee3faace04dca00dcc412943e19c8a2cc45e0c",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "sanitizer_integration": {
+    "path": "build/oblivion-compat/sewer-escape/runner-recovery-broad-sanitize-02/verification.json",
+    "sha256": "cd0e7dcaa1a8281819dec3fb4f001dd9e993a1c7c82f8d5d67835f212a0f3b62",
+    "source": {
+      "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+      "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+    },
+    "result": {
+      "executed": 2223,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "f2e907b432c6fb1ca8f6148a1ab8b9d3ce776513d96779b72473ffb6b238af55",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "b62743ebf72a751e34da98531d652f99cc08e12482fb7188f3faa9aea562780c",
+      "inventory_sha256": "5dcea304028205fc60d2f26daeee3faace04dca00dcc412943e19c8a2cc45e0c",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "retained_failed_sanitizer": {
+    "path": "build/oblivion-compat/sewer-escape/runner-recovery-broad-sanitize-01/verification.json",
+    "passed": false,
+    "outcome": "All2223 case assertions passed; process failed at shutdown with LeakSanitizer19790 bytes in372 allocations via SDL/D-Bus and unloaded driver modules. Workstation Mesa/X11 environment was omitted. Passing02 retains leak checking and all tests with documented environment."
+  },
+  "python_reuse": {
+    "path": "build/oblivion-compat/sewer-escape/resource-aware-recovery-broad-python-01/verification.json",
+    "executed": 580,
+    "scope": "Original81c9629a80 controller/observer evidence; no Python/data changes since. Not relabeled as a current-source run."
+  },
+  "remaining": "Fresh original-new-game67-section run, physical outdoor exit, own outdoor save reload in a new PID, all native/input/save audits and rendered review."
+}

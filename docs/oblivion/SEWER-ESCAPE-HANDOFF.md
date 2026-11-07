@@ -49,14 +49,30 @@ exact; no loads. Original-new-game PID380028 ended after an ordinary diagnostic
 F5seq29. That extra input and intentional stop are separately recorded; this is
 not continuous acceptance. No outdoor reload was launched.
 
-Current chunk: diagnose the runner stalls using genuine pre-corridor F5seq28.
-Compare earlier grounded solver89947 against swept solver5fb2 with the same
-ordinary phase1 route and readonly observer. Do not assume the new physics
-correction caused the failure until that comparison supplies evidence. The
-baseline diagnostic is `runner16-grounded-baseline-01`; matched swept manifest is
-prepared. Never reset terminal actor packages or splice a diagnostic into proof.
+The runner regression is corrected: the extra sweep now applies only to downward
+recovery. Grounded feet still cannot be rejected downward; lateral/upward
+separation retains the existing contact-improvement rule. New geometry regression
+fails before and passes after; all10 actor-bounds,2223 normal engine and2223
+ASan/UBSan engine tests pass. Sanitizer engine leak checking remains enabled.
+The first sanitizer attempt had2223 passing assertions but failed shutdown leaks
+with the workstation Mesa/X11 environment omitted; retained as failed. Rerun02
+uses the documented environment and passes cleanly.
+[Current recovery proof](SEWER-DESCENDING-RECOVERY-VERIFICATION.json).
 
-After the runner correction, launch another fresh full route and guarded own-outdoor reload. Accept only all67 in one PID, actual outdoor
+Matched genuine pre-corridor F5seq28 replays: grounded baseline89947 passes,
+unrestricted sweep5fb2 stalls, corrected downward-only13f2 passes with both rats
+physically in01fbb9. All entries0diff; corrected actual F5 parsed/native exact,
+input delivered, native end0/0/0, final capture inspected. These diagnostics do
+not replace an uninterrupted full course. Earlier all-direction swept evidence
+remains historical; the narrowed correction is current.
+
+Next: launch prepared `runner-recovery-full-assembly-01/full-escape.json` as
+continuous17 with immutable `rat-descending-recovery-runtime-snapshot-01`, ELF
+`13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`.
+Full17 guarded own-outdoor reload is prepared; all67 sections/10399 actions and
+generated observer syntax validate. No rendered game remains at this checkpoint.
+
+Accept only all67 in one PID, actual outdoor
 save/reload and ordinary walking, all input/native/save audits and rendered review.
 Keep one rendered game at a time, preserve healthy jobs, never overwrite live
 snapshots, and make no source edits/commits while `run_checks.py` is live.
