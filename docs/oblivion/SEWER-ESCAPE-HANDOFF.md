@@ -15,56 +15,64 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — continuous cavern encounters and traps
+## Current chunk — original environmental fire spell Cast
 
-Source22 healing correction is complete: five fixed casts reached only79.1HP
-from43.9, then old driver stopped casting and waited for full health.
-`remaining-continuity-03` is terminal FAILED at that gate, game0/launcher1,
-no runtime findings, end0error/0pending/0unsupported. Original10–21 completed
-in that loaded diagnostic; original22 stopped before descent. Real saves3/4/5
-prove gear76HP, Player zombie0491fc victory43.1HP, recovery80HP, all native-exact
-with clear queues. Raw failure: `remaining-continuity-03-failure-verification.json`.
-Preserve its genuine prehealing archive23 SHA8bb7c6fd…3bd3a,43.9HP.
+No rendered game is currently live. Menu reset focus and late-potion focus are
+terminal PASS. Next required gameplay dependency is original fire hazard Cast:
+raw `remaining-continuity-04` has2 deferred Cast commands from SCPT06a9cd.
+Independent hash-checked original master audit identifies
+GenericFireDamageMedium01SCRIPT on REFR0486cf/base06717f (ActivatorFlameNode6),
+casting0689b0 at Player on trigger,3sec reactivation timer. Spell0689b0 has
+Fire Damage magnitude6,duration2,touch range. This is content evidence, not a
+native behavior implementation/probe. Extracted original script/content stays
+ignored under `deferred-cast-record-audit-01/`. Implement this bounded hazard
+through native state authority; verify actual damage, duration, save/load and
+clear pending work. Do not relabel it as unrelated distant deferral.
 
-Source22 now repeats ordinary C +12sec recovery until existing79.99 full-health
-gate, bounded20 attempts/300sec. Physical route/other gates unchanged;619→605
-actions and selection updated. `root-descent-healing-feedback-01` passes from
-actual archive23:6 native releases43.9→80, inventory/cell/position unchanged,
-whole loaded entry0diff, native-exact F5, all input bytes delivered,
-end0error/0pending/0unsupported. Capture inspected.18 focused Python and
-full67/11545-action LuaJIT compilation pass; unchanged engine gates retain
-original provenance. [Recovery proof](SEWER-ROOT-DESCENT-HEALING-VERIFICATION.json).
+`remaining-continuity-04` is terminal FAILED at original40 potion menu:
+original22–39 completed in one loaded process, but remembered Magic +3RS selects
+Weapon, confirmed capture; no potions consumed. Game0/launcher1; native end
+0error/0pending/unsupported2 (the fire Cast events). Six inherited forbidden
+051aca/b/c activation/playgroup findings match already independently audited
+original mace behavior; preserve raw findings/failure. See
+`remaining-continuity-04-failure-verification.json` and
+[second-goblin audit](SEWER-JOINED-SECOND-GOBLIN-VERIFICATION.json).
+Actual rolling logs03b49e released6 bodies and struck goblin03b518 for6.5 damage.
+Actual late chest save42 SHA6f01c498…9641f retains3 healing potions,70.79HP.
 
-`remaining-continuity-04` is live, game263479, original22–67 from genuine
-archive23. Corrected recovery passed in continuation. Original22–27 completed:
-full physical descent, native Player lower-rat kills159832/038174, original
-0381b8 door teleports once to Natural Caverns0380bd. Actual entry13/native
-exact62.9HP, recovery14/native exact80HP, all combat/spell queues clear. Entry
-restore0diff; recorded ordinary Tab/3RS/B restores known Magic inventory
-category, inspected. Entry/recovery captures inspected.
-[Cavern checkpoint proof](SEWER-CAVERN-ENTRY-DIAGNOSTIC-VERIFICATION.json).
+Menu correction is complete: original10 now uses2 ordinary RS presses after
+initial potion to restore Magic→Misc→All before closing. Source49→52 actions,
+selection updated. `inventory-filter-reset-01` passes from genuine first-chest
+save:56→76, armor/axe equipped, All category inspected.
+`late-potion-all-01` passes unchanged original40 from actual late chest42 with
+matching fresh All:3 potions consumed70.79→80, gear retained. Both native-exact
+F5, all input bytes delivered, end0error/0pending/0unsupported; whole entries0/
+2 tiny body-velocity projections.18 focused Python and full67/11548-action
+LuaJIT pass; unchanged engine gates keep original provenance.
+[Menu reset proof](SEWER-INVENTORY-FILTER-RESET-VERIFICATION.json).
+Separate producer/consumer checks do not prove continuous10→40 with reset;
+that remains for final full run. No synthetic actor/quest/health state used.
 
-Next: preserve live game; inspect original28+ goblins, log trap, healing and
-shaman. Actual current handles: `menu-admission-current-work.json`, actual
-launcher status/processes authoritative. This loaded diagnostic is not full
-acceptance. Final acceptance remains one original-new-game67-segment PID and
-fresh reload of its own outdoor save. All evidence paths below are relative to
+After hazard work, continue original40–67 from actual late chest42 with All
+category precondition, as now produced by original10. This loaded diagnostic
+cannot substitute for final original-new-game67-segment PID and fresh reload
+of its own outdoor save. Actual handles/progress: `menu-admission-current-work.json`;
+inspect actual launcher/processes. All evidence paths below are relative to
 `build/oblivion-compat/sewer-escape/` unless stated otherwise.
 
-Runner departure correction is complete. Source11 retains267 input actions,
-route and actual-cell departure criteria; wait120→1200sec, total1200→2400sec,
-plus read-only actor cell telemetry. `corridor-runners-long-wait-01` passes at1fps:
-actual departure wait201.11sec exceeds old120sec allowance. Both0387da/db alive
-in original destination01fbb9 through door025041; Player remains76HP in022ff6.
-Native-exact actual F5, whole loaded entry0diff, all input bytes delivered,
-end0error/0pending/0unsupported. Capture inspected.18 focused Python cases and
-full67/11559-action LuaJIT compilation pass. Unchanged engine gates retain their
-original provenance. [Runner proof](SEWER-CORRIDOR-RUNNERS-VERIFICATION.json).
+Recent bounded checkpoints:
 
-Failed `remaining-continuity-01` remains terminal FAILED in source11 at old
-120sec departure wait; sources9/10 passed at1fps with native-exact saves and
-real potion56→76, armor/axe equipped. Preserve raw evidence and
-`remaining-continuity-01-failure-verification.json`.
+- Root recovery `8ceb69148d`: replace5 fixed casts with normal C/12sec repeats
+  until existing full-health gate, bounded20/300sec. Actual43.9→80 in6 releases;
+  source619→605. [Proof](SEWER-ROOT-DESCENT-HEALING-VERIFICATION.json).
+- Loaded original22–27: physical descent, Player lower-rat kills159832/038174,
+  original0381b8 door once to Natural Caverns0380bd; native-exact entry62.9HP
+  and recovery80HP, queues clear. [Proof](SEWER-CAVERN-ENTRY-DIAGNOSTIC-VERIFICATION.json).
+- Runner departure `a5b4b01dbe`: original route/cell criteria and267 inputs
+  unchanged; departure wait120→1200sec, total1200→2400sec, actor cell telemetry.
+  Actual1fps departure201.11sec; both0387da/db alive in01fbb9, Player76HP,
+  native-exact F5/whole entry0diff/all input bytes/end0error/0pending/unsupported0.
+  [Proof](SEWER-CORRIDOR-RUNNERS-VERIFICATION.json). Raw remaining01 stays failed.
 
 Chest correction `45171111df` is complete: same real full10 save26, default-speed
 chest/gear passes; separate1fps chest reaches90-unit range in112.10sec, all8 types
@@ -113,13 +121,6 @@ segments, then fresh-load that run's own outdoor save. No other rendered game or
 resource overwrite while this UI is live. Do not restart on observation timeout.
 On terminal failure retain raw evidence, fix the actual failed gate, verify a
 bounded correction and commit it before another full original-new-game attempt.
-
-Static later risk, not an observed failure: source10 leaves Inventory's Magic
-filter selected; source40 assumes All before3 rightshoulder presses. Source
-onOpen preserves the filter. `remaining-ui-filter-context-risk.json` records
-this; `healing-filter-context-prepared-01/reproduce.json` is prepared, **not run**,
-from native-exact real chest-loot save SHA f6327a68…3c84eb,26.14HP/3 potions.
-It seeds the remembered category using normal inputs. Never launch alongside another rendered game.
 
 ## Latest completed fixes and reusable evidence
 

@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "scope": "Normalize Inventory category after original10 so original40 retains its cold/continuous All precondition. Full uninterrupted escape incomplete.",
+  "full_escape_complete": false,
+  "failure": "build/oblivion-compat/sewer-escape/remaining-continuity-04-failure-verification.json",
+  "source_change": "After initial potion,2 normal rightshoulder presses return Magic\u2192Misc\u2192All before B close; capture verifies category. Source10 49\u219252 actions and full selection updated. No change to original40 or game menu behavior.",
+  "source_manifest_sha256": "0403afac1f56f4ed19c8cc797d17a0fbbae3b0c852c0a11c8fdf3cd3c5c08ad3",
+  "cases": [
+    {
+      "course": "build/oblivion-compat/sewer-escape/inventory-filter-reset-01",
+      "actions_complete": true,
+      "all_input_bytes_delivered": true,
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-01/retained-saves/3-0003-Quicksave.omwsave",
+        "source_save_sha256": "0289a23acb71aad7554080b9bc9895ff11023cc9e8744c764e869dfdbe17e19e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "health_before": 56.0,
+      "health_after": 76.0,
+      "healing_potions_before": 1,
+      "healing_potions_after": 0,
+      "equipped_slots": {
+        "0661c1": 4,
+        "0661c3": 8,
+        "090613": 65536
+      },
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/inventory-filter-reset-01/retained-saves/3-0003-Quicksave.omwsave",
+      "save_sha256": "ad7e0684b2b56afdeb594f0d143e7ca0be085c821e605a7dbaac6b82eb5153ee",
+      "native_snapshot_sha256": "33aa9b33f65dc8b588d7e33b89310a035930064d6255d2c5ed958d896e6c1654",
+      "parsed_save_equals_native_snapshot": true,
+      "queues": {
+        "native_combat_engagements": [],
+        "pending_death_events": [],
+        "physical_action_owners": [],
+        "native_spell_casts": [],
+        "native_magic_projectiles": []
+      },
+      "native_run_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 264687,
+        "sequence": 4,
+        "tick": 212,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    },
+    {
+      "course": "build/oblivion-compat/sewer-escape/late-potion-all-01",
+      "actions_complete": true,
+      "all_input_bytes_delivered": true,
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-04/retained-saves/3-0042-Quicksave.omwsave",
+        "source_save_sha256": "6f01c498e179dda0e6eea6f1df0be4108edd5c57de0a3624f9a088755159641f",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/0/linear_velocity/0",
+            -0.22238782048225403,
+            -0.22238783538341522
+          ],
+          [
+            "/native_animated_references/0/bodies/0/linear_velocity/1",
+            0.014332030899822712,
+            0.014332031831145287
+          ]
+        ]
+      },
+      "health_before": 70.78999328613281,
+      "health_after": 80.0,
+      "healing_potions_before": 3,
+      "healing_potions_after": 0,
+      "equipped_slots": {
+        "0661c1": 4,
+        "0661c3": 8,
+        "090613": 65536
+      },
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/late-potion-all-01/retained-saves/3-0003-Quicksave.omwsave",
+      "save_sha256": "6a06ee796200801d119f707e5748ebcbe0f9b541e0bd9e13b2b825b595129a5f",
+      "native_snapshot_sha256": "f9fdbbea1aa9c038b78e2c126258fa278b2d3e2fc576b189c1aac7c8b513967e",
+      "parsed_save_equals_native_snapshot": true,
+      "queues": {
+        "native_combat_engagements": [],
+        "pending_death_events": [],
+        "physical_action_owners": [],
+        "native_spell_casts": [],
+        "native_magic_projectiles": []
+      },
+      "native_run_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 264844,
+        "sequence": 4,
+        "tick": 201,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    }
+  ],
+  "rendered_inspection": [
+    "inventory-filter-reset-01/joined-inventory-all-restored.png: Inventory and All Tab selected, gear/items visible.",
+    "late-potion-all-01/healing-potion-menu.png: Inventory/Magic selected; healing potion stack3 selected."
+  ],
+  "integration_limit": "Separate genuine checkpoint tests prove producer exitAll and consumer from matching fresh All. Continuous original10\u219240 with new reset remains for final full run. Earlier remaining04 source22\u201339 used prior Magic context and remains failed.",
+  "python": {
+    "log": "build/oblivion-compat/sewer-escape/inventory-filter-reset-python-focused-01.log",
+    "tests": 18,
+    "failures": 0,
+    "skips": 0
+  },
+  "full_assembly": {
+    "segments": 67,
+    "actions": 11548,
+    "compile": "build/oblivion-compat/sewer-escape/inventory-filter-reset-full-assembly-01/luajit-syntax-verification.json"
+  },
+  "runtime_openmw_sha256": "ff12ce922fa13e8500ab613cb6a1c7745f808da5563eba56c9243a26451c7f6d",
+  "implementation_gates": "Data-only producer/selection change; unchanged2210 normal/2210 ASan-UBSan engine provenance in SEWER-EQUIPMENT-PAGE-VERIFICATION.json. No fresh sanitizer runtime claim.",
+  "adjacent_required": "Original fire hazard0486cf/base06717f runs06a9cd and casts0689b0 at Player;2 deferred Cast events in remaining04 must be addressed before final full acceptance. Content audit under deferred-cast-record-audit-01. Inherited mace exclusions remain raw failure findings and match previously audited original behavior."
+}

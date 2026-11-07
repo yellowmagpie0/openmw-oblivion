@@ -242,6 +242,21 @@
     },
     {
       "type": "gamepad_button",
+      "value": "rightshoulder",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "gamepad_button",
+      "value": "rightshoulder",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "screenshot",
+      "name": "joined-inventory-all-restored.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
       "value": "b",
       "hold_seconds": 0.2
     },
