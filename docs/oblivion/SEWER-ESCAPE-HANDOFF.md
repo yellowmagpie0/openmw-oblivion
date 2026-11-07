@@ -17,7 +17,9 @@ and input audit, and rendered inspection. Existing evidence keeps its provenance
 
 ## Current chunk — survive the log encounter using a normal route
 
-No rendered game or build helper is live. Bounded environmental fire is complete:
+`cavern-fire-bypass-01` and `cavern-log-trap-outcome-01` are terminal. No build
+helper is live. Bounded
+environmental fire is committed as `a76852a12e`:
 original SCPT06a9cd on bonfire0486cf now schedules its actual timed FIDG0689b0
 on Player. Source reference owns saved spell/magnitude/duration/elapsed under
 `native.fire.*`; existing serialization reused, no schema change. Native Health/
@@ -47,17 +49,29 @@ trace lines. Native end0error/0pending/0unsupported is a distinct authority,
 not a clean observer result. Preserve `remaining-continuity-05-failure-verification.json`.
 Do not infer a casting-input bug from this failure.
 
-Next bounded chunk: normal path around optional visible bonfire in original34
-(points10/11 currentlyy1658/1635 run directly into fire2536,1663; tryy1540 if
-collision permits), preserve dedicated fire-contact probes and all goblin/log
-encounters. Verify actual arrivals/no fire contact and survival past original37/38,
-then commit. If still failing, improve ordinary combat/recovery; no damage
-neutralization or health injection. Genuine pre-fire input: remaining04 archive30
-SHAf83ae64e…b623e,80HP. Fresh All category matches original10's verified exitAll.
-After bounded correction continue later course, then final original-new-game67
-PID and fresh reload of its own outdoor save. Loaded diagnostics do not substitute.
-Actual handles/evidence: `menu-admission-current-work.json`; future build helpers
-lock tracked edits/commits, and live games prohibit binary/resource overwrite.
+Bounded route correction is verified: original34 waypoint10/11 y1658/1635→1540,
+all549 ordinary input actions retained. Actual16-waypoint traversal avoids the
+optional visible bonfire; actual saves3–9 retain80HP and both goblins die from
+original03b49e rolling logs (null killer). Raw `cavern-fire-bypass-01` remains
+FAILED solely for its unconditional Player-melee expected log. Source38 now
+accepts that melee event OR an actual03b49e log impact on03b51a, retaining75
+inputs and the existing target-death requirement. Clean four-segment35–38
+`cavern-log-trap-outcome-01` PASS instead demonstrates both Player melee kills,
+Player alive10.57HP, native end0error/0pending/0unsupported and clear final queues.
+Both whole entries0diff/all input bytes delivered. Actual final replay F5 is
+native-exact; earlier overwritten replay saves were not archived and are not
+claimed. Dedicated normal/sanitized fire-contact/reload coverage remains intact.
+18 focused Python cases and full67/11548-action LuaJIT compile pass; unchanged
+broad engine evidence keeps its original provenance.
+[Route and victory-outcome proof](SEWER-LOG-ROUTE-VERIFICATION.json).
+
+Current continuation `remaining-after-logs-01`, game280575, runs original39–67
+from the clean melee replay's actual final F5 (SHAd95eb16c…705d01,10.57HP).
+Read-only archiver280630 and watcher280631 are attached. Inspect actual processes;
+never infer liveness from this handoff. Normal chest/potion route must recover
+from this health before later encounters. Fresh All matches original10's exitAll.
+After the loaded continuation, final acceptance remains one original-new-game
+67-segment PID and a fresh reload of that run's own outdoor save.
 
 `remaining-continuity-04` is terminal FAILED at original40 potion menu:
 original22–39 completed in one loaded process, but remembered Magic +3RS selects
@@ -83,8 +97,8 @@ LuaJIT pass; unchanged engine gates keep original provenance.
 Separate producer/consumer checks do not prove continuous10→40 with reset;
 that remains for final full run. No synthetic actor/quest/health state used.
 
-Continue original34–67 from genuine pre-fire save30 after the bounded route fix, with All
-category precondition, as now produced by original10. Actual late chest42 remains
+The bounded route fix is verified; original39–67 continuation is running with the All
+category precondition now produced by original10. Actual late chest42 remains
 useful for focused potion diagnostics. This loaded diagnostic
 cannot substitute for final original-new-game67-segment PID and fresh reload
 of its own outdoor save. Actual handles/progress: `menu-admission-current-work.json`;

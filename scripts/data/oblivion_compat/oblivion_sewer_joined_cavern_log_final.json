@@ -451,7 +451,7 @@
   "expected_log": [
     "M16 native cast release: spell=content:oblivion.esm:000136",
     "West course phase 2:\\s*(?:Joined northern rat dead)",
-    "M15 melee hit committed: actor=dynamic:player:0000000000000001"
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001|TES4 trap impact: reference=content:oblivion.esm:03b49e .*actor=content:oblivion.esm:03b51a .*damage="
   ],
   "forbidden_log": [
     "Unsupported ObScript command",
