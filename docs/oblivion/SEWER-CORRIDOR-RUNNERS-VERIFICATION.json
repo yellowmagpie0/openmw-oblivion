@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "scope": "Real corridor runner departure allowance at low frame rate; full escape incomplete.",
+  "full_escape_complete": false,
+  "source_change": "Source11 preserves267 input actions, route and actual-cell departure criteria. Wait120\u21921200sec, total1200\u21922400sec; read-only actor cell telemetry.",
+  "source_manifest_sha256": "25f1fc23d06476ee3a5e0d7dfdbe8b3995242340f73b23e33ab13ded083e2b2c",
+  "failed_attempt": "build/oblivion-compat/sewer-escape/remaining-continuity-01-failure-verification.json",
+  "focused_course": "build/oblivion-compat/sewer-escape/corridor-runners-long-wait-01",
+  "focused_manifest": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/corridor-runners-focused-assembly-01/runners.json",
+  "loaded_input": "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-01/retained-saves/3-0004-Quicksave.omwsave",
+  "input_sha256": "f6ae0e489b173643a8bf9b9080d78607d11be1291b9a78d505f31b8d8fd9357e",
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/remaining-continuity-01/retained-saves/3-0004-Quicksave.omwsave",
+    "source_save_sha256": "f6ae0e489b173643a8bf9b9080d78607d11be1291b9a78d505f31b8d8fd9357e",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "framerate_limit": 1,
+  "departure_wait_seconds": 201.111057,
+  "exceeded_old120sec_allowance": true,
+  "game_pid": 261431,
+  "actions_complete": true,
+  "all_input_bytes_delivered": true,
+  "actual_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/corridor-runners-long-wait-01/retained-saves/3-0003-Quicksave.omwsave",
+  "save_sha256": "cddcba555d50700611092cd8bdca1b11beefb76d93896c8e3ef866970c32d70d",
+  "native_snapshot_sha256": "43c7db51dc037d9b91421b16b9ec090dbb4d8e853482fc3eb78168038037d5c6",
+  "parsed_save_equals_native_snapshot": true,
+  "player_health": 76,
+  "player_cell": "content:oblivion.esm:022ff6",
+  "runners": [
+    {
+      "reference": "content:oblivion.esm:0387da",
+      "cell": "content:oblivion.esm:01fbb9",
+      "life": {
+        "actor": "content:oblivion.esm:0387da",
+        "base": "content:oblivion.esm:0387d8",
+        "phase": 0,
+        "recovery_remaining": 0.0,
+        "killer": "null"
+      }
+    },
+    {
+      "reference": "content:oblivion.esm:0387db",
+      "cell": "content:oblivion.esm:01fbb9",
+      "life": {
+        "actor": "content:oblivion.esm:0387db",
+        "base": "content:oblivion.esm:0387d8",
+        "phase": 0,
+        "recovery_remaining": 0.0,
+        "killer": "null"
+      }
+    }
+  ],
+  "native_run_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 261431,
+    "sequence": 4,
+    "tick": 630,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 3,
+    "pending_count": 0,
+    "unsupported_count": 0
+  },
+  "rendered_inspection": "runners-departed.png inspected: Player in corridor, axe drawn, healthy HUD, no menu/error overlay. Rat cells/life verified separately in native save.",
+  "python": {
+    "log": "build/oblivion-compat/sewer-escape/corridor-runners-python-focused-01.log",
+    "tests": 18,
+    "failures": 0,
+    "skips": 0
+  },
+  "full_assembly": {
+    "segments": 67,
+    "actions": 11559,
+    "compile": "build/oblivion-compat/sewer-escape/corridor-runners-full-assembly-01/luajit-syntax-verification.json"
+  },
+  "runtime_openmw_sha256": "ff12ce922fa13e8500ab613cb6a1c7745f808da5563eba56c9243a26451c7f6d",
+  "implementation_gates": "Data-only correction; reuse unchanged2210 normal/2210 ASan-UBSan engine provenance from SEWER-EQUIPMENT-PAGE-VERIFICATION.json. No fresh sanitizer runtime claim.",
+  "remaining": "This focused test ends before zombie combat. Continue continuous later-route diagnostic, then mandatory original-new-game67-segment run and own outdoor fresh reload."
+}

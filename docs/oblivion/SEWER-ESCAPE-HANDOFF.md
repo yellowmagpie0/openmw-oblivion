@@ -15,39 +15,44 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — first chest approach from the actual post-rat position
+## Current chunk — continue later route after proven runner departure
 
-`full-escape-continuous-10` is terminal FAILED at source9 chest-in-range wait60sec,
-game0/launcher1, no forbidden/unreviewed engine findings. Native run-end error0/
-pending0/unsupported5 (known Peryite startup). All UI/runner/archiver processes
-are terminal. Preserve the run unchanged. Failure proof under evidence root:
-`full-escape-continuous-10-failure-verification.json`.
+Runner departure correction is complete. Source11 retains267 input actions,
+route and actual-cell departure criteria; wait120→1200sec, total1200→2400sec,
+plus read-only actor cell telemetry. `corridor-runners-long-wait-01` passes at1fps:
+actual departure wait201.11sec exceeds old120sec allowance. Both0387da/db alive
+in original destination01fbb9 through door025041; Player remains76HP in022ff6.
+Native-exact actual F5, whole loaded entry0diff, all input bytes delivered,
+end0error/0pending/0unsupported. Capture inspected.18 focused Python cases and
+full67/11559-action LuaJIT compilation pass. Unchanged engine gates retain their
+original provenance. [Runner proof](SEWER-CORRIDOR-RUNNERS-VERIFICATION.json).
 
-Full10 passed opening/first ambush/escort departure30, early3 Player rat kills,
-real healing, corpse loot/equipment/keyed entry and first Substructure Player
-rat victory. Genuine retained save26 is native-exact,56HP, all combat queues clear.
-It starts664.42 horizontal units from chest049352. The failed approach stays
-facing the chest; changing focus pitch indicates progress, but no final-position
-save exists. Source9 range threshold90 and actual loot checks remain unchanged.
-Correction only extends walk wait60→180sec and logs actual distance/position.
+Failed `remaining-continuity-01` remains terminal FAILED in source11 at old
+120sec departure wait; sources9/10 passed at1fps with native-exact saves and
+real potion56→76, armor/axe equipped. Preserve raw evidence and
+`remaining-continuity-01-failure-verification.json`.
 
-Chest correction now passes focused9+10 from actual26: exact whole entry0diff,
-real chest loot, armor/axe equipment and one real potion56→76. Separate1fps
-chest-only case reaches range in112.10sec (>old60,<new180), transfers all8 types,
-empty chest, native-exact final save, all input bytes delivered and native end
-error0/pending0/unsupported0. Whole entry0diff.18 focused Python cases and full67
-LuaJIT compilation pass; unchanged engine gates reused with original provenance.
-Normal intermediate chest save3 has native receipt/snapshot but bytes were
-superseded by final4; only final4 is parser-verified. Paced chest save is retained.
-[Chest approach proof](SEWER-CHEST-APPROACH-VERIFICATION.json).
-Armor equipment/mechanics proven; paperdoll appears in prior clothing. Updated
-armor appearance is not claimed; record for later visual inspection.
+Next prepared diagnostic: `remaining-continuity-after-runners-assembly-01/remaining.json`,
+original sources10–67 from genuine remaining diagnostic chest save3 SHA0289a23a…e19e.
+Starts before gear/potion to retain real Magic inventory filter for later
+continuity; normal60fps limit, no injected state. Check actual process/status
+and `menu-admission-current-work.json` before launching. Runner focus is terminal;
+no zombie/full escape acceptance from it. Final acceptance remains one original
+new-game67-segment PID and fresh reload of its own outdoor save.
 
-Next: commit bounded chest correction, then exercise remaining sources9–67
-continuously from genuine26 at1fps to expose later input/context timing gaps
-before replaying the84-minute known opening for each repair. This is diagnostic
-only: final acceptance still requires all67 in one original-new-game PID plus
-its own outdoor fresh reload. All focused/UI helpers are terminal here.
+Chest correction `45171111df` is complete: same real full10 save26, default-speed
+chest/gear passes; separate1fps chest reaches90-unit range in112.10sec, all8 types
+transferred once, native-exact save, no native errors/pending work. Whole loaded
+entry0diff. All input bytes delivered.18 focused Python and full67 LuaJIT pass;
+unchanged engine gates retain original provenance. [Chest proof](SEWER-CHEST-APPROACH-VERIFICATION.json).
+Armor mechanics/equipment proven; paperdoll appears in prior clothing. Updated
+armor appearance is not claimed; retain for later visual inspection.
+
+Full10 remains terminal failed at source9's old60sec chest wait after its verified
+opening/solo/keyed-entry/Substructure-rat prefix. No full escape acceptance.
+Final acceptance remains all67 in one original-new-game PID and its own outdoor
+fresh reload. Loaded diagnostics do not substitute. After bounded corrections,
+continue the remaining route with matching GUI context; then final new-game run.
 
 Actual uninterrupted solo prefix through keyed entry now passes. All3 early rats
 are native Player kills; wall-exit archive22 matches native snapshot,46HP and all
@@ -67,8 +72,10 @@ fresh reload remain unproven. Current proofs under `full-escape-continuous-10/`:
 `keyed-door-entry-verification.json`. Monitor's stage value is the last requested
 SetStage, not the native maximum completed stage; repeated23/29 is expected.
 
-Current binary SHA ff12ce92…c7f6d; full67 manifest SHA7c2e216a…9d0b85,
-`equipment-active-page-full-assembly-01/full-escape.json`. All paths below are
+Current binary SHA ff12ce92…c7f6d. Failed full10 manifest SHA7c2e216a…9d0b85
+remains unchanged in `equipment-active-page-full-assembly-01/full-escape.json`.
+Regenerate the full67 manifest from committed sources after current correction;
+do not reuse the failed manifest's old timeout. All paths below are
 relative to `build/oblivion-compat/sewer-escape/`. Incremental monitor reads logs
 without input and verifies PID identity; `full-escape-continuous-10/incremental-watch.json`
 is observation history, not sufficient alone to prove a currently live process.
