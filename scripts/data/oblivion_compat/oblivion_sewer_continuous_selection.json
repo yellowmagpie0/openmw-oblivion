@@ -334,7 +334,7 @@
     {
       "segment": 48,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_subterrane_entry.json",
-      "action_count": 978,
+      "action_count": 667,
       "source_course": "joined-cavern-to-subterrane-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

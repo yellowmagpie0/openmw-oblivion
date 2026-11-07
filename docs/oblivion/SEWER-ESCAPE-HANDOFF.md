@@ -119,12 +119,32 @@ first-F5 audit expectation failure retained (omitted real2.91 post-heal hit);
 corrected audit proves actual50.25 save; raw game course remains PASS.
 [Shaman active-combat proof](SEWER-SHAMAN-ACTIVE-COMBAT-VERIFICATION.json).
 
-Current `remaining-after-shaman-01` game283320 runs original48–67 from actual
-shaman victory/recovery archive4 SHAf3102638…3bc45b,80HP/80MP/shaman Player-dead.
-Archiver283368/watcher283369 attached; inspect actual processes. Complete original
-reunion/story/choices/exterior from this genuine save, then regenerate/run full67
-in one original-new-game PID and reload its own outdoor save fresh. Full escape
-acceptance remains incomplete; loaded continuations do not substitute.
+Shaman correction committed `aaea1d4e5b`. `remaining-after-shaman-01` is terminal
+FAILED at original48's first old north-room waypoint. Ordinary movement from
+actual south-side victory reached5539.98,4181.01,-437.35 then blocked; Player80HP,
+no observer error findings. Raw failure preserved. Original48 also needlessly
+spent10 fixed C casts despite actual80HP entry; record in
+`remaining-after-shaman-01-failure-verification.json` and `next-runtime-efficiency.json`.
+
+Original48 connection is verified in `post-shaman-route-01` PASS: joins at original
+point9 (5544.30,4124.85), already on failed run's observed ordinary path; remaining
+original9–26 vectors retained verbatim and renumbered1–18. Removed north-room
+detour has no encounters/loot; all required native deaths retained. All18 actual
+arrivals pass; original03816c teleports exactly once into Subterrane022288. All3
+actual F5s parsed-native/receipt exact, Player80HP/80MP throughout, same inventory
+and death counts, queues clear. Full-health recovery loop sends0 C, replacing
+10 unnecessary fixed casts. Whole entry only1 tiny permitted velocity projection.
+All input delivered; no observer findings; native end0error/0pending/0unsupported.
+Destination capture inspected.18 focused Python and full67/10477 LuaJIT compile
+pass; unchanged engine/fire gates retain original provenance.
+[Post-shaman route proof](SEWER-POST-SHAMAN-ROUTE-VERIFICATION.json).
+
+Current `remaining-after-subterrane-01` game284139 runs original49–67 from actual
+Subterrane archive5 SHAe1f5ca4b…047dc0,80HP/80MP/shaman Player-dead. Archiver284188/
+watcher284189 attached; inspect actual processes. Finish reunion/story/choices/
+exterior, then regenerate/run full67 in one original-new-game PID and reload its
+own outdoor save fresh. Full escape remains incomplete; loaded continuations
+do not substitute.
 
 `remaining-continuity-04` is terminal FAILED at original40 potion menu:
 original22–39 completed in one loaded process, but remembered Magic +3RS selects
