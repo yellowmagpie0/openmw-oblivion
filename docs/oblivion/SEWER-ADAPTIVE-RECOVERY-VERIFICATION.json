@@ -178,5 +178,24 @@
   },
   "gate_reuse": "No C++ or Python implementation changes: retain2222 normal/SAN engine and580 Python gate provenance;18 focused recipe tests rerun for these data edits.",
   "full_escape_complete": false,
-  "rendered_review": "Inspected adaptive-healing-01/joined-zombie-healed.png: full health HUD and drawn axe in the original corridor; upright zombie corpse remains the recorded visual limitation."
+  "rendered_review": "Inspected adaptive-healing-01/joined-zombie-healed.png: full health HUD and drawn axe in the original corridor; upright zombie corpse remains the recorded visual limitation.",
+  "broad_python": {
+    "path": "build/oblivion-compat/sewer-escape/adaptive-healing-broad-python-01",
+    "passed": true,
+    "results": {
+      "python": {
+        "executed": 580,
+        "passed": true,
+        "log_sha256": "26810ebcbaa6bdf7ee0d35a5429778b183bd0de457a99bf10d8bee487086b3c5"
+      }
+    },
+    "source_before": {
+      "head": "b11b8aeb5c2e8a7f8cccc6fea66f845a49a78b2a",
+      "source_fingerprint": "f86efdbb8b215f398295105864c28bfd37a669f43a1428873700be45837650e1"
+    },
+    "source_after": {
+      "head": "b11b8aeb5c2e8a7f8cccc6fea66f845a49a78b2a",
+      "source_fingerprint": "f86efdbb8b215f398295105864c28bfd37a669f43a1428873700be45837650e1"
+    }
+  }
 }
