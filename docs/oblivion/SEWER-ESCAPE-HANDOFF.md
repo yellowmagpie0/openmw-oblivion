@@ -39,10 +39,15 @@ parsed/native exact, all automated input delivered, native ends0/0/0. Entry
 comparisons permit only animated-body velocity projection differences<=1e-5.
 [Recovery proof](SEWER-THRESHOLD-RECOVERY-VERIFICATION.json). All18 focused
 recipe tests pass; full67-section assembly has10399 actions. C++ is unchanged.
-Follow-up15 correctly stopped without outdoor reload. No rendered game remains.
+Follow-up15 correctly stopped without outdoor reload. Recovery committed81c9629a80;
+fresh580 Python tests pass, fingerprint
+`662012fac3ad6f70bb59cc46149d09566444f17882b20ecbd0d243306491f2cb`.
+Continuous16 is now live, original-new-game PID380028, immutable swept-recovery
+ELF5fb2d043179117857bc19c4c9b832601910b379cfafe94a488a2e79e87ef1e5a.
+Its actual runtime identity, automatic archive/watch and guarded own-outdoor
+reload are under `build/oblivion-compat/sewer-escape/`. No manual input so far.
 
-After focused recovery checks, regenerate a fresh full67-section new-game course
-and its guarded own-outdoor reload. Accept only all67 in one PID, actual outdoor
+Monitor continuous16 and its guarded own-outdoor reload. Accept only all67 in one PID, actual outdoor
 save/reload and ordinary walking, all input/native/save audits and rendered review.
 Keep one rendered game at a time, preserve healthy jobs, never overwrite live
 snapshots, and make no source edits/commits while `run_checks.py` is live.

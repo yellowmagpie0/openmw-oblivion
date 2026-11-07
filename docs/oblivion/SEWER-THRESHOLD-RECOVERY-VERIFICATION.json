@@ -367,6 +367,21 @@
     "actions": 10399,
     "path": "build/oblivion-compat/sewer-escape/resource-aware-recovery-full-assembly-01/full-escape.json"
   },
-  "gate_reuse": "C++ unchanged since486f3860e2 normal2222/Python580/SAN2222 gates. These are controller/observer data changes; fresh Python integration accompanies the next full run.",
-  "full_escape_complete": false
+  "gate_reuse": "C++ unchanged since486f3860e2 normal2222/SAN2222 gates; retain original provenance. Current controller/observer data passes fresh580 Python tests at81c9629a80.",
+  "full_escape_complete": false,
+  "python_integration": {
+    "path": "build/oblivion-compat/sewer-escape/resource-aware-recovery-broad-python-01/verification.json",
+    "passed": true,
+    "source": {
+      "head": "81c9629a80f95d8c3b07ddf49e29bf050edb4ef5",
+      "source_fingerprint": "662012fac3ad6f70bb59cc46149d09566444f17882b20ecbd0d243306491f2cb"
+    },
+    "results": {
+      "python": {
+        "executed": 580,
+        "passed": true,
+        "log_sha256": "8c314b94bd851290ec826261a941db23d398a232f610e8efa41f3d67cc19449c"
+      }
+    }
+  }
 }
