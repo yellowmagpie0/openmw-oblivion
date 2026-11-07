@@ -1,0 +1,142 @@
+{
+  "scope": "Stationary peaceful native Follow/Accompany actors in Wait can use existing proactive crowd yielding, allowing the third-ambush escort to resume",
+  "full_escape_complete": false,
+  "state_contract": [
+    "Actual movement and native combat exclusion remain in collision coordinator.",
+    "Restrained/action-reserved actors cannot yield. Active Path admission and waypoint/arrival tolerances are unchanged.",
+    "Existing package, target, destination and save schema remain; no quest-specific actor IDs or injected movement."
+  ],
+  "source_files_sha256": {
+    "apps/openmw/mwmechanics/oblivionaigait.hpp": "1782c0ec03224f6bb7081ac2d7396c011d3f3127119ef1d10013606d37fc2176",
+    "apps/openmw_tests/mwworld/testoblivionai.cpp": "b0e19e8081d5ed834b66bae8a64532a4e1f4b0b377d3c4e5bd7e1e9da6b52b91"
+  },
+  "checks": {
+    "waiting-follower-yield-focused-01": {
+      "source": {
+        "head": "d59607ee6858db52fc0daa8072724c2a82d73ea9",
+        "source_fingerprint": "f1bd5cee6ea11ba0a3b27b2bc702b23c39948d2bf43505aa6a64fba150786e82"
+      },
+      "results": {
+        "engine": {
+          "executed": 43,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.*",
+          "binary_sha256": "c98ebff94527539c302bd1d29fbded5ec33ae3c3372886bd915754f6d016e5c3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "968ce0fe3ee4a2f415201abdf9a97d67290f51d86fe87848d336333b9eae85dd",
+          "inventory_sha256": "7b5cce8220644fb61a3fec5abe3e486add5afc705ede58999e5784e07f3c84be",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/waiting-follower-yield-focused-01/verification.json"
+    },
+    "waiting-follower-yield-broad-normal-01": {
+      "source": {
+        "head": "d59607ee6858db52fc0daa8072724c2a82d73ea9",
+        "source_fingerprint": "d04dd1c82b78d7adc30ea3c63824f14fffe3dd5257c485307581cd2bf7c5dcfa"
+      },
+      "results": {
+        "engine": {
+          "executed": 2217,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c98ebff94527539c302bd1d29fbded5ec33ae3c3372886bd915754f6d016e5c3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "55049f90e16e4e057fbb98219ac7ebda31417e52e7ca4fb2dca9a1931de1064d",
+          "inventory_sha256": "7b5cce8220644fb61a3fec5abe3e486add5afc705ede58999e5784e07f3c84be",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/waiting-follower-yield-broad-normal-01/verification.json"
+    },
+    "waiting-follower-yield-broad-sanitize-02": {
+      "source": {
+        "head": "d59607ee6858db52fc0daa8072724c2a82d73ea9",
+        "source_fingerprint": "0a0c4250e9779e0d9fcc64eaa6b9b81e6e5b7db1440724119d053bbb7a8d98c7"
+      },
+      "results": {
+        "engine": {
+          "executed": 2217,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4dae019d36d96e4924f04342fbb2b0d52cbd21ccdf772e59af77ac9bc0d769a2",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "660e258a19ea4b601094ce6de9715483673f552dadd1eea669e608c40634aafc",
+          "inventory_sha256": "7b5cce8220644fb61a3fec5abe3e486add5afc705ede58999e5784e07f3c84be",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/waiting-follower-yield-broad-sanitize-02/verification.json"
+    }
+  },
+  "normal_runtime": {
+    "passed": true,
+    "scope": "Real stalled-stage50 checkpoint advances52/54/56 with existing passive6-input course; not full escape acceptance",
+    "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/waiting-follower-yield-01/retained-saves/3-0003-Quicksave.omwsave",
+    "save_sha256": "37362b980a39151003c28095f25d54426e75d3c27a676c356e65ba0e2d45d3ef",
+    "native_save_exact": true,
+    "entry": {
+      "passed": true,
+      "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-after-birthsign-01/retained-saves/3-0023-Quicksave.omwsave",
+      "source_save_sha256": "16b9f120e35fe5daee2f93d675d6b09254caafacf6fab52146f8aa383376c2c9",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "health": 38.504398345947266,
+    "escorts_alive": true,
+    "native_end": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 301961,
+      "sequence": 4,
+      "tick": 1099,
+      "event": "run-end",
+      "error_count": 0,
+      "event_count": 3,
+      "pending_count": 0,
+      "unsupported_count": 0
+    }
+  },
+  "normal_runtime_gate": "Original passive6-action course from real failed-stage50 save reaches52/54/56; actual F5/native exact, whole entry0diff, health unchanged38.50, all3escorts alive, all inputs delivered, no observer findings, native end0error/0pending/unsupported0.",
+  "retained_failures": {
+    "waiting-follower-yield-broad-sanitize-01": "79 failures begin with SDL_InitSubSystem x11 not available. No passing claim; independent Xvfb -displayfd retry02 passes full2217. Underlying display lifetime/allocation collision is a hypothesis, not independently proven.",
+    "remaining-after-marker-g-01": "Story/class/secret passage progress from actual56, fails original64 manhole entry. Resource version mismatch error also retained; this is not a clean course pass.",
+    "manhole-approach-diagnostic-01": "Actual tail approach/Space teleports through manhole, but raw report remains failed for missing skipped waypoint8 expectation and mismatched resource version. Helps diagnose intermittent targeting, not acceptance."
+  },
+  "snapshot_correction": {
+    "path": "build/oblivion-compat/sewer-escape/follower-yield-runtime-snapshot-01/manifest.json",
+    "problem": "New executable at d59607ee68 was incorrectly paired with immutable resources/version at6be7e3f695.",
+    "fix": "Copied complete matching build/resources into its own snapshot/resources after all rendered games ended; do not overwrite old evidence."
+  },
+  "remaining_course_gaps": [
+    "Make original64 activation robust and verify clean matching resources, then finish65\u201367.",
+    "Implement original story SetOwnership58 and SetFactionRank80 instead of waiving native unsupported-command events.",
+    "One original new-game67-segment run and fresh load of its own outdoor save; loaded diagnostics do not satisfy this."
+  ],
+  "sanitizer_scope": "Full2217 engine cases with ASan/UBSan halt-on-error and detect_leaks=1. Yielding gameplay probe is normal; no rendered sanitizer yield or leak-free claim."
+}

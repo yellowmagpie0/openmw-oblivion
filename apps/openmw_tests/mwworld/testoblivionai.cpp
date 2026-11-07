@@ -556,6 +556,32 @@ namespace
         EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::FleeNotCombat, {}, 0.f, std::nullopt, false));
     }
 
+    TEST(OblivionAiTest, WaitingNativeFollowersCanYieldWithoutAbandoningTheirPackage)
+    {
+        RuntimeActorAiState state;
+        state.mPackage = key(1);
+        state.mTarget = key(2);
+        state.mHasDestination = true;
+        for (const auto type : {AIPackageType::Follow, AIPackageType::Accompany})
+        {
+            state.mPackageType = type;
+            state.mPhase = PackagePhase::Wait;
+            EXPECT_TRUE(MWMechanics::oblivionActorCanProactivelyYield(state));
+            EXPECT_FALSE(MWMechanics::oblivionActorHasMovingIntent(state));
+            state.mRestrained = true;
+            EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+            state.mRestrained = false;
+            state.mActionReserved = true;
+            EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+            state.mActionReserved = false;
+            state.mPhase = PackagePhase::Path;
+            EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+        }
+        state.mPackageType = AIPackageType::Travel;
+        state.mPhase = PackagePhase::Wait;
+        EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+    }
+
     TEST(OblivionAiTest, ProactiveYieldingIsLimitedToGenuinelyIdleNativeActors)
     {
         RuntimeActorAiState state;

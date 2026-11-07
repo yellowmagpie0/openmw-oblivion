@@ -17,8 +17,8 @@ and input audit, and rendered inspection. Existing evidence keeps its provenance
 
 ## Current checkpoint — reunion/birthsign verified; third ambush escort next
 
-Native GetDetected and explicit test-controller hat mapping are verified and ready
-for commit. Full normal3263 component/2216 engine/578 Python and full2216
+Native GetDetected and explicit test-controller hat mapping are committed as
+`d59607ee68`. Full normal3263 component/2216 engine/578 Python and full2216
 ASan/UBSan engine checks pass, exact inventories0fail/0skip, same tested source
 fingerprint30b8308c…3280f1 at HEAD6be7e3f695. Actual normal and sanitized original
 6-action reunion reach40/42 with native-exact80HP/80MP saves, all escorts alive,
@@ -30,7 +30,7 @@ SHA6522bb58…b996dd, whole entry0diff, all inputs and native end clear. Capture
 review confirms Warrior selected; blank description remains a known limit.
 [Reunion/controller verification](SEWER-REUNION-DETECTION-VERIFICATION.json).
 
-Next bounded chunk is the third-ambush escort movement stall. Actual original
+The next observed blocker was the third-ambush escort movement stall. Actual original
 53–55 route inputs complete in `remaining-after-birthsign-01`, then54/56 waits
 fail at CharacterGen50. Player alive38.50HP; attacker01772e dead by Glenroy;
 all3 escorts alive, no active engagements/pending physical actions. Actual last
@@ -43,7 +43,35 @@ requirements. First run remains failed with0 observer findings/native end clear.
 Fresh reload diagnostic `escort-route-reload-01` restores whole state0diff and
 immediately reproduces the cluster, but report overhead allows only172 ticks in
 180sec; this is not an equal-simulation-time proof. Failed raw attempts retained.
-No helper or rendered game is live at this checkpoint. Ignored current handles:
+Bounded correction now permits peaceful stationary native Follow/Accompany
+actors in Wait to use existing proactive yielding. Actual movement/combat and
+restraint/reservation checks remain; active Path admission is unchanged.43 focused
+AI tests pass. `waiting-follower-yield-01` restores exact failed save23 with0diff,
+then original passive6-action course reaches52/54/56; no Player movement or state
+injection. Actual F5 SHA37362b98…45d3ef is native-exact, same38.50HP, all3 escorts
+alive, all input delivered, observer findings0/native end0error/0pending/unsupported0.
+See ignored `waiting-follower-yield-01/follower-yield-verification.json`. Full normal2217 and isolated
+ASan/UBSan2217 engine gates now pass0fail/0skip, exact inventories. Component3263
+and Python578 evidence from prior reunion remains applicable (no changes there).
+[Waiting follower proof](SEWER-FOLLOWER-YIELD-VERIFICATION.json). Immutable snapshot is
+`follower-yield-runtime-snapshot-01`; `remaining-after-marker-g-01` is terminal FAILED at original64 manhole entry,
+after original58–63 pass including Sanctum65, Amulet74, Emperor death76, final
+assassin Baurus kill, Warrior class023787/CharacterGen88 and secret passage.
+Player survives37.08HP; actual latest save18 SHAfb1df080…4b9ea is retained.
+Original02282e key door animates, but later Space does not activate the sewer
+manhole. Diagnose actual approach/camera/activation from retained save; no quest
+or position injection. Broad normal2217 passes. Sanitizer01 fails79 cases because
+SDL cannot initialize X11 (first error x11 not available); preserve failed run,
+independent Xvfb -displayfd rerun02 passes all2217. Later continuation and manhole
+probe also contain a resource-version mismatch: snapshot ELF d59607ee68 was
+paired with old6be7e3f695 resources. Raw errors retained. Snapshot now has its own
+complete matching resources copied from build/resources after games ended.
+Manhole tail diagnostic actually teleports but report stays failed for old
+resource error/missing skipped waypoint8. Add actual crosshair-target readiness
+before activation and verify with matching snapshot. Two original native story
+commands remain unexpectedly deferred: SetOwnership at58 and SetFactionRank at80.
+Implement their state/save behavior; do not waive these in final audit. Attach/read actual handles; no other rendered game
+or overwrite of its snapshot files. Ignored current handles:
 `reunion-current-handles.json`; inspect actual processes before reuse.
 
 ## Earlier bounded checkpoints

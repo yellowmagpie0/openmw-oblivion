@@ -38,7 +38,13 @@ namespace MWMechanics
             return false;
         // A peaceful escort recipient can be holding in its Travel Path phase.
         // Its actual stationary input is checked by the collision coordinator.
-        return escortRecipient || state.mPhase == ESM4::PackagePhase::Complete
+        const bool waitingFollower = state.mPhase == ESM4::PackagePhase::Wait
+            && (state.mPackageType == ESM4::AIPackageType::Follow
+                || state.mPackageType == ESM4::AIPackageType::Accompany);
+        // Follow waits within its target spacing without completing the
+        // package. A stationary follower must still leave room for passing
+        // actors; actual movement and combat are checked by the coordinator.
+        return escortRecipient || waitingFollower || state.mPhase == ESM4::PackagePhase::Complete
             || (state.mPhase == ESM4::PackagePhase::Wait && state.mPackage.isNull());
     }
 
