@@ -56,7 +56,14 @@ parsed/native exact at66HP, Clubcount1/equipped_slots65536; both menu/world-door
 captures reviewed. SHA256
 `eebd258fb13181e365c51a264ac6d017cd27c311fbe43cedfb66c9b89cf8f803`.
 See `club-continuous-checkpoint.json` and updated Club proof. Actual run has
-advanced to9, without manual input or loads. Revalidate live progress on resume.
+advanced beyond9, without manual input or loads. Latest verified encounter group:
+sections14–16 pass in original PID410270. All8 actual F5s32–39 parsed/native
+exact; northern038171/72/73 and western038176 all persistent Player kills. Route
+end44.28HP, four native applied heals to72.44HP, final66.80HP. Recovery and victory
+captures reviewed. See `west-continuous-checkpoint.json` and updated
+[west proof](SEWER-WEST-THREAT-RESPONSE-VERIFICATION.json). Actual run has reached18
+at61.16HP; revalidate live progress on resume. This clears continuous17's fatal
+section15 gap; full escape/own reload/terminal audits remain pending.
 
 Adjacent observation for later: source2 retains Magic-menu state, so source5's
 repeated relative page navigation visits Stats (actual capture reviewed). Minor

@@ -335,5 +335,122 @@
     "actions": 10231,
     "generated_observer_syntax": "luajit -b passed; preparation only"
   },
-  "remaining": "New original-new-game full67 course, physical exterior exit, own fresh-PID outdoor reload/walk, every-save/input/native audits and rendered review."
+  "remaining": "New original-new-game full67 course, physical exterior exit, own fresh-PID outdoor reload/walk, every-save/input/native audits and rendered review.",
+  "continuous_new_game_checkpoint": {
+    "scope": "Original new-game continuous19 sections14-16 only; full67 and terminal audits remain pending",
+    "game_pid": 410270,
+    "no_loads": true,
+    "actual_saves": [
+      {
+        "sequence": 32,
+        "save_sha256": "12544fe3d68848f0effe5fd7971464fdd4098f0d87f18eedc62d5a38660fd474",
+        "live_sha256": "66ff8694c505ffc21582e84e93943247c6d446cc5e6bcc93040a0b549427ae12",
+        "parsed_native_exact": true,
+        "health": 64.95999908447266
+      },
+      {
+        "sequence": 33,
+        "save_sha256": "22dd82c9f92d1cf860b8bf713f605e6de96a8f3b83510480ba9546545ba2da4b",
+        "live_sha256": "14078cc099a74ec944a3951bbdebd5559c74f2d0254a686da1291d6bd39af3b6",
+        "parsed_native_exact": true,
+        "health": 44.280006408691406
+      },
+      {
+        "sequence": 34,
+        "save_sha256": "f8fa82f9059f5783855f6ccf816c91949627df2edbbbb71d82d21b58d787c813",
+        "live_sha256": "928f92a7c0c827b1f6ea2087ba27843c4acefccac08306bbc8056ac6d72fd2eb",
+        "parsed_native_exact": true,
+        "health": 44.280006408691406
+      },
+      {
+        "sequence": 35,
+        "save_sha256": "10dd535d919978319cd520ef2b0346af2b68ce3081bd836d4c74292ae5bba27d",
+        "live_sha256": "79732aeadb11be8daa005afd6f03f90e30891cdc2810e8723549e16c4138010a",
+        "parsed_native_exact": true,
+        "health": 44.280006408691406
+      },
+      {
+        "sequence": 36,
+        "save_sha256": "c93c8dd5a9c15dfec40d8cbaa27534ac3bfeb1318c14722b36ddccf7d0c5374e",
+        "live_sha256": "c29c612936e0e5dc76e9844e324f187249cf5d6f4c9b85e9a4770069cb251d0a",
+        "parsed_native_exact": true,
+        "health": 44.280006408691406
+      },
+      {
+        "sequence": 37,
+        "save_sha256": "a34a0f32f7d137c914ec063985632d3d2ff66cc98497c89a52a27c7eaf309e27",
+        "live_sha256": "3d22aad4381246d75a67ddf61aae5a57317da6ec3cfa2bac604b331ff6fd4c3d",
+        "parsed_native_exact": true,
+        "health": 72.44001007080078
+      },
+      {
+        "sequence": 38,
+        "save_sha256": "eee72b49145adf58696dff9c720378f2c3c5fe5b19d61b919533ef384d2c81e4",
+        "live_sha256": "9671eff59682b3793cba1eb1953160972ce3ad710d72bcb0c3ff47f21b93ce88",
+        "parsed_native_exact": true,
+        "health": 72.44001007080078
+      },
+      {
+        "sequence": 39,
+        "save_sha256": "8dd0b03e2edd09e5a19dafc528f4a3b11c9986c4023ad77b4cad4755d3e4c9fb",
+        "live_sha256": "6f3225b7e3cb775d0863f1feda1a3d5e958dcd038a68a7b714dbf38dfbed7e8b",
+        "parsed_native_exact": true,
+        "health": 66.80001068115234
+      }
+    ],
+    "player_kills": [
+      {
+        "actor": "content:oblivion.esm:038171",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:038172",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:038173",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:038176",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    ],
+    "native_healing_casts": [
+      [
+        "51.32",
+        "61"
+      ],
+      [
+        "58.36",
+        "54.345"
+      ],
+      [
+        "65.4",
+        "47.7719"
+      ],
+      [
+        "72.44",
+        "41.0494"
+      ]
+    ],
+    "route_end_health": 44.280006408691406,
+    "final_health": 66.80001068115234,
+    "rendered_review": [
+      "segment16-phase4-west-recovery.png",
+      "segment16-phase6-joined-northern-rat-victory.png"
+    ]
+  }
 }
