@@ -54,6 +54,19 @@ Current gates under `build/oblivion-compat/sewer-escape/`:
 - `story-faction-python-02`: all580 Python pass. Retain original fingerprints;
   later changes are C++ regression expectations/docs, not Python implementation.
 
+The ongoing full11 exposed a controller-route obstruction at625.55,1204.32,
+-434.76: straight forward met a stone edge. A recorded ordinary X11 D key pair
+(09:57:15.519→09:57:16.068UTC) cleared it in the same PID. Original landing and
+roomC gates resumed, first ambush and original stage30 completed, segment3 ready.
+No game-memory/actor/health/position/quest commands were used. **This run includes
+manual ordinary input; SDL delivery receipts cover the automated driver only.**
+Record the extra X11 input separately in its final audit; do not call it unattended.
+[Recovery proof](SEWER-LANDING-INPUT-VERIFICATION.json). The editable source now
+waits for y1200 and includes that0.5s sidestep before the original landing gate;
+future assembly67/10462 and18 assembly/repeat tests plus LuaJIT compile pass.
+That revised automatic schedule is prepared, not independently runtime-accepted.
+Active full11 keeps its original67/10460 recipe and recorded manual correction.
+
 ## Live work — recheck actual processes
 
 `full-escape-continuous-11` is a fresh original new game using immutable
@@ -62,15 +75,15 @@ version18c0cb4628, immutable normal libraries from `reunion-runtime-snapshot-01/
 Full67/10460 is regenerated in `story-faction-full-assembly-01/full-escape.json`;
 LuaJIT compile passes, new-game1/no load flag, no optional per-frame world report.
 Actual game PID335271, driver335211, supervisor335210, automatic archiver335298,
-watcher335299. It reached original stage19 at09:47:52UTC; **not terminal acceptance**.
+watcher335299. It reached original stage30 and segment3 by09:59:14UTC; **not terminal acceptance**.
 Inspect launcher status, actual process state and incremental watch before acting.
 One healthy game only; do not restart on an observation timeout or overwrite its
 ELF/resources/libraries. Current handles JSON may lag actual processes.
 
-Sanitizer direct prebuild is still preparing `build/m15-sanitize/openmw-tests`:
+Sanitizer direct prebuild completed `build/m15-sanitize/openmw-tests`:
 exec session27400, log `story-faction-sanitizer-development-build-01.log`.
-It is not sanitizer test evidence. Wait until its actual build terminates before
-starting a helper in the same build directory. Use independent Xvfb -displayfd
+It is not sanitizer test evidence. Actual cmake PID327133 is now gone and the
+log ends Built target openmw-tests. Full sanitizer helper can now start. Use independent Xvfb -displayfd
 for sanitizer gates; prior simultaneous xvfb-run collision lost X11 and failed79
 cases, retained. Engine sanitizer leak1; rendered probes leak0 unless stated.
 No tracked/nonignored edits or commits while any run_checks.py helper is live.

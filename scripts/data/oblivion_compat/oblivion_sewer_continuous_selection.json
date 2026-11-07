@@ -12,7 +12,7 @@
     {
       "segment": 2,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_continuous_escort_continuation.json",
-      "action_count": 70,
+      "action_count": 72,
       "source_course": "continuous-escort-continuation-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
