@@ -66,11 +66,16 @@ input delivered, native end0/0/0, final capture inspected. These diagnostics do
 not replace an uninterrupted full course. Earlier all-direction swept evidence
 remains historical; the narrowed correction is current.
 
-Next: launch prepared `runner-recovery-full-assembly-01/full-escape.json` as
-continuous17 with immutable `rat-descending-recovery-runtime-snapshot-01`, ELF
+Current: continuous17 is live from original new game, PID398617, driver398571.
+Manifest `runner-recovery-full-assembly-01/full-escape.json`, immutable
+`rat-descending-recovery-runtime-snapshot-01`, ELF
 `13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f`.
-Full17 guarded own-outdoor reload is prepared; all67 sections/10399 actions and
-generated observer syntax validate. No rendered game remains at this checkpoint.
+Full17 guarded own-outdoor follow-up PID398573 is waiting for complete success;
+all67 sections/10399 actions and generated observer syntax validate. Actual
+runtime identity is recorded in `full-escape-continuous-17/runtime-identity.json`.
+Automatic archive/watch attached; no manual input. Collision fix committedbd18d2bef6.
+Next action: monitor this exact PID/course and fix only observed blockers; do not
+restart a healthy game. Own outdoor reload may launch only after all67 pass.
 
 Accept only all67 in one PID, actual outdoor
 save/reload and ordinary walking, all input/native/save audits and rendered review.
