@@ -58,9 +58,15 @@ and all failed variants remain historical, not replacement continuous acceptance
 Defense correction committedc6f8c86047. Fresh original-new-game
 `full-escape-continuous-21` is now running from
 `full21-assembly-02/full-escape.json`: actual gamePID422333, driver422305,
-13f2 runtime identity captured. Startup actual /proc state verified live;
-no first segment had printed at the last poll. Assembly01 is superseded and
-contains old inputs. Monitor the same actual PID with
+13f2 runtime identity captured. Same actual PID verified live through section11.
+Original opening/ambush/escort departure and all3 native Player early-rat kills
+pass. Loot/Club/keyed traversal and Substructure rat pass; genuine F5seq28
+records80HP with0661c1/0661c3 armor and090613 axe equipped. Whole-run parsed-save,
+native/input and own outdoor reload audits remain pending; these prefix facts
+are not continuous escape acceptance. Fourteen captures reviewed so far in
+`full-escape-continuous-21/rendered-review-progress.json`, including the known
+T-pose/old-clothes inventory preview. No manual inputs or loads in this run.
+Assembly01 is superseded and contains old inputs. Monitor the same actual PID with
 `wait-course-progress.py full-escape-continuous-21 40`. Avoid unnecessary manual
 menu inspection; prior low-health samples can already be superseded by a native
 kill/heal. Recheck current native deaths/phase before drawing conclusions.
