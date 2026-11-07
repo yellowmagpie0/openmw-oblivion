@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO_DIR=$(cd -- "$SCRIPT_DIR/../.." && pwd)
 SCENARIO=${1:-}
-if (( $# < 1 || $# > 2 )); then
+if (( $# < 1 || $# > 3 )) || [[ "$SCENARIO" != checkpoint && $# -gt 2 ]] || [[ "$SCENARIO" == checkpoint && $# -ne 3 ]]; then
     printf 'Usage: %s SCENARIO [/path/to/Oblivion/Data]\n' "$0" >&2
     exit 2
 fi
@@ -14,7 +14,10 @@ case "$SCENARIO" in
     tutorial)
         START=ImperialDungeon01
         NEW_GAME=1
-        HINT='Start the authored prison opening. Approach the cell door, listen, then follow the Emperor and Blades. Full tutorial combat/progression is still unfinished.' ;;
+        HINT='Start the authored prison opening. Follow the Emperor and Blades, then explore the tunnels. The complete escape is still under validation.' ;;
+    checkpoint)
+        START=ImperialDungeon01
+        HINT='Resume the retained checkpoint with normal controls. Saves stay in this private tryout directory.' ;;
     prison)
         START=ImperialDungeon01::ref=0x1fc41::side=south
         HINT='Explore the prison directly: movement, jumping, activation, doors, containers and save/load. This skips the new-game introduction.' ;;
@@ -37,7 +40,7 @@ case "$SCENARIO" in
         START=OblivionMqKvatchSmallTower03
         HINT='Explore an Oblivion tower: architecture, lighting and quasi-exterior environment rendering. This does not set up or complete the Kvatch quest.' ;;
     *)
-        printf 'Unknown scenario: %s\nChoose: tutorial prison inventory city swimming horse creatures oblivion\n' "$SCENARIO" >&2
+        printf 'Unknown scenario: %s\nChoose: tutorial prison inventory city swimming horse creatures oblivion (use checkpoint.sh for saved checkpoints)\n' "$SCENARIO" >&2
         exit 2 ;;
 esac
 
@@ -86,8 +89,21 @@ if ! cmp -s -- "$SOURCE_BIN" "$RUN_DIR/runtime/openmw"; then
     exit 1
 fi
 sha256sum -- "$RUN_DIR/runtime/openmw" > "$RUN_DIR/executable.sha256"
+if [[ "$SCENARIO" == checkpoint ]]; then
+    CHECKPOINT_SAVE=$(realpath -- "$3")
+    [[ -f "$CHECKPOINT_SAVE" ]] || { printf 'Checkpoint is missing: %s\n' "$CHECKPOINT_SAVE" >&2; exit 1; }
+    cp --reflink=auto -- "$CHECKPOINT_SAVE" "$RUN_DIR/checkpoint.omwsave"
+    cmp -s -- "$CHECKPOINT_SAVE" "$RUN_DIR/checkpoint.omwsave" || { printf 'Checkpoint changed during copying.\n' >&2; exit 1; }
+    sha256sum -- "$RUN_DIR/checkpoint.omwsave" > "$RUN_DIR/checkpoint.sha256"
+    # Retained regression saves name this read-only descriptor. Preserve its
+    # identity without running the automated observer or changing saved bytes.
+    mkdir -p "$RUN_DIR/local-data/scripts"
+    printf 'PLAYER: scripts/tutorial_passage_observer.lua\n' > "$RUN_DIR/local-data/tutorial-passage-observer.omwscripts"
+    printf 'return {engineHandlers={}}\n' > "$RUN_DIR/local-data/scripts/tutorial_passage_observer.lua"
+fi
 printf 'scenario=%s\nsource executable=%s\nsource resources=%s\ndata=%s\nstart=%s\n' \
     "$SCENARIO" "$SOURCE_BIN" "$SOURCE_RESOURCES" "$DATA_DIR" "$START" > "$RUN_DIR/session.txt"
+if [[ "$SCENARIO" == checkpoint ]]; then printf 'source checkpoint=%s\n' "$CHECKPOINT_SAVE" >> "$RUN_DIR/session.txt"; fi
 
 cat > "$RUN_DIR/config/openmw.cfg" <<EOF
 replace=config
@@ -103,6 +119,9 @@ skip-menu=1
 new-game=$NEW_GAME
 no-grab=1
 EOF
+if [[ "$SCENARIO" == checkpoint ]]; then
+    printf 'content=tutorial-passage-observer.omwscripts\n' >> "$RUN_DIR/config/openmw.cfg"
+fi
 cat > "$RUN_DIR/config/settings.cfg" <<'EOF'
 [Video]
 fullscreen = false
@@ -136,4 +155,6 @@ printf 'Mouse: look | WASD: move | Space: activate | E: jump | F: draw/sheath | 
 printf 'Saves: %s/userdata/saves\nLogs and settings: %s/config\n' "$RUN_DIR" "$RUN_DIR"
 printf 'Every launch starts fresh. This directory is retained after quitting; delete it manually when finished.\n'
 cd -- "$RUN_DIR/work"
-exec "$RUN_DIR/runtime/openmw" --replace=config --config "$RUN_DIR/config" --game-profile=oblivion
+GAME_ARGS=(--replace=config --config "$RUN_DIR/config" --game-profile=oblivion)
+if [[ "$SCENARIO" == checkpoint ]]; then GAME_ARGS+=(--load-savegame "$RUN_DIR/checkpoint.omwsave"); fi
+exec "$RUN_DIR/runtime/openmw" "${GAME_ARGS[@]}"

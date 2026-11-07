@@ -285,7 +285,7 @@
     {
       "segment": 41,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_northern_patrol.json",
-      "action_count": 219,
+      "action_count": 217,
       "source_course": "joined-cavern-patrol-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
@@ -306,7 +306,7 @@
     {
       "segment": 44,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_engaged_eastern.json",
-      "action_count": 8,
+      "action_count": 6,
       "source_course": "joined-engaged-eastern-fight-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },

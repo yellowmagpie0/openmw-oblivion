@@ -9,11 +9,12 @@ Run one script from any directory, using an **existing completed build**:
 
 The optional argument is your Oblivion Data directory. Otherwise `OBLIVION_DATA`
 is used, then `~/.local/share/Steam/steamapps/common/Oblivion/Data`.
-Only `Oblivion.esm` is loaded; DLC and user mods are excluded.
+Only `Oblivion.esm` game content is loaded; DLC and user mods are excluded. Saved checkpoint starts also load a no-op compatibility descriptor for the saved read-only observer.
 
 | Script | Starting experience | Existing scenario used for the location |
 | --- | --- | --- |
 | `tutorial.sh` | Authored new-game prison opening, dialogue and Emperor/Blades escort | `oblivion_m14_tutorial_escort.json` |
+| `checkpoint.sh floor\|combat\|story\|exit` | Genuine retained sewer checkpoint with normal controls; private save copy | [Sewer regression catalog](../data/oblivion_compat/sewer_regression_checkpoints.json) |
 | `prison.sh` | Direct prison exploration, activation, doors, jumping and save/load | `oblivion_m12_jump_course.json` |
 | `inventory.sh` | A Fighting Chance: merchandise, containers, inventory and equipment | M13 market start in `docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md` |
 | `city.sh` | Imperial City Market District, NPC schedules, shops and door travel | `oblivion_m14_city_schedule.json` |
@@ -22,14 +23,14 @@ Only `Oblivion.esm` is loaded; DLC and user mods are excluded.
 | `creatures.sh` | Goblin Jim's Cave, creature appearance and animation | `oblivion_m11_creature_roster.json` |
 | `oblivion.sh` | Kvatch Oblivion tower architecture and environment | `oblivion_m10_quasi_exterior_environment.json` |
 
-Except for `tutorial.sh`, these are direct inspection starts with the default
+Except for `tutorial.sh` and `checkpoint.sh`, these are direct inspection starts with the default
 player. They do not replay prerequisites, grant equipment or gold, change quest
 stages, make enemies passive, or import existing saves. Take available items
 normally; shop ownership still applies. These starts reuse locations from
 existing evidence, not the automation, generated plugins or scripted setup in
 those evidence courses. Merchant services, combat/death, crime and complete
 tutorial/dungeon/quest progression are not promised by these tryouts. See the
-[implementation reports](../../../docs/oblivion/README.md) for accepted scope;
+[implementation reports](../../docs/oblivion/README.md) for accepted scope;
 M15 is still in progress. The current executable may lag the source code.
 
 Mouse looks, WASD moves, Space activates, E jumps, and Tab opens inventory.
@@ -82,7 +83,15 @@ system libraries and original game assets remain shared read-only inputs.
 
 ## Validation status
 
-These scripts were authored and statically inspected only. They were **not
-executed**, and no game, build, runtime scenario or tests were run for this
-change, as requested. Existing evidence explains the chosen starts; it does not
-establish runtime acceptance of these launchers or of the current build.
+The new checkpoint launcher was runtime-smoked with a genuine final-sewer save:
+private-copy hash preserved, rendered scene reviewed, ordinary F5 and F9 passed.
+Diagnostics are retained under
+`build/oblivion-compat/sewer-regression/checkpoint-launcher-smoke-02` and recorded
+in [closure evidence](../../docs/oblivion/SEWER-REGRESSION-CLOSURE-VERIFICATION.json).
+The first smoke targeted Xvfb while the host Wayland session received the game;
+that harness failure is retained separately. The successful smoke selected X11
+in its test environment; the launcher preserves the human desktop environment.
+This verifies the checkpoint path, not every direct-location launcher or full
+sewer acceptance. Shell syntax checks passed; no build was run for these changes.
+
+Checkpoint provenance, regeneration, the focused suite and full integration command are documented in [SEWER-REGRESSION.md](../../docs/oblivion/SEWER-REGRESSION.md). Full continuous sewer acceptance is still separate.

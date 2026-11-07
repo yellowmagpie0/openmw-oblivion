@@ -1,0 +1,357 @@
+{
+  "scope": "Bounded patrol correction and reusable regression artifact; not full sewer acceptance",
+  "full_escape_acceptance": false,
+  "source_sha256": {
+    "scripts/sewer_regression.py": "cda16cab0e39653a86782b1493fb686205ba73b0d339406a83be4c7c75367bb7",
+    "scripts/verify_oblivion_sewer_escape.py": "a1addcf1dd387923cd2780c8d3b9e4b6bcd97cc99960c08dd817bab124887701",
+    "scripts/archive_oblivion_sewer_saves.py": "745b8d7e9dd7acf8d478e1d0bc3e204381a097d05a883c08fb3c5765f97fdeb6",
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_northern_patrol.json": "dd63c383dccc7de2e7168c721d15add14d40f8ef84aa6d1f6856c992ecaf67fb",
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_engaged_eastern.json": "eb651c53cd5c1d251170bea5834ca59608a51f8284a4a57b7c3115af86a77226",
+    "scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json": "a977ef8c6862abe0afb9b573d1ef6d67c15263b7b650dc321936a22b648ce1ef"
+  },
+  "correction": {
+    "patrol": "Preserve original phase1 approach, respond to nearby threats using ordinary attack/block/heal, retreat to entry clearing after tagging patrol",
+    "eastern": "Reuse original eastern waypoints when far goblin survives; return through those waypoints to original clearing",
+    "native_changes": false,
+    "tactics_frozen": true
+  },
+  "retained_diagnostics": {
+    "patrol-response-01": {
+      "path": "build/oblivion-compat/sewer-escape/patrol-response-01",
+      "result": "Patrol543 and guard541 killed by Player; later old eastern direct chase failed. Not a passing course."
+    },
+    "eastern-detour-01": {
+      "path": "build/oblivion-compat/sewer-escape/eastern-detour-01",
+      "result": "Sections44\u201345 passed, three actual saves parsed/native exact, whole-entry compare passed, health80/magicka80",
+      "eastern_killer": "content:oblivion.esm:03b52e (shaman friendly fire), not Player"
+    }
+  },
+  "focused_results": "build/oblivion-compat/sewer-regression/focused-closure-01/results.json",
+  "tests": {
+    "focused_wrapper": 9,
+    "existing_branch": 7,
+    "existing_assembly": 6,
+    "bash_syntax": true,
+    "full67_luajit_compile": true,
+    "full67_actions": 10191,
+    "broad_engine_and_runner": "Reused unchanged implementation evidence with original provenance in SEWER-DESCENDING-RECOVERY-VERIFICATION.json and SEWER-REINFORCEMENT-RESPONSE-VERIFICATION.json"
+  },
+  "rendered_review": {
+    "combat/segment01-phase2-joined-first-cavern-goblin-victory.png": "Cavern and equipped axe visible; upright dead goblin remains a known presentation defect",
+    "combat/segment05-phase1-healing-potion-menu.png": "Inventory/potions visible, stale weapon title and T-pose preview remain; this capture does not prove consumption",
+    "story/segment04-baurus-final-response.png": "Original Baurus final dialogue visible in Sanctum",
+    "exit/segment03-first-daylight.png": "Player visibly outside at dock with axe/HUD; terrain/water/lighting remain rough. Not a wilderness rendering acceptance."
+  },
+  "original_full21_failure": "docs/oblivion/SEWER-CONTINUOUS-21-FAILURE.json",
+  "focused": {
+    "mode": "focused",
+    "status": "failed",
+    "scope": "Reusable sewer regression/closure; focused checks do not establish full escape acceptance",
+    "full_escape_acceptance": false,
+    "rendered_review": "separate manual gate",
+    "runtime": {
+      "openmw": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f"
+    },
+    "checks": [
+      {
+        "status": "passed",
+        "classification": "native_input_save_checks",
+        "diagnostics": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/floor/course",
+        "audit": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/floor/course/regression-audit.json",
+        "game_pid": 428575,
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/floor/course/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "bb176d8c8c724ee362745ac7003a7db510d3d284758714f6ced55144d1ed1da5",
+        "name": "floor",
+        "checkpoint_provenance": {
+          "kind": "retained canonical checkpoint",
+          "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-16/retained-saves/3-0028-Quicksave.omwsave",
+          "sha256": "a42a1a04f0a544517b5217046901170a3a520cc86c950690f9ca8a5730b37787",
+          "segments": [
+            11,
+            12
+          ],
+          "regenerate_stop_after": 10,
+          "purpose": "Supporting-floor/lateral recovery, original corridor runners, Player zombie victory and ordinary healing",
+          "provenance": "docs/oblivion/SEWER-DESCENDING-RECOVERY-VERIFICATION.json",
+          "resolved": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-16/retained-saves/3-0028-Quicksave.omwsave"
+        },
+        "semantic_checks": {
+          "health": 80.0,
+          "cell": "content:oblivion.esm:022ff6",
+          "relevant_deaths": [
+            {
+              "actor": "content:oblivion.esm:0491fc",
+              "base": "content:oblivion.esm:051445",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          ]
+        }
+      },
+      {
+        "status": "failed",
+        "classification": "unresolved_course_failure",
+        "reason": "Input/route/observation gate failed; inspect diagnostics before blaming the engine or player",
+        "diagnostics": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/combat/course",
+        "last_action": {
+          "type": "wait_log",
+          "pattern": "Escape segment 5:\\s*(?:West course phase 1:\\s*(?:Remaining supplies consumed and magicka restored))",
+          "reason": null
+        },
+        "name": "combat",
+        "checkpoint_provenance": {
+          "kind": "retained canonical checkpoint",
+          "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-21/retained-saves/3-0086-Quicksave.omwsave",
+          "sha256": "230901627d1a4c1c8ec9023e62600324d3f891aa794e9772cea4441114072cae",
+          "segments": [
+            41,
+            45
+          ],
+          "regenerate_stop_after": 40,
+          "purpose": "Patrol/nearby reinforcements, cover, combat/healing and full resource recovery",
+          "provenance": "docs/oblivion/SEWER-CONTINUOUS-21-FAILURE.json",
+          "resolved": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-21/retained-saves/3-0086-Quicksave.omwsave"
+        }
+      },
+      {
+        "status": "passed",
+        "classification": "native_input_save_checks",
+        "diagnostics": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/story/course",
+        "audit": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/story/course/regression-audit.json",
+        "game_pid": 429341,
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/story/course/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "265b4549383b05e78b0517b3d454bb56a3693196301f77b7c944a9c574ab552d",
+        "name": "story",
+        "checkpoint_provenance": {
+          "kind": "retained canonical checkpoint",
+          "path": "build/oblivion-compat/sewer-escape/story-ownership-runtime-01/retained-saves/3-0004-Quicksave.omwsave",
+          "sha256": "51950003614f967c1aac1025dd0ae19540f0649e101269870caa95a967d4a8e0",
+          "segments": [
+            59,
+            62
+          ],
+          "regenerate_stop_after": 58,
+          "purpose": "Original Sanctum/Amulet/Emperor/final-assassin/class story and shared-base faction persistence",
+          "provenance": "docs/oblivion/SEWER-SETFACTIONRANK-VERIFICATION.json",
+          "reload": "scripts/data/oblivion_compat/oblivion_sewer_baurus_class_reload.json",
+          "resolved": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-ownership-runtime-01/retained-saves/3-0004-Quicksave.omwsave"
+        },
+        "semantic_checks": {
+          "health": 40.27880859375,
+          "cell": "content:oblivion.esm:022282",
+          "relevant_deaths": [
+            {
+              "actor": "content:oblivion.esm:03b52f",
+              "base": "content:oblivion.esm:03b517",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:03b541",
+              "base": "content:oblivion.esm:03b531",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:03b543",
+              "base": "content:oblivion.esm:03b542",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:0491fc",
+              "base": "content:oblivion.esm:051445",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          ]
+        }
+      },
+      {
+        "status": "passed",
+        "classification": "native_input_save_checks",
+        "diagnostics": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/story/reload/course",
+        "audit": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/story/reload/course/regression-audit.json",
+        "game_pid": 429599,
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/story/reload/course/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "86eab0b36f8a1163e45a675528e2943aa8c5d5d9f24bd218c1e64d84b1ce9880",
+        "name": "story-own-reload",
+        "semantic_checks": {
+          "health": 40.27880859375,
+          "cell": "content:oblivion.esm:022282",
+          "relevant_deaths": [
+            {
+              "actor": "content:oblivion.esm:03b52f",
+              "base": "content:oblivion.esm:03b517",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:03b541",
+              "base": "content:oblivion.esm:03b531",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:03b543",
+              "base": "content:oblivion.esm:03b542",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:0491fc",
+              "base": "content:oblivion.esm:051445",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          ]
+        }
+      },
+      {
+        "status": "passed",
+        "classification": "native_input_save_checks",
+        "diagnostics": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/exit/course",
+        "audit": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/exit/course/regression-audit.json",
+        "game_pid": 429699,
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/exit/course/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "f4220dde3dbc388cbd64ba8df69b6004ab848d80831399ad518c47eb7edd3bf8",
+        "name": "exit",
+        "checkpoint_provenance": {
+          "kind": "retained canonical checkpoint",
+          "path": "build/oblivion-compat/sewer-escape/manhole-visible-target-01/retained-saves/3-0003-Quicksave.omwsave",
+          "sha256": "70eb26795543648ee6e07c0adee722c37597ef661a834388492d0335c4ed5a6c",
+          "segments": [
+            65,
+            67
+          ],
+          "regenerate_stop_after": 64,
+          "purpose": "Actual western-rat fight, final sewer traversal, exterior door and own outdoor save/reload",
+          "provenance": "docs/oblivion/SEWER-WESTERN-RAT-EXIT-VERIFICATION.json",
+          "reload": "scripts/data/oblivion_compat/oblivion_sewer_joined_outdoor_reload.json",
+          "resolved": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/manhole-visible-target-01/retained-saves/3-0003-Quicksave.omwsave"
+        },
+        "semantic_checks": {
+          "health": 37.07862091064453,
+          "cell": "content:oblivion.esm:005e3d",
+          "relevant_deaths": [
+            {
+              "actor": "content:oblivion.esm:03b52f",
+              "base": "content:oblivion.esm:03b517",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:03b541",
+              "base": "content:oblivion.esm:03b531",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:03b543",
+              "base": "content:oblivion.esm:03b542",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:0491fc",
+              "base": "content:oblivion.esm:051445",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:0666a7",
+              "base": "content:oblivion.esm:02509b",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          ]
+        }
+      },
+      {
+        "status": "passed",
+        "classification": "native_input_save_checks",
+        "diagnostics": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/exit/reload/course",
+        "audit": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/exit/reload/course/regression-audit.json",
+        "game_pid": 430420,
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-regression/focused-closure-01/exit/reload/course/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "b5716045f47da084aca1167b7110c81c6f4a117d5e536e4ad2c5405e51a8beaf",
+        "name": "exit-own-reload",
+        "semantic_checks": {
+          "health": 37.07862091064453,
+          "cell": "content:oblivion.esm:005e3d",
+          "relevant_deaths": [
+            {
+              "actor": "content:oblivion.esm:03b52f",
+              "base": "content:oblivion.esm:03b517",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:03b541",
+              "base": "content:oblivion.esm:03b531",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:03b543",
+              "base": "content:oblivion.esm:03b542",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:0491fc",
+              "base": "content:oblivion.esm:051445",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            },
+            {
+              "actor": "content:oblivion.esm:0666a7",
+              "base": "content:oblivion.esm:02509b",
+              "phase": 1,
+              "recovery_remaining": 0.0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          ]
+        }
+      }
+    ],
+    "reused_evidence": [
+      "docs/oblivion/SEWER-DESCENDING-RECOVERY-VERIFICATION.json",
+      "docs/oblivion/SEWER-SETFACTIONRANK-VERIFICATION.json",
+      "docs/oblivion/SEWER-REINFORCEMENT-DEFENSE-VERIFICATION.json"
+    ],
+    "complete": true,
+    "completion_verified": "All six requested entries terminal; original suite PID428559 ended. Report produced before partial-status formatting fix.",
+    "report_sha256": "1b31308394adfbf3a2e356d02fcbfd4e674763bb4d74e27d5fbdb4c0ec36a9e8"
+  },
+  "manual_launcher": {
+    "status": "passed",
+    "diagnostics": "build/oblivion-compat/sewer-regression/checkpoint-launcher-smoke-02",
+    "failed_harness_attempt": "build/oblivion-compat/sewer-regression/checkpoint-launcher-smoke-01",
+    "failure_classification": "Xvfb harness targeted X11 while inherited host session selected Wayland; only smoke environment corrected",
+    "private_checkpoint_sha256": "70eb26795543648ee6e07c0adee722c37597ef661a834388492d0335c4ed5a6c",
+    "manual_F5_sha256": "48c37b4da938b7f37337af72096f72c68d8a04669cb1504b4502639c39e8f5e7",
+    "manual_F5_health": 37.07862091064453,
+    "F5_F9_and_rendered_review": true,
+    "native_receipt_audit": "Not enabled in manual launcher; this is a separate manual-tool smoke, not full native acceptance"
+  }
+}
