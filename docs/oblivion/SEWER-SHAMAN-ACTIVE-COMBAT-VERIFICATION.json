@@ -1,0 +1,112 @@
+{
+  "passed": true,
+  "scope": "Original46 unchanged route/staff prefix reused with provenance; actual fresh original47 shaman Player victory/full recovery. Not full sewer escape acceptance",
+  "course": "build/oblivion-compat/sewer-escape/shaman-active-combat-01",
+  "game_pid": 282987,
+  "runtime_sha256": "eddf9a70e18fdb54b1706ded01b53dc8ba119ca433a4205527d2b4684774177d",
+  "entry": {
+    "passed": true,
+    "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-after-recovery-01/retained-saves/3-0003-Quicksave.omwsave",
+    "source_save_sha256": "9296bfc8e997d6fc12def49c43365eb616a110d185d2fa15d964258739e9784f",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": [
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/0",
+        0.2624703347682953,
+        0.2624703645706177
+      ],
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/2",
+        0.010595845058560371,
+        0.010595844127237797
+      ],
+      [
+        "/native_animated_references/0/bodies/5/linear_velocity/2",
+        0.011372718028724194,
+        0.011372718960046768
+      ]
+    ]
+  },
+  "actual_prefight_prefix": {
+    "course": "remaining-after-recovery-01",
+    "raw_whole_scenario_passed": false,
+    "reused_selected_actions": 379,
+    "unchanged_prefix_and_observer": true,
+    "actual_input_save_sha256": "9296bfc8e997d6fc12def49c43365eb616a110d185d2fa15d964258739e9784f",
+    "health": 25,
+    "magicka": 80,
+    "shaman_alive": true,
+    "native_staff_charge7_observed": true
+  },
+  "all_input_bytes_delivered": true,
+  "saves": [
+    {
+      "sequence": 3,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/shaman-active-combat-01/retained-saves/3-0003-Quicksave.omwsave",
+      "save_sha256": "28cb0af8c25d7d29614c5c29866010e5be263ce6a6d30e4a3d5292a036c0c63d",
+      "native_sha256": "099faa1a6ac4d4c4f6941444c9b0dab7cd33a66d708a5732f8b6935bcc6b6c88",
+      "parsed_save_equals_native_snapshot": true,
+      "health": 50.250003814697266,
+      "magicka": 6.151573181152344
+    },
+    {
+      "sequence": 4,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/shaman-active-combat-01/retained-saves/3-0004-Quicksave.omwsave",
+      "save_sha256": "f310263873ede63f8526d621e1d73b208f806ff6c8f108c59d4b81c45a3bc45b",
+      "native_sha256": "22b170fbbf0481d696c054e8937cbb136333f03233800877e22ad801f066c1cf",
+      "parsed_save_equals_native_snapshot": true,
+      "health": 80.0,
+      "magicka": 80.0
+    }
+  ],
+  "native_shaman_death": {
+    "actor": "content:oblivion.esm:03b52e",
+    "base": "content:oblivion.esm:03b52d",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "dynamic:player:0000000000000001"
+  },
+  "player_alive_after_fight": true,
+  "final_health": 80,
+  "final_magicka": 80,
+  "final_queues_clear": true,
+  "native_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 282987,
+    "sequence": 5,
+    "tick": 1708,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 4,
+    "pending_count": 0,
+    "unsupported_count": 0
+  },
+  "source_manifests": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_sewer_joined_shaman_staff_approach.json",
+      "sha256": "cf5533b3b66370bbc5a119fb62f45c43a0ddb1a89569435d2d5f7c5571fdf40a",
+      "selected_actions": 379
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_sewer_joined_shaman_victory.json",
+      "sha256": "255b8f7c22250c08e99351d1b24a31829f7eb65e380853db3e4f27f0460a040e",
+      "selected_actions": 31
+    }
+  ],
+  "focused_python": {
+    "cases": 18,
+    "passed": true,
+    "log": "build/oblivion-compat/sewer-escape/shaman-active-combat-python-focused-01.log"
+  },
+  "full_course_luajit_compile": {
+    "segments": 67,
+    "actions": 10788,
+    "passed": true,
+    "assembly": "build/oblivion-compat/sewer-escape/shaman-active-full-assembly-02"
+  },
+  "unchanged_engine_gates": "SEWER-ENVIRONMENTAL-FIRE-VERIFICATION.json; normal2216/Python578/sanitized2216 keep original tested fingerprints. No engine changes in this input/observer correction.",
+  "rendered_inspection": "Actual final victory/recovery capture inspected: Goblin Witch corpse, equipped axe, full HUD bars. Upright corpse remains a known presentation gap.",
+  "supplemental_audit_failure_retained": "audit-expectation-failure-01.json: initial first-F5 expectation above53 omitted a real2.91 melee hit after the fourth heal; corrected audit proves actual50.25 checkpoint. Raw gameplay course remains PASS."
+}

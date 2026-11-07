@@ -15,7 +15,7 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — survive the log encounter using a normal route
+## Current chunk — continue after verified shaman victory
 
 `cavern-fire-bypass-01` and `cavern-log-trap-outcome-01` are terminal. No build
 helper is live. Bounded
@@ -97,12 +97,34 @@ assertion (not observation timeout),05 old fixed patrol inputs caused death,
 four-heals-between-attacks and single-recovery-cast candidates were replaced by
 the demonstrated active-target combat inputs, not shipped as the final change.
 
-Current `remaining-after-recovery-01` game282620 runs original46–67 from actual
-full-recovery archive11 SHAd8a2a0c6…21dca5 (80HP/80MP, all3 goblins dead).
-Archiver282668/watcher282669 attached; inspect actual processes. Complete shaman,
-reunion/story/choices and exterior from this genuine checkpoint, then regenerate
-and run full67 in one original-new-game PID plus its own outdoor fresh reload.
-Full escape acceptance remains incomplete; loaded continuations do not substitute.
+Cavern correction committed `2fdc822d60`. `remaining-after-recovery-01` is terminal
+FAILED before original47 healing: original46's actual route11/staff-barrage
+save3 is25HP/80MP, shaman alive, staff7 charge. Subsequent6 fixed approaches delay
+healing until1.72HP; Player dies before C. Preserve raw observer findings in
+`remaining-after-recovery-01-failure-verification.json`.
+
+Bounded shaman correction is verified:46 ends after unchanged379-action route11/
+F5 prefix; actual source3 SHA9296bfc8…9784f is receipt/native-exact,25HP/80MP,
+shaman alive and native staff charge7.47's existing4 C casts now occur there
+before closing distance (fourth release53.16, actual F5 after one melee hit50.25).
+Bounded ordinary W approach/LMB camera tracking-and-chase then kills the same
+shaman03b52e, genuine native Player killer. Player survives about3.69HP, normal
+C/MP regeneration restores80/80. No native damage or world-state injection.
+`shaman-active-combat-01` PASS, all input bytes delivered, both actual saves
+parsed-native/receipt exact, final queues clear, native end0error/0pending/
+0unsupported. Whole entry only3 tiny permitted velocity projections. Capture
+inspected.18 focused Python and full67/10788-action LuaJIT compile pass; unchanged
+normal/sanitized engine/fire gates retain original provenance. Supplemental
+first-F5 audit expectation failure retained (omitted real2.91 post-heal hit);
+corrected audit proves actual50.25 save; raw game course remains PASS.
+[Shaman active-combat proof](SEWER-SHAMAN-ACTIVE-COMBAT-VERIFICATION.json).
+
+Current `remaining-after-shaman-01` game283320 runs original48–67 from actual
+shaman victory/recovery archive4 SHAf3102638…3bc45b,80HP/80MP/shaman Player-dead.
+Archiver283368/watcher283369 attached; inspect actual processes. Complete original
+reunion/story/choices/exterior from this genuine save, then regenerate/run full67
+in one original-new-game PID and reload its own outdoor save fresh. Full escape
+acceptance remains incomplete; loaded continuations do not substitute.
 
 `remaining-continuity-04` is terminal FAILED at original40 potion menu:
 original22–39 completed in one loaded process, but remembered Magic +3RS selects

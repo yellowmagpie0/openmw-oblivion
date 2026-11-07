@@ -320,14 +320,14 @@
     {
       "segment": 46,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_shaman_staff_approach.json",
-      "action_count": 469,
+      "action_count": 379,
       "source_course": "joined-cavern-shaman-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
     {
       "segment": 47,
       "manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_shaman_victory.json",
-      "action_count": 264,
+      "action_count": 31,
       "source_course": "joined-shaman-continuous-course-01",
       "source_evidence": "docs/oblivion/SEWER-ESCAPE-HANDOFF.md"
     },
