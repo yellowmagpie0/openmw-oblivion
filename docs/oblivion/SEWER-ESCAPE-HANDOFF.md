@@ -14,36 +14,35 @@ audit and rendered review. Loaded diagnostics cannot replace continuous proof.
 The only reviewed native deferrals are5 distant Peryite tick1 SetUnconscious
 startup calls; no story-command waiver. Keep all failed runs failed.
 
-## Live acceptance run — verify actual processes
+## Current checkpoint and next action
 
-`full-escape-continuous-14` is a fresh original new game using immutable
-`rat-grounded-runtime-snapshot-01`: ELF89947e13…adb1d5, own matching resources,
-pinned normal libraries. Its `runtime-identity.json` records the actual executable,
-process start ticks and mapped workspace library hashes. Recipe:
-`adaptive-healing-full-assembly-01/full-escape.json`,67 sections/10431 actions.
-The entire emitted Lua observer compiles. No manual input has been sent.
+Continuous15 is terminal failed at5 after passing all3 required native Player
+rat kills in the original new-game PID366061. Its actual last F5 is parsed/native
+exact: Player16HP, all3 dead rats above the tutorial floor, no loads/manual inputs.
+The swept overlap correction passes9 actor-bounds,2222 normal engine,580 Python
+and2222 ASan/UBSan engine tests (engine leak checking enabled). Retain original
+fingerprints in the [new physics proof](SEWER-SWEPT-RECOVERY-VERIFICATION.json).
+This closes the tested live-rat floor recurrence, not whole-course acceptance.
 
-Game364314, driver364226, supervisor364224, archiver364326, watcher364327.
-Check actual `/proc` state, launcher status and incremental watch before acting;
-the watch can lag45seconds. Preserve healthy jobs, never restart on an observation
-timeout, and never overwrite a live executable/resources/libraries. One rendered
-game at a time. No tracked/nonignored edits or commits while `run_checks.py` runs.
+Continuous14's Rat41 z-8185 failure and separately recorded ordinary diagnostic
+F5 remain retained. Its checkpoint replay did not reproduce the uninterrupted
+fall; no deterministic before/after replay is claimed. The expanded geometry
+regression independently catches the old airborne floor crossing. Read-only
+observers now fail if a required live rat falls below the tutorial floor.
 
-Guarded follow-up `followup-full14-outdoor-reload.py`, PID364228, records
-`full14-outdoor-followup-status.json`. It waits for a terminal passing full course,
-no live rendered game, and an actual own outdoor F5/native match before launching
-`full14-own-outdoor-reload-assembly-01/course.json` into
-`full-escape-continuous-14-outdoor-reload-01`. This adds ordinary walking, F5 and
-read-only faction inspection. A failed full course stops it without restart.
-The reload is prepared, not yet launched; recheck actual status.
+Next blocker: section5 still casts exactly3 times before requiring60HP. From
+16HP it reaches40 and stops. Make fixed-cast recoveries with a final health target
+adaptive, preserving each target and ordinary casting/native-effect gates. Audit
+remaining selected recovery blocks for this same pattern before another full run.
+Use continuous15's genuine post-rat F5 as the focused input; no state injection.
+Follow-up15 correctly stopped without outdoor reload. No rendered game remains.
 
-Next: monitor that same process, repairing only observed blockers. After both
-runs pass, use `verify-full-escape.py` and `audit-all-course-saves.py` under the
-evidence root, then inspect captures. The main audit requires all67 ordered
-segments, required fights, original story mutations once, ownership/faction/bounty
-persistence, own new-PID reload and terminal queues. The save audit compares every
-actual F5 receipt, retained bytes and parsed native state. Commit completed chunks;
-never push without explicit request.
+After focused recovery checks, regenerate a fresh full67-section new-game course
+and its guarded own-outdoor reload. Accept only all67 in one PID, actual outdoor
+save/reload and ordinary walking, all input/native/save audits and rendered review.
+Keep one rendered game at a time, preserve healthy jobs, never overwrite live
+snapshots, and make no source edits/commits while `run_checks.py` is live.
+Commit bounded completed chunks; never push without explicit request.
 
 ## Current recovery correction
 

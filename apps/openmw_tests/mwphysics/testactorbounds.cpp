@@ -595,23 +595,35 @@ TEST(ActorBoundsTest, GroundedOverlapRejectionDoesNotPushActorThroughSupportingF
     {
         MWPhysics::Actor actor(MWWorld::Ptr(&live), source, &scheduler, false,
             DetourNavigator::CollisionShapeType::Aabb, {});
-        for (bool grounded : {false, true})
+        for (float floorHeight : {0.f, -100.f})
         {
-            SCOPED_TRACE(grounded);
-            actor.setOnGround(grounded);
-            MWPhysics::ActorFrameData frame(actor, false, false, 1.f, -1000.f, false);
-            frame.mMovement = osg::Vec3f(0, 1, 0);
-            frame.mPosition = osg::Vec3f(0, 0, 1);
-            frame.mStuckFrames = 0;
-            const auto transform = actor.getCollisionObject()->getWorldTransform();
-            MWPhysics::MovementSolver::unstuck(frame, &world);
-            // A smaller overlap with the lip can still put the actor below its
-            // supporting floor. Falling actors retain downward depenetration.
-            if (grounded)
-                EXPECT_GE(frame.mPosition.z(), 1.f);
-            else
-                EXPECT_LT(frame.mPosition.z(), 0.f);
-            EXPECT_EQ(actor.getCollisionObject()->getWorldTransform(), transform);
+            SCOPED_TRACE(floorHeight);
+            floor.setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0, 0, floorHeight - 10)));
+            world.updateSingleAabb(&floor);
+            for (bool grounded : {false, true})
+            {
+                SCOPED_TRACE(grounded);
+                actor.setOnGround(grounded);
+                MWPhysics::ActorFrameData frame(actor, false, false, 1.f, -1000.f, false);
+                frame.mMovement = osg::Vec3f(0, 1, 0);
+                frame.mPosition = osg::Vec3f(0, 0, 1);
+                frame.mStuckFrames = 0;
+                const auto transform = actor.getCollisionObject()->getWorldTransform();
+                MWPhysics::MovementSolver::unstuck(frame, &world);
+                // Less overlap with the lip must not put either a grounded or
+                // falling actor below a floor. With the floor farther away,
+                // falling actors may still recover downward into open air.
+                EXPECT_GE(frame.mPosition.z(), floorHeight - .01f);
+                if (grounded)
+                    EXPECT_GE(frame.mPosition.z(), 1.f);
+                else
+                {
+                    EXPECT_LT(frame.mPosition.z(), 1.f);
+                    if (floorHeight < 0)
+                        EXPECT_LT(frame.mPosition.z(), 0.f);
+                }
+                EXPECT_EQ(actor.getCollisionObject()->getWorldTransform(), transform);
+            }
         }
     }
     world.removeCollisionObject(&lip);

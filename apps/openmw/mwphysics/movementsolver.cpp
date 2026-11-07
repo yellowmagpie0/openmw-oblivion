@@ -561,6 +561,24 @@ namespace MWPhysics
 
         auto gatherContacts = [&](btVector3 newOffset) -> ContactCollectionCallback {
             goodPosition = refPosition + Misc::Convert::toOsg(addMarginToDelta(newOffset));
+            if (newOffset.length2() > 0)
+            {
+                // Reduced penetration at the destination does not prove that
+                // the recovery path is clear. In particular, a falling actor
+                // can otherwise be rejected through the floor under a lip.
+                newTransform.setOrigin(Misc::Convert::toBullet(refPosition));
+                actor.mCollisionObject->setWorldTransform(newTransform);
+                ActorTracer recovery;
+                recovery.doTrace(actor.mCollisionObject, refPosition, goodPosition, collisionWorld);
+                if (recovery.mFraction < 1.f)
+                {
+                    auto displacement = recovery.mEndPos - refPosition;
+                    const float distance = displacement.length();
+                    goodPosition = distance > sCollisionMargin
+                        ? recovery.mEndPos - displacement * (sCollisionMargin / distance)
+                        : refPosition;
+                }
+            }
             newTransform.setOrigin(Misc::Convert::toBullet(goodPosition));
             actor.mCollisionObject->setWorldTransform(newTransform);
 

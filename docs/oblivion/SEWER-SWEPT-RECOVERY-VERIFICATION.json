@@ -1,0 +1,236 @@
+{
+  "scope": "Swept overlap correction, expanded floor geometry regression and continuous15 three-rat prefix. Full escape remains incomplete.",
+  "runtime_recurrence": {
+    "course": "full-escape-continuous-14",
+    "passed": false,
+    "save_sequence": 23,
+    "save_sha256": "dbb9019b4f0f1ecb01d3aedb7447084192b22051bd0cf7a31cd9ca7211044cce",
+    "parsed_native_exact": true,
+    "rat41_position": [
+      415.2047119140625,
+      3045.974365234375,
+      -8185.4775390625,
+      0.0,
+      0.0,
+      -0.7586630582809448
+    ],
+    "rat41_life": {
+      "actor": "content:oblivion.esm:037e41",
+      "base": "content:oblivion.esm:04e870",
+      "phase": 0,
+      "recovery_remaining": 0.0,
+      "killer": "null"
+    },
+    "manual_diagnostic_F5": {
+      "scope": "Explicit ordinary X11 F5 diagnostic input, separate from automated SDL delivery receipts; not acceptance of full14.",
+      "game_pid": 364314,
+      "display": ":1",
+      "actions": [
+        {
+          "utc": "2026-11-07T12:12:52.925962+00:00",
+          "argv": [
+            "xdotool",
+            "windowfocus",
+            "--sync",
+            "2097204"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T12:12:52.929067+00:00",
+          "argv": [
+            "xdotool",
+            "keydown",
+            "F5"
+          ],
+          "returncode": 0
+        },
+        {
+          "utc": "2026-11-07T12:12:53.096407+00:00",
+          "argv": [
+            "xdotool",
+            "keyup",
+            "F5"
+          ],
+          "returncode": 0
+        }
+      ]
+    },
+    "note": "Manual F5 is separate from automated SDL receipts; no world/health/position injection."
+  },
+  "implementation": "Collision-sweep each overlap correction before testing its endpoint, leaving a collision margin when clipped. Preserve existing grounded downward clamp; falling actors may still recover downward into clear space.",
+  "regression_before": {
+    "path": "build/oblivion-compat/sewer-escape/rat-airborne-regression-before-01",
+    "expected_failure": "Airborne correction crossed supporting floor: z1 to-19.2. Grounded and open-air cases remain checked."
+  },
+  "focused": {
+    "path": "build/oblivion-compat/sewer-escape/rat-airborne-focused-01",
+    "passed": true,
+    "results": {
+      "engine": {
+        "executed": 9,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ActorBoundsTest.*",
+        "binary_sha256": "ef3579bd5aa16425de4106044b9706533f4eb3a277f1e7daeadb0f201c7572e2",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "a6e351a3d02f6014b3175d5cd9509b7fe16758198a38c8b1fa09866d49d04e88",
+        "inventory_sha256": "7ab500e1a7a44d82185e23caaeae0d487b87d8fea7beaa547580533de2ef49a8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "source_before": {
+      "head": "4425d0653327f22fcf354e6f1becccebab38952d",
+      "source_fingerprint": "f6affa109b075f36d34a5e7499037ae4c02aac6650ea3b787ef3710577a6adb9"
+    },
+    "source_after": {
+      "head": "4425d0653327f22fcf354e6f1becccebab38952d",
+      "source_fingerprint": "f6affa109b075f36d34a5e7499037ae4c02aac6650ea3b787ef3710577a6adb9"
+    }
+  },
+  "runtime_limitation": "Old immutable snapshot checkpoint replay rat41-floor-baseline-01 did not reproduce the uninterrupted fall; its expected-breach diagnostic fails. Do not claim a deterministic before/after replay.",
+  "new_runtime": "continuous15 passes required rat prefix, then fails section5 because its fixed three healing casts cannot reach60HP from16HP. No full escape claim.",
+  "integration_status": "All2222 normal engine,580 Python and2222 ASan/UBSan engine tests pass; sanitizer leak checking enabled. No rendered leak claim.",
+  "recipe_tests": {
+    "path": "build/oblivion-compat/sewer-escape/rat-support-sweep-manifest-tests-01.log",
+    "passed": true,
+    "executed": 18
+  },
+  "full_escape_complete": false,
+  "passed": true,
+  "integration": {
+    "normal_python": {
+      "path": "build/oblivion-compat/sewer-escape/rat-support-sweep-broad-normal-python-01",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2222,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ef3579bd5aa16425de4106044b9706533f4eb3a277f1e7daeadb0f201c7572e2",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "d6ecf362ca8d669ce891ac5db754b9c8349975d7ccafdadccfe8e45f7aa65bf6",
+          "inventory_sha256": "7ab500e1a7a44d82185e23caaeae0d487b87d8fea7beaa547580533de2ef49a8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 580,
+          "passed": true,
+          "log_sha256": "12940b93b39c144913fa89f418ba75d4d8625fd1c582cf124fdcef0052b0d588"
+        }
+      },
+      "source_before": {
+        "head": "4425d0653327f22fcf354e6f1becccebab38952d",
+        "source_fingerprint": "3ab99e9ba08fbb7d385beb5ea981100131b293c1a9163b90fa7a0e4ec88f9fd6"
+      },
+      "source_after": {
+        "head": "4425d0653327f22fcf354e6f1becccebab38952d",
+        "source_fingerprint": "3ab99e9ba08fbb7d385beb5ea981100131b293c1a9163b90fa7a0e4ec88f9fd6"
+      }
+    },
+    "sanitizer": {
+      "path": "build/oblivion-compat/sewer-escape/rat-support-sweep-broad-sanitize-01",
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 2222,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "2cafc6a05a3cf5f18c25548ee497aa083244ac07bf2c7381a237f39e50bff9c3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "71b88989170c3c2e34da351978b53242fe6b4a8b1a369d789498233fbd54b02a",
+          "inventory_sha256": "7ab500e1a7a44d82185e23caaeae0d487b87d8fea7beaa547580533de2ef49a8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4425d0653327f22fcf354e6f1becccebab38952d",
+        "source_fingerprint": "3ab99e9ba08fbb7d385beb5ea981100131b293c1a9163b90fa7a0e4ec88f9fd6"
+      },
+      "source_after": {
+        "head": "4425d0653327f22fcf354e6f1becccebab38952d",
+        "source_fingerprint": "3ab99e9ba08fbb7d385beb5ea981100131b293c1a9163b90fa7a0e4ec88f9fd6"
+      }
+    }
+  },
+  "runtime_prefix": {
+    "scope": "Original-new-game continuous15 through all3 native Player wall-rat kills; no loads/manual input.",
+    "game_pid": 366061,
+    "save_sequence": 22,
+    "save_sha256": "300f5417b23d57b75deb32bb03f76c149cc30b2e7e72fb1b508f0f4a5eb0729c",
+    "parsed_native_exact": true,
+    "player_health": 16.0,
+    "rats": [
+      {
+        "actor": "content:oblivion.esm:037e40",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e41",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e42",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    ],
+    "rat_positions": {
+      "content:oblivion.esm:037e40": [
+        500.0232238769531,
+        3184.052978515625,
+        -831.5906372070312,
+        0.0,
+        0.0,
+        -1.5398353338241577
+      ],
+      "content:oblivion.esm:037e41": [
+        269.9802551269531,
+        3177.046630859375,
+        -802.1025390625,
+        0.0,
+        0.0,
+        -1.572520136833191
+      ],
+      "content:oblivion.esm:037e42": [
+        176.06472778320312,
+        3285.02490234375,
+        -817.1580810546875,
+        0.0,
+        0.0,
+        -2.3190038204193115
+      ]
+    }
+  }
+}
