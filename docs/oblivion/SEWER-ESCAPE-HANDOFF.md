@@ -15,21 +15,39 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — uninterrupted original-new-game10
+## Current chunk — first chest approach from the actual post-rat position
 
-`full-escape-continuous-10` is live, game PID254562, runner254545,
-supervisor254532, read-only save archiver254608. Preserve this process.
-Actual argv has no load-save argument; config has new-game1. Native events
-through original30 contain one run-start, no load and only the5 audited Peryite
-startup deferrals. Opening19 and actual passage/descent saves match their native
-snapshots. First ambush archive19/native match: all4 assassins killed by guards,
-all3 escorts alive, Renault script-dead/null killer/nonessential, death counts1,
-Player80HP/inventory unchanged, no bound gear on dead assassins and all combat
-queues clear. Original26/27/28/29/30 observed. Departure archive20/native match:
-CG30 retained despite later29 request, all3 escorts alive in022288, Glenroy
-Complete/Low at the authored arrival marker with no progress deficit. Player80HP;
-2 living early rats legitimately already engage Player. No supplemental inputs.
-Prison/dialogue/passage/victory/departure captures inspected.
+`full-escape-continuous-10` is terminal FAILED at source9 chest-in-range wait60sec,
+game0/launcher1, no forbidden/unreviewed engine findings. Native run-end error0/
+pending0/unsupported5 (known Peryite startup). All UI/runner/archiver processes
+are terminal. Preserve the run unchanged. Failure proof under evidence root:
+`full-escape-continuous-10-failure-verification.json`.
+
+Full10 passed opening/first ambush/escort departure30, early3 Player rat kills,
+real healing, corpse loot/equipment/keyed entry and first Substructure Player
+rat victory. Genuine retained save26 is native-exact,56HP, all combat queues clear.
+It starts664.42 horizontal units from chest049352. The failed approach stays
+facing the chest; changing focus pitch indicates progress, but no final-position
+save exists. Source9 range threshold90 and actual loot checks remain unchanged.
+Correction only extends walk wait60→180sec and logs actual distance/position.
+
+Chest correction now passes focused9+10 from actual26: exact whole entry0diff,
+real chest loot, armor/axe equipment and one real potion56→76. Separate1fps
+chest-only case reaches range in112.10sec (>old60,<new180), transfers all8 types,
+empty chest, native-exact final save, all input bytes delivered and native end
+error0/pending0/unsupported0. Whole entry0diff.18 focused Python cases and full67
+LuaJIT compilation pass; unchanged engine gates reused with original provenance.
+Normal intermediate chest save3 has native receipt/snapshot but bytes were
+superseded by final4; only final4 is parser-verified. Paced chest save is retained.
+[Chest approach proof](SEWER-CHEST-APPROACH-VERIFICATION.json).
+Armor equipment/mechanics proven; paperdoll appears in prior clothing. Updated
+armor appearance is not claimed; record for later visual inspection.
+
+Next: commit bounded chest correction, then exercise remaining sources9–67
+continuously from genuine26 at1fps to expose later input/context timing gaps
+before replaying the84-minute known opening for each repair. This is diagnostic
+only: final acceptance still requires all67 in one original-new-game PID plus
+its own outdoor fresh reload. All focused/UI helpers are terminal here.
 
 Actual uninterrupted solo prefix through keyed entry now passes. All3 early rats
 are native Player kills; wall-exit archive22 matches native snapshot,46HP and all
@@ -41,7 +59,7 @@ door0248b2 teleports once to022ff6. Archive25/native exact,70HP, Key/Club once,
 Club equipped and all3 early Player rat kills retained after cell change.
 [Continuous keyed-entry proof](SEWER-UNINTERRUPTED-KEYED-ENTRY-VERIFICATION.json).
 
-Same PID has completed segment8 and entered9 (first Substructure chest).
+Full10 completed segment8 and entered9 before the chest approach timed out.
 Later combat, traps, reunion/choices, Emperor death/Amulet, exterior and own-save
 fresh reload remain unproven. Current proofs under `full-escape-continuous-10/`:
 `first-ambush-victory-verification.json`, `escort-departure30-verification.json`,
@@ -57,8 +75,8 @@ is observation history, not sufficient alone to prove a currently live process.
 Inspect actual process/launcher status. Current handles and prepared evidence:
 `menu-admission-current-work.json`. No build/test helper is live at this checkpoint.
 
-Next: same process through remaining solo combat, loot/healing and all later
-segments; then fresh-load its own outdoor save. No other rendered game or binary/
+Remaining acceptance: uninterrupted original-new-game course through all later
+segments, then fresh-load that run's own outdoor save. No other rendered game or binary/
 resource overwrite while this UI is live. Do not restart on observation timeout.
 On terminal failure retain raw evidence, fix the actual failed gate, verify a
 bounded correction and commit it before another full original-new-game attempt.
@@ -68,7 +86,7 @@ filter selected; source40 assumes All before3 rightshoulder presses. Source
 onOpen preserves the filter. `remaining-ui-filter-context-risk.json` records
 this; `healing-filter-context-prepared-01/reproduce.json` is prepared, **not run**,
 from native-exact real chest-loot save SHA f6327a68…3c84eb,26.14HP/3 potions.
-It seeds the remembered category using normal inputs. Do not launch alongside10.
+It seeds the remembered category using normal inputs. Never launch alongside another rendered game.
 
 ## Latest completed fixes and reusable evidence
 
@@ -120,7 +138,7 @@ Other reusable evidence:
 
 ## Next action and completion audit
 
-Preserve the current original-new-game process; inspect milestones, actual saves/native receipts and rendered captures.
+For a live original-new-game process, preserve it and inspect milestones, actual saves/native receipts and rendered captures.
 On terminal failure, retain raw evidence, diagnose the actual failed gate and
 verify a bounded fix with focused/runtime checks before broad integration gates.
 Commit completed self-contained changes; no push. Do not edit source/docs or

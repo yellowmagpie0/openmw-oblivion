@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "scope": "First Substructure chest approach allowance and read-only distance telemetry; full uninterrupted sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "failure": "build/oblivion-compat/sewer-escape/full-escape-continuous-10-failure-verification.json",
+  "source_change": "Keep90-unit range, route/interaction inputs, eight-type transfer and gear checks; extend chest approach60\u2192180sec and log distance/position every15 frames.73 source actions unchanged.",
+  "source_manifest_sha256": "633ec2b3c5a1174e8f37af01ff4377ddc485b22d889e5fef641c585cd05b4b4e",
+  "genuine_input": {
+    "scope": "Actual full10 Substructure rat Player victory26; later chest approach failed, no full escape acceptance.",
+    "game_pid": 254562,
+    "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-10/retained-saves/3-0026-Quicksave.omwsave",
+    "save_sha256": "1809c18b6a3d7550f766582667f5f8cabbb30586ff3a45d427aef69a0a84a155",
+    "native_snapshot_sha256": "03b1d915d8598a5f203ff7c9757f57a664f8969712bcf325c39981237f32072f",
+    "parsed_save_equals_native_snapshot": true,
+    "rat": {
+      "actor": "content:oblivion.esm:038819",
+      "base": "content:oblivion.esm:0cd335",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "health": 56.0,
+    "position": [
+      469.5306091308594,
+      295.80413818359375,
+      127.64569091796875,
+      0.0830078125,
+      0.0,
+      2.43212628364563
+    ],
+    "queues": {
+      "native_combat_engagements": [],
+      "pending_death_events": [],
+      "physical_action_owners": [],
+      "native_spell_casts": [],
+      "native_magic_projectiles": []
+    },
+    "chest_position": [
+      1020.65478515625,
+      -75.30423736572266,
+      135.67491149902344,
+      -0.05907904729247093,
+      0.13262388110160828,
+      3.132607936859131
+    ],
+    "initial_horizontal_chest_distance": 664.4240241009638
+  },
+  "python": {
+    "log": "build/oblivion-compat/sewer-escape/chest-approach-python-focused-01.log",
+    "tests": 18,
+    "failures": 0,
+    "skips": 0
+  },
+  "normal_focused": {
+    "scenario": "build/oblivion-compat/sewer-escape/chest-approach-extended-01/scenario.json",
+    "actions_complete": true,
+    "approach_seconds": 6.968399,
+    "native": {
+      "scope": "Focused actual full10 input26 through chest, armor, axe and one real potion; not uninterrupted escape acceptance.",
+      "passed": true,
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/chest-approach-extended-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "72ba54047d43399b9a9659f588ecd26ba90e0a2ce595aa59e78141d1dd264fa7",
+      "native_snapshot_sha256": "c28b797c139e24ec09a14263bf139075da3e2c12478a028bfc8a923011162bf8",
+      "parsed_save_equals_native_snapshot": true,
+      "chest_empty": true,
+      "armor_and_axe_equipped": {
+        "content:oblivion.esm:0661c1": 4,
+        "content:oblivion.esm:0661c3": 8,
+        "content:oblivion.esm:090613": 65536
+      },
+      "potion_consumed": true,
+      "health_before": 56,
+      "health_after": 76,
+      "all_issued_input_bytes_delivered": true,
+      "entry": "entry-state-verification.json",
+      "intermediate_chest_save_limit": "Native save3 receipt/snapshot retained; actual save bytes overwritten by final4 before read-only archiver attachment. No parsed save3 claim. Final4 actual bytes/native snapshot checked."
+    },
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-10/retained-saves/3-0026-Quicksave.omwsave",
+      "source_save_sha256": "1809c18b6a3d7550f766582667f5f8cabbb30586ff3a45d427aef69a0a84a155",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    }
+  },
+  "paced_focused": {
+    "scenario": "build/oblivion-compat/sewer-escape/chest-approach-slow-frame-01/scenario.json",
+    "framerate_limit": 1,
+    "actions_complete": true,
+    "native": {
+      "scope": "Focused chest-only test paced at1fps, same genuine full10 input26; not uninterrupted full escape acceptance.",
+      "passed": true,
+      "approach_seconds": 112.096285,
+      "exceeded_old60sec_allowance": true,
+      "within_new180sec_allowance": true,
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/chest-approach-slow-frame-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "c5b746b15e2de5dec0bf8795210e479f4ddfcf630ec79d9f9d44fe0b4e95b0b6",
+      "native_snapshot_sha256": "bb3dcba51f43dae13be3d4f0e7c3801c4ec0a9b1315bcf9ba7349c6a100f8c4d",
+      "parsed_save_equals_native_snapshot": true,
+      "all_chest_items_transferred_once": {
+        "content:oblivion.esm:090613": 1,
+        "content:oblivion.esm:00000a": 5,
+        "content:oblivion.esm:047aca": 1,
+        "content:oblivion.esm:017829": 24,
+        "content:oblivion.esm:02cf9f": 3,
+        "content:oblivion.esm:0661c1": 1,
+        "content:oblivion.esm:0661c3": 1,
+        "content:oblivion.esm:009310": 1
+      },
+      "chest_empty": true,
+      "health": 56.0,
+      "entry": "entry-state-verification.json",
+      "all_input_bytes_delivered": true,
+      "native_run_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 259517,
+        "sequence": 4,
+        "tick": 216,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    },
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-10/retained-saves/3-0026-Quicksave.omwsave",
+      "source_save_sha256": "1809c18b6a3d7550f766582667f5f8cabbb30586ff3a45d427aef69a0a84a155",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    }
+  },
+  "rendered_inspection": [
+    "build/oblivion-compat/sewer-escape/chest-approach-extended-01/rendered-inspection-notes.json",
+    "build/oblivion-compat/sewer-escape/chest-approach-slow-frame-01/rendered-inspection-notes.json"
+  ],
+  "presentation_limit": "Armor equipment/mechanics proven; inspected paperdoll appears in prior clothing. Updated armor appearance is not claimed by these captures; retain for later visual inspection.",
+  "full_assembly": {
+    "path": "build/oblivion-compat/sewer-escape/chest-approach-full-assembly-01/full-escape.json",
+    "segments": 67,
+    "actions": 11559,
+    "luajit_compile": "build/oblivion-compat/sewer-escape/chest-approach-full-assembly-01/luajit-syntax-verification.json"
+  },
+  "implementation_gates": "C++/Python implementation unchanged. Reuse exact2210 normal/2210 ASan-UBSan engine provenance in SEWER-EQUIPMENT-PAGE-VERIFICATION.json; no fresh engine or rendered sanitizer claim for this data-only correction.",
+  "runtime_openmw_sha256": "ff12ce922fa13e8500ab613cb6a1c7745f808da5563eba56c9243a26451c7f6d",
+  "remaining": "Continuous later-route diagnostic before the final original-new-game67-segment process and its own outdoor fresh reload. Loaded checks do not substitute for full acceptance."
+}
