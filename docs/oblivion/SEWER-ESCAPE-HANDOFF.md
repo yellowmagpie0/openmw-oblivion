@@ -81,9 +81,14 @@ approach with40HP. The diagnostic nevertheless fails: rat037e42 is already at
 z=-8156 in its first F5, while the input started with that rat at z=-735.
 The later controller aims at the unreachable rat below the floor. Do not waive
 that kill or treat the wall-exit position marker as encounter completion.
-`wall-floor-trace-01` records read-only rat positions during the same normal-input
-approach to locate the fall; recheck actual processes before starting another game.
-Candidate controller edits remain ignored and are not adopted into source yet.
+`wall-floor-trace-01` and `wall-floor-ray-01` reproduce the fall with read-only
+observations. Instrumented `rat-unstuck-trace-03` passes diagnostic checks with
+matching resources and no unreviewed errors: grounded overlap rejection moves
+the rat down41.74 units and across39.54 units, below the stair surface. Subsequent
+rejections push down28.79 and16.81 units, then gravity continues the fall.
+[Diagnosis and provenance](SEWER-RAT-FLOOR-DIAGNOSIS.json). Temporary logging was
+removed; the diagnostic ELF is retained. All diagnostics are terminal. No repair
+is claimed. Candidate input-controller edits remain ignored and unadopted.
 
 `story-faction-broad-sanitize-01/verification.json` passes all2221 ASan/UBSan
 engine cases, no failures/skips, exact inventory, engine leak checking enabled.
@@ -93,7 +98,7 @@ This is engine-test evidence, not rendered leak coverage. Normal3265 component,
 2221 engine and580 Python gates retain their original provenance in the faction
 proof. No further broad rerun is needed for docs or controller-only edits.
 
-Next: locate and repair the rat floor crossing, complete the three-rat diagnostic
+Next: repair the demonstrated downward overlap rejection without crossing the supporting floor, complete the three-rat diagnostic
 with native Player kills and save/input audits, adopt verified controller changes,
 and commit that bounded chunk. Then regenerate a fresh original-new-game67-section
 course with the automatic landing sidestep and rat fix. Accept only its continuous
