@@ -1,0 +1,96 @@
+{
+  "scope": "Terminal genuine Player-death failure audit; not escape acceptance",
+  "course": "build/oblivion-compat/sewer-escape/full-escape-continuous-21",
+  "game_pid": 422333,
+  "failed_section": 41,
+  "actual_Player_death": [
+    "[14:43:51.787 I] M15 native death callback: id=19 actor=dynamic:player:0000000000000001 killer=content:oblivion.esm:03b541 handled=false"
+  ],
+  "native_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 422333,
+    "sequence": 89,
+    "tick": 32669,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 88,
+    "pending_count": 0,
+    "unsupported_count": 5
+  },
+  "terminal": {
+    "passed": false,
+    "actions_complete": false,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  "normal_stop_after_verified_death": {
+    "utc": "2026-11-07T20:44:38.914714+00:00",
+    "reason": "Verified actual Player death; stop failed diagnostic and release workers/controller. Not acceptance.",
+    "handles": {
+      "driver_pid": 422305,
+      "running": false,
+      "game_pid": 422333,
+      "archiver_pid": 422334,
+      "watcher_pid": 422335,
+      "reason": "capture workers attached to actual game"
+    },
+    "xvfb": []
+  },
+  "automated_inputs_delivered": true,
+  "manual_records": [],
+  "pre_patrol_save": {
+    "native_sequence": 88,
+    "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-21/retained-saves/3-0088-Quicksave.omwsave",
+    "sha256": "b35c655f3bc5a0e6096509a95bfb45e596b74372d39dd31e3f5ef533e6df1f71",
+    "position": [
+      4478.53759765625,
+      2590.146240234375,
+      -488.9583435058594,
+      0.06796874850988388,
+      0,
+      -0.006835108157247305
+    ],
+    "health": 80,
+    "magicka": 80,
+    "fatigue": 140
+  },
+  "cause": "Controller chased the moving patrol while nearby03b541 attacked, then exposed Player to shaman03b52e staff fire. Five held-power hits exhausted fatigue before killing patrol; no healing/cover response in original source41.",
+  "incoming_melee_hits": [
+    "[14:43:18.630 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=192 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=ffffffff armor_condition_writes=1 combat_random_draws=1",
+    "[14:43:21.551 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=193 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=ffffffff armor_condition_writes=1 combat_random_draws=3",
+    "[14:43:24.428 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=194 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=ffffffff armor_condition_writes=1 combat_random_draws=1",
+    "[14:43:27.320 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=195 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=ffffffff armor_condition_writes=1 combat_random_draws=2",
+    "[14:43:30.200 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=196 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=ffffffff armor_condition_writes=1 combat_random_draws=3",
+    "[14:43:36.532 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=198 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=ffffffff armor_condition_writes=1 combat_random_draws=3",
+    "[14:43:37.244 V] M15 melee hit committed: actor=content:oblivion.esm:03b543 id=199 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=2 armor_condition_writes=1 combat_random_draws=2",
+    "[14:43:39.573 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=19c fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=3 armor_condition_writes=1 combat_random_draws=2",
+    "[14:43:40.289 V] M15 melee hit committed: actor=content:oblivion.esm:03b543 id=19d fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=2 armor_condition_writes=1 combat_random_draws=4",
+    "[14:43:42.586 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=19f fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=3 armor_condition_writes=1 combat_random_draws=1",
+    "[14:43:43.365 V] M15 melee hit committed: actor=content:oblivion.esm:03b543 id=1a0 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=2 armor_condition_writes=1 combat_random_draws=4",
+    "[14:43:45.659 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=1a2 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=3 armor_condition_writes=1 combat_random_draws=1",
+    "[14:43:46.410 V] M15 melee hit committed: actor=content:oblivion.esm:03b543 id=1a3 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=2 armor_condition_writes=1 combat_random_draws=1",
+    "[14:43:48.704 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=1a5 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=3 armor_condition_writes=1 combat_random_draws=2",
+    "[14:43:49.924 V] M15 melee hit committed: actor=content:oblivion.esm:03b543 id=1a6 fatigue_cost=7 before=90 after=83 action=3 health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=2 armor_condition_writes=1 combat_random_draws=2",
+    "[14:43:51.568 V] M15 melee hit committed: actor=content:oblivion.esm:03b541 id=1a8 fatigue_cost=7 before=90 after=83 action=ffff health_damage=2.88 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=ffffffff armor_condition_writes=1 combat_random_draws=1"
+  ],
+  "staff_projectile_impacts": [
+    "[14:43:41.008 I] M16 magic projectile impact: id=1 actor=1 damage=5",
+    "[14:43:42.603 I] M16 magic projectile impact: id=2 actor=1 damage=5",
+    "[14:43:44.149 I] M16 magic projectile impact: id=3 actor=1 damage=5",
+    "[14:43:45.670 I] M16 magic projectile impact: id=4 actor=1 damage=5",
+    "[14:43:47.171 I] M16 magic projectile impact: id=5 actor=1 damage=5",
+    "[14:43:48.721 I] M16 magic projectile impact: id=6 actor=1 damage=5",
+    "[14:43:50.152 I] M16 magic projectile impact: id=7 actor=1 damage=5",
+    "[14:43:51.576 I] M16 magic projectile impact: id=8 actor=1 damage=0"
+  ],
+  "Player_patrol_hits": [
+    "[14:43:38.017 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=19b fatigue_cost=41 before=140 after=99 action=3 health_damage=1.72744 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=36.8 victim=content:oblivion.esm:03b543 victim_action=ffffffff armor_condition_writes=0 combat_random_draws=0",
+    "[14:43:41.001 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=19e fatigue_cost=41 before=118.922 after=77.9219 action=3 health_damage=1.59225 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=36.5 victim=content:oblivion.esm:03b543 victim_action=ffffffff armor_condition_writes=0 combat_random_draws=0",
+    "[14:43:44.142 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=1a1 fatigue_cost=41 before=97.8438 after=56.8438 action=3 health_damage=1.45791 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=36.2001 victim=content:oblivion.esm:03b543 victim_action=ffffffff armor_condition_writes=0 combat_random_draws=0",
+    "[14:43:47.156 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=1a4 fatigue_cost=41 before=76.7656 after=35.7656 action=3 health_damage=1.32439 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=35.9001 victim=content:oblivion.esm:03b543 victim_action=ffffffff armor_condition_writes=0 combat_random_draws=0",
+    "[14:43:50.146 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=1a7 fatigue_cost=41 before=55.6875 after=14.6875 action=3 health_damage=1.19172 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=35.6001 victim=content:oblivion.esm:03b543 victim_action=3 armor_condition_writes=0 combat_random_draws=0"
+  ],
+  "earlier_scope": "Original new game through40, including four cavern goblin Player kills and original log release; no loads/manual intervention. Sections41\u201367 and own outdoor reload remain unaccepted.",
+  "next": "Test ordinary nearest-threat/cover patrol response from this exact88, preserve original source41 phase1 and all later gates, then rerun complete original-new-game course."
+}
