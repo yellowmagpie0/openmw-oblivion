@@ -433,6 +433,10 @@ namespace MWWorld
         MWMechanics::OblivionAiService* getOblivionAiService() { return mOblivionAi.get(); }
         MWMechanics::OblivionCombatService* getOblivionCombatService() { return mOblivionCombat.get(); }
         const MWMechanics::OblivionCombatService* getOblivionCombatService() const { return mOblivionCombat.get(); }
+        bool castOblivionEnvironmentalFire(const Ptr& source, const ESM::FormKey& spell,
+            const ESM::FormKey& target);
+        void updateOblivionEnvironmentalFire(float duration);
+        void validateOblivionEnvironmentalFire(const ESM4::RuntimeState& state) const;
         // Process-owned configuration, independent of saved actor state. VERSION
         // and OS-processed text are resolved separately by the input adapter.
         const ESM4::PhysicalBlendProfilesConfiguration& getOblivionPhysicalBlendConfiguration() const;

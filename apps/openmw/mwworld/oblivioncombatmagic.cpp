@@ -27,6 +27,9 @@
 #include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadacti.hpp>
+#include <components/esm4/runtimestate.hpp>
+#include <components/esm4/runtimereferences.hpp>
 
 #include <bit>
 #include <set>
@@ -166,6 +169,194 @@ namespace MWWorld
     {
         if ((spell.mFlags & ESM4::Rec_Deleted) || !spell.mData || spell.mData->mType != 0) return {};
         return resolveInstantRestoration(store, spell.mEffects);
+    }
+
+    namespace
+    {
+        constexpr std::array<std::string_view, 4> sFireFields{
+            "native.fire.spell", "native.fire.magnitude", "native.fire.duration", "native.fire.elapsed"};
+
+        void validateFire(const OblivionEnvironmentalFire& fire)
+        {
+            if (!fire.mSpell.isContent() || ESM::FormKey::deserialize(fire.mSpell.serialize()) != fire.mSpell
+                || !std::isfinite(fire.mMagnitude) || fire.mMagnitude <= 0
+                || !std::isfinite(fire.mDuration) || fire.mDuration <= 0
+                || !std::isfinite(fire.mElapsed) || fire.mElapsed < 0 || fire.mElapsed >= fire.mDuration)
+                throw std::invalid_argument("invalid native environmental fire effect");
+        }
+    }
+
+    std::optional<OblivionEnvironmentalFire> resolveOblivionEnvironmentalFire(
+        const ESMStore& store, const ESM4::Spell& spell)
+    {
+        if ((spell.mFlags & ESM4::Rec_Deleted) || !spell.mData || spell.mData->mType != 0
+            || spell.mData->mFlags != 0x40 // Audited environmental fire's no-absorb/reflect profile.
+            || spell.mEffects.size() != 1) return {};
+        const auto& effect = spell.mEffects.front();
+        if (effect.mId != ESM::fourCC("FIDG") || effect.mRange != 1 || !effect.mDuration
+            || !effect.mMagnitude || effect.mArea || effect.mActorValue != 8 || effect.mScriptEffect) return {};
+        const ESM4::EffectSetting* definition = nullptr;
+        std::set<ESM::FormId> seen;
+        for (const auto& row : store.get<ESM4::EffectSetting>())
+        {
+            if (!seen.insert(row.mId).second) continue;
+            const auto* winner = store.get<ESM4::EffectSetting>().search(row.mId);
+            if (!winner || (winner->mFlags & ESM4::Rec_Deleted) || winner->mEffectCode != effect.mId) continue;
+            if (definition) return {};
+            definition = winner;
+        }
+        if (!definition || !definition->mData) return {};
+        const auto& data = *definition->mData;
+        if (data.mAssociatedData != 8 || data.mSchool != 2 || data.mResistanceActorValue != 61
+            || (data.mFlags & 0x51) != 0x51 || (data.mFlags & 0x180)) return {};
+        return OblivionEnvironmentalFire{spell.mFormKey, static_cast<float>(effect.mMagnitude),
+            static_cast<float>(effect.mDuration), 0};
+    }
+
+    std::optional<OblivionEnvironmentalFire> readOblivionEnvironmentalFire(
+        const ESM4::RuntimeReferenceState& reference)
+    {
+        const auto& values = reference.mCustomState;
+        const auto count = std::count_if(values.begin(), values.end(),
+            [](const auto& entry) { return entry.first.starts_with("native.fire."); });
+        if (!count) return {};
+        if (static_cast<std::size_t>(count) != sFireFields.size()
+            || std::any_of(sFireFields.begin(), sFireFields.end(), [&](auto key) { return !values.contains(key); }))
+            throw std::invalid_argument("incomplete native environmental fire ownership");
+        const auto* spell = std::get_if<std::string>(&values.find(sFireFields[0])->second);
+        if (!spell) throw std::invalid_argument("invalid native environmental fire spell");
+        const auto number = [&](std::size_t index) {
+            const auto& value = values.find(sFireFields[index])->second;
+            const auto* real = std::get_if<double>(&value);
+            const auto* integer = std::get_if<std::int64_t>(&value);
+            if (!real && !integer) throw std::invalid_argument("invalid native environmental fire number");
+            const double result = real ? *real : static_cast<double>(*integer);
+            if (!std::isfinite(result) || std::abs(result) > std::numeric_limits<float>::max())
+                throw std::invalid_argument("nonfinite native environmental fire number");
+            return static_cast<float>(result);
+        };
+        OblivionEnvironmentalFire result{ESM::FormKey::deserialize(*spell), number(1), number(2), number(3)};
+        validateFire(result);
+        if (result.mSpell.serialize() != *spell)
+            throw std::invalid_argument("noncanonical native environmental fire spell");
+        return result;
+    }
+
+    void writeOblivionEnvironmentalFire(ESM4::RuntimeReferenceState& reference,
+        const std::optional<OblivionEnvironmentalFire>& effect)
+    {
+        if (effect) validateFire(*effect);
+        auto values = reference.mCustomState;
+        std::erase_if(values, [](const auto& entry) { return entry.first.starts_with("native.fire."); });
+        if (effect)
+        {
+            values.emplace(sFireFields[0], effect->mSpell.serialize());
+            values.emplace(sFireFields[1], double(effect->mMagnitude));
+            values.emplace(sFireFields[2], double(effect->mDuration));
+            values.emplace(sFireFields[3], double(effect->mElapsed));
+        }
+        reference.mCustomState.swap(values);
+    }
+
+    bool World::castOblivionEnvironmentalFire(const Ptr& source, const ESM::FormKey& spell,
+        const ESM::FormKey& target)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || source.isEmpty()
+            || source.getClass().getType() != ESM::REC_ACTI4 || source.mRef->isDeleted()
+            || ESM4::runtimeReferenceKey(target) != ESM::FormKey::dynamic("player", 1)
+            || !mOblivionCombat) return false;
+        const auto* definition = mStore.get<ESM4::Spell>().search(spell);
+        const auto effect = definition ? resolveOblivionEnvironmentalFire(mStore, *definition) : std::nullopt;
+        if (!effect) return false;
+        if (getPlayerPtr().getClass().getCreatureStats(getPlayerPtr()).isDead()) return true;
+        const auto key = source.getCellRef().getFormKey();
+        if (!key.isContent()) return false;
+        if (!mOblivionRuntimeState)
+            mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+        auto& references = mOblivionRuntimeState->mReferences;
+        auto owner = std::find_if(references.begin(), references.end(), [&](const auto& ref) { return ref.mKey == key; });
+        if (owner == references.end())
+        {
+            // Import only the newly encountered source. Replacing the whole
+            // cached snapshot could discard unrelated script-owned state.
+            auto live = captureOblivionRuntimeState();
+            const auto current = std::find_if(live.mReferences.begin(), live.mReferences.end(),
+                [&](const auto& ref) { return ref.mKey == key; });
+            if (current == live.mReferences.end()) throw std::runtime_error("environmental fire source not captured");
+            writeOblivionEnvironmentalFire(*current, effect);
+            references.push_back(std::move(*current));
+            std::sort(references.begin(), references.end(), [](const auto& a, const auto& b) { return a.mKey < b.mKey; });
+        }
+        else writeOblivionEnvironmentalFire(*owner, effect); // A recast replaces this source's remaining effect.
+        Log(Debug::Info) << "TES4 environmental fire cast: source=" << key.serialize()
+            << " spell=" << spell.serialize() << " magnitude=" << effect->mMagnitude << " duration=" << effect->mDuration;
+        return true;
+    }
+
+    void World::updateOblivionEnvironmentalFire(float duration)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || !mOblivionCombat) return;
+        if (!std::isfinite(duration) || duration < 0) throw std::invalid_argument("invalid environmental fire frame");
+        if (duration == 0) return;
+        std::vector<ESM::FormKey> sources;
+        for (const auto& reference : mOblivionRuntimeState->mReferences)
+            if (readOblivionEnvironmentalFire(reference)) sources.push_back(reference.mKey);
+        if (sources.empty()) return;
+        const auto player = getPlayerPtr();
+        const auto recovery = resolveOblivionEssentialRecoverySettings(mStore);
+        const auto playerBase = resolveOblivionPlayerDynamicBaseSettings(mStore);
+        for (const auto& source : sources)
+        {
+            const auto findOwner = [&]() {
+                auto& references = mOblivionRuntimeState->mReferences;
+                return std::find_if(references.begin(), references.end(), [&](const auto& ref) { return ref.mKey == source; });
+            };
+            const auto owner = findOwner();
+            auto effect = *readOblivionEnvironmentalFire(*owner);
+            auto next = *owner;
+            const float elapsed = static_cast<float>(std::min(double(effect.mDuration), double(effect.mElapsed) + duration));
+            const float time = elapsed - effect.mElapsed;
+            effect.mElapsed = elapsed;
+            const bool dead = player.getClass().getCreatureStats(player).isDead();
+            std::optional<OblivionEnvironmentalFire> pending = effect;
+            if (dead || elapsed >= effect.mDuration) pending.reset();
+            writeOblivionEnvironmentalFire(next, pending);
+            float damage = 0;
+            if (!dead)
+            {
+                damage = effect.mMagnitude * time
+                    * std::max(0.f, 1.f - mOblivionCombat->getPlayerValue(61) / 100.f)
+                    * std::max(0.f, 1.f - mOblivionCombat->getPlayerValue(64) / 100.f);
+                if (!std::isfinite(damage)) throw std::invalid_argument("nonfinite environmental fire damage");
+                mOblivionCombat->changePlayerHealth(*mPlayer, -damage, {}, player.getClass().isEssential(player),
+                    recovery, playerBase, getGodModeState());
+                if (player.getClass().getCreatureStats(player).isDead())
+                    std::erase_if(next.mCustomState,
+                        [](const auto& entry) { return entry.first.starts_with("native.fire."); });
+            }
+            // All timer allocation/validation precedes the atomic Health/life
+            // write. Re-find after it: lifecycle preparation may grow references.
+            findOwner()->mCustomState.swap(next.mCustomState);
+            Log(Debug::Verbose) << "TES4 environmental fire tick: source=" << source.serialize()
+                << " damage=" << (getGodModeState() ? 0.f : damage) << " elapsed=" << elapsed
+                << " health=" << mOblivionCombat->getPlayerValue(8);
+        }
+    }
+
+    void World::validateOblivionEnvironmentalFire(const ESM4::RuntimeState& state) const
+    {
+        for (const auto& reference : state.mReferences)
+        {
+            const auto effect = readOblivionEnvironmentalFire(reference);
+            if (!effect) continue;
+            const auto base = getOblivionReferenceBaseKey(reference.mKey);
+            const auto* spell = mStore.get<ESM4::Spell>().search(effect->mSpell);
+            const auto expected = spell ? resolveOblivionEnvironmentalFire(mStore, *spell) : std::nullopt;
+            if (!reference.mKey.isContent() || !base || *base != reference.mBase
+                || !mStore.get<ESM4::Activator>().search(*base) || !expected
+                || expected->mMagnitude != effect->mMagnitude || expected->mDuration != effect->mDuration)
+                throw std::invalid_argument("saved environmental fire content no longer resolves");
+        }
     }
 
     static std::optional<OblivionTargetDamage> resolveTargetDamage(

@@ -15,19 +15,49 @@ passes fresh outdoor reload. It is composite evidence. Remaining acceptance is
 the uninterrupted new-game course plus its own outdoor save/reload, native-state
 and input audit, and rendered inspection. Existing evidence keeps its provenance.
 
-## Current chunk — original environmental fire spell Cast
+## Current chunk — survive the log encounter using a normal route
 
-No rendered game is currently live. Menu reset focus and late-potion focus are
-terminal PASS. Next required gameplay dependency is original fire hazard Cast:
-raw `remaining-continuity-04` has2 deferred Cast commands from SCPT06a9cd.
-Independent hash-checked original master audit identifies
-GenericFireDamageMedium01SCRIPT on REFR0486cf/base06717f (ActivatorFlameNode6),
-casting0689b0 at Player on trigger,3sec reactivation timer. Spell0689b0 has
-Fire Damage magnitude6,duration2,touch range. This is content evidence, not a
-native behavior implementation/probe. Extracted original script/content stays
-ignored under `deferred-cast-record-audit-01/`. Implement this bounded hazard
-through native state authority; verify actual damage, duration, save/load and
-clear pending work. Do not relabel it as unrelated distant deferral.
+No rendered game or build helper is live. Bounded environmental fire is complete:
+original SCPT06a9cd on bonfire0486cf now schedules its actual timed FIDG0689b0
+on Player. Source reference owns saved spell/magnitude/duration/elapsed under
+`native.fire.*`; existing serialization reused, no schema change. Native Health/
+lifecycle owns damage, resistance, god mode and environmental/null killer.
+Original000014 Player alias handled. General scripted Cast remains deferred.
+[Fire implementation/runtime proof](SEWER-ENVIRONMENTAL-FIRE-VERIFICATION.json).
+
+6 focused normal engine, full2216 normal +578 Python and full2216 ASan/UBSan
+engine pass, exact inventories,0fail/0skip. Both broad gates share tested dirty
+fingerprint6d18c165…41664 at HEAD964e989572. Normal and sanitized real contacts
+both1cast80→68, active/expired actual F5 native-exact; their own active saves
+fresh-reload in distinct same-build PIDs and finish68 with only remaining damage,
+no recast/pending fire/other queues, all input bytes delivered. All4 whole entries
+0diff, native ends0error/0pending/0unsupported; captures inspected. Engine leak1,
+rendered runtime leak0 (no runtime leak claim). Runtime hashes normaleddf9a70…74177d,
+sanitized4424b45d…f1e44; actual sanitized MyGUI978656d3…cd67. Original master/script
+hashes and bounded profile/tolerance limits are in the proof. Contact01's driver
+passed but single-cast expectation failed with2 legitimate original3sec casts;
+raw attempt and separate failure preserved. First focused compile01 also retained.
+
+`remaining-continuity-05` is terminal FAILED at original37. Original34 old route
+walked through visible bonfire: real24 damage80→56; rolling logs and goblins
+continued. Actual pre-failure save6 SHAe88608f9…2f03 has21.45HP/58.54MP. Player
+died21:23:10.845 under goblin hits **before** C; failed wait starts after death
+21:23:12.318. Report retains344 forbidden observer errors/2064 unreviewed death
+trace lines. Native end0error/0pending/0unsupported is a distinct authority,
+not a clean observer result. Preserve `remaining-continuity-05-failure-verification.json`.
+Do not infer a casting-input bug from this failure.
+
+Next bounded chunk: normal path around optional visible bonfire in original34
+(points10/11 currentlyy1658/1635 run directly into fire2536,1663; tryy1540 if
+collision permits), preserve dedicated fire-contact probes and all goblin/log
+encounters. Verify actual arrivals/no fire contact and survival past original37/38,
+then commit. If still failing, improve ordinary combat/recovery; no damage
+neutralization or health injection. Genuine pre-fire input: remaining04 archive30
+SHAf83ae64e…b623e,80HP. Fresh All category matches original10's verified exitAll.
+After bounded correction continue later course, then final original-new-game67
+PID and fresh reload of its own outdoor save. Loaded diagnostics do not substitute.
+Actual handles/evidence: `menu-admission-current-work.json`; future build helpers
+lock tracked edits/commits, and live games prohibit binary/resource overwrite.
 
 `remaining-continuity-04` is terminal FAILED at original40 potion menu:
 original22–39 completed in one loaded process, but remembered Magic +3RS selects
@@ -53,8 +83,9 @@ LuaJIT pass; unchanged engine gates keep original provenance.
 Separate producer/consumer checks do not prove continuous10→40 with reset;
 that remains for final full run. No synthetic actor/quest/health state used.
 
-After hazard work, continue original40–67 from actual late chest42 with All
-category precondition, as now produced by original10. This loaded diagnostic
+Continue original34–67 from genuine pre-fire save30 after the bounded route fix, with All
+category precondition, as now produced by original10. Actual late chest42 remains
+useful for focused potion diagnostics. This loaded diagnostic
 cannot substitute for final original-new-game67-segment PID and fresh reload
 of its own outdoor save. Actual handles/progress: `menu-admission-current-work.json`;
 inspect actual launcher/processes. All evidence paths below are relative to

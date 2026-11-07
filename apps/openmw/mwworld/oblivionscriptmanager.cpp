@@ -3118,6 +3118,18 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "cast")
+        {
+            const auto spell = keyFromValue(argument(0));
+            const auto victim = keyFromValue(argument(1));
+            if (spell && victim && mWorld.castOblivionEnvironmentalFire(objectPtr(), *spell, *victim))
+            {
+                trace("cast source=" + objectKey().serialize() + " spell=" + spell->serialize()
+                    + " target=" + victim->serialize() + " environmental-fire=true");
+                return std::int64_t(0);
+            }
+        }
+
         // These commands acknowledge state owned by later AI/UI/audio/magic
         // milestones without pretending their subsystem effect occurred. They
         // retain deterministic control-flow compatibility for M7 scripts.

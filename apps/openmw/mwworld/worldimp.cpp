@@ -2385,7 +2385,8 @@ namespace MWWorld
             for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
                 captured.insert(reference.mKey);
             for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
-                if (reference.mKey.isDynamic() && !captured.contains(reference.mKey))
+                if ((reference.mKey.isDynamic() || reference.mCustomState.contains("native.fire.spell"))
+                    && !captured.contains(reference.mKey))
                     state.mReferences.push_back(reference);
         }
         std::sort(state.mReferences.begin(), state.mReferences.end(), [](const auto& left, const auto& right) {
@@ -7857,6 +7858,7 @@ namespace MWWorld
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
         validateOblivionMagicProjectiles(state);
+        validateOblivionEnvironmentalFire(state);
         auto getupResources = prepareOblivionGetUpResources(state, incoming);
         if (prepared) prepared->mGetUpResources = std::move(getupResources);
         for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)
@@ -9192,6 +9194,7 @@ namespace MWWorld
         synchronizeOblivionAnimatedReferencePoses();
         processOblivionTrapContacts();
         updateOblivionMagicProjectiles(duration);
+        updateOblivionEnvironmentalFire(duration);
     }
 
     void World::updateNavigator()

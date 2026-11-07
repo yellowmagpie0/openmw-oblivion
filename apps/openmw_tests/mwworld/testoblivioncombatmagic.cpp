@@ -6,6 +6,7 @@
 #include <components/esm4/loadspel.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadench.hpp>
+#include <components/esm4/runtimestate.hpp>
 #include <limits>
 #include <components/loadinglistener/loadinglistener.hpp>
 
@@ -289,4 +290,94 @@ TEST(OblivionCombatMagicStore, StaffTargetDamageRejectsTimedAmbiguousAndInvalidP
     deleted.load("oblivion.esm", {}, {shockEffect(), staffEnchantment(), staff()});
     deleted.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_MGEF, 0x189b, {}, true)});
     EXPECT_FALSE(resolveStaff(deleted));
+}
+
+namespace
+{
+    std::string fireDefinition()
+    {
+        return record(ESM4::REC_MGEF, 0x1872,
+            sub(ESM::fourCC("EDID"), std::string("FIDG\0", 5))
+            + sub(ESM::fourCC("DATA"), bytes(0x21001c75u) + bytes(7.5f)
+                + bytes(8u) + bytes(2u) + bytes(std::int32_t(61)) + std::string(44, '\0')));
+    }
+
+    std::string fireSpell(unsigned magnitude = 6, unsigned duration = 2, unsigned range = 1, unsigned area = 0)
+    {
+        return record(ESM4::REC_SPEL, 0x689b0,
+            sub(ESM::fourCC("SPIT"), bytes(0u) + bytes(14u) + bytes(0u) + bytes(0x40u))
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("FIDG")))
+            + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("FIDG")) + bytes(magnitude)
+                + bytes(area) + bytes(duration) + bytes(range) + bytes(8u)));
+    }
+}
+
+TEST(OblivionCombatMagicStore, EnvironmentalFireUsesWinningTimedTouchProfileWithoutPartialEffects)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {fireDefinition(), fireSpell()});
+    const auto key = ESM::FormKey::content("oblivion.esm", 0x689b0);
+    const auto resolve = [&] {
+        const auto* spell = fixture.mStore.get<ESM4::Spell>().search(key);
+        return spell ? MWWorld::resolveOblivionEnvironmentalFire(fixture.mStore, *spell)
+            : std::optional<MWWorld::OblivionEnvironmentalFire>{};
+    };
+    ASSERT_TRUE(resolve());
+    EXPECT_EQ(resolve()->mSpell, key);
+    EXPECT_FLOAT_EQ(resolve()->mMagnitude, 6);
+    EXPECT_FLOAT_EQ(resolve()->mDuration, 2);
+    fixture.load("patch.esp", {"oblivion.esm"}, {fireSpell(9, 3)});
+    ASSERT_TRUE(resolve());
+    EXPECT_FLOAT_EQ(resolve()->mMagnitude, 9);
+    EXPECT_FLOAT_EQ(resolve()->mDuration, 3);
+    fixture.load("final.esp", {"oblivion.esm", "patch.esp"},
+        {record(ESM4::REC_SPEL, 0x689b0, {}, true)});
+    EXPECT_FALSE(resolve());
+
+    for (const auto& input : {fireSpell(0), fireSpell(6, 0), fireSpell(6, 2, 0),
+             fireSpell(6, 2, 2), fireSpell(6, 2, 1, 10)})
+    {
+        Fixture invalid;
+        invalid.load("oblivion.esm", {}, {fireDefinition(), input});
+        EXPECT_FALSE(MWWorld::resolveOblivionEnvironmentalFire(invalid.mStore,
+            *invalid.mStore.get<ESM4::Spell>().search(key)));
+    }
+    Fixture ambiguous;
+    ambiguous.load("oblivion.esm", {}, {fireDefinition(), fireSpell()});
+    ambiguous.load("other.esm", {}, {fireDefinition()});
+    EXPECT_FALSE(MWWorld::resolveOblivionEnvironmentalFire(ambiguous.mStore,
+        *ambiguous.mStore.get<ESM4::Spell>().search(key)));
+}
+
+TEST(OblivionCombatMagicStore, EnvironmentalFireOwnershipRoundTripsAndRejectsMalformedTimersAtomically)
+{
+    ESM4::RuntimeReferenceState reference;
+    reference.mCustomState["unrelated"] = std::int64_t(7);
+    const MWWorld::OblivionEnvironmentalFire effect{
+        ESM::FormKey::content("oblivion.esm", 0x689b0), 6, 2, .5f};
+    EXPECT_FALSE(MWWorld::readOblivionEnvironmentalFire(reference));
+    MWWorld::writeOblivionEnvironmentalFire(reference, effect);
+    EXPECT_EQ(MWWorld::readOblivionEnvironmentalFire(reference), effect);
+    const auto before = reference;
+    for (const auto& key : {"native.fire.spell", "native.fire.duration", "native.fire.elapsed"})
+    {
+        auto partial = before;
+        partial.mCustomState.erase(key);
+        EXPECT_THROW(MWWorld::readOblivionEnvironmentalFire(partial), std::invalid_argument);
+    }
+    auto unknown = before;
+    unknown.mCustomState["native.fire.unknown"] = 0.;
+    EXPECT_THROW(MWWorld::readOblivionEnvironmentalFire(unknown), std::invalid_argument);
+    for (float elapsed : {-1.f, 2.f, std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto bad = effect; bad.mElapsed = elapsed;
+        EXPECT_THROW(MWWorld::writeOblivionEnvironmentalFire(reference, bad), std::invalid_argument);
+        EXPECT_EQ(reference, before);
+        auto malformed = before; malformed.mCustomState["native.fire.elapsed"] = double(elapsed);
+        EXPECT_THROW(MWWorld::readOblivionEnvironmentalFire(malformed), std::invalid_argument);
+    }
+    MWWorld::writeOblivionEnvironmentalFire(reference, std::nullopt);
+    EXPECT_FALSE(MWWorld::readOblivionEnvironmentalFire(reference));
+    EXPECT_EQ(reference.mCustomState.size(), 1u);
+    EXPECT_EQ(std::get<std::int64_t>(reference.mCustomState.at("unrelated")), 7);
 }

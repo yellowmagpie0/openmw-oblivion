@@ -6,7 +6,7 @@
 #include <optional>
 #include <string>
 #include <components/esm/formkey.hpp>
-namespace ESM4 { struct Potion; struct Spell; struct Weapon; }
+namespace ESM4 { struct Potion; struct Spell; struct Weapon; struct RuntimeReferenceState; }
 namespace MWBase { class World; }
 
 namespace MWWorld
@@ -30,6 +30,26 @@ namespace MWWorld
 
     std::optional<std::array<float, 3>> resolveOblivionSpellRestoration(
         const ESMStore& store, const ESM4::Spell& spell);
+
+    // Source-reference-owned fire on Player, independent of actor casting,
+    // projectiles and the original trigger script's reactivation timer.
+    struct OblivionEnvironmentalFire
+    {
+        ESM::FormKey mSpell;
+        float mMagnitude = 0;
+        float mDuration = 0;
+        float mElapsed = 0;
+        friend bool operator==(const OblivionEnvironmentalFire&, const OblivionEnvironmentalFire&) = default;
+    };
+    std::optional<OblivionEnvironmentalFire> resolveOblivionEnvironmentalFire(
+        const ESMStore& store, const ESM4::Spell& spell);
+    // The existing saved reference custom-state namespace retains the owned
+    // effect. Absent fields mean no effect, including in older saves. Partial
+    // or malformed ownership is rejected; unrelated reference state survives.
+    std::optional<OblivionEnvironmentalFire> readOblivionEnvironmentalFire(
+        const ESM4::RuntimeReferenceState& reference);
+    void writeOblivionEnvironmentalFire(ESM4::RuntimeReferenceState& reference,
+        const std::optional<OblivionEnvironmentalFire>& effect);
 
     struct OblivionTargetDamage
     {

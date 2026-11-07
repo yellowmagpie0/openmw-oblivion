@@ -1,0 +1,383 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Bounded original environmental fire Cast, timed damage, native save ownership and fresh-process resume. Full uninterrupted sewer escape incomplete.",
+  "full_escape_complete": false,
+  "original_content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "winning_load_order": [
+      "Oblivion.esm"
+    ],
+    "audit": "build/oblivion-compat/sewer-escape/deferred-cast-record-audit-01",
+    "source_reference": "content:oblivion.esm:0486cf",
+    "source_base": "content:oblivion.esm:06717f",
+    "source_editor_id": "ActivatorFlameNode6",
+    "script": "content:oblivion.esm:06a9cd",
+    "script_editor_id": "GenericFireDamageMedium01SCRIPT",
+    "script_payload_sha256": "a830529ee2390cc1c8f83808197c78b0d44ea9f742044039370494a4e5772f96",
+    "spell": "content:oblivion.esm:0689b0",
+    "spell_payload_sha256": "1ef7fbbfede4d6319d86ef0d9e19d0adcb83b1c149f8411a91e58503341a6b66",
+    "effect": "FIDG",
+    "magnitude": 6,
+    "duration_seconds": 2,
+    "touch_range": 1,
+    "spell_flags": 64,
+    "script_reactivation_seconds": 3,
+    "limits": "Independent raw-record identity/profile audit.12\u00b10.1 damage expectation uses ordinary elapsed-effect behavior; no original-executable Cast arithmetic or RNG parity claim."
+  },
+  "implementation": {
+    "admission": "Winning single timed touch FIDG,normal spell type/flags0x40,health effect8, fire definition/resistance61. Nonactor native Activator to canonical Player only, including original000014 alias. Other Cast profiles retain honest deferral.",
+    "authority": "Source reference owns native.fire.spell/magnitude/duration/elapsed in existing serialized custom state. Native Health/lifecycle owns damage/resistance/god mode/environmental null killer. No actor casting animation, magicka debit or projectile fabricated.",
+    "persistence": "No runtime schema change. Older absent fields mean no effect. Complete/malformed ownership and winning content are checked on world admission. Remaining effect survives real fresh load; recast replaces this source; expiry/death remove ownership. Inactive sources retained for capture.",
+    "fidelity": "Bounded gameplay implementation, normal-difficulty rendered coverage; no general scripted magic, target spell VFX/icon, exact original order/arithmetic or broader M16 acceptance claim."
+  },
+  "tested_files_sha256": {
+    "apps/openmw/mwworld/oblivioncombatmagic.cpp": "e4f6177f1931c1955cf50af01733495ca25cf8498836338481c746c9e14668ca",
+    "apps/openmw/mwworld/oblivioncombatmagic.hpp": "ffc8cd0e6f82339232df515547276d4b6307542077822447ba2b4a4b06fd11d5",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "ffd3f63abc4e9235b6398c48b807040e9260e5602c2d845a78a3c3cbac8217a2",
+    "apps/openmw/mwworld/worldimp.cpp": "0ac713d15a121b679e1f6d913a5aa7e60007ba5553de80c1155a5a09414ce01c",
+    "apps/openmw/mwworld/worldimp.hpp": "9250f2882880a862ce2eaf9ff3624e431a53b8fd43753be14cb3af19d025f975",
+    "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "23931dee15ed93d212f38d95de4440f45f1b9b607ebbedf665f8014cf00cf824",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "00f4c00556d0fea81c6f45ba6b45181a96f639f10a8fc5dd3220b036fe81947d",
+    "scripts/data/oblivion_compat/oblivion_sewer_environmental_fire_contact.json": "50f5c2ced263c879aea3ef448896fbb9088b8811566f34b340a130f0c7232b11",
+    "scripts/data/oblivion_compat/oblivion_sewer_environmental_fire_reload.json": "e69d5defae842ff6735273e7f6c977f959c37114eed5edd42633c726829724e2"
+  },
+  "focused_engine": {
+    "verification": "build/oblivion-compat/sewer-escape/environmental-fire-engine-focused-02/verification.json",
+    "tests": 6,
+    "failures": 0,
+    "skips": 0,
+    "cases": "Actual store admission/overrides, malformed/timer state, scripted Player alias, clipping, recast, resistance/god mode, pending restore and environmental lethal non-replay."
+  },
+  "integration_gates": {
+    "tested_source": {
+      "head": "964e989572590e9d2f900a92c06146e8279d94af",
+      "source_fingerprint": "6d18c1658cd999a83858ae6184fbf319c71aff3822c85f4bfba4e9f30c941664"
+    },
+    "normal": {
+      "verification": "build/oblivion-compat/sewer-escape/environmental-fire-engine-normal-01/verification.json",
+      "results": {
+        "engine": {
+          "executed": 2216,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "3a924cf1ddfd81189aa85abd5553b1f7db92ef3b85f450e0e49750defb60a21e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "17aa2189cd55842cfaabb63389a00bbeccdbca87e315a14920a08979fddf5e9b",
+          "inventory_sha256": "a785ec855258947d52898235434f9268899b97d4e1cea9c55b210746449015fd",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 578,
+          "passed": true,
+          "log_sha256": "cbd317b044ad14611ae68ec7239539d910d081ee237e05d7ec8d08e6f3b862c8"
+        }
+      }
+    },
+    "asan_ubsan": {
+      "verification": "build/oblivion-compat/sewer-escape/environmental-fire-engine-sanitize-01/verification.json",
+      "results": {
+        "engine": {
+          "executed": 2216,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6633dcb64822756ccf9e4447549f3bb830a34fedea77400f687035b14aec1d90",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "3c9aef21cb951c2d45c5989f81bb0ee42baa86190afbbc7c10867c05e43b61f6",
+          "inventory_sha256": "a785ec855258947d52898235434f9268899b97d4e1cea9c55b210746449015fd",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "scope": "2216 normal engine +578 Python and2216 ASan/UBSan engine pass, exact inventories,0fail/0skip. Existing unrelated compiler warnings retained; no fresh component/rule or original-game executable probe claim."
+  },
+  "runtime_binaries": {
+    "normal_openmw_sha256": "eddf9a70e18fdb54b1706ded01b53dc8ba119ca433a4205527d2b4684774177d",
+    "sanitized_openmw_sha256": "4424b45d5953ba0e84992da9a0274ddf2d927d6e4194c4d57778b13f42bf1e44",
+    "sanitized_loaded_mygui": {
+      "game_pid": 274660,
+      "libraries": [
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3",
+          "sha256": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
+        }
+      ]
+    },
+    "sanitizers": "Engine detect_leaks=1/UBSan halt; rendered runtime detect_leaks=0/UBSan halt, actual libasan.so.8.0.0 preloaded first. No rendered leak coverage claim."
+  },
+  "runtime": {
+    "environmental-fire-contact-02": {
+      "passed": true,
+      "scope": "Actual contact fire probe; not full escape acceptance",
+      "game_pid": 267555,
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-04/retained-saves/3-0030-Quicksave.omwsave",
+        "source_save_sha256": "f83ae64e0bb299db2b9139616e289dd0204bc22c0c98af14ddf122df2beb623e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "health_before": 80.0,
+      "health_after": 68.0,
+      "cast_count": 1,
+      "damage_from_tick_log": 12.0,
+      "expected_damage": 12,
+      "inventory_unchanged": true,
+      "no_pending_fire": true,
+      "all_input_bytes_delivered": true,
+      "saves": [
+        {
+          "sequence": 3,
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/environmental-fire-contact-02/retained-saves/3-0003-Quicksave.omwsave",
+          "save_sha256": "fce42322d3d8e67ccea10db52883dff6254131bd9f880247c2efa414d4aac52c",
+          "native_snapshot_sha256": "8ceef12d9e7e05603096e77009bc73986cb6626b12e72dac2602c382fe044486",
+          "parsed_save_equals_native_snapshot": true,
+          "health": 78.71600341796875,
+          "fire_fields": {
+            "native.fire.duration": 2.0,
+            "native.fire.elapsed": 0.21400001645088196,
+            "native.fire.magnitude": 6.0,
+            "native.fire.spell": "content:oblivion.esm:0689b0"
+          },
+          "queues": {
+            "native_combat_engagements": [],
+            "pending_death_events": [],
+            "physical_action_owners": [],
+            "native_spell_casts": [],
+            "native_magic_projectiles": []
+          }
+        },
+        {
+          "sequence": 4,
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/environmental-fire-contact-02/retained-saves/3-0004-Quicksave.omwsave",
+          "save_sha256": "2fcdce6bd81e547cd760946d79e4ee1087de1e166831c21894354093c3577fbe",
+          "native_snapshot_sha256": "5faa56aaf8ead79b207e69ed2e3f0ab45afec3d263ebad6f49a25f8d33cad546",
+          "parsed_save_equals_native_snapshot": true,
+          "health": 68.0,
+          "fire_fields": {},
+          "queues": {
+            "native_combat_engagements": [],
+            "pending_death_events": [],
+            "physical_action_owners": [],
+            "native_spell_casts": [],
+            "native_magic_projectiles": []
+          }
+        }
+      ],
+      "native_run_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 267555,
+        "sequence": 5,
+        "tick": 1158,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 4,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    },
+    "environmental-fire-reload-01": {
+      "passed": true,
+      "scope": "Actual reload fire probe; not full escape acceptance",
+      "game_pid": 267734,
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/environmental-fire-contact-02/retained-saves/3-0003-Quicksave.omwsave",
+        "source_save_sha256": "fce42322d3d8e67ccea10db52883dff6254131bd9f880247c2efa414d4aac52c",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "health_before": 78.71600341796875,
+      "health_after": 68.0,
+      "cast_count": 0,
+      "damage_from_tick_log": 10.7159998,
+      "expected_damage": 10.715999901294708,
+      "inventory_unchanged": true,
+      "no_pending_fire": true,
+      "all_input_bytes_delivered": true,
+      "saves": [
+        {
+          "sequence": 3,
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/environmental-fire-reload-01/retained-saves/3-0003-Quicksave.omwsave",
+          "save_sha256": "43771d26d3836aded34bae6d678611338cdc8349ea8e636b584e62b4eb849f12",
+          "native_snapshot_sha256": "6305f728b09d4894e44b1d1b63bd4ff15565410146140adffe57553d4a0e2bb2",
+          "parsed_save_equals_native_snapshot": true,
+          "health": 68.0,
+          "fire_fields": {},
+          "queues": {
+            "native_combat_engagements": [],
+            "pending_death_events": [],
+            "physical_action_owners": [],
+            "native_spell_casts": [],
+            "native_magic_projectiles": []
+          }
+        }
+      ],
+      "native_run_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 267734,
+        "sequence": 4,
+        "tick": 88,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    },
+    "environmental-fire-contact-sanitize-01": {
+      "passed": true,
+      "scope": "Actual contact fire probe; not full escape acceptance",
+      "game_pid": 274660,
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-continuity-04/retained-saves/3-0030-Quicksave.omwsave",
+        "source_save_sha256": "f83ae64e0bb299db2b9139616e289dd0204bc22c0c98af14ddf122df2beb623e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "health_before": 80.0,
+      "health_after": 68.0,
+      "cast_count": 1,
+      "damage_from_tick_log": 11.9999994,
+      "expected_damage": 12,
+      "inventory_unchanged": true,
+      "no_pending_fire": true,
+      "all_input_bytes_delivered": true,
+      "saves": [
+        {
+          "sequence": 3,
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/environmental-fire-contact-sanitize-01/retained-saves/3-0003-Quicksave.omwsave",
+          "save_sha256": "635238a42bf1c65bd7865857d7cda27cefbb85895265157bbe88ea9e21d911ff",
+          "native_snapshot_sha256": "73ad36dd9fba4569a4d2205dfd1822082862990e7afd169b0659dea3ee1cc44c",
+          "parsed_save_equals_native_snapshot": true,
+          "health": 78.00800323486328,
+          "fire_fields": {
+            "native.fire.duration": 2.0,
+            "native.fire.elapsed": 0.3320000171661377,
+            "native.fire.magnitude": 6.0,
+            "native.fire.spell": "content:oblivion.esm:0689b0"
+          },
+          "queues": {
+            "native_combat_engagements": [],
+            "pending_death_events": [],
+            "physical_action_owners": [],
+            "native_spell_casts": [],
+            "native_magic_projectiles": []
+          }
+        },
+        {
+          "sequence": 4,
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/environmental-fire-contact-sanitize-01/retained-saves/3-0004-Quicksave.omwsave",
+          "save_sha256": "1d8ffc5f2a52cab6e35563f531decb318e24d0071c47a908fb9cd352806bad08",
+          "native_snapshot_sha256": "36e79cb462aeb91ff3df3790b529f6f430d9ca188f6e7e5f7ec62f26fdee5e95",
+          "parsed_save_equals_native_snapshot": true,
+          "health": 68.0,
+          "fire_fields": {},
+          "queues": {
+            "native_combat_engagements": [],
+            "pending_death_events": [],
+            "physical_action_owners": [],
+            "native_spell_casts": [],
+            "native_magic_projectiles": []
+          }
+        }
+      ],
+      "native_run_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 274660,
+        "sequence": 5,
+        "tick": 1048,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 4,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    },
+    "environmental-fire-reload-sanitize-01": {
+      "passed": true,
+      "scope": "Actual reload fire probe; not full escape acceptance",
+      "game_pid": 279722,
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/environmental-fire-contact-sanitize-01/retained-saves/3-0003-Quicksave.omwsave",
+        "source_save_sha256": "635238a42bf1c65bd7865857d7cda27cefbb85895265157bbe88ea9e21d911ff",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "health_before": 78.00800323486328,
+      "health_after": 68.0,
+      "cast_count": 0,
+      "damage_from_tick_log": 10.0079994,
+      "expected_damage": 10.007999897003174,
+      "inventory_unchanged": true,
+      "no_pending_fire": true,
+      "all_input_bytes_delivered": true,
+      "saves": [
+        {
+          "sequence": 3,
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/environmental-fire-reload-sanitize-01/retained-saves/3-0003-Quicksave.omwsave",
+          "save_sha256": "e7e484d8755be5adf527745f43c72da68daeeef48408412838533d78d49afaab",
+          "native_snapshot_sha256": "52ab58de501dc33bd61da39cd54d57390ca011531fbf95f116c93fa04b6b2f67",
+          "parsed_save_equals_native_snapshot": true,
+          "health": 68.0,
+          "fire_fields": {},
+          "queues": {
+            "native_combat_engagements": [],
+            "pending_death_events": [],
+            "physical_action_owners": [],
+            "native_spell_casts": [],
+            "native_magic_projectiles": []
+          }
+        }
+      ],
+      "native_run_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 279722,
+        "sequence": 4,
+        "tick": 54,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    }
+  },
+  "rendered_inspection": [
+    "normal contact fire-active.png and fire-finished.png inspected: original flames, axe, reduced/full-relative health HUD.",
+    "normal reload fire-reload-finished.png matches expired68HP state.",
+    "sanitized contact fire-finished.png and fresh reload fire-reload-finished.png inspected: fire visible, axe retained,68HP HUD matching normal."
+  ],
+  "preserved_attempts": {
+    "compile01": "environmental-fire-engine-focused-01 failed test-fixture Activator.mFormKey compile errors; retained.",
+    "contact01": "Scenario driver passed, declared one-cast semantic expectation failed: standing/saving longer caused2 legitimate3sec casts/24damage. Raw attempt and separate expectation failure retained; not relabeled as single-cast success.",
+    "later_route05": "remaining-continuity-05 failed original37: real24fire damage +goblin attacks; Player died before late C. Observer errors retained. Not a casting-input bug or full escape success."
+  },
+  "remaining": "Commit bounded fire chunk, then normal path around optional visible flames or earlier combat strategy to survive recorded original37 failure, retain all required encounters. Mandatory original-new-game67-segment PID and fresh reload of its own outdoor save still outstanding."
+}
