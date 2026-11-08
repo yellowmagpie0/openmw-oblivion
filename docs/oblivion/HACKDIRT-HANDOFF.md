@@ -5,6 +5,18 @@ overland travel, one original investigation route, cavern combat, Dar-Ma's
 rescue/escort, original escape conversation, return/reward and save/reload.
 **The full course remains open.** No original quest scripts or records changed.
 
+## Launcher performance checkpoint — 2026-11-08
+
+The Hackdirt shop tryout's repeated script scans and worldwide AI door searches
+are repaired. The accepted desktop replay improves median frames from 103 ms to 29 ms
+and the worst measured gameplay frame from 4.27 s to 172 ms; it remains CPU limited
+below a steady 60 FPS. Full normal and ASan/UBSan engine gates each pass 2,254 tests,
+with 598 Python tests. See [performance evidence](HACKDIRT-PERFORMANCE-VERIFICATION.json)
+for binary/source identities, normal controls, save/restart checks and limitations.
+Retained tryouts now use `~/.local/state/openmw-oblivion/tryouts` instead of tmpfs.
+This closes the bounded launcher-performance repair; original return/reward and
+the full quest course below remain open.
+
 ## Current checkpoint — 2026-11-08
 
 **Original rescue, active/waiting follower restart, resumption and escort through

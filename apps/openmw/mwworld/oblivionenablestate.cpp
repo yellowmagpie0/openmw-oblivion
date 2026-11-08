@@ -1,6 +1,8 @@
 #include "oblivionenablestate.hpp"
 #include "worldimp.hpp"
 #include "../mwmechanics/obliviondoorstate.hpp"
+#include <algorithm>
+#include <span>
 #include <components/esm4/referenceflags.hpp>
 #include <components/esm4/loadachr.hpp>
 #include <components/esm4/runtimestate.hpp>
@@ -27,12 +29,19 @@ namespace MWWorld
 
         std::optional<bool> enabled(const ESMStore& store, const ESM::FormKeyResolver& resolver,
             const ESM::FormKey& key, const MWMechanics::OblivionSavedReferenceIndex* saved,
-            const WorldModel* model, const ResidentFlags* residents = nullptr)
+            const WorldModel* model, const ResidentFlags* residents = nullptr,
+            std::span<const ESM4::RuntimeReferenceState> source = {})
         {
             return resolveOblivionEnableState(key, [&](const ESM::FormKey& current)
                 -> std::optional<OblivionEnableReference> {
                 auto node = authoredEnableReference(store, resolver, current);
                 const auto* snapshot = saved ? saved->find(current) : nullptr;
+                if (!saved)
+                {
+                    const auto found = std::find_if(source.begin(), source.end(),
+                        [&](const auto& reference) { return reference.mKey == current; });
+                    if (found != source.end()) snapshot = &*found;
+                }
                 if (!node && snapshot) node.emplace(OblivionEnableReference{snapshot->mEnabled, {}, false});
                 if (snapshot) node->mEnabled = snapshot->mEnabled;
                 if (model)
@@ -62,21 +71,20 @@ namespace MWWorld
     {
         if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
         const ESM::FormKeyResolver resolver(mContentFiles);
-        std::optional<MWMechanics::OblivionSavedReferenceIndex> owned;
+        std::span<const ESM4::RuntimeReferenceState> source;
         if (mOblivionRuntimeState)
         {
-            const auto& source = mOblivionRuntimeState->mReferences;
+            source = mOblivionRuntimeState->mReferences;
             // Package actions can insert saved references during a low-process
             // pass. Never dereference a borrowed index after vector growth.
-            if (!references || !references->matches(source))
-            {
-                owned.emplace(std::span<const ESM4::RuntimeReferenceState>(source));
-                references = &*owned;
-            }
+            if (references && !references->matches(source)) references = nullptr;
         }
         else
             references = nullptr;
-        return enabled(mStore, resolver, ESM4::runtimeReferenceKey(key), references, &mWorldModel);
+        // A single GetDisabled query must not allocate and sort an index of
+        // the entire saved world. Batch AI callers supply their shared index;
+        // standalone queries inspect only the requested enable-parent chain.
+        return enabled(mStore, resolver, ESM4::runtimeReferenceKey(key), references, &mWorldModel, nullptr, source);
     }
 
     void World::normalizeOblivionEnableParents(ESM4::RuntimeState& state) const

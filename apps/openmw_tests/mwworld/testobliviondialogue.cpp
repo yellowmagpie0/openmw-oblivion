@@ -1871,6 +1871,47 @@ namespace
     };
 }
 
+TEST(OblivionTutorialAction, FreshOffscreenActorsSpreadWorkAndRestoreTheirDeadlines)
+{
+    const auto group = [](unsigned kind, unsigned label, const std::string& data) {
+        return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
+            + bytes(label) + bytes(kind) + bytes(0u) + data;
+    };
+    std::string actors;
+    for (unsigned id = 0xe00; id < 0xe20; ++id)
+        actors += record(ESM4::REC_ACHR, id, sub(ESM::fourCC("NAME"), bytes(0x800u))
+            + sub(ESM::fourCC("DATA"), bytes(std::array<float, 6>{})));
+    const auto extra = group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xe40,
+        sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior}))))
+        + group(6, 0xe40, group(9, 0xe40, actors));
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted, false, extra, 33, false);
+        auto& ai = *f.mFixture.mWorld.getOblivionAiService();
+        ai.updateUnloaded(.016f);
+        unsigned selected = 0;
+        for (unsigned id = 0xe00; id < 0xe20; ++id)
+        {
+            ASSERT_NE(ai.state(key(id)), nullptr);
+            selected += ai.state(key(id))->mSelectionGeneration != 0;
+        }
+        EXPECT_GT(selected, 0u);
+        EXPECT_LT(selected, 32u); // Startup work must not share one frame.
+        ai.updateUnloaded(.25f);
+        std::map<ESM::FormKey, float> deadlines;
+        for (unsigned id = 0xe00; id < 0xe20; ++id)
+        {
+            EXPECT_NE(ai.state(key(id))->mSelectionGeneration, 0u); // No starvation.
+            deadlines.emplace(key(id), ai.state(key(id))->mNextLowProcessTick);
+        }
+        const auto saved = ESM4::RuntimeState::deserializeBinary(f.capture().serializeBinary());
+        ai.clear();
+        ai.restore(saved);
+        for (const auto& [actor, deadline] : deadlines)
+            EXPECT_EQ(ai.state(actor)->mNextLowProcessTick, deadline);
+    }
+}
+
 TEST(OblivionTutorialAction, ScriptedActivationHonorsActivatorAndRunScriptArguments)
 {
     for (bool shifted : {false, true})
@@ -2484,6 +2525,11 @@ TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChange
         ObScript::RuntimeContext root; root.mSelf = f.mActor.getCellRef().getFormKey();
         world.getOblivionScriptManager()->call("Disable", {}, {}, root, {});
         check(false);
+        // Original GameMode scripts repeat the same command on every frame.
+        // No-op writes must retain root/child/inverted-child saved flags.
+        for (int repeat = 0; repeat < 3; ++repeat)
+            world.getOblivionScriptManager()->call("Disable", {}, {}, root, {});
+        check(false);
         auto& ai = *world.getOblivionAiService();
         world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
         ASSERT_NE(ai.state(root.mSelf), nullptr);
@@ -2494,6 +2540,9 @@ TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChange
         EXPECT_EQ(after.mSelectionGeneration, before.mSelectionGeneration);
         EXPECT_EQ(after.mActionTimer, before.mActionTimer);
         world.getOblivionScriptManager()->call("Enable", {}, {}, root, {});
+        check(true);
+        for (int repeat = 0; repeat < 3; ++repeat)
+            world.getOblivionScriptManager()->call("Enable", {}, {}, root, {});
         check(true);
     }
 }
@@ -4075,12 +4124,14 @@ TEST(OblivionTutorialDoor, DoorChainIncludesDirectedExteriorStreetBetweenTelepor
             auto extra = sameCellTeleportRecords(true, true);
             extra += group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xd08,
                 sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior}))));
-            extra += group(6, 0xd08, group(9, 0xd08, placed(0xd10,0xd00,4096,0xd11,8192)));
+            extra += group(6, 0xd08, group(9, 0xd08,
+                placed(0xd10,0xd00,4096,0xd11,8192)
+                + placed(0xd12,0xd00,5000,0xd11,8192)));
             extra += group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xd16,
                 sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior}))));
             extra += group(6, 0xd16, group(9, 0xd16,
                 placed(0xd11,0xd00,8192,0xd10,4096) + placed(0xd13,0xb00,8256)));
-            SwitchFixture f(shifted, false, extra, 13, false);
+            SwitchFixture f(shifted, false, extra, 14, false);
             auto& world = f.mFixture.mWorld;
             auto& store = world.getStore();
             for (unsigned id : {0xd06u, 0xd08u})
@@ -4132,6 +4183,16 @@ TEST(OblivionTutorialDoor, DoorChainIncludesDirectedExteriorStreetBetweenTelepor
                     EXPECT_EQ(ai.state(key(0xa00))->mDoor, enabled ? key(0xd01) : ESM::FormKey{});
                     EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
                 }
+            if (connected)
+            {
+                // After the first teleport, the shop door is in another
+                // exterior cell. Compare both exits there and actually finish
+                // the journey, including the more distant equal-hop candidate.
+                for (int i = 0; i < 512 && ai.state(key(0xa00))->mCell != key(0xd16); ++i)
+                    ai.updateUnloaded(.25f);
+                EXPECT_EQ(ai.state(key(0xa00))->mCell, key(0xd16));
+                EXPECT_EQ(ai.state(key(0xa00))->mLastTransitionDoor, key(0xd10));
+            }
         }
 }
 

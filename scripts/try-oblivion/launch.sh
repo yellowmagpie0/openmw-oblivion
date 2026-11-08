@@ -76,7 +76,11 @@ esac
 # A new private directory for EVERY invocation. Never use shared build outputs,
 # player profiles, previous tryouts, or an environment-supplied output path.
 # Retain the directory even on failure so logs and saves remain inspectable.
-RUN_DIR=$(mktemp -d "/tmp/openmw-oblivion-${SCENARIO}.XXXXXXXX")
+# Debug executables can exceed 1 GiB. Retaining copies in a tmpfs /tmp fills
+# its quota and competes with the game for RAM/swap. Keep them on user storage.
+TRYOUT_ROOT="$HOME/.local/state/openmw-oblivion/tryouts"
+mkdir -p -- "$TRYOUT_ROOT"
+RUN_DIR=$(mktemp -d "$TRYOUT_ROOT/${SCENARIO}.XXXXXXXX")
 printf 'Private tryout directory: %s\n' "$RUN_DIR"
 mkdir -p "$RUN_DIR/runtime" "$RUN_DIR/config" "$RUN_DIR/userdata" "$RUN_DIR/local-data" \
     "$RUN_DIR/xdg-config" "$RUN_DIR/xdg-data" "$RUN_DIR/cache" "$RUN_DIR/work"

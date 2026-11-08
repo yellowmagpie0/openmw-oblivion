@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "name": "Hackdirt performance: original intro, 60 seconds live simulation, normal save",
+  "cwd": "{source}",
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--game-profile=oblivion"
+  ],
+  "xvfb": false,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c choices=2",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    },
+    {
+      "type": "command",
+      "command": [
+        "xdotool",
+        "search",
+        "--onlyvisible",
+        "--name",
+        "OpenMW",
+        "mousemove",
+        "--window",
+        "%@",
+        "300",
+        "453"
+      ]
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02869c choices=0",
+      "timeout_seconds": 20,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "command",
+      "command": [
+        "{python}",
+        "-c",
+        "import subprocess,sys; w=subprocess.check_output(['xdotool','search','--onlyvisible','--name','OpenMW'],text=True).splitlines()[-1]; subprocess.run(['import','-window',w,sys.argv[1]],check=True)",
+        "{output}/human-launcher-reply.png"
+      ]
+    },
+    {
+      "type": "key",
+      "value": "Escape"
+    },
+    {
+      "type": "sleep",
+      "seconds": 60
+    },
+    {
+      "type": "command",
+      "command": [
+        "{python}",
+        "-c",
+        "import subprocess,sys; w=subprocess.check_output(['xdotool','search','--onlyvisible','--name','OpenMW'],text=True).splitlines()[-1]; subprocess.run(['import','-window',w,sys.argv[1]],check=True)",
+        "{output}/live-shop.png"
+      ]
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 240,
+  "expected_exit": 0,
+  "expected_log": [
+    "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c choices=2",
+    "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02869c choices=0"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "environment": {
+    "WAYLAND_DISPLAY": "/tmp/openmw-hackdirt-no-wayland",
+    "XDG_SESSION_TYPE": "x11",
+    "OPENMW_OSG_STATS_FILE": "{output}/frames.stats",
+    "OPENMW_OSG_STATS_LIST": "times",
+    "XDG_CONFIG_HOME": "{output}/xdg-config",
+    "XDG_DATA_HOME": "{output}/xdg-data",
+    "XDG_CACHE_HOME": "{output}/cache",
+    "SDL_VIDEODRIVER": "x11"
+  },
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nreplace=content\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nuser-data=\"{output}/userdata\"\nstart=ChorrolNorthernGoodsAndTrade\nskip-menu=1\nnew-game=0\nno-grab=1\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nfullscreen = false\nresolution x = 1280\nresolution y = 720\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n"
+    }
+  ]
+}

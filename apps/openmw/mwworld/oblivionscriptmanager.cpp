@@ -1738,7 +1738,11 @@ namespace MWWorld
                 changed = changed || state->mEnabled != enabled;
                 state->mEnabled = enabled;
             }
-            mWorld.synchronizeOblivionEnableParents();
+            // GameMode scripts commonly repeat Enable/Disable every frame.
+            // Only a changed root can change its enable-parent descendants;
+            // a no-op must not scan all resident cells and saved references.
+            if (changed)
+                mWorld.synchronizeOblivionEnableParents();
             if (changed)
                 trace(name + " ref=" + key.serialize());
             return std::int64_t(0);

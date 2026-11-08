@@ -905,7 +905,13 @@ namespace MWMechanics
             live.mState.mProcedure = ESM4::PackageProcedure::None;
             setPhase(live, ESM4::PackagePhase::Select);
             live.mState.mTier = ESM4::ProcessTier::Low;
-            live.mState.mNextLowProcessTick = 0.f;
+            // Keep the 250 ms cadence, but distribute fresh actors across it.
+            // Starting every offscreen actor at the same deadline makes all
+            // package selection and route planning run in one visible frame.
+            // The phase is stable across load orders and saved normally;
+            // restoring an existing actor retains its saved deadline.
+            live.mState.mNextLowProcessTick
+                = 0.25f * (1.f + static_cast<float>(reference.mFormKey.mValue % 32)) / 32.f;
             live.mLastRiddenHorse = reference.mHorseKey;
             live.mNeedsSelection = true;
             actors.emplace(reference.mFormKey, std::move(live));
@@ -3810,20 +3816,58 @@ namespace MWMechanics
         // Follow resolved, directed PGRI edges backwards at zero door cost;
         // the eventual node route still validates the complete approach.
         ensureStreetCellIndex();
-        std::set<ESM::FormKey> sourceStreetCells{live.mState.mCell};
-        std::vector<ESM::FormKey> sourcePending{live.mState.mCell};
-        while (!sourcePending.empty())
-        {
-            const auto cell = sourcePending.back();
-            sourcePending.pop_back();
-            if (const auto streets = mOutgoingStreetCells.find(cell); streets != mOutgoingStreetCells.end())
-                for (const auto& successor : streets->second)
-                    if (sourceStreetCells.insert(successor).second)
-                        sourcePending.push_back(successor);
-        }
+        const auto streetCellsFrom = [&](const ESM::FormKey& origin) {
+            std::set<ESM::FormKey> cells{origin};
+            std::vector<ESM::FormKey> pending{origin};
+            while (!pending.empty())
+            {
+                const auto cell = pending.back();
+                pending.pop_back();
+                if (const auto streets = mOutgoingStreetCells.find(cell); streets != mOutgoingStreetCells.end())
+                    for (const auto& successor : streets->second)
+                        if (cells.insert(successor).second) pending.push_back(successor);
+            }
+            return cells;
+        };
+        const auto sourceStreetCells = streetCellsFrom(live.mState.mCell);
+        // An interior can reach an exterior street frontier through its own
+        // exit. Without this frontier, every offscreen room-to-room plan walks
+        // backwards through all Tamriel streets and thousands of other doors.
+        // Validate that first exit now; retain it as the actual next XTEL leg.
+        std::map<ESM::FormKey, std::set<ESM::FormKey>> exitStreetCells;
+        if (!sameCell)
+            if (const auto exits = mUnloadedDoorsByCell.find(live.mState.mCell);
+                exits != mUnloadedDoorsByCell.end())
+                for (const auto index : exits->second)
+                {
+                    const auto& door = mUnloadedLocations[index];
+                    if (door.mTeleportDoor.isNull()
+                        || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
+                        continue;
+                    bool locked = false;
+                    if (!canUseUnloadedDoor(live, door, locked, actor)) continue;
+                    const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
+                    if (marker == mUnloadedLocationByReference.end()) continue;
+                    const auto& landing = mUnloadedLocations[marker->second];
+                    if (landing.mCell.isNull() || sourceStreetCells.contains(landing.mCell)
+                        || exitStreetCells.contains(landing.mCell) || !currentDoorState(landing).mAvailable)
+                        continue;
+                    const auto node = service.nearestEnabledNode(sourceGraph->pathgridKey(),
+                        {door.mPosition.x(), door.mPosition.y(), door.mPosition.z()}, 4096.f);
+                    if (node && service.route(start, *node))
+                        exitStreetCells.emplace(landing.mCell, streetCellsFrom(landing.mCell));
+                }
         std::deque<ESM::FormKey> pendingCells;
         remainingHops.emplace(destinationCell, 0);
         pendingCells.push_back(destinationCell);
+        // A same-cell bridge has exactly one XTEL whose marker lands here.
+        // Its source may be across a PGRI street, but other teleport chains
+        // cannot satisfy that rule and need no reverse-world search.
+        if (sameCell)
+            if (const auto incoming = mUnloadedDoorsByDestinationCell.find(destinationCell);
+                incoming != mUnloadedDoorsByDestinationCell.end())
+                for (const auto index : incoming->second)
+                    remainingHops.try_emplace(mUnloadedLocations[index].mCell, 1);
         const auto relaxCell = [&](const ESM::FormKey& cell, std::size_t distance, bool street) {
             const auto [it, inserted] = remainingHops.emplace(cell, distance);
             if (!inserted && it->second <= distance)
@@ -3834,7 +3878,7 @@ namespace MWMechanics
         };
         std::size_t reverseDoors = 0;
         std::size_t reverseLocked = 0;
-        while (!pendingCells.empty())
+        while (!sameCell && !pendingCells.empty())
         {
             const ESM::FormKey cell = pendingCells.front();
             pendingCells.pop_front();
@@ -3844,6 +3888,19 @@ namespace MWMechanics
             // entire continent. Keep same-cell component-bridging door plans.
             if (!sameCell && sourceStreetCells.contains(cell))
                 continue;
+            bool reachedExit = false;
+            for (const auto& [landing, streets] : exitStreetCells)
+                if (streets.contains(cell))
+                {
+                    const auto recordDistance = [&](const ESM::FormKey& key, std::size_t hops) {
+                        const auto [it, inserted] = remainingHops.emplace(key, hops);
+                        if (!inserted) it->second = std::min(it->second, hops);
+                    };
+                    recordDistance(landing, distance);
+                    recordDistance(live.mState.mCell, distance + 1);
+                    reachedExit = true;
+                }
+            if (reachedExit) continue;
             if (const auto streets = mIncomingStreetCells.find(cell); streets != mIncomingStreetCells.end())
                 for (const auto& predecessor : streets->second)
                     relaxCell(predecessor, distance, true);
@@ -3909,6 +3966,11 @@ namespace MWMechanics
                 const UnloadedLocation& marker = mUnloadedLocations[destination->second];
                 if (marker.mCell.isNull() || !currentDoorState(marker).mAvailable)
                     continue;
+                // A same-cell bridge must land back in that cell. Reject
+                // other doors before routing to them, rather than after an
+                // otherwise pointless search across the exterior world.
+                if (sameCell && marker.mCell != destinationCell)
+                    continue;
                 const auto remaining = remainingHops.find(marker.mCell);
                 if (remaining == remainingHops.end())
                     continue;
@@ -3924,6 +3986,17 @@ namespace MWMechanics
                 if (!doorNode)
                     continue;
                 ++sourceNodeCount;
+                const ESM4::PathgridPoint doorPoint = doorGraph->worldPoint(doorNode->mNode);
+                const osg::Vec3f approach(doorPoint.mX, doorPoint.mY, doorPoint.mZ);
+                const auto sourcePoint = sourceGraph->worldPoint(start.mNode);
+                const float approachOffset = (approach - door.mPosition).length();
+                // Every path costs at least its straight-line distance. Once
+                // a usable exit is known, distant equal-hop doors cannot win.
+                // Avoid an A* across Tamriel for each of those candidates.
+                const float lowerBound = (approach
+                    - osg::Vec3f(sourcePoint.mX, sourcePoint.mY, sourcePoint.mZ)).length() + approachOffset;
+                if (bestRoute && remaining->second + 1 == bestHopCount && lowerBound > bestCost + 1.f)
+                    continue;
                 const ESM4::PathgridRouteResult route = service.route(start, *doorNode);
                 if (!route)
                 {
@@ -3944,7 +4017,6 @@ namespace MWMechanics
                     // tutorial's exit is above the room floor). Never choose
                     // an unresolved landing in our source component or a
                     // return edge that increases the remaining distance.
-                    if (marker.mCell != destinationCell) continue;
                     const auto exitNode = service.nearestEnabledNode(sourceGraph->pathgridKey(),
                         {door.mTeleportPosition.x(), door.mTeleportPosition.y(), door.mTeleportPosition.z()}, 4096.f);
                     if (!exitNode) continue;
@@ -3960,9 +4032,7 @@ namespace MWMechanics
                         exitCost = (door.mTeleportPosition - *live.mDestination).length();
                     }
                 }
-                const ESM4::PathgridPoint nodePoint = doorGraph->worldPoint(doorNode->mNode);
-                const float cost = route.mRoute->mCost + exitCost
-                    + (osg::Vec3f(nodePoint.mX, nodePoint.mY, nodePoint.mZ) - door.mPosition).length();
+                const float cost = route.mRoute->mCost + exitCost + approachOffset;
                 const std::size_t hopCount = remaining->second + 1;
                 if (!bestRoute || hopCount < bestHopCount
                     || (hopCount == bestHopCount
@@ -3973,7 +4043,7 @@ namespace MWMechanics
                     bestDoor = door.mReference;
                     // The reachable PGRD approach is at the actor's feet;
                     // a door model origin can be above activation height.
-                    bestDoorPosition = osg::Vec3f(nodePoint.mX, nodePoint.mY, nodePoint.mZ);
+                    bestDoorPosition = approach;
                     bestRoute = *route.mRoute;
                 }
             }
@@ -3985,12 +4055,22 @@ namespace MWMechanics
         considerDoorCell(live.mState.mCell);
         if (!bestRoute)
         {
-            std::vector<std::pair<std::size_t, ESM::FormKey>> candidates;
+            std::vector<std::tuple<std::size_t, float, ESM::FormKey>> candidates;
+            const auto point = sourceGraph->worldPoint(start.mNode);
+            const osg::Vec3f origin(point.mX, point.mY, point.mZ);
             for (const auto& [candidateCell, hops] : remainingHops)
                 if (candidateCell != live.mState.mCell)
-                    candidates.emplace_back(hops, candidateCell);
+                {
+                    float nearest = std::numeric_limits<float>::max();
+                    if (const auto doors = mUnloadedDoorsByCell.find(candidateCell);
+                        doors != mUnloadedDoorsByCell.end())
+                        for (const auto index : doors->second)
+                            nearest = std::min(nearest,
+                                distanceSquared(origin, mUnloadedLocations[index].mPosition));
+                    candidates.emplace_back(hops, nearest, candidateCell);
+                }
             std::sort(candidates.begin(), candidates.end());
-            for (const auto& [hops, candidateCell] : candidates)
+            for (const auto& [hops, nearest, candidateCell] : candidates)
             {
                 if (bestRoute && hops > bestHopCount)
                     break;

@@ -79,7 +79,7 @@ or complete prerequisites.
 
 ## Isolation while development continues
 
-Every invocation creates a private `/tmp/openmw-oblivion-SCENARIO.XXXXXXXX`
+Every invocation creates a private `~/.local/state/openmw-oblivion/tryouts/SCENARIO.XXXXXXXX`
 directory and prints its path. It contains copies of the executable, local
 build configuration, compiled settings defaults and resources, plus private config, data-local, saves,
 screenshots, logs, input bindings, Lua storage, temporary files and caches.
@@ -102,8 +102,10 @@ The directory stays after exit or failure, including logs and any saves you
 made. Every subsequent invocation starts fresh. To revisit a save, retain that
 directory and use its copied executable/config with a separately isolated
 environment; these simple launchers deliberately offer no shared profile or
-resume option. Delete only the printed directory when finished. `/tmp` may be
-cleaned by the system, so copy out any saves/screenshots you want to keep.
+resume option. Delete only the printed directory when finished. Tryouts live in
+`~/.local/state/openmw-oblivion/tryouts`, so retained debug executables and caches
+do not fill a RAM-backed `/tmp` or its quota. Earlier `/tmp/openmw-oblivion-*`
+sessions remain where they were; retain any saves before removing them.
 
 To select another already-built executable/resources pair:
 
@@ -119,6 +121,14 @@ or newlines are rejected. Linux, Bash and GNU coreutils are required. Dynamic
 system libraries and original game assets remain shared read-only inputs.
 
 ## Validation status
+
+The Hackdirt performance/storage repair has full normal and ASan/UBSan engine
+coverage, Python checks, desktop frame timings, and normal input save/restart
+and movement evidence in the [performance receipt](../../docs/oblivion/HACKDIRT-PERFORMANCE-VERIFICATION.json).
+Its editable replays are `oblivion_hackdirt_performance.json` (headless functional
+check) and `oblivion_hackdirt_performance_desktop.json` (real X11 desktop timing,
+which focuses the game window), under `scripts/data/oblivion_compat`.
+The quest course remains open; the timing result does not establish steady 60 FPS.
 
 The new checkpoint launcher was runtime-smoked with a genuine final-sewer save:
 private-copy hash preserved, rendered scene reviewed, ordinary F5 and F9 passed.
