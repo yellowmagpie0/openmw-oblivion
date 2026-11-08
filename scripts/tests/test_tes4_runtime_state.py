@@ -5092,3 +5092,36 @@ class FactionBase90Tests(unittest.TestCase):
             state = self.make_state(); state['native_actor_bases'][0]['factions'] = factions
             with self.subTest(factions=factions), self.assertRaises(state_io.RuntimeStateError):
                 state_io.encode_payload(state)
+
+class PackageWaiting91Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_state()
+        state.update(schema_version=91, ai_rng_state=1,
+            package_waiting=[{'package': 'content:oblivion.esm:0292f9', 'waiting': True},
+                             {'package': 'content:oblivion.esm:0292fa', 'waiting': False}])
+        return state
+
+    def test_roundtrip_false_override_legacy_and_malformed_flags(self):
+        state = self.make_state()
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded['package_waiting'], state['package_waiting'])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(payload[:-1] + b'\x02')
+        state['schema_version'] = 90
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state['package_waiting'] = []
+        self.assertNotIn('package_waiting', state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_invalid_and_duplicate_package_overrides(self):
+        for entry in [{'package': 'null', 'waiting': True},
+                      {'package': 'dynamic:package:0000000000000001', 'waiting': True},
+                      {'package': 'content:oblivion.esm:0292f9', 'waiting': 1}]:
+            state = self.make_state(); state['package_waiting'] = [entry]
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        state = self.make_state(); state['package_waiting'] *= 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)

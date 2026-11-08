@@ -1,6 +1,8 @@
 #include <stdexcept>
 
 #include <components/esm4/referenceflags.hpp>
+#include <components/esm4/playermiscstats.hpp>
+#include <components/esm4/playermurderstate.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadgmst.hpp>
@@ -2385,7 +2387,8 @@ namespace MWWorld
             for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
                 captured.insert(reference.mKey);
             for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
-                if ((reference.mKey.isDynamic() || reference.mCustomState.contains("native.fire.spell"))
+                if ((reference.mKey.isDynamic() || reference.mCustomState.contains("native.fire.spell")
+                        || reference.mCustomState.contains("native.package.lock_projection_pending"))
                     && !captured.contains(reference.mKey))
                     state.mReferences.push_back(reference);
         }
@@ -2399,6 +2402,7 @@ namespace MWWorld
         if (mOblivionRuntimeState)
             for (const auto& [name, value] : mOblivionRuntimeState->mPlayer.mActorValues)
                 state.mPlayer.mActorValues.try_emplace(name, value);
+        state.mPlayer.mActorValues.try_emplace(std::string(ESM4::PlayerMurdererKey), 0.0);
         if (mOblivionCombat)
         {
             if (mOblivionCombat->playerReputation())
@@ -7675,6 +7679,8 @@ namespace MWWorld
             }
             if (binding.mLocked)
                 ptr.getCellRef().setLocked(*binding.mLocked);
+            if (mOblivionAi && reference.mCustomState.contains("native.package.lock_projection_pending"))
+                mOblivionAi->applyPendingDoorLockProjection(ptr);
             int count = reference.mDeleted ? 0 : 1;
             if (const auto savedCount = reference.mCustomState.find("count");
                 savedCount != reference.mCustomState.end())
@@ -7922,6 +7928,10 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
+        ESM4::validatePlayerMiscStats(state.mPlayer.mActorValues);
+        if (const auto flag = state.mPlayer.mActorValues.find(std::string(ESM4::PlayerMurdererKey));
+            flag != state.mPlayer.mActorValues.end())
+            ESM4::playerMurdererValue(flag->second);
         validateOblivionMagicProjectiles(state);
         validateOblivionEnvironmentalFire(state);
         auto getupResources = prepareOblivionGetUpResources(state, incoming);
@@ -8118,10 +8128,18 @@ namespace MWWorld
                     throw std::runtime_error("TES4 runtime-state owner cannot be resolved: "
                         + reference.mOwner->serialize());
             }
-            for (const auto name : {"obscript.dead", "locked", "obscript.animation_scripted"})
+            for (const auto name : {"obscript.dead", "locked", "obscript.animation_scripted",
+                     "native.dialogue.talked_to_player"})
                 if (const auto value = reference.mCustomState.find(name); value != reference.mCustomState.end()
                     && !std::holds_alternative<bool>(value->second))
                     throw std::invalid_argument("TES4 runtime-state " + std::string(name) + " is not boolean");
+            if (reference.mCustomState.contains("native.dialogue.talked_to_player"))
+            {
+                const auto& definitions = incoming && reference.mBase.isDynamic() ? *incoming : mStore;
+                if (!definitions.search<ESM4::Npc>(reference.mBase)
+                    && !definitions.search<ESM4::Creature>(reference.mBase))
+                    throw std::invalid_argument("Native dialogue history requires an actor reference");
+            }
             if (const auto scale = reference.mCustomState.find("scale"); scale != reference.mCustomState.end())
                 if (const auto* value = std::get_if<double>(&scale->second))
                     validateFloat(*value, "reference scale");

@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "name": "Original Dar-Ma introductory greeting through scripted Player conversation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\nat 0 command content:oblivion.esm:0280fa GetDead\nat 0 command content:oblivion.esm:0234fd GetDead\n"
+    }
+  ],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "fixed_seed": 1414,
+    "required_events": []
+  },
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:027815 name=GetStage result=0(?:\\s|$)",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c choices=2",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "darma-introduction.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 180,
+  "expected_exit": 0,
+  "expected_log": [
+    "acceptance-command actor=content:oblivion.esm:027815 name=GetStage result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0280fa name=GetDead result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0234fd name=GetDead result=0(?:\\s|$)",
+    "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c choices=2",
+    "conversation-player ref=content:oblivion.esm:0280fa"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  }
+}

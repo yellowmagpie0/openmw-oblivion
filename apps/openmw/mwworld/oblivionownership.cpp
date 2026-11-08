@@ -1,4 +1,11 @@
 #include "oblivionownership.hpp"
+#include "obliviontrespass.hpp"
+#include "cellstore.hpp"
+#include "esmstore.hpp"
+#include "worldmodel.hpp"
+#include <components/esm3/loadnpc.hpp>
+#include <components/esm4/loadclas.hpp>
+#include <components/esm4/loadglob.hpp>
 #include "worldimp.hpp"
 
 #include <components/esm4/crimerules.hpp>
@@ -142,4 +149,96 @@ namespace MWWorld
         }
         return ESM4::hasOwnershipClaim(input);
     }
+    std::optional<bool> oblivionActorTrespassing(World& world, const Ptr& actor,
+        const ESM::FormKey& baseKey, const ESM::FormKey& cellKey)
+    {
+        const auto& store = world.getStore();
+        const bool player = !actor.isEmpty() && actor == world.getPlayerPtr();
+        const auto* npc = player ? &oblivionPlayerBase(store)
+            : !actor.isEmpty() && actor.getType() == ESM::REC_NPC_4
+            ? actor.get<ESM4::Npc>()->mBase : store.search<ESM4::Npc>(baseKey);
+        if (!npc)
+            return false; // Original creature virtual354 is false.
+        if (cellKey.isNull())
+            return false;
+        const auto* cell = store.search<ESM4::Cell>(cellKey);
+        if (!cell)
+            return std::nullopt;
+        ESM4::CellTrespassInput input{};
+        input.mActorIsNpc = true;
+        const ESM::RefId classId = player ? actor.get<ESM::NPC>()->mBase->mClass : ESM::RefId(npc->mClass);
+        const auto* classForm = classId.getIf<ESM::FormId>();
+        const auto* cls = classForm ? store.search<ESM4::Class>(
+            ESM::FormKeyResolver(world.getContentFiles()).toFormKey(*classForm)) : nullptr;
+        input.mActorIsGuard = cls && (cls->mData.mFlags & 2u);
+        input.mCellFlags = static_cast<std::uint8_t>(cell->mCellFlags);
+        input.mRequiredRank = cell->mOwnershipRank.value_or(-1);
+        input.mActorFactionRank = -1;
+        input.mHasPermissionGlobal = !cell->mGlobal.isZeroOrUnset();
+        if (input.mHasPermissionGlobal && !store.get<ESM4::GlobalVariable>().search(ESM::RefId(cell->mGlobal)))
+            return std::nullopt;
+        if (!cell->mOwner.isZeroOrUnset())
+        {
+            const ESM::RefId owner(cell->mOwner);
+            if (!store.hasEsm4ContentRecord(owner))
+                return std::nullopt;
+            if (const auto* ownerNpc = store.get<ESM4::Npc>().search(owner))
+            {
+                input.mOwnerKind = ESM4::CrimeOwnerKind::Actor;
+                input.mMatchesActorBase = ownerNpc->mId == npc->mId;
+            }
+            else if (const auto* faction = store.get<ESM4::Faction>().search(owner))
+            {
+                input.mOwnerKind = ESM4::CrimeOwnerKind::Faction;
+                if (!player || !(faction->mFactionFlags.value_or(0) & 8u))
+                    for (const auto& membership : world.getOblivionActorFactions(player
+                        ? world.getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1)).value_or(ESM::FormKey{})
+                        : baseKey))
+                        if (ESM::FormId::fromUint32(membership.faction) == cell->mOwner)
+                        {
+                            input.mActorFactionRank = membership.rank;
+                            break;
+                        }
+            }
+        }
+        // Original4F5370 -> actor354/60E320 ->4CABC0. This classification
+        // does not report a crime, accrue bounty or advance warning timers.
+        return ESM4::cellTreatsActorAsTrespasser(input);
+    }
+
+    bool oblivionPlayerHasDoorExitPermission(World& world, const Ptr& door, const Ptr& actor)
+    {
+        if (world.getGameProfile() != ESM::GameProfile::Oblivion
+            || actor.isEmpty() || actor != world.getPlayerPtr() || door.isEmpty()
+            || door.getType() != ESM::REC_DOOR4 || !door.getCellRef().isLocked()
+            || !door.getCellRef().getTeleport())
+            return false;
+        if (!door.isInCell() || !world.getWorldModel().ownsCell(*door.getCell()))
+            throw std::invalid_argument("native Player exit has no managed door cell");
+        if (!actor.isInCell() || !world.getWorldModel().ownsCell(*actor.getCell()))
+            throw std::invalid_argument("native Player exit has no managed current cell");
+        const auto* source = actor.getCell()->getCell();
+        if (!source->isEsm4())
+            throw std::invalid_argument("native Player exit requires a TES4 current cell");
+        const auto trespass = oblivionActorTrespassing(world, actor, {}, source->getEsm4().mFormKey);
+        if (!trespass)
+            throw std::invalid_argument("native Player exit cannot resolve current trespass");
+        if (!*trespass) return false;
+        if (static_cast<std::uint8_t>(door.getCellRef().getLockLevel()) == 100) return false;
+        const auto* reference = door.getCellRef().getNativeReference();
+        if (!reference || reference->mDoor.destDoor.isZeroOrUnset())
+            throw std::invalid_argument("native Player exit has no teleport reference");
+        const auto& store = world.getStore();
+        const auto* destination = store.get<ESM4::Reference>().searchStatic(reference->mDoor.destDoor);
+        if (!destination)
+            throw std::invalid_argument("native Player exit destination reference is unresolved");
+        const auto* cell = store.get<ESM4::Cell>().search(destination->mParent);
+        if (!cell)
+            throw std::invalid_argument("native Player exit destination cell is unresolved");
+        // isLocked means the native lock extra exists, including a script-added lock.
+        return ESM4::playerHasTrespassExitExemption({*trespass, true, true,
+            static_cast<std::uint8_t>(door.getCellRef().getLockLevel()), true,
+            static_cast<std::uint8_t>(cell->mCellFlags)});
+    }
+
 }

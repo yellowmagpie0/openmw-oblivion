@@ -40,6 +40,7 @@
 #include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/oblivioninteraction.hpp"
+#include "../mwworld/obliviontrespass.hpp"
 #include "../mwworld/worldimp.hpp"
 
 namespace MWClass
@@ -572,7 +573,8 @@ namespace MWClass
                 if (actor == world->getPlayerPtr())
                     MWBase::Environment::get().getWindowManager()->messageBox("Key used");
             }
-            else
+            // Keep ordinary key use first; the exit exemption preserves the lock.
+            else if (!MWWorld::oblivionPlayerHasDoorExitPermission(*world, ptr, actor))
             {
                 Log(Debug::Info) << "M5 door activation: result=locked ref="
                                  << ptr.getCellRef().getFormKey().serialize() << " level="

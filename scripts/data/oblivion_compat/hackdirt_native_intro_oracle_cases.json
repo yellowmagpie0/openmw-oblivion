@@ -1,0 +1,661 @@
+{
+  "scope": "Original greeting-condition dependencies; not live quest acceptance",
+  "probes": [
+    {
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "entry": "0x4f7ef0",
+      "stubs": [
+        "actor virtual +0x190 identity",
+        "current package accessor 0x5e0380"
+      ],
+      "cases": [
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": null,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": null,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": null,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": null,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": null,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 0,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 0,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 0,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 0,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 0,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 11,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 11,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 11,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 11,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 11,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 17,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 17,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 17,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 17,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": false,
+          "package_type": 17,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": null,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": null,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": null,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": null,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": null,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 0,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 0,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 0,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 0,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 0,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 11,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 11,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 11,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 11,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 11,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 17,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 17,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 17,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 17,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": false,
+          "actor_type": true,
+          "package_type": 17,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": null,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": null,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": null,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": null,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": null,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 0,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 0,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 0,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 0,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 0,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 11,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 11,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 11,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 11,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 11,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 17,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 17,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 17,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 17,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": false,
+          "package_type": 17,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": null,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": null,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": null,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": null,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": null,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 0,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 0,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 0,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 0,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 0,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 11,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 11,
+          "count": 0,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 11,
+          "count": 1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 11,
+          "count": 2,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 11,
+          "count": 3,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 17,
+          "count": -1,
+          "expected_result": -1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 17,
+          "count": 0,
+          "expected_result": 0.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 17,
+          "count": 1,
+          "expected_result": 1.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 17,
+          "count": 2,
+          "expected_result": 2.0
+        },
+        {
+          "actor_present": true,
+          "actor_type": true,
+          "package_type": 17,
+          "count": 3,
+          "expected_result": 3.0
+        }
+      ],
+      "name": "trespass-query-oracle"
+    },
+    {
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "entry": "0x4fa110",
+      "stubs": [],
+      "boundary": "preconstructed native event-variable list; no Script-definition allocation or SCVR-name binding emulated",
+      "cases": [
+        {
+          "ids": [
+            16,
+            16
+          ],
+          "values": [
+            10.0,
+            20.0
+          ],
+          "query": 16,
+          "expected_result": 10.0
+        },
+        {
+          "ids": [
+            16,
+            16
+          ],
+          "values": [
+            20.0,
+            10.0
+          ],
+          "query": 16,
+          "expected_result": 20.0
+        },
+        {
+          "ids": [
+            3,
+            16,
+            16
+          ],
+          "values": [
+            30.0,
+            40.0,
+            50.0
+          ],
+          "query": 16,
+          "expected_result": 40.0
+        },
+        {
+          "ids": [
+            16,
+            3,
+            16
+          ],
+          "values": [
+            60.0,
+            70.0,
+            80.0
+          ],
+          "query": 3,
+          "expected_result": 70.0
+        },
+        {
+          "ids": [
+            16,
+            16
+          ],
+          "values": [
+            0.0,
+            99.0
+          ],
+          "query": 16,
+          "expected_result": 0.0
+        },
+        {
+          "ids": [
+            16,
+            16
+          ],
+          "values": [
+            -3.0,
+            2.0
+          ],
+          "query": 16,
+          "expected_result": -3.0
+        }
+      ],
+      "name": "local-id-oracle"
+    }
+  ]
+}

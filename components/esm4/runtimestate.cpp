@@ -2014,6 +2014,12 @@ namespace ESM4
         for (const auto& info : mSpokenDialogueInfos)
             if (info.isNull() || ESM::FormKey::deserialize(info.serialize()) != info)
                 throw std::runtime_error("Invalid spoken dialogue INFO identity");
+        checkSize(mPackageWaiting.size(), "package waiting overrides");
+        if (mVersion < 91 && !mPackageWaiting.empty())
+            throw std::runtime_error("Package waiting overrides require runtime schema91");
+        for (const auto& [key, waiting] : mPackageWaiting)
+            if (!key.isContent() || ESM::FormKey::deserialize(key.serialize()) != key)
+                throw std::runtime_error("Invalid package waiting identity");
         checkSize(mActorAi.size(), "actor AI list");
         checkSize(mDailyPackageCompletions.size(), "daily package completion list");
         if (mVersion < 89 && !mDailyPackageCompletions.empty())
@@ -4064,6 +4070,15 @@ namespace ESM4
                 writeCalendar(writer, day);
             }
         }
+        if (mVersion >= 91)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mPackageWaiting.size()));
+            for (const auto& [key, waiting] : mPackageWaiting)
+            {
+                writeKey(writer, key);
+                writer.integer<std::uint8_t>(waiting ? 1 : 0);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -5496,6 +5511,20 @@ namespace ESM4
                     throw std::runtime_error("Noncanonical daily package completion identities");
                 previous = pair;
                 result.mDailyPackageCompletions.emplace(pair, readCalendar(reader));
+            }
+        }
+        if (result.mVersion >= 91)
+        {
+            ESM::FormKey previous;
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto key = readKey(reader);
+                const auto waiting = reader.integer<std::uint8_t>();
+                if ((i && !(previous < key)) || waiting > 1)
+                    throw std::runtime_error("Noncanonical package waiting overrides");
+                previous = key;
+                result.mPackageWaiting.emplace(key, waiting != 0);
             }
         }
         if (!reader.eof())
@@ -7133,6 +7162,19 @@ namespace ESM4
                 stream << "{\"actor\":\"" << escapeJson(pair.first.serialize())
                     << "\",\"package\":\"" << escapeJson(pair.second.serialize())
                     << "\",\"day\":[" << day.mYear << ',' << day.mMonth << ',' << day.mDay << ",0]}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 91)
+        {
+            stream << ",\"package_waiting\":[";
+            bool first = true;
+            for (const auto& [key, waiting] : mPackageWaiting)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"package\":\"" << escapeJson(key.serialize())
+                    << "\",\"waiting\":" << (waiting ? "true" : "false") << '}';
             }
             stream << ']';
         }

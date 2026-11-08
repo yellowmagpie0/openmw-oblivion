@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "name": "Original Player locked-shop exit permission through normal activation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\nat 0 command dynamic:player:0000000000000001 GetInCell content:oblivion.esm:024802\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal points={{{{-73,-36,1}},{{5,-36,1}},{{5,-125,2}},{{400,-125,-223}},{{401,-11,-223}}}}\nlocal index=6\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt; if timer<0.05 then return end; timer=0\n print('ExitShop exterior='..tostring(self.cell.isExterior)..' cell='..self.cell.name)\n local target\n if index<=5 then\n  local p=points[index]; target=util.vector3(p[1],p[2],p[3])\n  local d=target-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<8 then print('ExitShop reached='..index);index=index+1;return end\n else\n  local door=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x8b3))\n  if not door or not door:isValid() then return end\n  target=door.position+util.vector3(0,0,30)\n end\n local d=target-self.position;local f=self.rotation:apply(util.vector3(0,1,0))\n local angle=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=camera.getPitch()\n if index>5 then\n  local v=target-camera.getPosition();pitch=-math.atan2(v.z,math.sqrt(v.x*v.x+v.y*v.y))\n end\n if math.abs(angle)<0.01 and (index<=5 or math.abs(pitch-camera.getPitch())<0.02) then print('ExitShop ready='..index) end\n print(string.format('ExitShop aim x=%d y=%d step=%d pos=%.2f,%.2f,%.2f distance=%.2f',math.max(-200,math.min(200,math.floor(angle*512+.5))),math.max(-150,math.min(150,math.floor((pitch-camera.getPitch())*512+.5))),index,self.position.x,self.position.y,self.position.z,d:length()))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 8
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "ExitShop ready=6",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "ExitShop aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1.5
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "exit-shop-door-aimed.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "key",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "ExitShop exterior=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 240,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "ExitShop ready=6",
+    "ExitShop exterior=true"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "conversation-player ref=content:oblivion.esm:0280fa",
+    "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c",
+    "Native dialogue menu:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt"
+  },
+  "sdl_xvfb_input": true
+}

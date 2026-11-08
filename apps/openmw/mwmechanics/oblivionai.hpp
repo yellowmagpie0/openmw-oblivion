@@ -84,6 +84,8 @@ namespace MWMechanics
         // only low-process pass; promotion to high process resumes the same
         // stable package/route intent through update().
         void updateUnloaded(float duration);
+        // Publish a deferred lock into a newly materialized native door.
+        void applyPendingDoorLockProjection(const MWWorld::Ptr& door);
         // Door activation can move an actor between CellStores.  The actor
         // list commits those transitions after its iteration has finished.
         void commitPendingTransitions();
@@ -91,6 +93,9 @@ namespace MWMechanics
 
         bool evaluatePackage(const MWWorld::Ptr& actor);
         bool addScriptPackage(const MWWorld::Ptr& actor, const ESM::FormKey& package);
+        bool removeScriptPackage(const MWWorld::Ptr& actor);
+        bool setPackageWaiting(const MWWorld::Ptr& actor, const ESM::FormKey& package, bool waiting);
+        bool isPackageWaiting(const ESM::FormKey& package) const;
         bool forceFlee(const MWWorld::Ptr& actor, const ESM::FormKey& threat, float durationHours);
         bool setRestrained(const MWWorld::Ptr& actor, bool restrained);
 
@@ -261,6 +266,7 @@ namespace MWMechanics
         MWWorld::World& mWorld;
         const OblivionSavedReferenceIndex* mLowProcessReferenceIndex = nullptr;
         std::map<ESM::FormKey, LiveActor> mActors;
+        std::map<ESM::FormKey, bool> mPackageWaiting;
         OblivionPackageDoneQueue mPendingPackageDone;
         std::vector<UnloadedLocation> mUnloadedLocations;
         std::map<ESM::FormKey, std::size_t> mUnloadedLocationByReference;
@@ -271,6 +277,12 @@ namespace MWMechanics
         // every placed reference for every actor.
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByCell;
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByDestinationCell;
+        // Derived street topology is shared by route plans and rebuilt after
+        // graph/overlay changes; it is not part of saved actor state.
+        bool mStreetCellIndexValid = false;
+        std::map<ESM::FormKey, std::uint64_t> mStreetGraphGenerations;
+        std::map<ESM::FormKey, std::set<ESM::FormKey>> mIncomingStreetCells;
+        std::map<ESM::FormKey, std::set<ESM::FormKey>> mOutgoingStreetCells;
         mutable std::map<std::pair<ESM::FormKey, ESM::FormKey>, ESM4::RuntimeDetectionVector> mDetectionVectors;
         mutable std::map<std::string, std::uint64_t> mDiagnosticCounters;
         mutable std::uint64_t mNextEvaluationGeneration = 1;
@@ -304,6 +316,7 @@ namespace MWMechanics
         OblivionDoorState currentDoorState(const UnloadedLocation& door) const;
         bool doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor = nullptr) const;
         void buildUnloadedLocationIndex();
+        void ensureStreetCellIndex();
         void seedActors();
         void seedActors(std::map<ESM::FormKey, LiveActor>& actors);
         std::vector<ESM4::PackageCandidate> basePackages(const ESM::FormKey& base) const;
@@ -356,6 +369,8 @@ namespace MWMechanics
         void stopMovement(const MWWorld::Ptr& actor) const;
         void recordDailyCompletion(LiveActor& live, bool onlyIfMissing = false);
         void prepareDailySelection(LiveActor& live, ESM4::PackageSelectionRequest& request);
+        enum class DoorPolicyEvent { Start, Location, End };
+        void applyPackageDoorPolicy(const LiveActor& live, DoorPolicyEvent event);
         void approachResidentTarget(const MWWorld::Ptr& actor, const MWWorld::Ptr& target,
             float duration, bool escort);
         void faceAndMove(const MWWorld::Ptr& actor, const osg::Vec3f& destination, bool run, bool sneak = false) const;

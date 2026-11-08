@@ -1,0 +1,648 @@
+{
+  "schema_version": 1,
+  "name": "Original Dar-Ma escort reaches northern Hackdirt edge, saved before escape request",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal timer=0\nlocal index=1\nlocal points={{{{-67435.53125,64398.46875,9810.0}},{{-67517.21875,64300.78125,9810.0}},{{-67683.0625,64393.65625,9814.0}},{{-67862.1328125,64417.76953125,9826.0}},{{-67834.5625,64539.71484375,9832.0}},{{-67879.125,64713.3515625,9830.0}},{{-67950.25,64910.41796875,9816.0}},{{-67978.765625,65107.359375,9808.0}},{{-67922.5625,65253.20703125,9804.0}},{{-68093.640625,65482.578125,9792.0}}}}\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.1 then return end;timer=0\n assert(not Actor.isDead(self),'Player died escaping Hackdirt')\n local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x280fa));assert(a and a:isValid(),'Dar-Ma missing during town departure');assert(not Actor.isDead(a),'Dar-Ma died escaping Hackdirt')\n print('EscapeCourse playerCell='..self.cell.name..' player='..tostring(self.position)..' darmaCell='..a.cell.name..' darma='..tostring(a.position)..' health='..Actor.stats.dynamic.health(a).current)\n if core.isWorldPaused() then print('EscapeCourse paused');return end\n if index>#points then print('EscapeCourse routeComplete');return end\n local tag=tostring(index);local p=points[index];local v=util.vector3(p[1],p[2],p[3])-self.position\n if math.sqrt(v.x*v.x+v.y*v.y)<20 then print('EscapeCourse reached='..tag);index=index+1;return end\n local f=self.rotation:apply(util.vector3(0,1,0));local angle=math.atan2(f.y*v.x-f.x*v.y,f.x*v.x+f.y*v.y)\n if math.abs(angle)<0.05 and math.abs(camera.getPitch())<0.04 then print('EscapeCourse ready='..tag) end\n print(string.format('EscapeCourse aim x=%d y=%d',math.max(-150,math.min(150,math.floor(angle*128+.5))),math.max(-100,math.min(100,math.floor(-camera.getPitch()*128+.5)))))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "EscapeCourse aim",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=1(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=1(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=2(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=2(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=3(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=3(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=4(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=4(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=5(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=5(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=6(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=6(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=7(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=7(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=8(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=8(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=9(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=9(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse (?:ready|reached)=10(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "EscapeCourse reached=10(?:\\s|$)|EscapeCourse paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 240,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "EscapeCourse aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "EscapeCourse routeComplete",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    },
+    {
+      "type": "screenshot",
+      "name": "darma-before-town-boundary.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 2400,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "EscapeCourse routeComplete"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "Native dialogue menu: actor=(?!content:oblivion.esm:0280fa )",
+    "info=content:oblivion.esm:02809c",
+    "info=content:oblivion.esm:028693",
+    "M7 ObScript: setstage quest=content:oblivion.esm:027815 stage=90",
+    "Fatal Error",
+    "Native dialogue menu:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt"
+  },
+  "sdl_xvfb_input": true,
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": true
+}

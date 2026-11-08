@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 90
+CURRENT_VERSION = 91
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -659,7 +659,6 @@ def _validate_daily_packages(state: dict[str, Any]) -> None:
 
 
 def _validate_basic_state(state: dict[str, Any]) -> None:
-    _validate_daily_packages(state)
     """Validate the common envelope and the pre-M14 state shared by C++.
 
     The Python tool is also used to inspect saves produced by the engine, so
@@ -667,6 +666,20 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     of relying on a successful struct.pack as validation.
     """
 
+    _validate_daily_packages(state)
+    entries = state.get("package_waiting", [])
+    if not isinstance(entries, list) or len(entries) > MAX_COLLECTION:
+        raise RuntimeStateError("Invalid package waiting overrides")
+    if entries and state.get("schema_version", 1) < 91:
+        raise RuntimeStateError("Package waiting overrides require version91")
+    previous = None
+    for entry in entries:
+        if not isinstance(entry, dict) or not _canonical_content_key(entry.get("package")) or type(entry.get("waiting")) is not bool:
+            raise RuntimeStateError("Invalid package waiting override")
+        key = _global_identity(entry["package"])
+        if previous is not None and key <= previous:
+            raise RuntimeStateError("Noncanonical package waiting overrides")
+        previous = key
     crime = state.get("native_crime", crime_io.empty_state())
     try:
         crime_io.validate(crime)
@@ -3523,6 +3536,14 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["daily_package_completions"] = [
             {"actor": reader.string(), "package": reader.string(), "day": _calendar(reader)}
             for _ in range(reader.count())]
+    if version >= 91:
+        result["package_waiting"] = []
+        for _ in range(reader.count()):
+            key = reader.string()
+            flag = reader.unpack("<B")
+            if flag > 1:
+                raise RuntimeStateError("Invalid package waiting flag")
+            result["package_waiting"].append({"package": key, "waiting": bool(flag)})
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -4362,6 +4383,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in entries:
             writer.string(entry["actor"]); writer.string(entry["package"])
             _write_calendar(writer, entry["day"])
+    if version >= 91:
+        entries = state.get("package_waiting", [])
+        writer.pack("<I", len(entries))
+        for entry in entries:
+            writer.string(entry["package"])
+            writer.pack("<B", entry["waiting"])
     return writer.finish()
 
 
@@ -4510,6 +4537,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 89 and state.get("daily_package_completions"):
         raise RuntimeStateError("Cannot infer daily package history from an older schema")
     state.setdefault("daily_package_completions", [])
+    if state.get("schema_version", 1) < 91 and state.get("package_waiting"):
+        raise RuntimeStateError("Cannot infer package waiting overrides from an older schema")
+    state.setdefault("package_waiting", [])
 
 
 def _upgrade_loose_weapons(state: dict[str, Any]) -> None:

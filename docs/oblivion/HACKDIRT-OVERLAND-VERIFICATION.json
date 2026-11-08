@@ -1,0 +1,589 @@
+{
+  "schema_version": 1,
+  "scope": "Ordinary departure after original MS45 pickup and overland journey to Hackdirt. Investigation/rescue/follower/reward remain open.",
+  "pickup_provenance": "docs/oblivion/HACKDIRT-PICKUP-VERIFICATION.json",
+  "engine_changed": false,
+  "runtime": {
+    "pickup-departure-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/pickup-departure-01-console.json",
+        "sha256": "b3f635665faec1f7be42b1b4087c6082c0b440c5b9ac029b116339852ac730b9"
+      },
+      "original_harness_passed": true,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/pickup-departure-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "d0eb29d918d974da18bf74a5d9b30c26f51bcb177a5889e84a2ecff986f6612a"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 555350,
+        "start_ticks": 186766946,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/pickup-departure-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/pickup-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 16.903915405273438,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:000850",
+      "player_position": [
+        -66769.734375,
+        92787.90625,
+        14295.857421875,
+        0.0,
+        0.0,
+        2.1707961559295654
+      ],
+      "exact_native_payload_roundtrip": true,
+      "player_health": 80.0,
+      "inventory": [
+        {
+          "base": "content:oblivion.esm:0be335",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 16,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:02731a",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 32,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:027319",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 4,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:027318",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 8,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        }
+      ]
+    },
+    "pickup-town-departure-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/pickup-town-departure-01-console.json",
+        "sha256": "fb4cbc3b2c26ad191fb9f6fe7b6d6465167c02cebf35fceb35d3d9136d8784e4"
+      },
+      "original_harness_passed": true,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/pickup-town-departure-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "fea7717d7eb2f4289bf68e1d3b639e0cf7977cb2549119755f729b18bf14140d"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 555602,
+        "start_ticks": 186784746,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/pickup-town-departure-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/pickup-departure-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 17.601219177246094,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:0008f6",
+      "player_position": [
+        -64633.23828125,
+        91818.734375,
+        14185.0,
+        0.0,
+        0.0,
+        -3.141592502593994
+      ],
+      "exact_native_payload_roundtrip": true,
+      "player_health": 80.0,
+      "inventory": [
+        {
+          "base": "content:oblivion.esm:0be335",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 16,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:02731a",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 32,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:027319",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 4,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:027318",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 8,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        }
+      ]
+    },
+    "overland-03": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/overland-03-console.json",
+        "sha256": "cbc995ca97b1f8a634fbb5f6284bcd4c4a17c8d0a8483714836829496dc289b9"
+      },
+      "original_harness_passed": false,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/overland-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "ce218abaf7bc8b9f2d02245b1ee0f7890c35ae56930de0d5da69b1378fb0bda0"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 556263,
+        "start_ticks": 186845730,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/overland-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/pickup-town-departure-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 21.804899215698242,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:00f3c8",
+      "player_position": [
+        -67448.328125,
+        62646.5703125,
+        9798.1826171875,
+        0.0,
+        0.0,
+        2.8173739910125732
+      ],
+      "exact_native_payload_roundtrip": true,
+      "player_health": 80.0,
+      "inventory": [
+        {
+          "base": "content:oblivion.esm:0be335",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 16,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:02731a",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 32,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:027319",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 4,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        },
+        {
+          "base": "content:oblivion.esm:027318",
+          "count": 1,
+          "condition": -1.0,
+          "charge": -1.0,
+          "equipped_slots": 8,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null
+        }
+      ],
+      "reached_waypoints": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91
+      ],
+      "distance_to_final_waypoint": 1.940348838039503
+    },
+    "arrival-reload-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/arrival-reload-01-console.json",
+        "sha256": "b4fb14d3b3febca2616f82ce719e079570fb8c289ff796c920e38b54164b76de"
+      },
+      "original_harness_passed": false,
+      "harness_after_explicit_visual_review_passed": true,
+      "reviewed_error": {
+        "line": 5746,
+        "patterns": [
+          "\\sE\\]"
+        ],
+        "text": "[03:51:10.566 E] Failed to load 'meshes/landscape/miscbutterfly02.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+      },
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/arrival-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "e218c520b927c89c36e026579c0fc46d9d6ed3566ac518c0418ad6a792c423b1"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 557028,
+        "start_ticks": 186969253,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/arrival-reload-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/overland-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 21.818727493286133,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:00f3c8",
+      "player_position": [
+        -67448.328125,
+        62646.5703125,
+        9798.1826171875,
+        0.0,
+        0.0,
+        2.8173739910125732
+      ],
+      "health": 80,
+      "exact_native_payload_roundtrip": true,
+      "identical_fields": [
+        "MS45 quest",
+        "MS45 and Dar-Ma script instances",
+        "disposition modifiers",
+        "spoken dialogue history",
+        "native crime",
+        "Player inventory"
+      ],
+      "position_tolerance_units": 5,
+      "semantic_restart_passed": true
+    }
+  },
+  "route": {
+    "path": "build/oblivion-compat/hackdirt/overland-pathgrid-route.json",
+    "sha256": "a1fe7876b1f857742b057a8c780326a71acfd8f8ac9bda77e00eca04cfd410a1"
+  },
+  "route_source": "Original Oblivion.esm Tamriel PGRD connectivity; used only to guide normal mouse and movement inputs. Observer reads position/camera, no state injection.",
+  "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "stables_detour": {
+    "waypoint": 9,
+    "position": [
+      -65060,
+      89640,
+      14140
+    ],
+    "reason": "Visible road detour around a horse blocking the straight pathgrid approach in overland-02."
+  },
+  "retained_failure": {
+    "output": "build/oblivion-compat/hackdirt/overland-01",
+    "reason": "Stationary camera oscillation at waypoint4 from overly fast aiming feedback. Stopped only its identified process; terminal receipt is failed. Retry slows stationary aiming to1second. No gameplay barrier proved."
+  },
+  "second_retained_failure": {
+    "output": "build/oblivion-compat/hackdirt/overland-02",
+    "reason": "Horse collision blocked waypoint9. Own identified game stopped; no gameplay permission failure. Screenshot current-road.png retained."
+  },
+  "limits": [
+    "Route traversal does not prove investigation, cavern combat, rescue, follower save/load or original completion/reward.",
+    "Only read-only diagnostic observers and queries supplement ordinary controls. No stage/clock/position/health/reward writes.",
+    "Existing original butterfly mesh animation is unsupported and falls back to marker_error. Both terminal harness receipts remain failed for that sole visual diagnostic; their completed input/log checks and semantic save/reload evidence are recorded separately after explicit review."
+  ],
+  "visual_limitation_review": {
+    "original_console": "build/oblivion-compat/hackdirt/overland-03-console.json",
+    "sha256": "cbc995ca97b1f8a634fbb5f6284bcd4c4a17c8d0a8483714836829496dc289b9",
+    "original_passed": false,
+    "actions_complete": true,
+    "all_392_actions_passed": true,
+    "expected_and_forbidden_logs_passed": true,
+    "reviewed_error": {
+      "line": 63038,
+      "patterns": [
+        "\\sE\\]"
+      ],
+      "text": "[03:37:42.884 E] Failed to load 'meshes/landscape/miscbutterfly02.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+    },
+    "review_reason": "Original butterfly visual animation flags unsupported by existing NIF controller; fallback marker does not obstruct or alter the verified Player journey, quest or save. Visual fidelity limitation remains. Original failed receipt preserved.",
+    "travel_harness_after_explicit_review": true
+  },
+  "jiv_at_arrival": {
+    "key": "content:oblivion.esm:0280da",
+    "base": "content:oblivion.esm:0280ca",
+    "cell": "content:oblivion.esm:0280ac",
+    "position": [
+      2046.50048828125,
+      1546.773193359375,
+      6894.8955078125,
+      0.0,
+      0.0,
+      -2.903982400894165
+    ]
+  },
+  "arrival_inventory_unchanged_from_shop": true,
+  "date": "2026-11-08",
+  "unchanged_engine_source_provenance": "docs/oblivion/HACKDIRT-PICKUP-VERIFICATION.json",
+  "editable_sources": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_pickup_shop_departure.json",
+      "sha256": "019853e9c81c5aaa78fe52b95972c78c565776cb49d5aa4572ae7efac7d39ba8"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_pickup_town_departure.json",
+      "sha256": "8f468282baff4a222f01f7ac8048f766643a93def3e29b8afcb9fa8ca2481b82"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_overland.json",
+      "sha256": "74ceb1d4aed3bd5394cb2fd96619374886249558140c723bb40a3cc0df1e36f0"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_arrival_reload.json",
+      "sha256": "5e64cabd24812109387898d90fc594fd380371cde89afda2904734750d24d809"
+    }
+  ]
+}

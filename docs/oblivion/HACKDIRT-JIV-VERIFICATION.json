@@ -1,0 +1,1425 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Original chapel entry, approach, warning and Dar-Ma topic advance MS45 to50; fresh-process state retained. House meeting at55 is unaccepted: original package door lifecycle missing. Full quest remains open.",
+  "engine_changed": false,
+  "engine_provenance": "docs/oblivion/HACKDIRT-PICKUP-VERIFICATION.json",
+  "arrival_provenance": "docs/oblivion/HACKDIRT-OVERLAND-VERIFICATION.json",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_content": {
+    "warning_info": "028211",
+    "warning_result": "Learn HackdirtTopic; set MS45.warnedPC to1",
+    "topic": "028096 DarMaTopic",
+    "invitation_info": "01778a",
+    "invitation_result": "SetStage MS45,50",
+    "meeting_info": "01778d",
+    "meeting_requirements": [
+      "Jiv0280ca",
+      "InCell0280ae",
+      "CurrentPackage01778c",
+      "MS45 stage50 or55"
+    ],
+    "meeting_package": {
+      "key": "01778c",
+      "raw_flags": "0x1110",
+      "unlock_at_location": true,
+      "lock_at_end": true,
+      "schedule": "17:00 through01:00",
+      "destination_marker": "01778b in0280ae"
+    },
+    "house_entrance": {
+      "reference": "0280db",
+      "authored_lock_level": 30,
+      "key": "028b7b HackdirtKey"
+    },
+    "stage55_result": "ModDisposition Player20; add original HackdirtKey1. Not executed in accepted course yet."
+  },
+  "runtime": {
+    "jiv-chapel-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/jiv-chapel-01-console.json",
+        "sha256": "bb551fbddd6e2fc5affbedfc93ee66bbe1f2543ce8712cf5d836f112fa3a167c"
+      },
+      "original_harness_passed": false,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/jiv-chapel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "425f5ef21cb490ea7b213aa105d0f43a9b270cdc40c39b3963dfb8987dc88b12"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 557315,
+        "start_ticks": 186994893,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-chapel-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/arrival-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "jiv_ai": {
+        "actor": "content:oblivion.esm:0280da",
+        "base": "content:oblivion.esm:0280ca",
+        "package": "content:oblivion.esm:029309",
+        "script_package": "null",
+        "target": "content:oblivion.esm:03d548",
+        "target_base": "content:oblivion.esm:02f263",
+        "cell": "content:oblivion.esm:0280ac",
+        "pathgrid": "content:oblivion.esm:094eaa",
+        "door": "null",
+        "destination_cell": "content:oblivion.esm:0280ac",
+        "last_valid_cell": "content:oblivion.esm:0280ac",
+        "action_item": "null",
+        "last_transition_door": "content:oblivion.esm:0280e1",
+        "companion_group": "null",
+        "companion_side_with": "null",
+        "mount": "null",
+        "rider": "null",
+        "schedule_window": {
+          "start": [
+            433,
+            8,
+            1,
+            20.0
+          ],
+          "end": [
+            433,
+            8,
+            2,
+            1.0
+          ],
+          "duration_hours": 5.0
+        },
+        "condition_result": 0,
+        "destination_position": [
+          2053.49609375,
+          2042.991455078125,
+          6894.8955078125,
+          0.0,
+          -0.0,
+          0.15000000596046448
+        ],
+        "last_valid_position": [
+          2099.811767578125,
+          1972.02734375,
+          6895.8955078125,
+          0.0,
+          0.0,
+          1.8373103141784668
+        ],
+        "source": 1,
+        "package_type": 0,
+        "procedure": 1,
+        "phase": 7,
+        "tier": 0,
+        "boundary": 0,
+        "list_index": 4,
+        "path_node": 2,
+        "repath_attempts": 0,
+        "formation_index": -1,
+        "selection_generation": 2540538,
+        "route_generation": 1,
+        "transition_generation": 3,
+        "action_timer": 0.0,
+        "duration_remaining": 4.677492141723633,
+        "no_progress_seconds": 0.0,
+        "door_cooldown": 0.0,
+        "low_process_timer": 0.0,
+        "next_low_process_tick": 0.25,
+        "restrained": false,
+        "action_reserved": false,
+        "has_destination": true,
+        "door_animation_started": false,
+        "interruption_reason": ""
+      },
+      "house_lock_level": 30,
+      "house_locked": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 22.08097267150879,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:0280ac",
+      "player_position": [
+        2046.50048828125,
+        1546.773193359375,
+        6895.8955078125,
+        0.076171875,
+        0.0,
+        0.12500014901161194
+      ],
+      "exact_native_payload_roundtrip": true
+    },
+    "jiv-chapel-02": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/jiv-chapel-02-console.json",
+        "sha256": "53084cd9832ad4aeaf6beb5a1432170c7cf5f21bd8696ca943a22c4a8e7c258d"
+      },
+      "original_harness_passed": false,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/jiv-chapel-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "56a3275a34c74d22a9a30f1db82ba3ea5138c20f72973de834d64da0fb54f5e4"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 557514,
+        "start_ticks": 187016026,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-chapel-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-chapel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "jiv_ai": {
+        "actor": "content:oblivion.esm:0280da",
+        "base": "content:oblivion.esm:0280ca",
+        "package": "content:oblivion.esm:029309",
+        "script_package": "null",
+        "target": "content:oblivion.esm:03d548",
+        "target_base": "content:oblivion.esm:02f263",
+        "cell": "content:oblivion.esm:0280ac",
+        "pathgrid": "content:oblivion.esm:094eaa",
+        "door": "null",
+        "destination_cell": "content:oblivion.esm:0280ac",
+        "last_valid_cell": "content:oblivion.esm:0280ac",
+        "action_item": "null",
+        "last_transition_door": "content:oblivion.esm:0280e1",
+        "companion_group": "null",
+        "companion_side_with": "null",
+        "mount": "null",
+        "rider": "null",
+        "schedule_window": {
+          "start": [
+            433,
+            8,
+            1,
+            20.0
+          ],
+          "end": [
+            433,
+            8,
+            2,
+            1.0
+          ],
+          "duration_hours": 5.0
+        },
+        "condition_result": 0,
+        "destination_position": [
+          2053.49609375,
+          2042.991455078125,
+          6894.8955078125,
+          0.0,
+          -0.0,
+          0.15000000596046448
+        ],
+        "last_valid_position": [
+          2099.811767578125,
+          1972.02734375,
+          6895.8955078125,
+          0.0,
+          0.0,
+          1.8373103141784668
+        ],
+        "source": 1,
+        "package_type": 0,
+        "procedure": 1,
+        "phase": 7,
+        "tier": 0,
+        "boundary": 0,
+        "list_index": 4,
+        "path_node": 2,
+        "repath_attempts": 0,
+        "formation_index": -1,
+        "selection_generation": 2540538,
+        "route_generation": 1,
+        "transition_generation": 3,
+        "action_timer": 0.0,
+        "duration_remaining": 4.677492141723633,
+        "no_progress_seconds": 0.0,
+        "door_cooldown": 0.0,
+        "low_process_timer": 0.0,
+        "next_low_process_tick": 0.25,
+        "restrained": false,
+        "action_reserved": false,
+        "has_destination": true,
+        "door_animation_started": false,
+        "interruption_reason": ""
+      },
+      "house_lock_level": 30,
+      "house_locked": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 22.140514373779297,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:0280ac",
+      "player_position": [
+        2087.869873046875,
+        1876.0726318359375,
+        6895.8955078125,
+        0.271484375,
+        0.0,
+        0.12304702401161194
+      ],
+      "exact_native_payload_roundtrip": true
+    },
+    "jiv-invitation-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/jiv-invitation-01-console.json",
+        "sha256": "7e5a8e22a2ea9ddf8366809ca5ba84bafef460f86d50ab8072f485ada3553f42"
+      },
+      "original_harness_passed": false,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/jiv-invitation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "defa02b234286b6d0bfa8e261ba4a9a36c060aa744417b6c51c4f6a6abbbcafc"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 557643,
+        "start_ticks": 187028519,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-invitation-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-chapel-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "jiv_ai": {
+        "actor": "content:oblivion.esm:0280da",
+        "base": "content:oblivion.esm:0280ca",
+        "package": "content:oblivion.esm:029309",
+        "script_package": "null",
+        "target": "content:oblivion.esm:03d548",
+        "target_base": "content:oblivion.esm:02f263",
+        "cell": "content:oblivion.esm:0280ac",
+        "pathgrid": "content:oblivion.esm:094eaa",
+        "door": "null",
+        "destination_cell": "content:oblivion.esm:0280ac",
+        "last_valid_cell": "content:oblivion.esm:0280ac",
+        "action_item": "null",
+        "last_transition_door": "content:oblivion.esm:0280e1",
+        "companion_group": "null",
+        "companion_side_with": "null",
+        "mount": "null",
+        "rider": "null",
+        "schedule_window": {
+          "start": [
+            433,
+            8,
+            1,
+            20.0
+          ],
+          "end": [
+            433,
+            8,
+            2,
+            1.0
+          ],
+          "duration_hours": 5.0
+        },
+        "condition_result": 0,
+        "destination_position": [
+          2053.49609375,
+          2042.991455078125,
+          6894.8955078125,
+          0.0,
+          -0.0,
+          0.15000000596046448
+        ],
+        "last_valid_position": [
+          2099.811767578125,
+          1972.02734375,
+          6895.8955078125,
+          0.0,
+          0.0,
+          1.8373103141784668
+        ],
+        "source": 1,
+        "package_type": 0,
+        "procedure": 1,
+        "phase": 7,
+        "tier": 0,
+        "boundary": 0,
+        "list_index": 4,
+        "path_node": 2,
+        "repath_attempts": 0,
+        "formation_index": -1,
+        "selection_generation": 2540538,
+        "route_generation": 1,
+        "transition_generation": 3,
+        "action_timer": 0.0,
+        "duration_remaining": 4.677492141723633,
+        "no_progress_seconds": 0.0,
+        "door_cooldown": 0.0,
+        "low_process_timer": 0.0,
+        "next_low_process_tick": 0.25,
+        "restrained": false,
+        "action_reserved": false,
+        "has_destination": true,
+        "door_animation_started": false,
+        "interruption_reason": ""
+      },
+      "house_lock_level": 30,
+      "house_locked": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 22.174142837524414,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:0280ac",
+      "player_position": [
+        2087.869873046875,
+        1876.0726318359375,
+        6895.8955078125,
+        0.326171875,
+        0.0,
+        0.12304702401161194
+      ],
+      "exact_native_payload_roundtrip": true
+    },
+    "jiv-topic-02": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/jiv-topic-02-console.json",
+        "sha256": "4ad425d65fcbd3ff02094589af12009ff37778575e315c03b7a2cf4b1ec575ee"
+      },
+      "original_harness_passed": true,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/jiv-topic-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "e39119f6b728075e75c332a78455bd02ab65a9a103db613967b9a0d0b47e901f"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 557923,
+        "start_ticks": 187054071,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-topic-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-invitation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 50,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          50
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "jiv_ai": {
+        "actor": "content:oblivion.esm:0280da",
+        "base": "content:oblivion.esm:0280ca",
+        "package": "content:oblivion.esm:01778c",
+        "script_package": "null",
+        "target": "dynamic:player:0000000000000001",
+        "target_base": "dynamic:player-base:0000000000000001",
+        "cell": "content:oblivion.esm:0280ac",
+        "pathgrid": "content:oblivion.esm:094eaa",
+        "door": "content:oblivion.esm:0280f9",
+        "destination_cell": "content:oblivion.esm:0280ae",
+        "last_valid_cell": "content:oblivion.esm:0280ac",
+        "action_item": "null",
+        "last_transition_door": "content:oblivion.esm:0280e1",
+        "companion_group": "null",
+        "companion_side_with": "null",
+        "mount": "null",
+        "rider": "null",
+        "schedule_window": {
+          "start": [
+            433,
+            8,
+            1,
+            17.0
+          ],
+          "end": [
+            433,
+            8,
+            2,
+            1.0
+          ],
+          "duration_hours": 8.0
+        },
+        "condition_result": 0,
+        "destination_position": [
+          1911.9613037109375,
+          2347.511962890625,
+          8051.36572265625,
+          0.0,
+          0.0,
+          1.8373103141784668
+        ],
+        "last_valid_position": [
+          2077.41796875,
+          1934.0660400390625,
+          6926.71728515625,
+          0.0,
+          0.0,
+          -2.7453439235687256
+        ],
+        "source": 1,
+        "package_type": 9,
+        "procedure": 10,
+        "phase": 2,
+        "tier": 0,
+        "boundary": 0,
+        "list_index": 0,
+        "path_node": 2,
+        "repath_attempts": 0,
+        "formation_index": -1,
+        "selection_generation": 2997461,
+        "route_generation": 1,
+        "transition_generation": 3,
+        "action_timer": 0.0,
+        "duration_remaining": 2.7754650115966797,
+        "no_progress_seconds": 0.10000000894069672,
+        "door_cooldown": 0.0,
+        "low_process_timer": 0.0,
+        "next_low_process_tick": 0.25,
+        "restrained": false,
+        "action_reserved": false,
+        "has_destination": true,
+        "door_animation_started": false,
+        "interruption_reason": ""
+      },
+      "house_lock_level": 30,
+      "house_locked": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 22.234134674072266,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:0280ac",
+      "player_position": [
+        2087.869873046875,
+        1876.0726318359375,
+        6895.8955078125,
+        0.326171875,
+        0.0,
+        0.12304702401161194
+      ],
+      "exact_native_payload_roundtrip": true
+    },
+    "jiv-topic-03": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/jiv-topic-03-console.json",
+        "sha256": "0356a1350f441841170dad3f38f478fa9e1f4b9ff7e311a1fcd6404a36d63b5e"
+      },
+      "original_harness_passed": true,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/jiv-topic-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "00f287e438e7e42c2e77fe30fe89eb32891ea07a92cc9df2849d9a8807722e64"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 558853,
+        "start_ticks": 187137369,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-topic-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-invitation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 50,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          50
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "jiv_ai": {
+        "actor": "content:oblivion.esm:0280da",
+        "base": "content:oblivion.esm:0280ca",
+        "package": "content:oblivion.esm:01778c",
+        "script_package": "null",
+        "target": "dynamic:player:0000000000000001",
+        "target_base": "dynamic:player-base:0000000000000001",
+        "cell": "content:oblivion.esm:0280ac",
+        "pathgrid": "content:oblivion.esm:094eaa",
+        "door": "content:oblivion.esm:0280f9",
+        "destination_cell": "content:oblivion.esm:0280ae",
+        "last_valid_cell": "content:oblivion.esm:0280ac",
+        "action_item": "null",
+        "last_transition_door": "content:oblivion.esm:0280e1",
+        "companion_group": "null",
+        "companion_side_with": "null",
+        "mount": "null",
+        "rider": "null",
+        "schedule_window": {
+          "start": [
+            433,
+            8,
+            1,
+            17.0
+          ],
+          "end": [
+            433,
+            8,
+            2,
+            1.0
+          ],
+          "duration_hours": 8.0
+        },
+        "condition_result": 0,
+        "destination_position": [
+          1911.9613037109375,
+          2347.511962890625,
+          8051.36572265625,
+          0.0,
+          0.0,
+          1.8373103141784668
+        ],
+        "last_valid_position": [
+          2072.46240234375,
+          1932.9501953125,
+          6925.34375,
+          0.0,
+          0.0,
+          -2.7870845794677734
+        ],
+        "source": 1,
+        "package_type": 9,
+        "procedure": 10,
+        "phase": 2,
+        "tier": 0,
+        "boundary": 0,
+        "list_index": 0,
+        "path_node": 2,
+        "repath_attempts": 0,
+        "formation_index": -1,
+        "selection_generation": 2997461,
+        "route_generation": 1,
+        "transition_generation": 3,
+        "action_timer": 0.0,
+        "duration_remaining": 2.7754783630371094,
+        "no_progress_seconds": 0.06666667014360428,
+        "door_cooldown": 0.0,
+        "low_process_timer": 0.0,
+        "next_low_process_tick": 0.25,
+        "restrained": false,
+        "action_reserved": false,
+        "has_destination": true,
+        "door_animation_started": false,
+        "interruption_reason": ""
+      },
+      "house_lock_level": 30,
+      "house_locked": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 22.23283576965332,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:0280ac",
+      "player_position": [
+        2087.869873046875,
+        1876.0726318359375,
+        6895.8955078125,
+        0.326171875,
+        0.0,
+        0.12304702401161194
+      ],
+      "exact_native_payload_roundtrip": true
+    },
+    "jiv-house-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/jiv-house-01-console.json",
+        "sha256": "ed08444a1b09ef3194544c18f6712392c877c58ec841c0d4d9a9a76825de1b84"
+      },
+      "original_harness_passed": false,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/jiv-house-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "c4af65b59be2c4cb0a054e919de6fe5a7a6790820ce2ab02368a365c96120276"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 558069,
+        "start_ticks": 187061257,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-house-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-topic-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 50,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          50
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "jiv_ai": {
+        "actor": "content:oblivion.esm:0280da",
+        "base": "content:oblivion.esm:0280ca",
+        "package": "content:oblivion.esm:01778c",
+        "script_package": "null",
+        "target": "dynamic:player:0000000000000001",
+        "target_base": "dynamic:player-base:0000000000000001",
+        "cell": "content:oblivion.esm:0280b0",
+        "pathgrid": "content:oblivion.esm:0280ce",
+        "door": "content:oblivion.esm:090cf0",
+        "destination_cell": "content:oblivion.esm:0280ae",
+        "last_valid_cell": "content:oblivion.esm:0280b0",
+        "action_item": "null",
+        "last_transition_door": "content:oblivion.esm:0981d1",
+        "companion_group": "null",
+        "companion_side_with": "null",
+        "mount": "null",
+        "rider": "null",
+        "schedule_window": {
+          "start": [
+            433,
+            8,
+            1,
+            17.0
+          ],
+          "end": [
+            433,
+            8,
+            2,
+            1.0
+          ],
+          "duration_hours": 8.0
+        },
+        "condition_result": 0,
+        "destination_position": [
+          1911.9613037109375,
+          2347.511962890625,
+          8051.36572265625,
+          0.0,
+          0.0,
+          1.8373103141784668
+        ],
+        "last_valid_position": [
+          2011.9395751953125,
+          -1936.6934814453125,
+          8.120383262634277,
+          0.0,
+          0.0,
+          3.1363954544067383
+        ],
+        "source": 1,
+        "package_type": 9,
+        "procedure": 10,
+        "phase": 2,
+        "tier": 1,
+        "boundary": 0,
+        "list_index": 0,
+        "path_node": 116,
+        "repath_attempts": 0,
+        "formation_index": -1,
+        "selection_generation": 2997461,
+        "route_generation": 1,
+        "transition_generation": 5,
+        "action_timer": 0.0,
+        "duration_remaining": 2.7754650115966797,
+        "no_progress_seconds": 0.0,
+        "door_cooldown": 0.0,
+        "low_process_timer": 0.0,
+        "next_low_process_tick": 0.018995389342308044,
+        "restrained": false,
+        "action_reserved": false,
+        "has_destination": true,
+        "door_animation_started": false,
+        "interruption_reason": ""
+      },
+      "house_lock_level": 30,
+      "house_locked": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 23.126432418823242,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:00f3c9",
+      "player_position": [
+        -65409.62890625,
+        61807.203125,
+        10054.419921875,
+        0.43359375,
+        0.0,
+        2.012110948562622
+      ],
+      "exact_native_payload_roundtrip": true
+    },
+    "jiv-house-wait-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/jiv-house-wait-01-console.json",
+        "sha256": "72465e12a419fc6c91d10024a015dcbb147a0dd161d6e92e7a7eaf6ad4da84f5"
+      },
+      "original_harness_passed": true,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/jiv-house-wait-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "0028161aa4a12bebf208cab1622f88b05dacd97ee48c5e52b426adf737d04d62"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 558557,
+        "start_ticks": 187111494,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-house-wait-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-house-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 50,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          50
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "jiv_ai": {
+        "actor": "content:oblivion.esm:0280da",
+        "base": "content:oblivion.esm:0280ca",
+        "package": "content:oblivion.esm:01778c",
+        "script_package": "null",
+        "target": "dynamic:player:0000000000000001",
+        "target_base": "dynamic:player-base:0000000000000001",
+        "cell": "content:oblivion.esm:0280ae",
+        "pathgrid": "content:oblivion.esm:094eac",
+        "door": "null",
+        "destination_cell": "content:oblivion.esm:0280ae",
+        "last_valid_cell": "content:oblivion.esm:0280ae",
+        "action_item": "null",
+        "last_transition_door": "content:oblivion.esm:090cf0",
+        "companion_group": "null",
+        "companion_side_with": "null",
+        "mount": "null",
+        "rider": "null",
+        "schedule_window": {
+          "start": [
+            433,
+            8,
+            1,
+            17.0
+          ],
+          "end": [
+            433,
+            8,
+            2,
+            1.0
+          ],
+          "duration_hours": 8.0
+        },
+        "condition_result": 0,
+        "destination_position": [
+          1911.9613037109375,
+          2347.511962890625,
+          8051.36572265625,
+          0.0,
+          0.0,
+          1.8373103141784668
+        ],
+        "last_valid_position": [
+          1889.6246337890625,
+          2351.512451171875,
+          8050.0,
+          0.0,
+          0.0,
+          3.1363954544067383
+        ],
+        "source": 1,
+        "package_type": 9,
+        "procedure": 10,
+        "phase": 11,
+        "tier": 1,
+        "boundary": 2,
+        "list_index": 0,
+        "path_node": 11,
+        "repath_attempts": 0,
+        "formation_index": -1,
+        "selection_generation": 2997461,
+        "route_generation": 1,
+        "transition_generation": 6,
+        "action_timer": 0.0,
+        "duration_remaining": 2.7754650115966797,
+        "no_progress_seconds": 0.0,
+        "door_cooldown": 0.0,
+        "low_process_timer": 0.0,
+        "next_low_process_tick": 0.1309950202703476,
+        "restrained": false,
+        "action_reserved": false,
+        "has_destination": true,
+        "door_animation_started": false,
+        "interruption_reason": ""
+      },
+      "house_lock_level": 30,
+      "house_locked": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 2,
+        "hour": 0.18591022491455078,
+        "time_scale": 30.0
+      },
+      "player_cell": "content:oblivion.esm:00f3c9",
+      "player_position": [
+        -65409.62890625,
+        61807.203125,
+        10054.419921875,
+        0.43359375,
+        0.0,
+        2.012110948562622
+      ],
+      "exact_native_payload_roundtrip": true,
+      "semantic_meeting_entry_passed": false,
+      "diagnostic_passed": true
+    }
+  },
+  "limits": [
+    "Cavern entry, hostile combat, rescue, follower restart, return and original completion/reward remain unaccepted.",
+    "The stage55 house meeting is blocked by missing package door lifecycle integration; no unlock/key/stage workaround is used.",
+    "Earlier diagnostic probes retain failed terminal receipts. Only their independently verified saved prefixes are reused; recommended prefix manifests now stop at those boundaries.",
+    "Actor AI cell/last-valid position owns unloaded travel. The reference projection may retain the last resident chapel pose; do not use that projection as the package arrival cell."
+  ],
+  "retained_failures": {
+    "jiv-chapel-01": "Chapel entry saved successfully, but attempted Jiv activation from436 units was out of range.",
+    "jiv-chapel-02": "Approach saved; original warning028211 occurred before the incorrectly expected invitation greeting.",
+    "jiv-invitation-01": "Warning flag saved. Reopening gives generic greeting; invitation is the Dar-Ma topic, not GREETING.",
+    "jiv-topic-01": "Original invitation/result succeeded; inherited all-dialogue forbidden guard falsely rejected intended Jiv menu. Corrected guard allows expected actor only.",
+    "jiv-topic-02": "All semantic/harness checks pass; screenshot was captured before the rendered response updated. Topic03 adds a render delay.",
+    "jiv-house-01": "All13 village waypoints reached; activation locked30. Jiv arrival followed5seconds later, so post-arrival diagnostic was required."
+  },
+  "next_action": "Implement original package UnlockDoorsAtLocation and paired LockDoorsAtEnd with ownership, unloaded-state and persistence checks; replay pre-arrival checkpoint, then select Dar-Ma in the house for55.",
+  "quest50_fresh_process_verified": true,
+  "ready_pre_arrival_save": {
+    "path": "build/oblivion-compat/hackdirt/jiv-house-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "c4af65b59be2c4cb0a054e919de6fe5a7a6790820ce2ab02368a365c96120276"
+  },
+  "ready_post_arrival_diagnostic_save": {
+    "path": "build/oblivion-compat/hackdirt/jiv-house-wait-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "0028161aa4a12bebf208cab1622f88b05dacd97ee48c5e52b426adf737d04d62"
+  },
+  "editable_sources": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_chapel.json",
+      "sha256": "77adc5110b94da6727d0b7e0a12f9af916691308b4e94ee59e30599c073bb420"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_chapel_approach.json",
+      "sha256": "9cb9ee682880ab9707931a4c15d0b9d80bac4c292d02bb94399dc49862e0c43c"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_darma_topic.json",
+      "sha256": "7dca002263fa216d026204937fd37f0c4afd8375dff7c9613249da54e2cb95f5"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_house.json",
+      "sha256": "934a4137684e96643bd791a2e280e627a50a5aca6ffe419c71a536296554ec18"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_house_wait_diagnostic.json",
+      "sha256": "21d38c7e4f6ad9d16a26acf907595dacb85877f513be4a89c706dae446711c4c"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_invitation.json",
+      "sha256": "8493f684b182f6d28adc758aa4c990f73b5bdbb45efea2c058c784bce23489c1"
+    }
+  ]
+}

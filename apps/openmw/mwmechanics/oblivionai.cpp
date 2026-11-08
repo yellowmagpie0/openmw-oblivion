@@ -1,3 +1,4 @@
+#include "../mwworld/obliviontrespass.hpp"
 /*
   Copyright (C) 2026 OpenMW contributors
 
@@ -8,6 +9,8 @@
   later version.
 */
 #include "oblivionai.hpp"
+
+#include <components/esm4/cellcondition.hpp>
 #include "oblivioncombat.hpp"
 #include "oblivionaidestination.hpp"
 #include "oblivionaigait.hpp"
@@ -23,6 +26,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <deque>
 #include <iomanip>
 #include <iterator>
 #include <limits>
@@ -125,12 +129,37 @@ namespace MWMechanics
                     <= world.getMaxActivationDistance();
         }
 
+        bool reevaluateWaitingAmbush(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage* package)
+        {
+            return package && state.mPackageType == ESM4::AIPackageType::Ambush
+                && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete)
+                && (state.mPhase == ESM4::PackagePhase::Wait
+                    || state.mPhase == ESM4::PackagePhase::ReadyForM15Combat
+                    || state.mPhase == ESM4::PackagePhase::ReadyForDialogue);
+        }
+
+        bool reevaluateFollowContext(const ESM4::AIPackage* package)
+        {
+            return package && package->mPackageType == ESM4::AIPackageType::Follow
+                && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
+        }
+
         bool nativeActor(const MWWorld::ConstPtr& ptr)
         {
             if (ptr.isEmpty())
                 return false;
             const unsigned type = ptr.getClass().getType();
             return type == ESM::REC_NPC_4 || type == ESM::REC_CREA4;
+        }
+
+        std::int32_t nativeFactionRankDifference(MWWorld::World& world, const ESM::FormKey& actor,
+            const ESM::FormKey& faction, const ESM::FormKey& other)
+        {
+            // Original4F67E0: self minus the explicit second actor; either
+            // missing membership (-1) leaves the initialized zero result.
+            const auto first = world.getOblivionFactionRank(actor, faction);
+            const auto second = world.getOblivionFactionRank(ESM4::runtimeReferenceKey(other), faction);
+            return first == -1 || second == -1 ? 0 : int(first) - int(second);
         }
 
         ESM::RefId nativeClassId(MWWorld::World& world, const MWWorld::Ptr& actor,
@@ -152,6 +181,33 @@ namespace MWMechanics
             const auto actual = nativeClassId(world, actor, base);
             const auto* id = actual.getIf<ESM::FormId>();
             return id && ESM::FormKeyResolver(world.getContentFiles()).toFormKey(*id) == expected;
+        }
+
+        std::optional<bool> nativeNpcFemale(MWWorld::World& world, const MWWorld::Ptr& actor,
+            const ESM::FormKey& base)
+        {
+            if (!actor.isEmpty() && actor == world.getPlayerPtr())
+                return !actor.get<ESM::NPC>()->mBase->isMale();
+            const ESM4::Npc* npc = !actor.isEmpty() && actor.getType() == ESM::REC_NPC_4
+                ? actor.get<ESM4::Npc>()->mBase : world.getStore().search<ESM4::Npc>(base);
+            if (!npc) return std::nullopt;
+            return (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
+        }
+
+        std::optional<ESM::FormKey> nativeNpcRace(MWWorld::World& world, const MWWorld::Ptr& actor,
+            const ESM::FormKey& base)
+        {
+            const ESM::FormKeyResolver resolver(world.getContentFiles());
+            if (!actor.isEmpty() && actor == world.getPlayerPtr())
+            {
+                const auto& race = actor.get<ESM::NPC>()->mBase->mRace;
+                if (race.empty()) return ESM::FormKey{};
+                const auto* id = race.getIf<ESM::FormId>();
+                return id ? std::optional(resolver.toFormKey(*id)) : std::nullopt;
+            }
+            const ESM4::Npc* npc = !actor.isEmpty() && actor.getType() == ESM::REC_NPC_4
+                ? actor.get<ESM4::Npc>()->mBase : world.getStore().search<ESM4::Npc>(base);
+            return npc ? std::optional(resolver.toFormKey(npc->mRace)) : std::nullopt;
         }
 
         ESM4::ConditionValue nativePlayerSexCondition(MWWorld::World& world, std::int32_t sex)
@@ -184,54 +240,8 @@ namespace MWMechanics
         ESM4::ConditionValue nativeTrespassCondition(MWWorld::World& world, const MWWorld::Ptr& actor,
             const ESM::FormKey& baseKey, const ESM::FormKey& cellKey)
         {
-            const auto& store = world.getStore();
-            const bool player = !actor.isEmpty() && actor == world.getPlayerPtr();
-            const auto* npc = player ? &MWWorld::oblivionPlayerBase(store)
-                : !actor.isEmpty() && actor.getType() == ESM::REC_NPC_4
-                ? actor.get<ESM4::Npc>()->mBase : store.search<ESM4::Npc>(baseKey);
-            if (!npc)
-                return ESM4::ConditionValue::value(0.0); // Original creature virtual354 is false.
-            if (cellKey.isNull())
-                return ESM4::ConditionValue::value(0.0);
-            const auto* cell = store.search<ESM4::Cell>(cellKey);
-            if (!cell)
-                return ESM4::ConditionValue::missing();
-            ESM4::CellTrespassInput input{};
-            input.mActorIsNpc = true;
-            input.mActorIsGuard = nativeIsGuard(world, actor, baseKey);
-            input.mCellFlags = static_cast<std::uint8_t>(cell->mCellFlags);
-            input.mRequiredRank = cell->mOwnershipRank.value_or(-1);
-            input.mActorFactionRank = -1;
-            input.mHasPermissionGlobal = !cell->mGlobal.isZeroOrUnset();
-            if (input.mHasPermissionGlobal && !store.get<ESM4::GlobalVariable>().search(ESM::RefId(cell->mGlobal)))
-                return ESM4::ConditionValue::missing();
-            if (!cell->mOwner.isZeroOrUnset())
-            {
-                const ESM::RefId owner(cell->mOwner);
-                if (!store.hasEsm4ContentRecord(owner))
-                    return ESM4::ConditionValue::missing();
-                if (const auto* ownerNpc = store.get<ESM4::Npc>().search(owner))
-                {
-                    input.mOwnerKind = ESM4::CrimeOwnerKind::Actor;
-                    input.mMatchesActorBase = ownerNpc->mId == npc->mId;
-                }
-                else if (const auto* faction = store.get<ESM4::Faction>().search(owner))
-                {
-                    input.mOwnerKind = ESM4::CrimeOwnerKind::Faction;
-                    if (!player || !(faction->mFactionFlags.value_or(0) & 8u))
-                        for (const auto& membership : world.getOblivionActorFactions(player
-                            ? world.getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1)).value_or(ESM::FormKey{})
-                            : baseKey))
-                            if (ESM::FormId::fromUint32(membership.faction) == cell->mOwner)
-                            {
-                                input.mActorFactionRank = membership.rank;
-                                break;
-                            }
-                }
-            }
-            // Original4F5370 -> actor354/60E320 ->4CABC0. This classification
-            // does not report a crime, accrue bounty or advance warning timers.
-            return ESM4::ConditionValue::value(ESM4::cellTreatsActorAsTrespasser(input) ? 1.0 : 0.0);
+            const auto result = MWWorld::oblivionActorTrespassing(world, actor, baseKey, cellKey);
+            return result ? ESM4::ConditionValue::value(*result ? 1.0 : 0.0) : ESM4::ConditionValue::missing();
         }
 
         ESM4::ConditionValue nativeOwnedCellCondition(MWWorld::World& world, const MWWorld::Ptr& actor)
@@ -462,6 +472,7 @@ namespace MWMechanics
         OblivionAiService* mOwner;
         std::map<ESM::FormKey, LiveActor> mActors;
         OblivionPackageDoneQueue mEvents;
+        std::map<ESM::FormKey, bool> mPackageWaiting;
         decltype(OblivionAiService::mDetectionVectors) mDetection;
         std::uint64_t mNextGeneration = 1;
         std::optional<ESM4::CalendarInstant> mSimulationNow;
@@ -478,7 +489,9 @@ namespace MWMechanics
 
         void swap(OblivionAiService& owner) noexcept
         {
+            owner.mStreetCellIndexValid = false;
             mActors.swap(owner.mActors);
+            mPackageWaiting.swap(owner.mPackageWaiting);
             mDetection.swap(owner.mDetectionVectors);
             mEvents.mPending.swap(owner.mPendingPackageDone.mPending);
             std::swap(mEvents.mEpoch, owner.mPendingPackageDone.mEpoch);
@@ -622,6 +635,8 @@ namespace MWMechanics
             releasePhysicalDoorCollision(loadedPtrFor(live.mState.mActor), live);
         mPendingPackageDone.restore({});
         mActors.clear();
+        mPackageWaiting.clear();
+        mStreetCellIndexValid = false;
         mDetectionVectors.clear();
         flushDiagnosticCounters();
         mNextEvaluationGeneration = 1;
@@ -724,6 +739,44 @@ namespace MWMechanics
             result = cell.search(ESM::RefId(*id));
         });
         return result;
+    }
+
+    void OblivionAiService::ensureStreetCellIndex()
+    {
+        const auto& service = mWorld.mStore.getOblivionPathgridService();
+        if (mStreetCellIndexValid && std::equal(service.graphs().begin(), service.graphs().end(),
+                mStreetGraphGenerations.begin(), mStreetGraphGenerations.end(),
+                [](const auto& graph, const auto& saved) {
+                    return graph.first == saved.first && graph.second.generation() == saved.second;
+                }))
+            return;
+        mStreetCellIndexValid = false;
+        mIncomingStreetCells.clear();
+        mOutgoingStreetCells.clear();
+        mStreetGraphGenerations.clear();
+        for (const auto& [_, graph] : service.graphs())
+        {
+            mStreetGraphGenerations.emplace(graph.pathgridKey(), graph.generation());
+            const auto* sourceCell = mWorld.mStore.get<ESM4::Cell>().search(graph.cellKey());
+            if (!sourceCell || !sourceCell->isExterior())
+                continue;
+            for (const auto& link : graph.foreignLinks())
+            {
+                if (!link.mDestination || link.mAmbiguous || !graph.isEnabled(link.mSourceNode))
+                    continue;
+                const auto* destinationGraph = service.graph(link.mDestination->mPathgrid);
+                if (!destinationGraph || !destinationGraph->isEnabled(link.mDestination->mNode))
+                    continue;
+                const auto* targetCell = mWorld.mStore.get<ESM4::Cell>().search(destinationGraph->cellKey());
+                if (targetCell && targetCell->isExterior() && sourceCell->mParent == targetCell->mParent
+                    && graph.cellKey() != destinationGraph->cellKey())
+                {
+                    mIncomingStreetCells[destinationGraph->cellKey()].insert(graph.cellKey());
+                    mOutgoingStreetCells[graph.cellKey()].insert(destinationGraph->cellKey());
+                }
+            }
+        }
+        mStreetCellIndexValid = true;
     }
 
     void OblivionAiService::buildUnloadedLocationIndex()
@@ -1078,6 +1131,18 @@ namespace MWMechanics
         const std::function<std::optional<double>(const ESM::FormKey&)> resolveGlobal = context.mResolveGlobal;
         context.mResolve = [this, snapshot, resolver, locationFor, resolveGlobal](const ESM4::PackageCondition& condition,
                            ESM4::ConditionSubject subject) -> ESM4::ConditionValue {
+            if (condition.mFunction == 251)
+            {
+                const auto* scripts = mWorld.getOblivionScriptManager();
+                return scripts ? ESM4::ConditionValue::value(static_cast<double>(scripts->playerInfamy()))
+                               : ESM4::ConditionValue::missing();
+            }
+            if (condition.mFunction == 176)
+            {
+                const auto* scripts = mWorld.getOblivionScriptManager();
+                return scripts ? ESM4::ConditionValue::value(scripts->playerIsMurderer() ? 1.0 : 0.0)
+                               : ESM4::ConditionValue::missing();
+            }
             if (condition.mFunction == 228)
                 return ESM4::ConditionValue::value(
                     MWWorld::oblivionIsClassDefault(mWorld, condition.mParameter1.mReferenceKey) ? 1.0 : 0.0);
@@ -1345,7 +1410,7 @@ namespace MWMechanics
             }
             if (function == "GetDisposition")
             {
-                const auto disposition = mWorld.getOblivionScriptDisposition(subjectKey, parameterKey);
+                const auto disposition = mWorld.getOblivionScriptDisposition(subjectKey, comparisonKey);
                 return disposition ? value(*disposition) : ESM4::ConditionValue::missing();
             }
             if (function == "GetIsID")
@@ -1363,11 +1428,26 @@ namespace MWMechanics
             if (function == "GetIsClass")
                 return value(nativeClassMatches(mWorld, loadedPtrFor(subjectKey), subjectLocation->mBase,
                     parameterKey) ? 1.0 : 0.0);
+            if (function == "SameSex" || function == "SameRace")
+            {
+                const auto peer = comparisonLocation();
+                if (!peer) return value(0.0);
+                if (function == "SameRace")
+                {
+                    const auto first = nativeNpcRace(mWorld, loadedPtrFor(subjectKey), subjectLocation->mBase);
+                    const auto second = nativeNpcRace(mWorld, loadedPtrFor(comparisonKey), peer->mBase);
+                    return value(first && second && *first == *second ? 1.0 : 0.0);
+                }
+                const auto first = nativeNpcFemale(mWorld, loadedPtrFor(subjectKey), subjectLocation->mBase);
+                const auto second = nativeNpcFemale(mWorld, loadedPtrFor(comparisonKey), peer->mBase);
+                return value(first && second && *first == *second ? 1.0 : 0.0);
+            }
             if (function == "GetIsReference")
                 return value(!comparisonKey.isNull()
                     && subjectLocation->mReference == ESM4::runtimeReferenceKey(comparisonKey) ? 1.0 : 0.0);
             if (function == "GetInCell")
-                return value(!parameterKey.isNull() && subjectLocation->mCell == parameterKey ? 1.0 : 0.0);
+                return value(ESM4::cellConditionMatches(mWorld.mStore.get<ESM4::Cell>().search(subjectLocation->mCell),
+                    mWorld.mStore.get<ESM4::Cell>().search(parameterKey)) ? 1.0 : 0.0);
             if (function == "GetIsCreature")
                 return value(subjectLocation->mType == ESM::REC_ACRE4 ? 1.0 : 0.0);
             if (function == "IsActor")
@@ -1454,10 +1534,15 @@ namespace MWMechanics
             }
             if (function == "GetTalkedToPC")
             {
-                if (const MWWorld::Ptr loaded = loadedPtrFor(subjectKey); !loaded.isEmpty())
-                    return value(loaded.getClass().getCreatureStats(loaded).hasTalkedToPlayer() ? 1.0 : 0.0);
-                return value(0.0);
+                const auto* scripts = mWorld.getOblivionScriptManager();
+                return scripts ? value(scripts->hasTalkedToPlayer(subjectKey) ? 1.0 : 0.0)
+                               : ESM4::ConditionValue::missing();
             }
+            // Original4F7EF0 returns -1 unless the actor's current runtime
+            // package is the transient trespass package (type 17). This service
+            // currently runs authored PACKs only; it installs no such package.
+            if (function == "GetTrespassWarningLevel")
+                return value(-1.0);
             if (function == "GetScriptVariable")
             {
                 if (parameterKey.isNull())
@@ -1482,6 +1567,12 @@ namespace MWMechanics
                             condition.mParameter2.mNumber)
                     ? 1.0
                     : 0.0);
+            }
+            if (function == "GetPCMiscStat")
+            {
+                const auto* scripts = mWorld.getOblivionScriptManager();
+                return scripts ? value(scripts->playerMiscStat(condition.mParameter1.mNumber))
+                               : ESM4::ConditionValue::missing();
             }
             if (function == "GetQuestVariable")
             {
@@ -1589,6 +1680,9 @@ namespace MWMechanics
             }
             if (function == "GetFactionRank")
                 return value(mWorld.getOblivionFactionRank(subjectKey, parameterKey));
+            if (function == "GetFactionRankDifference")
+                return value(nativeFactionRankDifference(mWorld, subjectKey, parameterKey,
+                    condition.mParameter2.mReferenceKey));
             if (function == "GetInFaction")
             {
                 const auto id = resolver.toFormId(parameterKey);
@@ -1928,6 +2022,15 @@ namespace MWMechanics
                 switch (condition.mFunction)
                 {
                     case 18: return value(now().mHour);
+                    case 312:
+                        return scripts ? value(scripts->playerMiscStat(condition.mParameter1.mNumber))
+                                       : ESM4::ConditionValue::missing();
+                    case 251:
+                        return scripts ? value(static_cast<double>(scripts->playerInfamy()))
+                                       : ESM4::ConditionValue::missing();
+                    case 176:
+                        return scripts ? value(scripts->playerIsMurderer() ? 1.0 : 0.0)
+                                       : ESM4::ConditionValue::missing();
                     case 131: return nativePlayerSexCondition(mWorld, condition.mParameter1.mNumber);
                     case 224: return nativePlayerBirthsignCondition(mWorld, condition.mParameter1.mReferenceKey);
                     case 36:
@@ -2098,6 +2201,18 @@ namespace MWMechanics
         const auto resolveGlobal = context.mResolveGlobal;
         context.mResolve = [this, actor, target, &live, resolveGlobal, dialogue](const ESM4::PackageCondition& condition,
                            ESM4::ConditionSubject subject) -> ESM4::ConditionValue {
+            if (condition.mFunction == 251)
+            {
+                const auto* scripts = mWorld.getOblivionScriptManager();
+                return scripts ? ESM4::ConditionValue::value(static_cast<double>(scripts->playerInfamy()))
+                               : ESM4::ConditionValue::missing();
+            }
+            if (condition.mFunction == 176)
+            {
+                const auto* scripts = mWorld.getOblivionScriptManager();
+                return scripts ? ESM4::ConditionValue::value(scripts->playerIsMurderer() ? 1.0 : 0.0)
+                               : ESM4::ConditionValue::missing();
+            }
             if (condition.mFunction == 228)
                 return ESM4::ConditionValue::value(
                     MWWorld::oblivionIsClassDefault(mWorld, condition.mParameter1.mReferenceKey) ? 1.0 : 0.0);
@@ -2310,7 +2425,13 @@ namespace MWMechanics
                 return value(gold.isEmpty() ? 0.0 : gold.getCellRef().getCount());
             }
             if (function == "GetTalkedToPC")
-                return value(nativeStats().hasTalkedToPlayer() ? 1.0 : 0.0);
+            {
+                const auto* scripts = mWorld.getOblivionScriptManager();
+                return scripts ? value(scripts->hasTalkedToPlayer(subjectKey) ? 1.0 : 0.0)
+                               : ESM4::ConditionValue::missing();
+            }
+            if (function == "GetTrespassWarningLevel")
+                return value(-1.0); // No transient trespass package is installed; see unloaded query above.
             if (function == "GetScriptVariable")
             {
                 if (parameterKey.isNull())
@@ -2379,8 +2500,17 @@ namespace MWMechanics
                 return value(nativeStats().getAttacked() ? 1.0 : 0.0);
             if (function == "GetFactionRank")
                 return value(mWorld.getOblivionFactionRank(subjectKey, parameterKey));
+            if (function == "GetFactionRankDifference")
+                return value(nativeFactionRankDifference(mWorld, subjectKey, parameterKey,
+                    condition.mParameter2.mReferenceKey));
             if (function == "GetInFaction")
                 return value(factionMatches(parameterKey) ? 1.0 : 0.0);
+            if (function == "GetPCMiscStat")
+            {
+                const auto* scripts = mWorld.getOblivionScriptManager();
+                return scripts ? value(scripts->playerMiscStat(condition.mParameter1.mNumber))
+                               : ESM4::ConditionValue::missing();
+            }
             if (function == "GetQuestVariable")
             {
                 if (parameterKey.isNull())
@@ -2470,7 +2600,9 @@ namespace MWMechanics
             }
             if (function == "GetDisposition")
             {
-                const auto disposition = mWorld.getOblivionScriptDisposition(actorKey(subjectPtr), parameterKey);
+                const auto peer = comparisonPtr();
+                const auto disposition = mWorld.getOblivionScriptDisposition(actorKey(subjectPtr),
+                    peer.isEmpty() ? ESM::FormKey{} : actorKey(peer));
                 return disposition ? value(*disposition) : ESM4::ConditionValue::missing();
             }
             if (function == "GetIsID")
@@ -2486,6 +2618,23 @@ namespace MWMechanics
                 return value(nativeIsGuard(mWorld, subjectPtr, baseKey(subjectPtr)) ? 1.0 : 0.0);
             if (function == "GetIsClass")
                 return value(nativeClassMatches(mWorld, subjectPtr, baseKey(subjectPtr), parameterKey) ? 1.0 : 0.0);
+            if (function == "SameSex" || function == "SameRace")
+            {
+                // Original4F62A0 compares race identity;4F6350/519D20 compares sex.
+                // A missing or non-NPC peer is false; the dispatcher supplies
+                // the opposite dialogue context for an omitted actor argument.
+                const auto peer = comparisonPtr();
+                if (peer.isEmpty()) return value(0.0);
+                if (function == "SameRace")
+                {
+                    const auto first = nativeNpcRace(mWorld, subjectPtr, baseKey(subjectPtr));
+                    const auto second = nativeNpcRace(mWorld, peer, baseKey(peer));
+                    return value(first && second && *first == *second ? 1.0 : 0.0);
+                }
+                const auto first = nativeNpcFemale(mWorld, subjectPtr, baseKey(subjectPtr));
+                const auto second = nativeNpcFemale(mWorld, peer, baseKey(peer));
+                return value(first && second && *first == *second ? 1.0 : 0.0);
+            }
             if (function == "GetIsRace" || function == "GetIsSex")
             {
                 // The TES4 player intentionally uses the shared ESM::NPC
@@ -2518,7 +2667,8 @@ namespace MWMechanics
                     && actorKey(subjectPtr) == ESM4::runtimeReferenceKey(comparisonKey) ? 1.0 : 0.0);
             }
             if (function == "GetInCell")
-                return value(!parameterKey.isNull() && cellKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
+                return value(ESM4::cellConditionMatches(mWorld.mStore.get<ESM4::Cell>().search(cellKey(subjectPtr)),
+                    mWorld.mStore.get<ESM4::Cell>().search(parameterKey)) ? 1.0 : 0.0);
             if (function == "GetDayofWeek")
                 return value(ESM4::calendarDayOfWeek(now()));
             if (function == "IsPlayerInJail")
@@ -2680,6 +2830,8 @@ namespace MWMechanics
             return result;
         }
 
+        if (live.mState.mPhase != ESM4::PackagePhase::Complete)
+            applyPackageDoorPolicy(live, DoorPolicyEvent::End);
         live.mState.mSelectionGeneration = result.mEvaluationGeneration;
         live.mState.mConditionResult = result.mConditionResult;
         live.mState.mScheduleWindow = result.mWindow;
@@ -2727,6 +2879,7 @@ namespace MWMechanics
         selection << "source=" << static_cast<unsigned>(result.mSource) << " type="
                   << static_cast<unsigned>(result.mType) << " list_index=" << result.mListIndex << " low-process=true";
         logEvent("selection", live, selection.str());
+        applyPackageDoorPolicy(live, DoorPolicyEvent::Start);
         return result;
     }
 
@@ -2914,6 +3067,17 @@ namespace MWMechanics
             if (!target)
                 return std::nullopt;
             live.mDestinationCell = target->mCell;
+            if (record.mPackageType == ESM4::AIPackageType::Follow)
+            {
+                const float range = record.mTargetData.mDistance > 0
+                    ? static_cast<float>(record.mTargetData.mDistance) : 128.f;
+                // Route to the leader, not a radial point which can land on
+                // the wrong side of a wall. Within the authored range, hold
+                // the follower's current reachable position.
+                return live.mState.mCell == target->mCell
+                        && distanceSquared(actorPosition, target->mPosition) <= range * range
+                    ? actorPosition : target->mPosition;
+            }
             osg::Vec3f offset = actorPosition - target->mPosition;
             offset.z() = 0.f;
             if (offset.length2() <= 1.f)
@@ -3152,6 +3316,8 @@ namespace MWMechanics
             return result;
         }
 
+        if (live.mState.mPhase != ESM4::PackagePhase::Complete)
+            applyPackageDoorPolicy(live, DoorPolicyEvent::End);
         live.mState.mSelectionGeneration = result.mEvaluationGeneration;
         live.mState.mConditionResult = result.mConditionResult;
         live.mState.mScheduleWindow = result.mWindow;
@@ -3198,6 +3364,7 @@ namespace MWMechanics
         selection << "source=" << static_cast<unsigned>(result.mSource) << " type="
                   << static_cast<unsigned>(result.mType) << " list_index=" << result.mListIndex;
         logEvent("selection", live, selection.str());
+        applyPackageDoorPolicy(live, DoorPolicyEvent::Start);
         return result;
     }
 
@@ -3369,6 +3536,10 @@ namespace MWMechanics
                 live.mDestinationCell = logical->second.mState.mCell;
             const float requestedDistance = static_cast<float>(record.mTargetData.mDistance);
             const float followDistance = requestedDistance > 0.f ? requestedDistance : 128.f;
+            if (record.mPackageType == ESM4::AIPackageType::Follow)
+                return live.mState.mCell == live.mDestinationCell
+                        && distanceSquared(actorPosition, *targetPosition) <= followDistance * followDistance
+                    ? actorPosition : *targetPosition;
             osg::Vec3f offset = actorPosition - *targetPosition;
             offset.z() = 0.f;
             if (offset.length2() <= 1.f)
@@ -3635,16 +3806,47 @@ namespace MWMechanics
         // segment is rebuilt after the paired marker commits the intermediate
         // cell. This keeps every boundary an actual XTEL edge.
         std::map<ESM::FormKey, std::size_t> remainingHops;
-        std::queue<ESM::FormKey> pendingCells;
+        // Streets can cross CELL boundaries between two teleport doors.
+        // Follow resolved, directed PGRI edges backwards at zero door cost;
+        // the eventual node route still validates the complete approach.
+        ensureStreetCellIndex();
+        std::set<ESM::FormKey> sourceStreetCells{live.mState.mCell};
+        std::vector<ESM::FormKey> sourcePending{live.mState.mCell};
+        while (!sourcePending.empty())
+        {
+            const auto cell = sourcePending.back();
+            sourcePending.pop_back();
+            if (const auto streets = mOutgoingStreetCells.find(cell); streets != mOutgoingStreetCells.end())
+                for (const auto& successor : streets->second)
+                    if (sourceStreetCells.insert(successor).second)
+                        sourcePending.push_back(successor);
+        }
+        std::deque<ESM::FormKey> pendingCells;
         remainingHops.emplace(destinationCell, 0);
-        pendingCells.push(destinationCell);
+        pendingCells.push_back(destinationCell);
+        const auto relaxCell = [&](const ESM::FormKey& cell, std::size_t distance, bool street) {
+            const auto [it, inserted] = remainingHops.emplace(cell, distance);
+            if (!inserted && it->second <= distance)
+                return;
+            it->second = distance;
+            if (street) pendingCells.push_front(cell);
+            else pendingCells.push_back(cell);
+        };
         std::size_t reverseDoors = 0;
         std::size_t reverseLocked = 0;
         while (!pendingCells.empty())
         {
             const ESM::FormKey cell = pendingCells.front();
-            pendingCells.pop();
+            pendingCells.pop_front();
             const std::size_t distance = remainingHops.at(cell);
+            // This frontier is already approachable without another door.
+            // Expanding it backwards would search unrelated doors across the
+            // entire continent. Keep same-cell component-bridging door plans.
+            if (!sameCell && sourceStreetCells.contains(cell))
+                continue;
+            if (const auto streets = mIncomingStreetCells.find(cell); streets != mIncomingStreetCells.end())
+                for (const auto& predecessor : streets->second)
+                    relaxCell(predecessor, distance, true);
             const auto incoming = mUnloadedDoorsByDestinationCell.find(cell);
             if (incoming == mUnloadedDoorsByDestinationCell.end())
                 continue;
@@ -3661,8 +3863,7 @@ namespace MWMechanics
                     reverseLocked += locked ? 1 : 0;
                     continue;
                 }
-                if (remainingHops.emplace(door.mCell, distance + 1).second)
-                    pendingCells.push(door.mCell);
+                relaxCell(door.mCell, distance + 1, false);
             }
         }
 
@@ -3711,6 +3912,8 @@ namespace MWMechanics
                 const auto remaining = remainingHops.find(marker.mCell);
                 if (remaining == remainingHops.end())
                     continue;
+                if (bestRoute && remaining->second + 1 > bestHopCount)
+                    continue;
                 ++sourceReachableCellCount;
 
                 const ESM4::PathgridGraph* doorGraph = service.graphForCell(door.mCell);
@@ -3723,7 +3926,13 @@ namespace MWMechanics
                 ++sourceNodeCount;
                 const ESM4::PathgridRouteResult route = service.route(start, *doorNode);
                 if (!route)
+                {
+                    logEvent("door-candidate-unreachable", live, "door=" + door.mReference.serialize()
+                        + " start=" + start.mPathgrid.serialize() + "/" + std::to_string(start.mNode)
+                        + " destination=" + doorNode->mPathgrid.serialize() + "/"
+                        + std::to_string(doorNode->mNode) + " failure=" + route.mDiagnostic);
                     continue;
+                }
                 ++sourceRouteCount;
 
                 float exitCost = 0.f;
@@ -3775,9 +3984,19 @@ namespace MWMechanics
         // current-cell edge reaches the destination through the door graph.
         considerDoorCell(live.mState.mCell);
         if (!bestRoute)
-            for (const auto& [candidateCell, _] : remainingHops)
+        {
+            std::vector<std::pair<std::size_t, ESM::FormKey>> candidates;
+            for (const auto& [candidateCell, hops] : remainingHops)
                 if (candidateCell != live.mState.mCell)
-                    considerDoorCell(candidateCell);
+                    candidates.emplace_back(hops, candidateCell);
+            std::sort(candidates.begin(), candidates.end());
+            for (const auto& [hops, candidateCell] : candidates)
+            {
+                if (bestRoute && hops > bestHopCount)
+                    break;
+                considerDoorCell(candidateCell);
+            }
+        }
 
         if (!bestRoute || !bestDoor)
         {
@@ -4218,7 +4437,8 @@ namespace MWMechanics
             return false;
 
         const float radius = travelArrivalRadius(live);
-        if (live.mState.mPackageType == ESM4::AIPackageType::Travel
+        if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
+                || live.mState.mPackageType == ESM4::AIPackageType::Follow)
             && oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
                 live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType, radius))
         {
@@ -4382,6 +4602,12 @@ namespace MWMechanics
         if (transition.mFrom != ESM4::PackagePhase::Complete && transition.mTo == ESM4::PackagePhase::Complete)
             recordDailyCompletion(live);
         mPendingPackageDone.record(transition.mFrom, transition.mTo, live.mState.mActor, live.mState.mPackage);
+        if (transition.mFrom == ESM4::PackagePhase::Arrive
+            && (transition.mTo == ESM4::PackagePhase::Act || transition.mTo == ESM4::PackagePhase::Wait
+                || transition.mTo == ESM4::PackagePhase::ReadyForM15Combat))
+            applyPackageDoorPolicy(live, DoorPolicyEvent::Location);
+        if (transition.mFrom != ESM4::PackagePhase::Complete && transition.mTo == ESM4::PackagePhase::Complete)
+            applyPackageDoorPolicy(live, DoorPolicyEvent::End);
         if (oldPhase == ESM4::PackagePhase::Door && live.mState.mPhase != oldPhase)
             live.mState.mDoorAnimationStarted = false;
         if (transition.mFrom != transition.mTo)
@@ -4404,6 +4630,28 @@ namespace MWMechanics
 
     void OblivionAiService::executeUnloadedFixedStep(LiveActor& live, float duration)
     {
+        if (live.mState.mPhase == ESM4::PackagePhase::Stalled
+            && live.mState.mInterruptionReason == "bounded-repath-exhausted"
+            && live.mState.mNoProgressSeconds > 0.f)
+        {
+            // Resident movement can be blocked by physical geometry. Once
+            // abstract simulation owns movement, rebuild that same intent
+            // against the native graph and current door permissions. A
+            // missing route or locked door remains a semantic failure; it
+            // must not inherit an unconditional retry from this handoff.
+            logEvent("physical-route-retired", live, "abstract-movement-handoff");
+            live.mRoute.clear();
+            live.mContinuousRoute.clear();
+            live.mRouteCursor = live.mContinuousRouteCursor = 0;
+            live.mContinuousRouteEndCursor.reset();
+            live.mForeignRouteTarget.reset();
+            live.mRouteDoor.reset();
+            live.mState.mDoor = {};
+            live.mState.mNoProgressSeconds = 0.f;
+            live.mState.mRepathAttempts = 0;
+            live.mState.mInterruptionReason.clear();
+            setPhase(live, ESM4::PackagePhase::Resolve);
+        }
         live.mSelectionCheckTimer = std::max(0.f, live.mSelectionCheckTimer - duration);
         if (live.mState.mDoorCooldown > 0.f)
             live.mState.mDoorCooldown = std::max(0.f, live.mState.mDoorCooldown - duration);
@@ -4412,6 +4660,7 @@ namespace MWMechanics
         const bool waitingWander = live.mState.mPhase == ESM4::PackagePhase::Wait
             && live.mState.mPackageType == ESM4::AIPackageType::Wander && waitingPackage
             && !waitingPackage->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
+        const bool waitingAmbush = reevaluateWaitingAmbush(live.mState, waitingPackage);
         const bool routeChanged = (live.mState.mPhase == ESM4::PackagePhase::Interrupted
                                       || live.mState.mPhase == ESM4::PackagePhase::Stalled)
             && !live.mState.mPathgrid.isNull()
@@ -4425,7 +4674,7 @@ namespace MWMechanics
                 && (live.mState.mPhase == ESM4::PackagePhase::Interrupted
                     || live.mState.mPhase == ESM4::PackagePhase::Complete
                     || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
-                    || routeChanged || waitingWander)))
+                    || routeChanged || waitingWander || waitingAmbush)))
         {
             const bool idleWait = live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull();
             const bool restart = live.mNeedsSelection || (!idleWait && (routeChanged || doorRestored));
@@ -4440,6 +4689,18 @@ namespace MWMechanics
         {
             setPhase(live, ESM4::PackagePhase::Wait);
             return;
+        }
+
+        if (isPackageWaiting(current->mFormKey))
+        {
+            setPhase(live, ESM4::PackagePhase::Wait);
+            live.mState.mInterruptionReason = "package-waiting";
+            return;
+        }
+        if (live.mState.mInterruptionReason == "package-waiting")
+        {
+            live.mState.mInterruptionReason.clear();
+            setPhase(live, ESM4::PackagePhase::Resolve);
         }
 
         if (live.mState.mPhase == ESM4::PackagePhase::Select)
@@ -4482,8 +4743,14 @@ namespace MWMechanics
             if (live.mRoute.empty() && live.mDestination)
                 static_cast<void>(prepareUnloadedRoute(live));
             const osg::Vec3f previous = live.mState.mLastValidPosition.asVec3();
+            const ESM::FormKey previousCell = live.mState.mCell;
             bool reached = false;
             const bool route = advanceUnloadedMovement(live, duration, reached);
+            if (previousCell != live.mState.mCell && reevaluateFollowContext(current))
+            {
+                selectUnloaded(live, false);
+                return;
+            }
             const bool foreignDestination = !live.mDestinationCell.isNull()
                 && live.mDestinationCell != live.mState.mCell;
             const bool door = reached && !live.mState.mDoor.isNull();
@@ -4712,10 +4979,9 @@ namespace MWMechanics
         requireMutableRuntime();
         if (!std::isfinite(duration) || duration <= 0.f)
             return;
-        // The state-only executor queues package callbacks; it does not invoke
-        // scripts which could replace reference identities during this pass.
-        // Rebuild after every pass, so save/load, scripts and cell transitions
-        // cannot leave a persistent door/inventory cache behind.
+        // Callbacks are queued, but package door actions can still insert saved
+        // references. Refresh the borrowed index at actor/step boundaries when
+        // the backing vector changes; in-place state edits remain visible.
         std::optional<OblivionSavedReferenceIndex> references;
         if (mWorld.mOblivionRuntimeState)
             references.emplace(std::span<const ESM4::RuntimeReferenceState>(mWorld.mOblivionRuntimeState->mReferences));
@@ -4726,6 +4992,22 @@ namespace MWMechanics
             ~ResetIndex() { mSlot = mPrevious; }
         } reset{mLowProcessReferenceIndex, mLowProcessReferenceIndex};
         mLowProcessReferenceIndex = references ? &*references : nullptr;
+        const auto refreshReferences = [&] {
+            if (mWorld.mOblivionRuntimeState)
+            {
+                const auto& source = mWorld.mOblivionRuntimeState->mReferences;
+                if (!references || !references->matches(source))
+                    references.emplace(std::span<const ESM4::RuntimeReferenceState>(source));
+            }
+            else
+                references.reset();
+            mLowProcessReferenceIndex = references ? &*references : nullptr;
+        };
+        std::set<ESM::FormKey> visibleCells;
+        if (mWorld.mWorldScene)
+            for (const auto* cell : mWorld.mWorldScene->getActiveCells())
+                if (cell->getCell()->isEsm4())
+                    visibleCells.insert(cell->getCell()->getEsm4().mFormKey);
         const float elapsed = std::clamp(duration, 0.f, 5.f);
         for (auto& [_, live] : mActors)
         {
@@ -4748,6 +5030,7 @@ namespace MWMechanics
             }
             try
             {
+                refreshReferences();
                 const auto* saved = savedReferenceState(live.mState.mActor);
                 if ((saved && saved->mDeleted)
                     || !mWorld.getOblivionReferenceEnabled(live.mState.mActor, mLowProcessReferenceIndex).value_or(false))
@@ -4766,6 +5049,7 @@ namespace MWMechanics
                 unsigned steps = 0;
                 while (live.mState.mNextLowProcessTick <= 0.f && steps < 8)
                 {
+                    refreshReferences();
                     executeUnloadedFixedStep(live, 0.25f);
                     live.mState.mNextLowProcessTick += 0.25f;
                     ++steps;
@@ -4775,6 +5059,13 @@ namespace MWMechanics
                 if (!std::isfinite(live.mState.mNextLowProcessTick)
                     || live.mState.mNextLowProcessTick < 0.f)
                     live.mState.mNextLowProcessTick = 0.f;
+                // An inactive resident's Ptr can still be in the previous
+                // room. Promote its authoritative low-process pose when the
+                // destination becomes visible, after actor iteration ends.
+                if (!loaded.isEmpty() && live.mAbstractPositionDirty
+                    && live.mState.mPhase != ESM4::PackagePhase::Door
+                    && visibleCells.contains(live.mState.mCell))
+                    live.mPendingRealization = true;
             }
             catch (const std::exception& error)
             {
@@ -4954,6 +5245,120 @@ namespace MWMechanics
             return false;
         const ESM::FormKey owner = ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(record->mOwner);
         return hasDoorOwnershipPermission(live, owner, actor);
+    }
+
+    void OblivionAiService::applyPackageDoorPolicy(const LiveActor& live, DoorPolicyEvent event)
+    {
+        const auto* current = package(live.mState.mPackage);
+        if (!current)
+            return;
+        using Flag = ESM4::PackageFlag;
+        const auto [lockFlag, unlockFlag] = event == DoorPolicyEvent::Start
+            ? std::pair{Flag::LockDoorsAtStart, Flag::UnlockDoorsAtStart}
+            : event == DoorPolicyEvent::Location
+            ? std::pair{Flag::LockDoorsAtLocation, Flag::UnlockDoorsAtLocation}
+            : std::pair{Flag::LockDoorsAtEnd, Flag::UnlockDoorsAtEnd};
+        const bool lock = current->mPackageFlags.has(lockFlag);
+        const bool unlock = current->mPackageFlags.has(unlockFlag);
+        if (lock == unlock)
+            return; // Neither requested, or contradictory authored flags.
+        // Low-process travel owns a cell independently of its last resident Ptr.
+        const auto& cellKey = live.mState.mCell;
+        const auto* cell = mWorld.mStore.search<ESM4::Cell>(cellKey);
+        if (!cell || !(cell->mCellFlags & ESM4::CELL_Interior)
+            || !hasCellOwnershipPermission(live, cellKey))
+            return;
+
+        std::set<std::size_t> doors;
+        const auto collect = [&](const auto& index) {
+            if (const auto found = index.find(cellKey); found != index.end())
+                doors.insert(found->second.begin(), found->second.end());
+        };
+        collect(mUnloadedDoorsByCell);
+        collect(mUnloadedDoorsByDestinationCell);
+        for (const auto index : doors)
+        {
+            const auto& door = mUnloadedLocations[index];
+            const auto opposite = mUnloadedLocationByReference.find(door.mTeleportDoor);
+            if (door.mTeleportDoor.isNull() || opposite == mUnloadedLocationByReference.end()
+                || mUnloadedLocations[opposite->second].mType != ESM::REC_DOOR4)
+                continue;
+            const auto* record = mWorld.mStore.search<ESM4::Reference>(door.mReference);
+            if (!record)
+                continue;
+            const auto state = currentDoorState(door);
+            if (!state.mAvailable || state.mLocked == lock)
+                continue;
+            const auto* saved = savedReferenceState(door.mReference);
+            auto ptr = loadedPtrFor(door.mReference);
+            const int level = !ptr.isEmpty() ? ptr.getCellRef().getLockLevel()
+                : saved ? saved->mLockLevel : static_cast<int>(record->mLockLevel);
+            // This support changes existing locks, not unkeyed connections or
+            // physical doors within the room (for example a prison cell).
+            if (!record->mIsLocked && record->mLockLevel == 0 && record->mKey.isZeroOrUnset()
+                && level == 0 && !state.mLocked)
+                continue;
+            const int magnitude = static_cast<int>(std::min<std::int64_t>(
+                level < 0 ? -std::int64_t(level) : level, std::numeric_limits<int>::max()));
+            if (!mWorld.mOblivionRuntimeState)
+                mWorld.mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(
+                    mWorld.captureOblivionRuntimeState());
+            auto& references = mWorld.mOblivionRuntimeState->mReferences;
+            auto found = std::find_if(references.begin(), references.end(),
+                [&](const auto& reference) { return reference.mKey == door.mReference; });
+            if (found == references.end())
+            {
+                ESM4::RuntimeReferenceState reference;
+                reference.mKey = door.mReference;
+                reference.mBase = door.mBase;
+                reference.mCell = door.mCell;
+                reference.mPosition = record->mPos;
+                if (!door.mOwner.isNull()) reference.mOwner = door.mOwner;
+                reference.mOwnershipRank = record->mFactionRank;
+                reference.mOwnershipGlobal = ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(record->mGlobal);
+                reference.mCustomState["record_type"] = std::int64_t(ESM::REC_DOOR4);
+                reference.mCustomState["count"] = std::int64_t(record->mCount);
+                reference.mCustomState["scale"] = double(record->mScale);
+                references.push_back(std::move(reference));
+                found = std::prev(references.end());
+            }
+            found->mLockLevel = lock ? magnitude : -magnitude;
+            found->mCustomState["locked"] = lock;
+            if (ptr.isEmpty())
+                found->mCustomState["native.package.lock_projection_pending"] = true;
+            if (!ptr.isEmpty())
+            {
+                if (lock) ptr.getCellRef().lock(magnitude);
+                else ptr.getCellRef().unlock();
+                found->mCustomState.erase("native.package.lock_projection_pending");
+            }
+            Log(Debug::Info) << "Native package door policy: actor=" << live.mState.mActor.serialize()
+                << " package=" << live.mState.mPackage.serialize() << " door=" << door.mReference.serialize()
+                << " locked=" << lock << " event=" << static_cast<unsigned>(event);
+        }
+    }
+
+    void OblivionAiService::applyPendingDoorLockProjection(const MWWorld::Ptr& door)
+    {
+        // Incoming restore bindings apply their own validated lock values.
+        // Do not project the outgoing world's overlay while staging them.
+        if (door.isEmpty() || door.getType() != ESM::REC_DOOR4
+            || mWorld.mPendingOblivionRuntimeState || !mWorld.mOblivionRuntimeState)
+            return;
+        auto& references = mWorld.mOblivionRuntimeState->mReferences;
+        const auto found = std::find_if(references.begin(), references.end(), [&](const auto& reference) {
+            return reference.mKey == door.getCellRef().getFormKey();
+        });
+        if (found == references.end()) return;
+        const auto pending = found->mCustomState.find("native.package.lock_projection_pending");
+        if (pending == found->mCustomState.end() || !std::holds_alternative<bool>(pending->second)
+            || !std::get<bool>(pending->second)) return;
+        const auto locked = found->mCustomState.find("locked");
+        if (locked == found->mCustomState.end() || !std::holds_alternative<bool>(locked->second))
+            throw std::runtime_error("native package door projection has no lock state");
+        door.getCellRef().setLockLevel(found->mLockLevel);
+        door.getCellRef().setLocked(std::get<bool>(locked->second));
+        found->mCustomState.erase(pending);
     }
 
     bool OblivionAiService::doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor) const
@@ -5198,7 +5603,22 @@ namespace MWMechanics
         const ESM4::PathgridService& service = mWorld.mStore.getOblivionPathgridService();
         bool valid = actor.isInCell() && live.mState.mLastValidCell == live.mState.mCell;
 
-        if (valid)
+        // An intermediate XTEL landing has no remaining source route and is
+        // not yet the package destination. It is nevertheless an authored,
+        // bounded position from which the resident segment can be rebuilt.
+        bool doorLanding = false;
+        if (valid && live.mState.mDoorCooldown > 0.f)
+            if (const auto source = mUnloadedLocationByReference.find(live.mState.mLastTransitionDoor);
+                source != mUnloadedLocationByReference.end())
+            {
+                const auto& door = mUnloadedLocations[source->second];
+                const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
+                doorLanding = door.mType == ESM::REC_DOOR4 && marker != mUnloadedLocationByReference.end()
+                    && mUnloadedLocations[marker->second].mCell == live.mState.mCell
+                    && distanceSquared(abstractPosition, door.mTeleportPosition) <= 128.f * 128.f;
+            }
+
+        if (valid && !doorLanding)
         {
             constexpr float validationTolerance = 128.f;
             const float validationDistance = validationTolerance * validationTolerance;
@@ -5432,6 +5852,16 @@ namespace MWMechanics
         if (!highProcess)
             return advanceUnloadedMovement(live, duration, reached, speed);
 
+        if (live.mRoute.empty() && live.mContinuousRoute.empty() && !live.mRouteDoor
+            && !live.mDestinationCell.isNull() && live.mDestinationCell != live.mState.mCell)
+        {
+            // Interior coordinates are not a world-space fallback. A failed
+            // cross-cell plan must stay blocked, just like low process.
+            if (live.mLastRouteFailure.empty())
+                live.mLastRouteFailure = "foreign-route-unavailable";
+            return false;
+        }
+
         const auto useBlockingDoor = [&](const osg::Vec3f& target) {
             if (live.mState.mDoorCooldown > 0.f)
                 return false;
@@ -5451,7 +5881,8 @@ namespace MWMechanics
             return true;
         };
         const float radius = travelArrivalRadius(live);
-        if (live.mState.mPackageType == ESM4::AIPackageType::Travel
+        if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
+                || live.mState.mPackageType == ESM4::AIPackageType::Follow)
             && oblivionDestinationReached(live.mState.mCell, position,
                 live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
                 destination, sArrivalTolerance, live.mState.mPackageType, radius))
@@ -5477,13 +5908,21 @@ namespace MWMechanics
                 return true;
             }
 
-            if (live.mContinuousRouteEndCursor)
+            const bool continuesNativeRoute = live.mContinuousRouteEndCursor.has_value();
+            if (continuesNativeRoute)
             {
                 live.mRouteCursor = std::max(live.mRouteCursor, *live.mContinuousRouteEndCursor);
                 live.mContinuousRouteEndCursor.reset();
+                // A source-cell navmesh corridor can be consumed just as the
+                // physical actor enters the next exterior cell. Its endpoint
+                // is still a PGRI handoff, not the package destination. Retire
+                // the segment so later ticks cannot reinterpret it as one.
+                live.mContinuousRoute.clear();
+                live.mContinuousRouteCursor = 0;
             }
 
-            if (!live.mRouteDoor && (live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell))
+            if (!continuesNativeRoute && !live.mRouteDoor
+                && (live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell))
             {
                 // findSmoothPath normally ends within the requested tolerance.
                 // Keep the final arrival check explicit so a partial output
@@ -5577,6 +6016,13 @@ namespace MWMechanics
             live.mRouteDoor.reset();
             reached = true;
             return true;
+        }
+
+        if (live.mRouteCursor >= live.mRoute.size() && !live.mDestinationCell.isNull()
+            && live.mDestinationCell != live.mState.mCell)
+        {
+            live.mLastRouteFailure = "foreign-route-ended-before-destination";
+            return false;
         }
 
         osg::Vec3f doorTarget = destination;
@@ -5698,7 +6144,9 @@ namespace MWMechanics
             || cellKey(actor) != cellKey(target))
         {
             if (const auto found = mActors.find(actorKey(actor)); found != mActors.end())
-                (escort ? found->second.mEscortRoute : found->second.mCombatRoute) = {};
+                // Explicit materialization avoids GCC16's optimized conditional
+                // braced-assignment corrupting the empty FormKey strings.
+                (escort ? found->second.mEscortRoute : found->second.mCombatRoute) = TargetRoute{};
             return; // Foreign-cell combat travel needs its own door policy.
         }
         auto& live = ensure(actor);
@@ -5819,6 +6267,12 @@ namespace MWMechanics
         if (transition.mFrom != ESM4::PackagePhase::Complete && transition.mTo == ESM4::PackagePhase::Complete)
             recordDailyCompletion(live);
         mPendingPackageDone.record(transition.mFrom, transition.mTo, live.mState.mActor, live.mState.mPackage);
+        if (transition.mFrom == ESM4::PackagePhase::Arrive
+            && (transition.mTo == ESM4::PackagePhase::Act || transition.mTo == ESM4::PackagePhase::Wait
+                || transition.mTo == ESM4::PackagePhase::ReadyForM15Combat))
+            applyPackageDoorPolicy(live, DoorPolicyEvent::Location);
+        if (transition.mFrom != ESM4::PackagePhase::Complete && transition.mTo == ESM4::PackagePhase::Complete)
+            applyPackageDoorPolicy(live, DoorPolicyEvent::End);
         if (oldPhase == ESM4::PackagePhase::Door && live.mState.mPhase != oldPhase)
             live.mState.mDoorAnimationStarted = false;
         if (transition.mFrom != transition.mTo)
@@ -5994,6 +6448,7 @@ namespace MWMechanics
         const osg::Vec3f observedPosition = actor.getRefData().getPosition().asVec3();
         const bool madeProgress = !live.mHasObservedPosition
             || (observedPosition - live.mLastObservedPosition).length2() > 0.25f;
+        const bool observedCellChanged = live.mHasObservedPosition && live.mLastObservedCell != cellKey(actor);
         synchronizeIdentity(live, actor);
         live.mLastObservedPosition = observedPosition;
         live.mLastObservedCell = cellKey(actor);
@@ -6107,6 +6562,10 @@ namespace MWMechanics
 
         live.mEscortRoute = {};
 
+        if (live.mSelectionCheckTimer <= 0.f
+            && reevaluateWaitingAmbush(live.mState, package(live.mState.mPackage)))
+            select(actor, live, false);
+
         // Ambush also supplies authored force-greetings (including the
         // Emperor in the prison and Baurus after the final fight). Reuse the
         // native Player fight score to admit friendly greetings, including
@@ -6196,6 +6655,11 @@ namespace MWMechanics
         // Waiting wander is interruptible: a newly eligible authored package
         // (such as the tutorial rats pushing the wall) must not wait a day.
         const auto* waitingPackage = package(live.mState.mPackage);
+        const auto* sourceGraph = mWorld.mStore.getOblivionPathgridService().graph(live.mState.mPathgrid);
+        const bool sourceCellChanged = sourceGraph && sourceGraph->cellKey() != live.mState.mCell;
+        const bool staleSource = live.mState.mPhase == ESM4::PackagePhase::Stalled && sourceCellChanged;
+        const bool followContextChanged = reevaluateFollowContext(waitingPackage)
+            && (observedCellChanged || sourceCellChanged);
         const bool waitingWander = live.mState.mPhase == ESM4::PackagePhase::Wait
             && live.mState.mPackageType == ESM4::AIPackageType::Wander && waitingPackage
             && !waitingPackage->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
@@ -6209,10 +6673,10 @@ namespace MWMechanics
             && interruptedPackage && interruptedPackage->mPackageType == ESM4::AIPackageType::UseItemAt
             && interruptedPackage->mTargetData.hasReference()
             && canActivatePlacedObject(mWorld, actor, loadedPtrFor(interruptedPackage->mTargetData.mReferenceKey));
-        if (live.mSelectionCheckTimer <= 0.f
+        if (followContextChanged || (live.mSelectionCheckTimer <= 0.f
             && (live.mState.mPhase == ESM4::PackagePhase::Interrupted || live.mState.mPhase == ESM4::PackagePhase::Complete
                 || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
-                || stalledRouteChanged || waitingWander))
+                || stalledRouteChanged || waitingWander)))
         {
             // A terminal package remains terminal while it is still the
             // selected winner. Retry after an explicit graph change or when
@@ -6222,6 +6686,24 @@ namespace MWMechanics
             const bool idleWait = live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull();
             const bool restart = !idleWait && (stalledRouteChanged || doorRestored || actionRestored);
             select(actor, live, restart);
+        }
+        if (staleSource && live.mState.mPhase == ESM4::PackagePhase::Stalled)
+        {
+            // Recover a save made by the old corridor handoff. The actor has
+            // already crossed physically; rebuild from its actual cell while
+            // retaining a still-selected (including mandatory) package.
+            live.mRoute.clear();
+            live.mContinuousRoute.clear();
+            live.mRouteCursor = live.mContinuousRouteCursor = 0;
+            live.mContinuousRouteEndCursor.reset();
+            live.mForeignRouteTarget.reset();
+            live.mRouteDoor.reset();
+            live.mState.mPathgrid = {};
+            live.mState.mPathNode = 0;
+            live.mState.mRepathAttempts = 0;
+            live.mState.mNoProgressSeconds = 0.f;
+            live.mState.mInterruptionReason.clear();
+            setPhase(live, ESM4::PackagePhase::Resolve);
         }
 
         const ESM4::AIPackage* current = package(live.mState.mPackage);
@@ -6237,6 +6719,19 @@ namespace MWMechanics
                 return false;
             return transitionPackage(actor, live, { duration, true, true, true, false, true, false, false, false,
                 false, false, true });
+        }
+
+        if (isPackageWaiting(current->mFormKey))
+        {
+            stopMovement(actor);
+            setPhase(live, ESM4::PackagePhase::Wait);
+            live.mState.mInterruptionReason = "package-waiting";
+            return true;
+        }
+        if (live.mState.mInterruptionReason == "package-waiting")
+        {
+            live.mState.mInterruptionReason.clear();
+            setPhase(live, ESM4::PackagePhase::Resolve);
         }
 
         if (live.mState.mPhase == ESM4::PackagePhase::Select)
@@ -6306,10 +6801,20 @@ namespace MWMechanics
                 // A save stores the stable destination intent, not ephemeral
                 // route vectors. Rebuild the route after the cell stores and
                 // pathgrid service have been restored.
-                if (highProcess)
-                    static_cast<void>(prepareRoute(actor, live, *live.mDestination, live.mDestinationCell));
-                else
-                    static_cast<void>(prepareUnloadedRoute(live));
+                const bool prepared = highProcess
+                    ? prepareRoute(actor, live, *live.mDestination, live.mDestinationCell)
+                    : prepareUnloadedRoute(live);
+                if (!prepared)
+                {
+                    const auto& grids = mWorld.mStore.getOblivionPathgridService();
+                    const auto* source = grids.graphForCell(live.mState.mCell);
+                    const auto* target = grids.graphForCell(live.mDestinationCell);
+                    logEvent("route-preparation-failed", live, live.mLastRouteFailure
+                        + " source_cell=" + live.mState.mCell.serialize()
+                        + " source_graph=" + (source ? source->pathgridKey().serialize() : "null")
+                        + " destination_cell=" + live.mDestinationCell.serialize()
+                        + " destination_graph=" + (target ? target->pathgridKey().serialize() : "null"));
+                }
             }
             const osg::Vec3f previousLogicalPosition = live.mState.mLastValidPosition.asVec3();
             bool reached = false;
@@ -6863,6 +7368,28 @@ namespace MWMechanics
             return;
         const float seconds = gameHours * 3600.f;
         const ESM4::CalendarInstant end = now();
+        // Reuse identity lookups only across state-only steps. Inventory
+        // actions and resident reconciliation can mutate the saved world, so
+        // no index is installed during them and the next step rebuilds it.
+        std::optional<OblivionSavedReferenceIndex> references;
+        const auto executeStep = [&](LiveActor& live, float duration) {
+            if (mWorld.mOblivionRuntimeState)
+            {
+                const auto& source = mWorld.mOblivionRuntimeState->mReferences;
+                if (!references || !references->matches(source))
+                    references.emplace(std::span<const ESM4::RuntimeReferenceState>(source));
+            }
+            else
+                references.reset();
+            struct ResetIndex
+            {
+                const OblivionSavedReferenceIndex*& mSlot;
+                const OblivionSavedReferenceIndex* mPrevious;
+                ~ResetIndex() { mSlot = mPrevious; }
+            } reset{mLowProcessReferenceIndex, mLowProcessReferenceIndex};
+            mLowProcessReferenceIndex = references ? &*references : nullptr;
+            executeUnloadedFixedStep(live, duration);
+        };
         for (auto& [_, live] : mActors)
         {
             const MWWorld::Ptr actor = loadedPtrFor(live.mState.mActor);
@@ -6897,7 +7424,7 @@ namespace MWMechanics
                 // activation path when they are promoted/updated.
                 if (actor.isEmpty() && live.mState.mPhase == ESM4::PackagePhase::Door)
                 {
-                    executeUnloadedFixedStep(live, 0.f);
+                    executeStep(live, 0.f);
                     if (live.mState.mPhase == ESM4::PackagePhase::Door)
                     {
                         remaining = 0.f;
@@ -6915,7 +7442,7 @@ namespace MWMechanics
                         live.mState.mPhase == ESM4::PackagePhase::Path ? 300.f : remaining)
                     : 0.f;
 
-                executeUnloadedFixedStep(live, step);
+                executeStep(live, step);
 
                 // A low-process Eat/UseItemAt reservation becomes commit-ready
                 // when its timer reaches zero.  A resident actor can use the
@@ -6928,6 +7455,7 @@ namespace MWMechanics
                         live.mState.mActionReserved = false;
                     else
                         logEvent("action-commit-failed", live, "fast-forward-resident-inventory");
+                    references.reset();
                 }
 
                 if (step > 0.f)
@@ -6946,7 +7474,7 @@ namespace MWMechanics
                         // paired XTEL edge. Continue the same jump from the
                         // destination marker instead of leaving a route at
                         // every intermediate door.
-                        executeUnloadedFixedStep(live, 0.f);
+                        executeStep(live, 0.f);
                         if (live.mState.mPhase != ESM4::PackagePhase::Door)
                             continue;
                     }
@@ -6968,7 +7496,10 @@ namespace MWMechanics
 
             if (!actor.isEmpty() && live.mAbstractPositionDirty && live.mState.mPhase != ESM4::PackagePhase::Door
                 && (live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell))
+            {
                 static_cast<void>(reconcileAbstractPosition(actor, live));
+                references.reset();
+            }
             mSimulationNow.reset();
         }
         dispatchPendingPackageDone();
@@ -7002,6 +7533,57 @@ namespace MWMechanics
         setPhase(live, ESM4::PackagePhase::Select);
         live.mNeedsSelection = true;
         static_cast<void>(executeFixedStep(actor, live, 0.f, true));
+        return true;
+    }
+
+    bool OblivionAiService::removeScriptPackage(const MWWorld::Ptr& actor)
+    {
+        requireMutableRuntime();
+        if (!handles(actor))
+            return false;
+        LiveActor& live = ensure(actor);
+        if (!live.mScriptPackage)
+            return false;
+        live.mScriptPackage.reset();
+        live.mTransientPackage.reset();
+        live.mState.mScriptPackage = {};
+        // Explicit removal releases even a mandatory override. Keep the old
+        // selection until select() runs its normal end/cleanup policy, then
+        // resume the actor's authored list without retaining the override.
+        static_cast<void>(select(actor, live, true));
+        if (live.mState.mPhase == ESM4::PackagePhase::Select)
+            static_cast<void>(executeFixedStep(actor, live, 0.f, true));
+        return true;
+    }
+
+    bool OblivionAiService::isPackageWaiting(const ESM::FormKey& key) const
+    {
+        const auto* record = package(key);
+        if (!record || (record->mPackageType != ESM4::AIPackageType::Follow
+                && record->mPackageType != ESM4::AIPackageType::Escort
+                && record->mPackageType != ESM4::AIPackageType::Accompany))
+            return false;
+        if (const auto found = mPackageWaiting.find(key); found != mPackageWaiting.end())
+            return found->second;
+        return record->mPackageFlags.has(ESM4::PackageFlag::Waiting);
+    }
+
+    bool OblivionAiService::setPackageWaiting(
+        const MWWorld::Ptr& actor, const ESM::FormKey& key, bool waiting)
+    {
+        requireMutableRuntime();
+        if (!handles(actor)) return false;
+        const auto* record = package(key);
+        if (!record || (record->mPackageType != ESM4::AIPackageType::Follow
+                && record->mPackageType != ESM4::AIPackageType::Escort
+                && record->mPackageType != ESM4::AIPackageType::Accompany))
+            return false;
+        const auto& live = ensure(actor);
+        // Native Wait accepts the active base package or script package only.
+        // The flag belongs to PACK, so all actors using it observe the change.
+        if (live.mState.mPackage != key && live.mState.mScriptPackage != key)
+            return false;
+        mPackageWaiting.insert_or_assign(key, waiting);
         return true;
     }
 
@@ -7185,6 +7767,7 @@ namespace MWMechanics
 
     void OblivionAiService::invalidateOverlayRoutes(const std::set<ESM::FormKey>& changedPathgrids)
     {
+        mStreetCellIndexValid = false;
         for (auto& [_, live] : mActors)
         {
             if (!oblivionRouteAffectedByOverlay(
@@ -7527,6 +8110,7 @@ namespace MWMechanics
 
     void OblivionAiService::capture(ESM4::RuntimeState& state) const
     {
+        state.mPackageWaiting = mPackageWaiting;
         state.mPendingPackageDone = mPendingPackageDone.capture();
         state.mAiRngState = mNextEvaluationGeneration == 0 ? 1 : mNextEvaluationGeneration;
         state.mActorAi.clear();
@@ -7624,6 +8208,7 @@ namespace MWMechanics
     {
         OblivionAiService* mTarget;
         std::map<ESM::FormKey, LiveActor> mActors;
+        std::map<ESM::FormKey, bool> mPackageWaiting;
         std::map<std::pair<ESM::FormKey, ESM::FormKey>, ESM4::RuntimeDetectionVector> mDetection;
         std::deque<ESM4::RuntimePackageDoneEvent> mEvents;
         std::optional<ESM4::PathgridService::PreparedOverlayRestore> mPathgrids;
@@ -7650,7 +8235,9 @@ namespace MWMechanics
         for (const auto& [actor, door] : mImpl->mCollisionExceptions)
             target.mWorld.mPhysics->setIgnoreCollision(actor, door, false);
         mImpl->mPathgrids->commit();
+        target.mStreetCellIndexValid = false;
         target.mActors.swap(mImpl->mActors);
+        target.mPackageWaiting.swap(mImpl->mPackageWaiting);
         target.mDetectionVectors.swap(mImpl->mDetection);
         target.mPendingPackageDone.installPrepared(mImpl->mEvents);
         target.mNextEvaluationGeneration = mImpl->mNextGeneration;
@@ -7663,8 +8250,32 @@ namespace MWMechanics
     OblivionAiService::PreparedRestore OblivionAiService::prepareRestore(const ESM4::RuntimeState& state, bool afterWorldClear)
     {
         state.validate();
+        for (const auto& reference : state.mReferences)
+        {
+            const auto pending = reference.mCustomState.find("native.package.lock_projection_pending");
+            if (pending == reference.mCustomState.end()) continue;
+            const auto* value = std::get_if<bool>(&pending->second);
+            if (!value)
+                throw std::invalid_argument("native package door projection flag must be boolean");
+            if (!*value) continue;
+            const auto locked = reference.mCustomState.find("locked");
+            const auto* placed = mWorld.mStore.search<ESM4::Reference>(reference.mKey);
+            if (locked == reference.mCustomState.end() || !std::holds_alternative<bool>(locked->second)
+                || !placed || placed->mDoor.destDoor.isZeroOrUnset()
+                || mWorld.mStore.find(placed->mBaseObj) != ESM::REC_DOOR4)
+                throw std::invalid_argument("native package door projection requires a teleport lock binding");
+        }
         auto plan = std::make_unique<PreparedRestore::Impl>();
         plan->mTarget = this;
+        for (const auto& [key, waiting] : state.mPackageWaiting)
+        {
+            const auto* record = package(key);
+            if (!record || (record->mPackageType != ESM4::AIPackageType::Follow
+                    && record->mPackageType != ESM4::AIPackageType::Escort
+                    && record->mPackageType != ESM4::AIPackageType::Accompany))
+                throw std::invalid_argument("TES4 package waiting override has no companion PACK binding");
+        }
+        plan->mPackageWaiting = state.mPackageWaiting;
         plan->mEvents.assign(state.mPendingPackageDone.begin(), state.mPendingPackageDone.end());
         const ESM4::CalendarInstant restoredNow{
             state.mClock.mYear, state.mClock.mMonth, state.mClock.mDay, state.mClock.mHour};

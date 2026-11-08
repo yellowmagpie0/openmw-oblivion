@@ -1,0 +1,1609 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Documented pre-pickup Chorrol course through original MS45 discovery/acceptance and fresh-process stage10 persistence. Full rescue/reward objective remains open.",
+  "master": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "runtime_binary": {
+    "path": "build/openmw",
+    "sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca"
+  },
+  "native_sources": [
+    {
+      "path": "apps/openmw/mwworld/obliviontrespass.hpp",
+      "sha256": "0cf05f2659cc1b19ca505850a1d7131e90b80a08993da1e12459d7bb60c957d2"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionownership.cpp",
+      "sha256": "fe2b24439d96a4420456b7bd64edf1f5f9350fcf56486d5f336c710d1b4e1ea0"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionai.cpp",
+      "sha256": "f22a7a9160c02754147604f9299c8b6c15590551bb7c457673e635211420fcdb"
+    },
+    {
+      "path": "apps/openmw/mwclass/esm4interactive.cpp",
+      "sha256": "0c48871d947978491171c406206aea0358041e30b363ba0e2877c49295931ad0"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "c38f9b3853fb821e9cc3fbe4de719ee90a631d63d13ba82638ad75f94596c0c1"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionownership.cpp",
+      "sha256": "5f369b4340c8b67b6735b6fa44de5a52ffbb7ba692129b94b79a59aae43c3f57"
+    }
+  ],
+  "checks": {
+    "calendar-global-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/calendar-global-normal-01/verification.json",
+        "sha256": "c3ca3884628f5b6d7b95d19da02fa01b99baeb925508621fb3c027d9ecc3d91b"
+      },
+      "source_before": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "fc39ccc6ab04779dcec345ac3ec5d7f278855f675180ffec72dc22614ba9a97d"
+      },
+      "source_after": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "fc39ccc6ab04779dcec345ac3ec5d7f278855f675180ffec72dc22614ba9a97d"
+      },
+      "result": {
+        "executed": 2237,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "2d8bf46e5ce3e7ce7c1e7859a1c8052bdcfe463efbca3fd4efef975b6b4e8411",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "a83f58c9bf1f905f0680d35660221f14840a25e2a98954e7681ffb58cfe695f8",
+        "inventory_sha256": "67c26eff1603c09eff12fc7c68bbde67e31c9e1ef7cd91091ac278fee378e857",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "calendar-global-sanitized-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/calendar-global-sanitized-01/verification.json",
+        "sha256": "c820891bf70ece4f12c5169d9aaddeb8e35677c2cf2e06df28ac72e4b4c06246"
+      },
+      "source_before": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "fc39ccc6ab04779dcec345ac3ec5d7f278855f675180ffec72dc22614ba9a97d"
+      },
+      "source_after": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "fc39ccc6ab04779dcec345ac3ec5d7f278855f675180ffec72dc22614ba9a97d"
+      },
+      "result": {
+        "executed": 2237,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "c6864cb15d61fa8fce70bffeba7e6423674a54b160ab82333b93c71e8d51ab03",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "488cb944f66165fbcd6e72456090eb35899a41e5a1a4e2c418b359f98668c356",
+        "inventory_sha256": "67c26eff1603c09eff12fc7c68bbde67e31c9e1ef7cd91091ac278fee378e857",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "original_permission_evidence": {
+    "provenance": "docs/oblivion/M15-NATIVE-RULE-PROVENANCE.md: Player trespass door-exit exemption",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "entry": "004B73F9-004B743C inside 004B72C0",
+    "reused_cases": 266,
+    "corpus": {
+      "path": "build/oblivion-compat/m15/S2/oracle-emulator/door-exit-table.json",
+      "sha256": "05e0b5ac695f8b987b8949712fe800e5c6f03dc900949fd208ea790b34e341e8"
+    },
+    "boundary": "Current-cell trespass virtual is supplied in the original instruction oracle. Runtime now shares actual classification with native conditions; permission does not unlock or report crime."
+  },
+  "changes": [
+    "TES4 default door activation uses original Player exit permission after ordinary key use; NPCs receive no Player exemption and unknown destination bindings reject.",
+    "Calendar globals resolve through the live World clock owner with declared numeric projection, rather than a stale runtime snapshot. Quest scripts and thresholds are unchanged."
+  ],
+  "runtime": {
+    "shop-daytime-door-01": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/shop-daytime-door-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "da2d23f2dd33bfc65da62a43102ff66cef5f5b0f44c0d2daafb486cff471abd0"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 30,
+        "hour": 12.528900146484375,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:000807",
+      "player_position": [
+        400.6647033691406,
+        -4.654097557067871,
+        -207.92840576171875,
+        0.359375,
+        0.0,
+        -0.04932975769042969
+      ],
+      "structural_passed": false,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/shop-daytime-door-01-console.json",
+        "sha256": "47066b1bc9128e709a507f7f6684b6009d925cf1897c81bea1c7f52e69c79216"
+      },
+      "epoch": {
+        "pid": 522661,
+        "start_ticks": 186135187,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/shop-daytime-door-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/shop-exit-05/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "shop-door-exit-03": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/shop-door-exit-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "f5f9ae1afd7b70e23ade933d874a4b0d7a9a4e5c7c89474c489fb701b755234d"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 30,
+        "hour": 12.702150344848633,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:000850",
+      "player_position": [
+        -66769.734375,
+        92787.90625,
+        14295.857421875,
+        0.0,
+        0.0,
+        2.1707961559295654
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/shop-door-exit-03-console.json",
+        "sha256": "dae5ebb712bb30fd69fff6805f7b4d192a2eca04acaccd82640f4adb5b318d62"
+      },
+      "semantic_passed": true,
+      "door": {
+        "key": "content:oblivion.esm:0008b3",
+        "base": "content:oblivion.esm:02acf4",
+        "cell": "content:oblivion.esm:000807",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          453.148681640625,
+          1.3209812641143799,
+          -126.89130401611328,
+          0.0,
+          -0.0,
+          3.1415927410125732
+        ],
+        "owner": "content:oblivion.esm:029f83",
+        "lock_level": 40,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "locked": true,
+          "record_type": 1389317956,
+          "scale": 1.0
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "inventory_and_crime_unchanged": true
+    },
+    "shop-key-priority-diagnostic-02": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/shop-key-priority-diagnostic-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "944705f197ad5b07a4fb94153f033a8d36910d21488fa7e972b52e14926c5d6d"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 30,
+        "hour": 12.704462051391602,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:000850",
+      "player_position": [
+        -66769.734375,
+        92787.90625,
+        14295.857421875,
+        0.0,
+        0.0,
+        2.1707961559295654
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/shop-key-priority-diagnostic-02-console.json",
+        "sha256": "9868f2e6e7fe3a58a912c7eaec0dedc709498695cdeb57ff05450bb22254a434"
+      },
+      "diagnostic_only": true,
+      "acceptance_chain": false,
+      "scope": "Adds original key025067 only in an isolated fixture, verifies normal key unlock. This save is never used by the quest course.",
+      "door": {
+        "key": "content:oblivion.esm:0008b3",
+        "base": "content:oblivion.esm:02acf4",
+        "cell": "content:oblivion.esm:000807",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          453.148681640625,
+          1.3209812641143799,
+          -126.89130401611328,
+          0.0,
+          -0.0,
+          3.1415927410125732
+        ],
+        "owner": "content:oblivion.esm:029f83",
+        "lock_level": -40,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "locked": false,
+          "record_type": 1389317956,
+          "scale": 1.0
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      }
+    },
+    "shop-exterior-reload-01": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/shop-exterior-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "de98b9b6787325d95188383884d40638153966cc416f6090a43bdba1bfe25553"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 30,
+        "hour": 12.718127250671387,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:000850",
+      "player_position": [
+        -66769.734375,
+        92787.90625,
+        14295.857421875,
+        0.0,
+        0.0,
+        2.1707961559295654
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/shop-exterior-reload-01-console.json",
+        "sha256": "a0df462a73830ab4c417c4708eb6e5f60aec2d0c82fd9a18a9f50aec4efbc3f2"
+      },
+      "epoch": {
+        "pid": 524912,
+        "start_ticks": 186250948,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/shop-exterior-reload-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/shop-door-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "town-gate-04": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/town-gate-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "6be9a4f747271029c77bebcfd2760302086db93e9544b83650a46ca4d6164105"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 30,
+        "hour": 13.395639419555664,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 1,
+        "running": true,
+        "completed_stages": [
+          1
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:0008f6",
+      "player_position": [
+        -64633.23828125,
+        91818.734375,
+        14185.0,
+        0.0,
+        0.0,
+        -3.141592502593994
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/town-gate-04-console.json",
+        "sha256": "e029886380735703674b98f01a53e5793967857c7a9884ab2b6974c24329e5f8"
+      },
+      "epoch": {
+        "pid": 530707,
+        "start_ticks": 186311855,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/town-gate-04/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/shop-exterior-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "missing-news-wait-01": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/missing-news-wait-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "e6b5aa539e14b1e8a9f464357a5af9e7f28c08aa67abd430f4bd630e10ebad2a"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 14.788078308105469,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 1,
+        "running": true,
+        "completed_stages": [
+          1
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:0008f6",
+      "player_position": [
+        -64633.23828125,
+        91818.734375,
+        14185.0,
+        0.0,
+        0.0,
+        -3.141592502593994
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/missing-news-wait-01-console.json",
+        "sha256": "6d582a8ef9ac5f3955d934c5149b23d2daf750512e6a291a119c3ca7c3f2c09f"
+      },
+      "epoch": {
+        "pid": 530912,
+        "start_ticks": 186349597,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/missing-news-wait-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/town-gate-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "semantic_news_progression_passed": false
+    },
+    "missing-news-wait-02": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/missing-news-wait-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "c8358e7619cc74e3406bf6c687d67b93d9908628e3b425ca1bc29b798b45f7f2"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 14.72781753540039,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 2,
+        "running": true,
+        "completed_stages": [
+          1,
+          2
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:0008f6",
+      "player_position": [
+        -64633.23828125,
+        91818.734375,
+        14185.0,
+        0.0,
+        0.0,
+        -3.141592502593994
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/missing-news-wait-02-console.json",
+        "sha256": "9eec77334c999f8d1203f791f4ea7cd3bf57b642e6f49c7b2e6e4cc2675cb283"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 543404,
+        "start_ticks": 186509207,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/missing-news-wait-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/town-gate-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "semantic_news_progression_passed": true,
+      "same_session": true,
+      "start_day": 4,
+      "days_passed": 6
+    },
+    "missing-mother-return-01": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/missing-mother-return-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "a8ea8316d091681e7367f9b61101f9c81a4d1bf8acb91951a180098dcf8b895f"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 15.882244110107422,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 2,
+        "running": true,
+        "completed_stages": [
+          1,
+          2
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:000807",
+      "player_position": [
+        -196.26319885253906,
+        -35.997413635253906,
+        1.017913818359375,
+        0.353515625,
+        0.0,
+        -2.355952501296997
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/missing-mother-return-01-console.json",
+        "sha256": "ada0f594c62b4f04dc69f5d6313d8cde20e48de1ef2cd7c987997fab2a482345"
+      }
+    },
+    "accept-missing-daughter-01": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/accept-missing-daughter-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "e23930e3adc22045ca78e4e51f747fa11339493eb748fb7cda8a3f648fbd434b"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 15.945137023925781,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:000807",
+      "player_position": [
+        -196.26319885253906,
+        -35.997413635253906,
+        1.017913818359375,
+        0.353515625,
+        0.0,
+        -2.355952501296997
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/accept-missing-daughter-01-console.json",
+        "sha256": "59876639e64bf9035cf488a29e791cf4a0deeea46ce0c9c3683ffc6883215bcf"
+      },
+      "semantic_passed": true,
+      "original_infos": [
+        "0280c5",
+        "02809d",
+        "0280bd"
+      ],
+      "original_choice_topic": "028093",
+      "choice": "Yes, I'll help find Dar-Ma.",
+      "disposition_modifiers": [
+        {
+          "actor": "content:oblivion.esm:0234fd",
+          "target": "dynamic:player:0000000000000001",
+          "value": 40
+        },
+        {
+          "actor": "content:oblivion.esm:0280da",
+          "target": "dynamic:player:0000000000000001",
+          "value": 20
+        },
+        {
+          "actor": "content:oblivion.esm:0280fa",
+          "target": "dynamic:player:0000000000000001",
+          "value": 20
+        }
+      ]
+    },
+    "pickup-reload-01": {
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/pickup-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "b6ce05d1fd53ef8d00bf055a3b1a85942224b20a6dd48ac3fee66f3a0131299e"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 8,
+        "day": 1,
+        "hour": 15.98704719543457,
+        "time_scale": 30.0
+      },
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 10,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10
+        ]
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 4
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "darma_script": {
+        "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+        "context": "content:oblivion.esm:0280fa",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          }
+        ]
+      },
+      "player_cell": "content:oblivion.esm:000807",
+      "player_position": [
+        -196.26319885253906,
+        -35.997413635253906,
+        1.017913818359375,
+        0.353515625,
+        0.0,
+        -2.355952501296997
+      ],
+      "structural_passed": true,
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/pickup-reload-01-console.json",
+        "sha256": "6ab44851b9512d7ed7cb1e8dd26c177e96f13d181f313257ba3fd65de391c2d9"
+      },
+      "epoch": {
+        "exe_sha256": "1f1fc872459c0640c4d4d22d76bea18800fc5256db3e2d7cb012feb62dbd58ca",
+        "pid": 554585,
+        "start_ticks": 186645272,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/pickup-reload-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/accept-missing-daughter-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "semantic_passed": true,
+      "no_result_replay": true,
+      "disposition_query": 82,
+      "identical_fields": [
+        "MS45 quest record",
+        "MS45 and Dar-Ma script instances",
+        "disposition modifiers",
+        "spoken dialogue infos",
+        "native crime",
+        "Player inventory"
+      ]
+    }
+  },
+  "historical_prefix": [
+    "docs/oblivion/HACKDIRT-PLAYER-CONDITIONS-VERIFICATION.json",
+    "docs/oblivion/HACKDIRT-WAIT-VERIFICATION.json",
+    "docs/oblivion/HACKDIRT-SHOP-NAVIGATION-VERIFICATION.json"
+  ],
+  "retained_failures": {
+    "door-exit-focused-01": "Fixture ManualRef could not construct the non-Player NPC; replaced by actual native ACHR fixture.",
+    "calendar-global-red-01": "All six calendar reads retained old captured values after live owner updates; meaningful pre-fix regression failure.",
+    "missing-news-wait-01": "Two ordinary days advanced the saved clock to Day6 but stage stayed1 because scripts read stale calendar globals. Not accepted as news progression.",
+    "town-gate-01-console.json": "Unsupported Caps_Lock spelling rejected at preflight; replaced with ordinary Shift run modifier.",
+    "town-gate-02": "Input focus deadline expired during exterior initialization; readiness wait added.",
+    "town-gate-03": "Direct path met a wall corner; replaced with original PGRD-guided street turns."
+  },
+  "limits": [
+    "These normal-input courses use read-only observers/query events, except the explicitly isolated key fixture. No quest stages, clocks, positions, health or rewards are injected into the accepted course.",
+    "Initial exit/reload and town-gate-04 used the earlier same-format engine; their exact original binary identity is retained separately. Calendar-fixed current binary is recorded for news progression and pickup reload.",
+    "Npc package lock/unlock lifecycle flags remain adjacent work; this course used the original Player exit exemption and the authored unlocked exterior shop entrance.",
+    "Road to Hackdirt, an original investigation route, cavern combat, rescue, following/waiting reload, return and original completion/reward are unaccepted.",
+    "Explicit-topic Player StartConversation must be implemented before untied Dar-Ma leaves Hackdirt, because original MS45 sets thankedPC after requesting that conversation."
+  ],
+  "next_action": "Leave the shop and Chorrol through the verified normal routes, then travel overland to Hackdirt and pursue the original Jiv investigation route."
+}

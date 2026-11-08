@@ -18,6 +18,7 @@ Only `Oblivion.esm` game content is loaded; DLC and user mods are excluded. Save
 | `prison.sh` | Direct prison exploration, activation, doors, jumping and save/load | `oblivion_m12_jump_course.json` |
 | `inventory.sh` | A Fighting Chance: merchandise, containers, inventory and equipment | M13 market start in `docs/oblivion/M13-ITEMS-INVENTORY-ECONOMY.md` |
 | `city.sh` | Imperial City Market District, NPC schedules, shops and door travel | `oblivion_m14_city_schedule.json` |
+| `hackdirt.sh` | Chorrol before pickup, original Dar-Ma introduction and normal save/reload | `oblivion_hackdirt_darma_intro_save.json` |
 | `swimming.sh` | Waterfront movement, swimming, water, outdoor lighting and audio | `oblivion_m12_swim_course.json` |
 | `horse.sh` | Start beside a horse for mounting, riding and dismounting | `oblivion_m14_horse.json` |
 | `creatures.sh` | Goblin Jim's Cave, creature appearance and animation | `oblivion_m11_creature_roster.json` |
@@ -39,6 +40,42 @@ the selected spell. F5 quicksaves, F9 quickloads, and Esc opens the menu. These
 are fresh-profile Oblivion bindings. The window is 1280×720 with sound enabled and mouse grabbing
 disabled. For the horse, look down toward it before activating. At the
 waterfront, the recorded swim course backs up into the water from this start.
+
+## Chorrol before quest pickup
+
+`./scripts/try-oblivion/hackdirt.sh` starts the default Bendu Olo at the entrance
+of Northern Goods and Trade, with A Shadow over Hackdirt at stage 0. Dar-Ma's original
+introduction opens automatically. Select the friendly reply with the mouse,
+then use Goodbye or Escape. F5 saves in this launcher's private profile; F9
+reloads there. The introduction, learned Mother topic, and a fresh-process
+reload are verified. Sidestep left onto the staircase, then walk forward to the
+upper shop floor and Seed-Neeus. This route works with ordinary movement.
+Seed-Neeus's original first Chorrol greeting, timed missing-daughter offer,
+acceptance and fresh-process persistence are verified.
+
+To follow the verified pickup course, meet both NPCs, use T and the Wait slider
+to wait three full days, then wait until daytime (the recorded course waited
+ten more hours, to about noon). Walk downstairs and activate the entrance;
+the original Player exit permission now allows leaving even while it is locked.
+Follow the cobbled street around the stone wall to Chorrol's south gate and
+leave town. Wait two full days outside, return to the shop and speak to
+Seed-Neeus upstairs. Select Missing Daughter, then “Yes, I'll help find Dar-Ma.”
+The original response accepts the quest at stage 10 and survives a fresh reload.
+See the [current handoff](../../docs/oblivion/HACKDIRT-HANDOFF.md) for evidence.
+
+Overland travel to Hackdirt and a fresh-process arrival reload are also verified.
+Jiv's invitation is verified too: at night he can be found in Hackdirt Chapel.
+His first conversation gives the original warning; reopen dialogue and select
+Dar-Ma to receive the invitation at stage 50. The original house meeting,
+explanation and key at stage 55 are verified, including fresh-process persistence.
+His package unlocks the house on arrival and locks it when the meeting ends.
+Original-key entry through the inn trapdoor and a fresh cavern reload are also
+verified. One original hostile guard fight and its fresh reload are verified.
+Original key rescue, active/waiting follower save/reload, resumption, and escort
+through the caverns and inn onto Hackdirt street are verified. Town departure,
+further encountered combat, and the original return/reward remain under validation. Character suitability for combat is
+unverified. This launcher does not set quest stages, advance time, grant equipment,
+or complete prerequisites.
 
 ## Isolation while development continues
 

@@ -1,9 +1,13 @@
 #include "oblivionscriptmanager.hpp"
+
+#include <components/esm4/cellcondition.hpp>
 #include "oblivionactorstats.hpp"
 #include "oblivioninteraction.hpp"
 #include "oblivioncharactergen.hpp"
 #include "obliviondooranimation.hpp"
 #include <components/esm4/observation.hpp>
+#include <components/esm4/playermiscstats.hpp>
+#include <components/esm4/playermurderstate.hpp>
 #include <components/esm4/dropplacement.hpp>
 
 #include <algorithm>
@@ -1414,6 +1418,21 @@ namespace MWWorld
             return ObScript::ReferenceValue{ *key, lower(name) };
         if (const auto key = mStore.findEsm4FormKey(name))
         {
+            if (const auto* global = mStore.search<ESM4::GlobalVariable>(*key);
+                global && (Misc::StringUtils::ciEqual(global->mEditorId, "GameDaysPassed")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "GameHour")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "GameDay")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "GameMonth")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "GameYear")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "TimeScale")))
+            {
+                // Calendar globals project the live clock owner. The runtime
+                // snapshot can predate ordinary time advance or a Wait jump.
+                const GlobalVariableName calendarName(global->mEditorId);
+                if (global->mType == 'f')
+                    return double(mWorld.getGlobalFloat(calendarName));
+                return std::int64_t(mWorld.getGlobalInt(calendarName));
+            }
             if (mWorld.mOblivionRuntimeState)
             {
                 const auto global = mWorld.mOblivionRuntimeState->mGlobals.find(*key);
@@ -2076,7 +2095,9 @@ namespace MWWorld
             if (left.isEmpty() || !left.isInCell() || !cellKey)
                 return std::int64_t(0);
             const ESM::FormId* cellId = left.getCell()->getCell()->getId().getIf<ESM::FormId>();
-            return std::int64_t(cellId != nullptr && mResolver.toFormKey(*cellId) == *cellKey);
+            return std::int64_t(cellId != nullptr
+                && ESM4::cellConditionMatches(mStore.get<ESM4::Cell>().search(ESM::RefId(*cellId)),
+                    mStore.get<ESM4::Cell>().search(*cellKey)));
         }
         if (name == "getinsamecell")
         {
@@ -2313,6 +2334,10 @@ namespace MWWorld
             return std::int64_t(mWorld.getOblivionScriptIsWeaponOut(objectKey()).value_or(0.0));
         if (name == "getweaponanimtype")
             return std::int64_t(mWorld.getOblivionScriptWeaponAnimationType(objectKey()).value_or(0.0));
+        if (name == "gettalkedtopc")
+        {
+            return std::int64_t(isDispositionActor(objectKey()) && hasTalkedToPlayer(objectKey()));
+        }
         if (name == "getdead")
         {
             if (const auto* combat = mWorld.getOblivionCombatService())
@@ -2407,6 +2432,26 @@ namespace MWWorld
             {
                 throw ObScript::RuntimeError("OBSV104", error.what(), name);
             }
+        }
+        if (name == "wait" || name == "stopwaiting")
+        {
+            const Ptr actor = objectPtr();
+            const auto package = keyFromValue(argument(0));
+            if (!package || oblivionAi() == nullptr || actor.isEmpty() || !oblivionAi()->handles(actor))
+                throw ObScript::RuntimeError("OBSV104", "Wait/StopWaiting requires a native actor and PACK", name);
+            const bool applied = oblivionAi()->setPackageWaiting(actor, *package, name == "wait");
+            trace(name + " actor=" + objectKey().serialize() + " package=" + package->serialize()
+                + " applied=" + (applied ? "true" : "false"));
+            return std::int64_t(applied);
+        }
+        if (name == "removescriptpackage")
+        {
+            const Ptr actor = objectPtr();
+            if (oblivionAi() == nullptr || actor.isEmpty() || !oblivionAi()->handles(actor))
+                throw ObScript::RuntimeError("OBSV104", "RemoveScriptPackage requires a native TES4 actor", name);
+            const bool removed = oblivionAi()->removeScriptPackage(actor);
+            trace(name + " actor=" + objectKey().serialize() + " removed=" + (removed ? "true" : "false"));
+            return std::int64_t(removed);
         }
         if (name == "forceflee")
         {
@@ -2578,7 +2623,9 @@ namespace MWWorld
         {
             return std::int64_t(mWorld.isOblivionInCombat(objectKey()).value_or(false));
         }
-        if (name == "isspelltarget" || name == "ispcamurderer")
+        if (name == "ispcamurderer")
+            return std::int64_t(playerIsMurderer());
+        if (name == "isspelltarget")
             return std::int64_t(0);
         if (name == "issneaking")
         {
@@ -2599,11 +2646,24 @@ namespace MWWorld
         }
         if (name == "isplayerinjail")
             return std::int64_t(mWorld.isPlayerInJail());
+        if (name == "getpcmiscstat" || name == "modpcmiscstat")
+        {
+            const auto index = ObScript::asInteger(argument(0));
+            const auto previous = playerMiscStat(index);
+            if (name == "getpcmiscstat") return std::int64_t(previous);
+            const auto delta = ObScript::asInteger(argument(1));
+            if (delta < std::numeric_limits<std::int32_t>::min() || delta > std::numeric_limits<std::int32_t>::max())
+                throw ObScript::RuntimeError("OBSV117", "ModPCMiscStat requires an int32 delta", name);
+            if (!mWorld.mOblivionRuntimeState)
+                mWorld.mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
+            mWorld.mOblivionRuntimeState->mPlayer.mActorValues[ESM4::playerMiscStatKey(index)]
+                = ESM4::addPlayerMiscStat(previous, static_cast<std::int32_t>(delta));
+            return std::int64_t(0);
+        }
         if (name == "getpcinfamy" || name == "getpcfactionmurder" || name == "getpcfactionsteal")
         {
             if (name == "getpcinfamy")
-                if (const auto infamy = mWorld.getOblivionPlayerInfamy())
-                    return std::int64_t(*infamy);
+                return playerInfamy();
             if (!mWorld.mOblivionRuntimeState)
                 return std::int64_t(0);
             const std::string valueName = name == "getpcinfamy" ? "infamy"
@@ -2686,6 +2746,15 @@ namespace MWWorld
             // without extracting arguments or changing game/platform state.
             trace("addachievement pc-noop");
             return std::int64_t(0);
+        }
+        if (name == "getfactionrankdifference")
+        {
+            const auto faction = keyFromValue(argument(0));
+            const auto other = keyFromValue(argument(1));
+            if (!faction || !other) return std::int64_t(0);
+            const auto first = mWorld.getOblivionFactionRank(objectKey(), *faction);
+            const auto second = mWorld.getOblivionFactionRank(ESM4::runtimeReferenceKey(*other), *faction);
+            return std::int64_t(first == -1 || second == -1 ? 0 : int(first) - int(second));
         }
         if (name == "getfactionrank" || name == "setfactionrank")
         {
@@ -3032,7 +3101,31 @@ namespace MWWorld
                     && actor.getRefData().isEnabled() && actor.getCellRef().getCount() > 0
                     && !actor.getClass().getCreatureStats(actor).isDead();
             };
-            if (!available(speaker) || !available(listener) || speaker == listener)
+            if (!available(speaker) || speaker == listener)
+                return std::int64_t(0);
+            if (listener == mWorld.getPlayerPtr())
+            {
+                // The Player's projected record is not a TES4 NPC. Default
+                // Player conversations use the normal GREETING window path,
+                // which owns choices, result scripts and the talked-to flag.
+                if (listener.isEmpty()
+                    || listener.getClass().getCreatureStats(listener).isDead())
+                    return std::int64_t(0);
+                if (arguments.size() > 1)
+                {
+                    const auto topic = keyFromValue(argument(1));
+                    if (!topic || !MWBase::Environment::get().getDialogueManager()
+                            ->startScriptedDialogue(speaker, *topic))
+                        return std::int64_t(0);
+                    trace("conversation-player ref=" + keyFor(speaker).serialize()
+                        + " topic=" + topic->serialize());
+                    return std::int64_t(1);
+                }
+                MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_Dialogue, speaker);
+                trace("conversation-player ref=" + keyFor(speaker).serialize());
+                return std::int64_t(1);
+            }
+            if (!available(listener))
                 return std::int64_t(0);
             const auto root = arguments.size() > 1 ? keyFromValue(argument(1)) : mStore.findEsm4FormKey("HELLO");
             if (!root) return std::int64_t(0);
@@ -3219,6 +3312,71 @@ namespace MWWorld
         }
 
         throw ObScript::RuntimeError("OBSV100", "Unsupported ObScript command " + name, name);
+    }
+
+    std::int64_t OblivionScriptManager::playerInfamy() const
+    {
+        if (const auto infamy = mWorld.getOblivionPlayerInfamy()) return *infamy;
+        if (!mWorld.mOblivionRuntimeState) return 0;
+        const auto& values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+        const auto found = values.find("infamy");
+        if (found == values.end()) return 0;
+        const double integer = std::trunc(found->second);
+        if (!std::isfinite(integer) || integer < -0x1p63 || integer >= 0x1p63)
+            throw ObScript::RuntimeError("OBSV117", "Legacy Player counter cannot fit int64 storage", "getpcinfamy");
+        return static_cast<std::int64_t>(integer);
+    }
+
+    bool OblivionScriptManager::playerIsMurderer() const
+    {
+        if (!mWorld.mOblivionRuntimeState) return false;
+        const auto& values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+        const auto found = values.find(std::string(ESM4::PlayerMurdererKey));
+        // Previous fork saves did not record this flag and always queried false.
+        return found != values.end() && ESM4::playerMurdererValue(found->second);
+    }
+
+    void OblivionScriptManager::notifyPlayerMurder()
+    {
+        requireMutableRuntime();
+        const auto next = ESM4::recordPlayerMurder({ playerIsMurderer(), playerMiscStat(32) });
+        if (!mWorld.mOblivionRuntimeState)
+            mWorld.mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
+        auto values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+        values[std::string(ESM4::PlayerMurdererKey)] = next.mMurderer ? 1.0 : 0.0;
+        values[ESM4::playerMiscStatKey(32)] = next.mMurders;
+        mWorld.mOblivionRuntimeState->mPlayer.mActorValues.swap(values);
+    }
+
+    std::uint32_t OblivionScriptManager::playerMiscStat(std::int64_t index) const
+    {
+        const auto key = ESM4::playerMiscStatKey(index);
+        if (!mWorld.mOblivionRuntimeState) return 0;
+        const auto& values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+        const auto found = values.find(key);
+        return found == values.end() ? 0 : ESM4::playerMiscStatValue(found->second);
+    }
+
+    bool OblivionScriptManager::hasTalkedToPlayer(const ESM::FormKey& actor) const
+    {
+        const auto* state = referenceState(ESM4::runtimeReferenceKey(actor));
+        if (!state) return false;
+        const auto found = state->mCustomState.find("native.dialogue.talked_to_player");
+        if (found == state->mCustomState.end()) return false;
+        return std::get<bool>(found->second);
+    }
+
+    void OblivionScriptManager::markTalkedToPlayer(const ESM::FormKey& actor)
+    {
+        requireMutableRuntime();
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        const auto base = mWorld.getOblivionReferenceBaseKey(key);
+        if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base)))
+            throw std::invalid_argument("Native dialogue history requires an actor reference");
+        auto* state = referenceState(key);
+        if (!state)
+            throw std::invalid_argument("Native dialogue actor has no reference state");
+        state->mCustomState["native.dialogue.talked_to_player"] = true;
     }
 
     bool OblivionScriptManager::hasSpokenDialogueInfo(const ESM::FormKey& info) const

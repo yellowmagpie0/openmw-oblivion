@@ -30,6 +30,9 @@ case "$SCENARIO" in
     swimming)
         START=OldBridgeExterior::ref=0x60423::side=south
         HINT='Explore the waterfront, walk into the water (the recorded course backs up from this start), swim, and inspect outdoor lighting, water and sound.' ;;
+    hackdirt)
+        START=ChorrolNorthernGoodsAndTrade
+        HINT='Chorrol before A Shadow over Hackdirt: start at the shop entrance. Answer Dar-Ma and close dialogue, then sidestep left and climb the stairs to Seed-Neeus. The timed pickup, overland arrival and original Jiv meeting/key are verified. Cavern combat, rescue and reward remain under validation.' ;;
     horse)
         START=4,16::ref=0x68451::side=east
         HINT='Look down toward the nearby horse. Aim at it and press Space to mount; press Space again to dismount. Try moving and saving while mounted.' ;;
@@ -40,7 +43,7 @@ case "$SCENARIO" in
         START=OblivionMqKvatchSmallTower03
         HINT='Explore an Oblivion tower: architecture, lighting and quasi-exterior environment rendering. This does not set up or complete the Kvatch quest.' ;;
     *)
-        printf 'Unknown scenario: %s\nChoose: tutorial prison inventory city swimming horse creatures oblivion (use checkpoint.sh for saved checkpoints)\n' "$SCENARIO" >&2
+        printf 'Unknown scenario: %s\nChoose: tutorial prison inventory city hackdirt swimming horse creatures oblivion (use checkpoint.sh for saved checkpoints)\n' "$SCENARIO" >&2
         exit 2 ;;
 esac
 

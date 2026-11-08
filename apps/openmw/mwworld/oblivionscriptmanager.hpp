@@ -67,6 +67,13 @@ namespace MWWorld
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
+        bool hasTalkedToPlayer(const ESM::FormKey& actor) const;
+        void markTalkedToPlayer(const ESM::FormKey& actor);
+        std::uint32_t playerMiscStat(std::int64_t index) const;
+        bool playerIsMurderer() const;
+        std::int64_t playerInfamy() const;
+        // Admission/classification belongs to the caller, as at Original600949.
+        void notifyPlayerMurder();
         void dispatchDialogueResponseResult(const ESM::FormKey& info, const Ptr& actor);
         // Shared native conditions/order/history selection for speech and
         // interactive menus. Selection alone does not execute a response.

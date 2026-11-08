@@ -1,0 +1,295 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x4f62a0",
+  "profiles": [
+    {
+      "name": "missing",
+      "present": false,
+      "type": 0,
+      "race_pointer": 0
+    },
+    {
+      "name": "npc-null-race",
+      "present": true,
+      "type": 35,
+      "race_pointer": 0
+    },
+    {
+      "name": "npc-race-a",
+      "present": true,
+      "type": 35,
+      "race_pointer": 33579008
+    },
+    {
+      "name": "npc-race-b",
+      "present": true,
+      "type": 35,
+      "race_pointer": 33579264
+    },
+    {
+      "name": "creature-null-race",
+      "present": true,
+      "type": 36,
+      "race_pointer": 0
+    },
+    {
+      "name": "creature-race-a",
+      "present": true,
+      "type": 36,
+      "race_pointer": 33579008
+    },
+    {
+      "name": "static-race-a",
+      "present": true,
+      "type": 34,
+      "race_pointer": 33579008
+    }
+  ],
+  "cases": [
+    {
+      "first": "missing",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "npc-null-race",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "npc-race-a",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "npc-race-b",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "creature-null-race",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "creature-race-a",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "static-race-a",
+      "expected": 0
+    },
+    {
+      "first": "npc-null-race",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "npc-null-race",
+      "second": "npc-null-race",
+      "expected": 1
+    },
+    {
+      "first": "npc-null-race",
+      "second": "npc-race-a",
+      "expected": 0
+    },
+    {
+      "first": "npc-null-race",
+      "second": "npc-race-b",
+      "expected": 0
+    },
+    {
+      "first": "npc-null-race",
+      "second": "creature-null-race",
+      "expected": 0
+    },
+    {
+      "first": "npc-null-race",
+      "second": "creature-race-a",
+      "expected": 0
+    },
+    {
+      "first": "npc-null-race",
+      "second": "static-race-a",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-a",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-a",
+      "second": "npc-null-race",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-a",
+      "second": "npc-race-a",
+      "expected": 1
+    },
+    {
+      "first": "npc-race-a",
+      "second": "npc-race-b",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-a",
+      "second": "creature-null-race",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-a",
+      "second": "creature-race-a",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-a",
+      "second": "static-race-a",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-b",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-b",
+      "second": "npc-null-race",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-b",
+      "second": "npc-race-a",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-b",
+      "second": "npc-race-b",
+      "expected": 1
+    },
+    {
+      "first": "npc-race-b",
+      "second": "creature-null-race",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-b",
+      "second": "creature-race-a",
+      "expected": 0
+    },
+    {
+      "first": "npc-race-b",
+      "second": "static-race-a",
+      "expected": 0
+    },
+    {
+      "first": "creature-null-race",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "creature-null-race",
+      "second": "npc-null-race",
+      "expected": 0
+    },
+    {
+      "first": "creature-null-race",
+      "second": "npc-race-a",
+      "expected": 0
+    },
+    {
+      "first": "creature-null-race",
+      "second": "npc-race-b",
+      "expected": 0
+    },
+    {
+      "first": "creature-null-race",
+      "second": "creature-null-race",
+      "expected": 0
+    },
+    {
+      "first": "creature-null-race",
+      "second": "creature-race-a",
+      "expected": 0
+    },
+    {
+      "first": "creature-null-race",
+      "second": "static-race-a",
+      "expected": 0
+    },
+    {
+      "first": "creature-race-a",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "creature-race-a",
+      "second": "npc-null-race",
+      "expected": 0
+    },
+    {
+      "first": "creature-race-a",
+      "second": "npc-race-a",
+      "expected": 0
+    },
+    {
+      "first": "creature-race-a",
+      "second": "npc-race-b",
+      "expected": 0
+    },
+    {
+      "first": "creature-race-a",
+      "second": "creature-null-race",
+      "expected": 0
+    },
+    {
+      "first": "creature-race-a",
+      "second": "creature-race-a",
+      "expected": 0
+    },
+    {
+      "first": "creature-race-a",
+      "second": "static-race-a",
+      "expected": 0
+    },
+    {
+      "first": "static-race-a",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "static-race-a",
+      "second": "npc-null-race",
+      "expected": 0
+    },
+    {
+      "first": "static-race-a",
+      "second": "npc-race-a",
+      "expected": 0
+    },
+    {
+      "first": "static-race-a",
+      "second": "npc-race-b",
+      "expected": 0
+    },
+    {
+      "first": "static-race-a",
+      "second": "creature-null-race",
+      "expected": 0
+    },
+    {
+      "first": "static-race-a",
+      "second": "creature-race-a",
+      "expected": 0
+    },
+    {
+      "first": "static-race-a",
+      "second": "static-race-a",
+      "expected": 0
+    }
+  ]
+}

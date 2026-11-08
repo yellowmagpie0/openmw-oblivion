@@ -1,0 +1,78 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x502b00",
+  "query": "0x4f4b10",
+  "stubs": [
+    "actor virtual +0x190 identity",
+    "actor virtual +0x7c talked flag"
+  ],
+  "cases": [
+    {
+      "present": false,
+      "is_actor": false,
+      "talked": false,
+      "calls": [],
+      "expected_result": 0.0
+    },
+    {
+      "present": false,
+      "is_actor": false,
+      "talked": true,
+      "calls": [],
+      "expected_result": 0.0
+    },
+    {
+      "present": false,
+      "is_actor": true,
+      "talked": false,
+      "calls": [],
+      "expected_result": 0.0
+    },
+    {
+      "present": false,
+      "is_actor": true,
+      "talked": true,
+      "calls": [],
+      "expected_result": 0.0
+    },
+    {
+      "present": true,
+      "is_actor": false,
+      "talked": false,
+      "calls": [
+        "is_actor"
+      ],
+      "expected_result": 0.0
+    },
+    {
+      "present": true,
+      "is_actor": false,
+      "talked": true,
+      "calls": [
+        "is_actor"
+      ],
+      "expected_result": 0.0
+    },
+    {
+      "present": true,
+      "is_actor": true,
+      "talked": false,
+      "calls": [
+        "is_actor",
+        "talked"
+      ],
+      "expected_result": 0.0
+    },
+    {
+      "present": true,
+      "is_actor": true,
+      "talked": true,
+      "calls": [
+        "is_actor",
+        "talked"
+      ],
+      "expected_result": 1.0
+    }
+  ],
+  "scope": "Original GetTalkedToPC execute wrapper and query, excluding virtual method implementations and dialogue flag writes"
+}

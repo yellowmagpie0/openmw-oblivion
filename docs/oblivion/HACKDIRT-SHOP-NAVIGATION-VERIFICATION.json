@@ -1,0 +1,408 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Ordinary reverse shop navigation after three normal days; original exit remains blocked",
+  "binary": {
+    "path": "build/openmw",
+    "sha256": "799f32767420a3f166432f8582f3341130002b6973ce149569ca794dce3483bd"
+  },
+  "wait_verification": "docs/oblivion/HACKDIRT-WAIT-VERIFICATION.json",
+  "navigation": {
+    "save": {
+      "path": "build/oblivion-compat/hackdirt/shop-exit-05/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "f14b3fc1ac98f4d456c203216d979218a0bec308d1dcb65cd61df48141c78a3e"
+    },
+    "exact_payload_roundtrip": true,
+    "clock": {
+      "year": 433,
+      "month": 7,
+      "day": 30,
+      "hour": 2.0706772804260254,
+      "time_scale": 30.0
+    },
+    "days_passed": 4,
+    "quest": {
+      "quest": "content:oblivion.esm:027815",
+      "stage": 0,
+      "running": true,
+      "completed_stages": []
+    },
+    "ms45_script": {
+      "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+      "context": "content:oblivion.esm:027815",
+      "on_load_fired": false,
+      "locals": [
+        {
+          "type": "number",
+          "value": 1
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 1
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0.0
+        },
+        null
+      ]
+    },
+    "player_position": [
+      400.6647033691406,
+      -4.654097557067871,
+      -207.92840576171875,
+      0.359375,
+      0.0,
+      -0.04932975769042969
+    ],
+    "door": {
+      "key": "content:oblivion.esm:0008b3",
+      "base": "content:oblivion.esm:02acf4",
+      "cell": "content:oblivion.esm:000807",
+      "enabled": true,
+      "deleted": false,
+      "position": [
+        453.148681640625,
+        1.3209812641143799,
+        -126.89130401611328,
+        0.0,
+        -0.0,
+        3.1415927410125732
+      ],
+      "owner": "content:oblivion.esm:029f83",
+      "lock_level": 40,
+      "inventory": [],
+      "custom_state": {
+        "count": 1,
+        "locked": true,
+        "record_type": 1389317956,
+        "scale": 1.0
+      },
+      "actor_draw_state": null,
+      "item_condition": null,
+      "item_charge": null,
+      "ownership_rank": null,
+      "ownership_global": "null",
+      "dropper": null,
+      "dropped_items": null
+    },
+    "epoch": {
+      "pid": 522377,
+      "start_ticks": 186098434,
+      "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/shop-exit-05/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/normal-wait-indexed-three-days-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ]
+    },
+    "waypoints": [
+      [
+        -73,
+        -36,
+        1
+      ],
+      [
+        5,
+        -36,
+        1
+      ],
+      [
+        5,
+        -125,
+        2
+      ],
+      [
+        400,
+        -125,
+        -223
+      ],
+      [
+        401,
+        -11,
+        -223
+      ]
+    ]
+  },
+  "daylight": {
+    "save": {
+      "path": "build/oblivion-compat/hackdirt/shop-daytime-door-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "da2d23f2dd33bfc65da62a43102ff66cef5f5b0f44c0d2daafb486cff471abd0"
+    },
+    "exact_payload_roundtrip": true,
+    "clock": {
+      "year": 433,
+      "month": 7,
+      "day": 30,
+      "hour": 12.528900146484375,
+      "time_scale": 30.0
+    },
+    "days_passed": 4,
+    "quest": {
+      "quest": "content:oblivion.esm:027815",
+      "stage": 0,
+      "running": true,
+      "completed_stages": []
+    },
+    "ms45_script": {
+      "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+      "context": "content:oblivion.esm:027815",
+      "on_load_fired": false,
+      "locals": [
+        {
+          "type": "number",
+          "value": 1
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 1
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0
+        },
+        {
+          "type": "number",
+          "value": 0.0
+        },
+        null
+      ]
+    },
+    "player_position": [
+      400.6647033691406,
+      -4.654097557067871,
+      -207.92840576171875,
+      0.359375,
+      0.0,
+      -0.04932975769042969
+    ],
+    "door": {
+      "key": "content:oblivion.esm:0008b3",
+      "base": "content:oblivion.esm:02acf4",
+      "cell": "content:oblivion.esm:000807",
+      "enabled": true,
+      "deleted": false,
+      "position": [
+        453.148681640625,
+        1.3209812641143799,
+        -126.89130401611328,
+        0.0,
+        -0.0,
+        3.1415927410125732
+      ],
+      "owner": "content:oblivion.esm:029f83",
+      "lock_level": 40,
+      "inventory": [],
+      "custom_state": {
+        "count": 1,
+        "locked": true,
+        "record_type": 1389317956,
+        "scale": 1.0
+      },
+      "actor_draw_state": null,
+      "item_condition": null,
+      "item_charge": null,
+      "ownership_rank": null,
+      "ownership_global": "null",
+      "dropper": null,
+      "dropped_items": null
+    },
+    "epoch": {
+      "pid": 522661,
+      "start_ticks": 186135187,
+      "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/shop-daytime-door-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/shop-exit-05/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ]
+    },
+    "mother_ai": {
+      "actor": "content:oblivion.esm:0234fd",
+      "base": "content:oblivion.esm:0234b8",
+      "package": "content:oblivion.esm:023637",
+      "script_package": "null",
+      "target": "null",
+      "target_base": "null",
+      "cell": "content:oblivion.esm:000807",
+      "pathgrid": "content:oblivion.esm:02356d",
+      "door": "null",
+      "destination_cell": "content:oblivion.esm:000807",
+      "last_valid_cell": "content:oblivion.esm:000807",
+      "action_item": "null",
+      "last_transition_door": "null",
+      "companion_group": "null",
+      "companion_side_with": "null",
+      "mount": "null",
+      "rider": "null",
+      "schedule_window": {
+        "start": [
+          433,
+          7,
+          30,
+          8.0
+        ],
+        "end": [
+          433,
+          7,
+          30,
+          20.0
+        ],
+        "duration_hours": 12.0
+      },
+      "condition_result": 0,
+      "destination_position": [
+        -259.39898681640625,
+        -93.78746032714844,
+        1.0179214477539062,
+        0.0,
+        0.0,
+        0.5776524543762207
+      ],
+      "last_valid_position": [
+        -259.39898681640625,
+        -93.78746032714844,
+        1.0179214477539062,
+        0.0,
+        0.0,
+        0.5776524543762207
+      ],
+      "source": 1,
+      "package_type": 6,
+      "procedure": 7,
+      "phase": 7,
+      "tier": 0,
+      "boundary": 0,
+      "list_index": 1,
+      "path_node": 5,
+      "repath_attempts": 0,
+      "formation_index": -1,
+      "selection_generation": 461793,
+      "route_generation": 1,
+      "transition_generation": 0,
+      "action_timer": 0.0,
+      "duration_remaining": 7.905806541442871,
+      "no_progress_seconds": 0.0,
+      "door_cooldown": 0.0,
+      "low_process_timer": 0.0,
+      "next_low_process_tick": 0.25,
+      "restrained": false,
+      "action_reserved": false,
+      "has_destination": true,
+      "door_animation_started": false,
+      "interruption_reason": ""
+    }
+  },
+  "retained_attempts": {
+    "shop-exit-01": "Stopped after stale short-spaced mouse samples overshot the intended heading.",
+    "shop-exit-02": "Stopped after frame sampling identified per-frame full-world diagnostic JSON reporting overhead.",
+    "shop-exit-03": "Fixed-count aiming did not converge; readiness guard correctly stopped before movement.",
+    "shop-exit-04": "First waypoint saved; diagonal cut across shop furniture deflected movement.",
+    "shop-exit-05": "All five corrected right-angle waypoints saved through normal movement; targeted original locked door denied exit.",
+    "shop-daytime-door-01": "Normal ten-hour Wait and save succeeded; later activation was not aimed at the door, so that portion is not valid activation evidence.",
+    "shop-daylight-activation-01": "Correctly aimed original door at midday logs locked denial; no exterior transition."
+  },
+  "diagnostic_observations": {
+    "reporting": "shop-exit-02/frame-stack-01.txt samples writeRuntimeReport -> full world capture/canonicalJson; report was ~75MB and written every frame. Removed OPENMW_OBSCRIPT_REPORT from navigation probes; actual saves/logs remain the evidence.",
+    "remaining_frame_cost": "shop-exit-04/frame-stack-01.txt samples script Enable/Disable -> synchronizeOblivionEnableParents. Adjacent performance issue, not changed in this chunk."
+  },
+  "next_action": "Integrate existing independently verified Player trespass-exit permission into TES4 default door activation, resolving actual Player trespass/teleport/lock/destination inputs. Verify normal exit without unlocking, key use, lockpicking or crime, then fresh exterior save/reload and original disappearance.",
+  "reused_original_rule": {
+    "provenance": "docs/oblivion/M15-NATIVE-RULE-PROVENANCE.md: Player trespass door-exit exemption",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "entry": "004B73F9-004B743C inside 004B72C0",
+    "cases": 266,
+    "pure_helper": "components/esm4/crimerules.cpp:playerHasTrespassExitExemption",
+    "scope": "Permission only; no lock mutation or activation. Requires actual Player trespass, teleport and lock data; exact level100 rejects; destination exterior/public or native-null allowed. Stable-resolution failure must diagnose.",
+    "gap": "apps/openmw/mwclass/esm4interactive.cpp ESM4Door::activate currently applies only key ownership before rejecting locked doors."
+  },
+  "adjacent_discovery": "NPC package door lock/unlock flag names are parsed but unused by runtime. Daytime package023637 has flags0x311 including UnlockDoorsAtLocation. Do not expand into full NPC lock lifecycle if the original Player exit branch suffices for this course.",
+  "limits": [
+    "Shop/city exit and missing-daughter pickup are not accepted.",
+    "Road, investigation, combat, rescue, follower following/waiting restart and original reward remain open."
+  ]
+}

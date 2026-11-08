@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "name": "Original Seed-Neeus first Chorrol greeting and Player disposition regression",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\nat 0 command content:oblivion.esm:0280fa GetDead\nat 0 command content:oblivion.esm:0234fd GetDead\nat 0 command content:oblivion.esm:0280fa GetTalkedToPC\nat 0 command dynamic:player:0000000000000001 GetPCMiscStat 13\nat 0 command content:oblivion.esm:0234fd GetTalkedToPC\nat 0 command content:oblivion.esm:0234fd GetDisposition dynamic:player:0000000000000001\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt; if timer<0.3 then return end; timer=0\n local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x234fd))\n if not obj or not obj:isValid() then return end\n local d=obj.position-self.position\n local f=self.rotation:apply(util.vector3(0,1,0))\n local angle=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local c=camera.getPosition(); local v=obj.position+util.vector3(0,0,85)-c\n local pitch=-math.atan2(v.z,math.sqrt(v.x*v.x+v.y*v.y))\n print(string.format('SeedNeeus aim x=%d y=%d distance=%.3f',math.max(-200,math.min(200,math.floor(angle*512+.5))),math.max(-150,math.min(150,math.floor((pitch-camera.getPitch())*512+.5))),d:length()))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:0280fa name=GetTalkedToPC result=1(?:\\s|$)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=dynamic:player:0000000000000001 name=GetPCMiscStat result=0(?:\\s|$)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "SeedNeeus aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "SeedNeeus aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "seedneeus-aimed.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "key",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:0234fd info=",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "seedneeus-original-greeting.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "Escape"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 300,
+  "expected_exit": 0,
+  "expected_log": [
+    "acceptance-command actor=content:oblivion.esm:027815 name=GetStage result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0280fa name=GetDead result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0234fd name=GetDead result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0280fa name=GetTalkedToPC result=1(?:\\s|$)",
+    "Applied TES4 runtime state:",
+    "acceptance-command actor=dynamic:player:0000000000000001 name=GetPCMiscStat result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0234fd name=GetDisposition result=(?:[5-9][0-9]|100)(?:\\s|$)",
+    "Native dialogue menu: actor=content:oblivion.esm:0234fd info=content:oblivion.esm:0237cf"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "conversation-player ref=content:oblivion.esm:0280fa",
+    "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "OPENMW_TRACE_PLAYER_OBSTACLES": "1"
+  },
+  "sdl_xvfb_input": true
+}

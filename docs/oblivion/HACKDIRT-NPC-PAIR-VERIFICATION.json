@@ -1,0 +1,501 @@
+{
+  "status": "verified_native_npc_pair_conditions_and_entrance_opening",
+  "goal_complete": false,
+  "scope": "SameSex/SameRace loaded and unloaded conditions; documented entrance start, original introduction and fresh reload. Seed-Neeus first greeting and all quest pickup/rescue/reward gates remain open.",
+  "implementation": [
+    "Native SameSex compares NPC sex bits; non-NPC or missing comparison actor is false.",
+    "Native SameRace compares canonical race identity, including two null NPC race fields; names do not establish identity.",
+    "Player comparisons read the current shared Player record, including character-generation changes, rather than the NPC speaker or initial native base.",
+    "Explicit first actor argument overrides the listener; omitted arguments use the opposite bound context, including run-on-target.",
+    "Unloaded conditions use stable base records and current Player without materializing the cold speaker."
+  ],
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/hackdirt/npc-pair-normal-integration-01/verification.json",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "34c659ab89e1b7114a8fb9ae6340adad5bf015c2869fd58af80765ec4494932e"
+      },
+      "source_unchanged": true,
+      "results": {
+        "engine": {
+          "executed": 2231,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c9909ee5165ffd4a0c6477c2beef713baf3b877668ec727ca4d0744f83e614ed",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3017e87a0acc4e6bdb40fd7f94e2f66cc85031efb7e35f8d691c92887384af79",
+          "inventory_sha256": "8b8fbfaa3b742e7b4990ecdafdb7b5d4a7412f9a8db16dd4e13732d37623a0af",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitize": {
+      "path": "build/oblivion-compat/hackdirt/npc-pair-sanitize-integration-01/verification.json",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "34c659ab89e1b7114a8fb9ae6340adad5bf015c2869fd58af80765ec4494932e"
+      },
+      "source_unchanged": true,
+      "results": {
+        "engine": {
+          "executed": 2231,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "dd891a5d472ddd9b9c7bfa23b9558f9dd3389d1d1f67055c71b73cd121fb9e25",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "daacd87ee269a322eccdd2ca716cbdf421f79cacc267aec1f8b0718d599d6ef1",
+          "inventory_sha256": "8b8fbfaa3b742e7b4990ecdafdb7b5d4a7412f9a8db16dd4e13732d37623a0af",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "oracles": [
+    {
+      "kind": "sex",
+      "path": "build/oblivion-compat/hackdirt/inspection-01/same-sex-oracle.json",
+      "cases": 64,
+      "entry": "0x4f6350",
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "stubs": [
+        "reference virtual +0x170 supplies each current base object"
+      ],
+      "scope": "Complete original SameSex eval, NPC type gate, sex-bit reader and comparison. Dispatcher binding reused from M15-REFERENCE-BINDING-VERIFICATION.json; script argument extraction and actor-base allocation not tested.",
+      "expectations": "scripts/data/oblivion_compat/hackdirt_same_sex_oracle_cases.json"
+    },
+    {
+      "kind": "race",
+      "path": "build/oblivion-compat/hackdirt/inspection-01/same-race-oracle.json",
+      "cases": 49,
+      "entry": "0x4f62a0",
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "stubs": [
+        "reference virtual +0x170 supplies each current base object"
+      ],
+      "scope": "Complete original SameRace eval, NPC type gate, race-pointer read and comparison. Dispatcher binding reused from M15-REFERENCE-BINDING-VERIFICATION.json; script argument extraction and actor-base allocation not tested.",
+      "expectations": "scripts/data/oblivion_compat/hackdirt_same_race_oracle_cases.json"
+    }
+  ],
+  "reused_binding_evidence": {
+    "path": "docs/oblivion/M15-REFERENCE-BINDING-VERIFICATION.json",
+    "scope": "Original56AC50/56B1D0 typed actor/reference substitution and context swap; same executable identity."
+  },
+  "runtime_binary_sha256": "a0ebd3162af724d407c3925b666d6e3f386f726df810f73e69132e49fc75537a",
+  "runtime_build_source": "build/oblivion-compat/hackdirt/npc-pair-focused-01/verification.json",
+  "component_evidence_reused": {
+    "path": "build/oblivion-compat/hackdirt/misc-stat-normal-integration-01/verification.json",
+    "cases": 3265,
+    "scope": "No component implementation changed in the NPC-pair chunk."
+  },
+  "opening_reload": {
+    "passed": true,
+    "scope": "Human entrance launcher original introduction/friendly/goodbye/F5 and separate-process reload/resave; not Seed-Neeus greeting or quest pickup.",
+    "records": [
+      {
+        "run": "human-launcher-smoke-04",
+        "save": "build/oblivion-compat/hackdirt/human-launcher-smoke-04/human-Quicksave.omwsave",
+        "sha256": "dc653829f30e98842df6eb12e290624717b51828637ef10ae58545f715272d48",
+        "epoch": {
+          "pid": 497852,
+          "start_ticks": 185386086,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/tmp/openmw-oblivion-hackdirt.7XpyDFBf/runtime/openmw",
+            "--replace=config",
+            "--config",
+            "/tmp/openmw-oblivion-hackdirt.7XpyDFBf/config",
+            "--game-profile=oblivion"
+          ]
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 0,
+          "running": true,
+          "completed_stages": []
+        },
+        "instances": {
+          "content:oblivion.esm:028154@oblivion.esm/object/unit=0": {
+            "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+            "context": "content:oblivion.esm:0280fa",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              }
+            ]
+          },
+          "content:oblivion.esm:028155@oblivion.esm/quest/unit=0": {
+            "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+            "context": "content:oblivion.esm:027815",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0.0
+              },
+              null
+            ]
+          }
+        },
+        "player_cell": "content:oblivion.esm:000807",
+        "player_position": [
+          401.8355407714844,
+          -11.092348098754883,
+          -207.0927276611328,
+          0.0,
+          0.0,
+          -1.570796251296997
+        ]
+      },
+      {
+        "run": "chorrol-entrance-reload-02",
+        "save": "build/oblivion-compat/hackdirt/chorrol-entrance-reload-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "b0a7e324f9acca9f4b0d929b3e0c1f390e0d49b9bb6b2a97080450ac57257851",
+        "epoch": {
+          "pid": 501192,
+          "start_ticks": 185407283,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/chorrol-entrance-reload-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/human-launcher-smoke-04/human-Quicksave.omwsave"
+          ]
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 0,
+          "running": true,
+          "completed_stages": []
+        },
+        "instances": {
+          "content:oblivion.esm:028154@oblivion.esm/object/unit=0": {
+            "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+            "context": "content:oblivion.esm:0280fa",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              }
+            ]
+          },
+          "content:oblivion.esm:028155@oblivion.esm/quest/unit=0": {
+            "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+            "context": "content:oblivion.esm:027815",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0.0
+              },
+              null
+            ]
+          }
+        },
+        "player_cell": "content:oblivion.esm:000807",
+        "player_position": [
+          401.8355407714844,
+          -11.092348098754883,
+          -207.0927276611328,
+          0.0,
+          0.0,
+          -1.570796251296997
+        ]
+      }
+    ],
+    "native_payload_roundtrips_exact": true,
+    "quest_and_actor_instances_preserved": true,
+    "spoken_history_preserved": true,
+    "disposition_preserved": true,
+    "learned_mother_topic_and_dias_record_preserved": true,
+    "no_intro_result_replay": true,
+    "input_save_unchanged": true,
+    "player_position_tolerance_game_units": 0.1
+  },
+  "navigation": {
+    "previous_roof_side_spawn": "movement-obstacles-01: actual architecture and Dar-Ma collision contacts; no solver change made.",
+    "continuous_input": "movement-observer-03: held keys and requested movement stay active; position advances every frame. Slow rendered frames explain short wall-clock holds.",
+    "entrance_route": "entrance-stairs-02 passes ordinary sidestep and stair climb to the upper floor; current source course from human source is chorrol-stairs-01.",
+    "source": "scripts/data/oblivion_compat/oblivion_hackdirt_chorrol_stairs.json",
+    "human_source_course": {
+      "passed": true,
+      "scenario": "build/oblivion-compat/hackdirt/chorrol-stairs-01/scenario.json",
+      "save": "build/oblivion-compat/hackdirt/chorrol-stairs-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "da37f222515e917a992767886deb298160f413f0f0a2eab9bfbed65a62f3a9b9",
+      "epoch": {
+        "pid": 503039,
+        "start_ticks": 185428497,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/chorrol-stairs-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/chorrol-entrance-reload-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "parent": "chorrol-entrance-reload-02",
+      "player_cell": "content:oblivion.esm:000807",
+      "player_position": [
+        5.842436790466309,
+        -125.35582733154297,
+        2.3460464477539062,
+        0.0,
+        0.0,
+        -1.570796251296997
+      ],
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "startDay": 1,
+      "scope": "Ordinary A and W from the human entrance save after fresh reload; climbed from lower floor to upper shop without jumping, teleporting or quest-state writes. Does not prove Seed-Neeus greeting."
+    }
+  },
+  "current_failure": {
+    "run": "seedneeus-greeting-07",
+    "scenario": "build/oblivion-compat/hackdirt/seedneeus-greeting-07/scenario.json",
+    "ordinary_activation_target": "content:oblivion.esm:0234fd",
+    "info": "content:oblivion.esm:06fdc2",
+    "function": 176,
+    "name": "IsPCAMurderer",
+    "subject": "run-on-target; original callback is global Player-owned",
+    "status": "unsupported; original Seed-Neeus greeting not accepted",
+    "script_command_status": "Existing script dispatch returns literal zero; this is not independent proof of the native condition.",
+    "next_oracle": {
+      "query": "build/oblivion-compat/hackdirt/inspection-01/murderer-query-oracle.json",
+      "query_cases": 512,
+      "producer": "build/oblivion-compat/hackdirt/inspection-01/murderer-producer-oracle.json",
+      "producer_cases": 24,
+      "scope": "Full dedicated Player-byte read and receiver-owned mutation/counter32 increment. Admission/classification, constructor/reset and persistence remain unproved."
+    }
+  },
+  "inspected_captures": [
+    "movement-observer-03/process.log",
+    "entrance-stairs-02/after-stairs.png",
+    "seedneeus-approach-01/near-seedneeus.png",
+    "seedneeus-greeting-05/seedneeus-aimed.png",
+    "human-launcher-smoke-03/human-launcher-reply.png",
+    "chorrol-entrance-reload-02/darma-intro-reload.png",
+    "chorrol-stairs-01/after-stairs.png",
+    "human-launcher-smoke-04/human-launcher-reply.png",
+    "seedneeus-greeting-07/seedneeus-aimed.png"
+  ],
+  "retained_failures": [
+    {
+      "run": "movement-observer-01",
+      "reason": "Manifest formatter rejected unescaped Lua braces before launch."
+    },
+    {
+      "run": "movement-observer-02",
+      "reason": "Wrong config option lua-scripts; no observer loaded, so not input-observation evidence."
+    },
+    {
+      "run": "seedneeus-greeting-01",
+      "reason": "Low-sensitivity mouse deltas exceeded small X11 window bounds."
+    },
+    {
+      "run": "seedneeus-greeting-02",
+      "reason": "Stale observer samples caused aiming overshoot."
+    },
+    {
+      "run": "seedneeus-greeting-03",
+      "reason": "SDL replay preflight rejects M14 instrumentation; subsequent isolated replay removes it and makes no M14 acceptance claim."
+    },
+    {
+      "run": "seedneeus-greeting-04",
+      "reason": "Aiming helper used reversed vertical pitch convention."
+    },
+    {
+      "run": "seedneeus-greeting-05",
+      "reason": "Correct ordinary activation exposed unsupported SameSex, INFO023e3c; fixed."
+    },
+    {
+      "run": "seedneeus-greeting-06",
+      "reason": "SameSex resolved; unsupported SameRace, INFO0251cb; fixed."
+    },
+    {
+      "run": "seedneeus-greeting-07",
+      "reason": "Pair conditions resolved; unsupported IsPCAMurderer, INFO06fdc2; still open."
+    }
+  ],
+  "limitations": [
+    "Original quest records/scripts are unchanged; no plugin authored.",
+    "Human launcher uses normal desktop input without acceptance hooks. Acknowledged SDL replay/read-only Lua observations are separate diagnostic evidence.",
+    "Timed disappearance/pickup, overland travel, investigation, combat, rescue, follower saves and original reward remain unverified.",
+    "Explicit-topic Player StartConversation remains unsupported for the later original escape conversation."
+  ]
+}

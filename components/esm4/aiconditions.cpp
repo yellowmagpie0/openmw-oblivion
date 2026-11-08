@@ -88,7 +88,9 @@ namespace ESM4
         if (condition.mRunOn == ConditionRunOn::Unknown)
             return ConditionResult::Unsupported;
         const ConditionSubject subject = subjectFor(condition);
-        if (!subjectAvailable(subject, context) || !context.mResolve)
+        const auto native = nativeConditionFunction(condition.mFunction);
+        const bool global = native && native->mHasCallback && !native->mRequiresSubject;
+        if ((!global && !subjectAvailable(subject, context)) || !context.mResolve)
             return ConditionResult::MissingContext;
         return fromValue(context.mResolve(condition, subject), condition, context);
     }
@@ -465,6 +467,7 @@ namespace ESM4
             case 246: return "GetIsUsedItem";
             case 247: return "GetIsUsedItemType";
             case 249: return "GetPCFame";
+            case 251: return "GetPCInfamy";
             case 254: return "GetIsPlayableRace";
             case 255: return "GetOffersServicesNow";
             case 258: return "GetUsedItemLevel";
@@ -487,6 +490,7 @@ namespace ESM4
             case 304: return "IsWaterObject";
             case 306: return "IsActorUsingATorch";
             case 310: return "GetInWorldspace";
+            case 312: return "GetPCMiscStat";
             case 327: return "IsRidingHorse";
             case 329: return "IsTurnArrest";
             case 338: return "GetIgnoreFriendlyHits";

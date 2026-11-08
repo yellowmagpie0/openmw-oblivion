@@ -332,12 +332,16 @@ def audit_course(course, input_save=None, allow_startup_deferrals=False):
         expected = load_save(input_save)
         actual = json.loads((course / loads[0]['live']).read_text())
         migration = None
-        if expected['schema_version'] == 89 and actual['schema_version'] == 90:
+        if expected['schema_version'] == 89 and actual['schema_version'] >= 90:
             require(all(b.get('factions') is None for b in expected['native_actor_bases']), 'Unexpected legacy faction data')
             for base in expected['native_actor_bases']:
                 base['factions'] = None
             expected['schema_version'] = 90
             migration = '89 -> 90; absent optional shared-base faction replacements default to None'
+        if expected['schema_version'] == 90 and actual['schema_version'] == 91:
+            expected['package_waiting'] = []
+            expected['schema_version'] = 91
+            migration = (migration + '; ' if migration else '') + '90 -> 91; no package waiting overrides'
         entry = {'source_save_sha256': digest(input_save), 'migration': migration,
                  'differences': compare_entry(expected, actual)}
     else:

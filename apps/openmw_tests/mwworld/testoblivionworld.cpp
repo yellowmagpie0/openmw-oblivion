@@ -36513,6 +36513,83 @@ TEST(OblivionWorldTest, BaseObjectIdentityCompiledNamesAndReferenceLocalsSurvive
     EXPECT_EQ(std::get<std::int64_t>(world.captureOblivionRuntimeState().mScriptInstances.front().mLocals[0]), 3);
 }
 
+TEST(OblivionWorldTest, TalkedToPcScriptQueryReadsTheSelectedActorsDialogueState)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    const auto actor = fixture.mActor.getCellRef().getFormKey();
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    ObScript::RuntimeContext context;
+    context.mSelf = actor;
+    const auto query = [&](const std::optional<ObScript::Value>& target) {
+        return ObScript::asInteger(scripts.call("GetTalkedToPC", target, {}, context, {}));
+    };
+    EXPECT_EQ(query(std::nullopt), 0);
+    EXPECT_EQ(query(ObScript::ReferenceValue{actor, {}}), 0);
+    scripts.markTalkedToPlayer(actor);
+    EXPECT_EQ(query(std::nullopt), 1);
+    EXPECT_EQ(query(ObScript::ReferenceValue{actor, {}}), 1);
+    EXPECT_EQ(query(ObScript::ReferenceValue{player, {}}), 0);
+    EXPECT_EQ(query(ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 1), {}}), 0);
+    // The query must not clear the flag or confuse an explicit target with self.
+    EXPECT_EQ(query(std::nullopt), 1);
+}
+
+TEST(OblivionWorldTest, TalkedToPcHistoryRestoresTrueFalseAndLegacyAbsenceWithoutDialogueReplay)
+{
+    ESM4::RuntimeState talked;
+    ESM::FormKey actor;
+    {
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& scripts = *world.getOblivionScriptManager();
+        actor = fixture.mActor.getCellRef().getFormKey();
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        EXPECT_FALSE(scripts.hasTalkedToPlayer(actor));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        scripts.markTalkedToPlayer(actor);
+        talked = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+        auto notTalked = talked;
+        auto& reference = *std::ranges::find(notTalked.mReferences, actor, &ESM4::RuntimeReferenceState::mKey);
+        reference.mCustomState["native.dialogue.talked_to_player"] = false;
+        auto malformed = notTalked;
+        std::ranges::find(malformed.mReferences, actor, &ESM4::RuntimeReferenceState::mKey)
+            ->mCustomState["native.dialogue.talked_to_player"] = std::int64_t(1);
+        EXPECT_THROW(world.prepareOblivionSaveState(malformed), std::invalid_argument);
+        EXPECT_TRUE(scripts.hasTalkedToPlayer(actor));
+        readNativeSnapshot(fixture, notTalked);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_FALSE(scripts.hasTalkedToPlayer(actor));
+        readNativeSnapshot(fixture, talked);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_TRUE(scripts.hasTalkedToPlayer(actor));
+        reference.mCustomState.erase("native.dialogue.talked_to_player");
+        readNativeSnapshot(fixture, notTalked);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_FALSE(scripts.hasTalkedToPlayer(actor));
+    }
+    {
+        PopulatedMigrationFixture fresh;
+        auto& world = fresh.mWorld;
+        auto& scripts = *world.getOblivionScriptManager();
+        EXPECT_FALSE(scripts.hasTalkedToPlayer(actor));
+        readNativeSnapshot(fresh, talked);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_TRUE(scripts.hasTalkedToPlayer(actor));
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetTalkedToPC", ObScript::ReferenceValue{actor, {}},
+            {}, {}, {})), 1);
+        ESM4::PackageCondition condition{};
+        condition.mFunction = 50;
+        condition.mOperator = ESM4::ConditionOperator::Equal;
+        condition.mComparisonValue = 1;
+        EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
+            fresh.mActor, world.getPlayerPtr(), std::span(&condition, 1)), ESM4::ConditionResult::True);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mScriptEventSequence, talked.mScriptEventSequence);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mSpokenDialogueInfos, talked.mSpokenDialogueInfos);
+    }
+}
+
 TEST(OblivionWorldTest, DispositionReadsLiveActorValuesAndCachesOnlyScriptQueriesWithinAFrame)
 {
     PopulatedMigrationFixture fixture;

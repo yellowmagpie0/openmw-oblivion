@@ -1,0 +1,373 @@
+{
+  "status": "verified_native_dialogue_history_persistence",
+  "goal_complete": false,
+  "scope": "Actor-owned talked-to flag survives native saves and warm/fresh reload; not whole introduction or quest acceptance.",
+  "implementation": [
+    "Native GREETING marks reference custom state native.dialogue.talked_to_player.",
+    "GetTalkedToPC and loaded/unloaded native condition queries read that same reference-owned state.",
+    "Missing legacy flags read false; incoming false replaces outgoing true without a class-cache dependency.",
+    "Save admission rejects non-boolean flags and validates actor ownership with incoming definitions for runtime-created actor bases.",
+    "Morrowind retains its existing CreatureStats history path."
+  ],
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/hackdirt/dialogue-history-engine-integration-01/verification.json",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "84d662d795070ece1d07da750fa8c5801603b1063f12af17d6f300cf964d7fb7"
+      },
+      "result": {
+        "executed": 2227,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "0cab89ba933c95458369ece4bdc85519b7045b1413f80bdcebe09543ad4c8c5e",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "aa371aed366a800624341e78f3885d02255a3f07adc082933f664d2d85bde169",
+        "inventory_sha256": "b0c1b89d7bf09da378e90c5b1a2f1a09205157714d5c10f734728da07bd74a1a",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitize": {
+      "path": "build/oblivion-compat/hackdirt/dialogue-history-engine-sanitize-01/verification.json",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "31a240f5b984d8d9909a3afdf3f3d1cb0136a1ef3a8a72e4981bc2622cda8dee"
+      },
+      "result": {
+        "executed": 2227,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "7b3519b1d7067dd4b310160e5537411a4399dcd308cd1b581e7f271bf1bf80be",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "0ea0f99bb537004adccd7a64c08d6c7ab1abe8dbd64e35b77430f8dee76053d8",
+        "inventory_sha256": "b0c1b89d7bf09da378e90c5b1a2f1a09205157714d5c10f734728da07bd74a1a",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "runtime_provenance": {
+    "runtime_binary_sha256": "7e77b9968510ed704cd1476e8c1b0f151fd6d5db6a0dee6ed5363360ef531934",
+    "source_provenance": "dialogue-history-focused-04/verification.json; production unchanged since focused-02 for these runtime courses",
+    "subsequent_source_change": "Incoming definitions selected when validating runtime-created actor bases. Original content Dar-Ma uses the unchanged static-definition branch.",
+    "source_run": "darma-intro-save-02",
+    "reload_run": "darma-intro-reload-diagnostic-02"
+  },
+  "runtime": {
+    "passed": true,
+    "scope": "Native talked-to flag persistence only; source course remains failed on Training topic refresh, not an accepted playable checkpoint.",
+    "records": [
+      {
+        "path": "darma-intro-save-02",
+        "scenario_passed": false,
+        "save": "build/oblivion-compat/hackdirt/darma-intro-save-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "5320fe258602c0c7bb360099a062ca5f2358bace4807bfb6e0467e3a5cc002b1",
+        "epoch": {
+          "pid": 461672,
+          "start_ticks": 184599613,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/darma-intro-save-02/config",
+            "--no-sound=1",
+            "--no-grab"
+          ]
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 0,
+          "running": true,
+          "completed_stages": []
+        },
+        "instances": {
+          "content:oblivion.esm:028154@oblivion.esm/object/unit=0": {
+            "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+            "context": "content:oblivion.esm:0280fa",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              }
+            ]
+          },
+          "content:oblivion.esm:028155@oblivion.esm/quest/unit=0": {
+            "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+            "context": "content:oblivion.esm:027815",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0.0
+              },
+              null
+            ]
+          }
+        }
+      },
+      {
+        "path": "darma-intro-reload-diagnostic-02",
+        "scenario_passed": true,
+        "save": "build/oblivion-compat/hackdirt/darma-intro-reload-diagnostic-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "df2247ee4918dc2cabf974d4e61c6620bcf4fc2b0402a4400e1d04fa947ed4b4",
+        "epoch": {
+          "pid": 461800,
+          "start_ticks": 184606031,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/darma-intro-reload-diagnostic-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/darma-intro-save-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 0,
+          "running": true,
+          "completed_stages": []
+        },
+        "instances": {
+          "content:oblivion.esm:028154@oblivion.esm/object/unit=0": {
+            "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+            "context": "content:oblivion.esm:0280fa",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              }
+            ]
+          },
+          "content:oblivion.esm:028155@oblivion.esm/quest/unit=0": {
+            "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+            "context": "content:oblivion.esm:027815",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0.0
+              },
+              null
+            ]
+          }
+        }
+      }
+    ],
+    "native_payload_roundtrip_exact": true,
+    "quest_and_actor_script_instances_preserved": true,
+    "spoken_history_preserved": true,
+    "disposition_modifiers_preserved": true,
+    "input_save_unchanged": true,
+    "no_intro_result_replay": true
+  },
+  "runtime_evidence_limit": "The source course has one retained Training-topic frame failure at INFO18d883. Its save proves this bounded history property only; it is not an accepted playable start. The subsequent incoming-definition validation refinement leaves the original-content Dar-Ma branch unchanged; runtime binary identity is retained separately from final gate identities.",
+  "capture_inspected": "darma-intro-reload-diagnostic-02/darma-intro-reload.png",
+  "retained_attempts": [
+    {
+      "path": "dialogue-history-focused-01",
+      "result": "Build failed: invalid local fixture store variable."
+    },
+    {
+      "path": "dialogue-history-focused-02",
+      "result": "20/26 passed; six incomplete menu-Player fixtures failed character-generation capture validation."
+    },
+    {
+      "path": "dialogue-history-focused-03",
+      "result": "24/26 passed; two tests redundantly moved an already-prepared fixture into the same cell."
+    },
+    {
+      "path": "dialogue-history-focused-04",
+      "result": "26/26 passed after fixture corrections; warm/fresh true/false/absent flag and malformed-type coverage included."
+    }
+  ],
+  "next_dependency": {
+    "function": "GetPCMiscStat",
+    "parameter": 13,
+    "topic": "Training",
+    "topic_id": "03c159",
+    "info": "18d883",
+    "production_status": "unimplemented",
+    "oracle_expectations": "scripts/data/oblivion_compat/hackdirt_misc_stat_oracle_cases.json",
+    "original_instruction_cases": 90,
+    "proven_rule": "Unsigned 32-bit reads; signed deltas added with 32-bit wrap.",
+    "oracle_boundary": "Argument extraction stubbed for modification; preallocated Player/counter storage. Constructor defaults, parameter bounds, automatic counters and save/load not proven by this oracle."
+  },
+  "remaining_goal_gates": [
+    "Error-free ordinary introduction and documented playable pre-pickup setup",
+    "Original timed disappearance, discovery and Seed-Neeus acceptance",
+    "Overland travel and original investigation route",
+    "Cavern entry, original hostile inhabitants and Dar-Ma rescue",
+    "Explicit-topic Player conversation for original escape dialogue",
+    "Return and original completion/reward",
+    "Active quest/follower save/reload and appropriate full-course integration checks"
+  ],
+  "post_test_changes": "Documentation and verification receipt only; implementation unchanged after the recorded checks."
+}

@@ -73,7 +73,7 @@ namespace ESM4
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
     // v87 retains pending native spells and once-only release ownership.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 90;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 91;
 
     struct RuntimeContentIdentity
     {
@@ -910,6 +910,8 @@ namespace ESM4
         // v69 also permits Player's hidden process base package. Player +330
         // still returns null; generic process package queries can observe it.
         std::map<ESM::FormKey, std::vector<CombatControllerTarget>> mCombatControllers;
+        // v91: shared PACK waiting flag overrides; false shadows authored true.
+        std::map<ESM::FormKey, bool> mPackageWaiting;
         std::uint64_t mAiRngState = 1;
         // v27: profile-owned combat stream, independent of AI/world scheduling.
         // Zero is a valid CRT seed. Older saves initialize this stream at one.

@@ -38,6 +38,8 @@
 #include "../mwmechanics/creaturestatsrestore.hpp"
 #include "esmstore.hpp"
 #include "preparedsaverecords.hpp"
+#include "worldimp.hpp"
+#include "../mwmechanics/oblivionai.hpp"
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/luamanager.hpp"
@@ -680,6 +682,10 @@ namespace MWWorld
             throw std::logic_error("Ptr with nullptr mRef is not allowed to be registered");
         mPtrRegistry.insert(ptr);
         ptr.mRef->mWorldModel = this;
+        if (ptr.getType() == ESM::REC_DOOR4)
+            if (auto* world = dynamic_cast<World*>(MWBase::Environment::get().getWorldOrNull());
+                world && &world->getWorldModel() == this)
+                if (auto* ai = world->getOblivionAiService()) ai->applyPendingDoorLockProjection(ptr);
     }
 
     void WorldModel::registerPreparedPtr(const Ptr& ptr, PtrRegistry::PreparedInsertions& prepared)
@@ -687,6 +693,10 @@ namespace MWWorld
         if (!ptr.mRef) throw std::logic_error("Cannot register an empty prepared pointer");
         mPtrRegistry.insertPrepared(ptr, prepared);
         ptr.mRef->mWorldModel = this;
+        if (ptr.getType() == ESM::REC_DOOR4)
+            if (auto* world = dynamic_cast<World*>(MWBase::Environment::get().getWorldOrNull());
+                world && &world->getWorldModel() == this)
+                if (auto* ai = world->getOblivionAiService()) ai->applyPendingDoorLockProjection(ptr);
     }
 
     Ptr WorldModel::getResidentPtr(ESM::RefNum refNum)

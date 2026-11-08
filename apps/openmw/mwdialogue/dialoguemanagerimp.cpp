@@ -7,6 +7,7 @@
 #include <limits>
 #include <optional>
 #include <sstream>
+#include <utility>
 
 #include <components/debug/debuglog.hpp>
 
@@ -318,10 +319,32 @@ namespace MWDialogue
         }
     }
 
+    bool DialogueManager::startScriptedDialogue(const MWWorld::Ptr& actor, const ESM::FormKey& topic)
+    {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
+        auto* world = dynamic_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
+        if (!scripts || world->getGameProfile() != ESM::GameProfile::Oblivion
+            || actor.isEmpty() || actor.getClass().getCreatureStats(actor).isDead() || mScriptedStart
+            || !scripts->selectNativeDialogueInfo(topic, actor, world->getPlayerPtr()))
+            return false;
+        mScriptedStart.emplace(actor, topic);
+        struct Reset
+        {
+            decltype(mScriptedStart)& mPending;
+            ~Reset() { mPending.reset(); }
+        } reset{mScriptedStart};
+        MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_Dialogue, actor);
+        return true;
+    }
+
     bool DialogueManager::startDialogue(const MWWorld::Ptr& actor, ResponseCallback* callback)
     {
         requireMutableRuntime();
         const RuntimeCall call(mActiveCalls);
+        const auto scriptedStart = std::exchange(mScriptedStart, std::nullopt);
         const bool native = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
         if (!native) updateGlobals();
 
@@ -351,7 +374,9 @@ namespace MWDialogue
             auto* world = dynamic_cast<MWWorld::World*>(
                 static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
             auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
-            const auto greeting = world ? world->getStore().findEsm4FormKey("GREETING") : std::nullopt;
+            const auto greeting = scriptedStart && scriptedStart->first == actor
+                ? std::optional(scriptedStart->second)
+                : world ? world->getStore().findEsm4FormKey("GREETING") : std::nullopt;
             const auto info = scripts && greeting
                 ? scripts->selectNativeDialogueInfo(*greeting, actor, world->getPlayerPtr()) : std::nullopt;
             if (!info) return false;
@@ -361,7 +386,7 @@ namespace MWDialogue
                 mNativeDialogue = false;
                 return false;
             }
-            creatureStats.talkedToPlayer();
+            scripts->markTalkedToPlayer(actor.getCellRef().getFormKey());
             return true;
         }
 

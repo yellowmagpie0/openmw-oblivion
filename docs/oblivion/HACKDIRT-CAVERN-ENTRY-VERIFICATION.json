@@ -1,0 +1,1262 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Original inn/cavern entry and restart, one original hostile prison guard defeated by ordinary unarmed combat and dead across fresh process. Explicit-topic Player entry path passes engine checks; actual escape conversation, rescue/escort/return/reward remain open.",
+  "prior_engine_provenance": "docs/oblivion/HACKDIRT-PACKAGE-DOORS-VERIFICATION.json",
+  "original_executable": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe",
+    "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+  },
+  "master": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "runtime_binary": {
+    "path": "build/openmw",
+    "sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6"
+  },
+  "native_sources": [
+    {
+      "path": "apps/openmw/mwbase/dialoguemanager.hpp",
+      "sha256": "b6307e7c37ba016c0b8a2f8ec4961eb23852696232bbd9838524050da8119cdf"
+    },
+    {
+      "path": "apps/openmw/mwdialogue/dialoguemanagerimp.hpp",
+      "sha256": "07d094cfde7b14d859ebcf81b9ee41aa26f2f268b88ad4b4310bc9a913ad9dfd"
+    },
+    {
+      "path": "apps/openmw/mwdialogue/dialoguemanagerimp.cpp",
+      "sha256": "f0d39051f8b5d672da759ee17b6e4ce551ad7cfd21e0e118ffb0d271aa20be90"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "cc12d55850da8b78ac13965edfb3c46de282bad059b613c73bcebf564f4752cf"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testobliviondialogue.cpp",
+      "sha256": "6494ced0a36ca5f0442189e75254f96ed89a7b6856c4d0710c5e734b000b0b3d"
+    }
+  ],
+  "original_content": {
+    "trapdoor": "028100 in inn0280ad, originallylocked30, key028b7b, destinationCaverns0280b0",
+    "trapdoor_script": "0cd418 HackdirtTrapdoorSCRIPT invokes originalActivate then SetStageMS45,35 when Player activates and GetStage>=10",
+    "history_after_entry": [
+      1,
+      2,
+      10,
+      35,
+      50,
+      55
+    ],
+    "current_stage_after_entry": 55,
+    "quest_script": "028155 MS45 requests DarMaRef.StartConversation player,MS45DarMaGoHome after untied1 and outsideHackdirt, then unconditionally sets thankedPC1",
+    "explicit_topic": "028209 MS45DarMaGoHome",
+    "quest_given_response": "02820d",
+    "incidental_rescue_response": "02820e",
+    "escape_response_flags": "Goodbye0x01; no choice links",
+    "independent_evidence_scope": "Winning original records/scripts identified by unchanged master hash. Reuses reviewed generic dialogue selection/result behavior. No new instruction-level StartConversation oracle or complete original UI/audio parity is claimed."
+  },
+  "implementation": [
+    "Explicit-topic Player conversations open their requested root through the normal native dialogue executor, retaining conditions, response/result scripts, Goodbye, linked choices and spoken/talked-to history.",
+    "A synchronous scoped topic request is consumed by the GUI opening, cleared on failure, and cannot leak into a subsequent ordinary GREETING. Active runtime-call guards prevent retaining this transient request.",
+    "Default Player greetings and NPC-to-NPC conversations retain their existing paths; no quest records/scripts were changed."
+  ],
+  "checks": {
+    "explicit-topic-focused-04": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/explicit-topic-focused-04/verification.json",
+        "sha256": "7976a243ee6cc8b3ddf6c2de062e3be5f8c4522ad1fc4d4e06443bed2c925db2"
+      },
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "78bf7c055888cf6cd2aa238a937e8d18122c52986b67070f43e55cf5b18c5036"
+      },
+      "results": {
+        "engine": {
+          "executed": 32,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogueMenu.*",
+          "binary_sha256": "9acbe2559a213c82e6fef9bb984d95fcb958e86fda46cc8efda977615adbe793",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "79ae144140e630a486cb5344342dd2b05c825b93cd213fd6d6c439594ad323f2",
+          "inventory_sha256": "9c7f5983010de32389832f9c79a21e971b73c61f20c80f4fe7257e8cadc31710",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "explicit-topic-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/explicit-topic-normal-01/verification.json",
+        "sha256": "14ba38d647bacb37a66e2b40e19117fdb174d2f27e73d34d07e083b2e231ece8"
+      },
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "78bf7c055888cf6cd2aa238a937e8d18122c52986b67070f43e55cf5b18c5036"
+      },
+      "results": {
+        "engine": {
+          "executed": 2242,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "9acbe2559a213c82e6fef9bb984d95fcb958e86fda46cc8efda977615adbe793",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6ccd07dca42d939a0a01eeaa5ac5e16a5f92400c5f5800762b1ac701e289171f",
+          "inventory_sha256": "9c7f5983010de32389832f9c79a21e971b73c61f20c80f4fe7257e8cadc31710",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "explicit-topic-sanitized-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/explicit-topic-sanitized-01/verification.json",
+        "sha256": "4656a174772cb87e3315feb24698e582492bb14f24ea929dfd3a3986a495a827"
+      },
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "78bf7c055888cf6cd2aa238a937e8d18122c52986b67070f43e55cf5b18c5036"
+      },
+      "results": {
+        "engine": {
+          "executed": 2242,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ea311a306c9b6cb5cf31957ce6bc4184bb69254b7045c4bb523407cf0d507a27",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "c33359e69705b85f193bac6e9b3ac47968efec2111e6fd1e75e0b0c365409d5f",
+          "inventory_sha256": "9c7f5983010de32389832f9c79a21e971b73c61f20c80f4fe7257e8cadc31710",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "SDL_VIDEODRIVER": "x11",
+        "SDL_AUDIODRIVER": "dummy",
+        "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+        "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+        "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+      }
+    }
+  },
+  "village_semantics": {
+    "passed": true,
+    "scope": "Normal house exit/village path/inn entry using saved prefix from failed aiming attempt; no cavern or combat acceptance yet.",
+    "records": {
+      "jiv-meeting-reload-01": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/jiv-meeting-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "0bba3f14907858fb295e1b7d18d913ca92e964f05ce41c4e20816d77bb53e61b"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 55,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            50,
+            55
+          ]
+        },
+        "health": 80.0,
+        "inventory": [
+          {
+            "base": "content:oblivion.esm:0be335",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 16,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:02731a",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 32,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:027319",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 4,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:027318",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 8,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:028b7b",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 0,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          }
+        ],
+        "crime": {
+          "next_incident": 1,
+          "next_transaction": 1,
+          "action_retention_floor": 1,
+          "incidents": [],
+          "arrests": [],
+          "jails": []
+        },
+        "disposition": [
+          {
+            "actor": "content:oblivion.esm:0234fd",
+            "target": "dynamic:player:0000000000000001",
+            "value": 40
+          },
+          {
+            "actor": "content:oblivion.esm:0280da",
+            "target": "dynamic:player:0000000000000001",
+            "value": 40
+          },
+          {
+            "actor": "content:oblivion.esm:0280fa",
+            "target": "dynamic:player:0000000000000001",
+            "value": 20
+          }
+        ],
+        "player_cell": "content:oblivion.esm:0280ae",
+        "player_position": [
+          1631.3385009765625,
+          2061.340576171875,
+          8052.4052734375,
+          0.0,
+          0.0,
+          1.570801019668579
+        ],
+        "exact_payload_roundtrip": true
+      },
+      "inn-route-01": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/inn-route-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "10a4d7874c5a28513a69cb1bff8def551429803e02abd88dd487c8c8393139e3"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 55,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            50,
+            55
+          ]
+        },
+        "health": 80.0,
+        "inventory": [
+          {
+            "base": "content:oblivion.esm:0be335",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 16,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:02731a",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 32,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:027319",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 4,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:027318",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 8,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:028b7b",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 0,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          }
+        ],
+        "crime": {
+          "next_incident": 1,
+          "next_transaction": 1,
+          "action_retention_floor": 1,
+          "incidents": [],
+          "arrests": [],
+          "jails": []
+        },
+        "disposition": [
+          {
+            "actor": "content:oblivion.esm:0234fd",
+            "target": "dynamic:player:0000000000000001",
+            "value": 40
+          },
+          {
+            "actor": "content:oblivion.esm:0280da",
+            "target": "dynamic:player:0000000000000001",
+            "value": 40
+          },
+          {
+            "actor": "content:oblivion.esm:0280fa",
+            "target": "dynamic:player:0000000000000001",
+            "value": 20
+          }
+        ],
+        "player_cell": "content:oblivion.esm:00f3c8",
+        "player_position": [
+          -66783.703125,
+          63168.41015625,
+          9795.076171875,
+          0.0,
+          0.0,
+          -0.8219602108001709
+        ],
+        "exact_payload_roundtrip": true,
+        "epoch": {
+          "exe_sha256": "f9fedf9e8d1785b2721ddb1e846af7d15876620290d3be3b54d9fd401a4daa15",
+          "pid": 584931,
+          "start_ticks": 187697906,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-meeting-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "harness_passed": false,
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/inn-route-01-console.json",
+          "sha256": "960a4a0b5196c423d34189987f2f9e30e0e9dbc57b309be476238a2510611459"
+        }
+      },
+      "inn-route-02": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/inn-route-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "d9957ed48082e753eccf15fb052aaff16a6460e874e517b4594e9dffb44bdc8c"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 55,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            50,
+            55
+          ]
+        },
+        "health": 80.0,
+        "inventory": [
+          {
+            "base": "content:oblivion.esm:0be335",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 16,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:02731a",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 32,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:027319",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 4,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:027318",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 8,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          },
+          {
+            "base": "content:oblivion.esm:028b7b",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 0,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          }
+        ],
+        "crime": {
+          "next_incident": 1,
+          "next_transaction": 1,
+          "action_retention_floor": 1,
+          "incidents": [],
+          "arrests": [],
+          "jails": []
+        },
+        "disposition": [
+          {
+            "actor": "content:oblivion.esm:0234fd",
+            "target": "dynamic:player:0000000000000001",
+            "value": 40
+          },
+          {
+            "actor": "content:oblivion.esm:0280da",
+            "target": "dynamic:player:0000000000000001",
+            "value": 40
+          },
+          {
+            "actor": "content:oblivion.esm:0280fa",
+            "target": "dynamic:player:0000000000000001",
+            "value": 20
+          }
+        ],
+        "player_cell": "content:oblivion.esm:0280ad",
+        "player_position": [
+          -227.3736572265625,
+          -497.91986083984375,
+          1.0,
+          0.0,
+          0.0,
+          5.960465188081798e-08
+        ],
+        "exact_payload_roundtrip": true,
+        "epoch": {
+          "exe_sha256": "f9fedf9e8d1785b2721ddb1e846af7d15876620290d3be3b54d9fd401a4daa15",
+          "pid": 585929,
+          "start_ticks": 187762598,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "harness_passed": true,
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/inn-route-02-console.json",
+          "sha256": "fa0c5f352fe4a7c0b33d90efbeef97ce69a7b6573ac0b0fa52aa190be944125e"
+        }
+      }
+    }
+  },
+  "cavern_semantics": {
+    "passed": true,
+    "scope": "Original Jiv key opens inn trapdoor by normal activation; cavern entrance/restart preserved. No combat/rescue acceptance in this receipt.",
+    "records": {
+      "inn-route-02": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/inn-route-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "d9957ed48082e753eccf15fb052aaff16a6460e874e517b4594e9dffb44bdc8c"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 55,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            50,
+            55
+          ]
+        },
+        "player_cell": "content:oblivion.esm:0280ad",
+        "player_position": [
+          -227.3736572265625,
+          -497.91986083984375,
+          1.0,
+          0.0,
+          0.0,
+          5.960465188081798e-08
+        ],
+        "health": 80.0,
+        "key_count": 1,
+        "exact_payload_roundtrip": true,
+        "epoch": {
+          "exe_sha256": "f9fedf9e8d1785b2721ddb1e846af7d15876620290d3be3b54d9fd401a4daa15",
+          "pid": 585929,
+          "start_ticks": 187762598,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/inn-route-02-console.json",
+          "sha256": "fa0c5f352fe4a7c0b33d90efbeef97ce69a7b6573ac0b0fa52aa190be944125e"
+        },
+        "harness_passed": true
+      },
+      "inn-trapdoor-01": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/inn-trapdoor-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "8298408e4bf07ee65b096cd043b9a4c385d833d0bd2030efa9492aebdf6b2079"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 55,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            50,
+            55
+          ]
+        },
+        "player_cell": "content:oblivion.esm:0280ad",
+        "player_position": [
+          205.19142150878906,
+          479.23541259765625,
+          1.0,
+          0.83203125,
+          0.0,
+          -1.271484375
+        ],
+        "health": 80.0,
+        "key_count": 1,
+        "exact_payload_roundtrip": true,
+        "epoch": {
+          "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+          "pid": 592394,
+          "start_ticks": 187812261,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-trapdoor-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/inn-trapdoor-01-console.json",
+          "sha256": "90dc130ef2833e00bc7acee7db2ac5b1d66a301ca554f90debda7d2ec5ce1936"
+        },
+        "harness_passed": false
+      },
+      "inn-trapdoor-02": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/inn-trapdoor-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "80e33f58581b362966fd72a2fbd2da035dd21845a19f3de42c3d700279f5bff4"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 55,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            35,
+            50,
+            55
+          ]
+        },
+        "player_cell": "content:oblivion.esm:0280b0",
+        "player_position": [
+          640.0,
+          2240.0,
+          76.30061340332031,
+          0.0,
+          0.0,
+          6.556511493727157e-07
+        ],
+        "health": 80.0,
+        "key_count": 1,
+        "exact_payload_roundtrip": true,
+        "epoch": {
+          "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+          "pid": 592977,
+          "start_ticks": 187862381,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-trapdoor-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-trapdoor-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/inn-trapdoor-02-console.json",
+          "sha256": "43114ae8134d9cc7cdc437604f18750664819ed569417d9cd684d38bd3b75d79"
+        },
+        "harness_passed": true,
+        "inn_trapdoor_lock_level": -30,
+        "prison_door_locked": true
+      },
+      "cavern-entry-reload-01": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/cavern-entry-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "154ab50c2d7251486ba22a0657ebdcac45cfc9c77ff24f134f2021352ab55796"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 55,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            35,
+            50,
+            55
+          ]
+        },
+        "player_cell": "content:oblivion.esm:0280b0",
+        "player_position": [
+          640.0,
+          2240.0,
+          76.30061340332031,
+          0.0,
+          0.0,
+          6.556511493727157e-07
+        ],
+        "health": 80.0,
+        "key_count": 1,
+        "exact_payload_roundtrip": true,
+        "epoch": {
+          "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+          "pid": 593124,
+          "start_ticks": 187880628,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-entry-reload-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-trapdoor-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/cavern-entry-reload-01-console.json",
+          "sha256": "5696d1914631936f2f3a55323ea85bf19c492270bdafef3b468a4ca7ab4da337"
+        },
+        "harness_passed": true,
+        "inn_trapdoor_lock_level": -30,
+        "prison_door_locked": true
+      }
+    },
+    "original_entry_result": {
+      "script": "0cd418 HackdirtTrapdoorSCRIPT",
+      "normal_activation_result": "SetStage MS45,35 when GetStage>=10",
+      "expected_history_change": "Add35 to completed stages while highest stage remains55",
+      "log": "inn-trapdoor-02/process.log at06:21:22.250"
+    },
+    "restart_preserves": [
+      "MS45 quest55/completed stages",
+      "MS45 and Dar-Ma scripts",
+      "key/inventory",
+      "disposition",
+      "spoken INFO history",
+      "native crime",
+      "unlocked inn trapdoor",
+      "locked prison door",
+      "Player health80"
+    ]
+  },
+  "semantic_artifacts": [
+    {
+      "path": "build/oblivion-compat/hackdirt/inn-route-semantic-verification.json",
+      "sha256": "55b6408da451e56702bb3693ebcd1cdf2b571283210e0036d8d53324e3d7e80e"
+    },
+    {
+      "path": "build/oblivion-compat/hackdirt/cavern-entry-semantic-verification.json",
+      "sha256": "cc03a535883ccd9aa2242e241b26787c70eefb5cb747b9e87391baddcbee07be"
+    }
+  ],
+  "editable_sources": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_house_to_inn.json",
+      "sha256": "c48d84062e3fa88b8e7d57a4b0cd286adb5f8426b68c38f73a7839ecb6196afe"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_inn_trapdoor.json",
+      "sha256": "24e21d44ac77bf4422de60914a3da84d029d7d32735a24ff31f51c1e133394fe"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_cavern_entry_reload.json",
+      "sha256": "7be0addfb0423d212e8f3f82c3ed40b58ae98911c431cfbd6f26a0236fbc325d"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_cavern_guard_combat.json",
+      "sha256": "9d7f51a2f41a2df7fa87beee9ce032c6a3e6dccbe87c34fd57007ce5cf6736c4"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_cavern_guard_reload.json",
+      "sha256": "1b49b9dcf496699e7463dacc93213ef47f324060315d30719dbd377d98883444"
+    }
+  ],
+  "retained_attempts": {
+    "explicit-topic-focused-01": "Compile error: Environment.getWorld returns NotNullPtr; corrected explicit base-pointer conversion.",
+    "explicit-topic-focused-02": "Crash in older scripted-Player fixture: dialogue manager had not been installed because old explicit-topic branch returned early. Corrected fixture to install the real manager and exercise the newly supported topic.",
+    "explicit-topic-focused-03": "New fixture incorrectly expected SetStage20 to undo stage30 and re-enable a stage20-only linked choice. Corrected authored test root/expectations to preserve monotonic quest progress; production stage semantics unchanged.",
+    "inn-route-01": {
+      "interpretation": "Stationary camera feedback oscillated at waypoint13. Extra normal F5 preserved reached waypoint11; original terminal harness staysfailed.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/inn-route-01-console.json",
+        "sha256": "960a4a0b5196c423d34189987f2f9e30e0e9dbc57b309be476238a2510611459"
+      },
+      "epoch": {
+        "exe_sha256": "f9fedf9e8d1785b2721ddb1e846af7d15876620290d3be3b54d9fd401a4daa15",
+        "pid": 584931,
+        "start_ticks": 187697906,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-meeting-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "inn-route-02": {
+      "interpretation": "Normal-input continuation from that saved prefix enters inn. Smaller mouse gain and longer stationary settling are published for reuse.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/inn-route-02-console.json",
+        "sha256": "fa0c5f352fe4a7c0b33d90efbeef97ce69a7b6573ac0b0fa52aa190be944125e"
+      },
+      "epoch": {
+        "exe_sha256": "f9fedf9e8d1785b2721ddb1e846af7d15876620290d3be3b54d9fd401a4daa15",
+        "pid": 585929,
+        "start_ticks": 187762598,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "inn-trapdoor-01": {
+      "interpretation": "Complete inn path and normal F5 succeeded; camera-to-trapdoor distance exceeded existing fork activation reach150. Space selected nothing; no door/key workaround used.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/inn-trapdoor-01-console.json",
+        "sha256": "90dc130ef2833e00bc7acee7db2ac5b1d66a301ca554f90debda7d2ec5ce1936"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 592394,
+        "start_ticks": 187812261,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-trapdoor-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-route-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "inn-trapdoor-02": {
+      "interpretation": "Normal closer step to155,490,1, original locked30 tooltip, Space uses original key, original script adds35, normal cavern F5 succeeds.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/inn-trapdoor-02-console.json",
+        "sha256": "43114ae8134d9cc7cdc437604f18750664819ed569417d9cd684d38bd3b75d79"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 592977,
+        "start_ticks": 187862381,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-trapdoor-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-trapdoor-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "cavern-patrol-fight-01": {
+      "interpretation": "No combat accepted. Original pathgrid segment241 obstructed by crates/rocks near459,1915. Extra normal F5 preserves approach; normal E did not clear obstruction. Eastern detour now being exercised.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/cavern-patrol-fight-01-console.json",
+        "sha256": "c46de74b7e08e3b6bc86b5d903fa62b4de0abec3d46e978450d5e6b11524a6d6"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 593670,
+        "start_ticks": 187899206,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-patrol-fight-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-entry-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "weapon-crate-01": {
+      "interpretation": "Normal ray hit stacked upper clutter crate092d1b, and probe incorrectly waited for a TES3 container UI. Native fork activation transfers directly; terminal failed, no accepted equipment save.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/weapon-crate-01-console.json",
+        "sha256": "bfc6b4e3792ebf587984a22aadca4e1b16ebf505652be2f286ca773ec57c670b"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 598744,
+        "start_ticks": 187937913,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/weapon-crate-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-patrol-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "weapon-crate-02": {
+      "interpretation": "Exact lower original weapon crate092d1d reportedlooted, but semantic Player inventory remains four clothes+key. Leveled-list CNTO descriptors fail itemDefinition in transfer and are then discarded. Structural harness passes; equipment preparation fails. This save is not used as prepared gear.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/weapon-crate-02-console.json",
+        "sha256": "d478de8c39596c1bf30bd7c68a28deccdabc04633de6e960ce75e0fffb04999c"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 598938,
+        "start_ticks": 187951424,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/weapon-crate-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-patrol-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "cavern-entry-reload-01": {
+      "interpretation": "Fresh-process cavern reload harness and semantic inspection pass.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/cavern-entry-reload-01-console.json",
+        "sha256": "5696d1914631936f2f3a55323ea85bf19c492270bdafef3b468a4ca7ab4da337"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 593124,
+        "start_ticks": 187880628,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-entry-reload-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/inn-trapdoor-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "cavern-guard-fight-01": {
+      "interpretation": "Eastern route clears clutter. Guard initiates combat and damages Player; Player lands four normal unarmed hits of1.42. Knockback moves actors outside fist reach; old controller reverts to unfinished waypoint targeting and does not maintain contact. Target remainsalive, terminal combat requirement fails. Do not infer a formula defect or completed fight.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/cavern-guard-fight-01-console.json",
+        "sha256": "95d35276f9d04a53ff4043590a668b14ad1d77a8f1cc1d0a65eb3b20389c0bf1"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 599266,
+        "start_ticks": 187976077,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-guard-fight-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-patrol-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "cavern-guard-fight-02": {
+      "interpretation": "Blocking, charged fist hit and reach maintenance work: first hit3.44, Player62.85. All child actions of first attack passed but outer branch deadline20s expired after22.26s. No completed fight or save accepted. Next probe raises input-controller deadline and adds ordinary F5 checkpoints after settled strikes.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/cavern-guard-fight-02-console.json",
+        "sha256": "9d47573f98efef9567c21ce3424737c8157dfd28bc188b9dbe03d7ea27eead9d"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 599544,
+        "start_ticks": 188013952,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-guard-fight-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-patrol-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    },
+    "cavern-guard-fight-03": {
+      "interpretation": "Expanded controller deadline; normal F5 after settled strikes. Original guard attacked first; five charged unarmed hits defeated it; Player survives at13.58625. Fresh process preserves outcome and still-imprisoned Dar-Ma.",
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/cavern-guard-fight-03-console.json",
+        "sha256": "9f1761378ca2cc72cd704a77668a42198dcd4b4c18860d44be2c054cc94a2b90"
+      },
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 599738,
+        "start_ticks": 188039723,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-guard-fight-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-patrol-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      }
+    }
+  },
+  "limits": [
+    "Actual original escape INFO02820d and follower/thanks behavior remain unverified; explicit-topic engine checks do not close this runtime gate.",
+    "One guard combat/restart is accepted. Other encountered hostiles, rescue, active/waiting follower restart, return and original completion/reward remain open.",
+    "Normal controls and read-only Lua/events only; no scripted stage/time/position/health/equipment overrides. Native original trapdoor activation itself adds completed35.",
+    "Consolidated full house-to-inn and inn-to-cavern manifests incorporate observed controller/reach corrections but were not replayed as single complete runs. Accepted evidence is the separately identified saved prefixes and continuations.",
+    "Original proprietary records/images and generated save outputs remain ignored. Original failed receipts are retained.",
+    "Final check fingerprints precede documentation/manifest publication; native implementation hashes identify the tested code."
+  ],
+  "ready_pre_combat_save": {
+    "path": "build/oblivion-compat/hackdirt/cavern-entry-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "154ab50c2d7251486ba22a0657ebdcac45cfc9c77ff24f134f2021352ab55796"
+  },
+  "ready_obstructed_approach_save": {
+    "path": "build/oblivion-compat/hackdirt/cavern-patrol-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7e99e90a6444fda0631957d9fb1101d388c3dd665d171cf37d32abadd3a621a7"
+  },
+  "actual_escape_conversation_verified": false,
+  "weapon_crate_semantic_failure": {
+    "path": "build/oblivion-compat/hackdirt/weapon-crate-semantic-failure.json",
+    "sha256": "279d7a4d53e694aa4a2a384b0a83ee8b50f04bba95b0ab19900082aaa41219ef"
+  },
+  "guard_combat": {
+    "passed": true,
+    "scope": "One original hostile prison guard initiates combat, is defeated by normal charged unarmed attacks, and staysdead across fresh process. This is not all-hostile or rescue/escort/completion acceptance.",
+    "player_health": 13.586250305175781,
+    "quest": {
+      "quest": "content:oblivion.esm:027815",
+      "stage": 55,
+      "running": true,
+      "completed_stages": [
+        1,
+        2,
+        10,
+        35,
+        50,
+        55
+      ]
+    },
+    "player_hit_damage": [
+      3.43677,
+      3.25454,
+      3.07854,
+      3.0748,
+      3.08726
+    ],
+    "guard_hits_player": 28,
+    "guard_initiates_before_player_hit": true,
+    "guard_life": {
+      "actor": "content:oblivion.esm:092c59",
+      "base": "content:oblivion.esm:09fd71",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "prison_still_locked": true,
+    "original_weapon_crate_unopened": true,
+    "ms45_untied_unlockCell_thankedPC": [
+      0,
+      0,
+      0
+    ],
+    "unchanged_restart_fields": [
+      "MS45 quest",
+      "MS45 and Dar-Ma script instances",
+      "spoken INFOs",
+      "disposition",
+      "native crime",
+      "death counts",
+      "Player inventory",
+      "Player health within.001"
+    ],
+    "runtime": {
+      "cavern-guard-fight-03": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/cavern-guard-fight-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "b895e2537b46e7e14cdb400c0e1f01025815e0522090bcc1d7edc3030ace58a4"
+        },
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/cavern-guard-fight-03-console.json",
+          "sha256": "9f1761378ca2cc72cd704a77668a42198dcd4b4c18860d44be2c054cc94a2b90"
+        },
+        "log": {
+          "path": "build/oblivion-compat/hackdirt/cavern-guard-fight-03/process.log",
+          "sha256": "7ec14fa1d45b2f0e46fdfd3aed6977c4bd618c6a6fa99629e5f1cd262ab199c0"
+        },
+        "epoch": {
+          "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+          "pid": 599738,
+          "start_ticks": 188039723,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-guard-fight-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-patrol-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "player_position": [
+          1052.898193359375,
+          1677.8203125,
+          21.653152465820312,
+          0.35546875,
+          0.0,
+          2.09962797164917
+        ]
+      },
+      "cavern-guard-reload-01": {
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/cavern-guard-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "6a63742d2b90cbd0a1505219076922e7f068e251c547fc47f564137904ce7b87"
+        },
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/cavern-guard-reload-01-console.json",
+          "sha256": "b25ffcab4692fd811925a262fef85fecbff1589627da20ad25c31fd599fc16ac"
+        },
+        "log": {
+          "path": "build/oblivion-compat/hackdirt/cavern-guard-reload-01/process.log",
+          "sha256": "44dc8043de38202a46fdf5d8b444417a3358a9248421695b6a66fdcef5010339"
+        },
+        "epoch": {
+          "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+          "pid": 599940,
+          "start_ticks": 188079012,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-guard-reload-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/cavern-guard-fight-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "player_position": [
+          1052.898193359375,
+          1677.8203125,
+          21.653152465820312,
+          0.35546875,
+          0.0,
+          2.09962797164917
+        ]
+      }
+    }
+  },
+  "guard_combat_semantic_receipt": {
+    "path": "build/oblivion-compat/hackdirt/guard-combat-semantic-verification.json",
+    "sha256": "1b4ad13e6d505160bd2ab040dea029e71228c061b357f6ea12e50b3fd1853154"
+  },
+  "ready_post_guard_save": {
+    "path": "build/oblivion-compat/hackdirt/cavern-guard-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "6a63742d2b90cbd0a1505219076922e7f068e251c547fc47f564137904ce7b87"
+  },
+  "configured_runtime_shared_libraries": [
+    {
+      "path": "build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+      "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+    }
+  ],
+  "shared_library_provenance": "Normal executable ldd resolves this configured MyGUI library. No /proc maps capture was retained for these courses; shared library was not rebuilt during them."
+}

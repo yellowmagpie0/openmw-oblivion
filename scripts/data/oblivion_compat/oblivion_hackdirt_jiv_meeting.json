@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "name": "Original package arrival, house entry, Jiv explanation and key in one process",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal points={{{{-67324.34375,62132.953125,9858.0}},{{-67121.7421875,62099.36328125,9862.0}},{{-67013.28125,62209.28125,9852.0}},{{-66768.78125,62206.36328125,9842.0}},{{-66483.3046875,62212.26171875,9828.0}},{{-66297.8359375,62082.96484375,9824.0}},{{-66164.7734375,62005.54296875,9830.0}},{{-66023.96875,61994.46484375,9870.0}},{{-65914.4609375,61990.26171875,9900.0}},{{-65820.5546875,61952.77734375,9940.0}},{{-65630.3203125,61980.81640625,9998.0}},{{-65559.1484375,61875.81640625,10026.0}},{{-65403,61804,10048}}}}\nlocal index=1\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.1 then return end;timer=0\n local tag,target,object\n if not self.cell.isExterior then\n  if self.cell.name=='HackdirtJivHirielsHouse' then print('JivHouse entered='..self.cell.name);local j=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x280da));if j and j:isValid() then print('JivPresence player='..self.cell.name..' actor='..j.cell.name..' pos='..tostring(j.position)) end;return end\n  tag='exit';object=0x280f9\n else\n  print('JivHouse exterior=true')\n  if index<=#points then\n   tag=tostring(index);local p=points[index];target=util.vector3(p[1],p[2],p[3]);local v=target-self.position\n   if math.sqrt(v.x*v.x+v.y*v.y)<20 then print('JivHouse reached='..tag);index=index+1;return end\n  else tag='door';object=0x280db end\n end\n if object then\n  local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',object));if not obj or not obj:isValid() then print('JivHouse absent='..tag);return end\n  target=obj.position+util.vector3(0,0,30)\n end\n local v=target-self.position\n if tag=='exit' and math.sqrt(v.x*v.x+v.y*v.y)<110 then print('JivHouse near=exit') end\n local f=self.rotation:apply(util.vector3(0,1,0));local angle=math.atan2(f.y*v.x-f.x*v.y,f.x*v.x+f.y*v.y)\n local pitch=0\n if object then local c=target-camera.getPosition();pitch=-math.atan2(c.z,math.sqrt(c.x*c.x+c.y*c.y)) end\n if math.abs(angle)<0.06 and math.abs(pitch-camera.getPitch())<0.04 then print('JivHouse ready='..tag) end\n print(string.format('JivHouse aim x=%d y=%d tag=%s pos=%.2f,%.2f,%.2f distance=%.2f',math.max(-150,math.min(150,math.floor(angle*512+.5))),math.max(-100,math.min(100,math.floor((pitch-camera.getPitch())*512+.5))),tag,self.position.x,self.position.y,self.position.z,v:length()))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:027815 name=GetStage result=50",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native package door policy: actor=content:oblivion.esm:0280da package=content:oblivion.esm:01778c door=content:oblivion.esm:0280db locked=(?:0|false) event=1",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "JivHouse entered=HackdirtJivHirielsHouse",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "JivPresence player=HackdirtJivHirielsHouse actor=HackdirtJivHirielsHouse",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:0280da",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "jiv-house-original-greeting.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 420,
+      "y": 180
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:0280da info=content:oblivion.esm:01778d",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "original-jiv-key-explanation.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "Escape"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native package door policy: actor=content:oblivion.esm:0280da package=content:oblivion.esm:01778c door=content:oblivion.esm:0280db locked=(?:1|true) event=2",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "JivPresence player=HackdirtJivHirielsHouse actor=HackdirtJivHirielsHouse",
+    "Native dialogue menu: actor=content:oblivion.esm:0280da info=content:oblivion.esm:01778d",
+    "JivHouse entered=HackdirtJivHirielsHouse"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "conversation-player ref=content:oblivion.esm:0280fa",
+    "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c",
+    "Native dialogue menu: actor=(?!content:oblivion.esm:0280da )"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt"
+  }
+}

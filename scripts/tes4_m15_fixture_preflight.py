@@ -156,6 +156,7 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
+    Version91 adds empty shared PACK waiting overrides; these fixtures issue no Wait commands.
     Version90 adds optional shared-base faction replacements, absent in these fixtures.
     Version89 adds empty daily-package completion history; these fixtures run no daily packages.
     Version88 adds empty magic-projectile ownership and its initial serial; these fixtures have no casts or projectiles.
@@ -171,7 +172,7 @@ def is_current_fixture_schema(target, current, minimum):
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 90)
+            and target == current and minimum <= target <= 91)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):

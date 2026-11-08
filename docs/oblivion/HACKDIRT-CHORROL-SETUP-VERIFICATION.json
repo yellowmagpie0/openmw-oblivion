@@ -1,0 +1,489 @@
+{
+  "status": "verified_original_chorrol_introduction_and_reload",
+  "goal_complete": false,
+  "scope": "Original introduction, friendly reply, learned Mother topic, ordinary goodbye/F5 and fresh reload. Navigation and subsequent quest course remain open.",
+  "implementation": [
+    "Saved Player GetPCMiscStat/ModPCMiscStat counters shared by scripts and native conditions, including function 312.",
+    "Unsigned 32-bit values and wrapping signed deltas; invalid persisted fields rejected before publication.",
+    "Automatic gameplay counter notifications are not implemented by this change."
+  ],
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/hackdirt/misc-stat-normal-integration-01/verification.json",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "e36318b5408615162ed9d7d7440f5ed79f4c64bbc3a88c74d7a3a352017e072f"
+      },
+      "source_unchanged": true,
+      "results": {
+        "engine": {
+          "executed": 2228,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ed1ce9dab72ea6961810017d51bdf8370487246f4e2d2bcdb90b0084ea380245",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "7fa8bc29c20052d264b70438f96129481f76befa04a2de006a7d576117483168",
+          "inventory_sha256": "178ff9949061bb1537f1fe1817de5af3f1ad20b6964aaef9a56f9a4743da0e8b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components": {
+          "executed": 3265,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "37db2b62a000c17d452eada68cd98864445b0e89a4b47023103c6b579145990a",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "7d3ce7bd1a5d02573a7fada220514c62d3446696559e1e684165ad93cde26c00",
+          "inventory_sha256": "ab271eeb683bd8d1be71845e46cf88ecf693c6c16605918b6930144f9c667e4d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitize": {
+      "path": "build/oblivion-compat/hackdirt/misc-stat-sanitize-integration-01/verification.json",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "936e59bfd0eb648552e863bdd3496f34e295212b40b882c0599b83e818eb29da"
+      },
+      "source_unchanged": true,
+      "results": {
+        "engine": {
+          "executed": 2228,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a4121e3bf441269649d2f6498deb32ece3f0b4f6014f4a9698ee256c15a3ba85",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6c434f79da735e740cdf07ff71e88479eac34516c7aeb82b4735f7d1000c49b1",
+          "inventory_sha256": "178ff9949061bb1537f1fe1817de5af3f1ad20b6964aaef9a56f9a4743da0e8b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "oracle": {
+    "script": "build/oblivion-compat/hackdirt/inspection-01/misc-stat-oracle.py",
+    "cases": 90,
+    "expectations": "scripts/data/oblivion_compat/hackdirt_misc_stat_oracle_cases.json",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "query_address": "0x4f8590",
+    "modify_address": "0x50d740",
+    "scope": "Unsigned reads and wrapping arithmetic; argument extraction/current Player storage supplied by harness. Defaults, bounds, automatic increments and original save/reload not proved.",
+    "output": "build/oblivion-compat/hackdirt/misc-stat-oracle-output.txt"
+  },
+  "runtime_binary_sha256": "66ca33b81e59f7b134e4b9a7e6b8d8abbf26f79695b72275f1b9efa163328a8c",
+  "runtime_source_gate": "build/oblivion-compat/hackdirt/misc-stat-focused-02/verification.json",
+  "runtime": {
+    "passed": true,
+    "records": [
+      {
+        "path": "darma-intro-save-04",
+        "save": "build/oblivion-compat/hackdirt/darma-intro-save-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "cfc5f17ed42ee48f83007bf34b0e6096e5c335f231f8e7102c88e4fc132cb55b",
+        "epoch": {
+          "pid": 474802,
+          "start_ticks": 184863264,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/darma-intro-save-04/config",
+            "--no-sound=1",
+            "--no-grab"
+          ]
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 0,
+          "running": true,
+          "completed_stages": []
+        },
+        "instances": {
+          "content:oblivion.esm:028154@oblivion.esm/object/unit=0": {
+            "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+            "context": "content:oblivion.esm:0280fa",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              }
+            ]
+          },
+          "content:oblivion.esm:028155@oblivion.esm/quest/unit=0": {
+            "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+            "context": "content:oblivion.esm:027815",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0.0
+              },
+              null
+            ]
+          }
+        }
+      },
+      {
+        "path": "chorrol-reload-02",
+        "save": "build/oblivion-compat/hackdirt/chorrol-reload-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "77ba391d335a0d5a7266ae0c9d41dcc14e764e0274a3b228dc494b6dc02bc096",
+        "epoch": {
+          "pid": 475313,
+          "start_ticks": 184871182,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/chorrol-reload-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/darma-intro-save-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 0,
+          "running": true,
+          "completed_stages": []
+        },
+        "instances": {
+          "content:oblivion.esm:028154@oblivion.esm/object/unit=0": {
+            "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+            "context": "content:oblivion.esm:0280fa",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              }
+            ]
+          },
+          "content:oblivion.esm:028155@oblivion.esm/quest/unit=0": {
+            "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+            "context": "content:oblivion.esm:027815",
+            "on_load_fired": false,
+            "locals": [
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 1
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0
+              },
+              {
+                "type": "number",
+                "value": 0.0
+              },
+              null
+            ]
+          }
+        }
+      }
+    ],
+    "native_payload_roundtrip_exact": true,
+    "quest_and_actor_script_instances_preserved": true,
+    "spoken_history_preserved": true,
+    "disposition_modifiers_preserved": true,
+    "learned_topics_record_preserved": true,
+    "mother_topic_present": true,
+    "input_save_unchanged": true,
+    "no_intro_result_replay": true
+  },
+  "human_launcher": {
+    "command": "./scripts/try-oblivion/hackdirt.sh",
+    "scenario": "build/oblivion-compat/hackdirt/human-launcher-smoke-02/scenario.json",
+    "save": {
+      "passed": true,
+      "source_save": "/tmp/openmw-oblivion-hackdirt.foq7zRpJ/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "retained_save": "build/oblivion-compat/hackdirt/human-launcher-smoke-02/human-Quicksave.omwsave",
+      "sha256": "cc5143309e31ba7b51a1392a3315c08ce600604e769c49203078bc453ac08a65",
+      "stage": 0,
+      "startDay": 1,
+      "talked_to_player": true
+    },
+    "hooks": false,
+    "scope": "Normal mouse friendly reply, Esc and F5; movement and full quest not established."
+  },
+  "inspected_captures": [
+    "darma-intro-save-04/darma-friendly-reply.png",
+    "chorrol-reload-02/darma-intro-reload.png",
+    "human-launcher-smoke-02/human-launcher-reply.png",
+    "normal-wait-probe-01/normal-wait-interface.png",
+    "normal-wait-selection-01/selected-wait.png",
+    "normal-wait-day-01/after-normal-wait.png",
+    "marker-intro-movement-01/marker-after-backstep.png",
+    "entrance-movement-01/entrance-start.png",
+    "entrance-intro-movement-01/entrance-after-intro-forward.png",
+    "persistent-input-movement-02/persistent-input-movement.png"
+  ],
+  "retained_failures": [
+    {
+      "run": "misc-stat-focused-01",
+      "reason": "Missing function-312 name mapping; fixed and rerun."
+    },
+    {
+      "run": "chorrol-reload-01",
+      "reason": "Early nearly-black capture below entropy threshold; wait extended, threshold unchanged."
+    },
+    {
+      "run": "human-launcher-smoke-01",
+      "reason": "Game selected host Wayland while harness expected Xvfb; explicit X11 test environment rerun."
+    },
+    {
+      "run": "normal-movement-probe-03",
+      "reason": "Wrong resources path; game exited before gameplay."
+    },
+    {
+      "run": "entrance-movement-01",
+      "reason": "Original greeting opened; diagnostic did not answer/close it, so movement was still in dialogue and F5 did not save. Not accepted navigation."
+    },
+    {
+      "run": "persistent-input-movement-01",
+      "reason": "Runner correctly rejected an arbitrary command in an M14 scenario before launch; subsequent input-only diagnostic removed M14 instrumentation and was not counted as M14 acceptance."
+    }
+  ],
+  "remaining": [
+    "Navigable start and original elapsed-day/disappearance/pickup course",
+    "Overland travel, one investigation route, caverns and combat",
+    "Explicit-topic Player StartConversation for original escape conversation",
+    "Rescue/follow/wait/return including fresh follower saves",
+    "Original completion/reward deltas without replay"
+  ],
+  "movement_diagnostics": {
+    "runs": [
+      "normal-movement-probe-01",
+      "normal-movement-probe-02",
+      "normal-movement-probe-04"
+    ],
+    "scope": "Successful harness actions and ordinary F5; only small saved displacements. Not accepted navigation.",
+    "long_left_back_end_position": [
+      -66.69660186767578,
+      -157.96339416503906,
+      1.017913818359375
+    ],
+    "long_right_forward_end_position": [
+      -35.916770935058594,
+      -153.40682983398438,
+      0.6961593627929688
+    ],
+    "marker_probe": {
+      "scenario": "build/oblivion-compat/hackdirt/marker-intro-movement-01/scenario.json",
+      "initial_position": [
+        -142.17630004882812,
+        88.12901306152344,
+        1.017913818359375
+      ],
+      "after_three_second_backstep": [
+        -142.17630004882812,
+        61.788482666015625,
+        1.017913818359375
+      ],
+      "scope": "Original introduction and friendly reply still pass; only short displacement near furniture, not accepted navigation."
+    },
+    "entrance_probe": {
+      "scenario": "build/oblivion-compat/hackdirt/entrance-intro-movement-01/scenario.json",
+      "passed": true,
+      "scope": "No-ref cell start uses original entrance destination; original greeting/friendly/goodbye and F5 pass. Three-second forward input moves about 26 units toward stairs; navigation still unaccepted.",
+      "end_position": [
+        375.4949035644531,
+        -11.092348098754883,
+        -223.08944702148438
+      ]
+    },
+    "persistent_x11_client_probe": {
+      "scenario": "build/oblivion-compat/hackdirt/persistent-input-movement-02/scenario.json",
+      "passed": true,
+      "scope": "Normal keydown/sleep/keyup in one xdotool process, no M14 trace/checkpoint hooks; F5 save inspected separately. Small displacement persists, no cause established.",
+      "end_position": [
+        -37.99039077758789,
+        -157.96339416503906,
+        1.017913818359375
+      ]
+    }
+  },
+  "ordinary_wait": {
+    "scenario": "build/oblivion-compat/hackdirt/normal-wait-day-01/scenario.json",
+    "passed": true,
+    "input_clock": {
+      "year": 433,
+      "month": 7,
+      "day": 27,
+      "hour": 1.0082998275756836,
+      "time_scale": 30.0
+    },
+    "output_clock": {
+      "year": 433,
+      "month": 7,
+      "day": 28,
+      "hour": 1.0484166145324707,
+      "time_scale": 30.0
+    },
+    "quest_stage": 0,
+    "scope": "Normal T, select 24h, click Wait, F5; no clock injection. Does not prove disappearance/pickup."
+  }
+}

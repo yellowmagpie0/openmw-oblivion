@@ -63,11 +63,19 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
         const ESM::FormKeyResolver resolver(mContentFiles);
         std::optional<MWMechanics::OblivionSavedReferenceIndex> owned;
-        if (!references && mOblivionRuntimeState)
+        if (mOblivionRuntimeState)
         {
-            owned.emplace(std::span<const ESM4::RuntimeReferenceState>(mOblivionRuntimeState->mReferences));
-            references = &*owned;
+            const auto& source = mOblivionRuntimeState->mReferences;
+            // Package actions can insert saved references during a low-process
+            // pass. Never dereference a borrowed index after vector growth.
+            if (!references || !references->matches(source))
+            {
+                owned.emplace(std::span<const ESM4::RuntimeReferenceState>(source));
+                references = &*owned;
+            }
         }
+        else
+            references = nullptr;
         return enabled(mStore, resolver, ESM4::runtimeReferenceKey(key), references, &mWorldModel);
     }
 

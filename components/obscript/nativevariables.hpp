@@ -21,21 +21,24 @@ namespace ObScript
         for (const auto& entry : definition.localVarData)
             if (entry.index == static_cast<std::uint32_t>(nativeIndex))
             {
-                if (variable != nullptr)
+                // Original scripts can repeat the same native ID/name (for
+                // example ArenaGrandChampionMatchScript's FightOver). These
+                // aliases still identify one source local. Conflicting names
+                // cannot be mapped to a unique persisted VM local.
+                if (variable != nullptr
+                    && !Misc::StringUtils::ciEqual(variable->variableName, entry.variableName))
                     return std::nullopt;
                 variable = &entry;
             }
         if (variable == nullptr || variable->variableName.empty())
             return std::nullopt;
-        std::optional<std::size_t> result;
+        // Match Compiler::findLocal: vanilla sources can repeat a declaration,
+        // and compiled reads/writes target its first source slot. Preserve the
+        // complete persisted layout rather than inventing another local owner.
         for (std::size_t i = 0; i < program.mLocals.size(); ++i)
             if (Misc::StringUtils::ciEqual(program.mLocals[i].mName, variable->variableName))
-            {
-                if (result)
-                    return std::nullopt;
-                result = i;
-            }
-        return result;
+                return i;
+        return std::nullopt;
     }
 }
 

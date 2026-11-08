@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "name": "Original rescued Dar-Ma Wait Here result through native dialogue",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.1 then return end;timer=0\n local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x280fa));assert(a and a:isValid(),'Dar-Ma missing');assert(not Actor.isDead(a),'Dar-Ma died')\n if core.isWorldPaused() then print('DarmaWait paused');return end\n local v=a.position-self.position;local distance=v:length();local f=self.rotation:apply(util.vector3(0,1,0));local angle=math.atan2(f.y*v.x-f.x*v.y,f.x*v.x+f.y*v.y)\n print(string.format('DarmaWait status player=%s darma=%s distance=%.2f',tostring(self.position),tostring(a.position),distance))\n if distance<110 then print('DarmaWait close') end\n if math.abs(angle)<0.05 and math.abs(camera.getPitch())<0.04 then print('DarmaWait ready') end\n print(string.format('DarmaWait aim x=%d y=%d',math.max(-150,math.min(150,math.floor(angle*128+.5))),math.max(-100,math.min(100,math.floor(-camera.getPitch()*128+.5)))))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "DarmaWait status",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaWait ready",
+      "maximum_iterations": 400,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaWait aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaWait close",
+      "maximum_iterations": 400,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaWait aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.3
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaWait ready",
+      "maximum_iterations": 400,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaWait aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:028693",
+      "timeout_seconds": 45,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "original-wait-follow-choices.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": -1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "dpad_y",
+      "value": 0
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.15
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:028695",
+      "timeout_seconds": 45,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "original-wait-response.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
+      "value": "b",
+      "hold_seconds": 0.15
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "info=content:oblivion.esm:028693",
+    "info=content:oblivion.esm:028695",
+    "M7 ObScript: wait actor=content:oblivion.esm:0280fa package=content:oblivion.esm:0292f9 applied=true",
+    "M7 ObScript: wait actor=content:oblivion.esm:0280fa package=content:oblivion.esm:0a01ac applied=false"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "Native dialogue menu: actor=(?!content:oblivion.esm:0280fa )",
+    "info=content:oblivion.esm:02809c"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt"
+  },
+  "sdl_xvfb_input": true,
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": true
+}

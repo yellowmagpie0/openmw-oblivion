@@ -79,7 +79,7 @@ namespace ESM4
         AlwaysRun = 0x00002000,
         Reserved00004000 = 0x00004000,
         Reserved00008000 = 0x00008000,
-        Reserved00010000 = 0x00010000,
+        Waiting = 0x00010000,
         AlwaysSneak = 0x00020000,
         AllowSwimming = 0x00040000,
         AllowFalls = 0x00080000,
