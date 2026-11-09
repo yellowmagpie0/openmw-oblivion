@@ -43,9 +43,12 @@ Bone1, Crab Meat1, Lettuce1, Rice1. Ambush `06c356` and sitting bandit `06c359`
 remain dead with Player killer; the food sack stays opened and empty. No pending
 ingredient timer, cast or projectile; next projectile serial19.
 
-Current next action: select another actually present original content item or
-encounter, reproduce its unsupported path with ordinary input, then define the
-next bounded implementation. The autonomous content iteration remains active.
+Current chunk: carried original Chameleon scroll `084aeb` / ENCH `05b044`,
+CHML25 for30 seconds on Self. [Contract](CHAMELEON-SCROLL-CONTRACT.json).
+Normal baseline02 preserves stock/HP/MP and nativeAV46=0 after use/cast input;
+current native admission rejects this self-effect profile. Next: original-game
+application/recast/expiry probe, then owned timed effect and visibility/detection
+integration. The autonomous content iteration remains active.
 
 Remaining acceptance gaps include the rest of the expedition/return, general
 M16 effects/UI, native spawn-root/child identity, grouped actors, respawn, all
