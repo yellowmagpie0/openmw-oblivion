@@ -1,21 +1,31 @@
-# Vilverin Flare — current handoff
+# Player Flare and Vilverin — current handoff
 
-Current chunk: admit Player instant fire/shock target spells through the existing
-native cast/projectile owners, exercised by original Flare and Vilverin camp
-bandits. This is a bounded M16 slice; the full ruin and general magic remain open.
+Current bounded chunk: Player instant fire/shock target casts. Original Flare now
+launches with the native target animation, debits14 Magicka once and owns saved
+physical flight. Two normal casts kill original goblin03b526 (10→4.72→dead) with
+Player80 Health conserved and the Player recorded as killer. A lakeshore terrain
+miss applies no actor damage. Fresh flight continuation preserves ownership.
 
-The genuine outdoor sewer exit save and original record identities are pinned in
-[VILVERIN-FLARE-CONTRACT.json](VILVERIN-FLARE-CONTRACT.json). Normal menu selection
-in `build/oblivion-compat/vilverin/flare-baseline-03` visibly reproduces the existing
-restoration-only rejection with Magicka 80 unchanged. Earlier fixture/input
-failures are preserved and described in the contract.
+Real visual inspection found that Fireball.NIF initially plays its Cast phase.
+The renderer now selects authored SpecialIdle_Projectile and loops by saved flight
+age; `flare-visible-launch-02` visibly shows the fireball. A fresh visible restart
+and final normal/sanitizer integration remain open. General natural skill
+progression and additional tutorial skill-use tracking are separate gaps.
 
-Remaining acceptance: target-cast animation and single resource debit, visible
-miss and original-bandit impact through normal travel, encounter survival,
-fresh-process windup/in-flight continuation, focused checks and normal/sanitizer
-integration. Existing sewer tactics and accepted Hackdirt reward are frozen.
-General natural skill progression is a separate existing gap.
+The original Vilverin bandit references06c2aa/06c2ab use LVLC bases; the cell
+loader skips native leveled actors. That is the next content-driven chunk after Flare closes.
+The explicit course revision and immutable lakeshore/goblin inputs are in
+[VILVERIN-FLARE-CONTRACT.json](VILVERIN-FLARE-CONTRACT.json). Existing sewer manifests
+and the accepted Hackdirt reward are unchanged.
 
-Next action: finish the generic target-cast wiring, build once, then use normal
-input to establish the lakeshore launch and travel to the original camp. Preserve
-failed attempts and commit completed bounded changes without pushing.
+Reusable evidence under `build/oblivion-compat/vilverin/`: baseline03 reproduces
+the old rejection; focused02 passes14 existing checks; normal-engine01 passes2257
+engine tests before the visual selector. ASan engine01 was intentionally stopped
+before expensive world-test compilation for this discovered dependency; retain
+its stop reason and rerun after the visual fix. Prior fixture/input/version
+failures are preserved. Source gameplay manifests are `oblivion_player_flare_*`.
+
+Next action: fresh visible flight, depleted-Magicka rejection and completed-goblin
+restart; commit the asset-phase fix and manifests, then run final normal/sanitizer
+gates and instrumented real-content courses. Close this slice only when those
+gaps are empty, then implement original Vilverin leveled spawns.

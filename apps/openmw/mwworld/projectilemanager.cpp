@@ -1,6 +1,7 @@
 #include "projectilemanager.hpp"
 
 #include <iomanip>
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -26,9 +27,11 @@
 #include <components/misc/resourcehelpers.hpp>
 
 #include <components/resource/resourcesystem.hpp>
+#include <components/resource/keyframemanager.hpp>
 #include <components/resource/scenemanager.hpp>
 
 #include <components/sceneutil/controller.hpp>
+#include <components/sceneutil/keyframe.hpp>
 #include <components/sceneutil/lightmanager.hpp>
 #include <components/sceneutil/nodecallback.hpp>
 #include <components/sceneutil/visitor.hpp>
@@ -64,6 +67,38 @@
 
 namespace
 {
+    float oblivionProjectileAnimationTime(Resource::ResourceSystem& resources,
+        const ESM4::MagicProjectileState& projectile)
+    {
+        const osg::Vec3f velocity(projectile.mVelocity[0], projectile.mVelocity[1], projectile.mVelocity[2]);
+        const float age = projectile.mDistance / velocity.length();
+        const auto model = Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(projectile.mModel));
+        const auto frames = resources.getKeyframeManager()->get(model);
+        const SceneUtil::ControllerSequenceMetadata* flight = nullptr;
+        for (const auto& sequence : frames->mControllerSequences)
+            if (sequence.mGroup == "specialidle_projectile")
+            {
+                if (flight) throw std::runtime_error("ambiguous native projectile animation");
+                flight = &sequence;
+            }
+        if (!flight) return age; // Legacy assets without named effect phases.
+        const float duration = flight->mStopTime - flight->mStartTime;
+        const float span = flight->mTimelineStop - flight->mTimelineStart;
+        if (!std::isfinite(duration) || duration <= 0 || !std::isfinite(span) || span <= 0
+            || !std::isfinite(flight->mFrequency) || flight->mFrequency <= 0)
+            throw std::runtime_error("invalid native projectile animation timing");
+        float time = age * flight->mFrequency;
+        if (flight->mCycleType == 0) time = std::fmod(time, duration);
+        else if (flight->mCycleType == 1)
+        {
+            time = std::fmod(time, 2 * duration);
+            if (time > duration) time = 2 * duration - time;
+        }
+        else if (flight->mCycleType == 2) time = std::min(time, duration);
+        else throw std::runtime_error("unsupported native projectile animation cycle");
+        return flight->mTimelineStart + time * span / duration;
+    }
+
     ESM::EffectList getMagicBoltData(std::vector<ESM::RefId>& projectileIDs, std::set<ESM::RefId>& sounds, float& speed,
         VFS::Path::NormalizedView& texture, std::string& sourceName, const ESM::RefId& id,
         const MWWorld::ESMStore* content = nullptr, const MWWorld::ESMStore* incoming = nullptr)
@@ -728,7 +763,10 @@ namespace MWWorld
             }
             it->second.mNode->setPosition(position);
             it->second.mNode->setAttitude(lookAt(velocity));
-            it->second.mEffectAnimationTime->resetTime(projectile.mDistance / velocity.length());
+            // TES4 effect NIFs contain separate Cast, Projectile and AreaEffect
+            // sequences. Select flight explicitly instead of playing Cast at age
+            // zero. Saved distance owns the phase across a fresh process.
+            it->second.mEffectAnimationTime->resetTime(oblivionProjectileAnimationTime(*mResourceSystem, projectile));
         }
     }
 

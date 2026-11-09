@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "status": "preflight",
-  "scope": "M16 Player target-damage cast slice exercised at original Vilverin bandit camp; not full M16 or the full ruin",
+  "status": "implementation and normal-content verification in progress",
+  "scope": "M16 Player instant target-damage cast slice: original Flare lakeshore launch/restart and original placed tutorial goblin03b526 encounter; Vilverin leveled spawns are the next separate chunk.",
   "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
   "input": {
     "path": "build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
@@ -31,8 +31,8 @@
   "acceptance": [
     "Normal magic-menu Flare selection and cast-target animation",
     "Magicka spent once at valid release; correct cancellation/insufficient-resource behavior",
-    "Visible physical projectile from Player aim with one causal original-bandit impact and a geometric miss control",
-    "Reach original camp through normal travel and finish the scoped encounter alive using original equipment/healing as needed",
+    "Visible physical projectile from Player aim with causal original-goblin impact and a geometric miss control",
+    "Finish original placed goblin03b526 encounter alive through normal cast input",
     "Genuine in-flight or windup F5, fresh-process continuation without another resource debit/projectile/contact replay",
     "Current-source focused checks; normal/sanitizer integration gates at closure; commit discrete chunks"
   ],
@@ -45,5 +45,35 @@
       "flare-baseline-02": "Tab did not close controller menu; no cast input reached gameplay."
     }
   },
-  "remaining_existing_gaps": "General natural skill-use progression/level-up is outside this target-projectile slice, as in the preceding reward chunk."
+  "remaining_existing_gaps": "General natural skill-use progression/level-up is outside this target-projectile slice, as in the preceding reward chunk.",
+  "course_revision": {
+    "reason": "Original Vilverin camp REFR bases are LVLC. CellStoreTuple lacks native LVLC owners, and loadRef dispatch therefore skips them. No camp bandit actor is present in the baseline saved native authority.",
+    "deferred_acceptance": [
+      "Original Vilverin camp travel, actual leveled spawn identities, Flare bandit encounter and survival."
+    ],
+    "replacement_target": {
+      "reference": "03b526",
+      "base": "03b525",
+      "input_save": "build/oblivion-compat/sewer-escape/joined-first-goblin-rock-finish-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "8eb711aca2d39eb280013939535ff4ec9c23d61219cd559e21d7764f87a0969f",
+      "provenance": "SEWER-JOINED-FIRST-GOBLIN-VERIFICATION.json; genuine pre-fight normal traversal, Player80 Health/80 Magicka, original goblin10 Health, no combat engagement. Existing sewer manifests unchanged."
+    }
+  },
+  "implementation_commit": "80de0d3b1d",
+  "asset_phase": {
+    "model": "MagicEffects/Fireball.NIF",
+    "sha256": "66a6cbe04005c841ec8dac9e87921ff400348c86119771738882b117dafa9f87",
+    "flight_sequence": "SpecialIdle_Projectile",
+    "authored_start": 0,
+    "authored_stop_approx": 1.066666667,
+    "cycle": 0,
+    "finding": "The generic visual clock initially plays SpecialIdle_Cast. Select the authored flight sequence using persisted distance/speed; no gameplay/save ownership change.",
+    "inspection": "build/oblivion-compat/vilverin/fireball-inspection/inspection.json",
+    "normal_visible_launch": "build/oblivion-compat/vilverin/flare-visible-launch-02"
+  },
+  "reusable_checks": {
+    "focused": "build/oblivion-compat/vilverin/flare-focused-02/verification.json; 14 exact existing cast/resolver/staff/restoration checks passed.",
+    "normal_core_integration": "build/oblivion-compat/vilverin/flare-normal-engine-01/verification.json; 2257 exact engine tests passed before visual selector change.",
+    "superseded_sanitizer_build": "flare-asan-engine-01 was intentionally stopped for the observed visual dependency; retained intentional-stop.json. No sanitizer pass claimed."
+  }
 }
