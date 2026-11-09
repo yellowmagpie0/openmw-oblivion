@@ -1,31 +1,37 @@
 # Player Flare and Vilverin — current handoff
 
-Current bounded chunk: Player instant fire/shock target casts. Original Flare now
-launches with the native target animation, debits14 Magicka once and owns saved
-physical flight. Two normal casts kill original goblin03b526 (10→4.72→dead) with
-Player80 Health conserved and the Player recorded as killer. A lakeshore terrain
-miss applies no actor damage. Fresh flight continuation preserves ownership.
+Current bounded chunk: Player instant fire/shock target casts. Normal original
+content is accepted: Flare uses target animation, debits14 Magicka once, visibly
+flies using authored SpecialIdle_Projectile and consumes a geometric terrain miss
+without actor damage. Saved flight resumes in a fresh process without relaunch
+or another debit. Two normal casts kill original goblin03b526 (10→4.72→dead),
+conserve Player80 Health/inventory/quests, and persist the Player killer/death
+state without replay. No original records or old sewer course manifests changed.
 
-Real visual inspection found that Fireball.NIF initially plays its Cast phase.
-The renderer now selects authored SpecialIdle_Projectile and loops by saved flight
-age; `flare-visible-launch-02` visibly shows the fireball. A fresh visible restart
-and final normal/sanitizer integration remain open. General natural skill
-progression and additional tutorial skill-use tracking are separate gaps.
+The normal depleted-resource course exposed empty legacy error feedback. The
+TES4 path now shows a visible enough-Magicka message; read-only held-key observation
+proves input arrived while native state proves no cast/projectile/debit occurred.
+Normal integration at fff4a4dc33 passes2257 exact engine cases. Reuse it for unchanged
+mechanics/rendering after the two message-literal replacements; current normal
+runtime verifies those replacements. Final sanitizer acceptance is still open.
 
-The original Vilverin bandit references06c2aa/06c2ab use LVLC bases; the cell
-loader skips native leveled actors. That is the next content-driven chunk after Flare closes.
-The explicit course revision and immutable lakeshore/goblin inputs are in
-[VILVERIN-FLARE-CONTRACT.json](VILVERIN-FLARE-CONTRACT.json). Existing sewer manifests
-and the accepted Hackdirt reward are unchanged.
+Evidence under `build/oblivion-compat/vilverin/`: `flare-visible-launch-02`,
+`flare-flight-visible-reload-01`, `flare-goblin-{select-02,fire-01,victory-01}`,
+`flare-goblin-victory-reload-01`, `flare-insufficient-01`, and
+`flare-insufficient-reload-02`. Audits: `normal-semantic-verification-in-progress.json`
+and `normal-restart-verification.json`. Review screenshots as well as scenario
+results. ASan engine01/02 were intentionally superseded for the discovered visual
+phase/UI dependencies; their stop reasons and earlier fixture failures remain.
+Source reproducible courses are `oblivion_player_flare_*`.
 
-Reusable evidence under `build/oblivion-compat/vilverin/`: baseline03 reproduces
-the old rejection; focused02 passes14 existing checks; normal-engine01 passes2257
-engine tests before the visual selector. ASan engine01 was intentionally stopped
-before expensive world-test compilation for this discovered dependency; retain
-its stop reason and rerun after the visual fix. Prior fixture/input/version
-failures are preserved. Source gameplay manifests are `oblivion_player_flare_*`.
+This is not full M16: general skill progression, additional tutorial Destruction
+tracking, harmful-spell provocation/crime and complete FX/death visual fidelity
+remain separate. Existing accepted sewer/Hackdirt evidence stays frozen. The
+original Vilverin bandit references06c2aa/06c2ab use LVLC bases; the loader currently
+skips them. That is the next content-driven chunk after this slice closes. The
+course revision, inputs, asset identity and scope are explicit in
+[VILVERIN-FLARE-CONTRACT.json](VILVERIN-FLARE-CONTRACT.json).
 
-Next action: fresh visible flight, depleted-Magicka rejection and completed-goblin
-restart; commit the asset-phase fix and manifests, then run final normal/sanitizer
-gates and instrumented real-content courses. Close this slice only when those
-gaps are empty, then implement original Vilverin leveled spawns.
+Next action: finish the prepared ASan/UBSan build, run final exact engine gate and
+instrumented original Flare launch, flight restart and goblin hit. Audit and commit
+the acceptance receipt, then implement original Vilverin leveled spawns.

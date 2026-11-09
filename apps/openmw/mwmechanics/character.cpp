@@ -2476,7 +2476,7 @@ namespace MWMechanics
                 if (!description.mCost) return false;
                 if (!world->getGodModeState() && service->getPlayerValue(9) < *description.mCost)
                 {
-                    windows->messageBox("#{sMagicInsufficientSP}");
+                    windows->messageBox("You do not have enough Magicka to cast this spell.");
                     return false;
                 }
                 std::string group = target ? "casttarget" : "castself";
@@ -2549,7 +2549,8 @@ namespace MWMechanics
                 Log(Debug::Info) << "M16 native cast release: spell=" << cast.mSpell.serialize()
                     << " applied=" << update->mApplied << " health=" << service->getPlayerValue(8)
                     << " magicka=" << service->getPlayerValue(9);
-                if (!update->mApplied) windows->messageBox("#{sMagicInsufficientSP}");
+                if (!update->mApplied)
+                    windows->messageBox("You do not have enough Magicka to cast this spell.");
             }
             return true;
         }

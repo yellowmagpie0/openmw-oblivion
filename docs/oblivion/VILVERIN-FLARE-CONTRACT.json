@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "implementation and normal-content verification in progress",
+  "status": "normal content accepted; sanitizer closure pending",
   "scope": "M16 Player instant target-damage cast slice: original Flare lakeshore launch/restart and original placed tutorial goblin03b526 encounter; Vilverin leveled spawns are the next separate chunk.",
   "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
   "input": {
@@ -75,5 +75,28 @@
     "focused": "build/oblivion-compat/vilverin/flare-focused-02/verification.json; 14 exact existing cast/resolver/staff/restoration checks passed.",
     "normal_core_integration": "build/oblivion-compat/vilverin/flare-normal-engine-01/verification.json; 2257 exact engine tests passed before visual selector change.",
     "superseded_sanitizer_build": "flare-asan-engine-01 was intentionally stopped for the observed visual dependency; retained intentional-stop.json. No sanitizer pass claimed."
-  }
+  },
+  "feedback": {
+    "finding": "Real held-key low-Magicka probe confirmed an empty legacy sMagicInsufficientSP message in the TES4 profile. Replace it with visible English feedback in the TES4 cast path.",
+    "accepted_run": "build/oblivion-compat/vilverin/flare-insufficient-reload-02",
+    "retained_visual_failures": [
+      "flare-insufficient-reload-01",
+      "flare-insufficient-held-01"
+    ],
+    "superseded_sanitizer_build": "flare-asan-engine-02 intentionally stopped for this bounded UI correction; no sanitizer pass claimed."
+  },
+  "normal_core_integration": {
+    "evidence": "build/oblivion-compat/vilverin/flare-normal-engine-02/verification.json",
+    "head": "fff4a4dc33a0a3601494bdd2d0f8d61958fc6a64",
+    "source_fingerprint": "18b1181d97e6f6b0665fd55f98d0237526a1b48dec8da8d7b5cbcbc7b5f61a9f",
+    "executed": 2257,
+    "failed": 0,
+    "skipped": 0,
+    "reuse_after_feedback_fix": "Only two error-message literals change in C++; the held-key current-binary runtime verifies the corrected UI. Mechanics and visual selector are unchanged. Final sanitizer integration will cover the final source."
+  },
+  "adjacent_gaps": [
+    "General natural skill progression/level-up and tutorial Destruction hit-use tracking remain separate.",
+    "Harmful spell provocation/crime and complete magic-effect/death visual fidelity are not accepted by this cast/physical-flight slice.",
+    "Original Vilverin LVLC actor placement is the next separate content-driven chunk."
+  ]
 }

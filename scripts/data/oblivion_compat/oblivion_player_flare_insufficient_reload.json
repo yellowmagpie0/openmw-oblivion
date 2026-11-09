@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.2 then return end;timer=0\n assert(self.cell.isExterior,'Expected genuine outdoor sewer exit')\n assert(not Actor.isDead(self),'Player died at Flare preflight')\n print('VilverinFlareReady cell='..self.cell.name..' position='..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current..' magicka='..Actor.stats.dynamic.magicka(self).current)\nend}}}}\n"
+      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal input=require('openmw.input')\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n if input.isKeyPressed(input.KEY.C) then print('FlareInsufficientInput held') end\n timer=timer+dt;if timer<0.2 then return end;timer=0\n assert(self.cell.isExterior,'Expected genuine outdoor sewer exit')\n assert(not Actor.isDead(self),'Player died at Flare preflight')\n print('VilverinFlareReady cell='..self.cell.name..' position='..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current..' magicka='..Actor.stats.dynamic.magicka(self).current)\nend}}}}\n"
     }
   ],
   "command": [
@@ -52,7 +52,15 @@
       "seconds": 3
     },
     {
-      "type": "key",
+      "type": "key_down",
+      "value": "c"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "key_up",
       "value": "c"
     },
     {
@@ -79,7 +87,8 @@
   "expected_log": [
     "Applied TES4 runtime state:",
     "VilverinFlareReady",
-    "Writing saved game"
+    "Writing saved game",
+    "FlareInsufficientInput held"
   ],
   "forbidden_log": [
     "Unsupported ObScript command",
