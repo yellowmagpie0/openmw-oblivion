@@ -1,5 +1,5 @@
 {
-  "status": "actual original scroll use failure reproduced; independent native cast rule pending",
+  "status": "accepted bounded original carried Flash Bolt scroll use and owned pending/released continuation",
   "milestone": "Bounded M16 single-use native scroll casting",
   "content": {
     "book": "content:oblivion.esm:0888bf Flash Bolt",
@@ -27,13 +27,8 @@
     "feature_passed": false,
     "retained_inspection_setup": "carried-scroll-inventory-01 recorded images but its copied capture helper used the previous ingredient readiness prefix. Actual baseline01 uses corrected capture and retains process/input provenance."
   },
-  "known_source_gaps": [
-    "Book projection omits native enchantment identity/effects; tooltip shows only name/weight",
-    "Book.use unconditionally chooses ActionRead",
-    "Native Player spell controller admits declared SPEL grants; staff controller admits equipped WEAP/ENCH sources",
-    "Native cast/projectile content revalidation must explicitly recognize the supported scroll source"
-  ],
-  "native_rule_question": "Verify original selection/use, one-item consumption timing, no Magicka debit and no learned-spell skill gate for this actual BOOK/ENCH shape. Keep unobserved cancellation/timing semantics open.",
+  "known_source_gaps": [],
+  "native_rule_question": "Resolved by independent original-game checks in FLASH-BOLT-SCROLL-ORACLE.json; exact frame scheduling, armor scaling and general scrolls remain outside this slice.",
   "acceptance": [
     "Normal inventory/magic selection presents the actual original Flash Bolt effect and selects its owned scroll source",
     "One normal cast delivers the supported fire projectile to the original bandit, with source/count ownership verified",
@@ -47,11 +42,62 @@
     "Chameleon/general scroll effects",
     "All enchanted equipment and arbitrary multi-effect casting",
     "Alchemy/skill progression and full M16 completion",
-    "Bit-identical native frame scheduling and RNG"
+    "Bit-identical native frame scheduling and RNG",
+    "Automatic fallback to the previous learned spell when the last scroll is spent; this bounded path clears selection.",
+    "Armor-specific scroll scaling remains unprobed; the supported item uses its authored magnitude with existing resistance/difficulty handling.",
+    "General inventory magic-category/glow classification through the legacy enchantment property; the native magic menu exposes the supported scroll directly."
   ],
   "provenance": {
     "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
     "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
     "raw_scroll_inspection": "build/oblivion-compat/next-content-inspection/original-carried-scrolls.json"
-  }
+  },
+  "native_oracle": "docs/oblivion/FLASH-BOLT-SCROLL-ORACLE.json",
+  "development_evidence": {
+    "normal_semantic": "build/oblivion-compat/scroll-casting/normal-development-01-semantic-verification.json",
+    "normal_use": "flash-bolt-use-05",
+    "pending_restart": "flash-bolt-pending-restart-01",
+    "committed_restart": "flash-bolt-completed-restart-01",
+    "pending_elapsed": 0.12600000202655792,
+    "observed_hit": 20,
+    "note": "Uses build focused02; one final source cleanup removes even the zero-cost Magicka comparison for scroll release. Final-source checks/course still required.",
+    "retained_harness_failures": {
+      "use01": "preflight rejects adaptive loop without isolated SDL",
+      "use02": "preflight rejects absolute inventory mouse movement in isolated SDL",
+      "use03": "camera observation stale because Tab did not close the controller inventory",
+      "use04": "explicit observation wait confirms the same paused-menu boundary; corrected ordinary Escape closes it",
+      "sanitized-use-final02": "First instrumented attempt sent menu input during a slow initial frame; no selection/cast occurred. Preserved captured process, source identity and images; no sanitizer error.",
+      "sanitized-use-final03": "Startup barrier fixes selection; repeated mouse commands reuse stale observations at low frame rate and overshoot the target.",
+      "sanitized-use-final04": "Passing correction: ordinary mouse feedback waits for two new camera observations per correction; startup and quicksave use acknowledgements. No gameplay-code or state injection."
+    },
+    "magic_menu": "flash-bolt-magic-menu-03: separate real inventory control selects Flash Bolt from the Scrolls group with stored52 displayed; selected title/HUD verified visually. Final primary course now exercises inventory and magic-menu selection before casting.",
+    "legacy_enchantment_boundary": {
+      "observed": "flash-bolt-use-final-01/process.log reports Warning: Can't find enchantment FormId:0x105c057 on BOOK0x10888bf. Source audit finds legacy ContainerStore.stacks performs TES3 ENCH.find for nonempty Class.getEnchantment.",
+      "correction": "Remove the new generic Book.getEnchantment override branch; preserve legacy blank projection. Native item use, descriptions and magic-menu entries already resolve original BOOK/ENCH directly. Add a real-content forbidden-warning gate.",
+      "superseded": "normal-engine-01 passes2262 and normal-final-01 passes65, but precede this correction. sanitized-engine-01 compiled successfully; its owned test process was deliberately terminated before running the superseded full suite. Interruption identity/reason is retained in sanitized-engine-01-interruption.json; final fixed-source full gates remain required."
+    }
+  },
+  "implementation_commit": "0c53d9c463c18d0a64b282d346e33c70652bc308",
+  "verification": "docs/oblivion/FLASH-BOLT-SCROLL-VERIFICATION.json",
+  "accepted_evidence": {
+    "normal_engine": "build/oblivion-compat/scroll-casting/normal-engine-02/verification.json",
+    "sanitized_engine": "build/oblivion-compat/scroll-casting/sanitized-engine-02/verification.json",
+    "engine_tests_each": 2262,
+    "normal_semantic": "build/oblivion-compat/scroll-casting/normal-final-02-semantic-verification.json",
+    "sanitized_semantic": "build/oblivion-compat/scroll-casting/sanitized-final-04-semantic-verification.json",
+    "semantic_checks_each": 65,
+    "native_destruction_actor_value": 22,
+    "normal_pending_elapsed": 0.15900000929832458,
+    "sanitized_pending_elapsed": 0.16600000858306885,
+    "release_time": 0.40000009536743164,
+    "actual_fire_hit": 20,
+    "scope": "Both real courses preserve all remaining inventory metadata/Health/Magicka, source sack/earlier kill, owned pending BOOK cast, one projectile serial and committed target death. Last restart sends a cast input and observes the empty-selection message with no Flare substitution/release/debit replay."
+  },
+  "adjacent_discoveries": [
+    {
+      "scope": "Pre-existing learned target SPEL mastery gate, outside scroll casting",
+      "finding": "CharacterController uses native AV20 for target-spell mastery; oblivionSkillIds/12+i maps Alteration20 and Destruction22. Scroll admission bypasses this existing gate. Record for a future actual learned-spell case; no production change in this slice.",
+      "reporting": "Actual scroll audits use AV22 for unchanged Destruction; the earlier auxiliary audit mislabeled AV20. Corrected final normal/instrumented65-check audits were rerun; earlier outputs are retained with before-skill-index-audit suffix."
+    }
+  ]
 }
