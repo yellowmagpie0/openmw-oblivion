@@ -24,7 +24,9 @@
     "successful_response": "028210",
     "missing_daughter_topic": "028090",
     "return_question": "0280c0",
-    "safe_answer_topic": "02820a"
+    "safe_answer_topic": "02820a",
+    "completed_acknowledgement": "028735",
+    "post_completion_accompany_mother": "0292f3"
   },
   "expected": {
     "return_behavior": "Independent original TravelHome targeting SeedNeeusRef within 300 units; companion link released",
@@ -53,7 +55,7 @@
     "Fresh-process completed quest and reward persistence with no repeat reward",
     "Focused regressions and final affected normal/sanitizer integration gates"
   ],
-  "status": "Original turn-in and reward accepted; final restart and sanitizer gates pending",
+  "status": "Accepted: original independent return, turn-in/reward and fresh-process persistence; see HACKDIRT-RETURN-REWARD-VERIFICATION.json",
   "limits": [
     "Raw proprietary record/script payloads remain ignored local evidence.",
     "The latest return-shop-03 run failed its enteredShop observation; no shop arrival inferred."

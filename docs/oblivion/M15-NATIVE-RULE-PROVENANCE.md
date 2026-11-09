@@ -19702,3 +19702,24 @@ native lifecycle integration; this helper does not establish those rules or
 satisfy normal-input/save-restart recovery gates. See the
 [verification receipt](M15-NATIVE-GETUP-PROJECTION-VERIFICATION.json) and
 [delivery audit](M15-S4-DELIVERY-AUDIT.md). Full M15S4 remains incomplete.
+
+### Scripted skill training and original Hackdirt reward (2026-11-08)
+
+Original command `0050D020` increments skill base and per-skill, governing-attribute,
+specialization and major-skill advancement bookkeeping for each positive level;
+it does not apply the ordinary skill 100 cap. It subtracts the current cached XP
+requirement and clamps remaining XP at 0. The original `00548030` formula and full
+`00663C50` caller preserve positive requirements below 1; nonpositive results cache 1.
+The declared expectation manifest retains 54 original command-loop cases and 48
+original threshold/cache cases, including boundary stubs and the corrected
+initial cache expectation. Numeric comparisons use justified tolerances.
+
+[Case manifest](../../scripts/data/oblivion_compat/hackdirt_reward_training_oracle_cases.json)
+and [return verification](HACKDIRT-RETURN-REWARD-VERIFICATION.json) record identities,
+expected tables, native ModPCFame wiring, normal original-topic/answer reward,
+fresh completed restart and final normal/sanitizer gates. Skill base uses the
+native actor authority; XP and shared advancement counts use existing NPC save
+state; per-skill counts use the saved Player map. Missing old per-skill history
+starts at adoption. Negative counts/base overflow are explicit unsupported input;
+ordinary skill-use progression, level-up UI and original training notifications
+are outside this bounded prerequisite. No original quest records/scripts changed.

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "in progress",
+  "status": "accepted",
   "contract": "HACKDIRT-RETURN-CONTRACT.json",
   "implemented": [
     "ModPCFame uses native Player reputation, preserves Infamy and bounty accumulation, and publishes the shared view",
@@ -63,11 +63,7 @@
       "observed": "Original TravelHome placed living Dar-Ma in original shop cell000807 at stage80"
     }
   },
-  "remaining": [
-    "Matched pre-arrival continuation gate",
-    "Final restart capture with enough rendered frames; mechanical restart01 passes, but first capture preceded GUI rendering",
-    "Final ASan/UBSan component/engine and original-content reward checks"
-  ],
+  "remaining": [],
   "original_training_evidence": "../../scripts/data/oblivion_compat/hackdirt_reward_training_oracle_cases.json",
   "normal_integration_gate": {
     "path": "build/oblivion-compat/hackdirt/return-reward-normal-01/verification.json",
@@ -174,10 +170,12 @@
       "seedneeus_disposition_modifier_before": 40,
       "seedneeus_disposition_modifier_after": 58,
       "authored_disposition_request": 20,
-      "disposition_note": "Existing native derived-score clamp applies; remaining replay will record the pre-reward score.",
+      "disposition_note": "Read-only instrumented replay confirms pre-reward derived disposition82. Existing native clamp permits18 of the authored20, storing modifier40\u219258.",
       "chorrol_to_player_faction_reaction": 5,
       "seedneeus_essential": false,
-      "MS45FIN_running": true
+      "MS45FIN_running": true,
+      "post_reward_package": "0292f3 ChorrolDarMaAccompanySeedNeeus",
+      "post_reward_companion_target": "content:oblivion.esm:0234fd"
     },
     "captures_inspected": [
       "original-return-question.png",
@@ -192,6 +190,267 @@
     "return-question-diagnostic-01/03: input-manifest preflight rejections; no game started",
     "return-question-diagnostic-02: controller navigation did not select target topic",
     "return-reward-01: frame timer did not advance while dialogue paused simulation",
-    "return-reward-02: all actions/state passed, but forbidden matcher incorrectly rejected evaluated dialogue candidates; final matcher rejects selected menus"
+    "return-reward-02: all actions/state passed, but forbidden matcher incorrectly rejected evaluated dialogue candidates; final matcher rejects selected menus",
+    "return-completed-reload-01: mechanical state/nonrepeatability passed; capture preceded rendered dialogue, superseded visually by02",
+    "normal semantic audit drafts01/02: incorrect Python state indexing and overstrong post-completion companion-null assumption; corrected using original Accompany Seed-Neeus0292f3 record"
+  ],
+  "scope": "Bounded checkpoint-based original Hackdirt independent return, normal quest turn-in and fresh completed restart. Full uninterrupted quest and full M14/M15 acceptance are not claimed.",
+  "final_source_commit": "3d8c47ff6a15d41abc177cb1b33064a9066a13a4",
+  "final_sanitizer_gates": {
+    "components": {
+      "path": "build/oblivion-compat/hackdirt/return-reward-asan-components-01/verification.json",
+      "source": {
+        "head": "3d8c47ff6a15d41abc177cb1b33064a9066a13a4",
+        "source_fingerprint": "6ca6ac466a0675861f364094dfc6211537fc1f662a3230055efc6f2c88f806f0"
+      },
+      "result": {
+        "executed": 3272,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "77eec7ee1c155989af218fa4f15debf5cf0858124c0c57d6264ab41d86b1a578",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "b2f15726552a03d8794e5d591ad22db684e4633dda65fa99fcc01b404028fc97",
+        "inventory_sha256": "db447ba78d8f23dadfc84b5a647d3a61273ba559c8ab6fb5be62a1ccaf33509d",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "engine": {
+      "path": "build/oblivion-compat/hackdirt/return-reward-asan-engine-01/verification.json",
+      "source": {
+        "head": "3d8c47ff6a15d41abc177cb1b33064a9066a13a4",
+        "source_fingerprint": "6ca6ac466a0675861f364094dfc6211537fc1f662a3230055efc6f2c88f806f0"
+      },
+      "result": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "edf84800a2b754cecc86c7024fb6945e17e95c5a11f17cc8f1f8db0e97b4892b",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "4f1efcffae7baa006cd5bd3f881937e282686eb91a2b9cd012fbd8dea74216bc",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "component_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "engine_environment": {
+      "SDL_VIDEODRIVER": "x11",
+      "SDL_AUDIODRIVER": "dummy",
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "normal_semantics": {
+    "path": "build/oblivion-compat/hackdirt/normal-return-semantic-verification.json",
+    "sha256": "a6e6882c46c38b397430c74fda77ab99fbd58b467085142102e4b15dffed70aa",
+    "passed": true,
+    "checks": 37,
+    "saves": {
+      "before": "1c8d9a38e146ee1d6f3482f9e9c0e3407e708e321d607ab9e31c1cc9f9b51361",
+      "reward": "46b736c9828070d60b2f611f31f25b3fbb77467c645761a803d8d93379646515",
+      "restart": "4ce1c88f5a9a6c4d5b8a97241207cff5790952e5249ecd6b0d68c0e51550d682",
+      "arrival": "05466581ced2d4d7d7572adc79d09bb3747834236640e7bd8e0d2e2660630abf"
+    },
+    "epochs": {
+      "return-reward-03": {
+        "pid": 716127,
+        "start_ticks": 192574007,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-reward-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-turnin-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "9219567f2e96077faac069b14f54f5d5cb44dac51bbbc00a9044b34cc0f4c8f3"
+      },
+      "return-completed-reload-02": {
+        "pid": 716913,
+        "start_ticks": 192603767,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-completed-reload-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-reward-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "9219567f2e96077faac069b14f54f5d5cb44dac51bbbc00a9044b34cc0f4c8f3"
+      },
+      "return-arrival-matched-01": {
+        "pid": 716550,
+        "start_ticks": 192592110,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-arrival-matched-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-shop-diagnostic-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "9219567f2e96077faac069b14f54f5d5cb44dac51bbbc00a9044b34cc0f4c8f3"
+      }
+    }
+  },
+  "normal_arrival": {
+    "path": "build/oblivion-compat/hackdirt/return-arrival-matched-01",
+    "passed": true,
+    "package": "content:oblivion.esm:0a2e59",
+    "target": "content:oblivion.esm:0234fd",
+    "cell": "content:oblivion.esm:000807",
+    "companion_group": "null",
+    "save_sha256": "05466581ced2d4d7d7572adc79d09bb3747834236640e7bd8e0d2e2660630abf"
+  },
+  "normal_restart": {
+    "path": "build/oblivion-compat/hackdirt/return-completed-reload-02",
+    "passed": true,
+    "epoch": {
+      "pid": 716913,
+      "start_ticks": 192603767,
+      "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-completed-reload-02/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-reward-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "9219567f2e96077faac069b14f54f5d5cb44dac51bbbc00a9044b34cc0f4c8f3"
+    },
+    "save_sha256": "4ce1c88f5a9a6c4d5b8a97241207cff5790952e5249ecd6b0d68c0e51550d682",
+    "selected_original_acknowledgement": "028735",
+    "stage100_replayed": false,
+    "captures_inspected": [
+      "return-reloaded-mother-dialogue.png",
+      "return-reloaded-completed-shop.png"
+    ]
+  },
+  "sanitized_content": {
+    "path": "build/oblivion-compat/hackdirt/return-reward-sanitized-01",
+    "passed": true,
+    "exit_code": 0,
+    "semantic_evidence": "build/oblivion-compat/hackdirt/sanitized-return-semantic-verification.json",
+    "semantic_sha256": "be2b6278f1a8a998e23cfbd47d8844d99b818a3c84d80d31dfa75a45a58a274f",
+    "checks": 12,
+    "epoch": {
+      "pid": 720549,
+      "start_ticks": 192794640,
+      "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-reward-sanitized-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-turnin-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "0cf3cda80ed1ff53e0d493fa1d33c6802a3426d1c4d83715f97454b49efb8cec"
+    },
+    "save_sha256": "ebad44f77cdbfdf60ae2684133118ea721ae34ffaca8547a00b32f43e3d3d732",
+    "pre_reward_disposition": 82,
+    "inventory_and_darma_health_conserved": true,
+    "runtime_leak_checking": false,
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "captures_inspected": [
+      "original-return-reward.png",
+      "return-reward-completed.png"
+    ],
+    "no_sanitizer_findings": true
+  },
+  "manifest_provenance": {
+    "oblivion_hackdirt_return_arrival_reload.json": {
+      "source": "scripts/data/oblivion_compat/oblivion_hackdirt_return_arrival_reload.json",
+      "sha256": "53580d81cb721c8cd5a3654f86664c2fd46c94f2acebb2e4ea966965e3770798",
+      "run": "build/oblivion-compat/hackdirt/return-arrival-matched-01"
+    },
+    "oblivion_hackdirt_return_turnin_approach.json": {
+      "source": "scripts/data/oblivion_compat/oblivion_hackdirt_return_turnin_approach.json",
+      "sha256": "85f63765c2f140dab82e9412a53f7fa4f07a63a2a8b0103a47fbfb177e26ca10",
+      "run": "build/oblivion-compat/hackdirt/return-turnin-approach-01"
+    },
+    "oblivion_hackdirt_return_reward.json": {
+      "source": "scripts/data/oblivion_compat/oblivion_hackdirt_return_reward.json",
+      "sha256": "078b4cff418a6970cbee1df933e6f50da34a620c2ab0484bf52041f5e393842e",
+      "run": "build/oblivion-compat/hackdirt/return-reward-03"
+    },
+    "oblivion_hackdirt_return_completed_reload.json": {
+      "source": "scripts/data/oblivion_compat/oblivion_hackdirt_return_completed_reload.json",
+      "sha256": "0a8e5b5662599167a411cad5576a1be034196e65604ff720f3b28007ac507651",
+      "run": "build/oblivion-compat/hackdirt/return-completed-reload-02"
+    },
+    "oblivion_hackdirt_return_reward_sanitized.json": {
+      "source": "scripts/data/oblivion_compat/oblivion_hackdirt_return_reward_sanitized.json",
+      "sha256": "eac58908e827ccfafadafc75f43dff2e8ad148a4cffa1a4f07459ed683db4915",
+      "run": "build/oblivion-compat/hackdirt/return-reward-sanitized-01"
+    }
+  },
+  "runtime_identity_evidence": {
+    "return-reward-03": {
+      "epoch": "build/oblivion-compat/hackdirt/return-reward-03/process-epoch.json",
+      "loaded_libraries": "build/oblivion-compat/hackdirt/return-reward-03/loaded-libraries.json",
+      "driver_and_pristine_input": "build/oblivion-compat/hackdirt/return-reward-03/driver-process.json"
+    },
+    "return-completed-reload-02": {
+      "epoch": "build/oblivion-compat/hackdirt/return-completed-reload-02/process-epoch.json",
+      "loaded_libraries": "build/oblivion-compat/hackdirt/return-completed-reload-02/loaded-libraries.json",
+      "driver_and_pristine_input": "build/oblivion-compat/hackdirt/return-completed-reload-02/driver-process.json"
+    },
+    "return-arrival-matched-01": {
+      "epoch": "build/oblivion-compat/hackdirt/return-arrival-matched-01/process-epoch.json",
+      "loaded_libraries": "build/oblivion-compat/hackdirt/return-arrival-matched-01/loaded-libraries.json",
+      "driver_and_pristine_input": "build/oblivion-compat/hackdirt/return-arrival-matched-01/driver-process.json"
+    },
+    "return-reward-sanitized-01": {
+      "epoch": "build/oblivion-compat/hackdirt/return-reward-sanitized-01/process-epoch.json",
+      "loaded_libraries": "build/oblivion-compat/hackdirt/return-reward-sanitized-01/loaded-libraries.json",
+      "driver_and_pristine_input": "build/oblivion-compat/hackdirt/return-reward-sanitized-01/driver-process.json"
+    }
+  },
+  "new_regression_presence": {
+    "ModPCFamePreservesInfamyAndAccumulatorAcrossSignedBoundaries": true,
+    "SkillExperienceRequirementsMatchOriginalInstructionsAndPositiveSubunitCache": true,
+    "ScriptedTrainingMatchesOriginalLevelAndExperienceLoopWithoutSkill100Cap": true,
+    "OriginalQuestModPCFamePublishesSharedReputationAndRestoresWithoutReplay": true,
+    "QuestRewardPublishesNativeSkillAndSavedAdvancementForMajorAndMinor": true,
+    "InvalidRewardInputsLeaveNativeValuesAndBookkeepingUntouched": true
+  },
+  "limits": [
+    "Checkpoint-based composite evidence, not an uninterrupted whole-quest campaign or complete milestone.",
+    "All accepted gameplay uses ordinary movement/activation/dialogue/F5; extra observers/commands only read state.",
+    "Render courses disable sound and do not prove perceptual audio pacing or broad NPC/rendering fidelity.",
+    "Component and render sanitizer leak checking is disabled; full engine sanitizer leak checking is enabled and passed.",
+    "Normal gates retain their original tested dirty-source fingerprint; subsequent implementation matches final sanitizer commit3d8c47ff6a. Final publication changes documentation/manifests only.",
+    "Original master hash remained a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70 after all courses."
   ]
 }
