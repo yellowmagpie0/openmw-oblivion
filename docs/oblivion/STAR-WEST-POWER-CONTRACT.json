@@ -1,0 +1,38 @@
+{
+  "status": "active preflight; no implementation yet",
+  "milestone": "M16 bounded native greater power and Touch Absorb Fatigue",
+  "content": {
+    "spell": "content:oblivion.esm:047ade",
+    "name": "Star of the West",
+    "source": "existing Imperial racial grant, selected through actual magic menu",
+    "profile": "type2, cost0, level4, low flags byte1; ABFA100 instant Touch AV10",
+    "target": "original living bandit06c35c/base06c357 in Vilverin01663a"
+  },
+  "source_save": {
+    "path": "build/oblivion-compat/vilverin-continuation/next-bandit-magic-select-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "9905b786cbf2ba9673b9353cfbecd2315574ad5e64819ec0c7e13cf7f1c19f2b"
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/vilverin-continuation/star-west-baseline-verification.json",
+    "diagnostic_passed": true,
+    "feature_passed": false,
+    "limit": "Actual owned selection and Cast request outside Touch range; admission produces no cast/resources. Touch delivery is a later acceptance gate."
+  },
+  "plan": [
+    "Establish original-game transfer, armor effectiveness, missed Touch and daily reuse behavior using a private control prefix.",
+    "Implement only this original greater power, with ordinary input admission, real Touch target selection, native resource authority, and persistent daily ownership.",
+    "Exercise the real living Vilverin target with ordinary exertion and casting; verify both actors and preservation of inventory, health channels and prior course.",
+    "Verify pending/completed fresh-process ownership and repeated-use rejection; complete focused and affected broad gates in normal and sanitizer configurations.",
+    "Close bounded receipt, resume the original expedition and choose its next actual unsupported content."
+  ],
+  "outside_scope": [
+    "Voice of the Emperor, general Absorb effects, arbitrary greater powers, exact animation/audio/rounding parity, full M16"
+  ],
+  "acceptance": [
+    "Original independent behavior before production changes.",
+    "No fork grants, synthetic enemies or forged resource deficits.",
+    "Two-actor transfer and once-only cast release without partial publication.",
+    "Cooldown survives save/load and expires by ordinary game time.",
+    "Original pending/restart ownership and all previous expedition state retained."
+  ]
+}

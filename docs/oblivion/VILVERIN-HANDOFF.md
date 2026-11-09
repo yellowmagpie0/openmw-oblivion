@@ -60,10 +60,13 @@ incompletely aligned controller attempts remain under
 is claimed. The ordinary unsupported-use baseline and independent original control
 remain distinct from the final feature acceptance.
 
-Current next action: resume forward gameplay from the completed Welkynd checkpoint,
-use owned ordinary healing as needed, and find the next original content exposing
-an implementation gap. Consumable gaps have shrunk; expedition/return remains
-open. Finish each bounded acceptance before expanding into adjacent mechanics.
+Current chunk: owned Imperial Star of the West `047ade`, ABFA100 instant Touch,
+against living original bandit `06c35c`. [Contract](STAR-WEST-POWER-CONTRACT.json).
+Actual forward walking reached the bandit corridor. Owned menu selection and
+ordinary Cast expose unsupported admission before implementation; this distant
+baseline does not establish Touch delivery. Independent original controls are
+next, then bounded native transfer/daily-use persistence and actual restart gates.
+Latest immutable input is recorded in the contract. Full expedition remains open.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects
 and UI; native spawn-root/child identity, grouped actors, respawn, all Player
