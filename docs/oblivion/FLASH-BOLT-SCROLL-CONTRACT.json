@@ -1,0 +1,57 @@
+{
+  "status": "actual original scroll use failure reproduced; independent native cast rule pending",
+  "milestone": "Bounded M16 single-use native scroll casting",
+  "content": {
+    "book": "content:oblivion.esm:0888bf Flash Bolt",
+    "enchantment": "content:oblivion.esm:05c057",
+    "effect": "FIDG magnitude20/area0/duration0/Target/AV8",
+    "enchantment_type": 0,
+    "stored_charge_and_cost": 52,
+    "scope": "Original definition already carried by the continuing character; acquisition history is not asserted."
+  },
+  "actual_input": {
+    "save": "build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "95f35e0ef3416eddbbcc15eab2de73bd40b8ba78b1d7d803027a3d5a02e6efeb",
+    "scroll_count": 1,
+    "player_health": 67.67945861816406,
+    "target": "content:oblivion.esm:06c359 VilverinBanditSittingNPC",
+    "target_health": 16,
+    "target_fire_resist": 0,
+    "target_magic_resist": 0
+  },
+  "baseline": {
+    "run": "build/oblivion-compat/scroll-casting/flash-bolt-baseline-01",
+    "semantic": "build/oblivion-compat/scroll-casting/flash-bolt-baseline-semantic-verification.json",
+    "observed": "Normal drag-to-avatar opens an empty reading window; full inventory, Magicka and Health remain unchanged. No cast input was sent, preventing the previously selected Flare from being mistaken for a scroll cast.",
+    "diagnostic_scenario_passed": true,
+    "feature_passed": false,
+    "retained_inspection_setup": "carried-scroll-inventory-01 recorded images but its copied capture helper used the previous ingredient readiness prefix. Actual baseline01 uses corrected capture and retains process/input provenance."
+  },
+  "known_source_gaps": [
+    "Book projection omits native enchantment identity/effects; tooltip shows only name/weight",
+    "Book.use unconditionally chooses ActionRead",
+    "Native Player spell controller admits declared SPEL grants; staff controller admits equipped WEAP/ENCH sources",
+    "Native cast/projectile content revalidation must explicitly recognize the supported scroll source"
+  ],
+  "native_rule_question": "Verify original selection/use, one-item consumption timing, no Magicka debit and no learned-spell skill gate for this actual BOOK/ENCH shape. Keep unobserved cancellation/timing semantics open.",
+  "acceptance": [
+    "Normal inventory/magic selection presents the actual original Flash Bolt effect and selects its owned scroll source",
+    "One normal cast delivers the supported fire projectile to the original bandit, with source/count ownership verified",
+    "Exactly one actual Flash Bolt is spent at independently checked native phase; Chameleon, earned food/loot and unrelated state remain intact",
+    "Scroll use does not borrow Flare selection, learned-spell eligibility, Magicka cost or TES3 cast execution",
+    "Fresh process retains spent inventory, committed actor/projectile/cast state and no extra debit or damage replay",
+    "Unsupported scroll shapes and invalid/stale source instances do not silently consume items",
+    "Relevant normal/sanitizer checks and actual-content continuation pass"
+  ],
+  "outside_scope": [
+    "Chameleon/general scroll effects",
+    "All enchanted equipment and arbitrary multi-effect casting",
+    "Alchemy/skill progression and full M16 completion",
+    "Bit-identical native frame scheduling and RNG"
+  ],
+  "provenance": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "raw_scroll_inspection": "build/oblivion-compat/next-content-inspection/original-carried-scrolls.json"
+  }
+}

@@ -41,9 +41,13 @@ also pass. Actual jump depletion, images, live sanitizer environment and matchin
 normal/instrumented C++ sources are recorded. Fixture-schema recovery retains
 future-version rejection and pending-food preservation.
 
-Next action: choose and reproduce another well-defined failure using actual
-original content on this character. General ingredient effects, altered authored
-profiles, Alchemy XP, brewing and full M16/Vilverin acceptance remain open.
+Current chunk: original carried Flash Bolt scroll `0888bf`, ENCH `05c057`:
+single instant20 fire Target effect. [Contract](FLASH-BOLT-SCROLL-CONTRACT.json).
+Normal baseline01 opens an empty scroll-reading window and retains the whole
+inventory/Magicka/Health. Nearby original sitting bandit `06c359` has Health16
+and no fire/magic resistance. Next: independent original-game consumption phase/
+resource check, then native scroll selection/cast/projectile ownership. Keep
+Chameleon/general scrolls and full M16 outside this slice.
 
 Reusable latest normal checkpoint:
 `build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave`
