@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "name": "Normal lakeshore swim to original Vilverin shore",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal points={{{{48200,87900,0}},{{50700,87400,410}}}}\nlocal index=1\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.1 then return end;timer=0\n assert(not Actor.isDead(self),'Player died during Vilverin travel')\n if core.isWorldPaused() then return end\n if index>#points then print('VilverinTravel arrived');return end\n local p=points[index];local target=util.vector3(p[1],p[2],p[3]);local v=target-self.position\n if math.sqrt(v.x*v.x+v.y*v.y)<90 then print('VilverinTravel reached='..index);index=index+1;return end\n local f=self.rotation:apply(util.vector3(0,1,0));local angle=math.atan2(f.y*v.x-f.x*v.y,f.x*v.x+f.y*v.y)\n local pitch=0\n if math.abs(angle)<0.035 then print('VilverinTravel ready='..index) end\n print(string.format('VilverinTravel aim x=%d y=%d pos=%.2f,%.2f,%.2f distance=%.2f health=%.2f magicka=%.2f',math.max(-150,math.min(150,math.floor(angle*256+.5))),math.max(-100,math.min(100,math.floor((pitch-camera.getPitch())*256+.5))),self.position.x,self.position.y,self.position.z,v:length(),Actor.stats.dynamic.health(self).current,Actor.stats.dynamic.magicka(self).current))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinTravel aim",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "f"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "VilverinTravel (?:ready|reached)=1(?:\\s|$)",
+      "maximum_iterations": 200,
+      "timeout_seconds": 120,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "VilverinTravel aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.3
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "VilverinTravel reached=1(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "VilverinTravel aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.3
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "waypoint-1.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "VilverinTravel (?:ready|reached)=2(?:\\s|$)",
+      "maximum_iterations": 200,
+      "timeout_seconds": 120,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "VilverinTravel aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.3
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "VilverinTravel reached=2(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "VilverinTravel aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.3
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "waypoint-2.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1000,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "VilverinTravel reached=1",
+    "VilverinTravel reached=2",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "M16 native cast rejected:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

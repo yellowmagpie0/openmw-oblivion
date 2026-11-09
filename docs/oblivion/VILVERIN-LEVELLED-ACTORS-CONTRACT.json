@@ -1,0 +1,90 @@
+{
+  "status": "implementation in progress; runtime acceptance open",
+  "course": "Original Vilverin outdoor camp reached from the genuine sewer-exit checkpoint using ordinary swim, walk and mouse input",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "references": {
+    "06c2aa": "03407b LL1BanditMelee100",
+    "06c2ab": "03407c LL1BanditMissile100"
+  },
+  "selection_level": 1,
+  "acceptance": [
+    "Both original placements produce an eligible original actor without rewriting the master or injecting actors, positions or hostility",
+    "Original nested LVLI inventories supply concrete level-appropriate weapons and apparel; chance-none and EachInCount respect authored rules",
+    "Original placed reference identity, selected base and selection level survive a genuine F5 save and fresh process",
+    "Fresh continuation retains concrete inventory, native stats and lifecycle without reselection or duplicates",
+    "Normal camp approach visibly encounters the authored actors"
+  ],
+  "excluded": [
+    "Cell respawn/reset",
+    "Scripted leveled-list/reference activation",
+    "Initially disabled or enable-parent-controlled placements",
+    "All player levels",
+    "RNG stream identity",
+    "Full Vilverin dungeon/combat completion",
+    "Lists that can produce multiple actors per original reference; saved spawn-group child ownership remains unimplemented"
+  ],
+  "baseline": {
+    "shore": "build/oblivion-compat/vilverin/shore-travel-01",
+    "camp": "build/oblivion-compat/vilverin/camp-approach-baseline-03",
+    "camp_save_sha256": "e82c7e6deae9e40d079a164cfcf9edbea71bc9e3557a940c0df10f7bdfc19f05",
+    "result": "Ordinary navmesh-guided input reached 53386.65625,86141.1875,289 with Player Health84.51138 unchanged. Read-only observer and saved references confirm both actors absent; campsite screenshot inspected.",
+    "retained_route_failures": [
+      "camp-approach-baseline-01: Ayleid pillar",
+      "camp-approach-baseline-02: southern ruin wall"
+    ],
+    "manifests": [
+      "scripts/data/oblivion_compat/oblivion_vilverin_shore_travel.json",
+      "scripts/data/oblivion_compat/oblivion_vilverin_camp_missing_baseline.json"
+    ]
+  },
+  "rule_evidence": {
+    "report": "build/oblivion-compat/vilverin/leveled-inspection-01/native-list-oracle.json",
+    "cases": 160,
+    "content": "Both actual actor roots and25 reachable inventory lists; full authored tiers retained, requested Player level1",
+    "entry_points": [
+      "0046CC70 selector",
+      "0046CDE0 container expansion"
+    ],
+    "real_virtual_getters": [
+      "004AFA70 creature difference",
+      "004B0300 item difference"
+    ],
+    "boundary_stubs": [
+      "Declared RNG sequences",
+      "RTTI from audited winning record types",
+      "Detached container allocation/mutation"
+    ],
+    "result": "Original instruction paths returned normally. All20 camp actor candidates selected; real lockpick count3 exercises0..3 independent successes.",
+    "limitation": "Rule evidence only; fork gameplay/restart gates remain open",
+    "production_comparison": {
+      "report": "build/oblivion-compat/vilverin/leveled-inspection-01/production-real-pool-comparison.json",
+      "lists": 27,
+      "selections": 112,
+      "result": "Production tier-pool order and membership match original selector instructions at the actual Player level1."
+    },
+    "actor_caller": "Original004AFD80 calls container expansion0046CDE0 at004AFE72 with count1, then iterates resulting actor quantities. This confirms grouped placements require multiple child identities; the current slice admits only eligible paths whose counts are1. It also supplies per-list all-lower level clamping.",
+    "typed_record_comparison": {
+      "report": "build/oblivion-compat/vilverin/leveled-inspection-01/typed-original-lists-verification.json",
+      "lists": 27,
+      "entries": 303,
+      "result": "Actual esmtool typed LVLC/LVLI flags, chance-none and full authored entries match an independent raw decoder."
+    }
+  },
+  "development_attempts": [
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-placement-01",
+      "status": "failed scenario: stale copied travel-log expectations; all gameplay actions and F5 completed",
+      "exact_manifest": "source-manifest.json"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-placement-02",
+      "status": "failed scenario: unsupported wilderness group quantity caused one frame error; camp placement and F5 completed"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-restart-01",
+      "status": "passed diagnostic restart from placement02; both original camp bases, concrete inventories and metadata retained; no camp selection replay",
+      "limitation": "Earlier source, superseded by group guard; final-source restart still required"
+    }
+  ]
+}
