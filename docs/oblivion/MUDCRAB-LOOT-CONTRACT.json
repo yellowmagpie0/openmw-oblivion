@@ -1,5 +1,5 @@
 {
-  "status": "baseline reproduced; implementation pending",
+  "status": "normal gameplay and both engine suites passed; instrumented runtime pending",
   "scope": "Original guaranteed mudcrab06c927 near the genuine sewer exit: expand its real CREA LVLI microtreasure, preserve its rolled inventory through F5/fresh restart, then kill/loot through ordinary input and retain the transfer without replay.",
   "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
   "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
@@ -9,7 +9,14 @@
   "inventory": {
     "guaranteed": "content:oblivion.esm:03366c Crab Meat count1",
     "leveled": "content:oblivion.esm:03faee LL0LootMicroTreasure15 count1; chance-none85, flags3",
-    "level_1_results": ["Gold count2", "Gold count1", "Lockpick count1", "0223a8", "nested0bf01a LL0Silverware100", "023880"],
+    "level_1_results": [
+      "Gold count2",
+      "Gold count1",
+      "Lockpick count1",
+      "0223a8",
+      "nested0bf01a LL0Silverware100",
+      "023880"
+    ],
     "positive_branch": "Retain a naturally rolled nonempty result from an original fresh spawn; record all attempts. No RNG edits, item injection or rerolling an admitted actor."
   },
   "genuine_input": {
@@ -27,9 +34,16 @@
     "records": "build/oblivion-compat/creature-loot/inspection-01/original-creature-loot-tree.json",
     "instructions": "build/oblivion-compat/creature-loot/inspection-01/native-microtreasure-oracle.json",
     "cases": 31,
-    "entry_points": ["0046CDE0", "0046CC70"],
+    "entry_points": [
+      "0046CDE0",
+      "0046CC70"
+    ],
     "scope": "Actual count1 and Player level1;85-percent chance-none boundary, each concrete result and every nested silverware candidate. Actual flags0 mudcrab root covers non-EachInCount container path.",
-    "stubs": ["Declared RNG values", "RTTI list/concrete classification", "Detached container allocation/mutation"],
+    "stubs": [
+      "Declared RNG values",
+      "RTTI list/concrete classification",
+      "Detached container allocation/mutation"
+    ],
     "reused": "Hash-bound original instruction harness and list rules from the accepted Vilverin slice; no exact random-stream claim."
   },
   "acceptance": [
@@ -40,5 +54,21 @@
     "Fresh continuation retains death, corpse emptiness and Player item quantities without duplication",
     "Focused constructor checks, applicable integration gates and instrumented real-content continuation pass"
   ],
-  "outside_scope": ["Merchant restocking", "Actor/cell respawn", "Grouped spawns", "Scripted spawn-root/child identity", "All Player levels", "Native RNG sequence identity", "Full sewer/campaign or death visual fidelity"]
+  "outside_scope": [
+    "Merchant restocking",
+    "Actor/cell respawn",
+    "Grouped spawns",
+    "Scripted spawn-root/child identity",
+    "All Player levels",
+    "Native RNG sequence identity",
+    "Full sewer/campaign or death visual fidelity"
+  ],
+  "implementation": "ESM4Creature expands actual nonzero LVLI entries through the accepted shared resolver before constructing concrete stock. Direct/empty inventories do not query an unready Player; existing saved inventory bypasses expansion.",
+  "observed_positive": "First genuine fresh spawn: Crab Meat1 plus Bone0223a8 count1. No further fresh-spawn selection was needed for the normal positive course.",
+  "progress": {
+    "normal_engine": 2257,
+    "sanitized_engine": 2257,
+    "focused_construction": 112,
+    "ordinary_gameplay": "Fresh inventory and restart, ordinary arrival, two original Flare casts, native Player-owned death, visible corpse inventory and Take All, exact fresh-process Player/corpse continuation and pre-fix saved-inventory compatibility passed. Instrumented fresh construction/restart remain."
+  }
 }

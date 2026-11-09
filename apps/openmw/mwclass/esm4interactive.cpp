@@ -13,8 +13,9 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/doorstate.hpp>
 #include <components/esm3/loadskil.hpp>
-#include <components/esm4/playermechanics.hpp>
+#include <components/esm4/loadlvli.hpp>
 #include <components/esm4/npcplacement.hpp>
+#include <components/esm4/playermechanics.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
@@ -37,9 +38,10 @@
 #include "../mwworld/actionteleport.hpp"
 #include "../mwworld/failedaction.hpp"
 #include "../mwworld/manualref.hpp"
-#include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/oblivioninteraction.hpp"
+#include "../mwworld/oblivionlevelled.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwworld/obliviontrespass.hpp"
 #include "../mwworld/worldimp.hpp"
 
@@ -50,7 +52,15 @@ namespace MWClass
         void fillCreatureInventory(ESM4CreatureCustomData& data, const std::vector<ESM4::InventoryItem>& items,
             const MWWorld::ESMStore& store)
         {
-            for (const ESM4::InventoryItem& item : items)
+            auto* world = MWBase::Environment::get().getWorldOrNull();
+            const bool native = world && world->getGameProfile() == ESM::GameProfile::Oblivion;
+            const bool hasLevelledItems = native && std::any_of(items.begin(), items.end(), [&](const auto& item) {
+                return item.count != 0 && store.get<ESM4::LevelledItem>().search(
+                    ESM::FormId::fromUint32(item.item));
+            });
+            const auto expanded = hasLevelledItems ? MWWorld::expandOblivionLevelledItems(store, items,
+                world->getPlayerPtr().getClass().getCreatureStats(world->getPlayerPtr()).getLevel(), world->getPrng()) : items;
+            for (const ESM4::InventoryItem& item : expanded)
             {
                 if (item.count == 0)
                     continue;
