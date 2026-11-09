@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "normal content accepted; sanitizer closure pending",
+  "status": "accepted bounded Player Flare slice",
   "scope": "M16 Player instant target-damage cast slice: original Flare lakeshore launch/restart and original placed tutorial goblin03b526 encounter; Vilverin leveled spawns are the next separate chunk.",
   "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
   "input": {
@@ -98,5 +98,21 @@
     "General natural skill progression/level-up and tutorial Destruction hit-use tracking remain separate.",
     "Harmful spell provocation/crime and complete magic-effect/death visual fidelity are not accepted by this cast/physical-flight slice.",
     "Original Vilverin LVLC actor placement is the next separate content-driven chunk."
-  ]
+  ],
+  "acceptance_receipt": "PLAYER-FLARE-VERIFICATION.json",
+  "remaining_acceptance_gaps": [],
+  "sanitized_closure": {
+    "engine": "build/oblivion-compat/vilverin/flare-asan-engine-03/verification.json",
+    "engine_cases": 2257,
+    "failed": 0,
+    "skipped": 0,
+    "source_head": "7605dc6ab0d52a0f9d378a1eebe84bf30620a68c",
+    "source_fingerprint": "d633aab5ac1ebc7ba2eceb24f7422022ea59c49e56fd64b9bf8eec26b60dd141",
+    "actual_courses": [
+      "flare-sanitized-launch-01",
+      "flare-sanitized-flight-reload-01",
+      "flare-sanitized-goblin-hit-02"
+    ],
+    "semantic_checks": 24
+  }
 }

@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "status": "accepted",
+  "scope": "Bounded M16 Player instant target-damage cast slice, exercised by original Flare on placed tutorial goblin03b526 and genuine sewer-exit lakeshore flight. Checkpoint-based branches; not full M16, full sewer campaign or Vilverin camp combat.",
+  "code_commits": [
+    "80de0d3b1d",
+    "fff4a4dc33",
+    "7605dc6ab0"
+  ],
+  "contract": "VILVERIN-FLARE-CONTRACT.json",
+  "original_inputs": {
+    "original_master": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+    },
+    "original_inputs": [
+      {
+        "path": "build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8"
+      },
+      {
+        "path": "build/oblivion-compat/sewer-escape/joined-first-goblin-rock-finish-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "8eb711aca2d39eb280013939535ff4ec9c23d61219cd559e21d7764f87a0969f"
+      }
+    ]
+  },
+  "observed_results": {
+    "spell": "content:oblivion.esm:0a97df",
+    "normal_menu_cost": 14,
+    "lakeshore_magicka_at_release": [
+      80,
+      66
+    ],
+    "goblin_health": [
+      10,
+      4.72,
+      "dead"
+    ],
+    "player_health_in_goblin_branch": 80,
+    "goblin_killer": "dynamic:player:0000000000000001",
+    "persistence": "Actual F5, fresh processes, original identity/inventory/quests/life/death counts retained. In-flight cast resumes without a second debit, launch or contact.",
+    "visual": "Original Fireball.NIF SpecialIdle_Projectile is selected and looped by saved distance/speed. Normal capture visibly shows the fireball.",
+    "resource_rejection": "Genuine repeated casts exhaust resources. Held-key fresh continuation shows visible Magicka feedback and creates no cast, projectile or resource debit."
+  },
+  "engine_gates": {
+    "normal": {
+      "path": "build/oblivion-compat/vilverin/flare-normal-engine-02/verification.json",
+      "sha256": "f558062f7d591f18f0cc661b1fedb68891572a1f6a607b5052dbd542a833bd82",
+      "source": {
+        "head": "fff4a4dc33a0a3601494bdd2d0f8d61958fc6a64",
+        "source_fingerprint": "18b1181d97e6f6b0665fd55f98d0237526a1b48dec8da8d7b5cbcbc7b5f61a9f"
+      },
+      "result": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "383ec82b9f75d7a35fe86df6108851a25c9a0d7a5cfe6363f2910c058e307c44",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "5f6cdf55f26bdd2af5d68723e3a669ab28c1311f84f9621ab7ce5fa04028ca80",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "reuse": "Mechanics/renderer unchanged after this full normal gate; only two error-message literals changed in C++. Actual normal UI verifies those final literals; final-source sanitizer gate covers all engine cases."
+    },
+    "asan_ubsan": {
+      "path": "build/oblivion-compat/vilverin/flare-asan-engine-03/verification.json",
+      "sha256": "8032f8a28cc4f059eec56f597adacf2e564d8fbc31c2c354bb575070c3bc42c1",
+      "source": {
+        "head": "7605dc6ab0d52a0f9d378a1eebe84bf30620a68c",
+        "source_fingerprint": "d633aab5ac1ebc7ba2eceb24f7422022ea59c49e56fd64b9bf8eec26b60dd141"
+      },
+      "result": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "8f27584d24e0c1bada801ab92d6f8910463da97373de62b0316cbf3032fbb66d",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "9569618d788531d92bc2f372a29e6cc5e046cd65245c40f0eb3f2367c2e047dc",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "unchanged_component_evidence": {
+    "source_equivalence": "No changes under components or apps/components_tests since3d8c47ff6a. Existing cost, caster power, cast-state and projectile codecs reused.",
+    "normal": "build/oblivion-compat/hackdirt/return-reward-normal-01/verification.json",
+    "asan_ubsan": "build/oblivion-compat/hackdirt/return-reward-asan-components-01/verification.json",
+    "counts_each": 3272,
+    "repeated": false
+  },
+  "runtime_normal": {
+    "launch": {
+      "directory": "build/oblivion-compat/vilverin/flare-visible-launch-02",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_launch.json",
+      "manifest_sha256": "651673d383f815f0d86130052e95e0892fb2e580b67b7491e8cad767c8692a62",
+      "input_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+      "save_sha256": "a61af5d2cabe7c891e15356670fabaf1b62f940bfeaaa3d119d8a012ffe22e5d",
+      "game_binary_sha256": "222d06becf916b545493bc2710c5a76788d3b9adf96edad1b73c1fe97f046961",
+      "process_epoch_sha256": "1746b67011601873165985d9c6421e1fa658bb84389915f3746c8dc7ae62ec56",
+      "loaded_libraries_sha256": "89c0f760c73de6e61a68a12bc97ced93d324ad7c304dca7cf1c92d18380f00c6"
+    },
+    "flight_reload": {
+      "directory": "build/oblivion-compat/vilverin/flare-flight-visible-reload-01",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_flight_reload.json",
+      "manifest_sha256": "77dadc9562902dc26b4d4e54c000a7dc2abdcea549dc6f10d947b5a45bf0e09b",
+      "input_sha256": "a61af5d2cabe7c891e15356670fabaf1b62f940bfeaaa3d119d8a012ffe22e5d",
+      "save_sha256": "19652c0f944fc3504e283d267c70424668e3f165c0ae2565f5e1a854920b0872",
+      "game_binary_sha256": "222d06becf916b545493bc2710c5a76788d3b9adf96edad1b73c1fe97f046961",
+      "process_epoch_sha256": "e5518b01aaf0273fea479fde585ef7fabba4a43d5f118b1a8bd8d5a2cf510a3c",
+      "loaded_libraries_sha256": "89c0f760c73de6e61a68a12bc97ced93d324ad7c304dca7cf1c92d18380f00c6"
+    },
+    "select": {
+      "directory": "build/oblivion-compat/vilverin/flare-goblin-select-02",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_select.json",
+      "manifest_sha256": "5d5851f81422cfbc65a422ff1bec9212b52389b6f7433631497b8b32db915835",
+      "input_sha256": "8eb711aca2d39eb280013939535ff4ec9c23d61219cd559e21d7764f87a0969f",
+      "save_sha256": "3ddeb42fb573085f99f414a401d49279dc9fc80be19bc799af9ed19800a48f3b",
+      "game_binary_sha256": "c730e423220f0e7c294777b8a7b127db4eb3895911f5824292f1cdcc0c95aa0b",
+      "process_epoch_sha256": "1296092d4eadcd6c05f4ba92b49616da12cd4b5a8034d662d8b479b076f882b1",
+      "loaded_libraries_sha256": "89c0f760c73de6e61a68a12bc97ced93d324ad7c304dca7cf1c92d18380f00c6"
+    },
+    "goblin_hit": {
+      "directory": "build/oblivion-compat/vilverin/flare-goblin-fire-01",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_goblin_hit.json",
+      "manifest_sha256": "ae93c6b53ceb146eeb0832212976f54491c6416fc0349f8c26c5b6cf66b0efdf",
+      "input_sha256": "3ddeb42fb573085f99f414a401d49279dc9fc80be19bc799af9ed19800a48f3b",
+      "save_sha256": "9fca7eb19111f5ab2a5489bf06a8b3cf465c99bad91373a8ceb8ffb699d51538",
+      "game_binary_sha256": "c730e423220f0e7c294777b8a7b127db4eb3895911f5824292f1cdcc0c95aa0b",
+      "process_epoch_sha256": "4504c90495d92f31846db9a1fae9e25372193efafce62fe05ca0749621fa20b0",
+      "loaded_libraries_sha256": "8f8dcdf7586dcdb0d3a125979c7cef148c18130c808b2ce4ceee4331e78de477"
+    },
+    "goblin_victory": {
+      "directory": "build/oblivion-compat/vilverin/flare-goblin-victory-01",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_goblin_victory.json",
+      "manifest_sha256": "a18e74973c0c2c01edd6dd0258eb07e404553f1e6588428f5c8d27a990f08df8",
+      "input_sha256": "9fca7eb19111f5ab2a5489bf06a8b3cf465c99bad91373a8ceb8ffb699d51538",
+      "save_sha256": "80816ab52b49f52a284bcc722abdd10c1a4914a07621d6e7c9c01e7c33f15d07",
+      "game_binary_sha256": "c730e423220f0e7c294777b8a7b127db4eb3895911f5824292f1cdcc0c95aa0b",
+      "process_epoch_sha256": "c508b1aaede2fcd58273caf04eacd0e672a1d57d47a5fc9d9c1f68d3ad6546c1",
+      "loaded_libraries_sha256": "972b1a51a9728b583915f9847776a39f618b627b9d4301810bceefc8ef2cf7e5"
+    },
+    "victory_reload": {
+      "directory": "build/oblivion-compat/vilverin/flare-goblin-victory-reload-01",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_victory_reload.json",
+      "manifest_sha256": "940ac3e03aa8002e2193ee3d1647a22d9c3530cd9ccdb186ef41573ff1e05387",
+      "input_sha256": "80816ab52b49f52a284bcc722abdd10c1a4914a07621d6e7c9c01e7c33f15d07",
+      "save_sha256": "41f33ce474d7fc6f39b7126ff4d62fae82b95eb7055c3e627cf2a3c5dec0c39a",
+      "game_binary_sha256": "418b88a6b4f9434595437dbba871e30dfad50e359bcb44b0d976c0d83becd147",
+      "process_epoch_sha256": "c27e8057be719e92a6a70bf1b3e45d20d99c25a9973e4cc6226f08447528f403",
+      "loaded_libraries_sha256": "90369c827ff69f0893c277332c5b680fafa3d77e7ac624cc22b11af7dbaadc64"
+    },
+    "insufficient": {
+      "directory": "build/oblivion-compat/vilverin/flare-insufficient-01",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_insufficient.json",
+      "manifest_sha256": "4b82a1d1a701d074d346356c1fd61cb94d00b0ecf79c8cf3907861ded8729648",
+      "input_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+      "save_sha256": "6d1298f4713676cd06b78408894c1d513ce55426a1ed9427defd5c903e61da0a",
+      "game_binary_sha256": "852a1ac171edda387a4fd8fb6eccb0ab017a2991331e947a424c3396cc6ed626",
+      "process_epoch_sha256": "9ad6e95831879ac5db7e857c3049792ab099d35b83564e5f5cf9a154b9c56e2c",
+      "loaded_libraries_sha256": "90369c827ff69f0893c277332c5b680fafa3d77e7ac624cc22b11af7dbaadc64"
+    },
+    "insufficient_reload": {
+      "directory": "build/oblivion-compat/vilverin/flare-insufficient-reload-02",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_insufficient_reload.json",
+      "manifest_sha256": "6f3fa77e07e50a63435f61826d308109770df186b9a5aa8b1c6728ba435389c8",
+      "input_sha256": "6d1298f4713676cd06b78408894c1d513ce55426a1ed9427defd5c903e61da0a",
+      "save_sha256": "2c589a11785e2609a86d3e5f6f1a4a6af82597044266713b002ce5ff983ef10a",
+      "game_binary_sha256": "b12bfe7ae33e5ca6c2afa8d60c503f3005c2de9d5a5075b97a2ddabb76debc12",
+      "process_epoch_sha256": "0f894c7f2dbdb3f1ac2ffad1c905a6395d897072f54e6b95db7fd1ecaaf1ae90",
+      "loaded_libraries_sha256": "972b1a51a9728b583915f9847776a39f618b627b9d4301810bceefc8ef2cf7e5"
+    }
+  },
+  "runtime_sanitized": {
+    "launch_sanitized": {
+      "directory": "build/oblivion-compat/vilverin/flare-sanitized-launch-01",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_launch_sanitized.json",
+      "manifest_sha256": "8459c92974a8768d46dc7519becb53650a96faa0f14283698a63d3dd3d4fd65f",
+      "input_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+      "save_sha256": "21002a74bafd0ade77b1eb721f5bda6f22a3f23cf99ee2caea7e1a3c78b7c203",
+      "game_binary_sha256": "48007e9dac84a2e49e991d86783bcc3427882ea11f3a5c1a25050ac13b9e8e57",
+      "process_epoch_sha256": "50b39e9f866ae5e78c4607ae32ad358a04bac806e76fa10d202e502a98965276",
+      "loaded_libraries_sha256": "511cce4efe8a766537c27ecd10cdf459289ff0cd0e56b80672dadb839dc2619e"
+    },
+    "flight_reload_sanitized": {
+      "directory": "build/oblivion-compat/vilverin/flare-sanitized-flight-reload-01",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_flight_reload_sanitized.json",
+      "manifest_sha256": "6332b3f11a767d67f7582f9cdd4e1cc80f8533ed3dc604c6990e61c2da6e3232",
+      "input_sha256": "21002a74bafd0ade77b1eb721f5bda6f22a3f23cf99ee2caea7e1a3c78b7c203",
+      "save_sha256": "534976ab0f93a3fbb543e7475f2b2b6e6e7111eeb9d26a49a63157b5f7944747",
+      "game_binary_sha256": "48007e9dac84a2e49e991d86783bcc3427882ea11f3a5c1a25050ac13b9e8e57",
+      "process_epoch_sha256": "537d584f935788d5377276660c4473220c0a132f4d890e31bbe7f7bbe188cd86",
+      "loaded_libraries_sha256": "511cce4efe8a766537c27ecd10cdf459289ff0cd0e56b80672dadb839dc2619e"
+    },
+    "goblin_hit_sanitized": {
+      "directory": "build/oblivion-compat/vilverin/flare-sanitized-goblin-hit-02",
+      "canonical_manifest": "scripts/data/oblivion_compat/oblivion_player_flare_goblin_hit_sanitized.json",
+      "manifest_sha256": "c8c924899a7ee139adaec4f1eb4cd1ba009333539ca12480315b1152cd9d7a8b",
+      "input_sha256": "3ddeb42fb573085f99f414a401d49279dc9fc80be19bc799af9ed19800a48f3b",
+      "save_sha256": "22d7b60ef566fa46ec8387517491dc40a354d285303cfe1c2fb04f38b067cb65",
+      "game_binary_sha256": "48007e9dac84a2e49e991d86783bcc3427882ea11f3a5c1a25050ac13b9e8e57",
+      "process_epoch_sha256": "8ba1e5c6a64c39da519b205e5e73e031387036ef267f1428e55ed63dc61163b0",
+      "loaded_libraries_sha256": "511cce4efe8a766537c27ecd10cdf459289ff0cd0e56b80672dadb839dc2619e"
+    }
+  },
+  "semantic_audits": {
+    "normal": {
+      "path": "build/oblivion-compat/vilverin/normal-semantic-verification.json",
+      "sha256": "5fbad19701fcfec850d4bbbdbf9548b1989fca2bf7fce74bcfc3a5f490cf95e5",
+      "checks": 64
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/vilverin/sanitized-semantic-verification.json",
+      "sha256": "1998f3313a353ec9fa8c8c3a6a92e8793ec5fdde85a8e9268232378055a49b3a",
+      "checks": 24
+    }
+  },
+  "sanitizer_runtime_scope": {
+    "accepted_runs": "All three real-content runs exit0 with no ASan/UBSan findings. Full native engine source matches7605dc6ab0; subsequent source changes are manifest waits/preload and acceptance documentation only.",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "runtime_leak_coverage": false,
+    "actual_environment_receipt": "build/oblivion-compat/vilverin/flare-sanitized-flight-reload-01/sanitizer-environment.json",
+    "sdl_replay_preflight": "build/oblivion-compat/vilverin/asan-preload-preflight-02.json",
+    "sdl_actual_preload_order": "build/oblivion-compat/vilverin/flare-sanitized-goblin-hit-02/sdl-input-provenance.json"
+  },
+  "reused_rules": [
+    "SEWER-SPELL-COST-VERIFICATION.json",
+    "M15-MELEE-CASTER-POWER-VERIFICATION.json",
+    "SEWER-HEAL-CAST-VERIFICATION.json",
+    "SEWER-STAFF-PROJECTILE-VERIFICATION.json"
+  ],
+  "retained_failures": {
+    "flare-baseline-01": "Missing saved read-only observer dependency; no gameplay.",
+    "flare-baseline-02": "Tab did not close controller menu; no cast reached gameplay.",
+    "flare-focused-01": "Private actor-value accessor compile error, corrected to public snapshot query.",
+    "flare-goblin-select-01": "Binary/resource version mismatch during rebuild; repeated with matching runtime.",
+    "flare-launch-01 and flare-visible-launch-01": "Physical casting worked; visual review exposed the unselected original flight sequence, fixed infff4a4dc33.",
+    "flare-insufficient-reload-01 and flare-insufficient-held-01": "Resource guard worked but legacy feedback was empty; fixed and rerun in02.",
+    "flare-asan-engine-01 and02": "Intentionally superseded for discovered flight-phase/UI dependencies; no sanitizer pass claimed. Retained intentional-stop.json files.",
+    "flare-sanitized-goblin-hit-01": "SDL replay shim preceded ASan; process rejected before gameplay. Original manifest and startup failure retained.",
+    "asan-preload-preflight-01": "Compiler libasan path is a GNU linker script here; actual ELF selected from the successful runtime library map. Preflight02 passes.",
+    "sanitized initial resumed-in-flight capture": "First image caught startup fade; retained. Post-impact image shows the rendered original exterior. Normal launch is the primary visible-projectile proof."
+  },
+  "remaining_acceptance_gaps": [],
+  "outside_scope": [
+    "General NPC magic casting, duration/area/multi-effect spells, reflection/absorption, powers and full M16.",
+    "General skill progression/level-up and tutorial Destruction hit-use tracking.",
+    "Harmful-spell provocation/crime and complete FX/death visual fidelity.",
+    "Original Vilverin leveled actor spawns and full ruin/camp gameplay; next separate chunk."
+  ]
+}

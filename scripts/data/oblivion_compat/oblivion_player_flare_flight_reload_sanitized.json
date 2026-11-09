@@ -57,8 +57,14 @@
       "minimum_entropy": 0.02
     },
     {
+      "type": "wait_log",
+      "pattern": "M16 magic projectile impact: id=12 actor=0 damage=0",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
       "type": "sleep",
-      "seconds": 6
+      "seconds": 2
     },
     {
       "type": "screenshot",

@@ -1,37 +1,40 @@
-# Player Flare and Vilverin — current handoff
+# Vilverin — current handoff
 
-Current bounded chunk: Player instant fire/shock target casts. Normal original
-content is accepted: Flare uses target animation, debits14 Magicka once, visibly
-flies using authored SpecialIdle_Projectile and consumes a geometric terrain miss
-without actor damage. Saved flight resumes in a fresh process without relaunch
-or another debit. Two normal casts kill original goblin03b526 (10→4.72→dead),
-conserve Player80 Health/inventory/quests, and persist the Player killer/death
-state without replay. No original records or old sewer course manifests changed.
+The bounded Player Flare slice is accepted. Original menu selection,14-Magicka
+release, visible authored flight, miss, original goblin hit/kill, depleted-resource
+feedback and fresh-process ownership pass. Eight normal and three instrumented
+original-content courses support88 semantic checks. Normal2257 engine cases and
+final-source ASan/UBSan2257 cases pass; unchanged component evidence is reused.
+See [PLAYER-FLARE-VERIFICATION.json](PLAYER-FLARE-VERIFICATION.json) for exact
+source/binary/input provenance, gate reuse, captures and retained fixture failures.
+This is checkpoint-based evidence, not full M16 or a complete campaign.
 
-The normal depleted-resource course exposed empty legacy error feedback. The
-TES4 path now shows a visible enough-Magicka message; read-only held-key observation
-proves input arrived while native state proves no cast/projectile/debit occurred.
-Normal integration at fff4a4dc33 passes2257 exact engine cases. Reuse it for unchanged
-mechanics/rendering after the two message-literal replacements; current normal
-runtime verifies those replacements. Final sanitizer acceptance is still open.
+Target gameplay course: the original Vilverin outdoor bandit camp. References
+06c2aa/06c2ab in cell005e20 use LVLC bases03407b/03407c. The loader has no native
+leveled-actor owner; the code currently skips these placements. Current chunk is
+preflight for original level-dependent actor selection and persistent placement,
+without editing Oblivion.esm or injecting actors, positions or hostility.
 
-Evidence under `build/oblivion-compat/vilverin/`: `flare-visible-launch-02`,
-`flare-flight-visible-reload-01`, `flare-goblin-{select-02,fire-01,victory-01}`,
-`flare-goblin-victory-reload-01`, `flare-insufficient-01`, and
-`flare-insufficient-reload-02`. Audits: `normal-semantic-verification-in-progress.json`
-and `normal-restart-verification.json`. Review screenshots as well as scenario
-results. ASan engine01/02 were intentionally superseded for the discovered visual
-phase/UI dependencies; their stop reasons and earlier fixture failures remain.
-Source reproducible courses are `oblivion_player_flare_*`.
+Remaining acceptance gaps for the next chunk: audit winning list trees and real
+eligible actor definitions at the genuine Player level; confirm missing actors
+through normal camp arrival; implement selected-base/reference ownership; show
+both original actors and retain their identities, stats, inventory and lifecycle
+through F5/fresh-process continuation without reselection or duplication. Choose
+subsequent dependencies only when this deliverable requires them. General cell
+respawn and full dungeon/combat acceptance remain separate.
 
-This is not full M16: general skill progression, additional tutorial Destruction
-tracking, harmful-spell provocation/crime and complete FX/death visual fidelity
-remain separate. Existing accepted sewer/Hackdirt evidence stays frozen. The
-original Vilverin bandit references06c2aa/06c2ab use LVLC bases; the loader currently
-skips them. That is the next content-driven chunk after this slice closes. The
-course revision, inputs, asset identity and scope are explicit in
-[VILVERIN-FLARE-CONTRACT.json](VILVERIN-FLARE-CONTRACT.json).
+Reusable original travel input:
+`build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8.
+The Flare contract pins this save and the original camp forms. Existing sewer
+course manifests and [accepted Hackdirt reward](HACKDIRT-HANDOFF.md) stay frozen.
 
-Next action: finish the prepared ASan/UBSan build, run final exact engine gate and
-instrumented original Flare launch, flight restart and goblin hit. Audit and commit
-the acceptance receipt, then implement original Vilverin leveled spawns.
+Next action: inspect the original LVLC trees and existing list/save/reference
+machinery, then reach Vilverin by normal input to capture a baseline and genuine
+camp checkpoint. Close this bounded placement slice before choosing another.
+
+Known fixture detail: SDL replay under ASan requires the actual ASan ELF first in
+LD_PRELOAD. On this host the compiler libasan path is a linker script; the accepted
+recipe uses /usr/lib64/libasan.so.8.0.0. Preflight and actual ordering are retained
+in the Flare receipt. General magic/skill progression, harmful-spell provocation
+and full FX/death visual fidelity remain open beyond the accepted casting slice.

@@ -93,6 +93,12 @@
       "seconds": 1
     },
     {
+      "type": "wait_log",
+      "pattern": "M16 magic projectile impact: id=1 actor=1 damage=",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
       "type": "key",
       "value": "F5"
     },
@@ -114,7 +120,8 @@
     "FlareGoblin ready",
     "M16 native cast begin: spell=content:oblivion.esm:0a97df",
     "M16 native cast release: spell=content:oblivion.esm:0a97df applied=1",
-    "Writing saved game"
+    "Writing saved game",
+    "M16 magic projectile impact: id=1 actor=1 damage="
   ],
   "forbidden_log": [
     "Unsupported ObScript command",
@@ -142,7 +149,8 @@
     "LIBGL_ALWAYS_SOFTWARE": "1",
     "__GLX_VENDOR_LIBRARY_NAME": "mesa",
     "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
-    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
   },
   "sdl_input_timeout_seconds": 60,
   "virtual_gamepad": false,
