@@ -1,0 +1,1365 @@
+{
+  "source_note": "All implementation, tests and canonical recipes retain the full-gate hashes. Final contract/handoff closure edits are documentation only; each build report preserves its original tested fingerprint.",
+  "status": "bounded original collected-Mead slice accepted; full M16 and expedition remain open",
+  "contract": "docs/oblivion/MEAD-POTION-CONTRACT.json",
+  "original_oracle": "docs/oblivion/MEAD-POTION-ORACLE.json",
+  "implementation_commit": "f4e70230d06354f3f3d3c51b5778eba108d48f30",
+  "tested_source_files": {
+    "source": {
+      "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+      "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+    },
+    "files": {
+      "apps/components_tests/CMakeLists.txt": "db6e2d38eb1a57c87cc4e3ecbc37ec291d51b72caa9c0d6c33e6c17f63c8caca",
+      "apps/components_tests/esm4/runtimestate.cpp": "e1183503152b71039b3341c21369d64cc00c52f57fe439f7b9d5ef08613ca4b7",
+      "apps/openmw/mwclass/potion.cpp": "0c5757805abfb8b5fe2264fbba599845483aa0b7907337f21aa5c08e4996054b",
+      "apps/openmw/mwmechanics/oblivioncombat.cpp": "9fe69cdda7d887b0d48a33b235bc102289953ca208f617b82af5a2532feaf410",
+      "apps/openmw/mwworld/oblivioncombatmagic.cpp": "91b1d9696fd08df8f2a9e3b89c2cfa03f6f45a87ad743d124f9c8c746443ca71",
+      "apps/openmw/mwworld/oblivioncombatmagic.hpp": "1884979b612e27b1a3693acb689b8ecf63a84d5f5f6a28616cf46d866e031340",
+      "apps/openmw/mwworld/worldimp.cpp": "aced06b5ed8a2e2ce689eb119f6659cf2dc6d940751325067f1e79f6677e3762",
+      "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "5b71c18a6b5f20951dd9f16f7e0e2b6b224499d30c72d442fb9cc596f889ddc0",
+      "components/CMakeLists.txt": "a9430179dd9109245aa10184a27a9edeb60d6f53b96f94b929efbd98bf48493b",
+      "components/esm4/runtimestate.cpp": "103bc8f1f2a2cb7c70b5415e27a58ebf0e5aeac04157bbb5605c35ae91cf16de",
+      "components/esm4/runtimestate.hpp": "27f1f9d9f69244643491ad6249811c3c4b4efcf40535555af4b1e6c24fbde7b1",
+      "docs/oblivion/MEAD-POTION-CONTRACT.json": "c5939eeef4d8610378ef4306ebf6434f81defe87be51cdee0391205908203e33",
+      "docs/oblivion/VILVERIN-HANDOFF.md": "c430df4bd1c6c1b98cbd0dc2432d772b35d6c32b0dd63ed48b81928f118fb47e",
+      "scripts/data/oblivion_compat/m15_cached_block_input.json": "e62a500eeacccaea15546090a8301349d9577ce50c0089ed898a5a4224281fb0",
+      "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json": "ca9115e452fa9ad2208a6f8c103a20b2d2da5d3e0766c3e76dbc41bd990db73a",
+      "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json": "06b062e9f4fefd5b4cda8c832d3bd1516e5e2414213b77a92deafd5fa618db56",
+      "scripts/tes4_m15_fixture_preflight.py": "dd5f1ef74b22ac646f47871a6fd7444697d1d56dae7030b165e2fa5f986e672e",
+      "scripts/tes4_runtime_state.py": "650ce11442474cf1e62759aba8aab3202f9aaa0b7c876ff707365ace06f13cfd",
+      "scripts/tests/test_tes4_m15_fixture_preflight.py": "8b9340bcf274afd0bb2f43575e0098f937cfda43a1c0f84a2e2abf3c0f989012",
+      "scripts/tests/test_tes4_m15_pending_getup_fixture.py": "c1ff329982c16d9603ca97fca659a2b70877c26178dbf992f5c68d978ba10661",
+      "scripts/tests/test_tes4_runtime_state.py": "2a3b2034410f821012935e9ee633f6dc508193fd100963e1f9d5e30916c9e62c",
+      "apps/components_tests/esm4/potionattributes.cpp": "c9fc47875dc0390735ecb05465ecafdb430334dbc014836668c2a9d113e31525",
+      "components/esm4/potionattributes.cpp": "78803a00d2ef035564b86d59b95ce76601f19efb48c01267573dfa8d197d853f",
+      "components/esm4/potionattributes.hpp": "488515b8780801165496d78696747da24a7c338302cd100ea311301c32ae3d74",
+      "docs/oblivion/MEAD-POTION-ORACLE.json": "94df25c5bf332524cd8f90e180d101067ecd3d5953026b2cc800e0d878ba3dd5",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_completed_restart.json": "8587d723305427e9674691fba9ef244e473d664590c5a62495186d1e429f40a8",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_completed_restart_sanitized.json": "a60502a160cbb234f6c7c75d470e8b391500e39246b7757a1d1543ac2e0e66c9",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_first_expiry_restart.json": "f0f2b10db60f1157b5845c070955a2d4373015ba228fcf3cb43606b196c816ab",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_first_expiry_restart_sanitized.json": "f58adc0254af9e2863ee29cecf3b4eb87f0f9a7531432a1973591a350220e01f",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_first_use.json": "5b0789a7255f8cf4139021a5add45081fde7b607d26e8f91261f6c26acf00598",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_first_use_sanitized.json": "a562d149e6ad6b14bf2a780550fdf57952844aa2dcbeb1951b3b94700866760c",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_bottle_acquire.json": "ec80468067146c962ade3df5c69c3e1b2a0c9eb36304ce1c70f0ec5f94fa64af",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_expiry_restart.json": "65a2f05124120c3e7fbb0d25a0743b5adec186c5ae7ae50c149c6b7864f72362",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_expiry_restart_sanitized.json": "98d8a7bbbeb3becf59765ced2b900c5c2ecb1544212cb1ff58ca9a6b543031a3",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_use.json": "13f8e216813bfa528ea7eaf7c30b30a81edda487abc19e1d17f8144b6574b55d",
+      "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_use_sanitized.json": "cd0c6efd44ee78127235c2b09879a72e078bbb25c79ace74a56a4639b0da73c2"
+    }
+  },
+  "tested_head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+  "source_files": {
+    "apps/components_tests/CMakeLists.txt": "db6e2d38eb1a57c87cc4e3ecbc37ec291d51b72caa9c0d6c33e6c17f63c8caca",
+    "apps/components_tests/esm4/runtimestate.cpp": "e1183503152b71039b3341c21369d64cc00c52f57fe439f7b9d5ef08613ca4b7",
+    "apps/openmw/mwclass/potion.cpp": "0c5757805abfb8b5fe2264fbba599845483aa0b7907337f21aa5c08e4996054b",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "9fe69cdda7d887b0d48a33b235bc102289953ca208f617b82af5a2532feaf410",
+    "apps/openmw/mwworld/oblivioncombatmagic.cpp": "91b1d9696fd08df8f2a9e3b89c2cfa03f6f45a87ad743d124f9c8c746443ca71",
+    "apps/openmw/mwworld/oblivioncombatmagic.hpp": "1884979b612e27b1a3693acb689b8ecf63a84d5f5f6a28616cf46d866e031340",
+    "apps/openmw/mwworld/worldimp.cpp": "aced06b5ed8a2e2ce689eb119f6659cf2dc6d940751325067f1e79f6677e3762",
+    "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "5b71c18a6b5f20951dd9f16f7e0e2b6b224499d30c72d442fb9cc596f889ddc0",
+    "components/CMakeLists.txt": "a9430179dd9109245aa10184a27a9edeb60d6f53b96f94b929efbd98bf48493b",
+    "components/esm4/runtimestate.cpp": "103bc8f1f2a2cb7c70b5415e27a58ebf0e5aeac04157bbb5605c35ae91cf16de",
+    "components/esm4/runtimestate.hpp": "27f1f9d9f69244643491ad6249811c3c4b4efcf40535555af4b1e6c24fbde7b1",
+    "docs/oblivion/MEAD-POTION-CONTRACT.json": "4053680fbcce841ce191898ed2f04891ab54f8a90c4bafde4af92496d2e6e08a",
+    "docs/oblivion/VILVERIN-HANDOFF.md": "1b6283ab83199417bfb14c06d124fc0da6afbe0830220daec9450e0f4b3f6d9c",
+    "scripts/data/oblivion_compat/m15_cached_block_input.json": "e62a500eeacccaea15546090a8301349d9577ce50c0089ed898a5a4224281fb0",
+    "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json": "ca9115e452fa9ad2208a6f8c103a20b2d2da5d3e0766c3e76dbc41bd990db73a",
+    "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json": "06b062e9f4fefd5b4cda8c832d3bd1516e5e2414213b77a92deafd5fa618db56",
+    "scripts/tes4_m15_fixture_preflight.py": "dd5f1ef74b22ac646f47871a6fd7444697d1d56dae7030b165e2fa5f986e672e",
+    "scripts/tes4_runtime_state.py": "650ce11442474cf1e62759aba8aab3202f9aaa0b7c876ff707365ace06f13cfd",
+    "scripts/tests/test_tes4_m15_fixture_preflight.py": "8b9340bcf274afd0bb2f43575e0098f937cfda43a1c0f84a2e2abf3c0f989012",
+    "scripts/tests/test_tes4_m15_pending_getup_fixture.py": "c1ff329982c16d9603ca97fca659a2b70877c26178dbf992f5c68d978ba10661",
+    "scripts/tests/test_tes4_runtime_state.py": "2a3b2034410f821012935e9ee633f6dc508193fd100963e1f9d5e30916c9e62c",
+    "apps/components_tests/esm4/potionattributes.cpp": "c9fc47875dc0390735ecb05465ecafdb430334dbc014836668c2a9d113e31525",
+    "components/esm4/potionattributes.cpp": "78803a00d2ef035564b86d59b95ce76601f19efb48c01267573dfa8d197d853f",
+    "components/esm4/potionattributes.hpp": "488515b8780801165496d78696747da24a7c338302cd100ea311301c32ae3d74",
+    "docs/oblivion/MEAD-POTION-ORACLE.json": "94df25c5bf332524cd8f90e180d101067ecd3d5953026b2cc800e0d878ba3dd5",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_completed_restart.json": "8587d723305427e9674691fba9ef244e473d664590c5a62495186d1e429f40a8",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_completed_restart_sanitized.json": "a60502a160cbb234f6c7c75d470e8b391500e39246b7757a1d1543ac2e0e66c9",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_first_expiry_restart.json": "f0f2b10db60f1157b5845c070955a2d4373015ba228fcf3cb43606b196c816ab",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_first_expiry_restart_sanitized.json": "f58adc0254af9e2863ee29cecf3b4eb87f0f9a7531432a1973591a350220e01f",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_first_use.json": "5b0789a7255f8cf4139021a5add45081fde7b607d26e8f91261f6c26acf00598",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_first_use_sanitized.json": "a562d149e6ad6b14bf2a780550fdf57952844aa2dcbeb1951b3b94700866760c",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_bottle_acquire.json": "ec80468067146c962ade3df5c69c3e1b2a0c9eb36304ce1c70f0ec5f94fa64af",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_expiry_restart.json": "65a2f05124120c3e7fbb0d25a0743b5adec186c5ae7ae50c149c6b7864f72362",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_expiry_restart_sanitized.json": "98d8a7bbbeb3becf59765ced2b900c5c2ecb1544212cb1ff58ca9a6b543031a3",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_use.json": "13f8e216813bfa528ea7eaf7c30b30a81edda487abc19e1d17f8144b6574b55d",
+    "scripts/data/oblivion_compat/oblivion_vilverin_mead_second_use_sanitized.json": "cd0c6efd44ee78127235c2b09879a72e078bbb25c79ace74a56a4639b0da73c2"
+  },
+  "content": {
+    "potion": "content:oblivion.esm:0b1201",
+    "placed_bottles": [
+      "content:oblivion.esm:06c362",
+      "content:oblivion.esm:06c363"
+    ],
+    "effects": "DRAT1 Intelligence and Willpower, 60 seconds Self; instant REFA2",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "behavior": "Each ordinary inventory use consumes exactly one selected bottle, applies all three effects atomically, updates native attribute/resource authority and persists a separate source/elapsed lifetime. Same-source drains stack and expire separately; reload neither consumes nor replays instant restoration. Legacy modifiers are not inferred as ownership.",
+  "schema": 94,
+  "checks": {
+    "normal_full_cpp": {
+      "path": "build/oblivion-compat/mead-use/normal-full-cpp-01/verification.json",
+      "sha256": "b4a7f5975c0a36c8a60d05076f99178aced6bb66148aa203fc49f8c692af740f",
+      "results": {
+        "components": {
+          "executed": 3281,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "53dd240252453f42c63da523374a97e2314efb0653a8883d2a5adb3b84e9c805",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "06eddd1f61b37f05269f77fabd3d6ac4defaf15178d44ea16ad2f65a21b723f0",
+          "inventory_sha256": "2d6323b9690854a93fda5587c8207d16048656647b65e14ba0d13dc0769a0882",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2266,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4f9173e894b63f02312fc3a6e28c7f256e431baa25da2eae4ba3b1f1f9c8f7ea",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "43f242c3f60c4f64a69547c4686c7dea105509702bbcd5af309aaf55f5111260",
+          "inventory_sha256": "122223e98d4b90e6708c68d10f08a72cad57f658fc85ab06d3b4283e578a233a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+      },
+      "source_after": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+      }
+    },
+    "sanitized_full_components": {
+      "path": "build/oblivion-compat/mead-use/sanitized-full-components-01/verification.json",
+      "sha256": "cb0476b0412e7eab68b61db773fdf9ab25b09b65e31646aef37c6e4b8fd659d7",
+      "results": {
+        "sanitize": {
+          "executed": 3281,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "be4a238f3da4a85b213bee414102eb2f80b99f16ce3af50469922700768de2f2",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "152bbd1465b14ba6a09ab3af93f115f7ae6862d7fbf56833144340a11e878b0c",
+          "inventory_sha256": "af62355b1d88b1384d971dbd9a16e520c0ec47678e2c8d50c93d47bd92f6db5d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+      },
+      "source_after": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+      }
+    },
+    "sanitized_full_engine": {
+      "path": "build/oblivion-compat/mead-use/sanitized-full-engine-01/verification.json",
+      "sha256": "022cbcccf7daf4110e368ca50bf8a54e95978fb49d02036e640b1cc71dc3ac0c",
+      "results": {
+        "engine": {
+          "executed": 2266,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8ac4d938b5e991ab52e3716bfbd02a6afdbc74c497cc08e826dfbfa6f0165220",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "d4287785030f8da6d4badce4f4bd670eb5d5660a50b462816df1217b2fddd0ba",
+          "inventory_sha256": "122223e98d4b90e6708c68d10f08a72cad57f658fc85ab06d3b4283e578a233a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+      },
+      "source_after": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+      }
+    },
+    "focused_components_and_full_python": {
+      "path": "build/oblivion-compat/mead-use/normal-focused-components-01/verification.json",
+      "sha256": "efea7305ee0f2fd7557fd0dd8cb0e1efa32b525d897d4ecb218ba38d1a04db8c",
+      "results": {
+        "components": {
+          "executed": 3,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4PotionAttributes.*:ESM4RuntimeState.PotionAttributes94*",
+          "binary_sha256": "53dd240252453f42c63da523374a97e2314efb0653a8883d2a5adb3b84e9c805",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "d4f55b1928da4de6cb189aa70dd34d525c04de165b02494eaa2ae71c4d31d2de",
+          "inventory_sha256": "f5effbef9754098bae638d989936332cc2c413a7ce2c2ed43f33819902482a14",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 604,
+          "passed": true,
+          "log_sha256": "8a55d0935b02efc7684dee1db2eb401e98c7ce9e1c592af3badb8e138a9ec1f0"
+        }
+      },
+      "source_before": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "5b7e5c90797c1ad1d517869d0363c702f602a2f8c640ff52b4da8a7bf809ce6f"
+      },
+      "source_after": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "5b7e5c90797c1ad1d517869d0363c702f602a2f8c640ff52b4da8a7bf809ce6f"
+      }
+    },
+    "focused_engine": {
+      "path": "build/oblivion-compat/mead-use/normal-focused-engine-02/verification.json",
+      "sha256": "a70695ab2c1a06b569d503db64dd33a8f8be4837aae0a5cf0e49a8bca24da0db",
+      "results": {
+        "engine": {
+          "executed": 17,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionCombatMagicStore.*",
+          "binary_sha256": "4f9173e894b63f02312fc3a6e28c7f256e431baa25da2eae4ba3b1f1f9c8f7ea",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "419438be73d906560122236ae9a4965d79a6cd0f3eae9af2e93eb02bf4b88df0",
+          "inventory_sha256": "122223e98d4b90e6708c68d10f08a72cad57f658fc85ab06d3b4283e578a233a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "bb1fcaed08e7d2e13b45af71cb6c60c3e9e5df4ea3a73361dbe4c4b9c2cdb86b"
+      },
+      "source_after": {
+        "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+        "source_fingerprint": "bb1fcaed08e7d2e13b45af71cb6c60c3e9e5df4ea3a73361dbe4c4b9c2cdb86b"
+      }
+    }
+  },
+  "normal_runtime": {
+    "passed": true,
+    "checks": 127,
+    "cases": [
+      {
+        "case": "normal-development-01-first-use",
+        "save_sha256": "b539b2372c4ac351eade6cb8750810ac5deed7038d48c60d544fb5ca2c502800",
+        "effects": [
+          {
+            "potion": "content:oblivion.esm:0b1201",
+            "duration": 60.0,
+            "elapsed": 0.70556640625,
+            "modifiers": [
+              {
+                "attribute": 1,
+                "delta": -1.0
+              },
+              {
+                "attribute": 2,
+                "delta": -1.0
+              }
+            ]
+          }
+        ],
+        "intelligence": 39.0,
+        "willpower": 29.0,
+        "magicka": [
+          78.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          169.0,
+          0.0,
+          0.0,
+          -31.992382049560547
+        ]
+      },
+      {
+        "case": "normal-development-01-second-use",
+        "save_sha256": "fee1bce73aa300621a6f75a0e8f34d6eeac0ff2fc02def12774468f003598754",
+        "effects": [
+          {
+            "potion": "content:oblivion.esm:0b1201",
+            "duration": 60.0,
+            "elapsed": 19.2275390625,
+            "modifiers": [
+              {
+                "attribute": 1,
+                "delta": -1.0
+              },
+              {
+                "attribute": 2,
+                "delta": -1.0
+              }
+            ]
+          },
+          {
+            "potion": "content:oblivion.esm:0b1201",
+            "duration": 60.0,
+            "elapsed": 0.7099609375,
+            "modifiers": [
+              {
+                "attribute": 1,
+                "delta": -1.0
+              },
+              {
+                "attribute": 2,
+                "delta": -1.0
+              }
+            ]
+          }
+        ],
+        "intelligence": 38.0,
+        "willpower": 28.0,
+        "magicka": [
+          76.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          168.0,
+          0.0,
+          0.0,
+          -30.302928924560547
+        ]
+      },
+      {
+        "case": "normal-development-01-first-expiry-restart",
+        "save_sha256": "ee9cc44f250775156d1c765c0ae0ad9bd6dc0fd8a2063e509936d6f115de917b",
+        "effects": [
+          {
+            "potion": "content:oblivion.esm:0b1201",
+            "duration": 60.0,
+            "elapsed": 41.52783203125,
+            "modifiers": [
+              {
+                "attribute": 1,
+                "delta": -1.0
+              },
+              {
+                "attribute": 2,
+                "delta": -1.0
+              }
+            ]
+          }
+        ],
+        "intelligence": 39.0,
+        "willpower": 29.0,
+        "magicka": [
+          78.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          169.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "case": "normal-development-01-second-expiry-restart",
+        "save_sha256": "f0608f8836c310ad7ddf6d1ef34ee361196526ec6752d79e005ca5bb61395898",
+        "effects": [],
+        "intelligence": 40.0,
+        "willpower": 30.0,
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "case": "normal-development-01-completed-restart",
+        "save_sha256": "7c9f46eb893c161f94dab6e6161b05fefb4a6ec285dff996b03e007b89494566",
+        "effects": [],
+        "intelligence": 40.0,
+        "willpower": 30.0,
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "semantic_evidence": {
+      "path": "build/oblivion-compat/mead-use/normal-development-01-semantic-verification.json",
+      "sha256": "6d0c35ea3d8f94cf3923a59990c300557fb93267dbf82ad38f4482d0987fecbc"
+    }
+  },
+  "instrumented_runtime": {
+    "passed": true,
+    "checks": 127,
+    "cases": [
+      {
+        "case": "sanitized-development-01-first-use",
+        "save_sha256": "a5568f3e9182b5abc12e975caa3a9abaff17cc34deedca68de39ba3f0bd98f88",
+        "effects": [
+          {
+            "potion": "content:oblivion.esm:0b1201",
+            "duration": 60.0,
+            "elapsed": 0.2890625,
+            "modifiers": [
+              {
+                "attribute": 1,
+                "delta": -1.0
+              },
+              {
+                "attribute": 2,
+                "delta": -1.0
+              }
+            ]
+          }
+        ],
+        "intelligence": 39.0,
+        "willpower": 29.0,
+        "magicka": [
+          78.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          169.0,
+          0.0,
+          0.0,
+          -32.44921875
+        ]
+      },
+      {
+        "case": "sanitized-development-01-second-use",
+        "save_sha256": "e89fd54fc8e33de98f149529437f9de0f0df7f2013e07800267ba79120debe60",
+        "effects": [
+          {
+            "potion": "content:oblivion.esm:0b1201",
+            "duration": 60.0,
+            "elapsed": 10.34521484375,
+            "modifiers": [
+              {
+                "attribute": 1,
+                "delta": -1.0
+              },
+              {
+                "attribute": 2,
+                "delta": -1.0
+              }
+            ]
+          },
+          {
+            "potion": "content:oblivion.esm:0b1201",
+            "duration": 60.0,
+            "elapsed": 0.26123046875,
+            "modifiers": [
+              {
+                "attribute": 1,
+                "delta": -1.0
+              },
+              {
+                "attribute": 2,
+                "delta": -1.0
+              }
+            ]
+          }
+        ],
+        "intelligence": 38.0,
+        "willpower": 28.0,
+        "magicka": [
+          76.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          168.0,
+          0.0,
+          0.0,
+          -32.7275390625
+        ]
+      },
+      {
+        "case": "sanitized-development-01-first-expiry-restart",
+        "save_sha256": "b98d35d04d54fee95cb6fa5be61d279fef09dc36cd6940db850fb831e21e6e2f",
+        "effects": [
+          {
+            "potion": "content:oblivion.esm:0b1201",
+            "duration": 60.0,
+            "elapsed": 50.06591796875,
+            "modifiers": [
+              {
+                "attribute": 1,
+                "delta": -1.0
+              },
+              {
+                "attribute": 2,
+                "delta": -1.0
+              }
+            ]
+          }
+        ],
+        "intelligence": 39.0,
+        "willpower": 29.0,
+        "magicka": [
+          78.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          169.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "case": "sanitized-development-01-second-expiry-restart",
+        "save_sha256": "dfbb21da2bfe2d837fb81a93401084ad51a3a88021850e7fd61d6675c7a60a54",
+        "effects": [],
+        "intelligence": 40.0,
+        "willpower": 30.0,
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "case": "sanitized-development-01-completed-restart",
+        "save_sha256": "458a0a847c2cdc132003d878364e4b0f630bf729d0e8b4bbc277be6576009728",
+        "effects": [],
+        "intelligence": 40.0,
+        "willpower": 30.0,
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "semantic_evidence": {
+      "path": "build/oblivion-compat/mead-use/sanitized-development-01-semantic-verification.json",
+      "sha256": "f911edc786ea0926792d51ec6f4c1259d7660914caa440f6d74dfa84b5d17037"
+    }
+  },
+  "affected_chameleon_regression": {
+    "passed": true,
+    "checks": 90,
+    "cases": [
+      "chameleon-regression-normal-01-use",
+      "chameleon-regression-normal-01-pending-restart",
+      "chameleon-regression-normal-01-active-restart",
+      "chameleon-regression-normal-01-expired-restart"
+    ],
+    "pending_cast": {
+      "actor": "dynamic:player:0000000000000001",
+      "spell": "content:oblivion.esm:084aeb",
+      "animation_group": "onehandcastself",
+      "cost": 0.0,
+      "elapsed": 0.1300000101327896,
+      "release_time": 0.36666667461395264,
+      "duration": 1.2999999523162842,
+      "released": false
+    },
+    "active_effect": {
+      "scroll": "content:oblivion.esm:084aeb",
+      "enchantment": "content:oblivion.esm:05b044",
+      "magnitude": 25.0,
+      "elapsed": 2.12353515625
+    },
+    "native_detection_observed": true,
+    "semantic_evidence": {
+      "path": "build/oblivion-compat/mead-use/chameleon-regression-normal-01-semantic-verification.json",
+      "sha256": "30652b2ce8b0867abb451e1078f96e2a7112b60e2e0b8d375e21bb7f26b00447"
+    }
+  },
+  "runtime_processes": {
+    "normal-development-01-first-use": {
+      "process-epoch.json": {
+        "pid": 1021382,
+        "start_ticks": 198698347,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-use/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-trap-passage/mead-second-bottle-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71"
+      },
+      "driver-process.json": {
+        "driver_pid": 1021376,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_first_use.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-use",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-trap-passage/mead-second-bottle-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-trap-passage/mead-second-bottle-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "9ad029ea9c65bee445bf1f1e6b38101483cdb70db637e6c1f844749e0d0b1282",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      }
+    },
+    "normal-development-01-second-use": {
+      "process-epoch.json": {
+        "pid": 1021483,
+        "start_ticks": 198702203,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-use/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71"
+      },
+      "driver-process.json": {
+        "driver_pid": 1021480,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_second_use.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-use",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-use/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "b539b2372c4ac351eade6cb8750810ac5deed7038d48c60d544fb5ca2c502800",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      }
+    },
+    "normal-development-01-first-expiry-restart": {
+      "process-epoch.json": {
+        "pid": 1021607,
+        "start_ticks": 198707310,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-expiry-restart/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71"
+      },
+      "driver-process.json": {
+        "driver_pid": 1021604,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_first_expiry_restart.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-expiry-restart",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-use/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "fee1bce73aa300621a6f75a0e8f34d6eeac0ff2fc02def12774468f003598754",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      }
+    },
+    "normal-development-01-second-expiry-restart": {
+      "process-epoch.json": {
+        "pid": 1021709,
+        "start_ticks": 198714152,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-expiry-restart/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71"
+      },
+      "driver-process.json": {
+        "driver_pid": 1021705,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_second_expiry_restart.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-expiry-restart",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-first-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "ee9cc44f250775156d1c765c0ae0ad9bd6dc0fd8a2063e509936d6f115de917b",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      }
+    },
+    "normal-development-01-completed-restart": {
+      "process-epoch.json": {
+        "pid": 1021802,
+        "start_ticks": 198718762,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-completed-restart/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71"
+      },
+      "driver-process.json": {
+        "driver_pid": 1021799,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_completed_restart.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-completed-restart",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/normal-development-01-second-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "f0608f8836c310ad7ddf6d1ef34ee361196526ec6752d79e005ca5bb61395898",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      }
+    },
+    "sanitized-development-01-first-use": {
+      "process-epoch.json": {
+        "pid": 1036964,
+        "start_ticks": 199014032,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-use/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-trap-passage/mead-second-bottle-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+      },
+      "driver-process.json": {
+        "driver_pid": 1036961,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_first_use_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-use",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-sanitized-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-trap-passage/mead-second-bottle-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-trap-passage/mead-second-bottle-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "9ad029ea9c65bee445bf1f1e6b38101483cdb70db637e6c1f844749e0d0b1282",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      },
+      "observed_sanitizer_environment": {
+        "process": {
+          "pid": 1036964,
+          "start_ticks": 199014032,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-use/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-trap-passage/mead-second-bottle-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        }
+      }
+    },
+    "sanitized-development-01-second-use": {
+      "process-epoch.json": {
+        "pid": 1037159,
+        "start_ticks": 199033220,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-use/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+      },
+      "driver-process.json": {
+        "driver_pid": 1037156,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_second_use_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-use",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-sanitized-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-use/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "a5568f3e9182b5abc12e975caa3a9abaff17cc34deedca68de39ba3f0bd98f88",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      },
+      "observed_sanitizer_environment": {
+        "process": {
+          "pid": 1037159,
+          "start_ticks": 199033220,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-use/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        }
+      }
+    },
+    "sanitized-development-01-first-expiry-restart": {
+      "process-epoch.json": {
+        "pid": 1037364,
+        "start_ticks": 199052581,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-expiry-restart/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+      },
+      "driver-process.json": {
+        "driver_pid": 1037359,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_first_expiry_restart_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-expiry-restart",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-sanitized-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-use/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "e89fd54fc8e33de98f149529437f9de0f0df7f2013e07800267ba79120debe60",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      },
+      "observed_sanitizer_environment": {
+        "process": {
+          "pid": 1037364,
+          "start_ticks": 199052581,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-expiry-restart/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        }
+      }
+    },
+    "sanitized-development-01-second-expiry-restart": {
+      "process-epoch.json": {
+        "pid": 1037568,
+        "start_ticks": 199081985,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-expiry-restart/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+      },
+      "driver-process.json": {
+        "driver_pid": 1037565,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_second_expiry_restart_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-expiry-restart",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-sanitized-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "b98d35d04d54fee95cb6fa5be61d279fef09dc36cd6940db850fb831e21e6e2f",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      },
+      "observed_sanitizer_environment": {
+        "process": {
+          "pid": 1037568,
+          "start_ticks": 199081985,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-expiry-restart/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-first-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        }
+      }
+    },
+    "sanitized-development-01-completed-restart": {
+      "process-epoch.json": {
+        "pid": 1037770,
+        "start_ticks": 199100856,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-completed-restart/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+      },
+      "driver-process.json": {
+        "driver_pid": 1037767,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_mead_completed_restart_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-completed-restart",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/mead-sanitized-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "dfbb21da2bfe2d837fb81a93401084ad51a3a88021850e7fd61d6675c7a60a54",
+        "input_unchanged": true,
+        "captured": true,
+        "exit_code": 0
+      },
+      "observed_sanitizer_environment": {
+        "process": {
+          "pid": 1037770,
+          "start_ticks": 199100856,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-completed-restart/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/mead-use/sanitized-development-01-second-expiry-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        }
+      }
+    }
+  },
+  "python_reuse": {
+    "passed": true,
+    "reused": "build/oblivion-compat/mead-use/normal-focused-components-01/verification.json",
+    "executed_python": 604,
+    "original_source_fingerprint": "5b7e5c90797c1ad1d517869d0363c702f602a2f8c640ff52b4da8a7bf809ce6f",
+    "unchanged_head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+    "intermediate_source_snapshot": "build/oblivion-compat/mead-use/current-source-files.json",
+    "intermediate_snapshot_sha256": "943bd5dadf7946bb3973a5f8f892a2a79dc4659149c93a419775bd1a0b4007e9",
+    "unchanged_modified_python_files": {
+      "scripts/tes4_m15_fixture_preflight.py": "dd5f1ef74b22ac646f47871a6fd7444697d1d56dae7030b165e2fa5f986e672e",
+      "scripts/tes4_runtime_state.py": "650ce11442474cf1e62759aba8aab3202f9aaa0b7c876ff707365ace06f13cfd",
+      "scripts/tests/test_tes4_m15_fixture_preflight.py": "8b9340bcf274afd0bb2f43575e0098f937cfda43a1c0f84a2e2abf3c0f989012",
+      "scripts/tests/test_tes4_m15_pending_getup_fixture.py": "c1ff329982c16d9603ca97fca659a2b70877c26178dbf992f5c68d978ba10661",
+      "scripts/tests/test_tes4_runtime_state.py": "2a3b2034410f821012935e9ee633f6dc508193fd100963e1f9d5e30916c9e62c"
+    },
+    "scope": "Reuse original full Python execution with its original fingerprint. Later changes were canonical JSON recipes, docs and a C++ fixture correction; Python sources remain unchanged."
+  },
+  "normal_runtime_binary_link": {
+    "passed": true,
+    "executable": "build/openmw",
+    "executable_sha256": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+    "actual_processes": {
+      "normal-development-01-first-use": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+      "normal-development-01-second-use": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+      "normal-development-01-first-expiry-restart": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+      "normal-development-01-second-expiry-restart": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+      "normal-development-01-completed-restart": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+      "chameleon-regression-normal-01-use": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+      "chameleon-regression-normal-01-pending-restart": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+      "chameleon-regression-normal-01-active-restart": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71",
+      "chameleon-regression-normal-01-expired-restart": "991927dbfa4ad521a86c0acb3aa7ac3a6639e5bc909fc7c563e7f1fcaed80c71"
+    },
+    "build_report": "build/oblivion-compat/mead-use/normal-full-cpp-01/verification.json",
+    "source": {
+      "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+      "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+    },
+    "scope": "The runtime executable used by all nine real normal courses is byte-identical to the game built by the passing full normal C++ integration gate."
+  },
+  "instrumented_runtime_binary_link": {
+    "passed": true,
+    "executable": "build/m15-sanitize/openmw",
+    "executable_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c",
+    "cases": {
+      "sanitized-development-01-first-use": {
+        "game_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c",
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        },
+        "linked_loaded_sanitizers": {
+          "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+          "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+        }
+      },
+      "sanitized-development-01-second-use": {
+        "game_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c",
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        },
+        "linked_loaded_sanitizers": {
+          "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17",
+          "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f"
+        }
+      },
+      "sanitized-development-01-first-expiry-restart": {
+        "game_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c",
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        },
+        "linked_loaded_sanitizers": {
+          "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17",
+          "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f"
+        }
+      },
+      "sanitized-development-01-second-expiry-restart": {
+        "game_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c",
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        },
+        "linked_loaded_sanitizers": {
+          "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+          "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+        }
+      },
+      "sanitized-development-01-completed-restart": {
+        "game_sha256": "5363c123fd39ac49617cfbab6b5022ebaadd59b1273fa6df17af127699b89a2c",
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+        },
+        "linked_loaded_sanitizers": {
+          "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+          "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+        }
+      }
+    },
+    "gate_source": {
+      "head": "4392a6fdf3eb9c4b61fa71905d0cca344fe5ecd5",
+      "source_fingerprint": "525c3cbbf04e78a0b08dd91d8384a1507a7d2c5741ffd59409713a74b0b724c5"
+    },
+    "scope": "Five actual instrumented game processes use the executable built by the passing full engine gate; directly linked sanitizer libraries observed in process maps. Rendered leak detection disabled, UBSan halts."
+  },
+  "retained_failures": {
+    "normal-focused-engine-01": "New deleted-record test called its throwing fixture helper after deletion. Corrected by checking nullable store lookup and rejecting a retained copy of the deleted source; focused retry02 and broad suites pass.",
+    "baseline_and_original_bootstrap": "Retained in contract/oracle with original provenance; baseline unsupported consumption and test setup errors are not passing feature evidence."
+  },
+  "limitations": [
+    "Tested actual Player has zero native Magic Resistance; general resistance, absorption, arbitrary potions/effects and NPC drinking remain open.",
+    "Rendered sanitizer courses disable leak detection; full engine sanitizer tests enable it.",
+    "Original control used isolated original copies and original form grants only within that independent control; the fork course uses actually collected bottles and ordinary exertion."
+  ],
+  "record_validation": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "typed_and_raw": "build/oblivion-compat/mead-use/original-potion-audit-01/verification.json",
+    "records": 253,
+    "effects": 330,
+    "raw_mead_and_mgef": "build/oblivion-compat/mead-use/original-mead-records.json",
+    "raw_report_sha256": "9f74403f3ebda12180c4cbf3bb09ff87fa4ba546058ccb307103b63233250aae"
+  },
+  "visual_reviews": {
+    "normal_tooltip": "build/oblivion-compat/mead-use/normal-development-01-first-use/original-mead-tooltip.png",
+    "instrumented_tooltip": "build/oblivion-compat/mead-use/sanitized-development-01-first-use/original-mead-tooltip.png",
+    "observation": "Both reviewed images show the actual original Mead (2), localized Weight1/Value2, DRAT1 Intelligence and Willpower for60s Self, and REFA2 Self."
+  },
+  "outgoing_checkpoint": {
+    "semantic": "build/oblivion-compat/mead-use/normal-development-01-semantic-verification.json",
+    "checks": 127,
+    "outgoing_save": "build/oblivion-compat/mead-use/normal-development-01-completed-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7c9f46eb893c161f94dab6e6161b05fefb4a6ec285dff996b03e007b89494566",
+    "behavior": "Separate same-source clocks persist across processes, each expires once at60, all attribute/resource bases return, and completed reload neither reapplies nor consumes."
+  }
+}
