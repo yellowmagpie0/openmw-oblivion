@@ -1,5 +1,5 @@
 {
-  "status": "actual no-consumption/tooltip failures reproduced; original low/high-skill restoration controls observed, timing pending",
+  "status": "accepted bounded original-food ingestion and tooltip slice",
   "milestone": "Bounded M16 Player food ingestion with native ingredient presentation",
   "scope": "Consume one actual Lettuce from the accepted original Vilverin food sack using normal inventory input; show its native known first effect, restore depleted native Fatigue according to independently checked original behavior, preserve item/resource ownership through F5/fresh processes without replay.",
   "ingredient": "content:oblivion.esm:033681 Lettuce",
@@ -82,7 +82,8 @@
   "known_source_failures": [
     "Shared ingredient projection calls blank(), which seeds legacy WaterBreathing defaults, and never projects native effects",
     "Ingredient tooltip requests Morrowind-only fWortChanceValue rather than native effect knowledge",
-    "Actor.consume dispatches Oblivion consumables to a potion-only consumer, rejecting original INGR"
+    "Actor.consume dispatches Oblivion consumables to a potion-only consumer, rejecting original INGR",
+    "Native INGR loader discards EFID/EFIT; retain ordered effects through existing TES4 magic decoder"
   ],
   "acceptance": [
     "Normal use targets one actual earned Lettuce with Fatigue depleted by ordinary movement/jump",
@@ -99,7 +100,8 @@
     "All Player skill levels",
     "Alchemy XP and general skill progression",
     "Misc-stat UI/campaign coverage",
-    "Full M16 or complete Vilverin expedition"
+    "Full M16 or complete Vilverin expedition",
+    "Other authored first-effect magnitude/duration profiles until independently checked"
   ],
   "provenance": {
     "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
@@ -113,6 +115,46 @@
     "lettuce_low_skill": "count2\u21921, Fatigue100\u2192105",
     "lettuce_master_control": "Alchemy100, count1\u21920, Fatigue105\u2192110",
     "rice_control": "Alchemy5, one Rice consumes, Fatigue110\u2192115",
-    "unresolved": "Effect rate/duration and stacking; raw authored magnitude15/duration1 is not final ingestion potency."
+    "unresolved": "General effects/progression remain outside this bounded first-REFA slice; timing and stacking resolved in linked oracle."
+  },
+  "original_oracle": "docs/oblivion/LETTUCE-INGREDIENT-ORACLE.json",
+  "normal_checkpoint": {
+    "real_content_root": "build/oblivion-compat/ingredient-use",
+    "use": "lettuce-use-03",
+    "pending_restart": "lettuce-pending-restart-03",
+    "completed_restart": "lettuce-completed-restart-03",
+    "semantic_checks": 51,
+    "semantic_verification": "lettuce-semantic-verification-03.json",
+    "components": 3275,
+    "engine": 2260,
+    "python": 600,
+    "typed_original_records": 173,
+    "typed_effects": 656,
+    "remaining": "None for this bounded slice; general M16 and Vilverin gates remain open.",
+    "final_engine_gate": "normal-engine-03",
+    "final_build_provenance": "normal-final-build-provenance.json"
+  },
+  "admitted_first_effect": {
+    "code": "REFA",
+    "authored_magnitude": 15,
+    "authored_duration": 1,
+    "range": "Self",
+    "area": 0,
+    "actor_value": 10,
+    "execution": "5 Fatigue/second for1 second, independent per-use timers"
+  },
+  "verification": "docs/oblivion/LETTUCE-INGREDIENT-VERIFICATION.json",
+  "sanitized_checkpoint": {
+    "use": "lettuce-sanitized-use-01",
+    "pending_restart": "lettuce-sanitized-pending-restart-01",
+    "completed_restart": "lettuce-sanitized-completed-restart-01",
+    "semantic_verification": "build/oblivion-compat/ingredient-use/lettuce-sanitized-semantic-verification-01.json",
+    "semantic_checks": 51,
+    "components": 3275,
+    "engine": 2260,
+    "full_gate": "build/oblivion-compat/ingredient-use/sanitized-full-01/verification.json",
+    "runtime_leak_detection": false,
+    "engine_test_leak_detection": true,
+    "cpp_sources_match_normal": true
   }
 }

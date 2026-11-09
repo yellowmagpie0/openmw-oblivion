@@ -35,6 +35,7 @@
 #include <components/esm/path.hpp>
 
 #include "effect.hpp"
+#include "loadspel.hpp"
 
 namespace ESM4
 {
@@ -69,7 +70,8 @@ namespace ESM4
 
         std::vector<std::string> mScriptEffect; // FIXME: prob. should be in a struct
         ESM::FormId mScriptId;
-        ScriptEffect mEffect;
+        ScriptEffect mEffect; // Legacy later-game layout.
+        std::vector<SpellEffect> mEffects; // Ordered TES4 effects, retained independently of use policy.
         ENIT mEnchantment;
 
         Data mData;

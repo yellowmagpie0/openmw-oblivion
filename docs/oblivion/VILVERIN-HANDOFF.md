@@ -26,21 +26,32 @@ Lettuce 2 + Rice 1. Instrumented fresh loot: Leek 1 + Pear 1 + Potato 1 + Rice 1
 Both configurations retain the normal transfer and empty source; old saved
 empty stock stays empty. Normal images show the actual sack and food quantities.
 
-Current chunk: select/reproduce use of one actual earned Lettuce as a bounded
-M16 ingredient slice. Shared ingredient projection omits native effects and seeds legacy defaults.
-Actual use reaches a potion-only consumer and is rejected; hovering also errors
-on missing Morrowind `fWortChanceValue`. Baseline01 retains Lettuce2 after one
-normal drag-to-avatar attempt with depleted Fatigue. Original ingestion rules
-are next; do not substitute a TES3 GMST to hide the missing native path.
-Keep the same character and prove item/resource/effect ownership through restart.
-Ingredient use and progression were excluded from container acceptance.
+Latest accepted slice: one actual earned Lettuce use, bounded M16 first-effect
+REFA (authored magnitude15/duration1 only). See the
+[contract](LETTUCE-INGREDIENT-CONTRACT.json),
+[original-game oracle](LETTUCE-INGREDIENT-ORACLE.json) and
+[verification](LETTUCE-INGREDIENT-VERIFICATION.json). Native INGR effects/value
+and known first-effect tooltip replace the legacy defaults/GMST path. One use
+spends one Lettuce and owns 5 Fatigue over 1 second in schema92 actor values.
+Normal and ASan use → pending restart → completed restart each pass 51 semantic
+checks. Normal saves resume 1.455+3.545; ASan resumes 1.331+3.669; neither replays.
+Each configuration passes full 3,275 component and 2,260 engine tests; full 600
+Python tests and independent typed/raw agreement for 173 ingredients/656 effects
+also pass. Actual jump depletion, images, live sanitizer environment and matching
+normal/instrumented C++ sources are recorded. Fixture-schema recovery retains
+future-version rejection and pending-food preservation.
+
+Next action: choose and reproduce another well-defined failure using actual
+original content on this character. General ingredient effects, altered authored
+profiles, Alchemy XP, brewing and full M16/Vilverin acceptance remain open.
 
 Reusable latest normal checkpoint:
-`build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256 `85e7f595386586eeed29b02d4cb3328370a7322c84f05f4e9a35b65c9afcddd7`.
-Carries original Bone 1/Crab Meat 1 plus actual Lettuce 2/Rice 1; ambush NPC remains
-dead. Current C++ source is `d095f71345`; tested dirty `9ee1764b5e` source,
-source fingerprints, binary/resource/input hashes and failures are in the receipt.
+`build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `95f35e0ef3416eddbbcc15eab2de73bd40b8ba78b1d7d803027a3d5a02e6efeb`.
+Carries original Bone1/Crab Meat1 plus earned Lettuce1/Rice1; ambush NPC remains
+dead and the sack empty. Fatigue170, no pending ingredient effect. Both normal and instrumented continuations are accepted. Final source, binary
+and loaded-library hashes and implementation revision are in the ingredient
+receipt. Earlier container provenance stays in its linked receipt.
 
 The restoration-chest candidate `04bb8b` is deferred behind a repeated partial
 route/ledge gap; its records and probes remain linked in the current contract.

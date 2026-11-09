@@ -1,5 +1,7 @@
 #include <components/esm4/loadspel.hpp>
 #include <components/esm4/loadalch.hpp>
+#include <components/esm4/loadingr.hpp>
+#include <components/esm4/ingredientuse.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/weaponenchantment.hpp>
 #include <components/esm4/loadgmst.hpp>
@@ -480,4 +482,49 @@ TEST(ESM4Potion, KeepsScriptEffectNameSeparateFromPotionName)
     ASSERT_EQ(potion.mEffects.size(), 1u);
     ASSERT_TRUE(potion.mEffects[0].mScriptEffect);
     EXPECT_EQ(potion.mEffects[0].mScriptEffect->mName, "Effect");
+}
+
+// Authored values from original Lettuce033681; runtime potency is separate.
+TEST(ESM4Ingredient, RetainsOriginalFirstEffectAndRejectsMalformedWire)
+{
+    std::vector<std::uint8_t> payload;
+    sub(payload, "FULL", {'L','e','t','t','u','c','e',0});
+    sub(payload, "DATA", {0,0,0,0x3f}); // original weight .5
+    sub(payload, "ENIT", {1,0,0,0,3,0,0,0}); // original value1, flags3
+    sub(payload, "EFID", {'R','E','F','A'});
+    auto info = effectInfo("REFA");
+    put(info, 4, 15); put(info, 8, 0); put(info, 12, 1); put(info, 16, 0); put(info, 20, 10);
+    auto valid = payload; sub(valid, "EFIT", info);
+    for (bool compressed : {false, true})
+    {
+        const auto ingredient = load<ESM4::Ingredient>(valid, compressed, 0, 1.f, "INGR");
+        ASSERT_EQ(ingredient.mEffects.size(), 1u);
+        EXPECT_EQ(ingredient.mFullName, "Lettuce");
+        EXPECT_EQ(ingredient.mData.value, 1u);
+        EXPECT_FLOAT_EQ(ingredient.mData.weight, .5f);
+        EXPECT_EQ(ingredient.mEffects[0].mId, ESM::fourCC("REFA"));
+        EXPECT_EQ(ingredient.mEffects[0].mMagnitude, 15u);
+        EXPECT_EQ(ingredient.mEffects[0].mDuration, 1u);
+        EXPECT_EQ(ingredient.mEffects[0].mActorValue, 10u);
+    }
+    EXPECT_THROW(load<ESM4::Ingredient>(payload), std::runtime_error);
+    auto truncated = payload; sub(truncated, "EFIT", {1,2,3});
+    EXPECT_THROW(load<ESM4::Ingredient>(truncated), std::runtime_error);
+    auto mismatched = payload; sub(mismatched, "EFIT", effectInfo("REHE"));
+    EXPECT_THROW(load<ESM4::Ingredient>(mismatched), std::runtime_error);
+}
+
+TEST(ESM4Ingredient, RestorationAdvancesOnlyRemainingOneSecond)
+{
+    const auto first = ESM4::advanceIngredientRestoration(0, .25f);
+    EXPECT_FLOAT_EQ(first.mAmount, 1.25f);
+    EXPECT_FALSE(first.mFinished);
+    const auto rest = ESM4::advanceIngredientRestoration(first.mElapsed, 10.f);
+    EXPECT_FLOAT_EQ(rest.mAmount, 3.75f);
+    EXPECT_TRUE(rest.mFinished);
+    EXPECT_FLOAT_EQ(first.mAmount + rest.mAmount, 5.f);
+    EXPECT_EQ(ESM4::advanceIngredientRestoration(.25f, 0.f).mAmount, 0.f);
+    EXPECT_THROW(ESM4::advanceIngredientRestoration(1.f, 0.f), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceIngredientRestoration(0.f, -1.f), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceIngredientRestoration(std::numeric_limits<float>::quiet_NaN(), 0.f), std::invalid_argument);
 }

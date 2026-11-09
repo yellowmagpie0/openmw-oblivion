@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 91
+CURRENT_VERSION = 92
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1116,6 +1116,20 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 low = native_float(base_value + script + damage)
                 if process == 1:
                     native_float(low + maximum)
+
+        food = check_collection(actor.get("ingredient_restoration", []), "ingredient restoration list")
+        if food and (version < 92 or owner != 0):
+            raise RuntimeStateError("TES4 ingredient restoration requires Player ownership and version92")
+        for effect in food:
+            if not isinstance(effect, dict) or set(effect) != {"ingredient", "elapsed"}:
+                raise RuntimeStateError("Invalid TES4 ingredient restoration state")
+            key = effect["ingredient"]
+            if not isinstance(key, str) or not key.startswith("content:"):
+                raise RuntimeStateError("Invalid TES4 consumed ingredient identity")
+            native_key(key)
+            elapsed = native_float(effect["elapsed"])
+            if not 0 <= elapsed < 1:
+                raise RuntimeStateError("Invalid TES4 ingredient restoration time")
 
         paralysis = check_collection(actor.get("melee_paralysis", []), "melee paralysis list")
         if version < 70 and paralysis:
@@ -2981,6 +2995,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                                       "removed": bool(flags & 4)})
                 if paralysis:
                     actor["melee_paralysis"] = paralysis
+            if version >= 92:
+                food = [{"ingredient": reader.string(), "elapsed": reader.unpack("<f")} for _ in range(reader.count())]
+                if food:
+                    actor["ingredient_restoration"] = food
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -3817,6 +3835,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<f", effect["duration"])
                     writer.pack("<f", effect["elapsed"])
                     writer.pack("<B", effect["applied"] | (effect["terminated"] << 1) | (effect["removed"] << 2))
+            if version >= 92:
+                food = actor.get("ingredient_restoration", [])
+                writer.pack("<I", len(food))
+                for effect in food:
+                    writer.string(effect["ingredient"])
+                    writer.pack("<f", effect["elapsed"])
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))

@@ -7992,6 +7992,7 @@ namespace MWWorld
             ESM4::playerMurdererValue(flag->second);
         validateOblivionMagicProjectiles(state);
         validateOblivionEnvironmentalFire(state);
+        validateOblivionIngredientRestoration(mStore, state);
         auto getupResources = prepareOblivionGetUpResources(state, incoming);
         if (prepared) prepared->mGetUpResources = std::move(getupResources);
         for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)

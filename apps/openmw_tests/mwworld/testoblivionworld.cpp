@@ -14015,6 +14015,26 @@ TEST(OblivionWorldTest, ActualInventoryStackingDistinguishesNativeRankPresenceAn
         }
     }
 
+    TEST(OblivionWorldTest, PreparedNativeRemovalDebitsOnlySelectedInstance)
+    {
+        NativeWorldFixture fixture;
+        const auto key = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem first; first.mBase = key; first.mCount = 3; first.mCondition = 40;
+        auto second = first; second.mCount = 2; second.mCondition = 50;
+        const auto sources = MWWorld::OblivionProfileServices::prepareActorInventory(
+            fixture.mWorld.getStore(), ESM::FormKeyResolver({"headless.esm"}), {first, second});
+        auto owner = MWWorld::OblivionProfileServices::stageActorInventory(sources);
+        auto it = owner->begin(); const auto a = *it; ++it; const auto b = *it;
+        ASSERT_NE(a, b);
+        auto debit = owner->prepareItemRemoval(b, 1);
+        ASSERT_EQ(debit->getCount(), 1);
+        ASSERT_TRUE(debit->isValid());
+        ASSERT_TRUE(debit->commit());
+        EXPECT_EQ(a.getCellRef().getCount(), 3);
+        EXPECT_EQ(b.getCellRef().getCount(), 1);
+        EXPECT_FALSE(debit->commit());
+    }
+
     TEST(OblivionWorldTest, PreparedNativeRemovalRejectsStaleCountsSlotsAndStorage)
     {
         NativeWorldFixture fixture;

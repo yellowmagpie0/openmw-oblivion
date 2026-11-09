@@ -1,0 +1,79 @@
+{
+  "status": "independent bounded native rule observed",
+  "scope": "Original executable console isolation plus native Active Effects UI. Separate from normal-input fork acceptance. No production C++ used to generate expectations.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "input_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "inputs": {
+    "original_ingredient_ids": [
+      "033681 Lettuce",
+      "033690 Rice"
+    ],
+    "alchemy": [
+      5,
+      100
+    ],
+    "luck": 50,
+    "fatigue_base": 170,
+    "initial_current": 100,
+    "fFatigueReturnBase": 0,
+    "fFatigueReturnMult": 0
+  },
+  "observations": [
+    {
+      "case": "regeneration control",
+      "result": "current100 remains100 after unpausing",
+      "image": "native-zero-regen-control.png"
+    },
+    {
+      "case": "Lettuce, Alchemy5",
+      "result": "count2\u21921, current100\u2192105",
+      "image": "native-consumption-after.png"
+    },
+    {
+      "case": "Lettuce, Alchemy100",
+      "result": "count1\u21920, current105\u2192110",
+      "image": "native-master-consumption-after.png"
+    },
+    {
+      "case": "Rice, Alchemy5",
+      "result": "one consumed, current110\u2192115",
+      "image": "native-rice-menu.png"
+    },
+    {
+      "case": "Lettuce native Active Effects",
+      "result": "Restore Fatigue magnitude5, Wortcraft: Lettuce (5)",
+      "image": "native-lettuce-effect-details.png"
+    },
+    {
+      "case": "two overlapping Lettuce uses",
+      "result": "Restore Fatigue magnitude10",
+      "image": "native-two-lettuce-active-fast.png"
+    }
+  ],
+  "implementation_decision": {
+    "effect": "first REFA only",
+    "magnitude_per_second": 5,
+    "duration_seconds": 1,
+    "duration_basis": "Measured total5 divided by native UI magnitude5; short effect visible when menu paused promptly, absent after ordinary two-second menu transition.",
+    "stacking": "Independent per-use effects; native two-use UI aggregate10.",
+    "numeric_tolerance": 0.5,
+    "authored_EFIT": "magnitude15/duration1 retained as content, not treated as final eating magnitude",
+    "admission_boundary": "Only the observed authored first-effect shape: REFA magnitude15, duration1, Self, area0, AV10. Do not extrapolate native potency to other authored shapes."
+  },
+  "retained_setup_failures": [
+    "Initial SetAV Fatigue170 composes with derived base140, giving310; corrected to offset30, confirmed base170/current100 before measurement.",
+    "SGTM console command is unavailable in this executable; retained error and switched to prompt menu pause.",
+    "First input helper found xset unavailable before game input; used X11 API on owned isolated display."
+  ],
+  "evidence_root": "build/oblivion-compat/ingredient-use/original-native-01",
+  "process_identity": "game-process-epoch.json",
+  "input_log": "input-log.jsonl",
+  "exit": "Game exited via qqq; original executable, source pristine save and copied pristine save hashes unchanged.",
+  "outside_scope": [
+    "General ingredient effects and alchemy brewing",
+    "Alchemy experience and miscellaneous statistics",
+    "All possible skill/Luck combinations",
+    "Bit-identical native frame scheduling"
+  ]
+}

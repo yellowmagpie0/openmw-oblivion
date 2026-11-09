@@ -546,6 +546,9 @@ namespace
     {
         ESM::Ingredient result;
         result.blank();
+        // blank() seeds TES3 WaterBreathing effects. Native effects live only
+        // in the original INGR; the shared facade must not invent legacy magic.
+        for (auto& effect : result.mData.mEffectID) effect = ESM::RefId{};
         result.mId = ESM::RefId(source.mId);
         result.mName = source.mFullName;
         result.mModel = inventoryModel(source.mModel);

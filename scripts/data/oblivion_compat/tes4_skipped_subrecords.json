@@ -47,8 +47,6 @@
     { "record": "INFO", "subrecord": "TCLF", "reason": "Dialogue choice linkage is deferred to dialogue gameplay." },
     { "record": "INFO", "subrecord": "TCLT", "reason": "Dialogue choice linkage is deferred to dialogue gameplay." },
     { "record": "INFO", "subrecord": "TPIC", "reason": "Dialogue topic linkage is deferred to dialogue gameplay." },
-    { "record": "INGR", "subrecord": "EFID", "reason": "Effect semantics are deferred to the magic-system milestone." },
-    { "record": "INGR", "subrecord": "EFIT", "reason": "Effect semantics are deferred to the magic-system milestone." },
     { "record": "INGR", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
     { "record": "KEYM", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },
     { "record": "LIGH", "subrecord": "MODT", "reason": "Model texture hash metadata is not required by the current renderer." },

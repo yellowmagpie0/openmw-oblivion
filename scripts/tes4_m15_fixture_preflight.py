@@ -156,6 +156,8 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
+    Version92 adds Player-owned ingredient restoration. Older seeds have no
+    pending food; current-schema copies retain any existing timers unchanged.
     Version91 adds empty shared PACK waiting overrides; these fixtures issue no Wait commands.
     Version90 adds optional shared-base faction replacements, absent in these fixtures.
     Version89 adds empty daily-package completion history; these fixtures run no daily packages.
@@ -172,7 +174,7 @@ def is_current_fixture_schema(target, current, minimum):
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 91)
+            and target == current and minimum <= target <= 92)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):

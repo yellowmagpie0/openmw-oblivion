@@ -304,10 +304,13 @@ namespace EsmTool
                     }
                 }
             }
-            if constexpr (std::is_same_v<T, ESM4::Potion>)
+            if constexpr (std::is_same_v<T, ESM4::Ingredient>)
+                std::cout << "\n  Ingredient: value=" << value.mData.value << " weight=" << value.mData.weight
+                          << " flags=" << value.mEnchantment.flags;
+            if constexpr (std::is_same_v<T, ESM4::Potion> || std::is_same_v<T, ESM4::Ingredient>)
             {
                 for (const auto& effect : value.mEffects)
-                    std::cout << "\n  PotionEffect: code=" << effect.mId << " magnitude=" << effect.mMagnitude
+                    std::cout << (std::is_same_v<T, ESM4::Potion> ? "\n  PotionEffect: code=" : "\n  IngredientEffect: code=") << effect.mId << " magnitude=" << effect.mMagnitude
                               << " area=" << effect.mArea << " duration=" << effect.mDuration
                               << " range=" << effect.mRange << " actorValue=" << effect.mActorValue;
             }

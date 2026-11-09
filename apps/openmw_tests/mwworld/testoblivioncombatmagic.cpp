@@ -4,6 +4,7 @@
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/loadspel.hpp>
+#include <components/esm4/loadingr.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/runtimestate.hpp>
@@ -380,4 +381,41 @@ TEST(OblivionCombatMagicStore, EnvironmentalFireOwnershipRoundTripsAndRejectsMal
     EXPECT_FALSE(MWWorld::readOblivionEnvironmentalFire(reference));
     EXPECT_EQ(reference.mCustomState.size(), 1u);
     EXPECT_EQ(std::get<std::int64_t>(reference.mCustomState.at("unrelated")), 7);
+}
+
+TEST(OblivionMagicContent, IngredientUseAdmitsOnlyFirstRestoreFatigueAndRechecksWinningContent)
+{
+    Fixture fixture;
+    const auto definition = [&](std::uint32_t flags) {
+        const auto data = bytes(flags) + bytes(2.f) + bytes(10u) + bytes(5u) + bytes(-1)
+            + std::string(44, '\0');
+        return record(ESM4::REC_MGEF, 0x188b, sub(ESM::fourCC("EDID"), std::string("REFA\0", 5))
+            + sub(ESM::fourCC("DATA"), data));
+    };
+    const auto efit = bytes(ESM::fourCC("REFA")) + bytes(15u) + bytes(0u) + bytes(1u) + bytes(0u) + bytes(10u);
+    fixture.load("oblivion.esm", {}, {definition(0x01000870), record(ESM4::REC_INGR, 0x33681,
+        sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("REFA"))) + sub(ESM::fourCC("EFIT"), efit))});
+    const auto key = ESM::FormKey::content("oblivion.esm", 0x33681);
+    const auto* original = fixture.mStore.search<ESM4::Ingredient>(key);
+    ASSERT_NE(original, nullptr);
+    EXPECT_TRUE(MWWorld::supportsOblivionIngredientRestoration(fixture.mStore, *original));
+    for (int alteration = 0; alteration < 7; ++alteration)
+    {
+        auto changed = *original;
+        if (alteration == 0) changed.mEffects.front().mId = ESM::fourCC("DGAT");
+        if (alteration == 1) changed.mEffects.front().mRange = 1;
+        if (alteration == 2) changed.mEffects.front().mActorValue = 8;
+        if (alteration == 3) changed.mEffects.clear();
+        if (alteration == 4) changed.mScriptId = ESM::FormId{0x900, 1};
+        if (alteration == 5) changed.mEffects.front().mMagnitude = 30;
+        if (alteration == 6) changed.mEffects.front().mDuration = 5;
+        EXPECT_FALSE(MWWorld::supportsOblivionIngredientRestoration(fixture.mStore, changed));
+    }
+    ESM4::RuntimeState saved;
+    ESM4::RuntimeActorValues actor;
+    actor.mIngredientRestoration.push_back({key, .25f}); saved.mNativeActorValues.push_back(actor);
+    EXPECT_NO_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, saved));
+    fixture.load("patch.esp", {"oblivion.esm"}, {definition(0x01000871)});
+    EXPECT_FALSE(MWWorld::supportsOblivionIngredientRestoration(fixture.mStore, *original));
+    EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, saved), std::invalid_argument);
 }

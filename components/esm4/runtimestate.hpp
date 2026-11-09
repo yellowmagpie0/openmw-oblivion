@@ -73,7 +73,7 @@ namespace ESM4
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
     // v87 retains pending native spells and once-only release ownership.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 91;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 92;
 
     struct RuntimeContentIdentity
     {
@@ -354,6 +354,13 @@ namespace ESM4
         friend bool operator==(const RuntimeMeleeParalysis&, const RuntimeMeleeParalysis&) = default;
     };
 
+    struct RuntimeIngredientRestoration
+    {
+        ESM::FormKey mIngredient;
+        float mElapsed = 0;
+        friend bool operator==(const RuntimeIngredientRestoration&, const RuntimeIngredientRestoration&) = default;
+    };
+
     struct RuntimeActorValues
     {
         ESM::FormKey mActor;
@@ -391,6 +398,10 @@ namespace ESM4
         // Earlier fork schemas never produced these effects: empty ownership
         // does not reinterpret an existing Script/Temporary AV48 modifier.
         std::vector<RuntimeMeleeParalysis> mMeleeParalysis;
+
+        // v92: Player-owned first-effect REFA from a consumed ingredient.
+        // Older saves have no pending food, never inferred from carried stock.
+        std::vector<RuntimeIngredientRestoration> mIngredientRestoration;
 
         // v25: signed native High/MiddleHigh process knocked byte. Absence
         // retains unknown legacy Active-process state; Low queries return zero.

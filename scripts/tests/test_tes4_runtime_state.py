@@ -524,6 +524,28 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 "values": [[0., None, None, None] for _ in range(72)], "player_form_values": None})
         return state
 
+    def test_ingredient92_preserves_remaining_time_and_rejects_invalid_owners(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 92
+        actor = state["native_actor_values"][0]
+        actor["ingredient_restoration"] = [{"ingredient": "content:oblivion.esm:033681", "elapsed": .25}]
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(next(a for a in restored["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"], actor["ingredient_restoration"])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for change in ({"elapsed": 1}, {"elapsed": -1}, {"elapsed": math.nan},
+                       {"ingredient": "dynamic:item:0000000000000001"}):
+            bad = copy.deepcopy(state)
+            bad["native_actor_values"][0]["ingredient_restoration"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["native_actor_values"][1]["ingredient_restoration"] = actor["ingredient_restoration"]
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state["native_actor_values"][1]["ingredient_restoration"]
+        state["schema_version"] = 91
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del actor["ingredient_restoration"]
+        self.assertNotIn("ingredient_restoration", state_io.decode_payload(state_io.encode_payload(state))["native_actor_values"][0])
+
     @classmethod
     def melee_paralysis_state(cls):
         state = cls.combat_controller_state()

@@ -1,3 +1,4 @@
+#include <components/esm4/ingredientuse.hpp>
 #include "../mwworld/oblivionlevelled.hpp"
 #include <components/esm4/projectilerules.hpp>
 #include "oblivioncombat.hpp"
@@ -5724,6 +5725,23 @@ namespace MWMechanics
         // Original actor2E4 runs before life/resource handling. This prepares
         // only the verified recoverable NoMagnitude PARA scalar ownership;
         // the World supplies external preparation before its publication.
+        void prepareIngredientRestoration(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
+        {
+            if (dead) { values.mIngredientRestoration.clear(); return; }
+            if (!process || duration == 0) return;
+            for (auto& effect : values.mIngredientRestoration)
+            {
+                const auto step = ESM4::advanceIngredientRestoration(effect.mElapsed, duration);
+                effect.mElapsed = step.mElapsed;
+                values.mValues[10] = ESM4::changeActorValueModifier(values.mValues[10], values.mOwner, 10,
+                    ESM4::ActorValueModifier::Damage, step.mAmount);
+                Log(Debug::Verbose) << "TES4 ingredient restoration: ingredient=" << effect.mIngredient.serialize()
+                    << " amount=" << step.mAmount << " elapsed=" << step.mElapsed;
+            }
+            std::erase_if(values.mIngredientRestoration,
+                [](const auto& effect) { return effect.mElapsed >= ESM4::IngredientFatigueDuration; });
+        }
+
         unsigned prepareMeleeParalysis(ESM4::RuntimeActorValues& values, float elapsed,
             bool deadOrEssential, bool processEffects)
         {
@@ -5810,6 +5828,7 @@ namespace MWMechanics
                     {elapsed, movement.mEncumbrance, movement.mRunning, movement.mCanSpend},
                     hasActiveMagicItem, settings);
             }
+            prepareIngredientRestoration(candidate, elapsed, deadOrEssential, processEffects);
             if (applications && !prepareParalysis)
                 throw std::invalid_argument("native paralysis application requires World preparation");
             for (unsigned i = 0; i < applications; ++i) prepareParalysis();
@@ -7534,6 +7553,8 @@ namespace MWMechanics
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
         {
+            if (state.mVersion < 92 && !actor.mIngredientRestoration.empty())
+                throw std::invalid_argument("native ingredient restoration requires an Oblivion v92+ save");
             if (state.mVersion < 70 && !actor.mMeleeParalysis.empty())
                 throw std::invalid_argument("native melee paralysis requires an Oblivion v70+ save");
             if (state.mVersion < 26 && actor.mProcessAction)

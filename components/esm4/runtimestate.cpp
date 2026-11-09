@@ -1,4 +1,5 @@
 #include "runtimestate.hpp"
+#include "ingredientuse.hpp"
 
 #include "ability.hpp"
 #include "nativeidle.hpp"
@@ -1118,6 +1119,16 @@ namespace ESM4
                     throw std::runtime_error("Duplicate TES4 passive ability ownership");
             }
         }
+        if (mIngredientRestoration.size() > sMaximumCollectionSize
+            || (!mIngredientRestoration.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 ingredient restoration ownership");
+        for (const auto& effect : mIngredientRestoration)
+        {
+            if (!effect.mIngredient.isContent()
+                || ESM::FormKey::deserialize(effect.mIngredient.serialize()) != effect.mIngredient)
+                throw std::runtime_error("Invalid TES4 consumed ingredient identity");
+            advanceIngredientRestoration(effect.mElapsed, 0.f);
+        }
         if (mMeleeParalysis.size() > sMaximumCollectionSize)
             throw std::runtime_error("TES4 melee paralysis list exceeds the size limit");
         std::set<std::uint64_t> paralysisCauses;
@@ -2069,6 +2080,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 92 && !actor.mIngredientRestoration.empty())
+                throw std::runtime_error("TES4 ingredient restoration requires schema92");
             if (mVersion < 70 && !actor.mMeleeParalysis.empty())
                 throw std::runtime_error("TES4 melee paralysis ownership requires schema70");
             for (const auto& effect : actor.mMeleeParalysis)
@@ -3419,6 +3432,15 @@ namespace ESM4
                             | (effect.mState.mTerminated << 1) | (effect.mState.mRemoved << 2));
                     }
                 }
+                if (mVersion >= 92)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mIngredientRestoration.size()));
+                    for (const auto& effect : actor.mIngredientRestoration)
+                    {
+                        writeKey(writer, effect.mIngredient);
+                        writer.floating(effect.mElapsed);
+                    }
+                }
             }
         }
         if (mVersion >= 11)
@@ -4606,6 +4628,12 @@ namespace ESM4
                         effect.mState.mRemoved = flags & 4;
                         actor.mMeleeParalysis.push_back(effect);
                     }
+                }
+                if (result.mVersion >= 92)
+                {
+                    const auto effectCount = reader.count();
+                    for (std::uint32_t j = 0; j < effectCount; ++j)
+                        actor.mIngredientRestoration.push_back({nativeKey(), reader.float32()});
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
@@ -5996,6 +6024,20 @@ namespace ESM4
                         stream << ",\"applied\":" << (effect.mState.mApplied ? "true" : "false")
                                << ",\"terminated\":" << (effect.mState.mTerminated ? "true" : "false")
                                << ",\"removed\":" << (effect.mState.mRemoved ? "true" : "false") << '}';
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 92 && !actor.mIngredientRestoration.empty())
+                {
+                    stream << ",\"ingredient_restoration\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mIngredientRestoration)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"ingredient\":";
+                        stream << '"' << escapeJson(effect.mIngredient.serialize()) << '"';
+                        stream << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed << '}';
                     }
                     stream << ']';
                 }

@@ -6636,3 +6636,30 @@ TEST(ESM4RuntimeState, PackageWaitingOverridesRoundTripFalseAndRejectLegacyAndMa
     state.mPackageWaiting[ESM::FormKey::dynamic("package", 1)] = true;
     EXPECT_THROW(state.serializeBinary(), std::runtime_error);
 }
+
+TEST(ESM4RuntimeState, ConsumedIngredient92PreservesRemainingTimeAndLegacyAbsence)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mIngredientRestoration = {{ESM::FormKey::content("oblivion.esm", 0x33681), .25f}};
+    state.mNativeActorValues = {actor};
+    const auto data = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(data);
+    EXPECT_EQ(restored.mNativeActorValues, state.mNativeActorValues);
+    EXPECT_EQ(restored.serializeBinary(), data);
+    EXPECT_NE(restored.canonicalJson().find("ingredient_restoration"), std::string::npos);
+    state.mVersion = 91;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeActorValues[0].mIngredientRestoration.clear();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorValues[0].mIngredientRestoration.empty());
+    state.mVersion = ESM4::CurrentRuntimeStateVersion;
+    state.mNativeActorValues[0].mIngredientRestoration = actor.mIngredientRestoration;
+    state.mNativeActorValues[0].mIngredientRestoration[0].mElapsed = 1;
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeActorValues[0].mIngredientRestoration[0].mElapsed = .25f;
+    state.mNativeActorValues[0].mIngredientRestoration[0].mIngredient = ESM::FormKey::dynamic("item", 1);
+    EXPECT_ANY_THROW(state.serializeBinary());
+}

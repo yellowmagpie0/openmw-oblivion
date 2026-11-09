@@ -6,12 +6,20 @@
 #include <optional>
 #include <string>
 #include <components/esm/formkey.hpp>
-namespace ESM4 { struct Potion; struct Spell; struct Weapon; struct RuntimeReferenceState; }
+namespace ESM4 { struct Potion; struct Ingredient; struct RuntimeState; struct Spell; struct Weapon; struct RuntimeReferenceState; }
 namespace MWBase { class World; }
 
 namespace MWWorld
 {
     class ESMStore;
+    class Ptr;
+    class ConstPtr;
+
+    // Native INGR data/presentation and first-effect Player ingestion only.
+    bool supportsOblivionIngredientRestoration(const ESMStore& store, const ESM4::Ingredient& ingredient);
+    bool consumeOblivionIngredient(MWBase::World& world, const Ptr& item, const Ptr& actor);
+    std::string describeOblivionIngredient(MWBase::World& world, const ConstPtr& item);
+    void validateOblivionIngredientRestoration(const ESMStore& store, const ESM4::RuntimeState& state);
 
     struct OblivionSpellPresentation
     {

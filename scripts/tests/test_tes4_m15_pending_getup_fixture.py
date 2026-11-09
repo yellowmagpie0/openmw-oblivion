@@ -12,9 +12,12 @@ from scripts.tests import test_tes4_runtime_state as runtime_tests
 
 
 class PendingGetUpFixtureTests(unittest.TestCase):
-    def source(self, folder):
+    def source(self, folder, *, with_food=False):
         state = runtime_tests.Tes4RuntimeStateTests.getup_pending_state()
         runtime._upgrade_actor_knockback(state); state['schema_version'] = runtime.CURRENT_VERSION
+        if with_food:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['ingredient_restoration'] = [{'ingredient': 'content:oblivion.esm:033681', 'elapsed': .25}]
         graph = state['native_getup_playback'].pop()
         payload = runtime.encode_payload(state)
         body = struct.pack('<4sII', b'VERS', 4, runtime.CURRENT_VERSION) + struct.pack('<4sI', b'DATA', len(payload)) + payload
@@ -40,6 +43,17 @@ class PendingGetUpFixtureTests(unittest.TestCase):
             self.assertTrue(target.read_bytes().endswith(opaque))
             self.assertFalse(report['runtime_acceptance'])
             self.assertFalse(report['io_queued'])
+
+    def test_schema92_staging_preserves_unrelated_pending_food(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_food=True)
+            before = runtime.load_save(source)
+            target = source.with_name('pending-food-preserved.omwsave')
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            food = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)['ingredient_restoration']
+            self.assertEqual(food(before), food(after))
+            self.assertEqual(food(after), [{'ingredient': 'content:oblivion.esm:033681', 'elapsed': .25}])
 
     def test_invalid_graph_rejects_before_output_and_preserves_seed(self):
         for mutation in [lambda g: g['pending_requests'].pop(),

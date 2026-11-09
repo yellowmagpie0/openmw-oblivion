@@ -6,6 +6,9 @@
 #include "player.hpp"
 #include "inventorystore.hpp"
 #include "scene.hpp"
+#include "worldmodel.hpp"
+#include "../mwbase/environment.hpp"
+#include "../mwbase/luamanager.hpp"
 #include "projectilemanager.hpp"
 #include "oblivionprofileservices.hpp"
 #include "oblivionactorstats.hpp"
@@ -38,9 +41,117 @@
 #include <limits>
 #include <algorithm>
 #include <components/esm4/loadalch.hpp>
+#include <components/esm4/loadingr.hpp>
+#include <components/esm4/ingredientuse.hpp>
 
 namespace MWWorld
 {
+    namespace
+    {
+        const ESM4::EffectSetting* ingredientEffectDefinition(const ESMStore& store, std::uint32_t code)
+        {
+            const ESM4::EffectSetting* result = nullptr;
+            std::set<ESM::FormId> seen;
+            for (const auto& row : store.get<ESM4::EffectSetting>())
+            {
+                if (!seen.insert(row.mId).second) continue;
+                const auto* definition = store.get<ESM4::EffectSetting>().search(row.mId);
+                if (!definition || (definition->mFlags & ESM4::Rec_Deleted) || definition->mEffectCode != code) continue;
+                if (const auto key = store.get<ESM4::EffectSetting>().findFormKey(ESM::RefId(definition->mId)))
+                    if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                        winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_MGEF)) continue;
+                if (result) return nullptr;
+                result = definition;
+            }
+            return result;
+        }
+    }
+
+    bool supportsOblivionIngredientRestoration(const ESMStore& store, const ESM4::Ingredient& ingredient)
+    {
+        if ((ingredient.mFlags & ESM4::Rec_Deleted) || !ingredient.mScriptId.isZeroOrUnset()
+            || ingredient.mEffects.empty()) return false;
+        if (const auto key = store.get<ESM4::Ingredient>().findFormKey(ESM::RefId(ingredient.mId)))
+            if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_INGR)) return false;
+        const auto& effect = ingredient.mEffects.front();
+        // Only this authored stock-food profile has an independent ingestion
+        // oracle. Other magnitudes/durations must not inherit a guessed rule.
+        if (effect.mId != ESM::fourCC("REFA") || effect.mRange != 0 || effect.mArea
+            || effect.mMagnitude != 15 || effect.mDuration != 1
+            || effect.mActorValue != 10 || effect.mScriptEffect) return false;
+        const auto* definition = ingredientEffectDefinition(store, effect.mId);
+        if (!definition || !definition->mData) return false;
+        const auto& data = *definition->mData;
+        return data.mFlags == 0x01000870 && !data.mAssociatedForm && data.mAssociatedData == 10
+            && data.mSchool == 5 && data.mResistanceActorValue == -1;
+    }
+
+    std::string describeOblivionIngredient(MWBase::World& world, const ConstPtr& item)
+    {
+        const auto& store = world.getStore();
+        const auto* ingredient = store.get<ESM4::Ingredient>().search(item.getCellRef().getRefId());
+        const auto* native = dynamic_cast<const World*>(&world);
+        const auto* combat = native ? native->getOblivionCombatService() : nullptr;
+        if (!ingredient || !combat) return {};
+        const auto skill = combat->getPlayerIntegerValue(19); // Native Alchemy.
+        const auto mastery = resolveOblivionFatigueSettings(store).mMastery;
+        std::size_t known = 1;
+        for (std::size_t i = 0; i < 3; ++i)
+            if (skill >= mastery.mMinimumSkill[i]) ++known;
+        std::string result;
+        for (std::size_t i = 0; i < std::min(known, ingredient->mEffects.size()); ++i)
+            if (const auto* effect = ingredientEffectDefinition(store, ingredient->mEffects[i].mId))
+                result += "\n" + effect->mFullName;
+        return result;
+    }
+
+    bool consumeOblivionIngredient(MWBase::World& world, const Ptr& item, const Ptr& actor)
+    {
+        auto* native = dynamic_cast<World*>(&world);
+        auto* combat = native ? native->getOblivionCombatService() : nullptr;
+        if (!combat || item.isEmpty() || actor.isEmpty() || actor != world.getPlayerPtr()
+            || item.getCellRef().getCount() < 1 || item.getCellRef().getNativeBoundSource()
+            || actor.getClass().getCreatureStats(actor).isDead()) return false;
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        if (item.getContainerStore() != &inventory) return false;
+        const auto& store = world.getStore();
+        const auto* ingredient = store.get<ESM4::Ingredient>().search(item.getCellRef().getRefId());
+        if (!ingredient || !supportsOblivionIngredientRestoration(store, *ingredient)) return false;
+        const auto key = store.get<ESM4::Ingredient>().findFormKey(item.getCellRef().getRefId());
+        const auto* before = combat->findActorValues(ESM::FormKey::dynamic("player", 1));
+        const auto* life = combat->findActorLife(ESM::FormKey::dynamic("player", 1));
+        if (!key || !before || !life || life->mPhase != ESM4::ActorLifePhase::Alive) return false;
+        auto candidate = *before;
+        candidate.mIngredientRestoration.push_back({*key, 0.f});
+        candidate.validate();
+        const auto settings = resolveOblivionPlayerDynamicBaseSettings(store);
+        auto debit = inventory.prepareItemRemoval(item, 1);
+        if (debit->getCount() != 1 || !debit->isValid()) return false;
+        // Allocate/validate before publication. publishPlayerValues prepares the
+        // facade before its no-callback swap; the already validated debit then
+        // commits without allocation or callbacks. Observers see both owners.
+        MWBase::Environment::get().getWorldModel()->registerPtr(item);
+        combat->publishPlayerValues(world.getPlayer(), std::move(candidate), settings);
+        if (!debit->commit()) throw std::logic_error("native ingredient debit changed during publication");
+        Log(Debug::Info) << "TES4 ingredient consumed: ingredient=" << key->serialize()
+            << " magnitude=" << ESM4::IngredientFatigueMagnitude << " duration=" << ESM4::IngredientFatigueDuration;
+        MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
+        debit->notify();
+        return true;
+    }
+
+    void validateOblivionIngredientRestoration(const ESMStore& store, const ESM4::RuntimeState& state)
+    {
+        for (const auto& actor : state.mNativeActorValues)
+            for (const auto& effect : actor.mIngredientRestoration)
+            {
+                const auto* ingredient = store.get<ESM4::Ingredient>().search(effect.mIngredient);
+                if (!ingredient || !supportsOblivionIngredientRestoration(store, *ingredient))
+                    throw std::invalid_argument("saved native ingredient restoration no longer resolves");
+            }
+    }
+
     OblivionSpellPresentation describeOblivionPlayerSpell(MWBase::World& world, const ESM4::Spell& spell)
     {
         const auto* native = dynamic_cast<const World*>(&world);
