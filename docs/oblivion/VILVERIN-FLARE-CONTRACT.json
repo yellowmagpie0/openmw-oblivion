@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "preflight",
+  "scope": "M16 Player target-damage cast slice exercised at original Vilverin bandit camp; not full M16 or the full ruin",
+  "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "input": {
+    "path": "build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+    "provenance": "Genuine connected prison-origin exterior escape; SEWER-JOINED-EXTERIOR-VERIFICATION.json. Existing sewer regression/tactics remain frozen."
+  },
+  "forms": {
+    "flare": "0a97df",
+    "spell_editor_id": "StandardFireDamageTarget1Novice",
+    "effect": "FIDG",
+    "magnitude": 6,
+    "duration": 0,
+    "area": 0,
+    "range": 2,
+    "affected_actor_value": 8,
+    "authored_cost": 9,
+    "spell_level": 0,
+    "melee_bandit_reference": "06c2aa",
+    "melee_leveled_base": "03407b",
+    "missile_bandit_reference": "06c2ab",
+    "missile_leveled_base": "03407c",
+    "camp_cell": "005e20",
+    "ruin_marker": "06b588",
+    "ruin_door": "066ac8"
+  },
+  "observed_code_gap": "CharacterController::updateOblivionSpellCast admits only resolveOblivionSpellRestoration; normal Player Flare is rejected even though native fire/shock projectile resolution and flight already exist.",
+  "acceptance": [
+    "Normal magic-menu Flare selection and cast-target animation",
+    "Magicka spent once at valid release; correct cancellation/insufficient-resource behavior",
+    "Visible physical projectile from Player aim with one causal original-bandit impact and a geometric miss control",
+    "Reach original camp through normal travel and finish the scoped encounter alive using original equipment/healing as needed",
+    "Genuine in-flight or windup F5, fresh-process continuation without another resource debit/projectile/contact replay",
+    "Current-source focused checks; normal/sanitizer integration gates at closure; commit discrete chunks"
+  ],
+  "implementation_boundary": "Reuse existing native fire/shock projectile, resistance/difficulty, cast timing and persistence. No Flare-ID special case, no quest/position/health/hostility injection. General NPC casting, duration/area/multi-effect spells and the full Vilverin dungeon remain separate.",
+  "baseline": {
+    "evidence": "build/oblivion-compat/vilverin/flare-baseline-03",
+    "result": "Normal Flare selection visibly rejected by restoration-only message; native Magicka remains 80; F5 succeeds; no cast begins/releases.",
+    "failed_attempts": {
+      "flare-baseline-01": "Missing saved read-only observer dependency; no gameplay ran.",
+      "flare-baseline-02": "Tab did not close controller menu; no cast input reached gameplay."
+    }
+  },
+  "remaining_existing_gaps": "General natural skill-use progression/level-up is outside this target-projectile slice, as in the preceding reward chunk."
+}
