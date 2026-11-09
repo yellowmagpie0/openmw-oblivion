@@ -1,5 +1,5 @@
 {
-  "status": "implementation, ordinary/instrumented runtime and full engine gates passed; receipt closure pending",
+  "status": "accepted bounded slice",
   "milestone": "Bounded M13 native container leveled-loot transfer and persistence",
   "scope": "Same genuine post-mudcrab-loot character enters original Vilverin, reaches original first-area food sack06c2ad and receives concrete original food items from its four independent LVLI draws; F5/fresh processes and repeat activation retain actual Player transfer and empty source without replay.",
   "reference": "content:oblivion.esm:06c2ad",
@@ -88,5 +88,8 @@
     "repaired_display_cases": 79,
     "scope": "Concrete original draws, old-empty compatibility, exact normal/instrumented continuation and no-repeat activation; full unchanged component evidence reused.",
     "display_failure_recovery": "build/oblivion-compat/vilverin-containers/display-failure-recovery.json"
-  }
+  },
+  "implementation_commit": "d095f713456005d1cab7bcff1a0a77f970a77b35",
+  "verification": "docs/oblivion/VILVERIN-CONTAINER-LOOT-VERIFICATION.json",
+  "remaining": []
 }

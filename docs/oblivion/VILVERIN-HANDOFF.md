@@ -1,64 +1,52 @@
 # Vilverin — current handoff
 
-The bounded Player Flare slice is accepted; see
-[PLAYER-FLARE-VERIFICATION.json](PLAYER-FLARE-VERIFICATION.json). It is checkpoint
-coverage, not full M16 or a complete campaign.
+Target course: genuine sewer exit → independent Vilverin expedition → outside
+alive with retained loot. The full expedition and full milestones remain open.
 
-The original Vilverin single-actor leveled bandit slice is now accepted. Authored
-references `06c2aa` / `06c2ab` select original NPCs at genuine Player level 1, receive
-concrete nested LVLI gear, and retain reference/base/level, inventory and stats
-through F5/fresh processes. Ordinary arrival visibly shows both armed bandits;
-natural pursuit/hits provide real damage and weapon wear. The exterior-grid
-repair preserves all 15 saved movement owners across encounter continuations.
+Accepted bounded slices:
 
-Evidence: 132 normal and 78 instrumented semantic checks; 160 original-instruction
-cases; 112 production-pool comparisons; 27 typed lists / 303 raw-decoded entries.
-Full component suites 3,272 each and engine suites 2,257 each pass normal/ASan/UBSan.
-Engine leak checking is enabled; rendered-game leak checking is disabled.
-See [VILVERIN-LEVELLED-ACTORS-VERIFICATION.json](VILVERIN-LEVELLED-ACTORS-VERIFICATION.json)
-for source/binary/input provenance, component reuse and retained failures, and
-[the bounded contract](VILVERIN-LEVELLED-ACTORS-CONTRACT.json) for scope.
+- Original Player Flare casting, original tutorial goblin defeat and continuation:
+  [Player Flare receipt](PLAYER-FLARE-VERIFICATION.json).
+- Original single-actor LVLC bandits, concrete NPC gear and complete saved movement
+  ownership: [leveled-actor receipt](VILVERIN-LEVELLED-ACTORS-VERIFICATION.json).
+- Original mudcrab CREA leveled microtreasure, ordinary death/corpse transfer and
+  authoritative saved inventory: [mudcrab receipt](MUDCRAB-LOOT-VERIFICATION.json).
+- Original first-area food sack `06c2ad`, LVLI `053f26` count4, concrete transfer
+  and repeat-activation persistence:
+  [container receipt](VILVERIN-CONTAINER-LOOT-VERIFICATION.json) and
+  [contract](VILVERIN-CONTAINER-LOOT-CONTRACT.json).
 
-Single-actor runtime projection uses the authored placement key. Native scripted
-spawn-root/child identity, grouped actors, cell respawn, all Player levels and
-full bandit bow/combat/death behavior remain separate. Instrumented simulation
-is slow; its probes use actual reference/package readiness. Normal camp imagery
-is the visual layer. Exact original random streams are not claimed.
+The latest slice passes 145 semantic checks, 32 focused inventory checks, both
+full 2,257 engine suites, 28 original-instruction cases and typed/raw agreement
+for the container/list and 11 entries. Unchanged full 3,272 component evidence in
+both configurations is reused with an empty component-source/test diff.
+Normal input traverses original door `066ac8`, kills original ambush NPC `06c356`
+with four Flare casts and reaches the sack at Health 67.679. Actual normal loot:
+Lettuce 2 + Rice 1. Instrumented fresh loot: Leek 1 + Pear 1 + Potato 1 + Rice 1.
+Both configurations retain the normal transfer and empty source; old saved
+empty stock stays empty. Normal images show the actual sack and food quantities.
 
-The bounded original mudcrab `06c927` creature-loot slice is accepted. Commit
-`53b1f21ea7` resolves real CREA LVLI stock through the shared native resolver.
-The first natural spawn rolled Crab Meat1 + Bone1. Ordinary arrival, two Flare
-casts, visible corpse Take All and a fresh process preserve the dead, empty
-corpse and exact Player quantities. The pre-fix Meat-only save remains Meat-only.
-Instrumented fresh construction/F5 and continuation of the nonempty saved
-inventory pass. 76 semantic checks, 112 focused constructor checks, both full
-2,257 engine suites and 31 original-instruction loot cases pass. Unchanged full
-component evidence is reused with an empty component-source/test diff.
-See [MUDCRAB-LOOT-VERIFICATION.json](MUDCRAB-LOOT-VERIFICATION.json) and
-[the contract](MUDCRAB-LOOT-CONTRACT.json). Rendered ASan uses leak detection off;
-engine test-process leak checking is on. The timed-out instrumented initial
-AI/input attempt is retained; only receipt timing changed, with all gameplay
-assertions retained.
+Current chunk: select/reproduce use of one actual earned Lettuce as a bounded
+M16 ingredient slice. Shared ingredient projection currently omits effects;
+legacy ingredient use consequently returns a null action. Inspect the original
+winning effects and observe normal inventory use before changing implementation.
+Keep the same character and prove item/resource/effect ownership through restart.
+Ingredient use and progression were excluded from container acceptance.
 
-Current course remains sewer exit → independent Vilverin expedition → outside
-alive with retained loot. Current chunk: original first-area food sack `06c2ad`,
-base `037530`, LVLI `053f26` count4 (25% none per independent item). Door `066ac8`
-is passed with both mudcrab items intact. Read-only path survey finds a complete
-20-point route is traversed; four Flare casts kill the original ambush NPC and
-preserve Health67.679. Clear nearby standing-point/camera probes provide real
-center-ray activation. Baseline03 clears the count4 list and marks opened while
-leaving Player inventory exactly unchanged. Next action: resolve actual LVLI
-stock once before transfer, then verify eligible food quantities and persistence. The restoration-chest candidate is deferred
-behind a route/ledge gap; its records and probes remain linked historical evidence.
-See [VILVERIN-CONTAINER-LOOT-CONTRACT.json](VILVERIN-CONTAINER-LOOT-CONTRACT.json).
-No full M13/M16, respawn, grouped actors or full dungeon completion claim.
+Reusable latest normal checkpoint:
+`build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `85e7f595386586eeed29b02d4cb3328370a7322c84f05f4e9a35b65c9afcddd7`.
+Carries original Bone 1/Crab Meat 1 plus actual Lettuce 2/Rice 1; ambush NPC remains
+dead. Current C++ source is `d095f71345`; tested dirty `9ee1764b5e` source,
+source fingerprints, binary/resource/input hashes and failures are in the receipt.
 
-Reusable genuine inputs: exterior exit SHA256
-cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8;
-ordinary shore and genuine encounter F5 paths/hashes are pinned in the receipt.
-Current C++ source is `53b1f21ea7`; runtime evidence identifies tested dirty
-`501d9e845a` source and exact executable/resource hashes.
+The restoration-chest candidate `04bb8b` is deferred behind a repeated partial
+route/ledge gap; its records and probes remain linked in the current contract.
+Native scripted spawn-root/child identity, grouped actors, respawn, all Player
+levels, full bow tactics and full M13/M16/UI completion remain separate.
 
-ASan SDL replay requires the actual ELF `/usr/lib64/libasan.so.8.0.0` before the
-input shim. The compiler's libasan path is a linker script on this host. Actual
-ordering is verified in each accepted instrumented course.
+Rendered ASan uses leak detection off; full engine test-process leak checking is
+on. ASan SDL replay requires actual ELF `/usr/lib64/libasan.so.8.0.0` before the
+input shim. The compiler's libasan path is a linker script here. The initial
+engine run's 79 X11-only failures pass unchanged-source on an owned `-displayfd`
+server, followed by the full 2,257 pass; see the linked display-recovery receipt.
