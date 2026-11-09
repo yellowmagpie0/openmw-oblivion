@@ -1,0 +1,118 @@
+{
+  "status": "actual no-consumption/tooltip failures reproduced; original low/high-skill restoration controls observed, timing pending",
+  "milestone": "Bounded M16 Player food ingestion with native ingredient presentation",
+  "scope": "Consume one actual Lettuce from the accepted original Vilverin food sack using normal inventory input; show its native known first effect, restore depleted native Fatigue according to independently checked original behavior, preserve item/resource ownership through F5/fresh processes without replay.",
+  "ingredient": "content:oblivion.esm:033681 Lettuce",
+  "source_sack": "content:oblivion.esm:06c2ad",
+  "genuine_input": {
+    "path": "build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "85e7f595386586eeed29b02d4cb3328370a7322c84f05f4e9a35b65c9afcddd7",
+    "inventory": "Lettuce2/Rice1 from real four-draw container course, original Crab Meat1/Bone1 retained"
+  },
+  "baseline": {
+    "run": "build/oblivion-compat/ingredient-use/lettuce-use-baseline-01",
+    "semantic_verification": "build/oblivion-compat/ingredient-use/lettuce-use-baseline-semantic-verification.json",
+    "scenario_passed": false,
+    "meaning": "Intentional pre-implementation failure: actual one-item drag-to-avatar use leaves inventory unchanged, hover errors on Morrowind fWortChanceValue. Do not classify as feature pass.",
+    "fatigue_min": 140.6884765625,
+    "native_alchemy": [
+      5.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "native_luck": [
+      50.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "authored_effects": [
+    {
+      "code": "REFA",
+      "efit_hex": "524546410f0000000000000001000000000000000a000000",
+      "words": [
+        1095124306,
+        15,
+        0,
+        1,
+        0,
+        10
+      ]
+    },
+    {
+      "code": "REAT",
+      "efit_hex": "524541541e00000000000000010000000000000007000000",
+      "words": [
+        1413563730,
+        30,
+        0,
+        1,
+        0,
+        7
+      ]
+    },
+    {
+      "code": "FISH",
+      "efit_hex": "464953482d0000000000000001000000000000003d000000",
+      "words": [
+        1213417798,
+        45,
+        0,
+        1,
+        0,
+        61
+      ]
+    },
+    {
+      "code": "DGAT",
+      "efit_hex": "444741543c00000000000000010000000000000006000000",
+      "words": [
+        1413564228,
+        60,
+        0,
+        1,
+        0,
+        6
+      ]
+    }
+  ],
+  "original_rule_question": "How does original Player ingestion derive magnitude/duration and effect selection from authored REFA magnitude15/duration1 at actual Alchemy5/Luck50? Do not assume those authored numbers are final ingestion strength.",
+  "known_source_failures": [
+    "Shared ingredient projection calls blank(), which seeds legacy WaterBreathing defaults, and never projects native effects",
+    "Ingredient tooltip requests Morrowind-only fWortChanceValue rather than native effect knowledge",
+    "Actor.consume dispatches Oblivion consumables to a potion-only consumer, rejecting original INGR"
+  ],
+  "acceptance": [
+    "Normal use targets one actual earned Lettuce with Fatigue depleted by ordinary movement/jump",
+    "Native tooltip shows correct known Restore Fatigue without Morrowind GMST lookup or dummy Water Breathing",
+    "Independent original executable/isolated-game evidence resolves the bounded ingestion rule before runtime implementation",
+    "One use removes exactly one Lettuce and applies only the supported native first effect to native resource authority",
+    "Fresh continuation preserves the remaining stack, other actual carried loot and resource/effect ownership without replay",
+    "Unsupported ingredient effects do not silently consume items or enter legacy TES3 mechanics",
+    "Appropriate focused/full regression checks and instrumented real-content continuation pass"
+  ],
+  "outside_scope": [
+    "Potion brewing and apparatus matrix",
+    "General harmful/attribute/shield ingredient effects",
+    "All Player skill levels",
+    "Alchemy XP and general skill progression",
+    "Misc-stat UI/campaign coverage",
+    "Full M16 or complete Vilverin expedition"
+  ],
+  "provenance": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "winning_records": "build/oblivion-compat/ingredient-use/inspection-01/original-lettuce-rice-effects.json"
+  },
+  "original_observations": {
+    "root": "build/oblivion-compat/ingredient-use/original-native-01",
+    "scope": "Independent original-game console rule isolation, not fork normal-input acceptance",
+    "regeneration_control": "fFatigueReturnBase/Mult set0; current100/base170 stable across unpause; Alchemy5/Luck50",
+    "lettuce_low_skill": "count2\u21921, Fatigue100\u2192105",
+    "lettuce_master_control": "Alchemy100, count1\u21920, Fatigue105\u2192110",
+    "rice_control": "Alchemy5, one Rice consumes, Fatigue110\u2192115",
+    "unresolved": "Effect rate/duration and stacking; raw authored magnitude15/duration1 is not final ingestion potency."
+  }
+}

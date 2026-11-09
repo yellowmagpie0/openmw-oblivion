@@ -27,9 +27,11 @@ Both configurations retain the normal transfer and empty source; old saved
 empty stock stays empty. Normal images show the actual sack and food quantities.
 
 Current chunk: select/reproduce use of one actual earned Lettuce as a bounded
-M16 ingredient slice. Shared ingredient projection currently omits effects;
-legacy ingredient use consequently returns a null action. Inspect the original
-winning effects and observe normal inventory use before changing implementation.
+M16 ingredient slice. Shared ingredient projection omits native effects and seeds legacy defaults.
+Actual use reaches a potion-only consumer and is rejected; hovering also errors
+on missing Morrowind `fWortChanceValue`. Baseline01 retains Lettuce2 after one
+normal drag-to-avatar attempt with depleted Fatigue. Original ingestion rules
+are next; do not substitute a TES3 GMST to hide the missing native path.
 Keep the same character and prove item/resource/effect ownership through restart.
 Ingredient use and progression were excluded from container acceptance.
 
