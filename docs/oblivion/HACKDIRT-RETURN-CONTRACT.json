@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "scope": "Dar-Ma original independent return, successful MS45 turn-in and fresh-process persistence; not full M14/M15 acceptance",
+  "source_head": "20de744b02",
+  "content": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "inspection": "build/oblivion-compat/hackdirt/inspection-01/raw.py",
+    "stage100_result_sha256": [
+      "6cac7eca2e9fc0d6c6a64fe29b8b961f1a6a62af7f35fc8ec3e69670ca413476",
+      "cf2d8010a1c8eea7dd69c574aad89d809b192dd5e7d3a0de268f8deb56f8fb68",
+      "c37ae032f17abddca236477c03da4a429eab261ddd92d10bdfc913569492d285"
+    ]
+  },
+  "forms": {
+    "quest": "027815",
+    "darma": "0280fa",
+    "travel_home": "0a2e59",
+    "target_seedneeus": "0234fd",
+    "shop_cell": "000807",
+    "shop_exterior_door": "0104a3",
+    "shop_interior_door": "0008b3",
+    "successful_greeting": "028210",
+    "death_greeting_rejected": "02820c"
+  },
+  "expected": {
+    "return_behavior": "Independent original TravelHome targeting SeedNeeusRef within 300 units; companion link released",
+    "successful_stage": 100,
+    "quest_completed": true,
+    "mercantile_increase": 5,
+    "seedneeus_disposition_increase": 20,
+    "fame_increase": 1,
+    "chorrol_to_player_faction_reaction_increase": 5,
+    "seedneeus_essential": false,
+    "followup_quest_started": "MS45FIN",
+    "repeat_reward": false
+  },
+  "input_checkpoint": {
+    "path": "build/oblivion-compat/hackdirt/return-gate-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "66b77d9e21dc91fae4e87544d8c2c3db402be98076eb04b3e1fe98acbdbb9c47",
+    "provenance": "Genuine F5 after Player used original Chorrol gate; original stage80 rescue/escape prefix"
+  },
+  "acceptance": [
+    "Diagnose shop-entry timeout and use ordinary Player activation",
+    "Dar-Ma arrives alive under original package through gate and shop doors",
+    "Original Seed-Neeus successful dialogue completes MS45 and grants authored reward",
+    "Fresh-process pre-arrival continuation",
+    "Fresh-process completed quest and reward persistence with no repeat reward",
+    "Focused regressions and final affected normal/sanitizer integration gates"
+  ],
+  "status": "Content contract inspected; runtime acceptance and missing reward bindings remain open",
+  "limits": [
+    "Raw proprietary record/script payloads remain ignored local evidence.",
+    "The latest return-shop-03 run failed its enteredShop observation; no shop arrival inferred.",
+    "ModPCSkill and ModPCFame have no explicit production handlers at this checkpoint."
+  ]
+}
