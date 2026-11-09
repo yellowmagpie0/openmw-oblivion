@@ -25,19 +25,33 @@ full bandit bow/combat/death behavior remain separate. Instrumented simulation
 is slow; its probes use actual reference/package readiness. Normal camp imagery
 is the visual layer. Exact original random streams are not claimed.
 
-Current chunk: original mudcrab `06c927` near the genuine sewer exit. Baseline
-reproduces the separate CREA constructor dropping `03faee` microtreasure while
-retaining Crab Meat 1. Original instruction checks cover its actual lists and
-85% empty boundary (31 cases). See [MUDCRAB-LOOT-CONTRACT.json](MUDCRAB-LOOT-CONTRACT.json).
-Next action: reuse the shared LVLI resolver in creature inventory construction,
-requesting Player level only when a real list needs expansion. Observe a natural
-positive roll, preserve it on restart, and finish ordinary corpse-loot/transfer
-acceptance. Keep the saved baseline inventory authoritative; no retrofilling.
+The bounded original mudcrab `06c927` creature-loot slice is accepted. Commit
+`53b1f21ea7` resolves real CREA LVLI stock through the shared native resolver.
+The first natural spawn rolled Crab Meat1 + Bone1. Ordinary arrival, two Flare
+casts, visible corpse Take All and a fresh process preserve the dead, empty
+corpse and exact Player quantities. The pre-fix Meat-only save remains Meat-only.
+Instrumented fresh construction/F5 and continuation of the nonempty saved
+inventory pass. 76 semantic checks, 112 focused constructor checks, both full
+2,257 engine suites and 31 original-instruction loot cases pass. Unchanged full
+component evidence is reused with an empty component-source/test diff.
+See [MUDCRAB-LOOT-VERIFICATION.json](MUDCRAB-LOOT-VERIFICATION.json) and
+[the contract](MUDCRAB-LOOT-CONTRACT.json). Rendered ASan uses leak detection off;
+engine test-process leak checking is on. The timed-out instrumented initial
+AI/input attempt is retained; only receipt timing changed, with all gameplay
+assertions retained.
+
+Current course remains sewer exit → independent Vilverin expedition → outside
+alive with retained loot. Next action: select/reproduce the next original
+container or dungeon-entry blocker, using the genuine post-loot character.
+Container LVLI templates remain unresolved in original unopened saved state;
+inspect/reproduce a bounded original chest before implementing that path.
+No full M13/M16, respawn, grouped actors or full dungeon completion claim.
 
 Reusable genuine inputs: exterior exit SHA256
 cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8;
 ordinary shore and genuine encounter F5 paths/hashes are pinned in the receipt.
-Current C++ source is `b71bb621ab`; later acceptance/fixture commits change no C++.
+Current C++ source is `53b1f21ea7`; runtime evidence identifies tested dirty
+`501d9e845a` source and exact executable/resource hashes.
 
 ASan SDL replay requires the actual ELF `/usr/lib64/libasan.so.8.0.0` before the
 input shim. The compiler's libasan path is a linker script on this host. Actual

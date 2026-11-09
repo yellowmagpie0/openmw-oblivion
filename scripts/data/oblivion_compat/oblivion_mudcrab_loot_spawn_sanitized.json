@@ -40,7 +40,7 @@
     {
       "type": "wait_log",
       "pattern": "MudcrabLoot spawn ready",
-      "timeout_seconds": 360,
+      "timeout_seconds": 900,
       "abort_on_failure": true
     },
     {
@@ -54,7 +54,7 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game",
-      "timeout_seconds": 360,
+      "timeout_seconds": 900,
       "abort_on_failure": true
     },
     {
@@ -63,7 +63,7 @@
     }
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 1200,
+  "timeout_seconds": 1800,
   "expected_exit": 0,
   "expected_log": [
     "Applied TES4 runtime state:",
@@ -102,7 +102,7 @@
     "LIBGL_ALWAYS_SOFTWARE": "1",
     "__GLX_VENDOR_LIBRARY_NAME": "mesa"
   },
-  "sdl_input_timeout_seconds": 60,
+  "sdl_input_timeout_seconds": 300,
   "virtual_gamepad": false,
   "sdl_xvfb_input": true
 }

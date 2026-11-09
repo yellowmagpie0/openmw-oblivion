@@ -1,5 +1,5 @@
 {
-  "status": "normal gameplay and both engine suites passed; instrumented runtime pending",
+  "status": "accepted bounded slice",
   "scope": "Original guaranteed mudcrab06c927 near the genuine sewer exit: expand its real CREA LVLI microtreasure, preserve its rolled inventory through F5/fresh restart, then kill/loot through ordinary input and retain the transfer without replay.",
   "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
   "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
@@ -69,6 +69,9 @@
     "normal_engine": 2257,
     "sanitized_engine": 2257,
     "focused_construction": 112,
-    "ordinary_gameplay": "Fresh inventory and restart, ordinary arrival, two original Flare casts, native Player-owned death, visible corpse inventory and Take All, exact fresh-process Player/corpse continuation and pre-fix saved-inventory compatibility passed. Instrumented fresh construction/restart remain."
-  }
+    "ordinary_gameplay": "All bounded acceptance checks passed; see final receipt for actual binaries, source fingerprints, normal/instrumented scopes and retained failed attempts."
+  },
+  "verification": "docs/oblivion/MUDCRAB-LOOT-VERIFICATION.json",
+  "semantic_checks": 76,
+  "remaining": []
 }
