@@ -277,6 +277,97 @@ namespace MWWorld
         return resolveInstantRestoration(store, potion.mEffects);
     }
 
+    std::optional<ESM4::PotionAttributeState> resolveOblivionPotionAttributes(
+        const ESMStore& store, const ESM4::Potion& potion)
+    {
+        if ((potion.mFlags & ESM4::Rec_Deleted) || !potion.mScriptId.isZeroOrUnset()
+            || (potion.mItem.flags & 0xffu) != 3 || potion.mEffects.size() != 3) return {};
+        const auto key = store.get<ESM4::Potion>().findFormKey(ESM::RefId(potion.mId));
+        if (!key) return {};
+        if (const auto* winner = store.getFormKeyIndex().winner(*key);
+            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH)) return {};
+        for (unsigned i = 0; i < 2; ++i)
+        {
+            const auto& effect = potion.mEffects[i];
+            if (effect.mId != ESM::fourCC("DRAT") || effect.mMagnitude != ESM4::MeadAttributeDrain
+                || effect.mDuration != ESM4::MeadDuration || effect.mArea || effect.mRange
+                || effect.mActorValue != i + 1 || effect.mScriptEffect) return {};
+        }
+        const auto& restoration = potion.mEffects.back();
+        if (restoration.mId != ESM::fourCC("REFA") || restoration.mMagnitude != ESM4::MeadFatigueRestoration
+            || restoration.mDuration || restoration.mArea || restoration.mRange
+            || restoration.mActorValue != 10 || restoration.mScriptEffect) return {};
+        const auto* drain = ingredientEffectDefinition(store, ESM::fourCC("DRAT"));
+        if (!drain || !drain->mData) return {};
+        const auto& data = *drain->mData;
+        if (data.mFlags != 0x00101c77 || data.mAssociatedForm || data.mAssociatedData != 0
+            || data.mSchool != 2 || data.mResistanceActorValue != 64) return {};
+        if (!resolveInstantRestoration(store, {restoration})) return {};
+        return ESM4::PotionAttributeState{*key, ESM4::MeadDuration, 0.f,
+            {{1, -ESM4::MeadAttributeDrain}, {2, -ESM4::MeadAttributeDrain}}};
+    }
+
+    bool consumeOblivionPotionAttributes(MWBase::World& world, const Ptr& item, const Ptr& actor)
+    {
+        auto* native = dynamic_cast<World*>(&world);
+        auto* combat = native ? native->getOblivionCombatService() : nullptr;
+        if (!combat || item.isEmpty() || actor.isEmpty() || actor != world.getPlayerPtr()
+            || item.getCellRef().getCount() < 1 || item.getCellRef().getNativeBoundSource()
+            || actor.getClass().getCreatureStats(actor).isDead()) return false;
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        if (item.getContainerStore() != &inventory) return false;
+        const auto& store = world.getStore();
+        const auto* potion = store.get<ESM4::Potion>().search(item.getCellRef().getRefId());
+        const auto effect = potion ? resolveOblivionPotionAttributes(store, *potion) : std::nullopt;
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        const auto* before = combat->findActorValues(key);
+        const auto* life = combat->findActorLife(key);
+        if (!effect || !before || !life || life->mPhase != ESM4::ActorLifePhase::Alive) return false;
+        auto candidate = *before;
+        candidate.mPotionAttributeEffects.push_back(*effect);
+        for (const auto& modifier : effect->mModifiers)
+            candidate.mValues[modifier.mAttribute] = ESM4::changeActorValueModifier(
+                candidate.mValues[modifier.mAttribute], candidate.mOwner, modifier.mAttribute,
+                ESM4::ActorValueModifier::Maximum, modifier.mDelta);
+        const float fatigueDamage = candidate.mValues[10].mModifiers[2].value_or(0.f);
+        candidate.mValues[10] = ESM4::changeActorValueModifier(candidate.mValues[10], candidate.mOwner,
+            10, ESM4::ActorValueModifier::Damage, ESM4::MeadFatigueRestoration);
+        const float restored = candidate.mValues[10].mModifiers[2].value_or(0.f) - fatigueDamage;
+        candidate.validate();
+        const auto settings = resolveOblivionPlayerDynamicBaseSettings(store);
+        auto debit = inventory.prepareItemRemoval(item, 1);
+        if (debit->getCount() != 1 || !debit->isValid()) return false;
+        MWBase::Environment::get().getWorldModel()->registerPtr(item);
+        combat->publishPlayerValues(world.getPlayer(), std::move(candidate), settings);
+        if (!debit->commit()) throw std::logic_error("native potion debit changed during publication");
+        Log(Debug::Info) << "M16 potion attributes applied: potion=" << effect->mPotion.serialize()
+            << " duration=" << effect->mDuration << " intelligence_delta=-1 willpower_delta=-1"
+            << " fatigue_restored=" << restored << " count=1";
+        MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
+        debit->notify();
+        return true;
+    }
+
+    std::string describeOblivionPotionAttributes(MWBase::World& world, const ConstPtr& item)
+    {
+        const auto* potion = world.getStore().get<ESM4::Potion>().search(item.getCellRef().getRefId());
+        if (!potion || !resolveOblivionPotionAttributes(world.getStore(), *potion)) return {};
+        return "Drain Intelligence 1 pt for 60s on Self\nDrain Willpower 1 pt for 60s on Self"
+            "\nRestore Fatigue 2 pts on Self";
+    }
+
+    void validateOblivionPotionAttributes(const ESMStore& store, const ESM4::RuntimeState& state)
+    {
+        for (const auto& actor : state.mNativeActorValues)
+            for (const auto& effect : actor.mPotionAttributeEffects)
+            {
+                const auto* potion = store.get<ESM4::Potion>().search(effect.mPotion);
+                const auto profile = potion ? resolveOblivionPotionAttributes(store, *potion) : std::nullopt;
+                if (!profile || effect.mDuration != profile->mDuration || effect.mModifiers != profile->mModifiers)
+                    throw std::invalid_argument("saved native potion attribute source no longer resolves");
+            }
+    }
+
     std::optional<std::array<float, 3>> resolveOblivionSpellRestoration(
         const ESMStore& store, const ESM4::Spell& spell)
     {

@@ -6697,3 +6697,44 @@ TEST(ESM4RuntimeState, ScrollChameleon93PreservesOwnedContributionAndLegacyUnkno
     state.mNativeActorValues[0].mScrollChameleon[0].mEnchantment = ESM::FormKey::dynamic("item", 1);
     EXPECT_ANY_THROW(state.serializeBinary());
 }
+
+TEST(ESM4RuntimeState, PotionAttributes94KeepRepeatedSourcesAndDoNotInventLegacyOwnership)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("Oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mValues[1].mBase = 40.f; actor.mValues[1].mModifiers[0] = -2.f;
+    actor.mValues[2].mBase = 30.f; actor.mValues[2].mModifiers[0] = -2.f;
+    actor.mPotionAttributeEffects = {
+        {ESM::FormKey::content("Oblivion.esm", 0xb1201), 60.f, 39.f, {{1, -1.f}, {2, -1.f}}},
+        {ESM::FormKey::content("Oblivion.esm", 0xb1201), 60.f, 12.f, {{1, -1.f}, {2, -1.f}}}};
+    actor.mIngredientRestoration = {{ESM::FormKey::content("Oblivion.esm", 0x33681), .25f}};
+    actor.mValues[46].mModifiers[0] = 25.f;
+    actor.mScrollChameleon = {{ESM::FormKey::content("Oblivion.esm", 0x84aeb),
+        ESM::FormKey::content("Oblivion.esm", 0x5b044), 25.f, 12.f}};
+    state.mNativeActorValues = {actor};
+    const auto wire = state.serializeBinary();
+    auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(loaded.mNativeActorValues, state.mNativeActorValues);
+    EXPECT_EQ(loaded.serializeBinary(), wire);
+    EXPECT_NE(loaded.canonicalJson().find("potion_attribute_effects"), std::string::npos);
+    state.mVersion = 93;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeActorValues[0].mPotionAttributeEffects.clear();
+    loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(loaded.mNativeActorValues[0].mPotionAttributeEffects.empty());
+    EXPECT_EQ(loaded.mNativeActorValues[0].mValues, actor.mValues);
+    EXPECT_EQ(loaded.mNativeActorValues[0].mScrollChameleon, actor.mScrollChameleon);
+    state.mVersion = ESM4::CurrentRuntimeStateVersion;
+    state.mNativeActorValues[0] = actor;
+    state.mNativeActorValues[0].mPotionAttributeEffects[0].mElapsed = 60.f;
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeActorValues[0] = actor;
+    state.mNativeActorValues[0].mPotionAttributeEffects[0].mModifiers.push_back({1, -1.f});
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeActorValues[0] = actor;
+    state.mNativeActorValues[0].mOwner = ESM4::ActorValueOwner::NonPlayer;
+    EXPECT_ANY_THROW(state.serializeBinary());
+}

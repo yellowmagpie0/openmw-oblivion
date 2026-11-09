@@ -259,6 +259,7 @@ add_component_dir (esm4
     loadfact
     ability
     magiccaster
+    potionattributes
     combatmagicprofile
     combatstylepolicy
     combatsettings

@@ -156,6 +156,8 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
+    Version94 adds owned timed potion attribute contributions. Current-schema
+    copies retain these applications/modifiers; older seeds have no application.
     Version93 adds explicit Player scroll Chameleon sources. Older seeds have none;
     current-schema copies retain existing source/timer/modifier state unchanged.
     Version92 adds Player-owned ingredient restoration. Older seeds have no
@@ -176,7 +178,7 @@ def is_current_fixture_schema(target, current, minimum):
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 93)
+            and target == current and minimum <= target <= 94)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):

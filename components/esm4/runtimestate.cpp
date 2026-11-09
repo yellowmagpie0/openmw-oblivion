@@ -1139,6 +1139,11 @@ namespace ESM4
             if (!chameleonSources.insert(effect.mEnchantment).second)
                 throw std::runtime_error("Duplicate TES4 Chameleon enchantment source");
         }
+        if (mPotionAttributeEffects.size() > sMaximumCollectionSize
+            || (!mPotionAttributeEffects.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 potion attribute ownership");
+        for (const auto& effect : mPotionAttributeEffects)
+            effect.validate();
         if (mMeleeParalysis.size() > sMaximumCollectionSize)
             throw std::runtime_error("TES4 melee paralysis list exceeds the size limit");
         std::set<std::uint64_t> paralysisCauses;
@@ -2090,6 +2095,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 94 && !actor.mPotionAttributeEffects.empty())
+                throw std::runtime_error("TES4 potion attributes require schema94");
             if (mVersion < 93 && !actor.mScrollChameleon.empty())
                 throw std::runtime_error("TES4 scroll Chameleon requires schema93");
             if (mVersion < 92 && !actor.mIngredientRestoration.empty())
@@ -3464,6 +3471,22 @@ namespace ESM4
                         writer.floating(effect.mElapsed);
                     }
                 }
+                if (mVersion >= 94)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mPotionAttributeEffects.size()));
+                    for (const auto& effect : actor.mPotionAttributeEffects)
+                    {
+                        writeKey(writer, effect.mPotion);
+                        writer.floating(effect.mDuration);
+                        writer.floating(effect.mElapsed);
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(effect.mModifiers.size()));
+                        for (const auto& modifier : effect.mModifiers)
+                        {
+                            writer.integer<std::uint8_t>(modifier.mAttribute);
+                            writer.floating(modifier.mDelta);
+                        }
+                    }
+                }
             }
         }
         if (mVersion >= 11)
@@ -4663,6 +4686,20 @@ namespace ESM4
                     const auto effectCount = reader.count();
                     for (std::uint32_t j = 0; j < effectCount; ++j)
                         actor.mScrollChameleon.push_back({nativeKey(), nativeKey(), reader.float32(), reader.float32()});
+                }
+                if (result.mVersion >= 94)
+                {
+                    const auto effectCount = reader.count();
+                    for (std::uint32_t j = 0; j < effectCount; ++j)
+                    {
+                        PotionAttributeState effect{nativeKey(), reader.float32(), reader.float32(), {}};
+                        const auto modifierCount = reader.count();
+                        if (modifierCount > 8)
+                            throw std::runtime_error("TES4 potion attribute list exceeds the size limit");
+                        for (std::uint32_t k = 0; k < modifierCount; ++k)
+                            effect.mModifiers.push_back({reader.integer<std::uint8_t>(), reader.float32()});
+                        actor.mPotionAttributeEffects.push_back(std::move(effect));
+                    }
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
@@ -6085,6 +6122,30 @@ namespace ESM4
                         stream << ",\"elapsed\":";
                         stream << std::setprecision(17) << effect.mElapsed;
                         stream << '}';
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 94 && !actor.mPotionAttributeEffects.empty())
+                {
+                    stream << ",\"potion_attribute_effects\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mPotionAttributeEffects)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"potion\":\"" << escapeJson(effect.mPotion.serialize())
+                            << "\",\"duration\":" << std::setprecision(17) << effect.mDuration
+                            << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed
+                            << ",\"modifiers\":[";
+                        bool firstModifier = true;
+                        for (const auto& modifier : effect.mModifiers)
+                        {
+                            if (!firstModifier) stream << ',';
+                            firstModifier = false;
+                            stream << "{\"attribute\":" << static_cast<unsigned>(modifier.mAttribute)
+                                << ",\"delta\":" << std::setprecision(17) << modifier.mDelta << '}';
+                        }
+                        stream << "]}";
                     }
                     stream << ']';
                 }

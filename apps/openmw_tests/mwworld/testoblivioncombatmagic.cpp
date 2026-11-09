@@ -8,6 +8,7 @@
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/loadbook.hpp>
+#include <components/esm4/loadalch.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <limits>
 #include <components/loadinglistener/loadinglistener.hpp>
@@ -546,4 +547,78 @@ TEST(OblivionCombatMagicStore, ChameleonDoesNotSubstituteTargetDamagingOrDeleted
     fixture.load("oblivion.esm", {}, {chameleonBook(), chameleonEnchantment(), chameleonDefinition()});
     fixture.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_ENCH, 0x5b044, {}, true)});
     EXPECT_FALSE(resolveChameleon(fixture));
+}
+
+namespace
+{
+    std::string meadPotion(unsigned duration = 60, unsigned attribute = 2, unsigned flags = 0xffffff03)
+    {
+        auto body = sub(ESM::fourCC("DATA"), bytes(1.f))
+            + sub(ESM::fourCC("ENIT"), bytes(2) + bytes(flags));
+        for (unsigned av : {1u, attribute})
+            body += sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("DRAT")))
+                + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("DRAT")) + bytes(1u)
+                    + bytes(0u) + bytes(duration) + bytes(0u) + bytes(av));
+        body += sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("REFA")))
+            + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("REFA")) + bytes(2u)
+                + bytes(0u) + bytes(0u) + bytes(0u) + bytes(10u));
+        return record(ESM4::REC_ALCH, 0xb1201, body);
+    }
+
+    std::string drainAttributeDefinition(unsigned flags = 0x00101c77)
+    {
+        return record(ESM4::REC_MGEF, 0x186b,
+            sub(ESM::fourCC("EDID"), std::string("DRAT\0", 5))
+            + sub(ESM::fourCC("DATA"), bytes(flags) + bytes(.7f) + bytes(0u)
+                + bytes(2u) + bytes(std::int32_t{64}) + std::string(44, '\0')));
+    }
+
+    std::string fatigueRestorationDefinition()
+    {
+        return record(ESM4::REC_MGEF, 0x188b,
+            sub(ESM::fourCC("EDID"), std::string("REFA\0", 5))
+            + sub(ESM::fourCC("DATA"), bytes(0x01000870u) + bytes(2.f) + bytes(10u)
+                + bytes(5u) + bytes(std::int32_t{-1}) + std::string(44, '\0')));
+    }
+
+    auto resolveMead(const Fixture& fixture)
+    {
+        const auto* potion = fixture.mStore.get<ESM4::Potion>().search(ESM::FormId{0xb1201, 1});
+        if (!potion) throw std::runtime_error("missing fixture Mead");
+        return MWWorld::resolveOblivionPotionAttributes(fixture.mStore, *potion);
+    }
+}
+
+TEST(OblivionCombatMagicStore, OriginalMeadRequiresAllThreeEffectsAndTheirWinningDefinitions)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {meadPotion()});
+    EXPECT_FALSE(resolveMead(fixture));
+    fixture.load("patch.esp", {"oblivion.esm"}, {drainAttributeDefinition(), fatigueRestorationDefinition()});
+    const auto resolved = resolveMead(fixture);
+    ASSERT_TRUE(resolved);
+    EXPECT_EQ(resolved->mPotion, ESM::FormKey::content("Oblivion.esm", 0xb1201));
+    EXPECT_FLOAT_EQ(resolved->mDuration, 60.f);
+    EXPECT_EQ(resolved->mModifiers, (std::vector<ESM4::PotionAttributeModifier>{{1, -1.f}, {2, -1.f}}));
+    const auto* potion = fixture.mStore.get<ESM4::Potion>().search(ESM::FormId{0xb1201, 1});
+    ASSERT_NE(potion, nullptr);
+    EXPECT_FALSE(MWWorld::resolveOblivionPotionRestoration(fixture.mStore, *potion));
+    const auto previous = *potion;
+    fixture.load("final.esp", {"oblivion.esm", "patch.esp"}, {record(ESM4::REC_ALCH, 0xb1201, {}, true)});
+    EXPECT_EQ(fixture.mStore.get<ESM4::Potion>().search(ESM::FormId{0xb1201, 1}), nullptr);
+    EXPECT_FALSE(MWWorld::resolveOblivionPotionAttributes(fixture.mStore, previous));
+}
+
+TEST(OblivionCombatMagicStore, MeadRejectsChangedAttributesLifetimeFoodFlagsAndRecoverySemantics)
+{
+    for (const auto& records : std::vector<std::vector<std::string>>{
+        {meadPotion(61), drainAttributeDefinition(), fatigueRestorationDefinition()},
+        {meadPotion(60, 3), drainAttributeDefinition(), fatigueRestorationDefinition()},
+        {meadPotion(60, 2, 1), drainAttributeDefinition(), fatigueRestorationDefinition()},
+        {meadPotion(), drainAttributeDefinition(0x00101c75), fatigueRestorationDefinition()}})
+    {
+        Fixture fixture;
+        fixture.load("oblivion.esm", {}, records);
+        EXPECT_FALSE(resolveMead(fixture));
+    }
 }

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 93
+CURRENT_VERSION = 94
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1148,6 +1148,32 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             sources.add(effect["enchantment"])
             if native_float(effect["magnitude"]) != 25 or not 0 <= native_float(effect["elapsed"]) < 30:
                 raise RuntimeStateError("Invalid TES4 scroll Chameleon magnitude or lifetime")
+
+        potions = check_collection(actor.get("potion_attribute_effects", []), "potion attribute list")
+        if potions and (version < 94 or owner != 0):
+            raise RuntimeStateError("TES4 potion attributes require Player ownership and version94")
+        for effect in potions:
+            if not isinstance(effect, dict) or set(effect) != {"potion", "duration", "elapsed", "modifiers"}:
+                raise RuntimeStateError("Invalid TES4 potion attribute state")
+            key = effect["potion"]
+            if not isinstance(key, str) or not key.startswith("content:"):
+                raise RuntimeStateError("Invalid TES4 potion attribute source")
+            native_key(key)
+            duration, elapsed = native_float(effect["duration"]), native_float(effect["elapsed"])
+            if duration <= 0 or not 0 <= elapsed < duration:
+                raise RuntimeStateError("Invalid TES4 potion attribute lifetime")
+            modifiers = check_collection(effect["modifiers"], "potion attribute contributions")
+            if not 1 <= len(modifiers) <= 8:
+                raise RuntimeStateError("Invalid TES4 potion attribute contribution count")
+            attributes = set()
+            for modifier in modifiers:
+                if not isinstance(modifier, dict) or set(modifier) != {"attribute", "delta"}:
+                    raise RuntimeStateError("Invalid TES4 potion attribute contribution")
+                attribute = modifier["attribute"]
+                if (type(attribute) is not int or not 0 <= attribute < 8 or attribute in attributes
+                        or native_float(modifier["delta"]) == 0):
+                    raise RuntimeStateError("Invalid or duplicate TES4 potion attribute")
+                attributes.add(attribute)
 
         paralysis = check_collection(actor.get("melee_paralysis", []), "melee paralysis list")
         if version < 70 and paralysis:
@@ -3023,6 +3049,19 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                              for _ in range(reader.count())]
                 if chameleon:
                     actor["scroll_chameleon"] = chameleon
+            if version >= 94:
+                potions = []
+                for _ in range(reader.count()):
+                    effect = {"potion": reader.string(), "duration": reader.unpack("<f"),
+                              "elapsed": reader.unpack("<f"), "modifiers": []}
+                    count = reader.count()
+                    if count > 8:
+                        raise RuntimeStateError("TES4 potion attribute list exceeds the size limit")
+                    effect["modifiers"] = [{"attribute": reader.unpack("<B"), "delta": reader.unpack("<f")}
+                                           for _ in range(count)]
+                    potions.append(effect)
+                if potions:
+                    actor["potion_attribute_effects"] = potions
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -3873,6 +3912,17 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.string(effect["enchantment"])
                     writer.pack("<f", effect["magnitude"])
                     writer.pack("<f", effect["elapsed"])
+            if version >= 94:
+                potions = actor.get("potion_attribute_effects", [])
+                writer.pack("<I", len(potions))
+                for effect in potions:
+                    writer.string(effect["potion"])
+                    writer.pack("<f", effect["duration"])
+                    writer.pack("<f", effect["elapsed"])
+                    writer.pack("<I", len(effect["modifiers"]))
+                    for modifier in effect["modifiers"]:
+                        writer.pack("<B", modifier["attribute"])
+                        writer.pack("<f", modifier["delta"])
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))

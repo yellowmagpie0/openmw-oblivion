@@ -3,6 +3,7 @@
 
 #include "bounditemsource.hpp"
 #include "magiccaster.hpp"
+#include "potionattributes.hpp"
 #include <cstdint>
 #include <map>
 #include <optional>
@@ -74,7 +75,8 @@ namespace ESM4
     // v85 retains physical body graphs for animated placed references.
     // v87 retains pending native spells and once-only release ownership.
     // v93 retains Player scroll-owned CHML contributions and refreshed lifetimes.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 93;
+    // v94 retains each consumed potion's resolved timed attribute contributions.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 94;
 
     struct RuntimeContentIdentity
     {
@@ -407,6 +409,10 @@ namespace ESM4
         // v93: explicit recoverable Maximum AV46 contributions. Legacy values
         // never imply a scroll source or a remaining duration.
         std::vector<ScrollChameleonState> mScrollChameleon;
+
+        // v94: applications own their contributions independently of inventory.
+        // A legacy attribute modifier never implies a potion or an expiry time.
+        std::vector<PotionAttributeState> mPotionAttributeEffects;
 
         // v25: signed native High/MiddleHigh process knocked byte. Absence
         // retains unknown legacy Active-process state; Low queries return zero.

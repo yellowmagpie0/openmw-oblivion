@@ -12,6 +12,7 @@
 #include "../mwworld/actionapply.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/ptr.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
 
 #include "../mwgui/tooltips.hpp"
 
@@ -99,6 +100,24 @@ namespace MWClass
 
         text += "\n#{sWeight}: " + MWGui::ToolTips::toString(ref->mBase->mData.mWeight);
         text += MWGui::ToolTips::getValueString(getValue(ptr), "#{sValue}");
+
+        auto* world = MWBase::Environment::get().getWorldOrNull();
+        if (world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto description = MWWorld::describeOblivionPotionAttributes(*world, ptr);
+            if (!description.empty())
+            {
+                info.text = MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, "#{Interface:Weight}")
+                    + MWGui::ToolTips::getValueString(getValue(ptr), "#{Interface:Value}") + "\n" + description;
+                info.isPotion = true;
+                if (MWBase::Environment::get().getWindowManager()->getFullHelp())
+                {
+                    info.extra += MWGui::ToolTips::getCellRefString(ptr.getCellRef());
+                    info.extra += MWGui::ToolTips::getMiscString(ref->mBase->mScript.getRefIdString(), "Script");
+                }
+                return info;
+            }
+        }
 
         info.effects = MWGui::Widgets::MWEffectList::effectListFromESM(&ref->mBase->mEffects);
 

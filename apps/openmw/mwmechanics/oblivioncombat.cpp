@@ -5758,6 +5758,24 @@ namespace MWMechanics
             }
         }
 
+        void preparePotionAttributes(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
+        {
+            if (!process || (!dead && duration == 0)) return;
+            for (auto it = values.mPotionAttributeEffects.begin(); it != values.mPotionAttributeEffects.end(); )
+            {
+                const auto step = dead ? ESM4::PotionAttributeStep{it->mElapsed, true}
+                    : ESM4::advancePotionAttributes(it->mElapsed, it->mDuration, duration);
+                if (!step.mExpired) { it->mElapsed = step.mElapsed; ++it; continue; }
+                for (const auto& modifier : it->mModifiers)
+                    values.mValues[modifier.mAttribute] = ESM4::changeActorValueModifier(
+                        values.mValues[modifier.mAttribute], values.mOwner, modifier.mAttribute,
+                        ESM4::ActorValueModifier::Maximum, -modifier.mDelta);
+                Log(Debug::Info) << "M16 potion attributes expired: potion=" << it->mPotion.serialize()
+                    << " elapsed=" << step.mElapsed << " modifiers=" << it->mModifiers.size() << " dead=" << dead;
+                it = values.mPotionAttributeEffects.erase(it);
+            }
+        }
+
         unsigned prepareMeleeParalysis(ESM4::RuntimeActorValues& values, float elapsed,
             bool deadOrEssential, bool processEffects)
         {
@@ -5837,6 +5855,9 @@ namespace MWMechanics
         updateWithActorClock(mActorUpdateTimes, key, managerTime, [&](float elapsed) {
             auto candidate = before;
             const auto applications = prepareMeleeParalysis(candidate, elapsed, deadOrEssential, processEffects);
+            const bool dead = life ? life->mPhase == ESM4::ActorLifePhase::Dead
+                : ptr.getClass().getCreatureStats(ptr).isDead();
+            preparePotionAttributes(candidate, elapsed, dead, processEffects);
             if (!deadOrEssential)
             {
                 preparePlayerValues(candidate, settings.mFatigue.mPlayerBase);
@@ -5845,8 +5866,6 @@ namespace MWMechanics
                     hasActiveMagicItem, settings);
             }
             prepareIngredientRestoration(candidate, elapsed, deadOrEssential, processEffects);
-            const bool dead = life ? life->mPhase == ESM4::ActorLifePhase::Dead
-                : ptr.getClass().getCreatureStats(ptr).isDead();
             prepareScrollChameleon(candidate, elapsed, dead, processEffects);
             if (applications && !prepareParalysis)
                 throw std::invalid_argument("native paralysis application requires World preparation");
@@ -7572,6 +7591,8 @@ namespace MWMechanics
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
         {
+            if (state.mVersion < 94 && !actor.mPotionAttributeEffects.empty())
+                throw std::invalid_argument("native potion attributes require an Oblivion v94+ save");
             if (state.mVersion < 93 && !actor.mScrollChameleon.empty())
                 throw std::invalid_argument("native scroll Chameleon requires an Oblivion v93+ save");
             if (state.mVersion < 92 && !actor.mIngredientRestoration.empty())

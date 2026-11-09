@@ -574,6 +574,40 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertNotIn("scroll_chameleon", player(loaded))
         self.assertEqual(player(loaded)["values"][46], actor["values"][46])
 
+    def test_potion_attributes94_preserve_stacked_sources_and_legacy_unknown_modifiers(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 94
+        player = lambda s: next(a for a in s["native_actor_values"] if a["owner"] == 0)
+        actor = player(state)
+        actor["values"][1][1] = actor["values"][2][1] = -2.
+        effect = dict(potion="content:oblivion.esm:0b1201", duration=60., elapsed=39.,
+                      modifiers=[dict(attribute=1, delta=-1.), dict(attribute=2, delta=-1.)])
+        second = copy.deepcopy(effect); second["elapsed"] = 12.
+        actor["potion_attribute_effects"] = [effect, second]
+        payload = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(payload)
+        self.assertEqual(player(loaded)["potion_attribute_effects"], [effect, second])
+        self.assertEqual(state_io.encode_payload(loaded), payload)
+        for mutation in ({"elapsed": 60.}, {"elapsed": -1.}, {"duration": 0.},
+                         {"elapsed": math.nan}, {"potion": "dynamic:item:0000000000000001"},
+                         {"modifiers": []}, {"modifiers": [dict(attribute=8, delta=-1.)]},
+                         {"modifiers": [dict(attribute=1, delta=0.)]},
+                         {"modifiers": [dict(attribute=1, delta=math.inf)]},
+                         {"modifiers": [dict(attribute=1, delta=-1.), dict(attribute=1, delta=-1.)]}):
+            bad = copy.deepcopy(state)
+            player(bad)["potion_attribute_effects"][0].update(mutation)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        literal = struct.pack("<ffIBfBf", 60., 39., 2, 1, -1., 2, -1.)
+        offset = payload.index(literal)
+        bad = bytearray(payload); struct.pack_into("<I", bad, offset + 8, 9)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+        state["schema_version"] = 93
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del actor["potion_attribute_effects"]
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("potion_attribute_effects", player(loaded))
+        self.assertEqual(player(loaded)["values"][1:3], actor["values"][1:3])
+
     @classmethod
     def melee_paralysis_state(cls):
         state = cls.combat_controller_state()
