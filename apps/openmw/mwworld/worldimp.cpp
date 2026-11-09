@@ -2505,6 +2505,26 @@ namespace MWWorld
         return true;
     }
 
+    bool World::modifyOblivionPlayerFame(std::int32_t delta)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPlayer || getPlayerPtr().isEmpty()
+            || !mOblivionCombat->findActorValues(ESM::FormKey::dynamic("player", 1)))
+            return false;
+        const auto owned = mOblivionCombat->playerReputation();
+        const auto reputation = owned ? *owned : legacyPlayerReputation(getPlayerPtr(), mOblivionRuntimeState.get());
+        auto legacy = mOblivionRuntimeState ? mOblivionRuntimeState->mPlayer.mActorValues : decltype(ESM4::RuntimePlayerState::mActorValues){};
+        if (const auto found = legacy.find("infamy"); found != legacy.end())
+        {
+            legacy.try_emplace("legacy.infamy", found->second);
+            legacy.erase(found);
+        }
+        mOblivionCombat->publishPlayerReputation(*mPlayer, ESM4::modifyPlayerFame(reputation, delta),
+            resolveOblivionPlayerDynamicBaseSettings(mStore));
+        if (mOblivionRuntimeState)
+            mOblivionRuntimeState->mPlayer.mActorValues.swap(legacy);
+        return true;
+    }
+
     bool World::requestOblivionReputation(const Ptr& actor, int amount)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPlayer

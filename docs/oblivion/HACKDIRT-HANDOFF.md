@@ -17,6 +17,31 @@ Retained tryouts now use `~/.local/state/openmw-oblivion/tryouts` instead of tmp
 This closes the bounded launcher-performance repair; original return/reward and
 the full quest course below remain open.
 
+## Active return/reward work — 2026-11-08
+
+The bounded return plan is now authorized, with commits after discrete chunks.
+The original successful stage100 grants Mercantile+5, Seed-Neeus disposition+20,
+Fame+1 and Chorrol→Player faction reaction+5, releases Seed-Neeus's essential
+flag and starts MS45FIN. [Content contract](HACKDIRT-RETURN-CONTRACT.json).
+
+The shop-entry timeout was an observer defect: Lua reports editor ID
+`ChorrolNorthernGoodsAndTrade`, while the manifest checked the display name.
+`return-shop-diagnostic-04` normally activated the door and visibly entered.
+`return-shop-arrival-reload-01` saved living Dar-Ma in original shop000807 under
+TravelHome at stage80. Its overall gate failed a resource-version mismatch
+while a concurrent rebuild regenerated metadata; retain it as failed diagnostic
+evidence, not accepted return. No shop activation engine repair is justified.
+
+ModPCFame now uses the existing native reputation authority. The focused gate
+passes2 component and3 engine tests, with exact inventories and no failures or
+skips. It covers raw/shared Fame, preserved Infamy/accumulator, invalid-delta
+atomicity and native snapshot restoration. [Reward evidence](HACKDIRT-RETURN-REWARD-VERIFICATION.json).
+
+**Next:** implement missing ModPCSkill from original instruction/content evidence,
+repeat original arrival with matched artifacts, walk to Seed-Neeus, complete the
+original turn-in, and prove final restart/nonrepeatability. Final broad affected
+normal/sanitizer gates remain pending. The full course remains open.
+
 ## Current checkpoint — 2026-11-08
 
 **Original rescue, active/waiting follower restart, resumption and escort through

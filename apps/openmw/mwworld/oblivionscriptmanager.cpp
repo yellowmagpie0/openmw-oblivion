@@ -2683,13 +2683,16 @@ namespace MWWorld
                 throw ObScript::RuntimeError("OBSV117", "Legacy Player counter cannot fit int64 storage", name);
             return static_cast<std::int64_t>(integer);
         }
-        if (name == "modpcinfamy")
+        if (name == "modpcinfamy" || name == "modpcfame")
         {
             const auto delta = ObScript::asInteger(argument(0));
             if (delta < std::numeric_limits<std::int32_t>::min() || delta > std::numeric_limits<std::int32_t>::max())
-                throw ObScript::RuntimeError("OBSV117", "ModPCInfamy requires an int32 delta", name);
-            if (!mWorld.modifyOblivionPlayerInfamy(static_cast<std::int32_t>(delta)))
-                throw ObScript::RuntimeError("OBSV117", "Native Player Infamy is not ready", name);
+                throw ObScript::RuntimeError("OBSV117", "Player reputation mutation requires an int32 delta", name);
+            const bool applied = name == "modpcinfamy"
+                ? mWorld.modifyOblivionPlayerInfamy(static_cast<std::int32_t>(delta))
+                : mWorld.modifyOblivionPlayerFame(static_cast<std::int32_t>(delta));
+            if (!applied)
+                throw ObScript::RuntimeError("OBSV117", "Native Player reputation is not ready", name);
             return std::int64_t(0);
         }
         if (name == "getlevel")

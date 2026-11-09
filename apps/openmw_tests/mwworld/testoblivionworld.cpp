@@ -17223,6 +17223,40 @@ TEST(OblivionWorldTest, PlayerReputationOwnsRawCountersSharedFameAndExistingInfa
     EXPECT_EQ(service.playerReputation(), (std::optional<ESM4::PlayerReputationState>{{-20, -3, 0}}));
 }
 
+TEST(OblivionWorldTest, OriginalQuestModPCFamePublishesSharedReputationAndRestoresWithoutReplay)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::Npc native{};
+    native.mId = {7, 1}; native.mFormKey = ESM::FormKey::content("oblivion.esm", 7);
+    native.mIsTES4 = true; native.mData.attribs = {50, 50, 50, 50, 50, 50, 50, 50};
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    auto& service = *world.getOblivionCombatService();
+    auto values = *service.findActorValues(ESM::FormKey::dynamic("player", 1));
+    values.mReputation = ESM4::PlayerReputationState{17, -3, 777};
+    values.mValues[38].mModifiers = {0.f, 2.f, -1.f};
+    service.publishPlayerValues(world.getPlayer(), values,
+        MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+    MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+    EXPECT_EQ(ObScript::asInteger(host.call("ModPCFame", {}, {std::int64_t{1}}, {}, {})), 0);
+    EXPECT_EQ(service.playerReputation(), (std::optional<ESM4::PlayerReputationState>{{18, -3, 777}}));
+    const auto player = world.getPlayerPtr();
+    EXPECT_EQ(player.getClass().getNpcStats(player).getReputation(), 18);
+    EXPECT_EQ(service.getPlayerValue(38), 19.f);
+    const auto before = world.captureOblivionRuntimeState();
+    EXPECT_THROW(host.call("ModPCFame", {}, {std::numeric_limits<std::int64_t>::max()}, {}, {}),
+        ObScript::RuntimeError);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNativeActorValues, before.mNativeActorValues);
+    const auto saved = ESM4::RuntimeState::deserializeBinary(before.serializeBinary());
+    ASSERT_TRUE(world.modifyOblivionPlayerFame(10));
+    prepareNativeSnapshotPlayer(fixture, saved);
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(service.playerReputation(), (std::optional<ESM4::PlayerReputationState>{{18, -3, 777}}));
+    EXPECT_EQ(player.getClass().getNpcStats(player).getReputation(), 18);
+}
+
 TEST(OblivionWorldTest, ExplicitReputationWriteAdoptsLegacyInfamyWithoutGuessingAccumulator)
 {
     PopulatedMigrationFixture fixture;

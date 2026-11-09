@@ -207,6 +207,14 @@ namespace ESM4
         return result;
     }
 
+    PlayerReputationState modifyPlayerFame(const PlayerReputationState& state, std::int32_t delta)
+    {
+        auto result = state;
+        result.mFame = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(state.mFame)
+            + static_cast<std::uint32_t>(delta));
+        return result;
+    }
+
     std::int32_t actorBaseValueInteger(const ActorBaseValueSet& value)
     {
         return std::visit([](auto storedValue) { return truncated(double(storedValue)); }, value.mValue);

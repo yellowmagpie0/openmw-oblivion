@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "status": "in progress",
+  "contract": "HACKDIRT-RETURN-CONTRACT.json",
+  "implemented": [
+    "ModPCFame uses native Player reputation, preserves Infamy and bounty accumulation, and publishes the shared view"
+  ],
+  "focused_fame_gate": {
+    "path": "build/oblivion-compat/hackdirt/reward-fame-focused-01/verification.json",
+    "source": {
+      "head": "f5a533445ae1fdc9355f7663ba51117ce8dcf403",
+      "source_fingerprint": "be31d95dc94847d79524b8dda9e796ed3340bd3702de1c00a306013ec27f2d46"
+    },
+    "components": {
+      "executed": 2,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "ESM4ActorValues.ModPC*:OblivionWorldTest.*Reputation*:OblivionWorldTest.OriginalQuestModPCFame*",
+      "binary_sha256": "aa349b4ea73f0c6fb9ef5e6590e913cb0d7ebbfd2c78e0b87dfb6d61b9f1b3b3",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "ecb724f0488aacc30d3a6bd75cf88aa7371840eb8b184929a519ee7f28527a9c",
+      "inventory_sha256": "aad2fe4f8c544ea5222dccb6bde075e61cded48ede4b015f1ad47b5f28396690",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "engine": {
+      "executed": 3,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "ESM4ActorValues.ModPC*:OblivionWorldTest.*Reputation*:OblivionWorldTest.OriginalQuestModPCFame*",
+      "binary_sha256": "e21d616704b5571b82128c4a3c6c631691920b7230438edfcf46bfb75a7a09d9",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "d0ec6b53f5ea6a7d4ed4900a861da3c2e662a02e95360ae6bc73ff15aabdeb9f",
+      "inventory_sha256": "54d5a46eeefa1c4646c3184e0ff0b12b00b0dbf77da85bdbb1c9cb2bc563ec9c",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "original_fame_evidence": "M15-NATIVE-RULE-PROVENANCE.md: Player reference Fame/Infamy; existing 1792-case original-instruction mutation audit reused",
+  "runtime_diagnostics": {
+    "shop_entry": {
+      "path": "build/oblivion-compat/hackdirt/return-shop-diagnostic-04",
+      "result": "Player ordinary door activation entered ChorrolNorthernGoodsAndTrade; both captures inspected; prior timeout used the display name instead of the editor ID"
+    },
+    "npc_arrival": {
+      "path": "build/oblivion-compat/hackdirt/return-shop-arrival-reload-01",
+      "gate_passed": false,
+      "reason": "Resources version metadata changed during concurrent rebuild; failed receipt retained",
+      "save_sha256": "f0de8598556308ff13eddd0cdb2ff581451b26d35d0d346daadaa90d42eb9aa5",
+      "observed": "Original TravelHome placed living Dar-Ma in original shop cell000807 at stage80"
+    }
+  },
+  "remaining": [
+    "Implement original ModPCSkill reward and advancement bookkeeping",
+    "Repeat arrival with matched binary/resources",
+    "Original successful turn-in and exact reward deltas",
+    "Fresh completed restart and no reward replay",
+    "Final affected normal/sanitizer gates"
+  ]
+}

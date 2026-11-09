@@ -548,6 +548,7 @@ namespace MWWorld
         bool requestOblivionReputation(const Ptr& actor, int amount) override;
         std::optional<std::int32_t> getOblivionPlayerInfamy() const;
         bool modifyOblivionPlayerInfamy(std::int32_t delta);
+        bool modifyOblivionPlayerFame(std::int32_t delta);
         // False only for actors not yet registered with native value authority.
         bool killOblivionActor(const Ptr& actor, const ESM::FormKey& killer);
         bool resurrectOblivionActor(const Ptr& actor, bool preserveState);
