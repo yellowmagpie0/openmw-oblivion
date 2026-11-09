@@ -27,6 +27,7 @@
 #include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/loadkeym.hpp>
 #include <components/esm4/loadligh.hpp>
+#include <components/esm4/loadlvli.hpp>
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadsgst.hpp>
 #include <components/esm4/loadslgm.hpp>
@@ -50,6 +51,7 @@
 #include "scene.hpp"
 #include "oblivionprofileservices.hpp"
 #include "oblivioninventoryidentity.hpp"
+#include "oblivionlevelled.hpp"
 #include "worldimp.hpp"
 
 namespace MWWorld
@@ -1094,6 +1096,40 @@ namespace MWWorld
                 break; // Handled before any borrowed cached reference state.
             case OblivionInteractionKind::Container:
             {
+                const auto levelledForm = [&](const ESM4::RuntimeInventoryItem& item) -> std::optional<ESM::FormId> {
+                    const auto id = resolver.toFormId(item.mBase);
+                    return item.mCount > 0 && id && mStore.get<ESM4::LevelledItem>().search(ESM::RefId(*id))
+                        ? id : std::nullopt;
+                };
+                if (std::any_of(state.mInventory.begin(), state.mInventory.end(),
+                        [&](const auto& item) { return levelledForm(item).has_value(); }))
+                {
+                    const Ptr player = getPlayerPtr();
+                    const int level = player.getClass().getCreatureStats(player).getLevel();
+                    std::vector<ESM4::RuntimeInventoryItem> expanded;
+                    for (const auto& item : state.mInventory)
+                    {
+                        if (const auto form = levelledForm(item))
+                        {
+                            for (const auto& generated : expandOblivionLevelledItems(
+                                     mStore, {{form->toUint32(), item.mCount}}, level, mPrng))
+                            {
+                                auto concrete = item;
+                                concrete.mBase = resolver.toFormKey(ESM::FormId::fromUint32(generated.item));
+                                concrete.mCount = generated.count;
+                                expanded.push_back(std::move(concrete));
+                            }
+                        }
+                        else
+                            expanded.push_back(item);
+                    }
+                    // Publish concrete stock once, including a chance-none result.
+                    // Saved empty inventories never consult the base lists again.
+                    state.mInventory.swap(expanded);
+                    state.mCustomState["opened"] = true;
+                    Log(Debug::Info) << "M13 container lists resolved: ref=" << key.serialize()
+                                     << " entries=" << state.mInventory.size();
+                }
                 if (state.mInventory.empty())
                 {
                     message("Empty");

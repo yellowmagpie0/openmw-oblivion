@@ -1,5 +1,5 @@
 {
-  "status": "actual container loot loss reproduced; implementation pending",
+  "status": "implementation, ordinary/instrumented runtime and full engine gates passed; receipt closure pending",
   "milestone": "Bounded M13 native container leveled-loot transfer and persistence",
   "scope": "Same genuine post-mudcrab-loot character enters original Vilverin, reaches original first-area food sack06c2ad and receives concrete original food items from its four independent LVLI draws; F5/fresh processes and repeat activation retain actual Player transfer and empty source without replay.",
   "reference": "content:oblivion.esm:06c2ad",
@@ -69,5 +69,24 @@
     "semantic_verification": "build/oblivion-compat/vilverin-containers/food-sack-baseline-semantic-verification.json",
     "save_sha256": "218395f5a6c90ffb8f0bbb30398aff35c229bb230687c4eeebcfa2460128a7b8",
     "result": "Real normal-input activation clears original053f26 count4 and marks opened; Player inventory exactly unchanged."
+  },
+  "observed_normal_food": {
+    "content:oblivion.esm:033681": 2,
+    "content:oblivion.esm:033690": 1
+  },
+  "observed_instrumented_food": {
+    "content:oblivion.esm:033680": 1,
+    "content:oblivion.esm:03368b": 1,
+    "content:oblivion.esm:03368c": 1,
+    "content:oblivion.esm:033690": 1
+  },
+  "verification_progress": {
+    "semantic_checks": 145,
+    "focused_inventory": 32,
+    "normal_engine": 2257,
+    "sanitized_engine": 2257,
+    "repaired_display_cases": 79,
+    "scope": "Concrete original draws, old-empty compatibility, exact normal/instrumented continuation and no-repeat activation; full unchanged component evidence reused.",
+    "display_failure_recovery": "build/oblivion-compat/vilverin-containers/display-failure-recovery.json"
   }
 }
