@@ -47,11 +47,34 @@ Bone1, Crab Meat1, Lettuce1, Rice1. Ambush `06c356` and sitting bandit `06c359`
 remain dead with Player killer; food sack `06c2ad` stays opened and empty.
 No pending ingredient timer, scroll effect, cast or projectile; next projectile19.
 
-Next action: resume the actual Vilverin route from this checkpoint. The nearby
-original tripwire `06bf50` and short swinging maces `0c4986`/`06c605` provide a
-concrete gameplay stretch; establish what already works and choose the next
-bounded implementation from an observed missing behavior. The autonomous
-original-content iteration remains active.
+Current chunk: original Mead `0b1201`, two DRAT1 attribute drains for60 seconds
+(Intelligence/Willpower) plus instant REFA2. [Contract](MEAD-POTION-CONTRACT.json).
+Typed/raw audit passes all253 potions/330 effects. Ordinary-use baseline02 passes
+its diagnostic/save checks but leaves stock1 and all native attributes/resources
+unchanged: current potion admission supports only instant restoration.
+
+Actual expedition progress: tripwire `06bf50` and short maces already work;
+passage causes one11.5-point hit, retained without replay on fresh load. The lower
+room is reached with unchanged inventory/Magicka (81 route +9 room checks).
+Three original bandits `04bb72`/`04bb73`/`06bfba` are defeated using owned starter
+healing and the carried healthy Club. A fresh process retains their Player-killer
+deaths and collects actual bottle `06c362`. No combat/trap implementation change
+is claimed. Retained route/menu/aim failures and the failed worn-axe battle stay
+under `build/oblivion-compat/vilverin-trap-passage`.
+
+Current actual Mead input:
+`build/oblivion-compat/vilverin-trap-passage/mead-acquire-after-encounter-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `6677188fc1f68ec1142c994b9398492b3df0266a009b23cf43f117a4a29918b6`.
+Health29.73584, Magicka80, Fatigue170, Intelligence40, Willpower30, Mead1.
+Club equipped; prior expedition loot/deaths and expired Chameleon retained.
+
+Next action: finish the isolated original Mead control in
+`build/oblivion-compat/mead-use/original-native-02` (game currently active).
+One drink gives Int39/Will29/MP78; repeated-source/expiry and real-deficit Fatigue
+restoration remain under observation. Then implement the bounded mixed profile
+with owned saved contributions and verify normal/instrumented use, active restart,
+natural expiry and completed restart. The autonomous original-content iteration
+remains active. No C++ change or build fingerprint is currently in progress.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects
 and UI; native spawn-root/child identity, grouped actors, respawn, all Player
