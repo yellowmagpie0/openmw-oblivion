@@ -1,3 +1,4 @@
+#include "../mwworld/oblivionlevelled.hpp"
 #include <components/esm4/projectilerules.hpp>
 #include "oblivioncombat.hpp"
 
@@ -96,8 +97,9 @@ namespace MWMechanics
                 const auto* characterRef = store.search<ESM4::ActorCharacter>(values.mActor);
                 const auto* creatureRef = store.search<ESM4::ActorCreature>(values.mActor);
                 const ESM4::ActorCharacter* reference = creature ? creatureRef : characterRef;
-                if (!reference || (characterRef && creatureRef) || reference->mFormKey != values.mActor
+                if ((!reference || (characterRef && creatureRef) || reference->mFormKey != values.mActor
                     || reference->mBaseKey != values.mBase)
+                    && !MWWorld::oblivionLevelledActorContains(store, values.mActor, values.mBase))
                     throw std::invalid_argument("missing or mismatched native actor reference: " + values.mActor.serialize());
             }
             return creature;
@@ -7691,6 +7693,8 @@ namespace MWMechanics
     void OblivionCombatService::restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store)
     {
         state.validate();
+        for (const auto& reference : state.mReferences)
+            MWWorld::validateOblivionLevelledActor(store, reference);
         for (const auto& [actor, idle] : state.mNativeGetUpIdles)
         {
             const auto* record = store.search<ESM4::IdleAnimation>(idle.mIdle);

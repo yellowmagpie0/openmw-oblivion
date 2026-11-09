@@ -166,6 +166,10 @@ namespace MWWorld
 
         const CellStoreCollection& getActiveCells() const;
 
+        // A saved exterior movement footprint can straddle the grid hysteresis
+        // boundary. Admit every saved owner before restoring its capsule history.
+        void restoreExteriorMovementGrid(const std::vector<CellStore*>& cells);
+
         bool hasCellChanged() const;
         ///< Has the set of active cells changed, since the last frame?
 

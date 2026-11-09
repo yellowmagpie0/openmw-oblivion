@@ -55,6 +55,7 @@ void ESM4::LevelledCreature::load(ESM4::Reader& reader)
                 break;
             case ESM::fourCC("LVLF"):
                 reader.get(mLvlCreaFlags);
+                mHasLvlCreaFlags = true;
                 break;
             case ESM::fourCC("LVLO"):
             {

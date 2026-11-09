@@ -1,5 +1,5 @@
 {
-  "status": "implementation in progress; runtime acceptance open",
+  "status": "implemented; normal original-content acceptance passed; integration and instrumented runtime gates open",
   "course": "Original Vilverin outdoor camp reached from the genuine sewer-exit checkpoint using ordinary swim, walk and mouse input",
   "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
   "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
@@ -85,6 +85,70 @@
       "run": "build/oblivion-compat/vilverin/levelled-restart-01",
       "status": "passed diagnostic restart from placement02; both original camp bases, concrete inventories and metadata retained; no camp selection replay",
       "limitation": "Earlier source, superseded by group guard; final-source restart still required"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-placement-03",
+      "status": "passed clean placement with supported single-actor paths"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-restart-02",
+      "status": "passed fresh-process choice, inventory and stat persistence; initial paired semantic audit42 checks"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-camp-approach-01",
+      "status": "failed stale empty-camp forbidden assertion; genuine arrival/F5 and natural bandit damage observed; camera looked away"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-camp-approach-02",
+      "status": "interrupted faulty camera-step fixture before travel; route loop/cleanup omission corrected"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-camp-approach-03",
+      "status": "passed ordinary approach; screenshot inspected shows both original armed bandits; genuine F5 saves damage and wear"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-encounter-restart-01",
+      "status": "failed engine restart: exterior grid hysteresis left saved movement actors without mechanics owners; retained genuine input for repair"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-encounter-restart-02",
+      "status": "passed untouched genuine encounter checkpoint after grid repair"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-encounter-restart-03",
+      "status": "passed second fresh-process continuation; all15 movement owners and worn gear retained"
     }
-  ]
+  ],
+  "remaining_acceptance": [
+    "Full normal and ASan/UBSan component/engine integration gates",
+    "Sanitized original placement, continuation and genuine encounter restart"
+  ],
+  "normal_semantics": {
+    "report": "build/oblivion-compat/vilverin/levelled-normal-semantic-in-progress.json",
+    "checks": 116,
+    "passed": true,
+    "scope": "Original candidate selection, concrete raw-record item/category quantity bounds, exact shore inventories/stat bases, chance-none owners, natural camp pursuit/hits, visible original actors, damage and worn gear persistence, complete15-owner movement footprint across two fresh continuations"
+  },
+  "focused_gates": {
+    "source_revision": "9c9e27136f4de8e7ed6547c8681d024281766fec",
+    "dirty_source_fingerprint": "61a1369c0a9cca517aa444e9904483c0a563c6cc2e23b1f2ad6671d39e217e8a",
+    "movement_batch": {
+      "report": "build/oblivion-compat/vilverin/levelled-movement-focused-01/verification.json",
+      "cases": 1,
+      "passed": true
+    },
+    "normal_native_components": {
+      "report": "build/oblivion-compat/vilverin/levelled-normal-components-01/verification.json",
+      "filter": "ESM4*",
+      "cases": 1093,
+      "passed": true
+    },
+    "asan_ubsan_native_components": {
+      "report": "build/oblivion-compat/vilverin/levelled-asan-components-01/verification.json",
+      "filter": "ESM4*",
+      "cases": 1093,
+      "passed": true,
+      "leak_check": false
+    }
+  }
 }

@@ -427,6 +427,9 @@ namespace MWWorld
                 if constexpr (std::is_same_v<T, ESM4::Npc> || std::is_same_v<T, ESM4::Creature>)
                 {
                     ESM4::ActorCharacter actor{};
+                    actor.mOwner = reference.mOwner;
+                    actor.mGlobal = reference.mGlobal;
+                    actor.mEsp = reference.mEsp;
                     actor.mFormKey = reference.mFormKey;
                     actor.mParent = reference.mParent;
                     actor.mParentKey = reference.mParentKey;
@@ -440,6 +443,15 @@ namespace MWWorld
                 else
                     mInsertion = cell.prepareInsertion(LiveCellRef<T>(reference, base));
                 mPtr = Ptr(mInsertion->get(), &cell);
+                // Reserve the original placed identity only after detached
+                // insertion preparation, which requires an unassigned node.
+                if constexpr (std::is_same_v<T, ESM4::Npc> || std::is_same_v<T, ESM4::Creature>)
+                    if (reference.mFormKey.isContent())
+                    {
+                        if (!reference.mId.hasContentFile() || reference.mId.mIndex != reference.mFormKey.localId())
+                            throw std::invalid_argument("native content actor reconstruction requires its original FormId");
+                        mPtr.getCellRef().setRefNum(reference.mId);
+                    }
             }
             Ptr get() const override { return mPtr; }
             bool isValid() const noexcept override { return mCell.validatePreparedInsertion(*mInsertion); }

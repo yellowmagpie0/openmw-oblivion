@@ -32,6 +32,7 @@
 #include "../mwworld/customdata.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivionlevelled.hpp"
 #include "../mwworld/oblivioninteraction.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/worldimp.hpp"
@@ -91,7 +92,11 @@ namespace MWClass
         void fillInventory(ESM4NpcCustomData& data, const std::vector<ESM4::InventoryItem>& items,
             const MWWorld::ESMStore& store)
         {
-            for (const ESM4::InventoryItem& item : items)
+            auto* world = MWBase::Environment::get().getWorldOrNull();
+            const bool native = world && world->getGameProfile() == ESM::GameProfile::Oblivion;
+            const auto expanded = native ? MWWorld::expandOblivionLevelledItems(store, items,
+                world->getPlayerPtr().getClass().getCreatureStats(world->getPlayerPtr()).getLevel(), world->getPrng()) : items;
+            for (const ESM4::InventoryItem& item : expanded)
             {
                 if (item.count == 0)
                     continue;

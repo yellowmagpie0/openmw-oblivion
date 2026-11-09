@@ -951,6 +951,7 @@ namespace MWWorld
 
         // Apply the validated native snapshot read by readRecord. World data
         // restoration precedes optional scene attachment in saveLoaded.
+        void updateOblivionLevelledActors();
         void applyOblivionRuntimeState();
         ESM4::RuntimeState captureOblivionRuntimeState() const;
         bool releaseOblivionStaffProjectile(const Ptr& actor, const ESM::FormKey& enchantment, float chargeCost);

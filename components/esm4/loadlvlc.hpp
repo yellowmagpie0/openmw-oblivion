@@ -43,16 +43,16 @@ namespace ESM4
     struct LevelledCreature
     {
         ESM::FormId mId; // from the header
-        std::uint32_t mFlags; // from the header, see enum type RecordFlag for details
+        std::uint32_t mFlags = 0; // from the header, see enum type RecordFlag for details
 
         std::string mEditorId;
 
         ESM::FormId mScriptId;
         ESM::FormId mTemplate;
-        std::int8_t mChanceNone;
+        std::int8_t mChanceNone = 0;
 
-        bool mHasLvlCreaFlags;
-        std::uint8_t mLvlCreaFlags;
+        bool mHasLvlCreaFlags = false;
+        std::uint8_t mLvlCreaFlags = 0;
 
         std::vector<LVLO> mLvlObject;
 

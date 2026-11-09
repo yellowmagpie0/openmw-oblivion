@@ -260,6 +260,15 @@ namespace EsmTool
                     if (data.mAssociatedForm) std::cout << " associatedForm=" << data.mAssociatedForm->serialize();
                 }
             }
+            if constexpr (std::is_same_v<T, ESM4::LevelledCreature> || std::is_same_v<T, ESM4::LevelledItem>)
+            {
+                std::cout << "\n  LevelledList: chanceNone=" << int(value.chanceNone())
+                    << " allLower=" << value.calcAllLvlLessThanPlayer()
+                    << " eachInCount=" << value.calcEachItemInCount();
+                for (const auto& entry : value.mLvlObject)
+                    std::cout << "\n  LevelledEntry: level=" << entry.level
+                        << " base=" << ESM::FormId::fromUint32(entry.item) << " count=" << entry.count;
+            }
             if constexpr (std::is_same_v<T, ESM4::LevelledSpell>)
             {
                 std::cout << "\n  LevelledSpellForm: " << value.mFormKey.serialize();

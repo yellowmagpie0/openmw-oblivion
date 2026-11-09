@@ -20,6 +20,8 @@
 #include "oblivioncharactergen.hpp"
 #include "obliviondooranimation.hpp"
 #include "oblivionbounditems.hpp"
+#include "oblivionlevelled.hpp"
+#include <components/esm4/loadlvlc.hpp>
 #include <components/esm4/loadclas.hpp>
 #include "oblivioncombatdata.hpp"
 #include "savedreference.hpp"
@@ -1633,15 +1635,25 @@ namespace MWWorld
 
     std::unique_ptr<InventoryStore> World::prepareOblivionSavedActorInventory(const Ptr& actor) const
     {
-        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || actor.isEmpty())
+        if (mGameProfile != ESM::GameProfile::Oblivion || actor.isEmpty())
             return nullptr;
         const auto base = nativeActorBase(actor);
         if (base.isNull())
             return nullptr;
         const auto key = actor.getCellRef().getFormKey();
-        const auto saved = std::find_if(mOblivionRuntimeState->mReferences.begin(),
-            mOblivionRuntimeState->mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
-        if (saved == mOblivionRuntimeState->mReferences.end())
+        const ESM4::RuntimeState* snapshot = mOblivionRuntimeState.get();
+        if (mPendingOblivionRuntimeState)
+            for (const auto& reference : mPendingOblivionRuntimeState->mReferences)
+                if (reference.mKey == key && reference.mCustomState.contains("native.levelled_actor.level"))
+                {
+                    snapshot = mPendingOblivionRuntimeState.get();
+                    break;
+                }
+        if (!snapshot) return nullptr;
+        const auto saved = std::find_if(snapshot->mReferences.begin(),
+            snapshot->mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
+        if (saved == snapshot->mReferences.end()
+            || saved->mCustomState.contains("native.levelled_actor.inventory_pending"))
             return nullptr;
         const auto* npc = mStore.search<ESM4::Npc>(saved->mBase);
         const auto* creature = mStore.search<ESM4::Creature>(saved->mBase);
@@ -1655,7 +1667,7 @@ namespace MWWorld
         // or invoking live add/equip observers during lazy reconstruction.
         const ESM::FormKeyResolver resolver(mContentFiles);
         auto inventory = saved->mInventory;
-        if (mOblivionRuntimeState->mVersion < 4)
+        if (snapshot->mVersion < 4)
             migrateLegacyActorEquipment(inventory, mStore, resolver);
         return OblivionProfileServices::stageActorInventory(
             OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
@@ -2388,7 +2400,8 @@ namespace MWWorld
                 captured.insert(reference.mKey);
             for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
                 if ((reference.mKey.isDynamic() || reference.mCustomState.contains("native.fire.spell")
-                        || reference.mCustomState.contains("native.package.lock_projection_pending"))
+                        || reference.mCustomState.contains("native.package.lock_projection_pending")
+                        || reference.mCustomState.contains("native.levelled_actor.level"))
                     && !captured.contains(reference.mKey))
                     state.mReferences.push_back(reference);
         }
@@ -6935,7 +6948,8 @@ namespace MWWorld
             const auto relationActorTarget = [&](const ESM::FormKey& key) {
                 if (key == state.mPlayer.mReference) return true;
                 if (key.isContent() && !store.get<ESM4::ActorCharacter>().search(key)
-                    && !store.get<ESM4::ActorCreature>().search(key)) return false;
+                    && !store.get<ESM4::ActorCreature>().search(key)
+                    && !oblivionLevelledActorContains(store, key, relationBase(key))) return false;
                 return relationActor(relationBase(key));
             };
             const auto relationItemTarget = [&](const ESM::FormKey& key) {
@@ -7224,9 +7238,11 @@ namespace MWWorld
         for (const auto& reference : state.mReferences)
         {
             if (reference.mKey == state.mPlayer.mReference) continue;
+            const bool levelled = validateOblivionLevelledActor(mStore, reference);
+            if (levelled && std::get<bool>(reference.mCustomState.at("native.levelled_actor.empty"))) continue;
             auto found = references.find(reference.mKey);
-            if (found == references.end() && reference.mKey.isDynamic()
-                && reference.mKey.mNamespace == "native-reference")
+            if (found == references.end() && (levelled || (reference.mKey.isDynamic()
+                && reference.mKey.mNamespace == "native-reference")))
             {
                 const auto base = resolver.toFormId(reference.mBase);
                 if (!base)
@@ -7234,6 +7250,7 @@ namespace MWWorld
                 const auto cellId = resolver.toFormId(reference.mCell);
                 CellStore& cell = mWorldModel.getCell(ESM::RefId(*cellId));
                 ESM4::Reference placed{};
+                if (levelled) placed = *mStore.get<ESM4::Reference>().search(reference.mKey);
                 placed.mFormKey = reference.mKey;
                 placed.mParent = ESM::RefId(*cellId);
                 placed.mParentKey = reference.mCell;
@@ -7833,6 +7850,27 @@ namespace MWWorld
                 throw std::runtime_error("movement restore has multiple resident reference owners");
         }
         const auto& saved = *mOblivionRuntimeState->mNativeMovement;
+        std::vector<CellStore*> movementCells;
+        for (const auto& [key, movement] : saved.mActors)
+        {
+            const auto actor = references.find(key);
+            const auto* values = mOblivionCombat->findActorValues(key);
+            if (actor == references.end() || !values || values->mBase != movement.mBase
+                || (key != playerKey && nativeActorBase(actor->second) != movement.mBase))
+                throw std::runtime_error("movement restore has an unbound actor/base owner: " + key.serialize());
+            movementCells.push_back(actor->second.getCell());
+            if (!movement.mStandingOn.isNull())
+            {
+                const auto standing = references.find(movement.mStandingOn);
+                if (standing == references.end())
+                    throw std::runtime_error("movement restore has an unresolved standing reference");
+                movementCells.push_back(standing->second.getCell());
+            }
+        }
+        // The live grid can retain its previous center after the Player crosses
+        // a cell boundary. Recenter only as needed to admit the complete saved
+        // footprint; keep the strict mechanics/physics ownership checks below.
+        if (mWorldScene) mWorldScene->restoreExteriorMovementGrid(movementCells);
         const auto* mechanics = dynamic_cast<const MWMechanics::MechanicsManager*>(
             MWBase::Environment::get().getMechanicsManagerOrNull());
         std::vector<MWPhysics::ActorMovementSnapshot> snapshots;
@@ -7846,7 +7884,7 @@ namespace MWWorld
                 throw std::runtime_error("movement restore has an unbound actor/base owner");
             if (movement.mPositionAdjusted
                 && (!mechanics || !mechanics->getActors().positionAdjusted(found->second).has_value()))
-                throw std::runtime_error("movement restore has an unresolved mechanics actor");
+                throw std::runtime_error("movement restore has an unresolved mechanics actor: " + key.serialize());
             Ptr standingOn;
             if (!movement.mStandingOn.isNull())
             {
@@ -8110,6 +8148,9 @@ namespace MWWorld
         for (const auto& reference : state.mReferences)
         {
             validateCell(reference.mCell);
+            const bool levelled = validateOblivionLevelledActor(mStore, reference);
+            const bool levelledActor = levelled
+                && !std::get<bool>(reference.mCustomState.at("native.levelled_actor.empty"));
             if (reference.mKey.isDynamic() && reference.mKey.mNamespace == "native-reference"
                 && reference.mKey.mValue >= state.mNextDynamicSerial)
                 throw std::invalid_argument("native reference serial would reuse a saved identity");
@@ -8198,18 +8239,18 @@ namespace MWWorld
                 : object ? &object->mBaseKey : nullptr;
             if (!base)
                 throw std::runtime_error("TES4 runtime-state reference is not present: " + reference.mKey.serialize());
-            if (*base != reference.mBase)
+            if (*base != reference.mBase && !levelledActor)
                 throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
             if ((npc && !mStore.get<ESM4::Npc>().search(*base))
                 || (creature && !mStore.get<ESM4::Creature>().search(*base)))
                 throw std::runtime_error("TES4 runtime-state actor base is not present: " + base->serialize());
-            if (reference.mActorDrawState && !npc && !creature)
+            if (reference.mActorDrawState && !npc && !creature && !levelledActor)
                 throw std::runtime_error("TES4 runtime-state actor draw state requires an actor reference");
-            if (reference.mDropRelations.mItems && !npc && !creature)
+            if (reference.mDropRelations.mItems && !npc && !creature && !levelledActor)
                 throw std::invalid_argument("Native dropped-list owner requires ACHR/ACRE");
             if (reference.mDropRelations.mDropper && !object)
                 throw std::invalid_argument("Native dropper extra requires REFR");
-            if ((npc || creature) && reference.mOwnershipRank)
+            if ((npc || creature || levelledActor) && reference.mOwnershipRank)
                 throw std::invalid_argument("Native actor reference cannot own a REFR rank extra");
         }
         // Exercise the same detached preparations used by restore. Admission
@@ -9477,8 +9518,100 @@ namespace MWWorld
         }
     }
 
+    void World::updateOblivionLevelledActors()
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || mPendingOblivionRuntimeState
+            || !mPlayer || !mWorldScene || !mOblivionCombat || getPlayerPtr().isEmpty()) return;
+        const int level = getPlayerPtr().getClass().getCreatureStats(getPlayerPtr()).getLevel();
+        for (CellStore* cell : mWorldScene->getActiveCells())
+        {
+            const auto* cellId = cell->getCell()->getId().getIf<ESM::FormId>();
+            if (!cellId) continue;
+            for (const auto* original : mStore.get<ESM4::Reference>().getByCell(*cellId))
+            {
+                const auto* list = mStore.get<ESM4::LevelledCreature>().search(original->mBaseObj);
+                if (!list || (original->mFlags & (ESM4::Rec_Deleted | ESM4::Rec_Disabled))) continue;
+                // Scripted lists and enable-parent activation require their own
+                // lifecycle integration. The original Vilverin placements have neither.
+                if (!list->mScriptId.isZeroOrUnset() || !list->mTemplate.isZeroOrUnset()
+                    || !original->mEsp.parent.isZeroOrUnset()) continue;
+                const auto finishInventory = [&](ESM4::RuntimeReferenceState& saved, const Ptr& actor) {
+                    // A fresh choice is already durable in the cache, but its
+                    // inventory is not a saved empty store. Retry construction
+                    // after a failure without rolling another actor or list.
+                    actor.getClass().getInventoryStore(actor);
+                    saved.mInventory = captureOblivionActorInventory(actor);
+                    saved.mCustomState.erase("native.levelled_actor.inventory_pending");
+                };
+                if (mOblivionRuntimeState)
+                {
+                    const auto found = std::lower_bound(mOblivionRuntimeState->mReferences.begin(),
+                        mOblivionRuntimeState->mReferences.end(), original->mFormKey,
+                        [](const auto& ref, const auto& key) { return ref.mKey < key; });
+                    if (found != mOblivionRuntimeState->mReferences.end() && found->mKey == original->mFormKey)
+                    {
+                        if (found->mCustomState.contains("native.levelled_actor.inventory_pending"))
+                        {
+                            const Ptr actor = mWorldModel.getPtr(original->mId);
+                            finishInventory(*found, actor);
+                            mWorldScene->addObjectToScene(actor);
+                        }
+                        continue;
+                    }
+                }
+                if (!supportsOblivionLevelledActor(mStore, original->mBaseKey, level)) continue;
+                auto random = getPrng();
+                const auto selected = selectOblivionLevelledActor(mStore, original->mBaseKey, level, random);
+                ESM4::RuntimeReferenceState saved;
+                saved.mKey = original->mFormKey;
+                saved.mBase = original->mBaseKey;
+                saved.mCell = original->mParentKey;
+                saved.mPosition = original->mPos;
+                saved.mEnabled = true;
+                saved.mCustomState["native.levelled_actor.level"] = std::int64_t(level);
+                saved.mCustomState["native.levelled_actor.empty"] = !selected;
+                std::unique_ptr<PreparedSavedNativeReference> prepared;
+                if (selected)
+                {
+                    ESM4::Reference placed = *original;
+                    placed.mBaseObj = *selected;
+                    placed.mBaseKey = ESM::FormKeyResolver(mContentFiles).toFormKey(*selected);
+                    saved.mBase = placed.mBaseKey;
+                    saved.mCustomState["native.levelled_actor.inventory_pending"] = true;
+                    prepared = prepareSavedNativeReference(mStore, *cell, placed);
+                }
+                if (!mOblivionRuntimeState) mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>();
+                mOblivionRuntimeState->mReferences.reserve(mOblivionRuntimeState->mReferences.size() + 1);
+                if (prepared)
+                {
+                    const std::array<Ptr, 1> inserted{prepared->get()};
+                    auto registry = mWorldModel.preparePtrReplacement({}, inserted);
+                    if (!prepared->isValid() || !registry.isValid())
+                        throw std::logic_error("stale native leveled placement preparation");
+                    prepared->commit();
+                    registry.commit();
+                }
+                auto& references = mOblivionRuntimeState->mReferences;
+                const auto inserted = references.insert(std::lower_bound(references.begin(), references.end(),
+                    saved.mKey, [](const auto& ref, const auto& key) { return ref.mKey < key; }), std::move(saved));
+                getPrng() = random;
+                if (prepared)
+                {
+                    const Ptr actor = prepared->get();
+                    finishInventory(*inserted, actor);
+                    mWorldScene->addObjectToScene(actor);
+                    Log(Debug::Info) << "Native leveled placement " << original->mFormKey.serialize()
+                        << " selected " << actor.getCellRef().getRefId() << " at Player level " << level;
+                }
+                else Log(Debug::Info) << "Native leveled placement " << original->mFormKey.serialize()
+                    << " selected none at Player level " << level;
+            }
+        }
+    }
+
     void World::update(float duration, bool paused)
     {
+        if (!paused && duration > 0.f) updateOblivionLevelledActors();
         if (!dispatchOblivionEquipmentNotifications()) return;
         if (mGameProfile == ESM::GameProfile::Oblivion && mRendering && mRendering->getWorkQueue())
             updateOblivionPendingGetUpLoads(*mRendering->getWorkQueue());

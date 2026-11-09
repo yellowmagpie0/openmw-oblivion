@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "name": "Fresh process continuation of original Vilverin leveled actors (ASan/UBSan)",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal age=0\nlocal done=false\nreturn {{engineHandlers={{onFrame=function(dt)\n age=age+dt;if age<5 or core.isWorldPaused() or done then return end\n for _,id in ipairs({{0x6c2aa,0x6c2ab}}) do\n  local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n  assert(obj and obj:isValid(),'Original Vilverin actor absent: '..id)\n  print('VilverinPlacement actor='..id..' object='..tostring(obj)..' pos='..tostring(obj.position)..' health='..Actor.stats.dynamic.health(obj).current)\n end\n print('VilverinPlacement ready health='..Actor.stats.dynamic.health(self).current)\n done=true\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinPlacement ready",
+      "timeout_seconds": 240,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    },
+    {
+      "type": "screenshot",
+      "name": "shore-after-placement.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "VilverinPlacement actor=443050",
+    "VilverinPlacement actor=443051",
+    "VilverinPlacement ready",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "M16 native cast rejected:",
+    "Native leveled placement content:oblivion.esm:06c2a[ab]",
+    "ERROR: AddressSanitizer",
+    "runtime error:",
+    "LeakSanitizer:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

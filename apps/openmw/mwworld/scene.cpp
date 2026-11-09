@@ -641,6 +641,37 @@ namespace MWWorld
         return { cellPos.mX, cellPos.mY };
     }
 
+    void Scene::restoreExteriorMovementGrid(const std::vector<CellStore*>& cells)
+    {
+        if (!mCurrentCell || !mCurrentCell->isExterior() || cells.empty()) return;
+        const auto worldspace = mCurrentCell->getCell()->getWorldSpace();
+        osg::Vec2i minimum(mCurrentCell->getCell()->getGridX() - mHalfGridSize,
+            mCurrentCell->getCell()->getGridY() - mHalfGridSize);
+        osg::Vec2i maximum(mCurrentCell->getCell()->getGridX() + mHalfGridSize,
+            mCurrentCell->getCell()->getGridY() + mHalfGridSize);
+        for (const auto* cell : cells)
+        {
+            if (!cell || !cell->isExterior() || cell->getCell()->getWorldSpace() != worldspace)
+                throw std::invalid_argument("saved exterior movement footprint crosses worldspaces");
+            const int x = cell->getCell()->getGridX();
+            const int y = cell->getCell()->getGridY();
+            minimum.x() = std::max(minimum.x(), x - mHalfGridSize);
+            minimum.y() = std::max(minimum.y(), y - mHalfGridSize);
+            maximum.x() = std::min(maximum.x(), x + mHalfGridSize);
+            maximum.y() = std::min(maximum.y(), y + mHalfGridSize);
+        }
+        if (minimum.x() > maximum.x() || minimum.y() > maximum.y())
+            throw std::invalid_argument("saved movement owners do not fit an exterior cell grid");
+        const osg::Vec2i center(std::clamp(mCurrentGridCenter.x(), minimum.x(), maximum.x()),
+            std::clamp(mCurrentGridCenter.y(), minimum.y(), maximum.y()));
+        if (center == mCurrentGridCenter) return;
+        Log(Debug::Info) << "Restoring native movement grid: " << mCurrentGridCenter.x() << ","
+            << mCurrentGridCenter.y() << " -> " << center.x() << "," << center.y();
+        const auto position = mWorld.getPlayerPtr().getRefData().getPosition().asVec3();
+        changeCellGrid(position, ESM::ExteriorCellLocation(center.x(), center.y(), worldspace), false);
+        MWBase::Environment::get().getWindowManager()->changeCell(mCurrentCell);
+    }
+
     void Scene::playerMoved(const osg::Vec3f& pos)
     {
         if (!mCurrentCell)
