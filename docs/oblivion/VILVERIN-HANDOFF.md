@@ -25,11 +25,14 @@ full bandit bow/combat/death behavior remain separate. Instrumented simulation
 is slow; its probes use actual reference/package readiness. Normal camp imagery
 is the visual layer. Exact original random streams are not claimed.
 
-Next chunk: audit the observed original CREA inventory warnings and choose a
-fresh original leveled creature whose LVLI loot exercises the separate creature
-constructor. Reuse the shared list resolver; preserve authoritative saved empty
-inventories instead of retrofilling old actors. Finish its actual gameplay and
-fresh-process acceptance before expanding into grouped spawns or other work.
+Current chunk: original mudcrab `06c927` near the genuine sewer exit. Baseline
+reproduces the separate CREA constructor dropping `03faee` microtreasure while
+retaining Crab Meat 1. Original instruction checks cover its actual lists and
+85% empty boundary (31 cases). See [MUDCRAB-LOOT-CONTRACT.json](MUDCRAB-LOOT-CONTRACT.json).
+Next action: reuse the shared LVLI resolver in creature inventory construction,
+requesting Player level only when a real list needs expansion. Observe a natural
+positive roll, preserve it on restart, and finish ordinary corpse-loot/transfer
+acceptance. Keep the saved baseline inventory authoritative; no retrofilling.
 
 Reusable genuine inputs: exterior exit SHA256
 cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8;
