@@ -57,10 +57,13 @@ then three original bandits defeated with carried Club and starter healing. Bott
 claimed. Retained route/menu/aim failures and the failed worn-axe battle remain in
 `build/oblivion-compat/vilverin-trap-passage`; links/provenance are in the contract.
 
-Current next action: resume forward gameplay from the completed Mead checkpoint,
-recover through ordinary available healing as needed, and choose the next actual
-content that exposes an implementation gap. Consumable gaps have shrunk; the
-expedition/return gap remains. Finish each bounded chunk before widening scope.
+Current chunk: original Welkynd Stone `04929e` / MISC `000191`,619 units
+ahead of the completed Mead checkpoint. [Contract](WELKYND-STONE-CONTRACT.json).
+Raw record has value50, weight1 and no script. Miscellaneous use currently returns
+NullAction. Next: ordinary acquisition and starter healing to make a real Magicka
+deficit, unsupported-use baseline, then an independent original-game admission
+control. Implement native selected-stone use and verify completed restart before
+continuing. Consumable gaps have shrunk; the expedition/return gap remains.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects
 and UI; native spawn-root/child identity, grouped actors, respawn, all Player

@@ -1,0 +1,52 @@
+{
+  "status": "bounded preflight; actual acquisition, unsupported baseline and original-game control pending",
+  "milestone": "M16 native miscellaneous consumable: original Welkynd Stone",
+  "content": {
+    "reference": "content:oblivion.esm:04929e",
+    "base": "content:oblivion.esm:000191 WelkyndStone",
+    "cell": "content:oblivion.esm:01663a",
+    "position": [
+      -5275.96044921875,
+      -4897.859375,
+      -1377.90380859375
+    ],
+    "distance_from_actual_checkpoint": 619.2,
+    "type": "MISC",
+    "script": null,
+    "value": 50,
+    "weight": 1
+  },
+  "raw_records": {
+    "path": "build/oblivion-compat/welkynd-stone/original-records.json",
+    "sha256": "b36c422eca75b244b6d2422cc2fe282db6efbbd1ded2c8490ea5010e63faa753",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "actual_input": {
+    "save": "build/oblivion-compat/mead-use/normal-development-01-completed-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7c9f46eb893c161f94dab6e6161b05fefb4a6ec285dff996b03e007b89494566",
+    "health": 29.73583984375,
+    "magicka": 80,
+    "fatigue": 170,
+    "native_magic_resistance": 0,
+    "pending_effects": false
+  },
+  "observed_source_gap": "Miscellaneous::use handles legacy soul gems and otherwise returns NullAction. No Welkynd/Varla path exists in apps/openmw or components. Actual ordinary-use baseline remains required.",
+  "plan": [
+    "Reach and collect original placed04929e through ordinary movement/activation; preserve source/debit provenance and prior expedition state.",
+    "Spend Magicka through owned ordinary starter healing and establish the unsupported inventory-use baseline.",
+    "Use isolated original-game controls to establish admission at full/depleted Magicka, exactly one consumed stone, native recovery and relevant failure behavior.",
+    "Implement only the admitted native Welkynd use, with selected-instance inventory debit and native resource authority; avoid legacy soul-gem behavior.",
+    "Verify normal/instrumented real use and fresh-process completion without replay; run focused checks and required affected integration gates. Then continue forward gameplay."
+  ],
+  "acceptance": [
+    "Actual collected original stone, no fork-side grants or manufactured resource deficit.",
+    "Native original observations define full/depleted-resource admission before implementation.",
+    "One exact selected stone consumed only on admitted use; unrelated inventory/state retained.",
+    "Native Magicka change persists through a fresh process without repeating consumption/restoration.",
+    "Separate record, independent-original, structural, semantic and actual runtime evidence; full M16 and expedition remain open."
+  ],
+  "outside_scope": [
+    "Varla Stones, Ayleid wells, arbitrary MISC consumption, enchantment recharge and full M16",
+    "Exact animation, audio, floating arithmetic or frame scheduling parity unless a meaningful discrepancy arises"
+  ]
+}
