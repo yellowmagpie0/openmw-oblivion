@@ -954,6 +954,7 @@ namespace MWWorld
         void applyOblivionRuntimeState();
         ESM4::RuntimeState captureOblivionRuntimeState() const;
         bool releaseOblivionStaffProjectile(const Ptr& actor, const ESM::FormKey& enchantment, float chargeCost);
+        bool releaseOblivionPlayerSpellProjectile(const ESM::FormKey& spell, float power);
         void updateOblivionMagicProjectiles(float duration);
         void validateOblivionMagicProjectiles(const ESM4::RuntimeState& state) const;
         bool beginOblivionHeldBlock(const Ptr& actor, std::string_view group);

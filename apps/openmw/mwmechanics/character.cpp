@@ -2457,15 +2457,19 @@ namespace MWMechanics
                 const auto selected = windows->getSelectedSpell();
                 const auto key = store.get<ESM4::Spell>().findFormKey(selected);
                 const auto* spell = key ? store.get<ESM4::Spell>().search(*key) : nullptr;
+                const bool target = spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
                 if (!spell || std::find(granted.mDeclaredSpells.begin(), granted.mDeclaredSpells.end(), *key)
-                        == granted.mDeclaredSpells.end() || !MWWorld::resolveOblivionSpellRestoration(store, *spell))
+                        == granted.mDeclaredSpells.end()
+                    || (!target && !MWWorld::resolveOblivionSpellRestoration(store, *spell)))
                 {
-                    windows->messageBox("Select a supported self-restoration spell from the magic menu.");
+                    windows->messageBox("Select a supported restoration or target-damage spell from the magic menu.");
                     return false;
                 }
-                if (spell->mData->mLevel > 4 || service->getPlayerIntegerValue(25) < int(spell->mData->mLevel * 25))
+                if (spell->mData->mLevel > 4
+                    || service->getPlayerIntegerValue(target ? 20 : 25) < int(spell->mData->mLevel * 25))
                 {
-                    windows->messageBox("Your Restoration skill is too low to cast this spell.");
+                    windows->messageBox(target ? "Your Destruction skill is too low to cast this spell."
+                                               : "Your Restoration skill is too low to cast this spell.");
                     return false;
                 }
                 const auto description = MWWorld::describeOblivionPlayerSpell(*world, *spell);
@@ -2475,7 +2479,7 @@ namespace MWMechanics
                     windows->messageBox("#{sMagicInsufficientSP}");
                     return false;
                 }
-                std::string group = "castself";
+                std::string group = target ? "casttarget" : "castself";
                 auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
                 const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
                 if (mPtr.getClass().getCreatureStats(mPtr).getDrawState() == DrawState::Weapon
@@ -2483,11 +2487,12 @@ namespace MWMechanics
                 {
                     const auto id = MWWorld::OblivionProfileServices::nativeItemId(store, weapon->getCellRef().getRefId());
                     if (const auto* definition = store.get<ESM4::Weapon>().search(id);
-                        definition && (definition->mData.type == 0 || definition->mData.type == 2)) group = "onehandcastself";
+                        definition && (definition->mData.type == 0 || definition->mData.type == 2))
+                        group = target ? "onehandcasttarget" : "onehandcastself";
                 }
                 const auto* metadata = mAnimation->getControllerSequenceMetadata(group);
                 if (!metadata || metadata->mCycleType != 2 || metadata->mFrequency <= 0)
-                    throw std::invalid_argument("missing native self-cast sequence");
+                    throw std::invalid_argument("missing native cast sequence");
                 // The cast asset uses the same start/Hit/end text-key layout.
                 const auto keys = ESM4::powerMeleeKeyTimes(nativeRawKeys(*metadata));
                 if (keys.mMatchedCount != 3) throw std::invalid_argument("native cast lacks release keys");
@@ -2502,9 +2507,10 @@ namespace MWMechanics
             const auto cast = *pending;
             const auto* spell = store.get<ESM4::Spell>().search(cast.mSpell);
             const auto amounts = spell ? MWWorld::resolveOblivionSpellRestoration(store, *spell) : std::nullopt;
-            if (!amounts || std::find(granted.mDeclaredSpells.begin(), granted.mDeclaredSpells.end(), cast.mSpell)
+            const bool target = spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
+            if ((!amounts && !target) || std::find(granted.mDeclaredSpells.begin(), granted.mDeclaredSpells.end(), cast.mSpell)
                     == granted.mDeclaredSpells.end())
-                throw std::invalid_argument("pending native cast no longer has an owned restoration spell");
+                throw std::invalid_argument("pending native cast no longer has an owned supported spell");
             const float nextTime = static_cast<float>(std::min(double(cast.mDuration), double(cast.mElapsed) + duration));
             const auto bind = [&](MWRender::Animation& view) {
                 const auto* metadata = view.getControllerSequenceMetadata(cast.mAnimationGroup);
@@ -2526,14 +2532,17 @@ namespace MWMechanics
             if (auto* peer = mAnimation->getPlaybackPeer()) bind(*peer);
             mOblivionCastGroup = cast.mAnimationGroup;
             mUpperBodyState = UpperBodyState::Casting;
-            auto magnitudes = *amounts;
+            auto magnitudes = amounts.value_or(std::array<float, 3>{});
             const float power = oblivionCombatSpellPower(*world, mPtr);
             for (float& magnitude : magnitudes) magnitude *= power;
-            auto skillUse = !cast.mReleased && nextTime >= cast.mReleaseTime
+            auto skillUse = !target && !cast.mReleased && nextTime >= cast.mReleaseTime
                 ? MWWorld::prepareOblivionCharacterGenerationSkillUse(*world, 25, 1, 1.f)
                 : std::optional<ESM4::CharacterGenerationState>{};
-            const auto update = service->advanceRestorationCast(mPtr, &world->getPlayer(), duration, magnitudes,
-                MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+            const auto update = target
+                ? service->advanceItemCast(actor, duration,
+                    [&] { return world->releaseOblivionPlayerSpellProjectile(cast.mSpell, power); })
+                : service->advanceRestorationCast(mPtr, &world->getPlayer(), duration, magnitudes,
+                    MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
             if (update && update->mReleased)
             {
                 if (update->mApplied && skillUse) world->getPlayer().swapOblivionCharacterGenerationState(skillUse);

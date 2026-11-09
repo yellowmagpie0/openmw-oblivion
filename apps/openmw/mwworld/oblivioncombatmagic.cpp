@@ -524,6 +524,61 @@ namespace MWWorld
         return true;
     }
 
+    bool World::releaseOblivionPlayerSpellProjectile(const ESM::FormKey& spellKey, float power)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPhysics) return false;
+        const auto actor = getPlayerPtr();
+        const auto caster = ESM::FormKey::dynamic("player", 1);
+        const auto* cast = mOblivionCombat->findSpellCast(caster);
+        const auto* spell = mStore.get<ESM4::Spell>().search(spellKey);
+        const auto damage = spell ? resolveOblivionTargetSpellDamage(mStore, *spell) : std::nullopt;
+        if (!cast || cast->mSpell != spellKey || cast->mReleased || !damage
+            || !std::isfinite(power) || power < 0 || actor.isEmpty() || !actor.isInCell()
+            || !actor.getCell()->getCell()->isEsm4()) return false;
+        // Cost belongs to the pending cast, even if equipment or selection changes
+        // during windup. Prepare resource and projectile owners before publication.
+        const auto* current = mOblivionCombat->findActorValues(caster);
+        if (!current) return false;
+        auto values = *current;
+        if (ESM4::composeActorValue(values.mValues[9], values.mOwner, values.mProcess) < cast->mCost) return false;
+        values.mValues[9] = ESM4::changeActorValueModifier(values.mValues[9], values.mOwner, 9,
+            ESM4::ActorValueModifier::Damage, -cast->mCost);
+        osg::Vec3f position = actor.getRefData().getPosition().asVec3();
+        position.z() += mPhysics->getRenderingHalfExtents(actor).z() * 1.5f;
+        const auto& rotation = actor.getRefData().getPosition().rot;
+        osg::Vec3f direction = (osg::Quat(rotation[0], osg::Vec3f(-1, 0, 0))
+            * osg::Quat(rotation[2], osg::Vec3f(0, 0, -1))) * osg::Vec3f(0, 1, 0);
+        if (direction.normalize() == 0) return false;
+        const auto settings = magicSettings(mStore);
+        const float speed = projectileSetting(settings, "fMagicProjectileBaseSpeed", 1000.f)
+            * damage->mProjectileSpeedFactor;
+        ESM4::MagicProjectileState projectile;
+        projectile.mCaster = caster; projectile.mSource = spellKey;
+        projectile.mCell = actor.getCell()->getCell()->getEsm4().mFormKey;
+        projectile.mEffectCode = damage->mEffectCode; projectile.mMagnitude = damage->mMagnitude * power;
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+            projectile.mPosition[i] = position[i];
+            projectile.mVelocity[i] = direction[i] * speed;
+        }
+        projectile.mMaximumDistance = projectileSetting(settings, "fMagicProjectileMaxDistance", 10000.f);
+        projectile.mModel = damage->mModel;
+        projectile.validate();
+        if (!mOblivionRuntimeState) mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+        const auto serial = mOblivionRuntimeState->mNextMagicProjectile;
+        if (!serial || serial == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("native magic projectile serial exhausted");
+        auto projectiles = mOblivionRuntimeState->mNativeMagicProjectiles;
+        if (!projectiles.emplace(serial, std::move(projectile)).second)
+            throw std::logic_error("native magic projectile serial reused");
+        mOblivionCombat->publishPlayerValues(*mPlayer, std::move(values), resolveOblivionPlayerDynamicBaseSettings(mStore));
+        // Resource publication is transactional; the remaining ownership swaps
+        // cannot throw. advanceItemCast then publishes the released flag once.
+        mOblivionRuntimeState->mNativeMagicProjectiles.swap(projectiles);
+        mOblivionRuntimeState->mNextMagicProjectile = serial + 1;
+        return true;
+    }
+
     void World::updateOblivionMagicProjectiles(float duration)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || !mOblivionCombat
