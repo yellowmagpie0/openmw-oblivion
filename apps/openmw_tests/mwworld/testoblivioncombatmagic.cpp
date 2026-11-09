@@ -1,5 +1,6 @@
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivioncombatmagic.hpp"
+#include "apps/openmw/mwworld/oblivionmiscconsumables.hpp"
 
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
@@ -9,6 +10,7 @@
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/loadbook.hpp>
 #include <components/esm4/loadalch.hpp>
+#include <components/esm4/loadmisc.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <limits>
 #include <components/loadinglistener/loadinglistener.hpp>
@@ -621,4 +623,53 @@ TEST(OblivionCombatMagicStore, MeadRejectsChangedAttributesLifetimeFoodFlagsAndR
         fixture.load("oblivion.esm", {}, records);
         EXPECT_FALSE(resolveMead(fixture));
     }
+}
+
+namespace
+{
+    std::string welkynd(std::uint32_t id = 0x191, bool scripted = false, std::string name = "WelkyndStone")
+    {
+        auto data = sub(ESM::fourCC("EDID"), name + '\0')
+            + sub(ESM::fourCC("DATA"), bytes(50u) + bytes(1.f));
+        if (scripted) data += sub(ESM::fourCC("SCRI"), bytes(0x123u));
+        return record(ESM4::REC_MISC, id, data);
+    }
+
+    bool supportedStone(const Fixture& fixture, ESM::FormId id = {0x191, 1})
+    {
+        const auto* item = fixture.mStore.get<ESM4::MiscItem>().search(id);
+        return item && MWWorld::isOblivionWelkyndStone(fixture.mStore, *item);
+    }
+}
+
+TEST(OblivionMiscConsumableStore, OriginalBuiltinRoleUsesStableContentIdentityAndWinningMetadata)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {welkynd()});
+    ASSERT_TRUE(supportedStone(fixture));
+    // Native special-item role survives ordinary presentation overrides.
+    fixture.load("patch.esp", {"oblivion.esm"}, {welkynd(0x191, false, "ChangedDisplayEditorId")});
+    EXPECT_TRUE(supportedStone(fixture));
+}
+
+TEST(OblivionMiscConsumableStore, DisplayNameAndLocalIdDoNotGrantAnotherContentFileTheBuiltinRole)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {welkynd(0x192)});
+    EXPECT_FALSE(supportedStone(fixture, {0x192, 1}));
+    fixture.load("other.esm", {}, {welkynd()});
+    EXPECT_FALSE(supportedStone(fixture, {0x191, 3}));
+}
+
+TEST(OblivionMiscConsumableStore, ScriptedProfileAndDeletedWinningSourceDoNotPartiallyUse)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {welkynd(0x191, true)});
+    EXPECT_FALSE(supportedStone(fixture));
+    fixture.load("patch.esp", {"oblivion.esm"}, {welkynd()});
+    ASSERT_TRUE(supportedStone(fixture));
+    const auto previous = *fixture.mStore.get<ESM4::MiscItem>().search(ESM::FormId{0x191, 1});
+    fixture.load("final.esp", {"oblivion.esm", "patch.esp"}, {record(ESM4::REC_MISC, 0x191, {}, true)});
+    EXPECT_FALSE(supportedStone(fixture));
+    EXPECT_FALSE(MWWorld::isOblivionWelkyndStone(fixture.mStore, previous));
 }

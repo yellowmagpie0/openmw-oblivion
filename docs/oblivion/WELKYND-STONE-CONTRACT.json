@@ -1,5 +1,5 @@
 {
-  "status": "bounded preflight; actual acquisition, unsupported baseline and original-game control pending",
+  "status": "accepted bounded original Welkynd Stone use; full M16 and expedition remain open",
   "milestone": "M16 native miscellaneous consumable: original Welkynd Stone",
   "content": {
     "reference": "content:oblivion.esm:04929e",
@@ -30,7 +30,7 @@
     "native_magic_resistance": 0,
     "pending_effects": false
   },
-  "observed_source_gap": "Miscellaneous::use handles legacy soul gems and otherwise returns NullAction. No Welkynd/Varla path exists in apps/openmw or components. Actual ordinary-use baseline remains required.",
+  "observed_source_gap": "Baseline Miscellaneous::use returned NullAction. The accepted native path now recognizes the original built-in191 role and performs atomic current-Magicka restoration/selected-instance consumption.",
   "plan": [
     "Reach and collect original placed04929e through ordinary movement/activation; preserve source/debit provenance and prior expedition state.",
     "Spend Magicka through owned ordinary starter healing and establish the unsupported inventory-use baseline.",
@@ -48,5 +48,51 @@
   "outside_scope": [
     "Varla Stones, Ayleid wells, arbitrary MISC consumption, enchantment recharge and full M16",
     "Exact animation, audio, floating arithmetic or frame scheduling parity unless a meaningful discrepancy arises"
-  ]
+  ],
+  "collected_input": {
+    "save": "build/oblivion-compat/welkynd-stone/welkynd-path-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "40057173bba971f15766bbd583c988ba7ca2f81e420a066bfc943027acbffb64",
+    "health": 52.055843353271484,
+    "magicka": 80,
+    "stone_count": 1,
+    "acquisition_semantic": "build/oblivion-compat/welkynd-stone/acquisition-semantic-verification.json",
+    "checks": 38
+  },
+  "baseline": {
+    "semantic": "build/oblivion-compat/welkynd-stone/baseline-semantic-verification.json",
+    "diagnostic_passed": true,
+    "feature_passed": false,
+    "behavior": "One ordinary heal spends19 Magicka; correct drag-to-avatar attempt retains stone1, all inventory metadata, and a native Magicka deficit. No restoration except ordinary regeneration."
+  },
+  "original_oracle": "docs/oblivion/WELKYND-STONE-ORACLE.json",
+  "implementation": {
+    "schema": 94,
+    "new_schema_required": false,
+    "current": "Accepted:20 focused engine checks, fresh full2269 engine tests per configuration, and42 real-use/restart semantic checks per configuration.38 acquisition checks pass. Unchanged3281 component checks per configuration and604 Python checks reused with original provenance.",
+    "original_rule": "Full Magicka keeps the stone; deficit consumes one and restores the current maximum, including78 under original Mead."
+  },
+  "normal_runtime": {
+    "semantic": "build/oblivion-compat/welkynd-stone/normal-development-01-semantic-verification.json",
+    "checks": 42,
+    "outgoing_save": "build/oblivion-compat/welkynd-stone/normal-development-01-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "291804bb4e836f957f1e1ea8acd24a405d8719b52371ee1e0c641aa5725f865e",
+    "health": 59.49584197998047,
+    "magicka": 80,
+    "stone_count": 0
+  },
+  "typed_record_inspection": {
+    "dump": "build/oblivion-compat/welkynd-stone/typed-original-welkynd.txt",
+    "provenance": "build/oblivion-compat/welkynd-stone/typed-original-provenance.json",
+    "scope": "Existing esmtool confirms typed MISC identity, flags, name/model/icon; its MISC Data dump is unspecified. Raw record establishes value50/weight1; actual native tooltip independently displays both."
+  },
+  "reused_checks": "build/oblivion-compat/welkynd-stone/component-python-source-reuse.json",
+  "instrumented_runtime": {
+    "semantic": "build/oblivion-compat/welkynd-stone/sanitized-development-01-semantic-verification.json",
+    "checks": 42,
+    "outgoing_save": "build/oblivion-compat/welkynd-stone/sanitized-development-01-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "03420add640ae3863d261c9528bcc5211f974bd764e816fdc86029e77a39b126",
+    "rendered_leak_detection": false,
+    "full_engine_leak_detection": true
+  },
+  "verification": "docs/oblivion/WELKYND-STONE-VERIFICATION.json"
 }

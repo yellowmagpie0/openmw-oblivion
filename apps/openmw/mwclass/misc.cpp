@@ -17,6 +17,7 @@
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/manualref.hpp"
 #include "../mwworld/nullaction.hpp"
+#include "../mwworld/oblivionmiscconsumables.hpp"
 #include "../mwworld/worldmodel.hpp"
 
 #include "../mwgui/tooltips.hpp"
@@ -155,9 +156,12 @@ namespace MWClass
 
         std::string text;
 
-        text += MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, "#{sWeight}");
+        auto* world = MWBase::Environment::get().getWorldOrNull();
+        const bool nativeStone = world && MWWorld::isOblivionWelkyndItem(*world, ptr);
+        text += MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight,
+            nativeStone ? "#{Interface:Weight}" : "#{sWeight}");
         if (!gold && !(ref->mBase->mData.mFlags & ESM::Miscellaneous::Key))
-            text += MWGui::ToolTips::getValueString(getValue(ptr), "#{sValue}");
+            text += MWGui::ToolTips::getValueString(getValue(ptr), nativeStone ? "#{Interface:Value}" : "#{sValue}");
 
         if (MWBase::Environment::get().getWindowManager()->getFullHelp())
         {
@@ -232,6 +236,8 @@ namespace MWClass
 
     std::unique_ptr<MWWorld::Action> Miscellaneous::use(const MWWorld::Ptr& ptr, bool force) const
     {
+        if (auto* world = MWBase::Environment::get().getWorldOrNull())
+            if (auto action = MWWorld::createOblivionMiscConsumableUse(*world, ptr)) return action;
         if (isSoulGem(ptr))
             return std::make_unique<MWWorld::ActionSoulgem>(ptr);
 

@@ -1,0 +1,406 @@
+{
+  "status": "independent original control completed and closed normally",
+  "executable": {
+    "version": "1.2.0416",
+    "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "pe_metadata": "build/oblivion-compat/welkynd-stone/original-native-01/pe.json"
+  },
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "prefix_provenance": {
+    "source_prefix": "build/oblivion-compat/mead-use/original-native-02/compat",
+    "destination": "build/oblivion-compat/welkynd-stone/original-native-01/compat",
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "documents_save_resolves_inside_private_prefix": true,
+    "plugins_resolve_inside_private_prefix": true,
+    "windows_personal_folder": "C:\\users\\steamuser\\Documents",
+    "scope": "Independent original-game control only; fork acquisition remains ordinary real content."
+  },
+  "actual_process": {
+    "pid": 1040014,
+    "start_ticks": 199191051,
+    "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+    "window_id": 73400323,
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "verified_wineprefix": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/original-native-01/compat/pfx/",
+    "mapped_original_exe": [
+      "00400000-00401000 r-xp 00000000 00:23 2071952                            /home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe"
+    ]
+  },
+  "exit": {
+    "wrapper_exit": 0,
+    "pristine_input_unchanged": true,
+    "original_installed_exe_unchanged": true
+  },
+  "services_exit": {
+    "steam_launcher_exit": 0,
+    "owned_display_exit": 0,
+    "pristine_unchanged": true,
+    "exe_unchanged": true
+  },
+  "controls": "Only the isolated original control grants original191 stones2 and originalMead1. Actual fork acquisition uses ordinary movement and pickup. Magicka regeneration disabled with native GMST controls; deficits created by ordinary owned Heal Minor Wounds, not DamageAV or forged stats.",
+  "tolerances": {
+    "actor_values": 0.01,
+    "item_counts": "exact integers",
+    "timing": "No exact frame/wall-clock requirement"
+  },
+  "cases": [
+    {
+      "name": "full rejection",
+      "magicka_before": 80,
+      "magicka_after": 80,
+      "stone_before": 2,
+      "stone_after": 2,
+      "observed_message": "Because your Magicka is at maximum, the Welkynd Stone remains charged."
+    },
+    {
+      "name": "ordinary deficit",
+      "magicka_before": 61,
+      "magicka_after": 80,
+      "stone_before": 2,
+      "stone_after": 1,
+      "maximum": 80
+    },
+    {
+      "name": "current derived maximum under original Mead",
+      "intelligence": 39,
+      "magicka_before": 59,
+      "magicka_after": 78,
+      "base_magicka_query": 78,
+      "stone_before": 1,
+      "stone_after": 0
+    }
+  ],
+  "instructions": {
+    "identity_initialization": "0x0044b0f2..0x0044b13e assigns original FormId191 to the object retained at0x00b35ed8, then supplies the WelkyndStone editor string.",
+    "item_and_actor_dispatch": "0x005fb7c1..0x005fb7d5 compares selected base pointer with0x00b35ed8 and actor with Player singleton0x00b333c4.",
+    "resource_branch": "0x005fb7db..0x005fb818 queries AV9: integer base plus modifier bucket0 is compared with current value; non-deficit takes the full message path.",
+    "restoration_and_debit": "0x005fb81e..0x005fb86b computes maximum-current and passes AV9 plus delta to actor virtual+0x2a4. 0x005fb8cd..0x005fb8fb follows admitted use with count1 removal through actor virtual+0x100.",
+    "full_branch": "0x005fb905..0x005fb922 reads the sMagicAlreadyFull setting at0x00b38e98 and skips removal.",
+    "default_message": "0x009f3110 initializes sMagicAlreadyFull using key0x00a61464 and text0x00a61478. This is a setting initializer, not the use handler.",
+    "scope": "Instruction observations corroborate the three actual controls; virtual bodies, sound, HUD refresh and generic inventory script dispatch are boundary observations, not emulated/native parity claims. No exact arithmetic emulation is required."
+  },
+  "ignored_instruction_files": {
+    "build/oblivion-compat/welkynd-stone/original-native-01/native-stone-use.asm": "99789fd5394821a92dfb42ea487cb273ab3977eedb0bee81ba49c7e41d21b1db",
+    "build/oblivion-compat/welkynd-stone/original-native-01/native-welkynd-handler.asm": "fa049a920e043110d32cf5c9b2d90c3c28e146cf858d998c2af27ed7fcd15ba4",
+    "build/oblivion-compat/welkynd-stone/original-native-01/native-welkynd-dispatch.asm": "1295f4d9c5bcd7aa956aa2d0a4ef8b57563df62c09f0cbf7b2c210b397313058",
+    "build/oblivion-compat/welkynd-stone/original-native-01/native-welkynd-identity.asm": "27edbccde4339be9a8ec4a3260e51770658816619e18821d8a198210283a64b6"
+  },
+  "images": {
+    "build/oblivion-compat/welkynd-stone/original-native-01/original-controlled-full-baseline.png": "5b9429005116f830158fb7a1b445e93524d436311e7c072c1c292d6b84d7def2",
+    "build/oblivion-compat/welkynd-stone/original-native-01/original-full-use-result.png": "5814483dbd928bf1aafe0bcfd078accb011179a2cdca677ab76b20670cb15a05",
+    "build/oblivion-compat/welkynd-stone/original-native-01/original-after-owned-healing.png": "5164bcf76e32e7ec9727f2e4f94df08f3c27ce987bacd70c9f6ef7b6a44f63bd",
+    "build/oblivion-compat/welkynd-stone/original-native-01/original-restored-query.png": "468cfa87924b1729cad139e8ef566236e65ca7fdd54a95ccfabf72abe8204370",
+    "build/oblivion-compat/welkynd-stone/original-native-01/original-mead-reduced-maximum-deficit.png": "da63bed3fe32a71e82312e5fa6187a1ed5d9f6afc8cfde278bc8c107a0c8202a",
+    "build/oblivion-compat/welkynd-stone/original-native-01/original-reduced-maximum-restored-query.png": "d8bbe64fa3eae067a43636564fd00033d19fbcb61008fb7d483f90efb45bd6ac"
+  },
+  "editable_actual_input_recipes": {
+    "boot-actions.json": [
+      {
+        "type": "click",
+        "x": 340,
+        "y": 590
+      },
+      {
+        "type": "sleep",
+        "seconds": 1
+      },
+      {
+        "type": "shot",
+        "name": "original-continue-confirm.png"
+      }
+    ],
+    "controlled-baseline-actions.json": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "EnablePlayerControls"
+      },
+      {
+        "type": "line",
+        "value": "setGS fMagickaReturnBase 0"
+      },
+      {
+        "type": "line",
+        "value": "setGS fMagickaReturnMult 0"
+      },
+      {
+        "type": "line",
+        "value": "player.AddItem 00000191 2"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 00000191"
+      },
+      {
+        "type": "shot",
+        "name": "original-controlled-full-baseline.png"
+      }
+    ],
+    "depleted-use-actions.json": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "click",
+        "x": 211,
+        "y": 515
+      },
+      {
+        "type": "shot",
+        "name": "original-depleted-use-result.png"
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 00000191"
+      },
+      {
+        "type": "shot",
+        "name": "original-restored-query.png"
+      }
+    ],
+    "derived-maximum-setup-actions.json": [
+      {
+        "type": "line",
+        "value": "player.AddItem 000b1201 1"
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "shot",
+        "name": "original-derived-maximum-setup.png"
+      }
+    ],
+    "full-use-actions.json": [
+      {
+        "type": "click",
+        "x": 211,
+        "y": 515
+      },
+      {
+        "type": "shot",
+        "name": "original-full-use-result.png"
+      }
+    ],
+    "inventory-full-actions.json": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "sleep",
+        "seconds": 1
+      },
+      {
+        "type": "shot",
+        "name": "original-welkynd-inventory-full.png"
+      }
+    ],
+    "load-actions.json": [
+      {
+        "type": "click",
+        "x": 644,
+        "y": 382
+      },
+      {
+        "type": "sleep",
+        "seconds": 10
+      },
+      {
+        "type": "key",
+        "value": "F9"
+      },
+      {
+        "type": "sleep",
+        "seconds": 8
+      },
+      {
+        "type": "shot",
+        "name": "original-pristine-loaded.png"
+      }
+    ],
+    "menu-ready-actions.json": [
+      {
+        "type": "sleep",
+        "seconds": 12
+      },
+      {
+        "type": "shot",
+        "name": "original-menu-ready.png"
+      }
+    ],
+    "ordinary-deficit-actions.json": [
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "key",
+        "value": "c"
+      },
+      {
+        "type": "sleep",
+        "seconds": 2
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 00000191"
+      },
+      {
+        "type": "shot",
+        "name": "original-after-owned-healing.png"
+      }
+    ],
+    "quit-actions.json": [
+      {
+        "type": "line",
+        "value": "qqq"
+      }
+    ],
+    "reduced-maximum-deficit-actions.json": [
+      {
+        "type": "click",
+        "x": 211,
+        "y": 515
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "key",
+        "value": "c"
+      },
+      {
+        "type": "sleep",
+        "seconds": 2
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 00000191"
+      },
+      {
+        "type": "shot",
+        "name": "original-mead-reduced-maximum-deficit.png"
+      }
+    ],
+    "reduced-maximum-use-actions.json": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "click",
+        "x": 211,
+        "y": 515
+      },
+      {
+        "type": "shot",
+        "name": "original-reduced-maximum-use-result.png"
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 00000191"
+      },
+      {
+        "type": "shot",
+        "name": "original-reduced-maximum-restored-query.png"
+      }
+    ]
+  },
+  "outside_scope": [
+    "NPC use, Varla/wells and arbitrary MISC records",
+    "General scripts/mod-defined special-item roles or malformed resource domains",
+    "Exact audio, animation, frame timing and float stores"
+  ]
+}
