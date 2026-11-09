@@ -37,10 +37,19 @@ passes2 component and3 engine tests, with exact inventories and no failures or
 skips. It covers raw/shared Fame, preserved Infamy/accumulator, invalid-delta
 atomicity and native snapshot restoration. [Reward evidence](HACKDIRT-RETURN-REWARD-VERIFICATION.json).
 
-**Next:** implement missing ModPCSkill from original instruction/content evidence,
-repeat original arrival with matched artifacts, walk to Seed-Neeus, complete the
-original turn-in, and prove final restart/nonrepeatability. Final broad affected
-normal/sanitizer gates remain pending. The full course remains open.
+ModPCSkill is implemented and the original normal-input turn-in passes in
+`return-reward-03`: Missing Daughter→safe answer028210→stage100, Mercantile15→20,
+Fame0→1, five skill/Personality/Stealth advances and zero major advances for the
+original temporary class. Seed-Neeus's essential override is false, MS45FIN is
+running and Chorrol→Player reaction is5. Native disposition applies its existing
+derived-score clamp to the authored+20 request (modifier40→58). Captures inspected.
+Full normal gates pass3272 component and2257 engine tests, exact inventories.
+
+**Next:** finish matched pre-arrival continuation and the delayed final restart
+capture, then final sanitizer gates/reward replay. The first fresh completed
+restart passes state/nonrepeatability, but its dialogue capture was taken before
+the next rendered frame. Broad sanitizer acceptance and full milestone acceptance
+remain open. See the reward receipt for all retained failed attempts.
 
 ## Current checkpoint — 2026-11-08
 

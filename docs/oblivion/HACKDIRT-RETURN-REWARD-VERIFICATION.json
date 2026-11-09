@@ -3,7 +3,8 @@
   "status": "in progress",
   "contract": "HACKDIRT-RETURN-CONTRACT.json",
   "implemented": [
-    "ModPCFame uses native Player reputation, preserves Infamy and bounty accumulation, and publishes the shared view"
+    "ModPCFame uses native Player reputation, preserves Infamy and bounty accumulation, and publishes the shared view",
+    "Positive/zero ModPCSkill updates native Player skill base and experience, shared attribute/specialization/major advancement, and saved per-skill advances; natural skill-use/level-up UI and original training notifications remain outside this bounded implementation."
   ],
   "focused_fame_gate": {
     "path": "build/oblivion-compat/hackdirt/reward-fame-focused-01/verification.json",
@@ -63,10 +64,134 @@
     }
   },
   "remaining": [
-    "Implement original ModPCSkill reward and advancement bookkeeping",
-    "Repeat arrival with matched binary/resources",
-    "Original successful turn-in and exact reward deltas",
-    "Fresh completed restart and no reward replay",
-    "Final affected normal/sanitizer gates"
+    "Matched pre-arrival continuation gate",
+    "Final restart capture with enough rendered frames; mechanical restart01 passes, but first capture preceded GUI rendering",
+    "Final ASan/UBSan component/engine and original-content reward checks"
+  ],
+  "original_training_evidence": "../../scripts/data/oblivion_compat/hackdirt_reward_training_oracle_cases.json",
+  "normal_integration_gate": {
+    "path": "build/oblivion-compat/hackdirt/return-reward-normal-01/verification.json",
+    "source": {
+      "head": "12fb9325ad7d79f53bc2197159aa9a626a297955",
+      "source_fingerprint": "401f0cdd227a1fa38cbc3f42b8c53b31f108754f6ee9b43226b4722a1f3d4563"
+    },
+    "components": {
+      "executed": 3272,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "952e3535b4c5d5bb72b5aab186e6f4a686b0a370180f1d4be896c695c5c5011d",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "c91c4f46d72c4879a13346a6c38597fff86d9c0a2867287304ca442c2441d7b0",
+      "inventory_sha256": "da139a706ba4c4afcef63874cc1831be3f994aae6a34be8e7ed79279c5832cdb",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "engine": {
+      "executed": 2257,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "5ced046146fcdcfc3f7775ffa6b219a3c979de66d15ae7ee0f2d0b21deb320d4",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "d34d89076d5a1d431330dcd39a02139a0959b110048446b2f345a94d0e8817ad",
+      "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "focused_training_engine_gate": {
+    "path": "build/oblivion-compat/hackdirt/reward-training-focused-03/verification.json",
+    "source": {
+      "head": "12fb9325ad7d79f53bc2197159aa9a626a297955",
+      "source_fingerprint": "ad38434f94bc418cb83a38df9e6eab9887690a585476fa4505d1b827116bec5e"
+    },
+    "engine": {
+      "executed": 2,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "OblivionSkillTraining.*",
+      "binary_sha256": "5ced046146fcdcfc3f7775ffa6b219a3c979de66d15ae7ee0f2d0b21deb320d4",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "b4c40b418696f382e0d1dff87a6f2a887439d75289aa83ad01e65078265531b4",
+      "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "normal_reward": {
+    "path": "build/oblivion-compat/hackdirt/return-reward-03",
+    "passed": true,
+    "epoch": {
+      "pid": 716127,
+      "start_ticks": 192574007,
+      "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-reward-03/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/return-turnin-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "9219567f2e96077faac069b14f54f5d5cb44dac51bbbc00a9044b34cc0f4c8f3"
+    },
+    "normal_inputs": "Activate Seed-Neeus; Missing Daughter; Yes, Dar-Ma is safe.; close dialogue; F5",
+    "selected_infos": [
+      "029203",
+      "0280c0",
+      "028210"
+    ],
+    "observed": {
+      "stage": 100,
+      "mercantile_before": 15,
+      "mercantile_after": 20,
+      "fame_before": 0,
+      "fame_after": 1,
+      "skill_advances": 5,
+      "major_progress": 0,
+      "personality_advances": 5,
+      "stealth_advances": 5,
+      "seedneeus_disposition_modifier_before": 40,
+      "seedneeus_disposition_modifier_after": 58,
+      "authored_disposition_request": 20,
+      "disposition_note": "Existing native derived-score clamp applies; remaining replay will record the pre-reward score.",
+      "chorrol_to_player_faction_reaction": 5,
+      "seedneeus_essential": false,
+      "MS45FIN_running": true
+    },
+    "captures_inspected": [
+      "original-return-question.png",
+      "original-return-reward.png",
+      "return-reward-completed.png"
+    ]
+  },
+  "retained_new_failures": [
+    "reward-training-focused-01: application used RefId where AttributeID was required",
+    "reward-training-focused-02: incorrect test include path",
+    "return-home-turnin-01: expected completion response at activation instead of selecting original topic and answer",
+    "return-question-diagnostic-01/03: input-manifest preflight rejections; no game started",
+    "return-question-diagnostic-02: controller navigation did not select target topic",
+    "return-reward-01: frame timer did not advance while dialogue paused simulation",
+    "return-reward-02: all actions/state passed, but forbidden matcher incorrectly rejected evaluated dialogue candidates; final matcher rejects selected menus"
   ]
 }

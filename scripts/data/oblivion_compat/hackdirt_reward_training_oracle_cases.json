@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "scope": "Positive/zero scripted skill levels, experience threshold/cache and advancement bookkeeping needed by original MS45 stage100",
+  "command": {
+    "entry": "0050D020",
+    "stop": "0050D1CA before UI notifications",
+    "inputs": {
+      "base": [
+        20,
+        99,
+        100
+      ],
+      "count": [
+        0,
+        1,
+        5
+      ],
+      "major": [
+        false,
+        true
+      ],
+      "experience": [
+        0,
+        25,
+        125
+      ],
+      "supplied_experience_requirement": 100
+    },
+    "cases": 54,
+    "script": "build/oblivion-compat/hackdirt/reward-skill-oracle.py",
+    "script_sha256": "f1524cbfc4b92754e66d167d5173eb7304045646ad42936e277c9764cb3dfea3",
+    "report": "build/oblivion-compat/hackdirt/reward-skill-oracle.json",
+    "stubs": [
+      "004FAE80 argument extraction",
+      "00565C50 AV-to-skill index",
+      "00446AF0 skill-record resolver",
+      "005F23B0 and 005F1910 base getters",
+      "0065D1E0 base setter",
+      "006648D0 governed attribute increment observed at boundary",
+      "005E3320 class resolver",
+      "0051C090 major predicate"
+    ]
+  },
+  "threshold": {
+    "entries": [
+      "00548030",
+      "00663C50"
+    ],
+    "inputs": {
+      "settings": [
+        {
+          "factor": 1,
+          "exponent": 1
+        },
+        {
+          "factor": 0.35,
+          "exponent": 1.5
+        },
+        {
+          "factor": 2,
+          "exponent": 2
+        }
+      ],
+      "base": [
+        0,
+        1,
+        20,
+        100
+      ],
+      "major": [
+        false,
+        true
+      ],
+      "specialized": [
+        false,
+        true
+      ]
+    },
+    "cases": 48,
+    "script": "build/oblivion-compat/hackdirt/reward-xp-threshold-oracle.py",
+    "script_sha256": "56e89e0e23709e82158bec0d892721e1ee7cdfff8e2292e2329a04b5106a9975",
+    "report": "build/oblivion-compat/hackdirt/reward-xp-threshold-oracle.json",
+    "boundary": "Settings initialized explicitly at verified storage; full original x87 power path executes. Full caller00663C50 executes its cache decision and real Class major predicate. Skill/class/base resolvers and specialization getter are boundary stubs."
+  },
+  "expected_tables": [
+    "apps/components_tests/esm4/skill_training_threshold_expected.inc",
+    "apps/components_tests/esm4/scripted_skill_training_expected.inc"
+  ],
+  "limits": [
+    "Negative counts, int32 base overflow and negative skill bases are explicitly rejected before mutation.",
+    "Ordinary skill-use progression, level-up menus and original training notifications are outside this bounded quest-reward implementation.",
+    "Missing preexisting per-skill advancement history starts at adoption; no history is reconstructed.",
+    "Original counter wrapping is retained; ordinary numeric threshold comparisons use 2e-6 relative /1e-5 absolute tolerance."
+  ],
+  "retained_failures": [
+    "reward-skill-oracle-failed-01/02: incorrect boundary cleanup convention, corrected from original ret instructions",
+    "reward-xp-threshold-oracle-wrong-cache-01 and skilltraining-draft-preflight-failed-01: expected data incorrectly floored positive subunit thresholds to1; full original caller now verifies the actual cache branch"
+  ]
+}

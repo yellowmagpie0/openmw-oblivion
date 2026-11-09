@@ -6,6 +6,8 @@
 #include <components/esm4/loadclas.hpp>
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/playermechanics.hpp>
+#include <components/esm4/skilltraining.hpp>
+#include <limits>
 
 namespace
 {
@@ -94,4 +96,51 @@ TEST(ESM4PlayerMechanics, MapsExactlyTheTwentyOneNativeSkills)
     EXPECT_EQ(ESM4::playerSkillIndex(ESM4::Race::Skill_Armorer - 1), -1);
     EXPECT_EQ(ESM4::playerSkillIndex(ESM4::Race::Skill_Speechcraft + 1), -1);
     EXPECT_TRUE(ESM4::playerSkillName(21).empty());
+}
+
+TEST(ESM4PlayerMechanics, SkillExperienceRequirementsMatchOriginalInstructionsAndPositiveSubunitCache)
+{
+    struct Case { int mBase; bool mMajor, mSpecialized; float mFactor, mExponent, mExpected; };
+    const Case cases[] = {
+#include "skill_training_threshold_expected.inc"
+    };
+    for (const auto& test : cases)
+    {
+        SCOPED_TRACE(test.mBase);
+        ESM4::SkillTrainingSettings settings;
+        settings.mFactor = test.mFactor;
+        settings.mExponent = test.mExponent;
+        EXPECT_NEAR(ESM4::skillExperienceRequirement(test.mBase, test.mMajor, test.mSpecialized, settings),
+            test.mExpected, std::max(1e-5f, test.mExpected * 2e-6f));
+    }
+}
+
+TEST(ESM4PlayerMechanics, ScriptedTrainingMatchesOriginalLevelAndExperienceLoopWithoutSkill100Cap)
+{
+    struct Case { int mBase; float mExperience; int mCount; bool mMajor; int mAfter; float mRemaining; };
+    const Case cases[] = {
+#include "scripted_skill_training_expected.inc"
+    };
+    ESM4::SkillTrainingSettings settings;
+    settings.mExponent = 0;
+    settings.mMajorMultiplier = settings.mMinorMultiplier = 100;
+    settings.mSpecializationMultiplier = 1;
+    for (const auto& test : cases)
+    {
+        SCOPED_TRACE(test.mBase);
+        const auto result = ESM4::trainScriptedSkill(test.mBase, test.mExperience, test.mCount,
+            test.mMajor, false, settings);
+        EXPECT_EQ(result.mBase, test.mAfter);
+        EXPECT_FLOAT_EQ(result.mExperience, test.mRemaining);
+    }
+    settings.mFactor = .35f; settings.mExponent = 1.5f;
+    settings.mMinorMultiplier = 1.25f;
+    const auto result = ESM4::trainScriptedSkill(20, 30, 5, false, false, settings);
+    EXPECT_EQ(result.mBase, 25);
+    EXPECT_EQ(result.mExperience, 0);
+    EXPECT_THROW(ESM4::trainScriptedSkill(20, 0, -1, false, false, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::trainScriptedSkill(std::numeric_limits<int>::max(), 0, 1, false, false, settings),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::trainScriptedSkill(20, std::numeric_limits<float>::quiet_NaN(), 1,
+        false, false, settings), std::invalid_argument);
 }

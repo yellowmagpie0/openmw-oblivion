@@ -20,20 +20,25 @@
     "shop_cell": "000807",
     "shop_exterior_door": "0104a3",
     "shop_interior_door": "0008b3",
-    "successful_greeting": "028210",
-    "death_greeting_rejected": "02820c"
+    "death_greeting_rejected": "02820c",
+    "successful_response": "028210",
+    "missing_daughter_topic": "028090",
+    "return_question": "0280c0",
+    "safe_answer_topic": "02820a"
   },
   "expected": {
     "return_behavior": "Independent original TravelHome targeting SeedNeeusRef within 300 units; companion link released",
     "successful_stage": 100,
     "quest_completed": true,
     "mercantile_increase": 5,
-    "seedneeus_disposition_increase": 20,
     "fame_increase": 1,
-    "chorrol_to_player_faction_reaction_increase": 5,
     "seedneeus_essential": false,
     "followup_quest_started": "MS45FIN",
-    "repeat_reward": false
+    "repeat_reward": false,
+    "chorrol_to_player_faction_reaction": 5,
+    "seedneeus_disposition_requested_increase": 20,
+    "seedneeus_disposition_limit": "Existing native ModDisposition clamps against derived current score; stored modifier can increase by less than requested20.",
+    "normal_interaction": "Activate Seed-Neeus, select Missing Daughter, then Yes, Dar-Ma is safe."
   },
   "input_checkpoint": {
     "path": "build/oblivion-compat/hackdirt/return-gate-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
@@ -48,10 +53,9 @@
     "Fresh-process completed quest and reward persistence with no repeat reward",
     "Focused regressions and final affected normal/sanitizer integration gates"
   ],
-  "status": "Content contract inspected; runtime acceptance and missing reward bindings remain open",
+  "status": "Original turn-in and reward accepted; final restart and sanitizer gates pending",
   "limits": [
     "Raw proprietary record/script payloads remain ignored local evidence.",
-    "The latest return-shop-03 run failed its enteredShop observation; no shop arrival inferred.",
-    "ModPCSkill and ModPCFame have no explicit production handlers at this checkpoint."
+    "The latest return-shop-03 run failed its enteredShop observation; no shop arrival inferred."
   ]
 }

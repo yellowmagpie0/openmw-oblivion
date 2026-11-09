@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "name": "Hackdirt original Dar-Ma travel: fresh process from shop entry",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal timer=0\nlocal index=1\nlocal points={{{{-64640,91990,14184}},{{-64731.38671875,92111.96875,14184.0}},{{-64752.3125,92300.265625,14184.0}},{{-65003.28125,92568.03125,14184.0}},{{-65307.5625,92539.8125,14184.0}},{{-65845.8984375,92421.2890625,14204.0}},{{-66193.796875,92548.71875,14184.0}},{{-66442.03125,92596.015625,14198.0}},{{-66717.390625,92723.578125,14298.0}}}}\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.1 then return end;timer=0\n assert(not Actor.isDead(self),'Player died returning to shop')\n local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x280fa))\n if a and a:isValid() then assert(not Actor.isDead(a),'Dar-Ma died returning to shop');print('ReturnShop darmaCell='..a.cell.name..' position='..tostring(a.position)..' health='..Actor.stats.dynamic.health(a).current) end\n if core.isWorldPaused() then print('ReturnShop paused');return end\n print('ReturnShop playerCell='..self.cell.name..' position='..tostring(self.position))\n if self.cell.name=='ChorrolNorthernGoodsAndTrade' then\n  print('ReturnShop enteredShop');if a and a:isValid() and a.cell.name==self.cell.name then print('ReturnShop darmaArrived') end\n  if a and a:isValid() and a.cell.isExterior and (a.position-self.position):length()<450 then print('ReturnShop followerExterior') end\n  return\n end\n local tag,target\n if index<=#points then\n  tag=tostring(index);local p=points[index];target=util.vector3(p[1],p[2],p[3]);local v=target-self.position\n  if math.sqrt(v.x*v.x+v.y*v.y)<20 then print('ReturnShop reached='..tag);index=index+1;return end\n else\n  tag='door';local door=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x104a3));assert(door and door:isValid(),'Original Northern Goods shop door missing');target=door.position+util.vector3(0,0,30);print('ReturnShop doorDistance='..(target-self.position):length())\n end\n local v=target-self.position;local f=self.rotation:apply(util.vector3(0,1,0));local angle=math.atan2(f.y*v.x-f.x*v.y,f.x*v.x+f.y*v.y);local pitch=0\n if tag=='door' then local c=target-camera.getPosition();pitch=-math.atan2(c.z,math.sqrt(c.x*c.x+c.y*c.y)) end\n if math.abs(angle)<0.05 and math.abs(pitch-camera.getPitch())<0.04 then print('ReturnShop ready='..tag) end\n print(string.format('ReturnShop aim x=%d y=%d',math.max(-150,math.min(150,math.floor(angle*128+.5))),math.max(-100,math.min(100,math.floor((pitch-camera.getPitch())*128+.5)))))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "ReturnShop enteredShop",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "ReturnShop darmaArrived",
+      "timeout_seconds": 360,
+      "abort_on_failure": false
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 8
+    },
+    {
+      "type": "screenshot",
+      "name": "return-darma-shop.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "ReturnShop enteredShop",
+    "ReturnShop darmaArrived"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "Native dialogue menu: actor=(?!content:oblivion.esm:0280fa )",
+    "info=content:oblivion.esm:02809c",
+    "Native dialogue menu:",
+    "EscortStreet paused"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl"
+  },
+  "sdl_xvfb_input": true,
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}
