@@ -1,0 +1,73 @@
+{
+  "status": "actual container loot loss reproduced; implementation pending",
+  "milestone": "Bounded M13 native container leveled-loot transfer and persistence",
+  "scope": "Same genuine post-mudcrab-loot character enters original Vilverin, reaches original first-area food sack06c2ad and receives concrete original food items from its four independent LVLI draws; F5/fresh processes and repeat activation retain actual Player transfer and empty source without replay.",
+  "reference": "content:oblivion.esm:06c2ad",
+  "base": "content:oblivion.esm:037530 DungBanditSackFoodRound",
+  "inventory": {
+    "list": "content:oblivion.esm:053f26 LL0FoodLowerClass75",
+    "count": 4,
+    "chance_none": 25,
+    "flags": 2,
+    "all_lower": false,
+    "each_in_count": true,
+    "level1_candidates": 11
+  },
+  "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "genuine_input": {
+    "path": "build/oblivion-compat/vilverin-containers/entry-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "b94352a1a3af18c7693205a34a6353a5e80e2b776aa5e6e4e5c97df6cb7e6195",
+    "provenance": "Ordinary door066ac8 from accepted post-mudcrab-loot character; retains Crab Meat1/Bone1 and original unopened native container templates."
+  },
+  "route": {
+    "run": "build/oblivion-compat/vilverin-containers/route-survey-02",
+    "status": "Actual ordinary walking passed; ambush bandit killed with four original Flare casts and Player Health67.679 preserved at sack.",
+    "standing_point": [
+      -4971.69,
+      -1739.43,
+      -1060.65
+    ],
+    "points": 20,
+    "length": 5500.33,
+    "endpoint_error": 1.895
+  },
+  "known_failure": "Current generic container path passes raw LVLI forms to a concrete-item-only adder, ignores zero accepted counts, then clears source and reports looted. Actual food-sack baseline required before code changes.",
+  "acceptance": [
+    "Walk genuine character to original sack; survive and retain prior carried loot",
+    "Reproduce actual activation loss before fixing it",
+    "Independently audit actual count4/25-percent chance-none/EachInCount rules and eligible original food forms",
+    "Generate concrete eligible quantities from four independent original draws and perform actual Player transfer",
+    "F5/fresh process retains exact Player inventory metadata and empty opened source; repeat activation adds nothing",
+    "Previously emptied/opened saved baseline remains authoritative without retroactive refill",
+    "Focused regression checks, applicable integration gates and instrumented real-content continuation pass"
+  ],
+  "outside_scope": [
+    "Complete Vilverin expedition",
+    "All native container UI/drag-drop",
+    "Container/cell respawn",
+    "All Player levels and exact RNG streams",
+    "Ingredient consumption/effects",
+    "General merchant or ownership/crime matrix"
+  ],
+  "deferred_candidate": {
+    "reference": "content:oblivion.esm:04bb8b",
+    "contract": "build/oblivion-compat/vilverin-containers/inspection-01/deferred-restoration-contract.json",
+    "reason": "Repeated partial endpoints lie below/beside target. Avoid broad navigation/dungeon expansion solely to exercise this container primitive.",
+    "native_rule_evidence": "build/oblivion-compat/vilverin-containers/inspection-01/native-restoration-chest-oracle.json"
+  },
+  "independent_rules": {
+    "records": "build/oblivion-compat/vilverin-containers/inspection-01/original-food-sack-tree.json",
+    "instructions": "build/oblivion-compat/vilverin-containers/inspection-01/native-food-sack-oracle.json",
+    "cases": 28,
+    "typed_audit": "build/oblivion-compat/vilverin-containers/inspection-01/typed-original-food-sack-verification.json",
+    "typed_records": 2,
+    "entries": 11,
+    "scope": "Actual count4,25-percent chance-none boundary, every concrete original food and partial/mixed independent draws through original executable instructions."
+  },
+  "baseline": {
+    "run": "build/oblivion-compat/vilverin-containers/food-sack-baseline-03",
+    "semantic_verification": "build/oblivion-compat/vilverin-containers/food-sack-baseline-semantic-verification.json",
+    "save_sha256": "218395f5a6c90ffb8f0bbb30398aff35c229bb230687c4eeebcfa2460128a7b8",
+    "result": "Real normal-input activation clears original053f26 count4 and marks opened; Player inventory exactly unchanged."
+  }
+}

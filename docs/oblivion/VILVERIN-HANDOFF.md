@@ -41,10 +41,16 @@ AI/input attempt is retained; only receipt timing changed, with all gameplay
 assertions retained.
 
 Current course remains sewer exit → independent Vilverin expedition → outside
-alive with retained loot. Next action: select/reproduce the next original
-container or dungeon-entry blocker, using the genuine post-loot character.
-Container LVLI templates remain unresolved in original unopened saved state;
-inspect/reproduce a bounded original chest before implementing that path.
+alive with retained loot. Current chunk: original first-area food sack `06c2ad`,
+base `037530`, LVLI `053f26` count4 (25% none per independent item). Door `066ac8`
+is passed with both mudcrab items intact. Read-only path survey finds a complete
+20-point route is traversed; four Flare casts kill the original ambush NPC and
+preserve Health67.679. Clear nearby standing-point/camera probes provide real
+center-ray activation. Baseline03 clears the count4 list and marks opened while
+leaving Player inventory exactly unchanged. Next action: resolve actual LVLI
+stock once before transfer, then verify eligible food quantities and persistence. The restoration-chest candidate is deferred
+behind a route/ledge gap; its records and probes remain linked historical evidence.
+See [VILVERIN-CONTAINER-LOOT-CONTRACT.json](VILVERIN-CONTAINER-LOOT-CONTRACT.json).
 No full M13/M16, respawn, grouped actors or full dungeon completion claim.
 
 Reusable genuine inputs: exterior exit SHA256
