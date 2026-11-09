@@ -101,7 +101,8 @@ namespace MWGui
                     addGroup(spell.mNative ? "Spells" : "#{sSpells}",
                         mShowCostColumn ? (spell.mNative ? "#{sCastCost}" : "#{sCostChance}") : "");
                 else
-                    addGroup("#{sMagicItem}", mShowCostColumn ? "#{sCostCharge}" : "");
+                    addGroup(spell.mNative ? "Scrolls" : "#{sMagicItem}",
+                        mShowCostColumn ? (spell.mNative ? "#{sCastCost}" : "#{sCostCharge}") : "");
                 curType = spell.mType;
             }
 

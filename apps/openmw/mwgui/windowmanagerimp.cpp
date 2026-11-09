@@ -1,4 +1,6 @@
 #include "windowmanagerimp.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
+#include <components/esm4/loadbook.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -1707,6 +1709,20 @@ namespace MWGui
 
     void WindowManager::setSelectedEnchantItem(const MWWorld::Ptr& item)
     {
+        auto world = MWBase::Environment::get().getWorld();
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto* book = item.isEmpty() ? nullptr
+                : mStore->get<ESM4::Book>().search(item.getCellRef().getRefId());
+            if (!book || !MWWorld::resolveOblivionScrollDamage(*mStore, *book))
+                throw std::invalid_argument("unsupported native selected magic item");
+            mRuntime->mSelectedEnchantItem = item;
+            mRuntime->mSelectedSpell = {};
+            mRuntime->mHud->setSelectedEnchantItem(item, 100);
+            mRuntime->mSpellWindow->setTitle(item.getClass().getName(item));
+            return;
+        }
+
         mRuntime->mSelectedEnchantItem = item;
         mRuntime->mSelectedSpell = ESM::RefId();
         const ESM::Enchantment* ench = mStore->get<ESM::Enchantment>().find(item.getClass().getEnchantment(item));

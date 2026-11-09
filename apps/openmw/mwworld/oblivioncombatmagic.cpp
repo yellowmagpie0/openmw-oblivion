@@ -42,6 +42,8 @@
 #include <algorithm>
 #include <components/esm4/loadalch.hpp>
 #include <components/esm4/loadingr.hpp>
+#include <components/esm4/loadbook.hpp>
+#include "../mwbase/windowmanager.hpp"
 #include <components/esm4/ingredientuse.hpp>
 
 namespace MWWorld
@@ -524,6 +526,81 @@ namespace MWWorld
         return resolveTargetDamage(store, spell.mEffects);
     }
 
+    std::optional<OblivionTargetDamage> resolveOblivionScrollDamage(const ESMStore& store, const ESM4::Book& book)
+    {
+        if ((book.mFlags & ESM4::Rec_Deleted) || !(book.mData.flags & ESM4::Book::Flag_Scroll)
+            || !book.mScriptId.isZeroOrUnset()) return {};
+        if (const auto key = store.get<ESM4::Book>().findFormKey(ESM::RefId(book.mId)))
+            if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_BOOK)) return {};
+        const auto* enchantment = store.get<ESM4::Enchantment>().search(book.mEnchantment);
+        if (!enchantment || (enchantment->mFlags & ESM4::Rec_Deleted) || !enchantment->mData
+            || enchantment->mData->mType != 0 || enchantment->mEffects.size() != 1
+            || enchantment->mEffects.front().mId != ESM::fourCC("FIDG")
+            || enchantment->mEffects.front().mMagnitude != 20) return {};
+        if (const auto* winner = store.getFormKeyIndex().winner(enchantment->mFormKey);
+            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ENCH)) return {};
+        return resolveTargetDamage(store, enchantment->mEffects);
+    }
+
+    std::string describeOblivionScroll(MWBase::World& world, const ConstPtr& item)
+    {
+        const auto* book = world.getStore().get<ESM4::Book>().search(item.getCellRef().getRefId());
+        const auto damage = book ? resolveOblivionScrollDamage(world.getStore(), *book) : std::nullopt;
+        if (!damage) return {};
+        const auto* effect = ingredientEffectDefinition(world.getStore(), damage->mEffectCode);
+        return effect ? effect->mFullName + " 20 pts on Target" : std::string{};
+    }
+
+    bool selectOblivionScroll(MWBase::World& world, const Ptr& item, const Ptr& actor)
+    {
+        if (actor.isEmpty() || actor != world.getPlayerPtr() || item.isEmpty()
+            || item.getCellRef().getCount() < 1 || item.getCellRef().getNativeBoundSource()) return false;
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        if (item.getContainerStore() != &inventory) return false;
+        const auto* book = world.getStore().get<ESM4::Book>().search(item.getCellRef().getRefId());
+        const auto key = world.getStore().get<ESM4::Book>().findFormKey(item.getCellRef().getRefId());
+        if (!book || !key || !resolveOblivionScrollDamage(world.getStore(), *book)) return false;
+        for (auto it = inventory.begin(); it != inventory.end(); ++it)
+            if (*it == item)
+            {
+                MWBase::Environment::get().getWindowManager()->setSelectedEnchantItem(item);
+                inventory.setSelectedEnchantItem(it);
+                Log(Debug::Info) << "M16 native scroll selected: book="
+                    << key->serialize();
+                return true;
+            }
+        return false;
+    }
+
+    bool beginOblivionScrollCast(MWBase::World& world, const Ptr& item, ESM4::SpellCastState cast)
+    {
+        auto* native = dynamic_cast<World*>(&world);
+        auto* combat = native ? native->getOblivionCombatService() : nullptr;
+        const auto actor = world.getPlayerPtr();
+        if (!combat || item.isEmpty() || item.getCellRef().getCount() < 1
+            || item.getCellRef().getNativeBoundSource() || cast.mCost != 0) return false;
+        const auto& store = world.getStore();
+        const auto* book = store.get<ESM4::Book>().search(item.getCellRef().getRefId());
+        const auto key = store.get<ESM4::Book>().findFormKey(item.getCellRef().getRefId());
+        if (!book || !key || cast.mSpell != *key || !resolveOblivionScrollDamage(store, *book)) return false;
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        if (item.getContainerStore() != &inventory) return false;
+        MWBase::Environment::get().getWorldModel()->registerPtr(item);
+        auto debit = inventory.prepareItemRemoval(item, 1);
+        if (debit->getCount() != 1 || !debit->isValid()) return false;
+        if (!combat->beginSpellCast(ESM::FormKey::dynamic("player", 1), std::move(cast), false)) return false;
+        // No callbacks between admitted cast ownership and its prepared debit.
+        if (!debit->commit()) throw std::logic_error("native scroll debit changed during admission");
+        Log(Debug::Info) << "M16 native scroll consumed: book=" << key->serialize() << " count=1 magicka_cost=0";
+        const auto windows = MWBase::Environment::get().getWindowManager();
+        if (item.getCellRef().getCount() == 0 && windows->getSelectedEnchantItem() == item)
+            windows->unsetSelectedSpell();
+        MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
+        debit->notify();
+        return true;
+    }
+
     std::optional<OblivionStaffCastInputs> resolveOblivionStaffCastInputs(
         const ESMStore& store, const ESM4::Weapon& weapon)
     {
@@ -642,7 +719,9 @@ namespace MWWorld
         const auto caster = ESM::FormKey::dynamic("player", 1);
         const auto* cast = mOblivionCombat->findSpellCast(caster);
         const auto* spell = mStore.get<ESM4::Spell>().search(spellKey);
-        const auto damage = spell ? resolveOblivionTargetSpellDamage(mStore, *spell) : std::nullopt;
+        const auto* scroll = spell ? nullptr : mStore.get<ESM4::Book>().search(spellKey);
+        const auto damage = spell ? resolveOblivionTargetSpellDamage(mStore, *spell)
+            : scroll ? resolveOblivionScrollDamage(mStore, *scroll) : std::nullopt;
         if (!cast || cast->mSpell != spellKey || cast->mReleased || !damage
             || !std::isfinite(power) || power < 0 || actor.isEmpty() || !actor.isInCell()
             || !actor.getCell()->getCell()->isEsm4()) return false;
@@ -651,9 +730,12 @@ namespace MWWorld
         const auto* current = mOblivionCombat->findActorValues(caster);
         if (!current) return false;
         auto values = *current;
-        if (ESM4::composeActorValue(values.mValues[9], values.mOwner, values.mProcess) < cast->mCost) return false;
-        values.mValues[9] = ESM4::changeActorValueModifier(values.mValues[9], values.mOwner, 9,
-            ESM4::ActorValueModifier::Damage, -cast->mCost);
+        if (scroll && cast->mCost != 0) return false;
+        if (!scroll && ESM4::composeActorValue(values.mValues[9], values.mOwner, values.mProcess) < cast->mCost)
+            return false;
+        if (!scroll)
+            values.mValues[9] = ESM4::changeActorValueModifier(values.mValues[9], values.mOwner, 9,
+                ESM4::ActorValueModifier::Damage, -cast->mCost);
         osg::Vec3f position = actor.getRefData().getPosition().asVec3();
         position.z() += mPhysics->getRenderingHalfExtents(actor).z() * 1.5f;
         const auto& rotation = actor.getRefData().getPosition().rot;
@@ -666,7 +748,8 @@ namespace MWWorld
         ESM4::MagicProjectileState projectile;
         projectile.mCaster = caster; projectile.mSource = spellKey;
         projectile.mCell = actor.getCell()->getCell()->getEsm4().mFormKey;
-        projectile.mEffectCode = damage->mEffectCode; projectile.mMagnitude = damage->mMagnitude * power;
+        projectile.mEffectCode = damage->mEffectCode;
+        projectile.mMagnitude = damage->mMagnitude * (scroll ? 1.f : power);
         for (std::size_t i = 0; i < 3; ++i)
         {
             projectile.mPosition[i] = position[i];
@@ -761,11 +844,22 @@ namespace MWWorld
 
     void World::validateOblivionMagicProjectiles(const ESM4::RuntimeState& state) const
     {
+        for (const auto& [actor, cast] : state.mNativeSpellCasts)
+        {
+            const auto* book = mStore.get<ESM4::Book>().search(cast.mSpell);
+            const auto* winner = mStore.getFormKeyIndex().winner(cast.mSpell);
+            if (book || (winner && winner->mRecordType == ESM4::REC_BOOK))
+                if (!book || actor != ESM::FormKey::dynamic("player", 1) || cast.mCost != 0
+                    || !resolveOblivionScrollDamage(mStore, *book))
+                    throw std::invalid_argument("saved native scroll cast content no longer resolves");
+        }
         for (const auto& [id, projectile] : state.mNativeMagicProjectiles)
         {
             std::optional<OblivionTargetDamage> damage;
             if (const auto* spell = mStore.get<ESM4::Spell>().search(projectile.mSource))
                 damage = resolveOblivionTargetSpellDamage(mStore, *spell);
+            else if (const auto* scroll = mStore.get<ESM4::Book>().search(projectile.mSource))
+                damage = resolveOblivionScrollDamage(mStore, *scroll);
             else if (const auto* enchantment = mStore.get<ESM4::Enchantment>().search(projectile.mSource);
                 enchantment && !(enchantment->mFlags & ESM4::Rec_Deleted)
                 && enchantment->mData && enchantment->mData->mType == 1)

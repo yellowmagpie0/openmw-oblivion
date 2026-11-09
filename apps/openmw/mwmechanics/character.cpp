@@ -67,6 +67,7 @@
 #include "../mwworld/oblivioncombatmagic.hpp"
 #include "../mwworld/oblivioncharactergen.hpp"
 #include <components/esm4/loadspel.hpp>
+#include <components/esm4/loadbook.hpp>
 #include "oblivionmelee.hpp"
 #include <set>
 #include "oblivionai.hpp"
@@ -2450,34 +2451,51 @@ namespace MWMechanics
         const auto& store = world->getStore();
         try
         {
-            const auto granted = MWWorld::resolveOblivionPlayerSpellInputs(store,
-                mPtr.get<ESM::NPC>()->mBase->mRace, world->getPlayer().getBirthSign());
+            const auto ownsSpell = [&](const ESM::FormKey& key) {
+                const auto granted = MWWorld::resolveOblivionPlayerSpellInputs(store,
+                    mPtr.get<ESM::NPC>()->mBase->mRace, world->getPlayer().getBirthSign());
+                return std::find(granted.mDeclaredSpells.begin(), granted.mDeclaredSpells.end(), key)
+                    != granted.mDeclaredSpells.end();
+            };
             if (requested && !service->findSpellCast(actor))
             {
+                const auto item = windows->getSelectedEnchantItem();
+                const auto* scroll = item.isEmpty() ? nullptr
+                    : store.get<ESM4::Book>().search(item.getCellRef().getRefId());
                 const auto selected = windows->getSelectedSpell();
-                const auto key = store.get<ESM4::Spell>().findFormKey(selected);
-                const auto* spell = key ? store.get<ESM4::Spell>().search(*key) : nullptr;
-                const bool target = spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
-                if (!spell || std::find(granted.mDeclaredSpells.begin(), granted.mDeclaredSpells.end(), *key)
-                        == granted.mDeclaredSpells.end()
-                    || (!target && !MWWorld::resolveOblivionSpellRestoration(store, *spell)))
+                const auto key = scroll ? store.get<ESM4::Book>().findFormKey(item.getCellRef().getRefId())
+                                        : store.get<ESM4::Spell>().findFormKey(selected);
+                const auto* spell = !scroll && key ? store.get<ESM4::Spell>().search(*key) : nullptr;
+                const bool target = scroll ? MWWorld::resolveOblivionScrollDamage(store, *scroll).has_value()
+                    : spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
+                float cost = 0.f;
+                if (scroll)
                 {
-                    windows->messageBox("Select a supported restoration or target-damage spell from the magic menu.");
-                    return false;
+                    if (!key || !target || item.getCellRef().getCount() < 1) return false;
                 }
-                if (spell->mData->mLevel > 4
-                    || service->getPlayerIntegerValue(target ? 20 : 25) < int(spell->mData->mLevel * 25))
+                else
                 {
-                    windows->messageBox(target ? "Your Destruction skill is too low to cast this spell."
-                                               : "Your Restoration skill is too low to cast this spell.");
-                    return false;
-                }
-                const auto description = MWWorld::describeOblivionPlayerSpell(*world, *spell);
-                if (!description.mCost) return false;
-                if (!world->getGodModeState() && service->getPlayerValue(9) < *description.mCost)
-                {
-                    windows->messageBox("You do not have enough Magicka to cast this spell.");
-                    return false;
+                    if (!spell || !ownsSpell(*key)
+                        || (!target && !MWWorld::resolveOblivionSpellRestoration(store, *spell)))
+                    {
+                        windows->messageBox("Select a supported spell or scroll from the magic menu.");
+                        return false;
+                    }
+                    if (spell->mData->mLevel > 4
+                        || service->getPlayerIntegerValue(target ? 20 : 25) < int(spell->mData->mLevel * 25))
+                    {
+                        windows->messageBox(target ? "Your Destruction skill is too low to cast this spell."
+                                                   : "Your Restoration skill is too low to cast this spell.");
+                        return false;
+                    }
+                    const auto description = MWWorld::describeOblivionPlayerSpell(*world, *spell);
+                    if (!description.mCost) return false;
+                    cost = world->getGodModeState() ? 0.f : *description.mCost;
+                    if (service->getPlayerValue(9) < cost)
+                    {
+                        windows->messageBox("You do not have enough Magicka to cast this spell.");
+                        return false;
+                    }
                 }
                 std::string group = target ? "casttarget" : "castself";
                 auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
@@ -2496,20 +2514,25 @@ namespace MWMechanics
                 // The cast asset uses the same start/Hit/end text-key layout.
                 const auto keys = ESM4::powerMeleeKeyTimes(nativeRawKeys(*metadata));
                 if (keys.mMatchedCount != 3) throw std::invalid_argument("native cast lacks release keys");
-                ESM4::SpellCastState cast{*key, group, world->getGodModeState() ? 0.f : *description.mCost,
+                ESM4::SpellCastState cast{*key, group, cost,
                     0.f, (keys.mTimes[1] - keys.mTimes[0]) / metadata->mFrequency,
                     (keys.mTimes[2] - keys.mTimes[0]) / metadata->mFrequency, false};
-                if (!service->beginSpellCast(actor, std::move(cast))) return false;
+                if (scroll)
+                {
+                    if (!MWWorld::beginOblivionScrollCast(*world, item, std::move(cast))) return false;
+                }
+                else if (!service->beginSpellCast(actor, std::move(cast))) return false;
                 Log(Debug::Info) << "M16 native cast begin: spell=" << key->serialize() << " group=" << group;
             }
             const auto* pending = service->findSpellCast(actor);
             if (!pending) return false;
             const auto cast = *pending;
             const auto* spell = store.get<ESM4::Spell>().search(cast.mSpell);
+            const auto* scroll = store.get<ESM4::Book>().search(cast.mSpell);
             const auto amounts = spell ? MWWorld::resolveOblivionSpellRestoration(store, *spell) : std::nullopt;
-            const bool target = spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
-            if ((!amounts && !target) || std::find(granted.mDeclaredSpells.begin(), granted.mDeclaredSpells.end(), cast.mSpell)
-                    == granted.mDeclaredSpells.end())
+            const bool target = scroll ? cast.mCost == 0 && MWWorld::resolveOblivionScrollDamage(store, *scroll).has_value()
+                : spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
+            if ((!amounts && !target) || (!scroll && !ownsSpell(cast.mSpell)))
                 throw std::invalid_argument("pending native cast no longer has an owned supported spell");
             const float nextTime = static_cast<float>(std::min(double(cast.mDuration), double(cast.mElapsed) + duration));
             const auto bind = [&](MWRender::Animation& view) {
@@ -2533,14 +2556,14 @@ namespace MWMechanics
             mOblivionCastGroup = cast.mAnimationGroup;
             mUpperBodyState = UpperBodyState::Casting;
             auto magnitudes = amounts.value_or(std::array<float, 3>{});
-            const float power = oblivionCombatSpellPower(*world, mPtr);
+            const float power = scroll ? 1.f : oblivionCombatSpellPower(*world, mPtr);
             for (float& magnitude : magnitudes) magnitude *= power;
             auto skillUse = !target && !cast.mReleased && nextTime >= cast.mReleaseTime
                 ? MWWorld::prepareOblivionCharacterGenerationSkillUse(*world, 25, 1, 1.f)
                 : std::optional<ESM4::CharacterGenerationState>{};
             const auto update = target
                 ? service->advanceItemCast(actor, duration,
-                    [&] { return world->releaseOblivionPlayerSpellProjectile(cast.mSpell, power); })
+                    [&] { return world->releaseOblivionPlayerSpellProjectile(cast.mSpell, scroll ? 1.f : power); })
                 : service->advanceRestorationCast(mPtr, &world->getPlayer(), duration, magnitudes,
                     MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
             if (update && update->mReleased)
@@ -2550,7 +2573,8 @@ namespace MWMechanics
                     << " applied=" << update->mApplied << " health=" << service->getPlayerValue(8)
                     << " magicka=" << service->getPlayerValue(9);
                 if (!update->mApplied)
-                    windows->messageBox("You do not have enough Magicka to cast this spell.");
+                    windows->messageBox(scroll ? "The scroll could not be released."
+                                               : "You do not have enough Magicka to cast this spell.");
             }
             return true;
         }
@@ -2570,7 +2594,8 @@ namespace MWMechanics
         const bool player = mPtr == world->getPlayerPtr();
         const auto actor = player ? ESM::FormKey::dynamic("player", 1) : mPtr.getCellRef().getFormKey();
         const auto* pending = service->findSpellCast(actor);
-        if (pending && world->getStore().get<ESM4::Spell>().search(pending->mSpell)) return false;
+        if (pending && (world->getStore().get<ESM4::Spell>().search(pending->mSpell)
+            || world->getStore().get<ESM4::Book>().search(pending->mSpell))) return false;
         const auto stop = [&] {
             service->cancelSpellCast(actor);
             if (!mOblivionCastGroup.empty()) mAnimation->disable(std::exchange(mOblivionCastGroup, {}));

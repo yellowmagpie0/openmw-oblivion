@@ -1,4 +1,6 @@
 #include "spellmodel.hpp"
+#include <components/esm4/loadbook.hpp>
+#include <components/esm4/loadench.hpp>
 
 #include <components/debug/debuglog.hpp>
 #include <components/misc/utf8stream.hpp>
@@ -110,6 +112,28 @@ namespace MWGui
                 entry.mSelected = MWBase::Environment::get().getWindowManager()->getSelectedSpell() == entry.mId;
                 entry.mActive = true;
                 entry.mCount = 1;
+                mSpells.push_back(std::move(entry));
+            }
+            auto& inventory = mActor.getClass().getInventoryStore(mActor);
+            for (auto it = inventory.begin(); it != inventory.end(); ++it)
+            {
+                const auto* book = store.get<ESM4::Book>().search(it->getCellRef().getRefId());
+                if (!book || !MWWorld::resolveOblivionScrollDamage(store, *book)) continue;
+                const auto description = MWWorld::describeOblivionScroll(world, *it);
+                const auto name = std::string(it->getClass().getName(*it));
+                if (Utf8Stream::lowerCaseUtf8(name + " " + description).find(filter) == std::string::npos) continue;
+                Spell entry;
+                entry.mNative = true;
+                entry.mNativeDescription = description;
+                entry.mType = Spell::Type_EnchantedItem;
+                entry.mItem = *it;
+                entry.mId = it->getCellRef().getRefId();
+                entry.mName = name;
+                entry.mCount = it->getCellRef().getCount();
+                entry.mSelected = inventory.getSelectedEnchantItem() == it;
+                if (const auto* enchantment = store.get<ESM4::Enchantment>().search(book->mEnchantment);
+                    enchantment && enchantment->mData)
+                    entry.mCostColumn = std::to_string(enchantment->mData->mCost);
                 mSpells.push_back(std::move(entry));
             }
             std::sort(mSpells.begin(), mSpells.end(), sortSpells);

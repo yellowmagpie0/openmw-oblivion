@@ -6,7 +6,7 @@
 #include <optional>
 #include <string>
 #include <components/esm/formkey.hpp>
-namespace ESM4 { struct Potion; struct Ingredient; struct RuntimeState; struct Spell; struct Weapon; struct RuntimeReferenceState; }
+namespace ESM4 { struct Potion; struct Ingredient; struct RuntimeState; struct Book; struct SpellCastState; struct Spell; struct Weapon; struct RuntimeReferenceState; }
 namespace MWBase { class World; }
 
 namespace MWWorld
@@ -82,6 +82,13 @@ namespace MWWorld
         const ESMStore& store, const ESM4::Spell& spell);
     std::optional<OblivionStaffCastInputs> resolveOblivionStaffCastInputs(
         const ESMStore& store, const ESM4::Weapon& weapon);
+
+    // Audited single-use BOOK/ENCH target-fire source. Item selection is
+    // independent of learned spells; the admitted cast owns its spent source.
+    std::optional<OblivionTargetDamage> resolveOblivionScrollDamage(const ESMStore& store, const ESM4::Book& book);
+    std::string describeOblivionScroll(MWBase::World& world, const ConstPtr& item);
+    bool selectOblivionScroll(MWBase::World& world, const Ptr& item, const Ptr& actor);
+    bool beginOblivionScrollCast(MWBase::World& world, const Ptr& item, ESM4::SpellCastState cast);
 
     // Winning TES4 store preflight for the narrow default self-PARA owner.
     // No forms, actor state, selected spells or RNG are changed. The caller

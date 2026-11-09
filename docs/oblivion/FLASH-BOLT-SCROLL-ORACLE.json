@@ -1,0 +1,87 @@
+{
+  "status": "independent original-game bounded scroll rule observed",
+  "scope": "Controlled original1.2.0416 probe, separate from fork normal-input acceptance",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "context": {
+    "destruction": 5,
+    "magicka": 20,
+    "fMagickaReturnBase": 0,
+    "fMagickaReturnMult": 0,
+    "scroll": "BOOK0888bf / ENCH05c057, FIDG20/area0/duration0/Target/AV8",
+    "stored_enchantment_cost": 52,
+    "tolerance_magicka": 0.5
+  },
+  "observations": [
+    {
+      "case": "selection and zero-regeneration control",
+      "result": "Normal magic-menu selection retains count1, MP20 remains20",
+      "image": "native-selection-only-count-control.png"
+    },
+    {
+      "case": "first normal C cast then early console pause",
+      "result": "count1\u21920, MP20\u219220 with Destruction5",
+      "image": "native-scroll-cast-early-paused.png"
+    },
+    {
+      "case": "first completed cast",
+      "result": "count0 remains0, MP20 remains20",
+      "image": "native-scroll-cast-completed.png"
+    },
+    {
+      "case": "second independent normal selection/cast",
+      "result": "Selection keeps1, C removes it by early paused sample, MP20 unchanged; fire casting hand still visible after stock is gone",
+      "image": "native-second-cast-early-console.png"
+    },
+    {
+      "case": "native magic-menu presentation",
+      "result": "Flash Bolt under Scrolls; Fire Damage20 pts on Target; stored numeric column52",
+      "image": "native-second-scroll-selection-control-menu.png"
+    }
+  ],
+  "implementation_decision": {
+    "consumption": "Debit exactly one selected instance when admitting the cast; pending cast owns the source after the item disappears. Selection itself does not spend it.",
+    "mana": "No Magicka debit and no learned-spell skill/mastery gate for this scroll profile.",
+    "source": "Use explicit owned BOOK source; never substitute the previously selected learned spell.",
+    "timing_limit": "Fast input pulses are .06-second down/.06-second up; wall-clock screenshots/console queries do not establish bit-identical release-frame timing.",
+    "animation": "Native early cast image retains a fire casting hand after inventory count0. Existing authored target-cast animation is the fork integration boundary."
+  },
+  "retained_setup": {
+    "console_equipitem": "Retains stock but does not select the scroll; subsequent actual selection used original F3 magic menu.",
+    "tutorial_popup": "Low-Magicka tutorial popup was dismissed before casting; EnablePlayerControls is declared probe setup."
+  },
+  "evidence_root": "build/oblivion-compat/scroll-casting/original-native-01",
+  "process_identity": "game-process-epoch.json",
+  "input_log": "input-log.jsonl",
+  "exit_verification": "exit-verification.json",
+  "outside_scope": [
+    "Exact native animation frame scheduling",
+    "Armor-specific scroll damage arithmetic",
+    "General/multi-effect scrolls",
+    "Original-game save acceptance from this controlled probe"
+  ],
+  "editable_probe_recipe": {
+    "environment": "Private copied original-game prefix/config, only hash-identified Oblivion.esm active, private copy of the hash-identified pristine save; never overwrite source saves. UI observations used an owned1280x768 display.",
+    "console_setup": [
+      "EnablePlayerControls",
+      "player.getav destruction",
+      "player.getav magicka",
+      "player.getitemcount 000888bf",
+      "setgs fMagickaReturnBase 0",
+      "setgs fMagickaReturnMult 0",
+      "player.modav magicka -60",
+      "player.additem 000888bf 1"
+    ],
+    "setup_requirements": "Observed initial Destruction5, MP80 and scroll0. Require MP20/count1 after setup; dismiss the low-Magicka tutorial modal before the actual cast. Console EquipItem is not the selection step.",
+    "normal_selection": "Close console, open F3 magic menu, select Flash Bolt in Scrolls (observed row256,516). Selection-only control queries count1/MP20; selecting Heal Minor Wounds and returning to Flash Bolt repeats that control.",
+    "cast_and_query": [
+      "Close menu/console; one ordinary C pulse, .06s down/.06s up.",
+      "Open console promptly with ordinary key input; query player.getitemcount 000888bf and player.getav magicka. Expect0/20 with the fire casting hand still visible.",
+      "Unpause for2s, query again; require0/20.",
+      "Add one second original scroll, repeat normal magic-menu selection and cast/query.",
+      "Quit without saving, verify source/copy pristine hashes and original executable unchanged, stop owned display."
+    ],
+    "boundaries": "Controlled original-game rule probe, not the fork real-content course; no original target-damage/armor or exact-frame claim."
+  }
+}

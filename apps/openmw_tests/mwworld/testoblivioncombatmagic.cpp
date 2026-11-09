@@ -7,6 +7,7 @@
 #include <components/esm4/loadingr.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadench.hpp>
+#include <components/esm4/loadbook.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <limits>
 #include <components/loadinglistener/loadinglistener.hpp>
@@ -418,4 +419,71 @@ TEST(OblivionMagicContent, IngredientUseAdmitsOnlyFirstRestoreFatigueAndRechecks
     fixture.load("patch.esp", {"oblivion.esm"}, {definition(0x01000871)});
     EXPECT_FALSE(MWWorld::supportsOblivionIngredientRestoration(fixture.mStore, *original));
     EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, saved), std::invalid_argument);
+}
+
+namespace
+{
+    std::string flashBoltEnchantment(unsigned type = 0, unsigned duration = 0, unsigned magnitude = 20)
+    {
+        return record(ESM4::REC_ENCH, 0x5c057,
+            sub(ESM::fourCC("ENIT"), bytes(type) + bytes(52u) + bytes(52u) + bytes(0u))
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("FIDG")))
+            + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("FIDG")) + bytes(magnitude)
+                + bytes(0u) + bytes(duration) + bytes(2u) + bytes(8u)));
+    }
+
+    std::string flashBoltBook(unsigned flags = 1)
+    {
+        return record(ESM4::REC_BOOK, 0x888bf,
+            sub(ESM::fourCC("DATA"), bytes(static_cast<std::uint8_t>(flags))
+                + bytes(std::int8_t{-1}) + bytes(0u) + bytes(.1f))
+            + sub(ESM::fourCC("ENAM"), bytes(0x5c057u)));
+    }
+
+    std::string flashBoltEffect()
+    {
+        const auto data = bytes(0x21001c75u) + bytes(7.5f) + bytes(8u) + bytes(2u) + bytes(61)
+            + std::string(8, '\0') + bytes(1.f) + std::string(32, '\0');
+        return record(ESM4::REC_MGEF, 0x1872,
+            sub(ESM::fourCC("EDID"), std::string("FIDG\0", 5))
+            + sub(ESM::fourCC("MODL"), std::string("MagicEffects\\fireball.NIF") + '\0')
+            + sub(ESM::fourCC("DATA"), data));
+    }
+
+    auto resolveFlashBolt(const Fixture& fixture)
+    {
+        const auto* book = fixture.mStore.get<ESM4::Book>().search(ESM::FormId{0x888bf, 1});
+        if (!book) throw std::runtime_error("missing fixture scroll");
+        return MWWorld::resolveOblivionScrollDamage(fixture.mStore, *book);
+    }
+}
+
+TEST(OblivionCombatMagicStore, FlashBoltScrollRequiresCompleteWinningNativeItemAndEffect)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {flashBoltBook(), flashBoltEnchantment(), flashBoltEffect()});
+    ASSERT_TRUE(resolveFlashBolt(fixture));
+    EXPECT_FLOAT_EQ(resolveFlashBolt(fixture)->mMagnitude, 20.f);
+    fixture.load("patch.esp", {"oblivion.esm"}, {flashBoltEnchantment(1)});
+    EXPECT_FALSE(resolveFlashBolt(fixture)); // Staff ENCH cannot masquerade as a scroll.
+    fixture.load("final.esp", {"oblivion.esm", "patch.esp"}, {flashBoltEnchantment()});
+    EXPECT_TRUE(resolveFlashBolt(fixture));
+}
+
+TEST(OblivionCombatMagicStore, FlashBoltScrollRejectsUnsupportedShapesAndDeletedSources)
+{
+    for (const auto& records : std::vector<std::vector<std::string>>{
+        {flashBoltBook(0), flashBoltEnchantment(), flashBoltEffect()},
+        {flashBoltBook(), flashBoltEnchantment(0, 1), flashBoltEffect()},
+        {flashBoltBook(), flashBoltEnchantment(0, 0, 10), flashBoltEffect()},
+        {flashBoltBook(), flashBoltEnchantment()}})
+    {
+        Fixture fixture;
+        fixture.load("oblivion.esm", {}, records);
+        EXPECT_FALSE(resolveFlashBolt(fixture));
+    }
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {flashBoltBook(), flashBoltEnchantment(), flashBoltEffect()});
+    fixture.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_ENCH, 0x5c057, {}, true)});
+    EXPECT_FALSE(resolveFlashBolt(fixture));
 }

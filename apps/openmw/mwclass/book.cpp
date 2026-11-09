@@ -11,6 +11,8 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/actionread.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
+#include <components/esm4/loadbook.hpp>
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/failedaction.hpp"
@@ -28,6 +30,19 @@
 
 namespace MWClass
 {
+    namespace
+    {
+        class SelectNativeScroll final : public MWWorld::Action
+        {
+            void executeImp(const MWWorld::Ptr& actor) override
+            {
+                MWWorld::selectOblivionScroll(*MWBase::Environment::get().getWorld(), getTarget(), actor);
+            }
+        public:
+            explicit SelectNativeScroll(const MWWorld::Ptr& item) : Action(false, item) {}
+        };
+    }
+
     Book::Book()
         : MWWorld::RegisteredClass<Book>(ESM::Book::sRecordId)
     {
@@ -123,6 +138,15 @@ namespace MWClass
             info.extra += MWGui::ToolTips::getMiscString(ref->mBase->mScript.getRefIdString(), "Script");
         }
 
+        auto world = MWBase::Environment::get().getWorld();
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto description = MWWorld::describeOblivionScroll(*world, ptr);
+            info.text = MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, "#{Interface:Weight}")
+                + MWGui::ToolTips::getValueString(ref->mBase->mData.mValue, "#{Interface:Value}");
+            if (!description.empty()) info.text += "\n" + description;
+            return info;
+        }
         info.enchant = ref->mBase->mEnchant;
 
         info.text = std::move(text);
@@ -154,6 +178,15 @@ namespace MWClass
 
     std::unique_ptr<MWWorld::Action> Book::use(const MWWorld::Ptr& ptr, bool force) const
     {
+        if (auto* world = MWBase::Environment::get().getWorldOrNull();
+            world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            && ptr.get<ESM::Book>()->mBase->mData.mIsScroll)
+        {
+            const auto* native = world->getStore().get<ESM4::Book>().search(ptr.getCellRef().getRefId());
+            if (native && MWWorld::resolveOblivionScrollDamage(world->getStore(), *native))
+                return std::make_unique<SelectNativeScroll>(ptr);
+            return std::make_unique<MWWorld::FailedAction>("You cannot use this scroll.");
+        }
         return std::make_unique<MWWorld::ActionRead>(ptr);
     }
 
