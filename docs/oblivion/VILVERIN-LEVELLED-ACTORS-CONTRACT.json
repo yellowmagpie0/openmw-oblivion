@@ -1,5 +1,5 @@
 {
-  "status": "implemented; normal original-content acceptance passed; integration and instrumented runtime gates open",
+  "status": "accepted bounded original camp single-actor placement slice",
   "course": "Original Vilverin outdoor camp reached from the genuine sewer-exit checkpoint using ordinary swim, walk and mouse input",
   "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
   "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
@@ -124,10 +124,7 @@
       "repair": "Ask for Player level only when an actual nonzero LVLI needs expansion; rerun all148 failures first; do not modify existing fixtures/assertions"
     }
   ],
-  "remaining_acceptance": [
-    "Full normal and ASan/UBSan engine gates",
-    "Sanitized original placement, continuation and genuine encounter restart"
-  ],
+  "remaining_acceptance": [],
   "normal_semantics": {
     "report": "build/oblivion-compat/vilverin/levelled-normal-semantic-in-progress.json",
     "checks": 116,
@@ -185,5 +182,6 @@
       "leak_check": false
     },
     "reuse": "No component implementation changed in the engine-only NPC-construction repair."
-  }
+  },
+  "verification": "VILVERIN-LEVELLED-ACTORS-VERIFICATION.json"
 }
