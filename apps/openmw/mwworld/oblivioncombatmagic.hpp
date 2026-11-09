@@ -86,6 +86,9 @@ namespace MWWorld
     // Audited single-use BOOK/ENCH target-fire source. Item selection is
     // independent of learned spells; the admitted cast owns its spent source.
     std::optional<OblivionTargetDamage> resolveOblivionScrollDamage(const ESMStore& store, const ESM4::Book& book);
+    std::optional<ESM::FormKey> resolveOblivionScrollChameleon(const ESMStore& store, const ESM4::Book& book);
+    bool releaseOblivionScrollChameleon(MWBase::World& world, const ESM::FormKey& scroll);
+    void validateOblivionScrollChameleon(const ESMStore& store, const ESM4::RuntimeState& state);
     std::string describeOblivionScroll(MWBase::World& world, const ConstPtr& item);
     bool selectOblivionScroll(MWBase::World& world, const Ptr& item, const Ptr& actor);
     bool beginOblivionScrollCast(MWBase::World& world, const Ptr& item, ESM4::SpellCastState cast);

@@ -11,54 +11,57 @@ Accepted bounded slices:
   [receipt](VILVERIN-LEVELLED-ACTORS-VERIFICATION.json).
 - Original mudcrab CREA leveled microtreasure and ordinary corpse transfer:
   [receipt](MUDCRAB-LOOT-VERIFICATION.json).
-- Original first-area food sack `06c2ad`, LVLI `053f26` count4, concrete transfer
-  and authoritative empty stock: [receipt](VILVERIN-CONTAINER-LOOT-VERIFICATION.json).
-- One actually earned Lettuce, bounded first-effect REFA5 over1 second with
-  independent use timers and pending restart: [receipt](LETTUCE-INGREDIENT-VERIFICATION.json).
-- Original carried Flash Bolt `0888bf` / ENCH `05c057`, one instant20 fire Target
-  effect: [contract](FLASH-BOLT-SCROLL-CONTRACT.json),
-  [original-game oracle](FLASH-BOLT-SCROLL-ORACLE.json),
+- Original first-area food sack `06c2ad`, concrete LVLI transfer and empty stock:
+  [receipt](VILVERIN-CONTAINER-LOOT-VERIFICATION.json).
+- Actually earned Lettuce, first-effect REFA5 over1 second with independent
+  timers and pending restart: [receipt](LETTUCE-INGREDIENT-VERIFICATION.json).
+- Carried original Flash Bolt `0888bf` / ENCH `05c057`, FIDG20 instant Target:
   [receipt](FLASH-BOLT-SCROLL-VERIFICATION.json).
+- Carried original Chameleon `084aeb` / ENCH `05b044`, CHML25 for30 seconds Self:
+  [contract](CHAMELEON-SCROLL-CONTRACT.json),
+  [original-game oracle](CHAMELEON-SCROLL-ORACLE.json),
+  [receipt](CHAMELEON-SCROLL-VERIFICATION.json).
 
-Latest closed chunk: Flash Bolt implementation `0c53d9c463`. Normal inventory
-and native magic-menu selection spend one selected instance at cast admission,
-without a learned-spell mastery gate or Magicka debit. Pending casts retain the
-BOOK source after stock disappears. Normal saves at elapsed0.159 and ASan at
-0.166, before release0.4; fresh processes deliver one20-point hit to original
-sitting bandit `06c359`, then retain the committed death without replay.
-Each configuration passes65 actual-save semantic checks and full2,262 engine
-tests. Unchanged3,275 component tests per configuration and600 Python tests keep
-their original ingredient-use provenance, with source/binary reuse checks.
+Latest closed chunk: Chameleon. Ordinary inventory/magic-menu use spends one
+selected instance at cast admission without Magicka or learned-spell skill gates.
+Schema93 owns the consumed BOOK cast, then the resolved ENCH/magnitude/elapsed
+effect. Native visibility and NPC detection consume AV46. Active reloads preserve
+the remaining duration; natural expiry removes only this source's contribution;
+another reload stays expired. Same-ENCH refresh adds no second25. Legacy92 AV46
+without an owned timer is preserved. Approximate alpha0.75 is verified visually;
+exact Oblivion refraction and complete stealth outcome parity remain open.
 
-Native ENCH is resolved directly, never exposed through the generic TES3
-getEnchantment property. A real recharge warning and stacking dependency caught
-during development are fixed; final courses forbid that warning. General scrolls,
-previous-spell fallback and armor-specific scaling remain outside this slice.
+Normal and instrumented courses each pass90 actual-save semantic checks across
+use → pending restart → active restart/expiry → expired restart. Full3,278
+component and2,264 engine tests pass per configuration; full602 Python tests pass.
+The same real Flash Bolt course passes65 additional normal regression checks
+with schema93. Native ENCH remains explicit; the generic TES3 getEnchantment
+property is not used for native casting. Evidence/source/ELF identities and
+retained development failures are in the receipt.
 
 Reusable latest normal checkpoint:
-`build/oblivion-compat/scroll-casting/flash-bolt-completed-restart-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256 `8d106728715430819ac85490eead6050afdbd5cc7aee38da03435bc5a854d7dc`.
-Health67.679, Magicka80, Fatigue170, Destruction5; Flash Bolt0, Chameleon1,
+`build/oblivion-compat/chameleon-scroll/chameleon-expired-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `41b8e537b995738176c9568aeedd57a3e9a0044d44deae5e5c63f7ad18b041f4`.
+Health67.679, Magicka80, Fatigue170; Flash Bolt0, Chameleon0, nativeAV46=0;
 Bone1, Crab Meat1, Lettuce1, Rice1. Ambush `06c356` and sitting bandit `06c359`
-remain dead with Player killer; the food sack stays opened and empty. No pending
-ingredient timer, cast or projectile; next projectile serial19.
+remain dead with Player killer; food sack `06c2ad` stays opened and empty.
+No pending ingredient timer, scroll effect, cast or projectile; next projectile19.
 
-Current chunk: carried original Chameleon scroll `084aeb` / ENCH `05b044`,
-CHML25 for30 seconds on Self. [Contract](CHAMELEON-SCROLL-CONTRACT.json).
-Normal baseline02 preserves stock/HP/MP and nativeAV46=0 after use/cast input;
-current native admission rejects this self-effect profile. Next: original-game
-application/recast/expiry probe, then owned timed effect and visibility/detection
-integration. The autonomous content iteration remains active.
+Next action: resume the actual Vilverin route from this checkpoint. The nearby
+original tripwire `06bf50` and short swinging maces `0c4986`/`06c605` provide a
+concrete gameplay stretch; establish what already works and choose the next
+bounded implementation from an observed missing behavior. The autonomous
+original-content iteration remains active.
 
-Remaining acceptance gaps include the rest of the expedition/return, general
-M16 effects/UI, native spawn-root/child identity, grouped actors, respawn, all
-Player levels and full bow tactics. Restoration chest `04bb8b` remains deferred
-behind the retained partial route/ledge gap. A pre-existing learned target SPEL
-mastery gate reads Alteration AV20 instead of Destruction AV22; record this for a
-future actual learned-spell case rather than changing it inside the scroll slice.
+Remaining acceptance gaps: expedition continuation/return; general M16 effects
+and UI; native spawn-root/child identity, grouped actors, respawn, all Player
+levels and full bow tactics. Restoration chest `04bb8b` remains deferred behind
+the retained partial route/ledge gap. The pre-existing learned target-SPEL mastery
+gate reads Alteration AV20 rather than Destruction AV22; use a future actual
+learned-spell case to address it. Consumable coverage has increased, while the
+route/return gap remains; prioritize forward gameplay at the next checkpoint.
 
 Rendered ASan uses leak detection off; the full engine test process uses it on.
-Actual ELF/runtime/source hashes are in the receipt. Current courses use ordinary
-keyboard/mouse input; instrumented startup, mouse feedback and quicksave wait for
-fresh frames/acknowledgements. Historical SDL-shim/display recipes remain in the
-linked earlier receipts.
+Current courses use ordinary keyboard/mouse input with fresh-frame and quicksave
+acknowledgements. Historical SDL-shim/display recipes retain their original
+provenance in earlier linked receipts.

@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "name": "Original carried Chameleon active restart",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command player GetAV Chameleon\nat 1 command player GetAV Chameleon\nat 2 command player GetAV Chameleon\nat 3 command player GetAV Chameleon\nat 4 command player GetAV Chameleon\nat 5 command player GetAV Chameleon\nat 6 command player GetAV Chameleon\nat 7 command player GetAV Chameleon\nat 8 command player GetAV Chameleon\nat 9 command player GetAV Chameleon\nat 10 command player GetAV Chameleon\nat 11 command player GetAV Chameleon\nat 12 command player GetAV Chameleon\nat 13 command player GetAV Chameleon\nat 14 command player GetAV Chameleon\nat 15 command player GetAV Chameleon\nat 16 command player GetAV Chameleon\nat 17 command player GetAV Chameleon\nat 18 command player GetAV Chameleon\nat 19 command player GetAV Chameleon\nat 20 command player GetAV Chameleon\nat 21 command player GetAV Chameleon\nat 22 command player GetAV Chameleon\nat 23 command player GetAV Chameleon\nat 24 command player GetAV Chameleon\nat 25 command player GetAV Chameleon\nat 26 command player GetAV Chameleon\nat 27 command player GetAV Chameleon\nat 28 command player GetAV Chameleon\nat 29 command player GetAV Chameleon\nat 30 command player GetAV Chameleon\nat 31 command player GetAV Chameleon\nat 32 command player GetAV Chameleon\nat 33 command player GetAV Chameleon\nat 34 command player GetAV Chameleon\nat 35 command player GetAV Chameleon\nat 36 command player GetAV Chameleon\nat 37 command player GetAV Chameleon\nat 38 command player GetAV Chameleon\nat 39 command player GetAV Chameleon\nat 40 command player GetAV Chameleon\nat 41 command player GetAV Chameleon\nat 42 command player GetAV Chameleon\nat 43 command player GetAV Chameleon\nat 44 command player GetAV Chameleon\nat 45 command player GetAV Chameleon\nat 46 command player GetAV Chameleon\nat 47 command player GetAV Chameleon\nat 48 command player GetAV Chameleon\nat 49 command player GetAV Chameleon\nat 50 command player GetAV Chameleon\nat 51 command player GetAV Chameleon\nat 52 command player GetAV Chameleon\nat 53 command player GetAV Chameleon\nat 54 command player GetAV Chameleon\nat 55 command player GetAV Chameleon\nat 56 command player GetAV Chameleon\nat 57 command player GetAV Chameleon\nat 58 command player GetAV Chameleon\nat 59 command player GetAV Chameleon\nat 60 command player GetAV Chameleon\nat 61 command player GetAV Chameleon\nat 62 command player GetAV Chameleon\nat 63 command player GetAV Chameleon\nat 64 command player GetAV Chameleon\nat 65 command player GetAV Chameleon\nat 66 command player GetAV Chameleon\nat 67 command player GetAV Chameleon\nat 68 command player GetAV Chameleon\nat 69 command player GetAV Chameleon\nat 70 command player GetAV Chameleon\nat 71 command player GetAV Chameleon\nat 72 command player GetAV Chameleon\nat 73 command player GetAV Chameleon\nat 74 command player GetAV Chameleon\nat 75 command player GetAV Chameleon\nat 76 command player GetAV Chameleon\nat 77 command player GetAV Chameleon\nat 78 command player GetAV Chameleon\nat 79 command player GetAV Chameleon\nat 80 command player GetAV Chameleon\nat 81 command player GetAV Chameleon\nat 82 command player GetAV Chameleon\nat 83 command player GetAV Chameleon\nat 84 command player GetAV Chameleon\nat 85 command player GetAV Chameleon\nat 86 command player GetAV Chameleon\nat 87 command player GetAV Chameleon\nat 88 command player GetAV Chameleon\nat 89 command player GetAV Chameleon\nat 90 command player GetAV Chameleon\nat 91 command player GetAV Chameleon\nat 92 command player GetAV Chameleon\nat 93 command player GetAV Chameleon\nat 94 command player GetAV Chameleon\nat 95 command player GetAV Chameleon\nat 96 command player GetAV Chameleon\nat 97 command player GetAV Chameleon\nat 98 command player GetAV Chameleon\nat 99 command player GetAV Chameleon\nat 100 command player GetAV Chameleon\nat 101 command player GetAV Chameleon\nat 102 command player GetAV Chameleon\nat 103 command player GetAV Chameleon\nat 104 command player GetAV Chameleon\nat 105 command player GetAV Chameleon\nat 106 command player GetAV Chameleon\nat 107 command player GetAV Chameleon\nat 108 command player GetAV Chameleon\nat 109 command player GetAV Chameleon\nat 110 command player GetAV Chameleon\nat 111 command player GetAV Chameleon\nat 112 command player GetAV Chameleon\nat 113 command player GetAV Chameleon\nat 114 command player GetAV Chameleon\nat 115 command player GetAV Chameleon\nat 116 command player GetAV Chameleon\nat 117 command player GetAV Chameleon\nat 118 command player GetAV Chameleon\nat 119 command player GetAV Chameleon\nat 120 command player GetAV Chameleon\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal t=0\nreturn {{engineHandlers={{onFrame=function(dt)\n t=t+dt;if t<.2 then return end;t=0\n assert(not Actor.isDead(self),'Player died during original scroll inspection')\n local inv=Actor.inventory(self)\n local target=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x6c359))\n local th=target and target:isValid() and Actor.stats.dynamic.health(target).current or -1\n print('ChameleonUse sample flashbolt='..inv:countOf(core.getFormId('Oblivion.esm',0x888bf))..' chameleon='..inv:countOf(core.getFormId('Oblivion.esm',0x84aeb))..' magicka='..Actor.stats.dynamic.magicka(self).current..' health='..Actor.stats.dynamic.health(self).current..' targetHealth='..th..' paused='..tostring(core.isWorldPaused()))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "ChameleonUse sample flashbolt=0 chameleon=0",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M16 Chameleon visibility: magnitude=25 alpha=0.75",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "active-player-after-active-restart.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M16 Chameleon expired: scroll=content:oblivion.esm:084aeb",
+      "timeout_seconds": 480,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "opaque-player-after-natural-expiry.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "poll_interval_seconds": 0.005
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "ChameleonUse sample flashbolt=0 chameleon=0",
+    "Writing saved game",
+    "M16 Chameleon expired: scroll=content:oblivion.esm:084aeb",
+    "M16 Chameleon detection: .*target=dynamic:player:0000000000000001 magnitude=25"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "Warning: Can't find enchantment",
+    "M16 native scroll consumed:",
+    "M16 Chameleon applied:",
+    "M16 native cast release:",
+    "M16 native cast rejected:",
+    "M16 magic projectile impact:",
+    "M16 native cast release: spell=content:oblivion.esm:0a97df"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}

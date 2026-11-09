@@ -1129,6 +1129,16 @@ namespace ESM4
                 throw std::runtime_error("Invalid TES4 consumed ingredient identity");
             advanceIngredientRestoration(effect.mElapsed, 0.f);
         }
+        if (mScrollChameleon.size() > sMaximumCollectionSize
+            || (!mScrollChameleon.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 scroll Chameleon ownership");
+        std::set<ESM::FormKey> chameleonSources;
+        for (const auto& effect : mScrollChameleon)
+        {
+            effect.validate();
+            if (!chameleonSources.insert(effect.mEnchantment).second)
+                throw std::runtime_error("Duplicate TES4 Chameleon enchantment source");
+        }
         if (mMeleeParalysis.size() > sMaximumCollectionSize)
             throw std::runtime_error("TES4 melee paralysis list exceeds the size limit");
         std::set<std::uint64_t> paralysisCauses;
@@ -2080,6 +2090,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 93 && !actor.mScrollChameleon.empty())
+                throw std::runtime_error("TES4 scroll Chameleon requires schema93");
             if (mVersion < 92 && !actor.mIngredientRestoration.empty())
                 throw std::runtime_error("TES4 ingredient restoration requires schema92");
             if (mVersion < 70 && !actor.mMeleeParalysis.empty())
@@ -3441,6 +3453,17 @@ namespace ESM4
                         writer.floating(effect.mElapsed);
                     }
                 }
+                if (mVersion >= 93)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mScrollChameleon.size()));
+                    for (const auto& effect : actor.mScrollChameleon)
+                    {
+                        writeKey(writer, effect.mScroll);
+                        writeKey(writer, effect.mEnchantment);
+                        writer.floating(effect.mMagnitude);
+                        writer.floating(effect.mElapsed);
+                    }
+                }
             }
         }
         if (mVersion >= 11)
@@ -4634,6 +4657,12 @@ namespace ESM4
                     const auto effectCount = reader.count();
                     for (std::uint32_t j = 0; j < effectCount; ++j)
                         actor.mIngredientRestoration.push_back({nativeKey(), reader.float32()});
+                }
+                if (result.mVersion >= 93)
+                {
+                    const auto effectCount = reader.count();
+                    for (std::uint32_t j = 0; j < effectCount; ++j)
+                        actor.mScrollChameleon.push_back({nativeKey(), nativeKey(), reader.float32(), reader.float32()});
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
@@ -6038,6 +6067,24 @@ namespace ESM4
                         stream << "{\"ingredient\":";
                         stream << '"' << escapeJson(effect.mIngredient.serialize()) << '"';
                         stream << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed << '}';
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 93 && !actor.mScrollChameleon.empty())
+                {
+                    stream << ",\"scroll_chameleon\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mScrollChameleon)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"scroll\":\"" << escapeJson(effect.mScroll.serialize())
+                            << "\",\"enchantment\":\"" << escapeJson(effect.mEnchantment.serialize())
+                            << "\",\"magnitude\":";
+                        stream << std::setprecision(17) << effect.mMagnitude;
+                        stream << ",\"elapsed\":";
+                        stream << std::setprecision(17) << effect.mElapsed;
+                        stream << '}';
                     }
                     stream << ']';
                 }

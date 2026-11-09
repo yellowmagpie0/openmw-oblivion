@@ -546,6 +546,34 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         del actor["ingredient_restoration"]
         self.assertNotIn("ingredient_restoration", state_io.decode_payload(state_io.encode_payload(state))["native_actor_values"][0])
 
+    def test_scroll_chameleon93_preserves_sources_and_rejects_invented_lifetimes(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 93
+        player = lambda s: next(a for a in s["native_actor_values"] if a["owner"] == 0)
+        actor = player(state)
+        actor["values"][46][1] = 25.
+        effect = dict(scroll="content:oblivion.esm:084aeb", enchantment="content:oblivion.esm:05b044",
+                      magnitude=25., elapsed=12.)
+        actor["scroll_chameleon"] = [effect]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        self.assertEqual(player(loaded)["scroll_chameleon"], [effect])
+        for change in ({"elapsed": 30.}, {"elapsed": -1.}, {"elapsed": math.nan},
+                       {"magnitude": 24.}, {"scroll": "dynamic:item:0000000000000001"}):
+            bad = copy.deepcopy(state)
+            player(bad)["scroll_chameleon"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        player(bad)["scroll_chameleon"].append(effect)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 92
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del actor["scroll_chameleon"]
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("scroll_chameleon", player(loaded))
+        self.assertEqual(player(loaded)["values"][46], actor["values"][46])
+
     @classmethod
     def melee_paralysis_state(cls):
         state = cls.combat_controller_state()

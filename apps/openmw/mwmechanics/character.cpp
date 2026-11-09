@@ -2468,10 +2468,11 @@ namespace MWMechanics
                 const auto* spell = !scroll && key ? store.get<ESM4::Spell>().search(*key) : nullptr;
                 const bool target = scroll ? MWWorld::resolveOblivionScrollDamage(store, *scroll).has_value()
                     : spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
+                const bool chameleon = scroll && MWWorld::resolveOblivionScrollChameleon(store, *scroll).has_value();
                 float cost = 0.f;
                 if (scroll)
                 {
-                    if (!key || !target || item.getCellRef().getCount() < 1) return false;
+                    if (!key || (!target && !chameleon) || item.getCellRef().getCount() < 1) return false;
                 }
                 else
                 {
@@ -2532,7 +2533,9 @@ namespace MWMechanics
             const auto amounts = spell ? MWWorld::resolveOblivionSpellRestoration(store, *spell) : std::nullopt;
             const bool target = scroll ? cast.mCost == 0 && MWWorld::resolveOblivionScrollDamage(store, *scroll).has_value()
                 : spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
-            if ((!amounts && !target) || (!scroll && !ownsSpell(cast.mSpell)))
+            const bool chameleon = scroll && cast.mCost == 0
+                && MWWorld::resolveOblivionScrollChameleon(store, *scroll).has_value();
+            if ((!amounts && !target && !chameleon) || (!scroll && !ownsSpell(cast.mSpell)))
                 throw std::invalid_argument("pending native cast no longer has an owned supported spell");
             const float nextTime = static_cast<float>(std::min(double(cast.mDuration), double(cast.mElapsed) + duration));
             const auto bind = [&](MWRender::Animation& view) {
@@ -2558,12 +2561,13 @@ namespace MWMechanics
             auto magnitudes = amounts.value_or(std::array<float, 3>{});
             const float power = scroll ? 1.f : oblivionCombatSpellPower(*world, mPtr);
             for (float& magnitude : magnitudes) magnitude *= power;
-            auto skillUse = !target && !cast.mReleased && nextTime >= cast.mReleaseTime
+            auto skillUse = !target && !chameleon && !cast.mReleased && nextTime >= cast.mReleaseTime
                 ? MWWorld::prepareOblivionCharacterGenerationSkillUse(*world, 25, 1, 1.f)
                 : std::optional<ESM4::CharacterGenerationState>{};
-            const auto update = target
+            const auto update = (target || chameleon)
                 ? service->advanceItemCast(actor, duration,
-                    [&] { return world->releaseOblivionPlayerSpellProjectile(cast.mSpell, scroll ? 1.f : power); })
+                    [&] { return chameleon ? MWWorld::releaseOblivionScrollChameleon(*world, cast.mSpell)
+                        : world->releaseOblivionPlayerSpellProjectile(cast.mSpell, scroll ? 1.f : power); })
                 : service->advanceRestorationCast(mPtr, &world->getPlayer(), duration, magnitudes,
                     MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
             if (update && update->mReleased)
@@ -5159,10 +5163,25 @@ namespace MWMechanics
                                   .getMagicEffects()
                                   .getOrDefault(ESM::MagicEffect::Chameleon)
                                   .getMagnitude();
+            const auto world = MWBase::Environment::get().getWorld();
+            const bool native = world->getGameProfile() == ESM::GameProfile::Oblivion;
+            if (native)
+            {
+                const auto key = mPtr == getPlayer() ? ESM::FormKey::dynamic("player", 1)
+                    : mPtr.getCellRef().getFormKey();
+                auto* implementation = dynamic_cast<MWWorld::World*>(static_cast<MWBase::World*>(world));
+                const auto* combat = implementation ? implementation->getOblivionCombatService() : nullptr;
+                const auto* values = combat ? combat->findActorValues(key) : nullptr;
+                chameleon = values ? std::clamp(ESM4::composeActorValue(values->mValues[46],
+                    values->mOwner, values->mProcess), 0.f, 100.f) : 0.f;
+            }
             if (chameleon)
             {
                 alpha *= std::clamp(1.f - chameleon / 100.f, 0.25f, 0.75f);
             }
+
+            if (native && chameleon > 0 && mPtr == getPlayer())
+                Log(Debug::Verbose) << "M16 Chameleon visibility: magnitude=" << chameleon << " alpha=" << alpha;
 
             visibility = std::min(visibility, alpha);
         }

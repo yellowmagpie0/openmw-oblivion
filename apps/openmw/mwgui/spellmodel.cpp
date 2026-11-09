@@ -118,7 +118,8 @@ namespace MWGui
             for (auto it = inventory.begin(); it != inventory.end(); ++it)
             {
                 const auto* book = store.get<ESM4::Book>().search(it->getCellRef().getRefId());
-                if (!book || !MWWorld::resolveOblivionScrollDamage(store, *book)) continue;
+                if (!book || (!MWWorld::resolveOblivionScrollDamage(store, *book)
+                    && !MWWorld::resolveOblivionScrollChameleon(store, *book))) continue;
                 const auto description = MWWorld::describeOblivionScroll(world, *it);
                 const auto name = std::string(it->getClass().getName(*it));
                 if (Utf8Stream::lowerCaseUtf8(name + " " + description).find(filter) == std::string::npos) continue;

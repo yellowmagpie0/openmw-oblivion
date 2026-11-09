@@ -6663,3 +6663,37 @@ TEST(ESM4RuntimeState, ConsumedIngredient92PreservesRemainingTimeAndLegacyAbsenc
     state.mNativeActorValues[0].mIngredientRestoration[0].mIngredient = ESM::FormKey::dynamic("item", 1);
     EXPECT_ANY_THROW(state.serializeBinary());
 }
+
+TEST(ESM4RuntimeState, ScrollChameleon93PreservesOwnedContributionAndLegacyUnknownValue)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("Oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mValues[46].mModifiers[0] = 25.f;
+    actor.mScrollChameleon = {{ESM::FormKey::content("Oblivion.esm", 0x84aeb),
+        ESM::FormKey::content("Oblivion.esm", 0x5b044), 25.f, 12.f}};
+    state.mNativeActorValues = {actor};
+    const auto wire = state.serializeBinary();
+    auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(loaded.mNativeActorValues, state.mNativeActorValues);
+    EXPECT_EQ(loaded.serializeBinary(), wire);
+    EXPECT_NE(loaded.canonicalJson().find("scroll_chameleon"), std::string::npos);
+    state.mVersion = 92;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeActorValues[0].mScrollChameleon.clear();
+    loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(loaded.mNativeActorValues[0].mScrollChameleon.empty());
+    EXPECT_EQ(loaded.mNativeActorValues[0].mValues[46], actor.mValues[46]);
+    state.mVersion = ESM4::CurrentRuntimeStateVersion;
+    state.mNativeActorValues[0] = actor;
+    state.mNativeActorValues[0].mScrollChameleon.push_back(actor.mScrollChameleon.front());
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeActorValues[0] = actor;
+    state.mNativeActorValues[0].mScrollChameleon[0].mElapsed = 30.f;
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeActorValues[0] = actor;
+    state.mNativeActorValues[0].mScrollChameleon[0].mEnchantment = ESM::FormKey::dynamic("item", 1);
+    EXPECT_ANY_THROW(state.serializeBinary());
+}

@@ -183,7 +183,8 @@ namespace MWClass
             && ptr.get<ESM::Book>()->mBase->mData.mIsScroll)
         {
             const auto* native = world->getStore().get<ESM4::Book>().search(ptr.getCellRef().getRefId());
-            if (native && MWWorld::resolveOblivionScrollDamage(world->getStore(), *native))
+            if (native && (MWWorld::resolveOblivionScrollDamage(world->getStore(), *native)
+                || MWWorld::resolveOblivionScrollChameleon(world->getStore(), *native)))
                 return std::make_unique<SelectNativeScroll>(ptr);
             return std::make_unique<MWWorld::FailedAction>("You cannot use this scroll.");
         }

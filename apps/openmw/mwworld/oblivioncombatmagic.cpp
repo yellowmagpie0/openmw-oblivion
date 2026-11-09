@@ -543,11 +543,85 @@ namespace MWWorld
         return resolveTargetDamage(store, enchantment->mEffects);
     }
 
+    std::optional<ESM::FormKey> resolveOblivionScrollChameleon(const ESMStore& store, const ESM4::Book& book)
+    {
+        if ((book.mFlags & ESM4::Rec_Deleted) || !(book.mData.flags & ESM4::Book::Flag_Scroll)
+            || !book.mScriptId.isZeroOrUnset()) return {};
+        if (const auto key = store.get<ESM4::Book>().findFormKey(ESM::RefId(book.mId)))
+            if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_BOOK)) return {};
+        const auto* enchantment = store.get<ESM4::Enchantment>().search(book.mEnchantment);
+        if (!enchantment || (enchantment->mFlags & ESM4::Rec_Deleted) || !enchantment->mData
+            || enchantment->mData->mType != 0 || enchantment->mEffects.size() != 1) return {};
+        if (const auto* winner = store.getFormKeyIndex().winner(enchantment->mFormKey);
+            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ENCH)) return {};
+        const auto& effect = enchantment->mEffects.front();
+        if (effect.mId != ESM::fourCC("CHML") || effect.mMagnitude != ESM4::ScrollChameleonMagnitude
+            || effect.mDuration != ESM4::ScrollChameleonDuration || effect.mArea || effect.mRange
+            || effect.mActorValue != 46 || effect.mScriptEffect) return {};
+        const auto* definition = ingredientEffectDefinition(store, effect.mId);
+        if (!definition || !definition->mData) return {};
+        const auto& data = *definition->mData;
+        // Fixed associated AV46, Recover, percentage magnitude and Self support.
+        // Hostile/detrimental/NoDuration/NoMagnitude profiles are not substituted.
+        if (data.mAssociatedData != 46 || data.mSchool != 3 || data.mResistanceActorValue != -1
+            || (data.mFlags & 0x0100001a) != 0x0100001a || (data.mFlags & 0x185)) return {};
+        return enchantment->mFormKey;
+    }
+
+    bool releaseOblivionScrollChameleon(MWBase::World& world, const ESM::FormKey& scroll)
+    {
+        auto* native = dynamic_cast<World*>(&world);
+        auto* combat = native ? native->getOblivionCombatService() : nullptr;
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        const auto* cast = combat ? combat->findSpellCast(actor) : nullptr;
+        const auto* life = combat ? combat->findActorLife(actor) : nullptr;
+        const auto* current = combat ? combat->findActorValues(actor) : nullptr;
+        const auto* book = world.getStore().get<ESM4::Book>().search(scroll);
+        const auto enchantment = book ? resolveOblivionScrollChameleon(world.getStore(), *book) : std::nullopt;
+        if (!cast || cast->mSpell != scroll || cast->mReleased || cast->mCost != 0
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive || !current || !enchantment) return false;
+        auto values = *current;
+        auto& effects = values.mScrollChameleon;
+        const auto previous = std::find_if(effects.begin(), effects.end(),
+            [&](const auto& effect) { return effect.mEnchantment == *enchantment; });
+        const bool refresh = previous != effects.end();
+        const float delta = ESM4::applyScrollChameleon(effects,
+            {scroll, *enchantment, ESM4::ScrollChameleonMagnitude, 0.f});
+        if (delta != 0)
+            values.mValues[46] = ESM4::changeActorValueModifier(values.mValues[46], values.mOwner, 46,
+                ESM4::ActorValueModifier::Maximum, delta);
+        values.validate();
+        combat->publishPlayerValues(world.getPlayer(), std::move(values),
+            resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        Log(Debug::Info) << "M16 Chameleon applied: scroll=" << scroll.serialize()
+            << " enchantment=" << enchantment->serialize() << " magnitude=" << ESM4::ScrollChameleonMagnitude
+            << " duration=" << ESM4::ScrollChameleonDuration << " refresh=" << refresh;
+        return true;
+    }
+
+    void validateOblivionScrollChameleon(const ESMStore& store, const ESM4::RuntimeState& state)
+    {
+        for (const auto& actor : state.mNativeActorValues)
+            for (const auto& effect : actor.mScrollChameleon)
+            {
+                const auto* book = store.get<ESM4::Book>().search(effect.mScroll);
+                const auto source = book ? resolveOblivionScrollChameleon(store, *book) : std::nullopt;
+                if (!source || *source != effect.mEnchantment)
+                    throw std::invalid_argument("saved native Chameleon source no longer resolves");
+            }
+    }
+
     std::string describeOblivionScroll(MWBase::World& world, const ConstPtr& item)
     {
         const auto* book = world.getStore().get<ESM4::Book>().search(item.getCellRef().getRefId());
         const auto damage = book ? resolveOblivionScrollDamage(world.getStore(), *book) : std::nullopt;
-        if (!damage) return {};
+        if (!damage)
+        {
+            if (!book || !resolveOblivionScrollChameleon(world.getStore(), *book)) return {};
+            const auto* effect = ingredientEffectDefinition(world.getStore(), ESM::fourCC("CHML"));
+            return effect ? effect->mFullName + " 25 pts for 30s on Self" : std::string{};
+        }
         const auto* effect = ingredientEffectDefinition(world.getStore(), damage->mEffectCode);
         return effect ? effect->mFullName + " 20 pts on Target" : std::string{};
     }
@@ -560,7 +634,8 @@ namespace MWWorld
         if (item.getContainerStore() != &inventory) return false;
         const auto* book = world.getStore().get<ESM4::Book>().search(item.getCellRef().getRefId());
         const auto key = world.getStore().get<ESM4::Book>().findFormKey(item.getCellRef().getRefId());
-        if (!book || !key || !resolveOblivionScrollDamage(world.getStore(), *book)) return false;
+        if (!book || !key || (!resolveOblivionScrollDamage(world.getStore(), *book)
+            && !resolveOblivionScrollChameleon(world.getStore(), *book))) return false;
         for (auto it = inventory.begin(); it != inventory.end(); ++it)
             if (*it == item)
             {
@@ -583,7 +658,8 @@ namespace MWWorld
         const auto& store = world.getStore();
         const auto* book = store.get<ESM4::Book>().search(item.getCellRef().getRefId());
         const auto key = store.get<ESM4::Book>().findFormKey(item.getCellRef().getRefId());
-        if (!book || !key || cast.mSpell != *key || !resolveOblivionScrollDamage(store, *book)) return false;
+        if (!book || !key || cast.mSpell != *key || (!resolveOblivionScrollDamage(store, *book)
+            && !resolveOblivionScrollChameleon(store, *book))) return false;
         auto& inventory = actor.getClass().getInventoryStore(actor);
         if (item.getContainerStore() != &inventory) return false;
         MWBase::Environment::get().getWorldModel()->registerPtr(item);
@@ -594,8 +670,11 @@ namespace MWWorld
         if (!debit->commit()) throw std::logic_error("native scroll debit changed during admission");
         Log(Debug::Info) << "M16 native scroll consumed: book=" << key->serialize() << " count=1 magicka_cost=0";
         const auto windows = MWBase::Environment::get().getWindowManager();
-        if (item.getCellRef().getCount() == 0 && windows->getSelectedEnchantItem() == item)
+        if (windows->getSelectedEnchantItem() == item)
+        {
+            inventory.setSelectedEnchantItem(inventory.end());
             windows->unsetSelectedSpell();
+        }
         MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
         debit->notify();
         return true;
@@ -850,7 +929,8 @@ namespace MWWorld
             const auto* winner = mStore.getFormKeyIndex().winner(cast.mSpell);
             if (book || (winner && winner->mRecordType == ESM4::REC_BOOK))
                 if (!book || actor != ESM::FormKey::dynamic("player", 1) || cast.mCost != 0
-                    || !resolveOblivionScrollDamage(mStore, *book))
+                    || (!resolveOblivionScrollDamage(mStore, *book)
+                        && !resolveOblivionScrollChameleon(mStore, *book)))
                     throw std::invalid_argument("saved native scroll cast content no longer resolves");
         }
         for (const auto& [id, projectile] : state.mNativeMagicProjectiles)

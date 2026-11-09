@@ -73,7 +73,8 @@ namespace ESM4
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
     // v87 retains pending native spells and once-only release ownership.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 92;
+    // v93 retains Player scroll-owned CHML contributions and refreshed lifetimes.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 93;
 
     struct RuntimeContentIdentity
     {
@@ -402,6 +403,10 @@ namespace ESM4
         // v92: Player-owned first-effect REFA from a consumed ingredient.
         // Older saves have no pending food, never inferred from carried stock.
         std::vector<RuntimeIngredientRestoration> mIngredientRestoration;
+
+        // v93: explicit recoverable Maximum AV46 contributions. Legacy values
+        // never imply a scroll source or a remaining duration.
+        std::vector<ScrollChameleonState> mScrollChameleon;
 
         // v25: signed native High/MiddleHigh process knocked byte. Absence
         // retains unknown legacy Active-process state; Low queries return zero.

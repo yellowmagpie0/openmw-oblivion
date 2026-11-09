@@ -1,5 +1,5 @@
 {
-  "status": "bounded next chunk selected; real baseline reproduced; independent original effect-lifecycle probe running",
+  "status": "accepted bounded original Chameleon carried-scroll timed self-effect slice",
   "milestone": "M16 native timed self effect: original Chameleon scroll",
   "content": {
     "book": "content:oblivion.esm:084aeb ScrollStandardChameleon3Journeyman",
@@ -42,12 +42,6 @@
     },
     "retained_initial": "baseline01 selects/drags the actual Chameleon but does not send C; baseline02 adds ordinary cast input."
   },
-  "known_source_gaps": [
-    "Book.use admits only the supported instant target fire scroll; this CHML self profile is rejected.",
-    "Native Player cast controller needs an owned self-buff release path, independent of the consumed inventory instance.",
-    "No saved native Chameleon source/lifetime currently exists; never infer it from stock or a pre-existing AV46 modifier.",
-    "CharacterController visibility and native detection read legacy MagicEffects.Chameleon rather than owned native AV46."
-  ],
   "independent_probe": {
     "root": "build/oblivion-compat/chameleon-scroll/original-native-01",
     "question": "Application phase, magnitude, repeated-source stacking/replacement and natural expiry. Reuse independently established generic-scroll free-cast/mastery behavior where applicable.",
@@ -56,7 +50,7 @@
     "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
   },
   "plan": [
-    "Establish the original effect lifecycle before choosing stacking/timer ownership.",
+    "Original control establishes early debit before AV46 application, authored25 even at armored88% effectiveness, same-source refresh without stacking, and natural expiry.",
     "Admit only the original single CHML25/30 Self BOOK/ENCH shape; retain one-shot selected-instance debit and owned cast source.",
     "Apply the native timed contribution once at the observed phase, save its explicit source/elapsed lifecycle, and restore/expire only that contribution.",
     "Connect renderer visibility and detection to native AV46 without inventing TES3 effects.",
@@ -73,6 +67,21 @@
     "General magic-effect interpreter, all other buff/scroll shapes and poisons",
     "General spell mastery/XP progression, including the separately recorded pre-existing target-SPEL skill-index issue",
     "Exact original shader/refraction, frame scheduling or bit-identical arithmetic",
-    "Full M16 and complete Vilverin expedition acceptance"
-  ]
+    "Full M16 and complete Vilverin expedition acceptance",
+    "Cross-enchantment stacking parity and NPC self casting",
+    "Automatic previous-learned-spell fallback after scroll consumption"
+  ],
+  "native_oracle": "docs/oblivion/CHAMELEON-SCROLL-ORACLE.json",
+  "baseline_source_gaps": [
+    "Book.use admits only the supported instant target fire scroll; this CHML self profile is rejected.",
+    "Native Player cast controller needs an owned self-buff release path, independent of the consumed inventory instance.",
+    "No saved native Chameleon source/lifetime currently exists; never infer it from stock or a pre-existing AV46 modifier.",
+    "CharacterController visibility and native detection read legacy MagicEffects.Chameleon rather than owned native AV46."
+  ],
+  "implementation": {
+    "schema": 93,
+    "lifecycle": "Owned consumed BOOK cast releases the explicit original ENCH once; the native Player timer owns the resolved25-point Maximum46 contribution. Same ENCH refreshes without another contribution; expiry removes only its owned magnitude. Legacy92 AV46 without a source is not assigned a timer.",
+    "visibility_and_detection": "Both consume nativeAV46. Existing approximate alpha0.75 is visually checked at25; actual original NPC observers read25. No complete stealth-outcome or refraction parity claim.",
+    "verification": "docs/oblivion/CHAMELEON-SCROLL-VERIFICATION.json"
+  }
 }

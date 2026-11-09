@@ -199,3 +199,37 @@ TEST(ESM4SpellCast, ReleaseOccursOnceAcrossFramePartitioning)
     EXPECT_THROW(ESM4::advanceSpellCast(small, std::numeric_limits<float>::infinity()), std::invalid_argument);
     EXPECT_EQ(small, before);
 }
+
+TEST(ESM4ScrollChameleon, LifetimeStopsAtAuthoredDurationAndRejectsReplay)
+{
+    ESM4::ScrollChameleonState effect{ESM::FormKey::content("Oblivion.esm", 0x84aeb),
+        ESM::FormKey::content("Oblivion.esm", 0x5b044), 25.f, 12.f};
+    EXPECT_NO_THROW(effect.validate());
+    const auto paused = ESM4::advanceScrollChameleon(effect.mElapsed, 0.f);
+    EXPECT_FLOAT_EQ(paused.mElapsed, 12.f);
+    EXPECT_FALSE(paused.mExpired);
+    const auto remaining = ESM4::advanceScrollChameleon(effect.mElapsed, 100.f);
+    EXPECT_FLOAT_EQ(remaining.mElapsed, 30.f);
+    EXPECT_TRUE(remaining.mExpired);
+    EXPECT_THROW(ESM4::advanceScrollChameleon(30.f, 0.f), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceScrollChameleon(0.f, -1.f), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceScrollChameleon(0.f, std::numeric_limits<float>::infinity()), std::invalid_argument);
+    effect.mMagnitude = 24.f;
+    EXPECT_THROW(effect.validate(), std::invalid_argument);
+}
+
+TEST(ESM4ScrollChameleon, SameEnchantmentRefreshesWithoutAnAdditionalContribution)
+{
+    ESM4::ScrollChameleonState effect{ESM::FormKey::content("Oblivion.esm", 0x84aeb),
+        ESM::FormKey::content("Oblivion.esm", 0x5b044), 25.f, 0.f};
+    std::vector<ESM4::ScrollChameleonState> effects;
+    EXPECT_FLOAT_EQ(ESM4::applyScrollChameleon(effects, effect), 25.f);
+    effects.front().mElapsed = 12.f;
+    EXPECT_FLOAT_EQ(ESM4::applyScrollChameleon(effects, effect), 0.f);
+    ASSERT_EQ(effects.size(), 1);
+    EXPECT_FLOAT_EQ(effects.front().mElapsed, 0.f);
+    const auto before = effects;
+    effect.mElapsed = 1.f;
+    EXPECT_THROW(ESM4::applyScrollChameleon(effects, effect), std::invalid_argument);
+    EXPECT_EQ(effects, before);
+}

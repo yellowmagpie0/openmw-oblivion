@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 92
+CURRENT_VERSION = 93
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1130,6 +1130,24 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             elapsed = native_float(effect["elapsed"])
             if not 0 <= elapsed < 1:
                 raise RuntimeStateError("Invalid TES4 ingredient restoration time")
+
+        chameleon = check_collection(actor.get("scroll_chameleon", []), "scroll Chameleon list")
+        if chameleon and (version < 93 or owner != 0):
+            raise RuntimeStateError("TES4 scroll Chameleon requires Player ownership and version93")
+        sources = set()
+        for effect in chameleon:
+            if not isinstance(effect, dict) or set(effect) != {"scroll", "enchantment", "magnitude", "elapsed"}:
+                raise RuntimeStateError("Invalid TES4 scroll Chameleon state")
+            for field in ("scroll", "enchantment"):
+                key = effect[field]
+                if not isinstance(key, str) or not key.startswith("content:"):
+                    raise RuntimeStateError("Invalid TES4 scroll Chameleon source")
+                native_key(key)
+            if effect["enchantment"] in sources:
+                raise RuntimeStateError("Duplicate TES4 Chameleon enchantment source")
+            sources.add(effect["enchantment"])
+            if native_float(effect["magnitude"]) != 25 or not 0 <= native_float(effect["elapsed"]) < 30:
+                raise RuntimeStateError("Invalid TES4 scroll Chameleon magnitude or lifetime")
 
         paralysis = check_collection(actor.get("melee_paralysis", []), "melee paralysis list")
         if version < 70 and paralysis:
@@ -2999,6 +3017,12 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 food = [{"ingredient": reader.string(), "elapsed": reader.unpack("<f")} for _ in range(reader.count())]
                 if food:
                     actor["ingredient_restoration"] = food
+            if version >= 93:
+                chameleon = [{"scroll": reader.string(), "enchantment": reader.string(),
+                              "magnitude": reader.unpack("<f"), "elapsed": reader.unpack("<f")}
+                             for _ in range(reader.count())]
+                if chameleon:
+                    actor["scroll_chameleon"] = chameleon
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -3840,6 +3864,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<I", len(food))
                 for effect in food:
                     writer.string(effect["ingredient"])
+                    writer.pack("<f", effect["elapsed"])
+            if version >= 93:
+                chameleon = actor.get("scroll_chameleon", [])
+                writer.pack("<I", len(chameleon))
+                for effect in chameleon:
+                    writer.string(effect["scroll"])
+                    writer.string(effect["enchantment"])
+                    writer.pack("<f", effect["magnitude"])
                     writer.pack("<f", effect["elapsed"])
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])

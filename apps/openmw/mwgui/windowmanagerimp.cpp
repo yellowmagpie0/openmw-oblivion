@@ -1714,7 +1714,8 @@ namespace MWGui
         {
             const auto* book = item.isEmpty() ? nullptr
                 : mStore->get<ESM4::Book>().search(item.getCellRef().getRefId());
-            if (!book || !MWWorld::resolveOblivionScrollDamage(*mStore, *book))
+            if (!book || (!MWWorld::resolveOblivionScrollDamage(*mStore, *book)
+                && !MWWorld::resolveOblivionScrollChameleon(*mStore, *book)))
                 throw std::invalid_argument("unsupported native selected magic item");
             mRuntime->mSelectedEnchantItem = item;
             mRuntime->mSelectedSpell = {};

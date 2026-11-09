@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <array>
 #include <string>
+#include <vector>
 #include <components/esm/formkey.hpp>
 
 namespace ESM4
@@ -47,6 +48,30 @@ namespace ESM4
     // Candidate endpoint for a swept collision query, limited by remaining range.
     // The caller owns hit testing and commits either the flight step or impact.
     MagicProjectileState advanceMagicProjectile(const MagicProjectileState& state, float duration);
+
+    inline constexpr float ScrollChameleonMagnitude = 25.f;
+    inline constexpr float ScrollChameleonDuration = 30.f;
+
+    // Resolved single CHML scroll application. Enchantment identity owns
+    // replacement; the consumed BOOK remains explicit provenance.
+    struct ScrollChameleonState
+    {
+        ESM::FormKey mScroll;
+        ESM::FormKey mEnchantment;
+        float mMagnitude = ScrollChameleonMagnitude;
+        float mElapsed = 0;
+        void validate() const;
+        friend bool operator==(const ScrollChameleonState&, const ScrollChameleonState&) = default;
+    };
+    // Refresh the same enchantment without stacking; return the net recoverable delta.
+    float applyScrollChameleon(std::vector<ScrollChameleonState>& effects, ScrollChameleonState application);
+
+    struct ScrollChameleonStep
+    {
+        float mElapsed;
+        bool mExpired;
+    };
+    ScrollChameleonStep advanceScrollChameleon(float elapsed, float duration);
 
     struct SpellCostSettings
     {

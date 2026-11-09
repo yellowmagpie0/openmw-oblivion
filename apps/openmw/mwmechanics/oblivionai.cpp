@@ -8030,7 +8030,10 @@ namespace MWMechanics
             return std::clamp(stats.getMagicEffects().getOrDefault(effect).getMagnitude(), 0.f, 100.f);
         };
         input.mObserverBlindness = magnitude(observerStats, ESM::MagicEffect::Blind);
-        input.mTargetChameleon = magnitude(targetStats, ESM::MagicEffect::Chameleon);
+        input.mTargetChameleon = std::clamp(value(targetKey, 46), 0, 100);
+        if (input.mTargetChameleon > 0)
+            Log(Debug::Verbose) << "M16 Chameleon detection: observer=" << observerKey.serialize()
+                << " target=" << targetKey.serialize() << " magnitude=" << input.mTargetChameleon;
         if (target.getClass().hasInventoryStore(target))
         {
             auto& inventory = mutableTarget.getClass().getInventoryStore(mutableTarget);

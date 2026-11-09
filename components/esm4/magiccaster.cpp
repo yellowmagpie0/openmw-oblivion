@@ -5,6 +5,8 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <set>
+#include <utility>
 namespace ESM4
 {
     void MagicProjectileState::validate() const
@@ -69,6 +71,47 @@ namespace ESM4
         state.mElapsed = elapsed;
         state.mReleased = state.mReleased || release;
         return release;
+    }
+
+    ScrollChameleonStep advanceScrollChameleon(float elapsed, float duration)
+    {
+        if (!std::isfinite(elapsed) || elapsed < 0 || elapsed >= ScrollChameleonDuration
+            || !std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native Chameleon lifetime");
+        const float next = static_cast<float>(std::min(double(ScrollChameleonDuration), double(elapsed) + duration));
+        return {next, next >= ScrollChameleonDuration};
+    }
+
+    void ScrollChameleonState::validate() const
+    {
+        if (!mScroll.isContent() || !mEnchantment.isContent()
+            || ESM::FormKey::deserialize(mScroll.serialize()) != mScroll
+            || ESM::FormKey::deserialize(mEnchantment.serialize()) != mEnchantment
+            || mMagnitude != ScrollChameleonMagnitude)
+            throw std::invalid_argument("invalid native Chameleon source or resolved magnitude");
+        advanceScrollChameleon(mElapsed, 0.f);
+    }
+
+    float applyScrollChameleon(std::vector<ScrollChameleonState>& effects, ScrollChameleonState application)
+    {
+        application.validate();
+        if (application.mElapsed != 0)
+            throw std::invalid_argument("new Chameleon application must start at zero");
+        std::set<ESM::FormKey> sources;
+        for (const auto& effect : effects)
+        {
+            effect.validate();
+            if (!sources.insert(effect.mEnchantment).second)
+                throw std::invalid_argument("duplicate Chameleon application source");
+        }
+        auto next = effects;
+        const auto previous = std::find_if(next.begin(), next.end(),
+            [&](const auto& effect) { return effect.mEnchantment == application.mEnchantment; });
+        const float delta = application.mMagnitude - (previous == next.end() ? 0.f : previous->mMagnitude);
+        if (previous != next.end()) next.erase(previous);
+        next.push_back(std::move(application));
+        effects.swap(next);
+        return delta;
     }
 
     namespace

@@ -487,3 +487,63 @@ TEST(OblivionCombatMagicStore, FlashBoltScrollRejectsUnsupportedShapesAndDeleted
     fixture.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_ENCH, 0x5c057, {}, true)});
     EXPECT_FALSE(resolveFlashBolt(fixture));
 }
+
+namespace
+{
+    std::string chameleonBook()
+    {
+        return record(ESM4::REC_BOOK, 0x84aeb,
+            sub(ESM::fourCC("DATA"), bytes(std::uint8_t{1}) + bytes(std::int8_t{-1}) + bytes(0u) + bytes(.1f))
+            + sub(ESM::fourCC("ENAM"), bytes(0x5b044u)));
+    }
+    std::string chameleonEnchantment(unsigned duration = 30, unsigned range = 0)
+    {
+        return record(ESM4::REC_ENCH, 0x5b044,
+            sub(ESM::fourCC("ENIT"), bytes(0u) + bytes(116u) + bytes(116u) + bytes(0u))
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("CHML")))
+            + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("CHML")) + bytes(25u)
+                + bytes(0u) + bytes(duration) + bytes(range) + bytes(46u)));
+    }
+    std::string chameleonDefinition(unsigned flags = 0x0100187a)
+    {
+        return record(ESM4::REC_MGEF, 0x185c,
+            sub(ESM::fourCC("EDID"), std::string("CHML\0", 5))
+            + sub(ESM::fourCC("DATA"), bytes(flags) + bytes(.63f) + bytes(46u)
+                + bytes(3u) + bytes(std::int32_t{-1}) + std::string(44, '\0')));
+    }
+    auto resolveChameleon(const Fixture& fixture)
+    {
+        const auto* book = fixture.mStore.get<ESM4::Book>().search(ESM::FormId{0x84aeb, 1});
+        if (!book) throw std::runtime_error("missing fixture Chameleon scroll");
+        return MWWorld::resolveOblivionScrollChameleon(fixture.mStore, *book);
+    }
+}
+
+TEST(OblivionCombatMagicStore, OriginalChameleonRequiresCompleteRecoverableSelfProfile)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {chameleonBook(), chameleonEnchantment()});
+    EXPECT_FALSE(resolveChameleon(fixture));
+    fixture.load("patch.esp", {"oblivion.esm"}, {chameleonDefinition()});
+    ASSERT_TRUE(resolveChameleon(fixture));
+    EXPECT_EQ(*resolveChameleon(fixture), ESM::FormKey::content("Oblivion.esm", 0x5b044));
+    fixture.load("final.esp", {"oblivion.esm", "patch.esp"}, {chameleonEnchantment(31)});
+    EXPECT_FALSE(resolveChameleon(fixture));
+}
+
+TEST(OblivionCombatMagicStore, ChameleonDoesNotSubstituteTargetDamagingOrDeletedEffects)
+{
+    for (const auto& records : std::vector<std::vector<std::string>>{
+        {chameleonBook(), chameleonEnchantment(30, 2), chameleonDefinition()},
+        {chameleonBook(), chameleonEnchantment(), chameleonDefinition(0x01001878)},
+        {chameleonBook(), chameleonEnchantment(), chameleonDefinition(0x0100197a)}})
+    {
+        Fixture fixture;
+        fixture.load("oblivion.esm", {}, records);
+        EXPECT_FALSE(resolveChameleon(fixture));
+    }
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {chameleonBook(), chameleonEnchantment(), chameleonDefinition()});
+    fixture.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_ENCH, 0x5b044, {}, true)});
+    EXPECT_FALSE(resolveChameleon(fixture));
+}
