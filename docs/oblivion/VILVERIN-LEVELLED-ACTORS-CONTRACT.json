@@ -117,10 +117,15 @@
     {
       "run": "build/oblivion-compat/vilverin/levelled-encounter-restart-03",
       "status": "passed second fresh-process continuation; all15 movement owners and worn gear retained"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-normal-integration-01",
+      "status": "3272 component cases passed; full2257 engine run had148 failures, all an unavailable Player lookup introduced in NPC construction",
+      "repair": "Ask for Player level only when an actual nonzero LVLI needs expansion; rerun all148 failures first; do not modify existing fixtures/assertions"
     }
   ],
   "remaining_acceptance": [
-    "Full normal and ASan/UBSan component/engine integration gates",
+    "Full normal and ASan/UBSan engine gates",
     "Sanitized original placement, continuation and genuine encounter restart"
   ],
   "normal_semantics": {
@@ -149,6 +154,36 @@
       "cases": 1093,
       "passed": true,
       "leak_check": false
+    },
+    "construction_repair": {
+      "report": "build/oblivion-compat/vilverin/levelled-construction-focused-01/verification.json",
+      "cases": 148,
+      "failed": 0,
+      "skipped": 0,
+      "passed": true,
+      "source": {
+        "head": "9424df608d43ef5ff245182da877272b247f945e",
+        "source_fingerprint": "e2146b887fe81be2330b9a96e777bf9339f119ed14accc044f79ce42f36132de"
+      }
     }
+  },
+  "component_integration": {
+    "normal": {
+      "report": "build/oblivion-compat/vilverin/levelled-normal-integration-01/verification.json",
+      "result": "results.components",
+      "cases": 3272,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Component phase passed; subsequent engine phase failed and is retained separately."
+    },
+    "asan_ubsan": {
+      "report": "build/oblivion-compat/vilverin/levelled-asan-components-full-01/verification.json",
+      "cases": 3272,
+      "failed": 0,
+      "skipped": 0,
+      "passed": true,
+      "leak_check": false
+    },
+    "reuse": "No component implementation changed in the engine-only NPC-construction repair."
   }
 }

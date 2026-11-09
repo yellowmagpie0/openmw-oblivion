@@ -94,7 +94,11 @@ namespace MWClass
         {
             auto* world = MWBase::Environment::get().getWorldOrNull();
             const bool native = world && world->getGameProfile() == ESM::GameProfile::Oblivion;
-            const auto expanded = native ? MWWorld::expandOblivionLevelledItems(store, items,
+            const bool hasLevelledItems = native && std::any_of(items.begin(), items.end(), [&](const auto& item) {
+                return item.count != 0 && store.get<ESM4::LevelledItem>().search(
+                    ESM::FormId::fromUint32(item.item));
+            });
+            const auto expanded = hasLevelledItems ? MWWorld::expandOblivionLevelledItems(store, items,
                 world->getPlayerPtr().getClass().getCreatureStats(world->getPlayerPtr()).getLevel(), world->getPrng()) : items;
             for (const ESM4::InventoryItem& item : expanded)
             {

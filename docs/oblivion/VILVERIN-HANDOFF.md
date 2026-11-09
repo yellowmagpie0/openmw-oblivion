@@ -36,7 +36,14 @@ See `build/oblivion-compat/vilverin/levelled-normal-semantic-in-progress.json`.
 The focused strict movement batch regression passes (1case). Normal and
 ASan/UBSan component checks each pass all1093 ESM4-prefixed cases, with no failures
 or skips, at dirty-source fingerprint61a1369c0a9cca517aa444e9904483c0a563c6cc2e23b1f2ad6671d39e217e8a.
-Remaining acceptance: full component/engine integration gates and sanitized
+Full component gates pass3272 cases in normal and ASan/UBSan builds. The normal
+engine gate exposed148 failures with one cause: NPC inventory construction
+queried an unavailable Player even for empty/direct inventories. The production
+path now requests a Player level only when a nonzero LVLI entry actually needs
+expansion. Existing fixtures and assertions remain unchanged. All148 failed cases now
+pass the focused rerun. Next action is the full normal engine gate, followed by
+the full instrumented engine gate and original-content instrumented courses.
+Remaining acceptance: repaired full engine integration gates and sanitized
 original placement/continuation plus encounter restart. Source is being frozen
 for those checks. Native group quantities,
 scripted placement lifecycle and CREA inventory expansion remain outside this
