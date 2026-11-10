@@ -1,0 +1,204 @@
+{
+  "status": "accepted bounded ordinary Player bow release, flight, impact and persistence; full S5/M15 and expedition remain open",
+  "implementation_commit": "d0205f154972f0a27833d8b4d266ad221631bd77",
+  "contract": "docs/oblivion/PLAYER-BOW-CONTRACT.json",
+  "original_oracle": "docs/oblivion/PLAYER-BOW-ORACLE.json",
+  "tested_source_files": {
+    "apps/components_tests/esm4/runtimestate.cpp": "6c7843bebafcbd558d95289e1d6b94b96fce5cbc97aed4f65bd45acb824623fb",
+    "apps/openmw/CMakeLists.txt": "74bed6cd7a1b83894e538e11d1dcea0972089ff4179e8332f587711476bc3837",
+    "apps/openmw/mwmechanics/character.cpp": "d6107763b6547a7098966e0acd92f19f0e8c17f15c7dcb5e9029e85356f5fcc8",
+    "apps/openmw/mwmechanics/character.hpp": "e77a3e34c6721b0ad03af102426d9dbfdd3c8ab84106da7e569d72cb6d5fc347",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "cb6ed63f75f5905243707577d9896b1916156e81229731b9ab20390296df1883",
+    "apps/openmw/mwmechanics/oblivionmelee.hpp": "7f0d51de76cd88fe74cd9d2281ca2fbde7db021bff2a34bab996d5391c487c46",
+    "apps/openmw/mwrender/animation.cpp": "ac84e940d2f624bd220f67e5d7a63f09b963595383e69e217e46a21316985ebd",
+    "apps/openmw/mwrender/animation.hpp": "1030de3b124c6c52fd5cbc43b949e7cb25d2064b920c1100e32d0c4be7793227",
+    "apps/openmw/mwworld/oblivionbow.cpp": "7bc9915566f9c35cb017c266e322cf0b0f95d2a4031c9c84f9e1675b8cd22ddd",
+    "apps/openmw/mwworld/projectilemanager.cpp": "bbc44f46244c8a3a7846df34b3bd76863ec521354df4fe4420617a684289d70e",
+    "apps/openmw/mwworld/projectilemanager.hpp": "5b09da86d2c5e325e16196f01841d322f3dd92f6fd177fd19b0e9e8431c6b1a3",
+    "apps/openmw/mwworld/worldimp.cpp": "8d2bab2a62886414f1fe585369888525a0520b4bc878ac92a187178bac2bd10c",
+    "apps/openmw/mwworld/worldimp.hpp": "a468df84936494635c205a74cb52e9693de4257e43027b3871096e59de4a49a7",
+    "components/esm4/projectilerules.cpp": "b562cba5958c9f9791b4c4376e8a1f31be88622c5856ebfd051fc64f6687faac",
+    "components/esm4/projectilerules.hpp": "fc92ddd47d08b9cc8fed2281f64a5e8438de7101bcf607524c3cc83c7f8e981b",
+    "components/esm4/runtimestate.cpp": "e9d6da9f4aa2f3de5ad0538a5f7109194d096950568ae0fca6bb5d089f369bf7",
+    "components/esm4/runtimestate.hpp": "3b65b188071e40e5752721101820de823580f5e09948b51f44dc878016d8310c",
+    "scripts/tes4_m15_cached_block_input.py": "a8d65471d9edde16266b48b7381088e7f03630aa4d98d0922ed04f95c4968fa3",
+    "scripts/tes4_m15_fixture_preflight.py": "2047869e5c7ceac7aa4384ee583447d501ed4336dfdc73d86396143e97207ffc",
+    "scripts/tes4_m15_npc_passive_fixture.py": "17446ee04b87582e1874b3406f4650976c6fb3c09c468bb08f4fc9097a814b87",
+    "scripts/tes4_m15_passive_slot3_fixture.py": "5009b9802b755bb0aab20208d76b1206735a2890596a21c3299bb9810327c303",
+    "scripts/tes4_runtime_state.py": "c5fdd71c1bbc2d320b6607707041d813b4b4325f3b89b18d56b52793c3940fdd",
+    "scripts/tests/test_tes4_m15_fixture_preflight.py": "a8ec082091fcebdfe4494b784d08502475e62b04503fae4070b587f58a74f70d",
+    "scripts/tests/test_tes4_m15_npc_passive_fixture.py": "fb9f9eda0915d45a107b58a73916d3d645fba7f3ef66393c5f655134ce72fa67",
+    "scripts/tests/test_tes4_m15_passive_slot3_fixture.py": "538e01f8ad8f7dda91a0c413ef508d60e72762e7557be41bf6e24c16632eadc7",
+    "scripts/tests/test_tes4_runtime_state.py": "21fc73bdcbb363a230d042c837d26a90e56573ffaf59270bac72988a145f3018",
+    "scripts/verify_oblivion_player_bow_course.py": "69194bc44dd380f5a6d465213408e44b8daa257d1ecfb258f17e7badff312702"
+  },
+  "source_note": "Gate reports retain their exact parent1e978a297f dirty-source fingerprints. Production C++/codec/fixture source hashes match this receipt. Later documentation, strict optional-timer audit handling and instrumented startup recipes do not change the compiled implementation; all real audits execute the final verifier.",
+  "behavior": [
+    "Actual retained Rusty Iron Bow047aca/Iron Arrow017829; authored draw, attachment, held pose, release and cancellation ownership use existing native helpers.",
+    "Resource preparation precedes one-arrow/fatigue/wear commit and independent schema96 flight publication. World-coordinate gravity, swept line collision and launch damage snapshot persist independently of equipment/draw animation.",
+    "Actual bandit06bfc2 takes a nonlethal arrow. Three ordinary Flare casts soften it; a close arrow yields one Player-credited death and preserved corpse stock. This is mixed combat, not an all-arrow defeat.",
+    "Normal and instrumented Hold/flight/defeated fresh-process reloads preserve authoritative load/save boundaries and binary roundtrips without resource or death replay.",
+    "Measured39.11-unit shoulder miss motivates physical muzzle-to-crosshair convergence. Original aiming/autoaim equivalence is not claimed."
+  ],
+  "validation_layers": {
+    "structural": "Schema96 C++/Python wire validation, strict legacy suffix/default gates and exact actual-save roundtrips.",
+    "compiler_world": [
+      {
+        "path": "build/oblivion-compat/player-bow/normal-components-02/verification.json",
+        "sha256": "573cf55c0d4b9d520f08ef3c6d3fa32a8a8686012d8b82dc1ab5e7c9878bb08f",
+        "source": {
+          "head": "1e978a297fd51443710f4febe6a3363a205d746f",
+          "source_fingerprint": "6eaa500717fad0625575d9aa827e5c1187c7b3c73edc4720b7f31ba67c2c6898"
+        },
+        "results": {
+          "components": {
+            "executed": 3284,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "0d1bf2ddb667a5a7d919e862a934505bf7026869f4823717c95a1bb80d59313a",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "203c8903e9f38a7fc7feeea3fe3219a135eda384ec7e6177fb97c7dab1778a09",
+            "inventory_sha256": "323c7bd24f524c394efc66029f96581611cd8abb2f2c9c9cdcbe3ce5c2b2c39f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/player-bow/normal-integration-01/verification.json",
+        "sha256": "61506c0a2e5c49615389a86dd47f47de46c7f0a473d7a96a0ff557fa783202e8",
+        "source": {
+          "head": "1e978a297fd51443710f4febe6a3363a205d746f",
+          "source_fingerprint": "3304d3eaa5cbfc6783d4160e0a011847decb1dce304cb55a7ffb1a783dd20329"
+        },
+        "results": {
+          "engine": {
+            "executed": 2271,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "51f09f6ff62afa33c78aff0e8139a63e14f27005a0f30a3994df258ab80cca35",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "aa4e401d961b19f1f35a9c61c05965682b2a91e3447f9f6016ecc2cb41f7f981",
+            "inventory_sha256": "2ff4110cf9ce550cdb8b0bb9d7d6ba1d82bf2c6822c849fa5b9a10650b52d6e0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 607,
+            "passed": true,
+            "log_sha256": "11fb1b1ec60b3703fbe768ab38e4e75477e234965f2a01d374eaa083150061dc"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/player-bow/sanitized-final-01/verification.json",
+        "sha256": "ef434765f4ffe5dc43322f8020985fef0b37eeb3ad88a735a1870b8223bdfc7b",
+        "source": {
+          "head": "1e978a297fd51443710f4febe6a3363a205d746f",
+          "source_fingerprint": "3304d3eaa5cbfc6783d4160e0a011847decb1dce304cb55a7ffb1a783dd20329"
+        },
+        "results": {
+          "components": {
+            "executed": 3284,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "15e99eaaf7aa2dde2acaf54b91f51f1a0b2decc72f609ec83eb061d99893aab4",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "06ce731ad85cc96943fe0af27fff04323063a66675651cfb431c8dc46361da72",
+            "inventory_sha256": "0e368103c3f3e672cb340012816ddf7c9f59e3647c5a5f01397bd520c85b64e1",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2271,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "8919ed34ec763d70a46336814a76fcdaa4887e70349a163a65883d981e7d0519",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c2605302d9c5aaec2a17483c981a5c2b6230122642a3a57e15e036ae9d940434",
+            "inventory_sha256": "2ff4110cf9ce550cdb8b0bb9d7d6ba1d82bf2c6822c849fa5b9a10650b52d6e0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "semantic_and_runtime": {
+      "normal": {
+        "path": "build/oblivion-compat/player-bow/normal-runtime-summary.json",
+        "sha256": "9a432fb478ee6127a2117550ecfd2362297e2db8eabc36785a7434d40ebff16d",
+        "cases": 7,
+        "processes": 7,
+        "game_binaries": [
+          "46f2d445e6dd69d6d45a0f29fd87127789acb84a4d5c9330581b467ce74c409a"
+        ]
+      },
+      "sanitized": {
+        "path": "build/oblivion-compat/player-bow/sanitized-runtime-summary.json",
+        "sha256": "b21d901323e48421b9bd5ab2b8fc96399be94a62df23ed7666cdc6020a7d3e14",
+        "cases": 7,
+        "processes": 7,
+        "game_binaries": [
+          "46aa55971e921b7498ea3bfa837c1388524db951b0662e5957b6b5d74226eb9f"
+        ]
+      }
+    },
+    "independent_rules": "Reuse original-executable phase/timer/launch/resource/coordinate/gravity evidence with its original provenance; actual original winning records and installed mesh archive are hash-identified separately."
+  },
+  "outgoing": {
+    "path": "build/oblivion-compat/player-bow/normal-bandit-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "93a7ca9ffca5135916a2b22be4b712c82fea6faa049db142fc92afa5f016f519",
+    "player_health": 32.97400665283203,
+    "player_magicka": 50.83135986328125,
+    "player_fatigue": 170,
+    "arrows": 19,
+    "bow_condition": 87.59998321533203,
+    "cell": "content:oblivion.esm:0463f5",
+    "target": "content:oblivion.esm:06bfc2",
+    "target_killer": "dynamic:player:0000000000000001",
+    "pending_bow_or_flight": false
+  },
+  "retained_failures": [
+    "development-build-01/02: incomplete launch type and NotNullPtr deduction, repaired before gameplay.",
+    "normal-release-development-01/02: four camera/shadow parents rejected by initial global-path query; actor-placement capture fixes it without resource loss.",
+    "normal-components-01 and normal-python-01: strict wire suffix/default expectations updated for schema96; focused repairs then full reruns pass.",
+    "sanitized-development-build-01: parallel compiler killed for memory; single-job full instrumented gates pass.",
+    "sanitized-held-acceptance-01:180-second startup allowance expired before draw input; unchanged mechanics replay with600-second startup allowance.",
+    "Bandit body/raised-cover and high parallel-muzzle misses retained; fixed physical crosshair convergence then actual impacts pass.",
+    "Zombie corridor path/raised slab/stair attempts retained; ordinary jumps clear slab, but descent stalls after25 units. No movement implementation is claimed."
+  ],
+  "limits": [
+    "Accepted real gameplay is ordinary unenchanted Player bows in this interior, third-person course. Instrumented rendered leak checks are off; full instrumented component/engine leak checks are on.",
+    "Constant-acceleration line sweep has12000-unit cap; complete Havok collision/controller, cell-crossing/caster-removal and original autoaim parity remain unverified.",
+    "Arrow embedding/recovery, XP, sound delivery, full hit reactions, other target/crime/view/device contexts, NPC tactics/mastery/poison/enchantment branches and full S5/M15 remain open.",
+    "Full campaign, unrelated acceptance matrices and expedition return are not closed. All content is original; runtime observers are read-only and inputs use ordinary controls without grants, synthetic enemies, forced deficits or teleports."
+  ]
+}
