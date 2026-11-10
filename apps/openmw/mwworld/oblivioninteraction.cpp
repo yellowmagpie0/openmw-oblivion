@@ -1,4 +1,5 @@
 #include "oblivioninteraction.hpp"
+#include "oblivionscriptmanager.hpp"
 
 #include <algorithm>
 #include <array>
@@ -404,6 +405,12 @@ namespace MWWorld
         return item.mCount;
     }
 
+    void World::notifyOblivionItemEquipped(const Ptr& actor, const Ptr& item)
+    {
+        if (mGameProfile == ESM::GameProfile::Oblivion && mOblivionScriptManager)
+            mOblivionScriptManager->dispatchInventoryEquip(actor, item);
+    }
+
     bool World::oblivionEquipPlayerItem(const ESM::FormKey& key, bool equip)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || key.isNull())
@@ -443,6 +450,8 @@ namespace MWWorld
         int selectedSlot = slots.front();
         if (definition->mChooseOneSlot && slots.size() > 1)
             selectedSlot = inventory.getSlot(slots.front()) == inventory.end() ? slots.front() : slots.back();
+        const Ptr equipped = *found;
+        const bool wasEquipped = inventory.isEquipped(equipped);
         inventory.equip(selectedSlot, found);
         oblivionPlayerEquipmentChanged();
         const std::uint32_t preferred = definition->mChooseOneSlot
@@ -451,6 +460,7 @@ namespace MWWorld
                     : static_cast<std::uint32_t>(ESM4::Armor::TES4_RightRing))
             : 0;
         ESM4::equipInventoryItem(mOblivionRuntimeState->mPlayer.mInventory, *definition, preferred);
+        if (!wasEquipped) notifyOblivionItemEquipped(getPlayerPtr(), equipped);
         return true;
     }
 

@@ -807,6 +807,7 @@ namespace MWWorld
             ptr.getCellRef().setNativeOwnershipRank(item.mOwnershipRank);
             ptr.getCellRef().setNativeItemScale(item.mExtraScale);
             ptr.getCellRef().setNativeBoundSource(item.mBoundSource);
+            ptr.getCellRef().setNativeScriptOwner(item.mScriptOwner);
             std::optional<int> slot;
             if (item.mEquippedSlots != 0)
             {

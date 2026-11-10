@@ -66,6 +66,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     runtime._upgrade_faction_reactions(state)
     runtime._upgrade_process_alerts(state)
     runtime._upgrade_bound_ownership(state)
+    runtime._upgrade_inventory_scripts(state)
     runtime._upgrade_friend_hit_counters(state)
     runtime._upgrade_combat_controllers(state)
     runtime._upgrade_actor_knockback(state)
@@ -95,7 +96,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                   source_schema=59, target_schema=runtime.CURRENT_VERSION,
                   mutations=['Player process action -1 -> 8', 'declared Player melee state installed'],
                   shared_camera=dict(source_first_person=True, output_first_person=recipe['camera_first_person']),
-                  schema_defaults={'native_arrow_projectiles': [], 'next_arrow_projectile': 1, 'package_waiting': [], 'daily_package_completions': [], 'native_magic_projectiles': [], 'next_magic_projectile': 1, 'native_spell_casts': [], 'melee.held_blocks': [], 'first_person.held_blocks': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': [], 'native_getup_playback.request_selections': [], 'native_getup_playback.pending_requests': [], 'native_getup_playback.physical_hit': None},
+                  schema_defaults={'inventory.script_owner': None, 'native_arrow_projectiles': [], 'next_arrow_projectile': 1, 'package_waiting': [], 'daily_package_completions': [], 'native_magic_projectiles': [], 'next_magic_projectile': 1, 'native_spell_casts': [], 'melee.held_blocks': [], 'first_person.held_blocks': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': [], 'native_getup_playback.request_selections': [], 'native_getup_playback.pending_requests': [], 'native_getup_playback.physical_hit': None},
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,
                   runtime_acceptance=False, normal_input_contact=False)
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')

@@ -524,6 +524,31 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 "values": [[0., None, None, None] for _ in range(72)], "player_form_values": None})
         return state
 
+    def test_inventory_script97_identity_roundtrip_rejects_shared_and_dangling_context(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 97
+        owner = "dynamic:inventory-script:0000000000000001"
+        state["next_dynamic_serial"] = 2
+        state["player"]["inventory"] = [dict(base="content:oblivion.esm:0250a0", count=1,
+            condition=-1., charge=-1., equipped_slots=0, hotkey=-1, owner="null",
+            remaining_usage_time=-1., script_owner=owner)]
+        state["script_instances"] = [dict(unit="original-inventory-script", context=owner, locals=[])]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(loaded["player"]["inventory"][0]["script_owner"], owner)
+        self.assertNotEqual(owner, state["player"]["reference"])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        for field, value in (("count", 2), ("script_owner", None),
+                             ("script_owner", "dynamic:player:0000000000000001")):
+            bad = copy.deepcopy(state)
+            bad["player"]["inventory"][0][field] = value
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        bad["references"][0]["inventory"].append(copy.deepcopy(state["player"]["inventory"][0]))
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 96
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     def test_ingredient92_preserves_remaining_time_and_rejects_invalid_owners(self):
         state = self.combat_controller_state()
         state["schema_version"] = 92

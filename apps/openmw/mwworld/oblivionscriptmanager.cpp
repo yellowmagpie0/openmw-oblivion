@@ -824,13 +824,21 @@ namespace MWWorld
             return {};
         if (ptr == mWorld.getPlayerConstPtr())
             return ESM::FormKey::dynamic("player", 1);
-        return ptr.getCellRef().getFormKey();
+        const auto key = ptr.getCellRef().getFormKey();
+        return key.isNull() ? ptr.getCellRef().getNativeScriptOwner() : key;
     }
 
     Ptr OblivionScriptManager::ptrFor(const ESM::FormKey& key)
     {
         if (ESM4::runtimeReferenceKey(key) == ESM::FormKey::dynamic("player", 1))
             return mWorld.getPlayerPtr();
+        if (key.isDynamic() && key.mNamespace == "inventory-script")
+        {
+            auto& inventory = mWorld.getPlayerPtr().getClass().getInventoryStore(mWorld.getPlayerPtr());
+            for (auto item = inventory.begin(); item != inventory.end(); ++item)
+                if (item->getCellRef().getNativeScriptOwner() == key) return *item;
+            return {};
+        }
         if (const MWMechanics::OblivionAiService* oblivionAi = mWorld.getOblivionAiService())
             if (Ptr ptr = oblivionAi->resolveReference(key); !ptr.isEmpty())
                 return ptr;
@@ -853,7 +861,12 @@ namespace MWWorld
             return {};
         const ESM::FormKey script = mResolver.toFormKey(scriptId(ptr));
         const auto found = mScripts.find(script);
-        return found == mScripts.end() ? std::shared_ptr<const ObScript::Program>{} : found->second;
+        if (found != mScripts.end()) return found->second;
+        const auto native = OblivionProfileServices::nativeItemId(mStore, ptr.getCellRef().getRefId());
+        if (const auto* id = native.getIf<ESM::FormId>())
+            if (const auto base = mBaseScripts.find(mResolver.toFormKey(*id)); base != mBaseScripts.end())
+                return base->second;
+        return {};
     }
 
     std::shared_ptr<const ObScript::Program> OblivionScriptManager::scriptFor(const ESM::FormKey& key)
@@ -1125,6 +1138,42 @@ namespace MWWorld
         if (mSuppressedActivations.contains(key))
             return false;
         return dispatchObjectEvent(self, "onactivate", actionReference);
+    }
+
+    bool OblivionScriptManager::dispatchInventoryEquip(const Ptr& actor, const Ptr& item)
+    {
+        requireMutableRuntime();
+        // First admitted course: an exact Player-owned, singleton inventory
+        // instance. Its reference identity must never be the containing actor.
+        if (actor != mWorld.getPlayerPtr() || item.isEmpty() || item.getCellRef().getCount() != 1)
+            return false;
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        if (item.getContainerStore() != &inventory || !inventory.isEquipped(item)) return false;
+        const auto native = OblivionProfileServices::nativeItemId(mStore, item.getCellRef().getRefId());
+        const auto* id = native.getIf<ESM::FormId>();
+        if (!id) return false;
+        const auto base = mResolver.toFormKey(*id);
+        const auto found = mBaseScripts.find(base);
+        if (found == mBaseScripts.end()) return false;
+        const auto program = found->second;
+        if (!std::any_of(program->mEntryPoints.begin(), program->mEntryPoints.end(), [](const auto& entry) {
+                return Misc::StringUtils::ciEqual(entry.mEvent, "onequip");
+            })) return false;
+        auto key = item.getCellRef().getNativeScriptOwner();
+        if (key.isNull())
+        {
+            if (!mWorld.mNextOblivionDynamicSerial
+                || mWorld.mNextOblivionDynamicSerial == std::numeric_limits<std::uint64_t>::max())
+                throw std::runtime_error("Native inventory script identity exhausted");
+            key = ESM::FormKey::dynamic("inventory-script", mWorld.mNextOblivionDynamicSerial);
+            item.getCellRef().setNativeScriptOwner(key);
+            ++mWorld.mNextOblivionDynamicSerial;
+        }
+        Log(Debug::Info) << "M7 inventory equip event: item=" << base.serialize()
+            << " self=" << key.serialize() << " container=" << keyFor(actor).serialize();
+        // execute/instanceFor retain locals by the actual item identity. Script
+        // callbacks may unequip the item; no borrowed slot iterator survives.
+        return execute(program, key, key, "onequip", keyFor(actor));
     }
 
     void OblivionScriptManager::update(double secondsPassed)
@@ -1649,8 +1698,21 @@ namespace MWWorld
             if (button >= 0) mMessageBoxOwner = {};
             return std::int64_t(button);
         }
-        if (name == "getself" || name == "getcontainer")
+        if (name == "getself")
             return ObScript::ReferenceValue{ context.mSelf, "self" };
+        if (name == "getcontainer")
+        {
+            if (context.mSelf.isDynamic() && context.mSelf.mNamespace == "inventory-script")
+            {
+                const auto item = ptrFor(context.mSelf);
+                const auto player = mWorld.getPlayerPtr();
+                const auto& inventory = player.getClass().getInventoryStore(player);
+                return ObScript::ReferenceValue{
+                    !item.isEmpty() && item.getContainerStore() == &inventory
+                        ? ESM::FormKey::dynamic("player", 1) : ESM::FormKey{}, "container"};
+            }
+            return ObScript::ReferenceValue{ context.mSelf, "self" };
+        }
         if (name == "getactionref" || name == "getactionreference")
             return ObScript::ReferenceValue{ context.mActionReference, "actionref" };
         if (name == "isactionref")
@@ -3601,8 +3663,29 @@ namespace MWWorld
             quest.mRunning = (record.mData.flags & ESM4::Quest::Flag_StartGameEnabled) != 0;
             plan->mQuests.emplace(quest.mQuest, std::move(quest));
         }
+        std::map<ESM::FormKey, std::string> inventoryPrograms;
+        const auto inventoryProgramsFor = [&](const auto& inventory) {
+            for (const auto& item : inventory)
+            {
+                if (item.mScriptOwner.isNull()) continue;
+                const auto base = mBaseScripts.find(item.mBase);
+                if (base == mBaseScripts.end())
+                    throw std::invalid_argument("Saved inventory script item has no winning script");
+                inventoryPrograms.emplace(item.mScriptOwner, base->second->mUnit.serialize());
+            }
+        };
+        inventoryProgramsFor(state.mPlayer.mInventory);
+        for (const auto& reference : state.mReferences) inventoryProgramsFor(reference.mInventory);
+        for (const auto& [actor, abilities] : state.mNativeBoundAbilities)
+            for (const auto& ability : abilities) inventoryProgramsFor(ability.mDisplacedEquipment);
         for (const ESM4::RuntimeScriptInstance& saved : state.mScriptInstances)
         {
+            if (saved.mContext.isDynamic() && saved.mContext.mNamespace == "inventory-script")
+            {
+                const auto source = inventoryPrograms.find(saved.mContext);
+                if (source == inventoryPrograms.end() || source->second != saved.mUnit)
+                    throw std::invalid_argument("Saved inventory script unit no longer matches its actual item");
+            }
             const auto program = mProgramsByUnit.find(saved.mUnit);
             if (program == mProgramsByUnit.end())
                 throw std::invalid_argument("TES4 restored script has no compiled winning unit: " + saved.mUnit);

@@ -836,6 +836,11 @@ namespace ESM4
                             writer.integer(item.mBoundSource->mEffectIndex);
                         }
                     }
+                    if (version >= 97)
+                    {
+                        writer.integer<std::uint8_t>(!item.mScriptOwner.isNull());
+                        if (!item.mScriptOwner.isNull()) writeKey(writer, item.mScriptOwner);
+                    }
                 }
             }
         }
@@ -871,6 +876,12 @@ namespace ESM4
                         const auto present = reader.integer<std::uint8_t>();
                         if (present > 1) throw std::runtime_error("Invalid bound item source presence");
                         if (present) item.mBoundSource = BoundItemSource{readKey(reader), reader.integer<std::uint32_t>()};
+                    }
+                    if (version >= 97)
+                    {
+                        const auto present = reader.integer<std::uint8_t>();
+                        if (present > 1) throw std::runtime_error("Invalid inventory script identity presence");
+                        if (present) item.mScriptOwner = readKey(reader);
                     }
                 }
                 result.push_back(std::move(item));
@@ -915,6 +926,12 @@ namespace ESM4
                         if (!item.mBoundSource) stream << "null";
                         else stream << "{\"spell\":\"" << escapeJson(item.mBoundSource->mSpell.serialize())
                             << "\",\"effect_index\":" << item.mBoundSource->mEffectIndex << '}';
+                    }
+                    if (version >= 97)
+                    {
+                        stream << ",\"script_owner\":";
+                        if (item.mScriptOwner.isNull()) stream << "null";
+                        else stream << '"' << escapeJson(item.mScriptOwner.serialize()) << '"';
                     }
                 }
                 stream << '}';
@@ -2724,6 +2741,7 @@ namespace ESM4
             if (name.empty() || !std::isfinite(value))
                 throw std::runtime_error("Invalid TES4 runtime-state player actor value");
         }
+        std::set<ESM::FormKey> inventoryScriptOwners;
         const auto validateInventory = [&](const std::vector<RuntimeInventoryItem>& inventory,
                                            std::string_view label, bool actorInventory) {
             std::uint32_t occupiedSlots = 0;
@@ -2731,6 +2749,15 @@ namespace ESM4
             for (const RuntimeInventoryItem& item : inventory)
             {
                 validateOwnershipExtras(item.mOwnershipRank, item.mOwnershipGlobal, mVersion);
+                if (!item.mScriptOwner.isNull())
+                {
+                    const auto& key = item.mScriptOwner;
+                    if (mVersion < 97 || !key.isDynamic() || key.mNamespace != "inventory-script"
+                        || !key.mValue || key.mValue >= mNextDynamicSerial || item.mCount != 1
+                        || ESM::FormKey::deserialize(key.serialize()) != key
+                        || !inventoryScriptOwners.insert(key).second)
+                        throw std::runtime_error("Invalid or duplicate inventory script identity");
+                }
                 if (item.mBoundSource && (mVersion < 83 || !item.mBoundSource->mSpell.isContent()
                     || ESM::FormKey::deserialize(item.mBoundSource->mSpell.serialize()) != item.mBoundSource->mSpell
                     || item.mCount != 1 || item.mHotkey != -1))
@@ -2872,6 +2899,9 @@ namespace ESM4
         std::set<std::pair<std::string, ESM::FormKey>> scriptKeys;
         for (const RuntimeScriptInstance& script : mScriptInstances)
         {
+            if (script.mContext.isDynamic() && script.mContext.mNamespace == "inventory-script"
+                && !inventoryScriptOwners.contains(script.mContext))
+                throw std::runtime_error("Dangling inventory script instance");
             if (script.mUnit.empty() || script.mContext.isNull())
                 throw std::runtime_error("TES4 runtime-state script instance has a null identity");
             if (!scriptKeys.emplace(script.mUnit, script.mContext).second)
@@ -4118,7 +4148,7 @@ namespace ESM4
                 for (const auto& ability : abilities)
                 {
                     writeKey(writer, ability.mSpell);
-                    writeInventory(writer, ability.mDisplacedEquipment, 82);
+                    writeInventory(writer, ability.mDisplacedEquipment, mVersion >= 97 ? mVersion : 82);
                 }
             }
         }
@@ -5586,7 +5616,7 @@ namespace ESM4
                 for (std::uint32_t j = 0; j < size; ++j)
                 {
                     const auto spell = readKey(reader);
-                    abilities.push_back({spell, readInventory(reader, 82)});
+                    abilities.push_back({spell, readInventory(reader, result.mVersion >= 97 ? result.mVersion : 82)});
                 }
                 result.mNativeBoundAbilities.emplace(actor, std::move(abilities));
             }
@@ -7264,7 +7294,7 @@ namespace ESM4
                     if (i) stream << ',';
                     stream << "{\"spell\":\"" << escapeJson(abilities[i].mSpell.serialize())
                         << "\",\"displaced_inventory\":";
-                    writeJsonInventory(stream, abilities[i].mDisplacedEquipment, 82);
+                    writeJsonInventory(stream, abilities[i].mDisplacedEquipment, mVersion >= 97 ? mVersion : 82);
                     stream << '}';
                 }
                 stream << "]}";

@@ -46,6 +46,7 @@ class CachedBlockInputTests(unittest.TestCase):
             actual['script_instances'][0]['unit'] = recipe['old_unit']
             for actor in before['native_actor_values']: actor.setdefault('process_alerted', None)
             runtime._upgrade_bound_ownership(before)
+            runtime._upgrade_inventory_scripts(before)
             for item in before['player']['inventory']:
                 item['extra_scale'] = None
             for key, value in before.items():

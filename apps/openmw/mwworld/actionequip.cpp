@@ -7,6 +7,7 @@
 
 #include "class.hpp"
 #include "inventorystore.hpp"
+#include "worldimp.hpp"
 
 namespace MWWorld
 {
@@ -108,5 +109,8 @@ namespace MWWorld
                 invStore.setSelectedEnchantItem(enchItem);
             }
         }
+        if (auto* world = dynamic_cast<World*>(
+                MWBase::Environment::get().getWorld().operator MWBase::World*()))
+            world->notifyOblivionItemEquipped(actor, object);
     }
 }

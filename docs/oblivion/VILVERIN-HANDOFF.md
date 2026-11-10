@@ -3,38 +3,43 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The full expedition and full milestones remain open.
 
-Latest closed chunk: ordinary Player Rusty Iron Bow047aca / Iron Arrow017829.
-[Contract](PLAYER-BOW-CONTRACT.json), [native provenance](PLAYER-BOW-ORACLE.json),
-[receipt](PLAYER-BOW-VERIFICATION.json). Authored draw/attachment, one-arrow
-release, independent schema96 flight, damage and save/load now work. A real
-bandit06bfc2 takes an arrow; three ordinary Flare casts soften it and a final
-arrow gives one Player-credited death with corpse stock preserved. This is mixed
-combat. Physical muzzle/crosshair convergence fixes the observed39.11-unit miss.
+Latest closed chunk: original Amulet of Kings0250a0 inventory OnEquip.
+[Contract](AMULET-KINGS-EQUIP-CONTRACT.json),
+[original script audit](AMULET-KINGS-EQUIP-ORACLE.json),
+[receipt](AMULET-KINGS-EQUIP-VERIFICATION.json). Actual avatar equip runs original
+027589: its message appears, GetContainer resolves the Player, and it unequips
+its retained Amulet. Schema97 persists the item's own identity and locals.
+Fresh-process restart does not replay OnEquip; a repeated actual attempt uses
+the same identity and executes once. General inventory events/lifecycle and
+stacked scripted items remain open.
 
-Fourteen normal/instrumented real-content cases pass: actor hit/death, defeated
-restart, held draw and in-flight save/restart with authoritative boundary audits.
-Full normal3,284 components/2,271 engine/607 Python and instrumented3,284/2,271
-pass. Instrumented unit/engine leak checks are on; rendered leak checks are off.
-Original source fingerprints, process/library/binary identities and failures
-remain in linked evidence. A memory-killed parallel build passes with one job;
-instrumented startup recipes allow600 seconds without weakening gameplay checks.
+Three normal and three rendered instrumented cases pass, with exact save wire
+roundtrips and live load/save boundary audits. Full normal3,285 components/
+2,271 engine/608 Python and instrumented3,285/2,271 pass. Instrumented test leak
+checks are on; rendered leak checks are off. The first actual equip exposed a
+nested bound-displaced inventory JSON layout mismatch; canonical JSON was
+repaired and fresh courses pass. Original fingerprints/failures remain linked.
 
 Current outgoing normal checkpoint:
-`build/oblivion-compat/player-bow/normal-bandit-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256 `93a7ca9ffca5135916a2b22be4b712c82fea6faa049db142fc92afa5f016f519`.
-Player alive32.974HP,19 arrows, bow condition87.60; worn armor has real fight
-wear. Earlier loot/consumable/power history remains. Cell0463f5 (Vilverin02 /
-Vilverin Canosel), no pending bow or flight, bandit06bfc2 dead with Player credit.
+`build/oblivion-compat/amulet-kings/normal-repeat-equip-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `f97573f62938c26f2230c7ba8b51f7de4065d58285c7bcc1d4b0295ab8518e9b`.
+Player alive40.414HP,19 arrows, bow condition87.60; existing fight armor wear
+remains. One equipped Torch02 has973 fuel, two spares1000. Amulet count1,
+unworn, identity `dynamic:inventory-script:0000000000000001`. Cell0463f5
+(Vilverin02 / Vilverin Canosel), no pending bow/flight; bandit06bfc2 dead with
+Player credit. Normal Heal Minor Wounds and torch split/equip already worked;
+they are continuation checks, not new implementations. Earlier loot and spent
+Star of the West history remain.
 
-Current chunk: [Amulet of Kings inventory OnEquip](AMULET-KINGS-EQUIP-CONTRACT.json).
-Normal Heal Minor Wounds raises actual Health32.974→40.414. Ordinary Torch02
-split/equip works: one lit torch ages1000→996, two spare torches stay1000.
-These are existing features, not new implementations. Real Amulet0250a0 equip
-incorrectly remains worn in slot256; original027589 OnEquip must show its message
-and unequip through GetContainer. Baseline and pristine pre-equip checkpoint are
-in `build/oblivion-compat/next-content`; use the contract's exact source hash.
-Next action: inventory event ownership/identity, original-script dispatch and
-reentrant unequip; then real UI/restart acceptance and focused/integration gates.
+Previous chunk: [ordinary Player bow](PLAYER-BOW-VERIFICATION.json) and
+[native provenance](PLAYER-BOW-ORACLE.json). Authored draw/attachment, independent
+flight and save/restart work. An arrow, three ordinary Flare casts, and a final
+arrow defeat real bandit06bfc2 with one Player death credit and preserved stock.
+Fourteen normal/instrumented cases pass. Arrow recovery and full S5 remain open.
+
+Next action: after this bounded local commit, resume actual Canosel content and
+select the next observed unimplemented behavior. Keep accepted saves pristine;
+do not claim the expedition or entire scripting/equipment milestones complete.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects
 and UI; spawn-root/child identity, grouped actors, respawn, all Player levels;

@@ -78,7 +78,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 96;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 97;
 
     struct RuntimeContentIdentity
     {
@@ -117,6 +117,9 @@ namespace ESM4
         std::optional<float> mExtraScale = std::nullopt;
         // v83: exact associated-item effect identity, separate from crime owner.
         std::optional<BoundItemSource> mBoundSource = std::nullopt;
+        // v97: reference identity of this scripted inventory instance. It is
+        // independent of the item base, crime owner and containing actor.
+        ESM::FormKey mScriptOwner;
 
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };

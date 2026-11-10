@@ -1756,6 +1756,7 @@ namespace MWWorld
                     item.mOwner = inventoryResolver.toFormKey(*ownerId);
                 item.mExtraScale = itemPtr.getCellRef().getNativeItemScale();
                 item.mBoundSource = itemPtr.getCellRef().getNativeBoundSource();
+                item.mScriptOwner = itemPtr.getCellRef().getNativeScriptOwner();
                 item.mOwnershipRank = itemPtr.getCellRef().getNativeOwnershipRank();
                 item.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
                     mStore, inventoryResolver, itemPtr.getCellRef());

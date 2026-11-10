@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 96
+CURRENT_VERSION = 97
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -358,6 +358,10 @@ def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
                 present = reader.unpack("<B")
                 if present > 1: raise RuntimeStateError("Invalid bound item source presence")
                 item["bound_source"] = {"spell": reader.string(), "effect_index": reader.unpack("<I")} if present else None
+            if version >= 97:
+                present = reader.unpack("<B")
+                if present > 1: raise RuntimeStateError("Invalid inventory script identity presence")
+                item["script_owner"] = reader.string() if present else None
         result.append(item)
     return result
 
@@ -388,6 +392,10 @@ def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int)
                 writer.pack("<B", int(source is not None))
                 if source is not None:
                     writer.string(source["spell"]); writer.pack("<I", source["effect_index"])
+            if version >= 97:
+                owner = item.get("script_owner")
+                writer.pack("<B", int(owner is not None))
+                if owner is not None: writer.string(owner)
 
 
 def _finite_float(reader: _Reader, label: str) -> float:
@@ -2574,6 +2582,16 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         life_source(event.get("killer"))
         previous = identity
 
+    inventory_script_owners = set()
+    inventories = [state["player"].get("inventory", [])] + [row.get("inventory", []) for row in state.get("references", [])]
+    inventories += [ability.get("displaced_inventory", []) for row in state.get("native_bound_abilities", []) for ability in row.get("abilities", [])]
+    for inventory in inventories:
+        for item in inventory:
+            owner = item.get("script_owner")
+            if owner is not None:
+                if owner in inventory_script_owners or int(owner.split(":")[-1], 16) >= state["next_dynamic_serial"]:
+                    raise RuntimeStateError("Duplicate or unallocated inventory script identity")
+                inventory_script_owners.add(owner)
     scripts = check_collection(state.get("script_instances", []), "script instance list")
     quests = check_collection(state.get("quests", []), "quest list")
     if version < 2 and (state.get("script_event_sequence", 0) != 0 or scripts or quests):
@@ -2581,6 +2599,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     script_keys: set[tuple[str, str]] = set()
     for script in scripts:
         identity = (str(script.get("unit", "")), str(script.get("context", "null")))
+        if identity[1].startswith("dynamic:inventory-script:") and identity[1] not in inventory_script_owners:
+            raise RuntimeStateError("Dangling inventory script instance")
         if not identity[0] or identity[1] == "null" or identity in script_keys:
             raise RuntimeStateError("Invalid or duplicate TES4 runtime-state script instance")
         script_keys.add(identity)
@@ -2725,6 +2745,13 @@ def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) 
     }
     for item in value:
         _validate_ownership_extras(item, version)
+        owner = item.get("script_owner")
+        if owner is not None:
+            parts = owner.split(":") if isinstance(owner, str) else []
+            if (version < 97 or len(parts) != 3 or parts[:2] != ["dynamic", "inventory-script"]
+                    or len(parts[2]) != 16 or any(c not in "0123456789abcdef" for c in parts[2])
+                    or int(parts[2], 16) == 0 or item.get("count") != 1):
+                raise RuntimeStateError("Invalid inventory script identity")
         source = item.get("bound_source")
         if source is not None and (version < 83 or not isinstance(source, dict)
                 or not _canonical_content_key(source.get("spell"))
@@ -3635,7 +3662,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             actor = reader.string(); order = tuple(actor.split(":"))
             if previous is not None and previous >= order:
                 raise RuntimeStateError("Noncanonical bound ability owners")
-            abilities = [{"spell": reader.string(), "displaced_inventory": _inventory(reader, 82)}
+            abilities = [{"spell": reader.string(), "displaced_inventory": _inventory(reader, version if version >= 97 else 82)}
                          for _ in range(reader.count())]
             owners.append({"actor": actor, "abilities": abilities}); previous = order
         result["native_bound_abilities"] = owners
@@ -4525,7 +4552,7 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.string(owner["actor"]); writer.pack("<I", len(owner["abilities"]))
             for ability in owner["abilities"]:
                 writer.string(ability["spell"])
-                _write_inventory(writer, ability.get("displaced_inventory", []), 82)
+                _write_inventory(writer, ability.get("displaced_inventory", []), version if version >= 97 else 82)
     if version >= 86:
         contacts = state.get("native_trap_contacts", [])
         writer.pack("<I", len(contacts))
@@ -4917,6 +4944,16 @@ def _upgrade_bound_ownership(state: dict[str, Any]) -> None:
         for item in inventory: item.setdefault("bound_source", None)
 
 
+def _upgrade_inventory_scripts(state: dict[str, Any]) -> None:
+    inventories = [state.get("player", {}).get("inventory", [])] + [row.get("inventory", []) for row in state.get("references", [])]
+    inventories += [ability.get("displaced_inventory", []) for row in state.get("native_bound_abilities", []) for ability in row.get("abilities", [])]
+    for inventory in inventories:
+        for item in inventory:
+            if state.get("schema_version", 1) < 97 and item.get("script_owner") is not None:
+                raise RuntimeStateError("Legacy runtime cannot contain inventory script identity")
+            item.setdefault("script_owner", None)
+
+
 def _upgrade_base_essential(state: dict[str, Any]) -> None:
     for base in state.get("native_actor_bases", []):
         if state.get("schema_version", 1) < 84 and base.get("essential") is not None:
@@ -5004,6 +5041,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_faction_reactions(state)
     _upgrade_process_alerts(state)
     _upgrade_bound_ownership(state)
+    _upgrade_inventory_scripts(state)
     _upgrade_base_essential(state)
     _upgrade_friend_hit_counters(state)
     _upgrade_combat_controllers(state)
@@ -5097,6 +5135,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_faction_reactions(result)
     _upgrade_process_alerts(result)
     _upgrade_bound_ownership(result)
+    _upgrade_inventory_scripts(result)
     _upgrade_base_essential(result)
     _upgrade_friend_hit_counters(result)
     _upgrade_combat_controllers(result)
@@ -5242,6 +5281,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
         reference.setdefault("ownership_global", "null")
         reference.setdefault("dropper", None)
         reference.setdefault("dropped_items", None)
+    _upgrade_inventory_scripts(result)
     return result
 
 

@@ -1,0 +1,26 @@
+{
+  "status": "original-content expectation independently recorded; bounded fork runtime acceptance in linked receipt",
+  "content_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "item": "content:oblivion.esm:0250a0",
+  "script": "content:oblivion.esm:027589",
+  "original_source_audit": {
+    "path": "build/oblivion-compat/next-content/amulet-original-script-audit.json",
+    "sha256": "9852d8f905c1f7f0c7c53e52abfeb20f1bb41594cfa16a7293e27498ef83d5e9",
+    "proprietary_script_kept_ignored": true
+  },
+  "independent_expectation": [
+    "The winning original item script admits OnEquip only for the Player.",
+    "The script displays its slips-off message, stores GetContainer in its reference local, then asks that actor to unequip the actual Amulet of Kings.",
+    "The item remains carried; it is not removed or consumed."
+  ],
+  "implementation_decisions": [
+    "The item is the script self/instance; the containing Player is the event action reference and GetContainer result.",
+    "Per-item locals and identity survive save/restart. Loading equipment does not constitute a new equip attempt.",
+    "An ordinary repeated equip attempt executes the same original script using the same item identity."
+  ],
+  "limits": [
+    "This record/script audit is independent of production C++; it is not a native executable instruction trace or original-game live probe.",
+    "This bounded course admits a unique actually carried Player quest item. Arbitrary stacked scripted items, transfer/drop semantics and general inventory events remain open."
+  ],
+  "fork_runtime_receipt": "docs/oblivion/AMULET-KINGS-EQUIP-VERIFICATION.json"
+}

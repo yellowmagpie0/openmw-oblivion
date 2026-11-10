@@ -64,6 +64,7 @@ namespace MWWorld
         bool dispatchObjectEvent(const ESM::FormKey& self, std::string_view event,
             const ESM::FormKey& actionReference = {});
         bool dispatchActivation(const Ptr& self, const Ptr& actionReference);
+        bool dispatchInventoryEquip(const Ptr& actor, const Ptr& item);
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);

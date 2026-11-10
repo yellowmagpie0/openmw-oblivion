@@ -131,6 +131,16 @@ namespace MWWorld
         }
         void setScale(float scale);
 
+        const ESM::FormKey& getNativeScriptOwner() const noexcept { return mNativeScriptOwner; }
+        void setNativeScriptOwner(ESM::FormKey owner)
+        {
+            if (!owner.isNull() && (!owner.isDynamic() || owner.mNamespace != "inventory-script"
+                || !owner.mValue || ESM::FormKey::deserialize(owner.serialize()) != owner))
+                throw std::invalid_argument("Invalid native inventory script identity");
+            mNativeScriptOwner = std::move(owner);
+            mChanged = true;
+        }
+
         const std::optional<ESM4::BoundItemSource>& getNativeBoundSource() const noexcept
         { return mNativeBoundSource; }
         void setNativeBoundSource(std::optional<ESM4::BoundItemSource> source)
@@ -380,6 +390,7 @@ namespace MWWorld
         float mNativePlacedEnchantmentCharge = -1.f;
         ESM4::DropRelations mNativeDropRelations;
         std::optional<ESM4::BoundItemSource> mNativeBoundSource;
+        ESM::FormKey mNativeScriptOwner;
     };
 
 }

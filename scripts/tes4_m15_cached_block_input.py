@@ -66,6 +66,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     expected.setdefault('faction_reactions', [])
     runtime._upgrade_process_alerts(expected)
     runtime._upgrade_bound_ownership(expected)
+    runtime._upgrade_inventory_scripts(expected)
     expected.setdefault('friend_hit_counters', {})
     expected.setdefault('combat_controllers', {})
     expected.setdefault('native_getup_idles', [])
@@ -98,7 +99,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                   script_before=before, script_after=instances[0],
                   original_reference_inventories_checked=len(original['references']),
                   state_other_than_declared_script_and_empty_schema_defaults_preserved=True,
-                  schema_defaults={'native_arrow_projectiles': [], 'next_arrow_projectile': 1, 'package_waiting': [], 'daily_package_completions': [], 'native_magic_projectiles': [], 'next_magic_projectile': 1, 'native_spell_casts': [], 'reference.dropper': None, 'reference.dropped_items': None,
+                  schema_defaults={'inventory.script_owner': None, 'native_arrow_projectiles': [], 'next_arrow_projectile': 1, 'package_waiting': [], 'daily_package_completions': [], 'native_magic_projectiles': [], 'next_magic_projectile': 1, 'native_spell_casts': [], 'reference.dropper': None, 'reference.dropped_items': None,
                                    'inventory.extra_scale': None, 'native_actor_values.process_alerted': None, 'melee.reaction': None,
                                    'melee.retiring_sequences': [], 'melee.first_person': None,
                                    'melee.passive_sequence': None, 'melee.held_blocks': [],

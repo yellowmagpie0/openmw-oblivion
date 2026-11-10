@@ -55,6 +55,7 @@ class NpcPassiveFixtureTests(unittest.TestCase):
                 after['content'] = before['content']
                 for actor in before['native_actor_values']: actor.setdefault('process_alerted', None)
                 runtime._upgrade_bound_ownership(before)
+                runtime._upgrade_inventory_scripts(before)
                 self.assertEqual(after, before)
                 self.assertEqual(output.read_bytes()[-len(opaque):], opaque)
                 self.assertEqual(source.read_bytes(), original)

@@ -1,5 +1,5 @@
 {
-  "status": "active bounded inventory OnEquip integration; real Amulet of Kings remains worn in baseline",
+  "status": "accepted bounded singleton Player inventory OnEquip; full M7/M11 and expedition remain open",
   "milestone": "M7 inventory script events / M11 equipment interaction",
   "content": {
     "item": "content:oblivion.esm:0250a0",
@@ -24,11 +24,6 @@
       "sha256": "9852d8f905c1f7f0c7c53e52abfeb20f1bb41594cfa16a7293e27498ef83d5e9"
     }
   },
-  "code_gaps": [
-    "No native inventory OnEquip dispatch observed.",
-    "GetContainer currently aliases GetSelf; inventory context needs its actual containing actor.",
-    "Establish a correct stable script instance identity for the admitted inventory item; do not impersonate the actor as the item or silently share locals across items."
-  ],
   "plan": [
     "Keep this real baseline and original script/record provenance.",
     "Bind inventory equip notifications to the original compiled OnEquip entry with correct item/container/action-reference context. Use stable existing identity when suitable; add persistence only if needed.",
@@ -39,5 +34,30 @@
   "outside_scope": [
     "Full inventory scripting, arbitrary stacked scripted-item identity/movement and all M7/M11 acceptance are not claimed by this unique quest-item case.",
     "Do not hardcode the Amulet rejection instead of executing its original script. No synthetic actors/items, inventory grants, forced deficits or teleports in fork acceptance."
-  ]
+  ],
+  "baseline_code_gaps": [
+    "No native inventory OnEquip dispatch observed.",
+    "GetContainer currently aliases GetSelf; inventory context needs its actual containing actor.",
+    "Establish a correct stable script instance identity for the admitted inventory item; do not impersonate the actor as the item or silently share locals across items."
+  ],
+  "implementation": {
+    "schema": 97,
+    "item_identity": "dynamic:inventory-script using existing world serial allocator; singleton instances retain independent locals",
+    "dispatch": "Actual avatar and native Player EquipItem notify original winning OnEquip program after inventory equip. Reentrant script unequip changes real inventory.",
+    "container": "GetContainer resolves the exact inventory item and verifies its actual containing Player InventoryStore.",
+    "save_load": "Identity and locals retained; equipment restoration does not replay OnEquip. Winning-program binding and global identity uniqueness validated.",
+    "normal_cases": [
+      "normal-equip-02",
+      "normal-restart-01",
+      "normal-repeat-equip-01"
+    ],
+    "evidence_root": "build/oblivion-compat/amulet-kings"
+  },
+  "acceptance": {
+    "receipt": "docs/oblivion/AMULET-KINGS-EQUIP-VERIFICATION.json",
+    "normal_cases": 3,
+    "instrumented_cases": 3,
+    "behavior": "Original message and reentrant unequip on each actual equip attempt; stable per-item identity/Player local survive fresh process, with no replay on load. Unrelated inventory exact apart from equipped torch fuel.",
+    "integration": "Normal3285 components/2271 engine/608 Python; instrumented3285 components/2271 engine. Instrumented unit leak checks on; rendered leak checks off."
+  }
 }
