@@ -50,6 +50,7 @@
 #include "weapon.hpp"
 
 #include "esm4base.hpp"
+#include "esm4furniture.hpp"
 #include "esm4interactive.hpp"
 #include "esm4npc.hpp"
 #include "light4.hpp"
@@ -90,7 +91,7 @@ namespace MWClass
         ESM4Container::registerSelf();
         ESM4Door::registerSelf();
         ESM4Flora::registerSelf();
-        ESM4Named<ESM4::Furniture>::registerSelf();
+        ESM4Furniture::registerSelf();
         ESM4Takeable<ESM4::Ingredient>::registerSelf();
         ESM4Named<ESM4::ItemMod>::registerSelf();
         ESM4Takeable<ESM4::Key>::registerSelf();

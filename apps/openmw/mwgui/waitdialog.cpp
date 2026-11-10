@@ -4,6 +4,7 @@
 #include <MyGUI_ProgressBar.h>
 #include <MyGUI_ScrollBar.h>
 
+#include <components/debug/debuglog.hpp>
 #include <components/misc/rng.hpp>
 #include <components/l10n/manager.hpp>
 
@@ -270,7 +271,10 @@ namespace MWGui
     {
         mProgressBar.setProgress(cur, total);
         MWBase::World* const world = MWBase::Environment::get().getWorld();
-        if (!world->restOblivionHour(mSleeping))
+        if (world->restOblivionHour(mSleeping))
+            Log(Debug::Info) << "M13 native rest hour: sleeping=" << (mSleeping ? "true" : "false")
+                             << " completed=" << cur << " total=" << total;
+        else
         {
             MWBase::Environment::get().getMechanicsManager()->rest(1, mSleeping);
             world->advanceTime(1);

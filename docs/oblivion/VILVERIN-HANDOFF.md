@@ -3,46 +3,46 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The full expedition and full milestones remain open.
 
-Latest closed chunk: original Amulet of Kings0250a0 inventory OnEquip.
-[Contract](AMULET-KINGS-EQUIP-CONTRACT.json),
-[original script audit](AMULET-KINGS-EQUIP-ORACLE.json),
-[receipt](AMULET-KINGS-EQUIP-VERIFICATION.json). Actual avatar equip runs original
-027589: its message appears, GetContainer resolves the Player, and it unequips
-its retained Amulet. Schema97 persists the item's own identity and locals.
-Fresh-process restart does not replay OnEquip; a repeated actual attempt uses
-the same identity and executes once. General inventory events/lifecycle and
-stacked scripted items remain open.
+Latest closed chunk: original unowned Canosel bedroll06bf97/base01d5bf default
+activation. [Contract](BEDROLL-REST-CONTRACT.json),
+[record/backend provenance](BEDROLL-REST-ORACLE.json),
+[receipt](BEDROLL-REST-VERIFICATION.json). A native sleep-marked furniture action
+reuses existing bed permission/danger checks and the actual bed pointer to open
+the existing rest UI. Ordinary rest excludes the separate jail-sentence state.
+Missing/malformed native MNAM flags cannot accidentally admit a bed. No new
+rest formula or save schema; schema97 remains.
 
-Three normal and three rendered instrumented cases pass, with exact save wire
-roundtrips and live load/save boundary audits. Full normal3,285 components/
-2,271 engine/608 Python and instrumented3,285/2,271 pass. Instrumented test leak
-checks are on; rendered leak checks are off. The first actual equip exposed a
-nested bound-displaced inventory JSON layout mismatch; canonical JSON was
-repaired and fresh courses pass. Original fingerprints/failures remain linked.
+Three normal and three instrumented actual cases pass: open/cancel without an
+hour; one ordinary hour restores genuine40.414 damage to110 Health maximum;
+fresh-process reopen/cancel preserves recovery without replay. Exact inventory,
+Amulet script identity and earlier bandit death credit persist. Final normal/
+instrumented3,288 components and2,271 engine pass with identical frozen source.
+Unchanged608 Python evidence is reused with its original hashes. Instrumented
+unit leak checks are on; rendered leak checks are off. Failed process-marker
+capture and instrumented timed approach are retained; final recipes/cases pass.
 
 Current outgoing normal checkpoint:
-`build/oblivion-compat/amulet-kings/normal-repeat-equip-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256 `f97573f62938c26f2230c7ba8b51f7de4065d58285c7bcc1d4b0295ab8518e9b`.
-Player alive40.414HP,19 arrows, bow condition87.60; existing fight armor wear
-remains. One equipped Torch02 has973 fuel, two spares1000. Amulet count1,
-unworn, identity `dynamic:inventory-script:0000000000000001`. Cell0463f5
-(Vilverin02 / Vilverin Canosel), no pending bow/flight; bandit06bfc2 dead with
-Player credit. Normal Heal Minor Wounds and torch split/equip already worked;
-they are continuation checks, not new implementations. Earlier loot and spent
-Star of the West history remain.
+`build/oblivion-compat/bedroll-rest/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `109d414957caf2748143a90380bb1d51bb6b5dba86050c30181508808d6ed8ce`.
+Player alive110HP in Vilverin02 / Canosel,19 arrows, bow condition87.60,
+existing fight armor wear retained. One lit Torch02 has927 fuel, two spares1000.
+Amulet count1/unworn, independent script identity retained; bandit06bfc2 dead
+with Player credit. RestUI closed, no pending bow/flight. This is the genuine
+camp branch specified in the contract; the separate wall exploration below is
+not silently merged into this save.
 
-Previous chunk: [ordinary Player bow](PLAYER-BOW-VERIFICATION.json) and
-[native provenance](PLAYER-BOW-ORACLE.json). Authored draw/attachment, independent
-flight and save/restart work. An arrow, three ordinary Flare casts, and a final
-arrow defeat real bandit06bfc2 with one Player death credit and preserved stock.
-Fourteen normal/instrumented cases pass. Arrow recovery and full S5 remain open.
+Previous chunks: [Amulet of Kings OnEquip](AMULET-KINGS-EQUIP-VERIFICATION.json)
+executes original027589, resolves actual GetContainer, retains independent
+schema97 identity/locals and avoids replay on load. [Player bow](PLAYER-BOW-VERIFICATION.json)
+uses authored draw/attachment, independent flight and save/restart. An arrow,
+three ordinary Flare casts and a final arrow defeat real bandit06bfc2 with
+preserved stock; arrow recovery and full S5 remain open.
 
-Current chunk: [original bedroll activation](BEDROLL-REST-CONTRACT.json).
-Real unowned bedroll06bf97/base01d5bf shows its focus prompt at73 units but
-ordinary Activate does nothing. Native furniture still uses the generic named
-class/NullAction; native bed-rest UI/recovery backend already exists. Next:
-default Player bed action with existing ownership/danger checks, real open/
-cancel and one-hour recovery/restart acceptance; do not claim a new rest formula.
+Next action: after this bounded local commit, continue genuine Canosel content
+from the healthy camp checkpoint and select the next observed unimplemented
+behavior. Seating/sleep poses, owned/occupied matrices, leveling and full M13/
+M16 remain open. Healing spell and Torch02 continuation checks already worked;
+they are not new implementations.
 
 Route discovery: the old stair blockage was not a proven movement defect.
 Original plate06bf96 requires distance<64 and opens wall06bf95. An ordinary

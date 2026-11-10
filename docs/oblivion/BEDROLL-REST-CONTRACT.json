@@ -1,5 +1,5 @@
 {
-  "status": "active bounded native bedroll default activation; close-range original baseline is inert",
+  "status": "accepted bounded original unowned bedroll default activation; full M13/M16 and expedition remain open",
   "milestone": "M13 default furniture interaction exposing existing native bed-rest/recovery backend",
   "content": {
     "reference": "content:oblivion.esm:06bf97",
@@ -39,6 +39,24 @@
   "outside_scope": [
     "No new rest formula or bit-identical numerical parity claim. Reuse existing native rest backend and its earlier provenance.",
     "Only this original unowned, unoccupied bedroll is runtime acceptance. Full furniture poses/seating, occupied/owned context matrices, leveling and full M13/M16 remain open.",
-    "Pressure plate06bf96/secret wall06bf95 already work: an ordinary coffin jump reaches the plate, original scripts activate/open it, and fresh-process passage succeeds. This exploration is not a new implementation."
-  ]
+    "Pressure plate06bf96/secret wall06bf95 already work: an ordinary coffin jump reaches the plate, original scripts activate/open it, and fresh-process passage succeeds. This exploration is not a new implementation.",
+    "Jail sentences retain their separate transition owner; ordinary bed-rest action does not admit jail state."
+  ],
+  "implementation": {
+    "entry": "ESM4Furniture default Player action for sleep-marked records, actual-bed sleepInBed checks, then GM_Rest with the actual reference. Ordinary rest rejects the separate jail-sentence state and empty actor contexts.",
+    "loader": "Native MNAM requires exactly4 bytes; absent flags reset to0. Three focused parser checks pass.",
+    "schema": "Unchanged97; existing rest math, actor authority and save fields reused.",
+    "normal": "Open/cancel, one actual sleep hour40.414\u2192110, fresh-process reopen/cancel without another hour; exact inventory and save-boundary audits pass.",
+    "integration": "Final normal and instrumented3288 components/2271 engine pass with identical frozen-source fingerprinta34a79eb. Existing608 Python evidence reused with11 unchanged source hashes.",
+    "runtime_setup_failure": "First rendered instrumented timed approach advanced only19 units, leaving142-unit reference distance without a usable focus/activation. Instrumented recipe now loads the genuine73-unit checkpoint and omits the timed walk. No state edits or activation-range changes.",
+    "evidence_root": "build/oblivion-compat/bedroll-rest"
+  },
+  "acceptance": {
+    "receipt": "docs/oblivion/BEDROLL-REST-VERIFICATION.json",
+    "normal_cases": 3,
+    "instrumented_cases": 3,
+    "health": "Genuine40.414 deficit recovers to110 maximum through one existing native sleeping-hour update; cancel/restart/reopen do not replay it.",
+    "integration": "Final normal and instrumented3288 components/2271 engine, identical frozen sourcea34a79eb. Python608 reused with unchanged source provenance.",
+    "schema": 97
+  }
 }

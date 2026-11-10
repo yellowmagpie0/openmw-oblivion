@@ -131,6 +131,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/testloadnpc.cpp
     esm4/testloadgmst.cpp
     esm4/testloadcrea.cpp
+    esm4/testloadfurn.cpp
     esm4/testloadcsty.cpp
     esm4/testloadskil.cpp
     esm4/testloadspel.cpp

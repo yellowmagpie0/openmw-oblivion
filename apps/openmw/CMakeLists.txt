@@ -96,7 +96,7 @@ add_openmw_dir (mwphysics
 add_openmw_dir (mwclass
     classes activator creature npc weapon armor potion apparatus book clothing container door
     ingredient creaturelevlist itemlevlist light lockpick misc probe repair static actor bodypart
-    esm4base esm4interactive esm4npc light4
+    esm4base esm4furniture esm4interactive esm4npc light4
     )
 
 add_openmw_dir (mwmechanics
