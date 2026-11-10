@@ -28,7 +28,7 @@
   "source_note": "Normal and instrumented gates retain their exact source fingerprints. Production C++/Python files match these hashes; later receipt/handoff and ordinary-wait driver adjustments do not change the implementation. Normal use/pending core runtime evidence predates only the native wait-menu gate and eligibility log. Original binary/process/resource provenance remains attached to each run.",
   "behavior": [
     "Original owned047ade: cost0, ABFA100 instant Touch; real authored animation and physics hit.",
-    "Atomic native two-actor Fatigue transfer capped at caster maximum; unarmored real deficit138.999\u2192170, original target150\u219250, no direct Health or Magicka damage.",
+    "Atomic native two-actor Fatigue transfer capped at caster maximum; real deficit138.999\u2192170 and original target150\u219250, with no direct Health or Magicka damage. Player retains native worn armor0661c1/0661c3, so this actual case exercises bypass of armor and Fatigue spell scaling.",
     "Committed hostile release starts existing native combat controller for this surviving confident defender. Real H2H retaliation and save/load continuation are observed.",
     "Schema95 owns the last use per Player power. Release spends it on hit or miss; pending save has no early owner. Fresh restart releases once and completed restart rejects without replay.",
     "Actual 23-hour wait crosses midnight and still rejects after fresh reload; one further ordinary hour admits a miss and replaces the timestamp, whose fresh reload rejects again."
@@ -3007,7 +3007,7 @@
   "outside_scope": [
     "Arbitrary powers/Absorb effects, Voice of the Emperor, crime/flee/reflect/absorption and exact cancellation timing.",
     "Original missed casting costs1 Fatigue; this narrow path currently omits that small generic casting expenditure.",
-    "Nonzero Magic Resistance and fork armor cases are not runtime acceptance claims; independent original93% armor probe establishes unchanged100 transfer.",
+    "Nonzero Magic Resistance and other armor/mastery combinations are not runtime acceptance claims. The actual Player wears0661c1/0661c3 throughout the accepted cases; the separate original93% armor probe verifies unchanged100 transfer independently.",
     "No full M16, expedition completion, native bow tactics, spawn/respawn or generic NPC hostility claim."
   ],
   "sanitizer_scope": "Rendered game ASan leak detection off, UBSan halt on; full component/engine ASan leak detection on. Direct sanitizer-linked ELF/libraries captured, no LD_PRELOAD requirement.",
@@ -3032,5 +3032,20 @@
     "fatigue": 170.0,
     "path": "build/oblivion-compat/star-west/normal-recharge-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
   },
-  "original_oracle_sha256": "2e8dc9282afaf9d51eb10c1165f064caf730c363d0e8d66b0df38565015fafe3"
+  "original_oracle_sha256": "2e8dc9282afaf9d51eb10c1165f064caf730c363d0e8d66b0df38565015fafe3",
+  "equipment_reinspection": {
+    "source": "build/oblivion-compat/vilverin-continuation/star-west-touch-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_sha256": "a771fe9437cdfd8f0b683ff2639b614d0e5734ac52471f49ea9cba4fbfcc3ea4",
+    "worn_native_armor": [
+      {
+        "base": "content:oblivion.esm:0661c1",
+        "equipped_slots": 4
+      },
+      {
+        "base": "content:oblivion.esm:0661c3",
+        "equipped_slots": 8
+      }
+    ],
+    "note": "Corrects the earlier receipt adjective unarmored; actual inventory preservation assertions and runtime outcomes are unchanged."
+  }
 }
