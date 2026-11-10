@@ -1,111 +1,75 @@
 # Vilverin — current handoff
 
 Target course: genuine sewer exit → independent Vilverin expedition → outside
-alive with retained loot. The full expedition and full milestones remain open.
+alive with retained loot. The expedition and full milestones remain open.
 
-Current chunk: ordinary Iron Arrow017829 static-surface recovery.
-[Preflight](IRON-ARROW-RECOVERY-CONTRACT.json). Actual arrow6 from retained stock
-hits original Canosel floor049be8, consumes19→18, then disappears without a world
-AMMO owner. Next: prepare/publish one recoverable reference, verify normal pickup
-and restart ownership, and apply the existing settled age/fade rule. Actor-hit
-inventory recovery and full bow/S5 acceptance remain open.
-
-Latest closed chunk: original Voice of the Emperor047add Target Charm on
-Canosel Skeleton04bb63/base084b1a. [Contract](VOICE-EMPEROR-CONTRACT.json),
-[record/rule provenance](VOICE-EMPEROR-ORACLE.json),
-[receipt](VOICE-EMPEROR-VERIFICATION.json). Winning CREA audit corrected an
-initial human-bandit assumption. Ordinary swimming resolved the flooded route;
-Player remains at110 Health.
-
-Actual hit raises disposition20→50. Fresh-process load preserves the recipient/
-caster timer and rejects daily reuse; one expiration returns20. Three normal
-and three instrumented cases pass final wire/live/timer/state audits. Both broad
-gates pass3,288 components/2,273 engine with identical frozen source70aee55c;
-609 Python pass. Unit leak checks on; rendered leak checks off. Unchanged schema97.
-Amulet locals/identity and earlier bandit kill credit persist. Caster-hit
-dispelling/general Charm and full M16 remain open.
+Latest closed chunk: ordinary Iron Arrow017829 static-surface recovery.
+[Contract](IRON-ARROW-RECOVERY-CONTRACT.json),
+[original record/rule provenance](IRON-ARROW-RECOVERY-ORACLE.json),
+[verification](IRON-ARROW-RECOVERY-VERIFICATION.json).
+Actual Rusty Iron Bow047aca shot hits original Canosel floor049be8/base02d59c:
+19 inventory arrows become18 plus one stable world AMMO reference. Fresh-process
+ordinary movement/aim/Activate restores19 exactly; repeated activation and
+another restart retain19 and the taken tombstone. Independent uncollected expiry
+deletes once after90 seconds plus three-second fade. Settled age starts at impact.
+Prepared model/collision/cell/registry admission and projectile consumption retain
+one owner through unchanged schema97. Four normal and four instrumented actual
+cases pass strict wire/live/save/identity/conservation audits. Both broad C++
+gates pass3,288 components/2,275 engine at frozen fingerprint82179cee; unchanged
+609 Python evidence is reused with94 source hashes. Unit leak checks on;
+rendered leak checks off. Actor-hit recovery, full flight aging, process budgets,
+Havok embedding/bounce and complete S5 remain open.
 
 Current genuine continuation:
-`build/oblivion-compat/voice-emperor/normal-expire-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA-256 `4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41`.
-Player110 Health/80 Magicka/170 Fatigue at(-2664,-10358,-2662);19 Iron Arrows,
-two spare torches (earlier lit torch consumed ordinary fuel on the route).
-Skeleton remains alive20 Health; Voice is spent for the day, Charm expired.
-Next action: select and baseline another observed real-content gap, prioritizing
-remaining acceptance requirements such as physical-arrow recovery.
+`build/oblivion-compat/iron-arrow-recovery/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `fa710f96c3115e8f141f6fbd69ef3d8455a2d01acd926a1d1f8554e229e24002`.
+Player110 Health/80 Magicka/170 Fatigue at(-2665,-10105,-2662), Canosel0463f5;
+19 Iron Arrows, bow condition retains ordinary shot wear, two spare torches.
+Amulet script owner/locals and earlier bandit06bfc2 Player death credit persist.
+Native-reference2 is taken/count-zero; next dynamic serial3/arrow serial7.
+Skeleton04bb63/base084b1a remains alive20 Health. Both Imperial powers are spent;
+Voice Charm expired, disposition20. Use this collected branch, not expiry branch.
 
-Earlier closed bedroll chunk:
- original unowned Canosel bedroll06bf97/base01d5bf default
-activation. [Contract](BEDROLL-REST-CONTRACT.json),
-[record/backend provenance](BEDROLL-REST-ORACLE.json),
-[receipt](BEDROLL-REST-VERIFICATION.json). A native sleep-marked furniture action
-reuses existing bed permission/danger checks and the actual bed pointer to open
-the existing rest UI. Ordinary rest excludes the separate jail-sentence state.
-Missing/malformed native MNAM flags cannot accidentally admit a bed. No new
-rest formula or save schema; schema97 remains.
+Current chunk / next action: select and baseline another actual-content failure
+from this continuation, prioritizing an acceptance gap; then record a bounded
+contract before implementation. The autonomous content iteration remains active.
 
-Three normal and three instrumented actual cases pass: open/cancel without an
-hour; one ordinary hour restores genuine40.414 damage to110 Health maximum;
-fresh-process reopen/cancel preserves recovery without replay. Exact inventory,
-Amulet script identity and earlier bandit death credit persist. Final normal/
-instrumented3,288 components and2,271 engine pass with identical frozen source.
-Unchanged608 Python evidence is reused with its original hashes. Instrumented
-unit leak checks are on; rendered leak checks are off. Failed process-marker
-capture and instrumented timed approach are retained; final recipes/cases pass.
+Earlier accepted slices and reusable evidence:
 
-Current outgoing normal checkpoint:
-`build/oblivion-compat/bedroll-rest/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256 `109d414957caf2748143a90380bb1d51bb6b5dba86050c30181508808d6ed8ce`.
-Player alive110HP in Vilverin02 / Canosel,19 arrows, bow condition87.60,
-existing fight armor wear retained. One lit Torch02 has927 fuel, two spares1000.
-Amulet count1/unworn, independent script identity retained; bandit06bfc2 dead
-with Player credit. RestUI closed, no pending bow/flight. This is the genuine
-camp branch specified in the contract; the separate wall exploration below is
-not silently merged into this save.
+- [Voice of the Emperor Target Charm](VOICE-EMPEROR-VERIFICATION.json): actual
+  Skeleton disposition20→50→20, daily ownership, independent recipient timer and
+  restart. General Charm/resistance, caster-hit dispelling and full M16 remain open.
+- [Canosel bedroll](BEDROLL-REST-VERIFICATION.json): unowned original FURN06bf97
+  opens rest UI; ordinary hour restores40.414→110 Health; reopen/cancel/restart.
+  Poses, owned/occupied matrices, leveling and full M13 remain open.
+- [Amulet of Kings OnEquip](AMULET-KINGS-EQUIP-VERIFICATION.json): original027589,
+  actual GetContainer, independent saved inventory-script identity, no replay.
+- [Player bow](PLAYER-BOW-VERIFICATION.json): authored draw/attachment, independent
+  flight/restart; arrow, three Flares and final arrow defeat bandit06bfc2.
+- [Player Flare/tutorial goblin](PLAYER-FLARE-VERIFICATION.json),
+  [levelled bandits](VILVERIN-LEVELLED-ACTORS-VERIFICATION.json),
+  [mudcrab loot](MUDCRAB-LOOT-VERIFICATION.json),
+  [food sack/LVLI](VILVERIN-CONTAINER-LOOT-VERIFICATION.json),
+  [Lettuce](LETTUCE-INGREDIENT-VERIFICATION.json),
+  [Flash Bolt](FLASH-BOLT-SCROLL-VERIFICATION.json),
+  [Chameleon](CHAMELEON-SCROLL-VERIFICATION.json),
+  [Welkynd Stone](WELKYND-STONE-VERIFICATION.json),
+  [Mead](MEAD-POTION-VERIFICATION.json),
+  [Star of the West](STAR-WEST-POWER-VERIFICATION.json).
 
-Previous chunks: [Amulet of Kings OnEquip](AMULET-KINGS-EQUIP-VERIFICATION.json)
-executes original027589, resolves actual GetContainer, retains independent
-schema97 identity/locals and avoids replay on load. [Player bow](PLAYER-BOW-VERIFICATION.json)
-uses authored draw/attachment, independent flight and save/restart. An arrow,
-three ordinary Flare casts and a final arrow defeat real bandit06bfc2 with
-preserved stock; arrow recovery and full S5 remain open.
+Route evidence: ordinary coffin jump and distance<64 plate06bf96 open wall06bf95;
+`next-content/normal-secret-wall-restart-passage-01` traverses after restart.
+Ordinary swimming resolves the flooded route; foot-only navigation drowned on
+an earlier branch. Neither is another implementation. The older bedroll camp
+and wall exploration inputs remain separate historical branches.
 
-Next action: after this bounded local commit, continue genuine Canosel content
-from the healthy camp checkpoint and select the next observed unimplemented
-behavior. Seating/sleep poses, owned/occupied matrices, leveling and full M13/
-M16 remain open. Healing spell and Torch02 continuation checks already worked;
-they are not new implementations.
-
-Route discovery: the old stair blockage was not a proven movement defect.
-Original plate06bf96 requires distance<64 and opens wall06bf95. An ordinary
-jump clears sarcophagus066e60; stepping within35.6 triggers original scripts.
-`next-content/normal-secret-wall-restart-passage-01` crosses the opened wall
-after a fresh process with Health40.414 unchanged. This is existing behavior,
-not another implementation. Keep that exploration checkpoint separate from the
-bedroll contract's genuine camp input; no teleports or forced state changes.
-
-Remaining acceptance gaps: expedition continuation/return; general M16 effects
-and UI; spawn-root/child identity, grouped actors, respawn, all Player levels;
-full S5/M15, arrow recovery, XP, sound/reaction/view/device matrices and NPC bow
-tactics. Zombie06c2c6 remains deferred at actual `normal-stair-descent-01`:
-ordinary jumps clear the prior slab, but further descent stops after25 units.
-That retained exploratory checkpoint predates this bandit defeat. Restoration
-chest04bb8b remains deferred behind its earlier partial route/ledge gap. Learned
-target-SPEL mastery reads Alteration AV20 rather than Destruction AV22; use a
-future actual spell case. Chameleon is approximate alpha0.75. The earlier Flare
-provocation candidate did not establish a gap. Historical evidence stays linked.
-
-Earlier accepted slices:
-
-- [Player Flare and tutorial goblin](PLAYER-FLARE-VERIFICATION.json).
-- [Original single-actor LVLC bandits](VILVERIN-LEVELLED-ACTORS-VERIFICATION.json).
-- [Mudcrab CREA loot](MUDCRAB-LOOT-VERIFICATION.json).
-- [Food sack and concrete LVLI transfer](VILVERIN-CONTAINER-LOOT-VERIFICATION.json).
-- [Lettuce first-effect REFA](LETTUCE-INGREDIENT-VERIFICATION.json).
-- [Flash Bolt scroll](FLASH-BOLT-SCROLL-VERIFICATION.json).
-- [Chameleon scroll](CHAMELEON-SCROLL-VERIFICATION.json).
-- [Welkynd Stone](WELKYND-STONE-VERIFICATION.json).
-- [Mead](MEAD-POTION-VERIFICATION.json).
-- [Star of the West and ordinary daily recharge](STAR-WEST-POWER-VERIFICATION.json).
-
-The autonomous original-content iteration remains active.
+Remaining acceptance gaps: expedition continuation/return; general M16 effects/UI;
+spawn-root/child identity, grouped actors, respawn/all levels; full S5/M15, actor
+arrow recovery, XP, sound/reaction/view/device matrices and NPC bow tactics.
+Zombie06c2c6 is deferred at historical `normal-stair-descent-01` (slab cleared by
+jump; further descent stopped after25 units). Restoration chest04bb8b remains
+behind an earlier route/ledge gap. Learned target-SPEL mastery incorrectly reads
+Alteration AV20 instead of Destruction AV22: require an actual spell case.
+Chameleon alpha0.75 is approximate. Earlier Flare provocation did not establish
+a gap; healing and Torch02 checks already worked. Preserve original provenance
+when reusing the linked historical records.
