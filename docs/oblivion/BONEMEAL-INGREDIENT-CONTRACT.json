@@ -1,5 +1,5 @@
 {
-  "status": "planned bounded novice Bonemeal ingestion",
+  "status": "accepted bounded novice Bonemeal ingestion; full M16 and expedition remain open",
   "milestone": "M16 original harmful ingredient first effect",
   "content": {
     "ingredient": "content:oblivion.esm:01ebff",
@@ -32,5 +32,16 @@
     "Resistance/absorption beyond the current zero-Magic-Resistance Player.",
     "Active-effects UI and visual shader parity, bit-identical timing.",
     "Full M16 or expedition completion."
-  ]
+  ],
+  "implementation": {
+    "rule": "Original novice Damage Fatigue1 per second for3 seconds. Alchemy5/Luck50/zero Magic Resistance admission; later effects remain absent.",
+    "ownership": "Schema98 owns source/elapsed/resolved signed rate/duration per use. Older food timers retain5/1; old schema cannot discard nondefault potency.",
+    "actual": "One genuinely looted Bonemeal consumed through inventory. Partial save, fresh-process remaining damage, completed restart and legacy Lettuce regression pass normally and instrumented.",
+    "verification": "Both variants3290 components/2276 engine;611 Python. Eight actual process courses, exact wire/live/save, strict item metadata and prior state. Unit leak checking on; rendered off.",
+    "remaining": "No remaining gate for this bounded slice. General non-food potency, experience/miscstats, brewing, resistance/absorption and effect UI remain open."
+  },
+  "current_genuine_continuation": {
+    "path": "build/oblivion-compat/bonemeal/normal-completed_restart-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "e75b5f5a47873a7461627091a816904c12f818a9320e0af3b6d585de072f1959"
+  }
 }

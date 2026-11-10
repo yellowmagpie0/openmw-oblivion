@@ -12,12 +12,16 @@ from scripts.tests import test_tes4_runtime_state as runtime_tests
 
 
 class PendingGetUpFixtureTests(unittest.TestCase):
-    def source(self, folder, *, with_food=False, with_chameleon=False, with_potion=False, with_power=False):
+    def source(self, folder, *, with_food=False, with_chameleon=False, with_potion=False, with_power=False, with_damage=False):
         state = runtime_tests.Tes4RuntimeStateTests.getup_pending_state()
         runtime._upgrade_actor_knockback(state); state['schema_version'] = runtime.CURRENT_VERSION
         if with_food:
             player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
             player['ingredient_restoration'] = [{'ingredient': 'content:oblivion.esm:033681', 'elapsed': .25}]
+        if with_damage:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['ingredient_restoration'] = [dict(ingredient='content:oblivion.esm:01ebff', elapsed=2.,
+                                                     magnitude=-1., duration=3.)]
         if with_chameleon:
             player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
             player['values'][46][1] = 25.
@@ -67,6 +71,16 @@ class PendingGetUpFixtureTests(unittest.TestCase):
             food = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)['ingredient_restoration']
             self.assertEqual(food(before), food(after))
             self.assertEqual(food(after), [{'ingredient': 'content:oblivion.esm:033681', 'elapsed': .25}])
+
+    def test_schema98_staging_preserves_resolved_harmful_ingredient(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_damage=True)
+            target = Path(directory) / 'staged.omwsave'
+            before = runtime.load_save(source)
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            food = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)['ingredient_restoration']
+            self.assertEqual(food(before), food(after))
 
     def test_schema93_staging_preserves_unrelated_chameleon_source_and_contribution(self):
         with tempfile.TemporaryDirectory() as directory:

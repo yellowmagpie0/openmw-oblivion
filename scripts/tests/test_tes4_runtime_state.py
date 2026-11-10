@@ -571,6 +571,29 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         del actor["ingredient_restoration"]
         self.assertNotIn("ingredient_restoration", state_io.decode_payload(state_io.encode_payload(state))["native_actor_values"][0])
 
+    def test_ingredient98_retains_resolved_damage_and_rejects_legacy_downgrade(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 98
+        effect = {"ingredient": "content:oblivion.esm:01ebff", "elapsed": 2,
+                  "magnitude": -1, "duration": 3}
+        state["native_actor_values"][0]["ingredient_restoration"] = [effect]
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(next(a for a in restored["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"], [effect])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for change in ({"elapsed": 3}, {"magnitude": -3}, {"duration": 1}, {"duration": math.nan}):
+            bad = copy.deepcopy(state)
+            bad["native_actor_values"][0]["ingredient_restoration"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 97
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["native_actor_values"][0]["ingredient_restoration"] = [
+            {"ingredient": "content:oblivion.esm:033681", "elapsed": .25}]
+        old = state_io.decode_payload(state_io.encode_payload(state))
+        old["schema_version"] = 98
+        self.assertEqual(next(a for a in state_io.decode_payload(state_io.encode_payload(old))["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"],
+                         next(a for a in old["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"])
+
     def test_scroll_chameleon93_preserves_sources_and_rejects_invented_lifetimes(self):
         state = self.combat_controller_state()
         state["schema_version"] = 93

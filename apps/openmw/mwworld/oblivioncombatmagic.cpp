@@ -72,24 +72,32 @@ namespace MWWorld
         }
     }
 
-    bool supportsOblivionIngredientRestoration(const ESMStore& store, const ESM4::Ingredient& ingredient)
+    std::optional<ESM4::IngredientFatigueProfile> resolveOblivionIngredientFatigue(
+        const ESMStore& store, const ESM4::Ingredient& ingredient)
     {
         if ((ingredient.mFlags & ESM4::Rec_Deleted) || !ingredient.mScriptId.isZeroOrUnset()
-            || ingredient.mEffects.empty()) return false;
+            || ingredient.mEffects.empty()) return {};
         if (const auto key = store.get<ESM4::Ingredient>().findFormKey(ESM::RefId(ingredient.mId)))
             if (const auto* winner = store.getFormKeyIndex().winner(*key);
-                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_INGR)) return false;
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_INGR)) return {};
         const auto& effect = ingredient.mEffects.front();
-        // Only this authored stock-food profile has an independent ingestion
-        // oracle. Other magnitudes/durations must not inherit a guessed rule.
-        if (effect.mId != ESM::fourCC("REFA") || effect.mRange != 0 || effect.mArea
-            || effect.mMagnitude != 15 || effect.mDuration != 1
-            || effect.mActorValue != 10 || effect.mScriptEffect) return false;
+        if (effect.mRange != 0 || effect.mArea || effect.mMagnitude != 15 || effect.mDuration != 1
+            || effect.mActorValue != 10 || effect.mScriptEffect) return {};
         const auto* definition = ingredientEffectDefinition(store, effect.mId);
-        if (!definition || !definition->mData) return false;
+        if (!definition || !definition->mData) return {};
         const auto& data = *definition->mData;
-        return data.mFlags == 0x01000870 && !data.mAssociatedForm && data.mAssociatedData == 10
-            && data.mSchool == 5 && data.mResistanceActorValue == -1;
+        if (data.mAssociatedForm || data.mAssociatedData != 10) return {};
+        // ENIT's upper three bytes are padding in original records. Food and
+        // non-food ingestion have different potency; never infer one from EFIT.
+        const auto flags = ingredient.mEnchantment.flags & 0xff;
+        if (effect.mId == ESM::fourCC("REFA") && flags == 3
+            && data.mFlags == 0x01000870 && data.mSchool == 5 && data.mResistanceActorValue == -1)
+            return ESM4::IngredientFatigueProfile{};
+        if (effect.mId == ESM::fourCC("DGFA") && flags == 1
+            && data.mFlags == 0x01001c75 && data.mBaseCost == 4.4f
+            && data.mSchool == 2 && data.mResistanceActorValue == 64)
+            return ESM4::NoviceIngredientFatigueDamage;
+        return {};
     }
 
     std::string describeOblivionIngredient(MWBase::World& world, const ConstPtr& item)
@@ -122,13 +130,17 @@ namespace MWWorld
         if (item.getContainerStore() != &inventory) return false;
         const auto& store = world.getStore();
         const auto* ingredient = store.get<ESM4::Ingredient>().search(item.getCellRef().getRefId());
-        if (!ingredient || !supportsOblivionIngredientRestoration(store, *ingredient)) return false;
+        const auto profile = ingredient ? resolveOblivionIngredientFatigue(store, *ingredient) : std::nullopt;
+        if (!profile) return false;
+        if (*profile == ESM4::NoviceIngredientFatigueDamage
+            && (combat->getPlayerValue(19) != 5.f || combat->getPlayerValue(7) != 50.f
+                || combat->getPlayerValue(64) != 0.f)) return false;
         const auto key = store.get<ESM4::Ingredient>().findFormKey(item.getCellRef().getRefId());
         const auto* before = combat->findActorValues(ESM::FormKey::dynamic("player", 1));
         const auto* life = combat->findActorLife(ESM::FormKey::dynamic("player", 1));
         if (!key || !before || !life || life->mPhase != ESM4::ActorLifePhase::Alive) return false;
         auto candidate = *before;
-        candidate.mIngredientRestoration.push_back({*key, 0.f});
+        candidate.mIngredientRestoration.push_back({*key, 0.f, profile->mMagnitude, profile->mDuration});
         candidate.validate();
         const auto settings = resolveOblivionPlayerDynamicBaseSettings(store);
         auto debit = inventory.prepareItemRemoval(item, 1);
@@ -140,7 +152,7 @@ namespace MWWorld
         combat->publishPlayerValues(world.getPlayer(), std::move(candidate), settings);
         if (!debit->commit()) throw std::logic_error("native ingredient debit changed during publication");
         Log(Debug::Info) << "TES4 ingredient consumed: ingredient=" << key->serialize()
-            << " magnitude=" << ESM4::IngredientFatigueMagnitude << " duration=" << ESM4::IngredientFatigueDuration;
+            << " magnitude=" << profile->mMagnitude << " duration=" << profile->mDuration;
         MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
         debit->notify();
         return true;
@@ -152,8 +164,9 @@ namespace MWWorld
             for (const auto& effect : actor.mIngredientRestoration)
             {
                 const auto* ingredient = store.get<ESM4::Ingredient>().search(effect.mIngredient);
-                if (!ingredient || !supportsOblivionIngredientRestoration(store, *ingredient))
-                    throw std::invalid_argument("saved native ingredient restoration no longer resolves");
+                const auto profile = ingredient ? resolveOblivionIngredientFatigue(store, *ingredient) : std::nullopt;
+                if (!profile || profile->mMagnitude != effect.mMagnitude || profile->mDuration != effect.mDuration)
+                    throw std::invalid_argument("saved native ingredient Fatigue profile no longer resolves");
             }
     }
 

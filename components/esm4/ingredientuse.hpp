@@ -13,6 +13,17 @@ namespace ESM4
     inline constexpr float IngredientFatigueMagnitude = 5.f;
     inline constexpr float IngredientFatigueDuration = 1.f;
 
+    struct IngredientFatigueProfile
+    {
+        float mMagnitude = IngredientFatigueMagnitude;
+        float mDuration = IngredientFatigueDuration;
+        friend bool operator==(const IngredientFatigueProfile&, const IngredientFatigueProfile&) = default;
+    };
+
+    // Original non-food Bonemeal at Alchemy5/Luck50: UI magnitude1,
+    // completed total3. Higher skill uses a different, unimplemented profile.
+    inline constexpr IngredientFatigueProfile NoviceIngredientFatigueDamage{-1.f, 3.f};
+
     struct IngredientRestorationStep
     {
         float mElapsed;
@@ -20,13 +31,20 @@ namespace ESM4
         bool mFinished;
     };
 
+    inline IngredientRestorationStep advanceIngredientFatigue(
+        float elapsed, float duration, IngredientFatigueProfile profile)
+    {
+        if ((profile != IngredientFatigueProfile{} && profile != NoviceIngredientFatigueDamage)
+            || !std::isfinite(elapsed) || elapsed < 0 || elapsed >= profile.mDuration
+            || !std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native ingredient Fatigue profile/time");
+        const float next = std::min(profile.mDuration, elapsed + duration);
+        return {next, (next - elapsed) * profile.mMagnitude, next >= profile.mDuration};
+    }
+
     inline IngredientRestorationStep advanceIngredientRestoration(float elapsed, float duration)
     {
-        if (!std::isfinite(elapsed) || elapsed < 0 || elapsed >= IngredientFatigueDuration
-            || !std::isfinite(duration) || duration < 0)
-            throw std::invalid_argument("invalid native ingredient restoration time");
-        const float next = std::min(IngredientFatigueDuration, elapsed + duration);
-        return {next, (next - elapsed) * IngredientFatigueMagnitude, next >= IngredientFatigueDuration};
+        return advanceIngredientFatigue(elapsed, duration, {});
     }
 }
 #endif

@@ -1144,7 +1144,7 @@ namespace ESM4
             if (!effect.mIngredient.isContent()
                 || ESM::FormKey::deserialize(effect.mIngredient.serialize()) != effect.mIngredient)
                 throw std::runtime_error("Invalid TES4 consumed ingredient identity");
-            advanceIngredientRestoration(effect.mElapsed, 0.f);
+            advanceIngredientFatigue(effect.mElapsed, 0.f, {effect.mMagnitude, effect.mDuration});
         }
         if (mScrollChameleon.size() > sMaximumCollectionSize
             || (!mScrollChameleon.empty() && mOwner != ActorValueOwner::Player))
@@ -2128,6 +2128,10 @@ namespace ESM4
                 throw std::runtime_error("TES4 potion attributes require schema94");
             if (mVersion < 93 && !actor.mScrollChameleon.empty())
                 throw std::runtime_error("TES4 scroll Chameleon requires schema93");
+            if (mVersion < 98)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mMagnitude != 5.f || effect.mDuration != 1.f)
+                        throw std::runtime_error("TES4 resolved ingredient potency requires schema98");
             if (mVersion < 92 && !actor.mIngredientRestoration.empty())
                 throw std::runtime_error("TES4 ingredient restoration requires schema92");
             if (mVersion < 70 && !actor.mMeleeParalysis.empty())
@@ -3509,6 +3513,11 @@ namespace ESM4
                     {
                         writeKey(writer, effect.mIngredient);
                         writer.floating(effect.mElapsed);
+                        if (mVersion >= 98)
+                        {
+                            writer.floating(effect.mMagnitude);
+                            writer.floating(effect.mDuration);
+                        }
                     }
                 }
                 if (mVersion >= 93)
@@ -4755,7 +4764,15 @@ namespace ESM4
                 {
                     const auto effectCount = reader.count();
                     for (std::uint32_t j = 0; j < effectCount; ++j)
-                        actor.mIngredientRestoration.push_back({nativeKey(), reader.float32()});
+                    {
+                        RuntimeIngredientRestoration effect{nativeKey(), reader.float32()};
+                        if (result.mVersion >= 98)
+                        {
+                            effect.mMagnitude = reader.float32();
+                            effect.mDuration = reader.float32();
+                        }
+                        actor.mIngredientRestoration.push_back(effect);
+                    }
                 }
                 if (result.mVersion >= 93)
                 {
@@ -6206,7 +6223,10 @@ namespace ESM4
                         first = false;
                         stream << "{\"ingredient\":";
                         stream << '"' << escapeJson(effect.mIngredient.serialize()) << '"';
-                        stream << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed << '}';
+                        stream << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed;
+                        if (mVersion >= 98 && (effect.mMagnitude != 5.f || effect.mDuration != 1.f))
+                            stream << ",\"magnitude\":" << effect.mMagnitude << ",\"duration\":" << effect.mDuration;
+                        stream << '}';
                     }
                     stream << ']';
                 }

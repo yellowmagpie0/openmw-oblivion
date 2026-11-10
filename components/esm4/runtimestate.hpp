@@ -78,7 +78,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 97;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 98;
 
     struct RuntimeContentIdentity
     {
@@ -364,8 +364,12 @@ namespace ESM4
 
     struct RuntimeIngredientRestoration
     {
+        // Historical collection name; schema98 also owns bounded DGFA.
+        // Resolved potency belongs to this use, independently of later skills.
         ESM::FormKey mIngredient;
         float mElapsed = 0;
+        float mMagnitude = 5.f;
+        float mDuration = 1.f;
         friend bool operator==(const RuntimeIngredientRestoration&, const RuntimeIngredientRestoration&) = default;
     };
 

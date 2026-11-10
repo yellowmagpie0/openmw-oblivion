@@ -5790,7 +5790,8 @@ namespace MWMechanics
             if (!process || duration == 0) return;
             for (auto& effect : values.mIngredientRestoration)
             {
-                const auto step = ESM4::advanceIngredientRestoration(effect.mElapsed, duration);
+                const auto step = ESM4::advanceIngredientFatigue(
+                    effect.mElapsed, duration, {effect.mMagnitude, effect.mDuration});
                 effect.mElapsed = step.mElapsed;
                 values.mValues[10] = ESM4::changeActorValueModifier(values.mValues[10], values.mOwner, 10,
                     ESM4::ActorValueModifier::Damage, step.mAmount);
@@ -5798,7 +5799,7 @@ namespace MWMechanics
                     << " amount=" << step.mAmount << " elapsed=" << step.mElapsed;
             }
             std::erase_if(values.mIngredientRestoration,
-                [](const auto& effect) { return effect.mElapsed >= ESM4::IngredientFatigueDuration; });
+                [](const auto& effect) { return effect.mElapsed >= effect.mDuration; });
         }
 
         void prepareScrollChameleon(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
@@ -7654,6 +7655,10 @@ namespace MWMechanics
                 throw std::invalid_argument("native potion attributes require an Oblivion v94+ save");
             if (state.mVersion < 93 && !actor.mScrollChameleon.empty())
                 throw std::invalid_argument("native scroll Chameleon requires an Oblivion v93+ save");
+            if (state.mVersion < 98)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mMagnitude != 5.f || effect.mDuration != 1.f)
+                        throw std::invalid_argument("resolved ingredient potency requires an Oblivion v98+ save");
             if (state.mVersion < 92 && !actor.mIngredientRestoration.empty())
                 throw std::invalid_argument("native ingredient restoration requires an Oblivion v92+ save");
             if (state.mVersion < 70 && !actor.mMeleeParalysis.empty())

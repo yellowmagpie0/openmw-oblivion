@@ -44,6 +44,11 @@
       "case": "two overlapping novice uses",
       "result": "Damage Fatigue aggregate2",
       "image": "native-clean-low-two-effects.png"
+    },
+    {
+      "case": "two novice effects completed",
+      "result": "Fatigue94->88; stock0",
+      "image": "native-clean-low-two-final.png"
     }
   ],
   "decision": {
@@ -59,5 +64,22 @@
   "evidence_root": "build/oblivion-compat/bonemeal/original-native-01",
   "process": "game-process-epoch.json",
   "input_log": "input-log.jsonl",
-  "exit": "Exit/restoration audit will be recorded before implementation acceptance."
+  "exit": {
+    "path": "build/oblivion-compat/bonemeal/original-native-01/exit-verification.json",
+    "sha256": "0fdaf4170abffd7b4cc092a3b8b36e6bdfdc35660546dc487e210a75e67925ed",
+    "result": "qqq wrapper0; pristine/executable unchanged; exact original copied configuration restored; owned display exited.",
+    "retained_setup_failure": "Post-Steam-shutdown kill found the owned X server already exited; no unrelated process signalled."
+  },
+  "raw_audit_including_enit": {
+    "path": "build/oblivion-compat/bonemeal/winning-records-enit-audit.json",
+    "sha256": "40c49d62dbbaf6d5d268f6bc3991ceb716d25ed513dd3401c70b290b5b162bd0"
+  },
+  "typed_parser_reuse": {
+    "path": "build/oblivion-compat/bonemeal/typed-loader-reuse.json",
+    "sha256": "b13bd4074d0192f80ed5bf37527a2243ea08177f48b72cede2b3da10da7f5fa7"
+  },
+  "native_source_inputs_after_exit": {
+    "path": "build/oblivion-compat/bonemeal/original-native-01/post-exit-inputs.json",
+    "sha256": "3451d2aff67f0a36ad2cfb817accc35a7afbe8237fcf3476d5ce1b6f965937f9"
+  }
 }

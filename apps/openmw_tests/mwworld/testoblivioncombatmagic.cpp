@@ -398,11 +398,12 @@ TEST(OblivionMagicContent, IngredientUseAdmitsOnlyFirstRestoreFatigueAndRechecks
     };
     const auto efit = bytes(ESM::fourCC("REFA")) + bytes(15u) + bytes(0u) + bytes(1u) + bytes(0u) + bytes(10u);
     fixture.load("oblivion.esm", {}, {definition(0x01000870), record(ESM4::REC_INGR, 0x33681,
-        sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("REFA"))) + sub(ESM::fourCC("EFIT"), efit))});
+        sub(ESM::fourCC("ENIT"), bytes(1u) + bytes(3u))
+        + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("REFA"))) + sub(ESM::fourCC("EFIT"), efit))});
     const auto key = ESM::FormKey::content("oblivion.esm", 0x33681);
     const auto* original = fixture.mStore.search<ESM4::Ingredient>(key);
     ASSERT_NE(original, nullptr);
-    EXPECT_TRUE(MWWorld::supportsOblivionIngredientRestoration(fixture.mStore, *original));
+    EXPECT_TRUE(MWWorld::resolveOblivionIngredientFatigue(fixture.mStore, *original));
     for (int alteration = 0; alteration < 7; ++alteration)
     {
         auto changed = *original;
@@ -413,15 +414,49 @@ TEST(OblivionMagicContent, IngredientUseAdmitsOnlyFirstRestoreFatigueAndRechecks
         if (alteration == 4) changed.mScriptId = ESM::FormId{0x900, 1};
         if (alteration == 5) changed.mEffects.front().mMagnitude = 30;
         if (alteration == 6) changed.mEffects.front().mDuration = 5;
-        EXPECT_FALSE(MWWorld::supportsOblivionIngredientRestoration(fixture.mStore, changed));
+        EXPECT_FALSE(MWWorld::resolveOblivionIngredientFatigue(fixture.mStore, changed));
     }
     ESM4::RuntimeState saved;
     ESM4::RuntimeActorValues actor;
     actor.mIngredientRestoration.push_back({key, .25f}); saved.mNativeActorValues.push_back(actor);
     EXPECT_NO_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, saved));
     fixture.load("patch.esp", {"oblivion.esm"}, {definition(0x01000871)});
-    EXPECT_FALSE(MWWorld::supportsOblivionIngredientRestoration(fixture.mStore, *original));
+    EXPECT_FALSE(MWWorld::resolveOblivionIngredientFatigue(fixture.mStore, *original));
     EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, saved), std::invalid_argument);
+}
+
+TEST(OblivionMagicContent, NoviceBonemealResolvesSignedProfileAndRechecksSavedPotency)
+{
+    Fixture fixture;
+    const auto definition = [&](unsigned flags) {
+        return record(ESM4::REC_MGEF, 0x1864,
+            sub(ESM::fourCC("EDID"), std::string("DGFA\0", 5))
+            + sub(ESM::fourCC("DATA"), bytes(flags) + bytes(4.4f) + bytes(10u)
+                + bytes(2u) + bytes(64) + std::string(44, '\0')));
+    };
+    fixture.load("oblivion.esm", {}, {definition(0x01001c75), record(ESM4::REC_INGR, 0x1ebff,
+        sub(ESM::fourCC("ENIT"), bytes(5u) + bytes(0x00045401u))
+        + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("DGFA")))
+        + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("DGFA")) + bytes(15u) + bytes(0u)
+            + bytes(1u) + bytes(0u) + bytes(10u)))});
+    const auto key = ESM::FormKey::content("oblivion.esm", 0x1ebff);
+    const auto* ingredient = fixture.mStore.search<ESM4::Ingredient>(key);
+    ASSERT_NE(ingredient, nullptr);
+    EXPECT_EQ(MWWorld::resolveOblivionIngredientFatigue(fixture.mStore, *ingredient),
+        ESM4::NoviceIngredientFatigueDamage);
+    auto food = *ingredient;
+    food.mEnchantment.flags = 3;
+    EXPECT_FALSE(MWWorld::resolveOblivionIngredientFatigue(fixture.mStore, food));
+    ESM4::RuntimeState state;
+    ESM4::RuntimeActorValues actor;
+    actor.mIngredientRestoration = {{key, 2.f, -1.f, 3.f}};
+    state.mNativeActorValues = {actor};
+    EXPECT_NO_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state));
+    state.mNativeActorValues[0].mIngredientRestoration[0].mMagnitude = 5.f;
+    EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state), std::invalid_argument);
+    state.mNativeActorValues = {actor};
+    fixture.load("patch.esp", {"oblivion.esm"}, {definition(0x01001c74)});
+    EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state), std::invalid_argument);
 }
 
 namespace

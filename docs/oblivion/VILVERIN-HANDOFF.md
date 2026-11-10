@@ -3,49 +3,47 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The expedition and full milestones remain open.
 
-Latest closed chunk: original Skeleton archery. [Contract](SKELETON-ARCHERY-CONTRACT.json),
-[winning-record/rule provenance](SKELETON-ARCHERY-ORACLE.json),
-[verification](SKELETON-ARCHERY-VERIFICATION.json).
-Actual level1 Skeleton04bb63/base084b1a selects its healthy Iron Bow025231 and
-Iron Arrows017829. Ordinary movement/provocation at about714 units saves an
-unreleased owned draw; fresh process releases exactly once into a saved flight;
-another fresh process consumes that flight for one native5.31-point Player hit.
-NPC stock6 is preserved, bow wears0.48 once. All three normal and instrumented
-boundary cases pass strict exact-wire/live/save, resource and identity audits.
-Active bow owns the frame clock; calendar/actor deltas agree within0.25s.
-Earlier doubled ticking is retained as a failed development result.
+Latest closed chunk: original novice Bonemeal ingestion.
+[Contract](BONEMEAL-INGREDIENT-CONTRACT.json),
+[independent original-game rule](BONEMEAL-INGREDIENT-ORACLE.json),
+[verification](BONEMEAL-INGREDIENT-VERIFICATION.json).
+Actual Skeleton04bb63/base084b1a defeated with carried Flare and genuinely looted.
+Bonemeal01ebff count1→0 through ordinary inventory use; Damage Fatigue1/sec
+for3sec. Partial save resumes only its remainder; completed reload stays clear.
+Schema98 stores each use's resolved signed rate/duration; old food retains5/1.
+Legacy Lettuce92 migration completes its existing remainder without replay.
 
-Both broad gates pass3,288 components/2,275 engine with identical frozen source;
-37 focused bow/arrow engine checks pass. Unchanged609 Python evidence is reused
-with94 source hashes; the new auditor runs on six actual cases. Current normal
-and instrumented Player floor-shot regressions also pass. Unit leak checks on;
-rendered leak checks off. Schema97 remains. Full tactical hold/chance/retreat,
-leading, broken NPC bow drops, NPC miss recovery and dead-caster matrices remain
-open. Approximate range policy uses the authored ranged switch distance.
+Four normal/four instrumented actual courses pass exact wire/live/save and
+inventory/state audits. Both full gates pass3,290 components/2,276 engine;
+611 Python pass. Unit leak checks on; rendered off. Recipe capture and read-only
+legacy-null comparison corrections are recorded separately from unchanged C++.
+Higher Alchemy differed in the original probe; non-food admission remains
+Alchemy5/Luck50/zero Magic Resistance. General potency, XP/miscstats, brewing,
+resistance/absorption and native active-effects presentation remain open.
 
 Current genuine continuation:
-`build/oblivion-compat/skeleton-archery/normal-impact-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256 48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad.
-Player104.6883 Health/80 Magicka in Canosel0463f5, on the floor about714 units
-from the active Skeleton. Player has18 Iron Arrows:17 in the equipped original
-stack and1 separately recovered arrow; Rusty Iron Bow retains actual shot wear.
-Skeleton remains alive18.0898 Health, equipped bow111.52 condition and6 arrows.
-It is engaged against Player; a retained released bow action may finish before
-its next draw. Amulet script identity/locals, spent Imperial powers, taken arrow2
-and earlier bandit06bfc2 Player death credit persist. Native next dynamic serial3,
-next arrow serial9. Use this branch, not the separate Player floor regression.
+`build/oblivion-compat/bonemeal/normal-completed_restart-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 e75b5f5a47873a7461627091a816904c12f818a9320e0af3b6d585de072f1959.
+Player78.2150 Health/69.8641 Magicka/170 Fatigue
+in Canosel0463f5 at(-2779.292,-10392.376,-2662.209), both prior powers spent.
+Bonemeal0/no pending ingredient effect. Iron Arrows24:17 equipped and7 in the
+other stack. Looted Iron Bow retains109.12 condition; Rusty bow wear retained.
+Skeleton remains Player-credited dead with empty inventory. Amulet script owner1/
+locals and taken arrow2 tombstone persist. Next dynamic serial3, next arrow14.
+The separate legacy-food regression is historical; use the continuation above.
 
-Current chunk: [novice Bonemeal ingestion](BONEMEAL-INGREDIENT-CONTRACT.json).
-Original Skeleton defeated with carried Flare and genuinely looted; current
-Bonemeal1 save is linked in the contract. Ordinary use baseline leaves it
-unconsumed. [Original probe](BONEMEAL-INGREDIENT-ORACLE.json) isolates novice
-Damage Fatigue1/second for3seconds; higher Alchemy behaves differently and is
-outside this chunk. Next: persist resolved per-use rate/duration, implement the
-bounded harmful effect, then genuine use/pending/completed fresh processes.
-The autonomous content iteration remains active.
+Next action: approach original lower-floor Cask066e79/base03767e, inspect its
+actual lock/contents and baseline the next unsupported behavior. Read-only
+candidate records are in `build/oblivion-compat/next-content/canosel-item-candidates.json`.
+The autonomous content iteration remains active; full expedition/milestones open.
 
 Earlier accepted slices and reusable evidence:
 
+- [Original Skeleton archery](SKELETON-ARCHERY-VERIFICATION.json): live
+  Creature084b1a equips its actual Iron Bow/Arrows, saves an owned draw, releases
+  one saved flight in a fresh process, then hits Player once in another. NPC
+  stock6 preserved; wear0.48 once; frame/calendar clock corrected within0.25s.
+  Tactical hold/chance/retreat, leading, broken bow drops and NPC misses remain open.
 - [Player static-arrow recovery](IRON-ARROW-RECOVERY-VERIFICATION.json): actual
   Canosel floor049be8 impact19→18+world1; fresh pickup→19, repeat/restart retain
   taken tombstone; untaken90-second age plus3-second fade removes once. Settled

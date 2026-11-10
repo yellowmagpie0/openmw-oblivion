@@ -528,3 +528,18 @@ TEST(ESM4Ingredient, RestorationAdvancesOnlyRemainingOneSecond)
     EXPECT_THROW(ESM4::advanceIngredientRestoration(0.f, -1.f), std::invalid_argument);
     EXPECT_THROW(ESM4::advanceIngredientRestoration(std::numeric_limits<float>::quiet_NaN(), 0.f), std::invalid_argument);
 }
+
+TEST(ESM4Ingredient, NoviceDamageResumesOnlyRemainingThreeSeconds)
+{
+    const auto profile = ESM4::NoviceIngredientFatigueDamage;
+    const auto first = ESM4::advanceIngredientFatigue(0, .25f, profile);
+    EXPECT_FLOAT_EQ(first.mAmount, -.25f);
+    EXPECT_FALSE(first.mFinished);
+    const auto remaining = ESM4::advanceIngredientFatigue(first.mElapsed, 20.f, profile);
+    EXPECT_FLOAT_EQ(remaining.mAmount, -2.75f);
+    EXPECT_TRUE(remaining.mFinished);
+    EXPECT_FLOAT_EQ(first.mAmount + remaining.mAmount, -3.f);
+    EXPECT_EQ(ESM4::advanceIngredientFatigue(2.f, 0.f, profile).mAmount, 0.f);
+    EXPECT_THROW(ESM4::advanceIngredientFatigue(3.f, 0.f, profile), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceIngredientFatigue(0.f, 1.f, {-5.f, 1.f}), std::invalid_argument);
+}
