@@ -1,0 +1,36 @@
+{
+  "status": "preflight; original-game UI check and implementation pending",
+  "milestone": "M13 native interactions; manual tumblers remain open",
+  "content": {
+    "reference": "content:oblivion.esm:066e79",
+    "base": "content:oblivion.esm:03767e",
+    "name": "Ayleid Cask",
+    "cell": "Vilverin Canosel",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "XLOC": "001c40000000000004f71200"
+  },
+  "source": {
+    "path": "build/oblivion-compat/next-content/normal-cask-short-dive-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "add795ead46d2d4b593da4eee2d6357c8c82247f5c5f8c5cb17563f06b103b7a",
+    "health": 53.00106430053711,
+    "picks": 8,
+    "breath": 16.167997360229492,
+    "genuine_route": "Ordinary route/swim/surface, owned Heal Minor Wounds, short dive; no fork grants or setters"
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/next-content/normal-cask-aim-open-01",
+    "result": "Normal Space activation immediately rolls auto chance57, breaks one original pick8->7, leaves cask locked, no explicit choice or paused lock menu"
+  },
+  "acceptance": [
+    "Normal Space opens paused lock prompt; opening spends no picks and does not alter lock or loot",
+    "Cancel preserves exact picks and lock; cold restart retains those values",
+    "Only explicit Auto Attempt may roll or spend one pick on failure; failed attempts remain paused for another choice",
+    "Success unlocks and opens actual container; looted result and spent picks persist across restart",
+    "Original typed content audit, source-input hashes, actual process identity and loaded libraries; focused engine checks plus normal and sanitized genuine course"
+  ],
+  "boundaries": [
+    "Reuse existing approximate lockpickAutoChance without new native probability parity claim",
+    "No manual tumbler game, XP, Skeleton Key, forced locks or leveled-lock recalculation in this chunk",
+    "Key-owned bypass and no-pick behavior remain established paths; no schema change"
+  ]
+}
