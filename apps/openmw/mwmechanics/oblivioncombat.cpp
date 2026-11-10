@@ -1145,7 +1145,8 @@ namespace MWMechanics
                 prepared->mCondition->setNativeItemCondition(*after);
             }
             const float current = player ? getPlayerValue(10) : getNonPlayerValue(actor, 10);
-            const float debit = current > 0 ? std::min(current, prepared->mLaunch.mShotFatigueDebit) : 0;
+            const float debit = canSpendFatigue(actor) && current > 0
+                ? std::min(current, prepared->mLaunch.mShotFatigueDebit) : 0;
             if (debit > 0)
                 prepared->mValues.mValues[10] = ESM4::changeActorValueModifier(
                     prepared->mValues.mValues[10], values.mOwner, 10, ESM4::ActorValueModifier::Damage, -debit);

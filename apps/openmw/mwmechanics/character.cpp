@@ -2120,6 +2120,7 @@ namespace MWMechanics
 
     void CharacterController::advanceOblivionMeleePlayback(float duration)
     {
+        if (mOblivionBowOwnsFrameClock) return;
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
         auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
             ? world->getOblivionCombatService() : nullptr;
@@ -2726,8 +2727,10 @@ namespace MWMechanics
     {
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
         auto* service = world ? world->getOblivionCombatService() : nullptr;
-        if (!service || !mAnimation || mPtr != world->getPlayerPtr()) return false;
-        const auto actor = ESM::FormKey::dynamic("player", 1);
+        if (!service || !mAnimation) return false;
+        const bool player = mPtr == world->getPlayerPtr();
+        if (!player && mPtr.getType() != ESM::REC_NPC_4 && mPtr.getType() != ESM::REC_CREA4) return false;
+        const auto actor = player ? ESM::FormKey::dynamic("player", 1) : mPtr.getCellRef().getFormKey();
         auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
         const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         const auto ammo = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
@@ -2738,7 +2741,7 @@ namespace MWMechanics
             if (const auto* state = service->findBowState(actor))
             {
                 service->cancelBowDraw(state->mActionId, actor);
-                service->updatePlayerBowTimer(0, -1, ESM4::BowAnimationPhase::End);
+                if (player) service->updatePlayerBowTimer(0, -1, ESM4::BowAnimationPhase::End);
             }
             if (!mOblivionBowGroup.empty()) mAnimation->disable(std::exchange(mOblivionBowGroup, {}));
             mAnimation->detachArrow();
@@ -2759,7 +2762,8 @@ namespace MWMechanics
             || mSkipAnim || isScriptedAnimPlaying() || isKnockedOut() || isKnockedDown() || isRecovery()
             || oblivionKnockedState(*world, mPtr) != 0 || oblivionParalyzed(*world, mPtr)
             || (world->getOblivionAiService() && world->getOblivionAiService()->isRidingHorse(mPtr))
-            || !inputManager->getControlSwitch("playercontrols") || !inputManager->getControlSwitch("playerfighting"))
+            || (player && (!inputManager->getControlSwitch("playercontrols")
+                || !inputManager->getControlSwitch("playerfighting"))))
         {
             stop();
             return false;
@@ -2815,12 +2819,12 @@ namespace MWMechanics
                 if (!held) input.mRequireRelease = false;
                 service->setMeleeInput(actor, input);
             }
-            if (!service->findBowState(actor) && pressed && !input.mRequireRelease)
+            if (!service->findBowState(actor) && (player ? pressed && !input.mRequireRelease : held))
             {
                 if (!bowKey || !ammoKey || ammo == inventory.end() || ammo->getCellRef().getCount() <= 0
                     || right->getClass().getItemHealth(*right) <= 0)
                 {
-                    MWBase::Environment::get().getWindowManager()->messageBox("Equip an unbroken bow and arrows to shoot.");
+                    if (player) MWBase::Environment::get().getWindowManager()->messageBox("Equip an unbroken bow and arrows to shoot.");
                     return true;
                 }
                 const auto* ammunition = world->getStore().get<ESM4::Ammunition>().search(*ammoKey);
@@ -2828,7 +2832,7 @@ namespace MWMechanics
                     || !ammunition || !ammunition->mEnchantment.isZeroOrUnset()
                     || ammunition->mData.mFlags != 0 || !ammunition->mAmmoEffects.empty())
                 {
-                    MWBase::Environment::get().getWindowManager()->messageBox("Use an ordinary bow and arrows.");
+                    if (player) MWBase::Environment::get().getWindowManager()->messageBox("Use an ordinary bow and arrows.");
                     return true;
                 }
                 const auto* metadata = mAnimation->getControllerSequenceMetadata("bowattack");
@@ -2846,7 +2850,8 @@ namespace MWMechanics
                 prepared.mKeyTimes = keys.mTimes;
                 prepared.mProgress.mSequenceOffset = keys.mTimes.front() - service->animationClock(actor);
                 const auto id = service->beginBowDraw(actor, std::move(prepared));
-                Log(Debug::Info) << "M15 Player bow draw: id=" << id << " bow=" << bowKey->serialize()
+                Log(Debug::Info) << (player ? "M15 Player bow draw: id=" : "M15 actor bow draw: id=") << id
+                    << (player ? std::string{} : " actor=" + actor.serialize()) << " bow=" << bowKey->serialize()
                     << " ammo=" << ammoKey->serialize();
             }
             const auto* owned = service->findBowState(actor);
@@ -2855,11 +2860,18 @@ namespace MWMechanics
                 mUpperBodyState = UpperBodyState::WeaponEquipped;
                 return true;
             }
+            // This frame's bow prefix owns the actor clock, even if it
+            // completes/withdraws its state before the later idle melee pass.
+            mOblivionBowOwnsFrameClock = true;
             if (!service->bindBowPlayback(owned->mActionId, actor))
                 throw std::invalid_argument("native bow playback owner is stale");
             const auto id = owned->mActionId;
             if (acceptInput && owned->mProgress.mPhase != ESM4::BowAnimationPhase::End)
-                service->advancePlayerBowPlayback(id, actor, duration, held, pressed, true, false, true);
+            {
+                if (player) service->advancePlayerBowPlayback(id, actor, duration, held, pressed, true, false, true);
+                else service->advanceBowPlayback(id, actor, duration, false, true);
+            }
+            else if (acceptInput) service->advanceAnimationClock(actor, duration);
             const auto state = *service->findBowState(actor);
             const float sequenceTime = service->animationClock(actor) + state.mProgress.mSequenceOffset;
             const auto bind = [&](MWRender::Animation& view) {
@@ -2900,17 +2912,18 @@ namespace MWMechanics
                     || (mAnimation->getPlaybackPeer() && !mAnimation->getPlaybackPeer()->hasOblivionHeldArrow())
                     || !service->confirmBowAttachment(id, actor))
                     throw std::invalid_argument("native held arrow could not be attached");
-                Log(Debug::Info) << "M15 Player bow attached: id=" << id;
+                Log(Debug::Info) << (player ? "M15 Player bow attached: id=" : "M15 actor bow attached: id=")
+                    << id << (player ? std::string{} : " actor=" + actor.serialize());
             }
             else if (event == ESM4::BowActionEvent::Release)
             {
-                if (!world->releaseOblivionPlayerArrow(id, *mAnimation))
+                if (!world->releaseOblivionArrow(id, *mAnimation))
                     throw std::invalid_argument("native arrow release could not be published");
                 mAnimation->detachArrow();
             }
-            if (state.mProgress.mPhase == ESM4::BowAnimationPhase::End && acceptInput && !held)
+            if (state.mProgress.mPhase == ESM4::BowAnimationPhase::End && acceptInput && (!player || !held))
             {
-                service->updatePlayerBowTimer(0, -1, ESM4::BowAnimationPhase::End);
+                if (player) service->updatePlayerBowTimer(0, -1, ESM4::BowAnimationPhase::End);
                 if (!service->finishBowPlayback(id, actor)) throw std::invalid_argument("native bow completion is stale");
                 stop();
             }
@@ -2920,7 +2933,7 @@ namespace MWMechanics
         {
             Log(Debug::Warning) << "M15 native bow rejected: " << error.what();
             stop();
-            if (getAttackingOrSpell())
+            if (player && getAttackingOrSpell())
             {
                 auto input = service->findMeleeState(actor) ? service->findMeleeState(actor)->mInput : ESM4::RuntimeMeleeInput{};
                 input.mRequireRelease = true;
@@ -4385,6 +4398,7 @@ namespace MWMechanics
 
     void CharacterController::update(float duration)
     {
+        mOblivionBowOwnsFrameClock = false;
         if (!mAnimation)
             return;
         MWBase::World* world = MWBase::Environment::get().getWorld();

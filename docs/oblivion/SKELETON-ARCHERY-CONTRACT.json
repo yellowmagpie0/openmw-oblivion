@@ -1,5 +1,5 @@
 {
-  "status": "preflight: observed original archer fails to select/fire owned bow; implementation pending",
+  "status": "accepted bounded original Skeleton archery; full M15/S5/S7 and expedition remain open",
   "milestone": "M15 S5/S7 bounded original Creature archery; full bow tactics and expedition remain open",
   "content": {
     "reference": "content:oblivion.esm:04bb63",
@@ -30,6 +30,14 @@
   "outside_scope": [
     "This live level1 Skeleton, visible Player and healthy ordinary bow/arrow profile are bounded acceptance, not full NPC ranged tactics, evasive movement, leading or all creature/model/style combinations.",
     "Broken NPC bow drop, NPC static-hit recovery, creature-hit recovery, dead-caster/dead-target matrices and full S5 remain open unless needed by this course.",
-    "Native NPC ammunition is preserved, not debited; source Player provocation still spends exactly1. Approximate tactical spacing/timing must be described honestly; ownership and restart behavior remain strict."
-  ]
+    "Native NPC ammunition is preserved, not debited; source Player provocation still spends exactly1. Approximate tactical spacing/timing must be described honestly; ownership and restart behavior remain strict.",
+    "Bounded automatic full draw uses authored bowattack cadence; exact tactical hold/chance, retreat/standoff and leading remain open."
+  ],
+  "implementation": {
+    "source": "Native directed Creature bow selection, generic Character bow owner, rendered-actor release/collision and incoming caster validation; Creature fatigue flag and NPC ammunition preservation retained.",
+    "clock": "Real burst exposed double ticking by the idle melee pass. Bow now owns the frame clock through completion; corrected calendar16.7344/actor16.7337 delta passes predeclared0.25s tolerance.",
+    "development": "Original Skeleton equips, draws and shoots; corrected actor-clock audit passes. Canonical normal draw saves unreleased ownership, fresh release saves one independent flight, fresh impact applies one5.31-point Player hit. Native stock6, wear0.48 once, prior powers/tombstone/Amulet/kill credit and exact wire/live/save ownership verified. Current Player104.6883; expedition/full S5 remain open.",
+    "remaining": "No remaining gate for this bounded chunk. Three normal/three instrumented actual boundaries and both Player floor-shot regressions pass. Both full C++ gates3288 components/2275 engine at identical frozen e7ff8b18;37 focused engine pass; unchanged609 Python evidence reused. Separate verification receipt binds final commit, process/save evidence and one post-gate read-only auditor correction.",
+    "audit_boundary": "Saving is synchronous after animation-state persistence. Activity counts stop at Writing saved game; live/save/wire, resources, HP and serials remain strict. The instrumented release process naturally hit Player after capture; its saved branch correctly retains110 HP and one flight. C++ and recipes are unchanged from broad gates."
+  }
 }

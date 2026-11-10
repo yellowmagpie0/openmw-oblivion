@@ -14,6 +14,10 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
+#include "../mwmechanics/oblivionai.hpp"
+#include "../mwmechanics/creaturestats.hpp"
+#include <components/esm4/loadcrea.hpp>
+#include <components/esm4/loadnpc.hpp>
 #include "../mwmechanics/oblivionmelee.hpp"
 #include "../mwphysics/collisiontype.hpp"
 #include "../mwphysics/physicssystem.hpp"
@@ -52,11 +56,14 @@ namespace MWWorld
         }
     }
 
-    bool World::releaseOblivionPlayerArrow(std::uint64_t draw, MWRender::Animation& animation)
+    bool World::releaseOblivionArrow(std::uint64_t draw, MWRender::Animation& animation)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPhysics) return false;
-        const auto actor = getPlayerPtr();
-        const auto caster = ESM::FormKey::dynamic("player", 1);
+        const auto actor = animation.getPtr();
+        if (actor.isEmpty() || !actor.isInCell()
+            || (actor != getPlayerPtr() && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)) return false;
+        const bool player = actor == getPlayerPtr();
+        const auto caster = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
         const auto* state = mOblivionCombat->findBowState(caster);
         if (!state || state->mActionId != draw || state->mReleaseCommitted
             || !ordinaryArrow(mStore, state->mBowBase, state->mAmmoBase))
@@ -84,12 +91,24 @@ namespace MWWorld
         // launch rays miss a centered target by that entire shoulder offset.
         // Converge on the actual crosshair point, retaining the muzzle origin
         // and subsequent gravity/collision rather than relocating the arrow.
-        if (mRendering && mRendering->getCamera()->getTrackingPtr() == actor)
+        if (player && mRendering && mRendering->getCamera()->getTrackingPtr() == actor)
         {
             const auto* camera = mRendering->getCamera();
             const auto focus = mRendering->castCameraToViewportRay(.5f, .5f, 12000.f, true);
             const osg::Vec3f aim = focus.mHit ? focus.mHitPointWorld
                 : osg::Vec3f(camera->getPosition()) + camera->getOrient() * osg::Vec3f(0, 12000.f, 0);
+            direction = aim - *position;
+        }
+        if (!player)
+        {
+            const auto targetKey = getOblivionCombatTarget(caster);
+            const auto target = !targetKey || targetKey->isNull() ? Ptr()
+                : *targetKey == ESM::FormKey::dynamic("player", 1) ? getPlayerPtr()
+                : mOblivionAi ? mOblivionAi->resolveReference(*targetKey) : Ptr();
+            if (target.isEmpty() || !target.isInCell() || !mPhysics->getActor(target)
+                || target.getClass().getCreatureStats(target).isDead()) return false;
+            auto aim = target.getRefData().getPosition().asVec3();
+            aim.z() += mPhysics->getRenderingHalfExtents(target).z();
             direction = aim - *position;
         }
         if (direction.normalize() == 0) return false;
@@ -123,10 +142,11 @@ namespace MWWorld
         mOblivionRuntimeState->mNextArrowProjectile = serial + 1;
         mOblivionRuntimeState->mVersion = ESM4::CurrentRuntimeStateVersion;
         animation.detachArrow();
-        Log(Debug::Info) << "M15 Player arrow released: id=" << serial << " draw=" << draw
+        Log(Debug::Info) << (player ? "M15 Player arrow released: id=" : "M15 actor arrow released: id=")
+            << serial << " draw=" << draw << (player ? std::string{} : " caster=" + caster.serialize())
             << " bow=" << launch.mBow.serialize() << " ammo=" << launch.mAmmunition.serialize()
             << " damage=" << arrow.mDamage << " speed=" << launch.mSpeed << " gravity=" << arrow.mGravityFactor
-            << " position=" << *position << " fatigue=" << mOblivionCombat->getPlayerValue(10);
+            << " position=" << *position << " fatigue=" << (player ? mOblivionCombat->getPlayerValue(10) : mOblivionCombat->getNonPlayerValue(actor, 10));
         mOblivionCombat->notifyBowRelease(*release, inventory);
         return true;
     }
@@ -195,6 +215,7 @@ namespace MWWorld
         struct Notification
         {
             Ptr mVictim;
+            Ptr mCaster;
             std::unique_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
             std::vector<MWMechanics::OblivionPhysicalConditionChange> mEquipment;
         };
@@ -220,7 +241,11 @@ namespace MWWorld
                 const auto next = ESM4::advanceArrowProjectile(it->second, step, gravity);
                 const osg::Vec3f from(it->second.mPosition[0], it->second.mPosition[1], it->second.mPosition[2]);
                 const osg::Vec3f to(next.mPosition[0], next.mPosition[1], next.mPosition[2]);
-                const auto hit = mPhysics->castRay(from, to, {player}, {}, 0xff, MWPhysics::CollisionType_Projectile);
+                const auto caster = it->second.mCaster == ESM::FormKey::dynamic("player", 1) ? player
+                    : mOblivionAi ? mOblivionAi->resolveReference(it->second.mCaster) : Ptr();
+                const auto hit = mPhysics->castRay(from, to,
+                    caster.isEmpty() ? std::vector<ConstPtr>{} : std::vector<ConstPtr>{caster},
+                    {}, 0xff, MWPhysics::CollisionType_Projectile);
                 if (!hit.mHit)
                 {
                     it->second = next;
@@ -232,12 +257,12 @@ namespace MWWorld
                 float damage = 0;
                 if (!target.isEmpty() && target.getClass().isActor())
                 {
-                    const auto* life = mOblivionCombat->findActorLife(target.getCellRef().getFormKey());
+                    const auto* life = mOblivionCombat->findActorLife(target == player ? ESM::FormKey::dynamic("player", 1) : target.getCellRef().getFormKey());
                     const auto* casterLife = mOblivionCombat->findActorLife(it->second.mCaster);
-                    if (life && life->mPhase == ESM4::ActorLifePhase::Alive && casterLife
+                    if (!caster.isEmpty() && life && life->mPhase == ESM4::ActorLifePhase::Alive && casterLife
                         && casterLife->mPhase == ESM4::ActorLifePhase::Alive)
                     {
-                        const auto resolved = MWMechanics::resolveOblivionArrowContact(*this, player, target,
+                        const auto resolved = MWMechanics::resolveOblivionArrowContact(*this, caster, target,
                             it->second.mDamage, MWMechanics::oblivionNormalizedDifficulty(Settings::game().mDifficulty));
                         if (!resolved) throw std::runtime_error("native arrow mitigation is unsupported");
                         MWMechanics::OblivionPhysicalContactDeltas deltas;
@@ -248,11 +273,11 @@ namespace MWWorld
                         const auto contact = mOblivionCombat->allocateAction(it->second.mCaster);
                         try
                         {
-                            auto prepared = mOblivionCombat->preparePhysicalContact(contact, player, target, deltas,
+                            auto prepared = mOblivionCombat->preparePhysicalContact(contact, caster, target, deltas,
                                 mPlayer.get(), target.getClass().isEssential(target), resolveOblivionEssentialRecoverySettings(mStore),
                                 resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
                             if (!prepared || !prepared->commit()) throw std::runtime_error("stale native arrow contact");
-                            notifications.push_back({target, std::move(prepared), std::move(deltas.mConditionChanges)});
+                            notifications.push_back({target, caster, std::move(prepared), std::move(deltas.mConditionChanges)});
                         }
                         catch (...)
                         {
@@ -262,7 +287,8 @@ namespace MWWorld
                         damage = resolved->mHealth;
                     }
                 }
-                if (!target.isEmpty() && target.getType() == ESM::REC_STAT4 && mRendering)
+                if (it->second.mCaster == ESM::FormKey::dynamic("player", 1)
+                    && !target.isEmpty() && target.getType() == ESM::REC_STAT4 && mRendering)
                 {
                     auto recovery = prepareArrowRecovery(*this, mRendering->getObjects(), *mPhysics,
                         target, it->second, serial, hit.mHitPos);
@@ -309,8 +335,9 @@ namespace MWWorld
                 // An impact cannot be replayed by callbacks or a later frame.
                 it = projectiles.erase(it);
                 removed = true;
-                Log(Debug::Info) << "M15 Player arrow impact: id=" << serial
-                    << " target=" << (target.isEmpty() ? ESM::FormKey{} : target.getCellRef().getFormKey()).serialize()
+                Log(Debug::Info) << (caster == player ? "M15 Player arrow impact: id=" : "M15 actor arrow impact: id=") << serial
+                    << " target=" << (target.isEmpty() ? ESM::FormKey{}
+                        : target == player ? ESM::FormKey::dynamic("player", 1) : target.getCellRef().getFormKey()).serialize()
                     << " damage=" << damage;
                 break;
             }
@@ -323,13 +350,20 @@ namespace MWWorld
             for (const auto& item : notification.mEquipment)
                 notification.mContact->notifyEquipmentChange(item.mItem);
             const auto& target = notification.mVictim;
+            if (target == player)
+            {
+                MWBase::Environment::get().getWindowManager()->setEnemy(notification.mCaster);
+                continue;
+            }
             const auto key = target.getCellRef().getFormKey();
+            const auto casterKey = notification.mCaster == player ? ESM::FormKey::dynamic("player", 1)
+                : notification.mCaster.getCellRef().getFormKey();
             const auto* life = mOblivionCombat->findActorLife(key);
             if (life && life->mPhase == ESM4::ActorLifePhase::Alive
                 && target.getRefData().isEnabled() && target.getCellRef().getCount() > 0
                 && mOblivionCombat->getNonPlayerIntegerValue(target, 34) > 0
-                && !isOblivionCombatTarget(key, ESM::FormKey::dynamic("player", 1)).value_or(false))
-                executeOblivionStartCombat(target, player);
+                && !isOblivionCombatTarget(key, casterKey).value_or(false))
+                executeOblivionStartCombat(target, notification.mCaster);
             MWBase::Environment::get().getWindowManager()->setEnemy(target);
         }
         std::map<std::uint64_t, ESM4::ArrowProjectileState> visible;
@@ -351,10 +385,21 @@ namespace MWWorld
             }
         for (const auto& [id, arrow] : state.mNativeArrowProjectiles)
         {
-            if (arrow.mCaster != ESM::FormKey::dynamic("player", 1)
-                || !ordinaryArrow(mStore, arrow.mBow, arrow.mAmmunition)
+            if (!ordinaryArrow(mStore, arrow.mBow, arrow.mAmmunition)
                 || !mStore.get<ESM4::Cell>().search(arrow.mCell))
                 throw std::invalid_argument("saved native arrow source no longer resolves");
+            if (arrow.mCaster != ESM::FormKey::dynamic("player", 1))
+            {
+                const auto owner = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                    [&](const auto& value) { return value.mActor == arrow.mCaster; });
+                const auto reference = std::find_if(state.mReferences.begin(), state.mReferences.end(),
+                    [&](const auto& value) { return value.mKey == arrow.mCaster; });
+                if (!arrow.mCaster.isContent() || owner == state.mNativeActorValues.end()
+                    || owner->mOwner != ESM4::ActorValueOwner::NonPlayer || reference == state.mReferences.end()
+                    || reference->mBase != owner->mBase
+                    || (!mStore.get<ESM4::Npc>().search(owner->mBase) && !mStore.get<ESM4::Creature>().search(owner->mBase)))
+                    throw std::invalid_argument("saved native arrow caster has no incoming actor owner");
+            }
             const auto* ammo = mStore.get<ESM4::Ammunition>().search(arrow.mAmmunition);
             if (Misc::ResourceHelpers::correctMeshPath(ammo->mModel.getNormalized()).value() != arrow.mModel)
                 throw std::invalid_argument("saved native arrow model no longer resolves");

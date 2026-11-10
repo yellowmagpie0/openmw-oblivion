@@ -20,5 +20,59 @@
     "fatigue": "Existing original canSpendFatigue distinguishes Creature constructed expenditure flag from Player/NPC; preserve it when admitting Creature bow release.",
     "fidelity": "Reasonable damage/tactical timing at this actual range; exact original tactical/RNG replay is not an acceptance requirement. Saved identity, release and Health/resource ownership are strict."
   },
-  "baseline_inspection": "build/oblivion-compat/next-content/normal-skeleton-response-baseline-01/baseline-inspection.json"
+  "baseline_inspection": "build/oblivion-compat/next-content/normal-skeleton-response-baseline-01/baseline-inspection.json",
+  "authored_bow_animation": {
+    "path": "build/oblivion-compat/next-content/skeleton-bow-assets/inspection.json",
+    "asset_sha256": "55755bd5bd26cfe3023da0b14fbb673baaada242d421fa3e1733a7757a9d1277",
+    "textkeys_sha256": "4255aac3d12c33a551ecc3ad7b6a5451daf14b3684110ee29f6bd7aec4e33ec6",
+    "reader": "build/oblivion-compat/m15/S4/native-melee-kf-inspection-01/driver",
+    "reader_sha256": "0b18f0ec1786493c898a3387d71be5e8e40de78593bdbb1d98d84b8f229b507a",
+    "reader_source_sha256": "07f9660c4549f2e6da0df435b138988c9bc045bfe0c6763f7caaa9f06dce5bd2",
+    "interpretation": "Original Skeleton sequence supplies start0,Attach0.4,Hold1.3667,Release1.4333,end2; NPC full draw advances without the Player held-input pause.",
+    "keys": [
+      {
+        "time": 0.0,
+        "text": "start"
+      },
+      {
+        "time": 0.0333333351,
+        "text": "Enum: Attack"
+      },
+      {
+        "time": 0.400000006,
+        "text": "Attach"
+      },
+      {
+        "time": 1.0333333,
+        "text": "Sound: bowPull"
+      },
+      {
+        "time": 1.36666667,
+        "text": "Hold"
+      },
+      {
+        "time": 1.39999998,
+        "text": "Sound: bowShoot"
+      },
+      {
+        "time": 1.4333334,
+        "text": "Release"
+      },
+      {
+        "time": 2.0,
+        "text": "end"
+      }
+    ]
+  },
+  "clock_acceptance": {
+    "retained_development": "build/oblivion-compat/next-content/normal-skeleton-first-shots-development-02/development-inspection.json",
+    "finding": "Before correction,16.8201 calendar simulation seconds advanced the Skeleton animation clock22.9067 seconds. The idle melee pass also ticks during bow playback; actual archery is too fast.",
+    "requirement": "One owner advances the actor animation clock per frame; the bow owns it through finishing/withdrawal.",
+    "predeclared_tolerance": "Absolute difference between saved actor-clock delta and calendar simulation delta must be <=0.25 seconds for this bounded burst/restart. Allows discrete frame admission and float accumulation; rejects doubled active-bow ticking."
+  },
+  "snapshot_activity_provenance": {
+    "source": "apps/openmw/mwstate/statemanagerimp.cpp: animation persistence precedes Writing saved game; save serialization is synchronous on the game thread.",
+    "correction": "build/oblivion-compat/skeleton-archery/post-gate-auditor-correction.json",
+    "acceptance": "Count releases/impacts through the saved snapshot. Allow later activity in the original process without treating it as part of the retained continuation; saved exact wire/live/HP/serial assertions unchanged."
+  }
 }

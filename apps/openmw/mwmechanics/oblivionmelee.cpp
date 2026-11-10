@@ -27,6 +27,7 @@
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadammo.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/loadmgef.hpp>
 #include <components/esm4/loadspel.hpp>
@@ -84,6 +85,82 @@ namespace MWMechanics
                 }
             }
             return selected;
+        }
+
+        // Bounded visible-target ranged policy for native weapon-capable
+        // creatures. The directed controller owns its target and the bow
+        // controller owns playback; no parallel melee intent is published.
+        bool updateOwnedCreatureBow(MWWorld::World& world, const MWWorld::Ptr& actor,
+            const MWWorld::Ptr& target, OblivionCombatService& combat,
+            OblivionAiService& ai, const ESM4::CombatStyleStandard& style, float duration)
+        {
+            if (actor.getType() != ESM::REC_CREA4
+                || !(actor.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_WeapAndShield))
+                return false;
+            const auto key = actor.getCellRef().getFormKey();
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            const auto bowDefinition = [&](const MWWorld::Ptr& item) -> const ESM4::Weapon* {
+                if (item.getType() != ESM::REC_WEAP || item.getCellRef().getCount() <= 0) return nullptr;
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item.getCellRef().getRefId());
+                const auto* weapon = world.getStore().get<ESM4::Weapon>().search(id);
+                return weapon && !(weapon->mFlags & ESM4::Rec_Deleted) && weapon->mData.type == 5
+                    && !(weapon->mData.flags & 1u) && weapon->mEnchantment.isZeroOrUnset()
+                    && item.getCellRef().getItemCondition(weapon->mData.health) > 0 ? weapon : nullptr;
+            };
+            const auto current = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            if (current != inventory.end() && !bowDefinition(*current)) return false;
+            MWWorld::Ptr bow = current == inventory.end() ? MWWorld::Ptr{} : *current;
+            if (bow.isEmpty())
+                for (auto item = inventory.begin(); item != inventory.end(); ++item)
+                    if (const auto* candidate = bowDefinition(*item);
+                        candidate && (bow.isEmpty() || candidate->mData.damage > bowDefinition(bow)->mData.damage))
+                        bow = *item;
+            if (bow.isEmpty()) return false;
+            MWWorld::Ptr ammo;
+            for (auto item = inventory.begin(); item != inventory.end(); ++item)
+            {
+                if (item->getCellRef().getCount() <= 0) continue;
+                // Inventory AMMO uses a shared WEAP facade; resolve the native
+                // identity before asking its winning ammunition definition.
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item->getCellRef().getRefId());
+                const auto* definition = world.getStore().get<ESM4::Ammunition>().search(id);
+                if (definition && !(definition->mFlags & ESM4::Rec_Deleted) && !definition->mData.mFlags
+                    && definition->mEnchantment.isZeroOrUnset() && definition->mAmmoEffects.empty())
+                { ammo = *item; break; }
+            }
+            if (ammo.isEmpty()) return false;
+            if (const auto* melee = combat.findMeleeState(key); melee && (melee->mStrike || melee->mReaction))
+                return false;
+            combat.clearMeleeAiIntent(key);
+            if (current == inventory.end())
+            {
+                inventory.equip(MWWorld::InventoryStore::Slot_CarriedRight, std::find(inventory.begin(), inventory.end(), bow));
+                Log(Debug::Info) << "M15 creature bow equipped: actor=" << key.serialize();
+            }
+            const auto selectedAmmo = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+            if (selectedAmmo == inventory.end() || *selectedAmmo != ammo)
+                inventory.equip(MWWorld::InventoryStore::Slot_Ammunition, std::find(inventory.begin(), inventory.end(), ammo));
+            const auto targetKey = target == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                : target.getCellRef().getFormKey();
+            if (world.getOblivionCombatTarget(key) != targetKey) return true;
+            combat.engage(key, targetKey);
+            auto& stats = actor.getClass().getCreatureStats(actor);
+            stats.setDrawState(DrawState::Weapon);
+            auto delta = target.getRefData().getPosition().asVec3() - actor.getRefData().getPosition().asVec3();
+            const bool facing = zTurn(actor, std::atan2(delta.x(), delta.y()));
+            const float horizontal = std::hypot(delta.x(), delta.y());
+            const bool pitched = smoothTurn(actor, -std::atan2(delta.z(), horizontal), 0);
+            // Use the authored ranged switch distance for this bounded policy.
+            // Exact standoff/retreat, leading and probabilistic tactics remain open.
+            const float range = style.mSwitchDistances ? (*style.mSwitchDistances)[1] : 1000.f;
+            const bool visible = world.getLOS(actor, target);
+            if (visible && delta.length() <= range)
+            {
+                ai.clearCombatRoute(actor);
+                stats.setAttackingOrSpell(facing && pitched && style.mAttackChance != 0);
+            }
+            else ai.approachCombatTarget(actor, target, duration);
+            return true;
         }
 
         void equipOwnedMeleeWeapon(MWWorld::World& world, const MWWorld::Ptr& actor,
@@ -547,6 +624,7 @@ namespace MWMechanics
                 // An exhausted staff cannot be treated as an ordinary melee weapon.
                 staffInventory.unequipSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             }
+        if (updateOwnedCreatureBow(*nativeWorld, actor, target, *combat, *ai, style, duration)) return true;
         if (const auto* afterEquipment = combat->findMeleeState(key); !afterEquipment || !afterEquipment->mStrike)
             equipOwnedMeleeWeapon(*nativeWorld, actor, *combat);
         // Equipment observers can stop combat or replace its target.

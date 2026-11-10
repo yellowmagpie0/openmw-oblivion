@@ -223,6 +223,7 @@ namespace MWMechanics
         bool updateOblivionBow(float duration);
         std::string mOblivionBowGroup;
         std::uint64_t mOblivionRenderedBow = 0;
+        bool mOblivionBowOwnsFrameClock = false;
         std::string mOblivionCastGroup; // Renderer binding only; service owns pending cast.
         void persistOblivionMeleeProgress() const;
         void dispatchOblivionMeleeContact();
