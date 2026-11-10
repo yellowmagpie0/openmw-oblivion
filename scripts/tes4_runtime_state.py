@@ -1841,7 +1841,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or not projectile["cell"].startswith("content:")):
             raise RuntimeStateError("Dangling native magic projectile identity")
         if type(projectile["effect_code"]) is not int or projectile["effect_code"] not in {
-                int.from_bytes(b'SHDG', 'little'), int.from_bytes(b'FIDG', 'little')}:
+                int.from_bytes(b'SHDG', 'little'), int.from_bytes(b'FIDG', 'little'), int.from_bytes(b'CHRM', 'little')}:
             raise RuntimeStateError("Unsupported native magic projectile effect")
         model = projectile["model"]
         if not isinstance(model, str) or not model or '\0' in model:

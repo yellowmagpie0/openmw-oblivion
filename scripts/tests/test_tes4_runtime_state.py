@@ -5158,6 +5158,17 @@ class MagicProjectile88Tests(unittest.TestCase):
             'maximum_distance': 10000., 'model': 'MagicEffects/shockbolt.nif'}]
         return state
 
+    def test_charm_projectile_keeps_effect_identity_and_exact_wire_roundtrip(self):
+        state = self.make_state()
+        projectile = state['native_magic_projectiles'][0]
+        projectile.update(source='content:oblivion.esm:047add',
+            effect_code=int.from_bytes(b'CHRM', 'little'), magnitude=30.,
+            model='MagicEffects/illusion.NIF')
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded['native_magic_projectiles'], state['native_magic_projectiles'])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+
     def test_flight_roundtrip_and_old_version_absence(self):
         state = self.make_state()
         decoded = state_io.decode_payload(state_io.encode_payload(state))

@@ -78,6 +78,23 @@ namespace MWWorld
         std::string mModel;
     };
 
+    // Original Player-owned Voice of the Emperor only. Reference custom state
+    // owns the recipient, caster and simulation timer independently of AVs.
+    struct OblivionCharm
+    {
+        ESM::FormKey mSpell;
+        ESM::FormKey mCaster;
+        float mMagnitude = 30;
+        float mElapsed = 0;
+        friend bool operator==(const OblivionCharm&, const OblivionCharm&) = default;
+    };
+    std::optional<OblivionTargetDamage> resolveOblivionVoiceOfEmperor(
+        const ESMStore& store, const ESM4::Spell& spell);
+    std::optional<OblivionCharm> readOblivionCharm(const ESM4::RuntimeReferenceState& reference);
+    void writeOblivionCharm(ESM4::RuntimeReferenceState& reference, const std::optional<OblivionCharm>& effect);
+    std::int32_t oblivionCharmModifier(const ESM4::RuntimeState& state,
+        const ESM::FormKey& actor, const ESM::FormKey& viewer);
+
     struct OblivionStaffCastInputs
     {
         ESM::FormKey mEnchantment;

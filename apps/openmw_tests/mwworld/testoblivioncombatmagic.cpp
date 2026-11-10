@@ -729,3 +729,76 @@ TEST(OblivionCombatMagicStore, GreaterPowerRejectsChangedOrDeletedWinningProfile
         record(ESM4::REC_MGEF, 0x8ca, {}, true)});
     EXPECT_FALSE(MWWorld::supportsOblivionStarOfWest(fixture.mStore, loadedStar(fixture)));
 }
+
+TEST(OblivionMagicContent, VoiceOfEmperorRequiresCompleteWinningOriginalPowerAndEffect)
+{
+    const auto makeSpell = [](std::uint32_t magnitude, std::uint32_t duration) {
+        const auto efit = bytes(ESM::fourCC("CHRM")) + bytes(magnitude) + bytes(0u)
+            + bytes(duration) + bytes(2u) + bytes(6u);
+        return record(ESM4::REC_SPEL, 0x47add,
+            sub(ESM::fourCC("SPIT"), bytes(2u) + bytes(0u) + bytes(1u) + bytes(1u))
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("CHRM"))) + sub(ESM::fourCC("EFIT"), efit));
+    };
+    const auto definition = [](std::uint32_t flags) {
+        const auto data = bytes(flags) + bytes(.2f) + bytes(6u) + bytes(3u) + bytes(64)
+            + bytes(1u) + bytes(0u) + bytes(1.f) + std::string(32, '\0');
+        return record(ESM4::REC_MGEF, 0x5e1d6,
+            sub(ESM::fourCC("EDID"), std::string("CHRM\0", 5)) + sub(ESM::fourCC("DATA"), data)
+            + sub(ESM::fourCC("MODL"), std::string("MagicEffects\\illusion.NIF\0", 26)));
+    };
+    const auto key = ESM::FormKey::content("oblivion.esm", 0x47add);
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {definition(0x01000c62), makeSpell(30, 30)});
+    const auto* power = fixture.mStore.get<ESM4::Spell>().search(key);
+    ASSERT_NE(power, nullptr);
+    const auto resolved = MWWorld::resolveOblivionVoiceOfEmperor(fixture.mStore, *power);
+    ASSERT_TRUE(resolved);
+    EXPECT_EQ(resolved->mEffectCode, ESM::fourCC("CHRM"));
+    EXPECT_EQ(resolved->mMagnitude, 30);
+    EXPECT_EQ(resolved->mProjectileSpeedFactor, 1);
+    EXPECT_EQ(resolved->mModel, "MagicEffects\\illusion.NIF");
+    EXPECT_EQ(MWWorld::describeOblivionSpell(fixture.mStore, *power, {}, 50).mCost, 0.f);
+    fixture.load("patch.esp", {"oblivion.esm"}, {makeSpell(30, 31)});
+    EXPECT_FALSE(MWWorld::resolveOblivionVoiceOfEmperor(fixture.mStore,
+        *fixture.mStore.get<ESM4::Spell>().search(key)));
+    Fixture wrongDefinition;
+    wrongDefinition.load("oblivion.esm", {}, {definition(0x01000c63), makeSpell(30, 30)});
+    EXPECT_FALSE(MWWorld::resolveOblivionVoiceOfEmperor(wrongDefinition.mStore,
+        *wrongDefinition.mStore.get<ESM4::Spell>().search(key)));
+}
+
+TEST(OblivionMagicContent, CharmBelongsOnlyToRecipientAndCasterAndRejectsPartialOrExpiredOwnership)
+{
+    ESM4::RuntimeState state;
+    ESM4::RuntimeReferenceState reference;
+    reference.mKey = ESM::FormKey::content("oblivion.esm", 0x4bb63);
+    reference.mCustomState["unrelated"] = std::int64_t(7);
+    const MWWorld::OblivionCharm effect{ESM::FormKey::content("oblivion.esm", 0x47add),
+        ESM::FormKey::dynamic("player", 1), 30, 10};
+    MWWorld::writeOblivionCharm(reference, effect);
+    EXPECT_EQ(MWWorld::readOblivionCharm(reference), effect);
+    state.mReferences.push_back(reference);
+    EXPECT_EQ(MWWorld::oblivionCharmModifier(state, reference.mKey, effect.mCaster), 30);
+    EXPECT_EQ(MWWorld::oblivionCharmModifier(state, reference.mKey, reference.mKey), 0);
+    EXPECT_EQ(MWWorld::oblivionCharmModifier(state, effect.mCaster, reference.mKey), 0);
+    for (const auto* key : {"native.charm.spell", "native.charm.caster", "native.charm.magnitude", "native.charm.elapsed"})
+    {
+        auto partial = reference;
+        partial.mCustomState.erase(key);
+        EXPECT_THROW(MWWorld::readOblivionCharm(partial), std::invalid_argument);
+    }
+    auto unknown = reference;
+    unknown.mCustomState["native.charm.unknown"] = 0.;
+    EXPECT_THROW(MWWorld::readOblivionCharm(unknown), std::invalid_argument);
+    for (float elapsed : {-1.f, 30.f, std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto invalid = effect;
+        invalid.mElapsed = elapsed;
+        const auto before = reference;
+        EXPECT_THROW(MWWorld::writeOblivionCharm(reference, invalid), std::invalid_argument);
+        EXPECT_EQ(reference, before);
+    }
+    MWWorld::writeOblivionCharm(reference, std::nullopt);
+    EXPECT_FALSE(MWWorld::readOblivionCharm(reference));
+    EXPECT_EQ(reference.mCustomState.size(), 1u);
+}

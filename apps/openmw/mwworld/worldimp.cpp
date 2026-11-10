@@ -2403,6 +2403,7 @@ namespace MWWorld
                 captured.insert(reference.mKey);
             for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
                 if ((reference.mKey.isDynamic() || reference.mCustomState.contains("native.fire.spell")
+                        || reference.mCustomState.contains("native.charm.spell")
                         || reference.mCustomState.contains("native.package.lock_projection_pending")
                         || reference.mCustomState.contains("native.levelled_actor.level"))
                     && !captured.contains(reference.mKey))
@@ -2824,9 +2825,12 @@ namespace MWWorld
         for (const auto& record : mStore.get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(mStore.get<ESM4::GameSetting>().search(record.mId));
+        const auto charm = mOblivionRuntimeState ? oblivionCharmModifier(*mOblivionRuntimeState, source, destination) : 0;
+        const auto totalModifier = std::clamp<std::int64_t>(std::int64_t(modifierOverride.value_or(modifier)) + charm,
+            std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max());
         const ESM4::DispositionInput input{integerValue(source, 6), integerValue(destination, 6), integerValue(source, 36),
             reputation ? reputation->mFame : 0, reputation ? reputation->mInfamy : 0, bounty,
-            raceReaction, factionReaction, rank, *drawn == ESM4::ActorDrawState::Weapon, false, modifierOverride.value_or(modifier),
+            raceReaction, factionReaction, rank, *drawn == ESM4::ActorDrawState::Weapon, false, static_cast<std::int32_t>(totalModifier),
             sourceCreature != nullptr};
         return std::clamp(ESM4::dispositionScore(input, ESM4::buildDispositionSettings(settings),
             ESM4::ActorValueConversionMode::Sse), 0, 100);
@@ -11576,6 +11580,12 @@ namespace MWWorld
                 updates.push_back(std::move(update));
         }
         mOblivionCombat->restoreResourceBatch(*mPlayer, updates, projections, settings, nextManagerTime);
+        // Each admitted Charm lasts30 simulation seconds; a completed ordinary
+        // hour expires it without touching permanent script disposition changes.
+        if (mOblivionRuntimeState)
+            for (auto& reference : mOblivionRuntimeState->mReferences)
+                std::erase_if(reference.mCustomState,
+                    [](const auto& entry) { return entry.first.starts_with("native.charm."); });
         advanceTime(1);
         if (mOblivionAi && MWBase::Environment::get().getMechanicsManager()->isAIActive())
             mOblivionAi->fastForward(1.f);

@@ -29,6 +29,8 @@
 #include <components/esm4/loadspel.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
+#include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadacti.hpp>
@@ -248,7 +250,7 @@ namespace MWWorld
         }
         result.mDescription = description.str();
         if (knownCost && std::isfinite(total)) result.mCost = total;
-        if (supportsOblivionStarOfWest(store, spell)) result.mCost = 0.f;
+        if (supportsOblivionStarOfWest(store, spell) || resolveOblivionVoiceOfEmperor(store, spell)) result.mCost = 0.f;
         return result;
     }
 
@@ -631,6 +633,116 @@ namespace MWWorld
             static_cast<std::uint8_t>(resistance), *speed, std::move(*model)};
     }
 
+    std::optional<OblivionTargetDamage> resolveOblivionVoiceOfEmperor(
+        const ESMStore& store, const ESM4::Spell& spell)
+    {
+        if (spell.mFormKey != ESM::FormKey::content("Oblivion.esm", 0x47add)
+            || (spell.mFlags & ESM4::Rec_Deleted) || !spell.mData
+            || spell.mData->mType != 2 || spell.mData->mCost != 0
+            || spell.mData->mFlags != 1 || spell.mEffects.size() != 1) return {};
+        if (const auto* winner = store.getFormKeyIndex().winner(spell.mFormKey);
+            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL)) return {};
+        const auto& effect = spell.mEffects.front();
+        if (effect.mId != ESM::fourCC("CHRM") || effect.mMagnitude != 30 || effect.mDuration != 30
+            || effect.mRange != 2 || effect.mArea || effect.mActorValue != 6 || effect.mScriptEffect) return {};
+        const auto* definition = ingredientEffectDefinition(store, effect.mId);
+        if (!definition || !definition->mData) return {};
+        const auto& data = *definition->mData;
+        if (data.mFlags != 0x01000c62 || data.mAssociatedData != 6
+            || data.mSchool != 3 || data.mResistanceActorValue != 64) return {};
+        std::optional<float> speed;
+        std::optional<std::string> model;
+        for (const auto& sub : definition->mSubRecords)
+        {
+            if (sub.mType == ESM::fourCC("DATA"))
+            {
+                if (speed || sub.mData.size() < 32) return {};
+                const auto& bytes = sub.mData;
+                const std::uint32_t bits = std::uint32_t(bytes[28]) | (std::uint32_t(bytes[29]) << 8)
+                    | (std::uint32_t(bytes[30]) << 16) | (std::uint32_t(bytes[31]) << 24);
+                speed = std::bit_cast<float>(bits);
+            }
+            else if (sub.mType == ESM::fourCC("MODL"))
+            {
+                if (model || sub.mData.size() < 2 || sub.mData.back() != 0) return {};
+                model.emplace(reinterpret_cast<const char*>(sub.mData.data()), sub.mData.size() - 1);
+                if (model->find('\0') != std::string::npos) return {};
+            }
+        }
+        if (!speed || !std::isfinite(*speed) || *speed <= 0 || !model || model->empty()) return {};
+        return OblivionTargetDamage{effect.mId, 30.f, 64, *speed, std::move(*model)};
+    }
+
+    namespace
+    {
+        constexpr std::array<std::string_view, 4> sCharmFields{
+            "native.charm.spell", "native.charm.caster", "native.charm.magnitude", "native.charm.elapsed"};
+        void validateCharm(const OblivionCharm& effect)
+        {
+            if (effect.mSpell != ESM::FormKey::content("Oblivion.esm", 0x47add)
+                || effect.mCaster != ESM::FormKey::dynamic("player", 1)
+                || !std::isfinite(effect.mMagnitude) || effect.mMagnitude <= 0 || effect.mMagnitude > 30
+                || !std::isfinite(effect.mElapsed) || effect.mElapsed < 0 || effect.mElapsed >= 30)
+                throw std::invalid_argument("invalid native Charm ownership or timer");
+        }
+    }
+
+    std::optional<OblivionCharm> readOblivionCharm(const ESM4::RuntimeReferenceState& reference)
+    {
+        const auto& values = reference.mCustomState;
+        const auto count = std::count_if(values.begin(), values.end(),
+            [](const auto& entry) { return entry.first.starts_with("native.charm."); });
+        if (!count) return {};
+        if (static_cast<std::size_t>(count) != sCharmFields.size()
+            || std::any_of(sCharmFields.begin(), sCharmFields.end(), [&](auto key) { return !values.contains(key); }))
+            throw std::invalid_argument("incomplete native Charm ownership");
+        const auto key = [&](std::size_t i) {
+            const auto* text = std::get_if<std::string>(&values.find(sCharmFields[i])->second);
+            if (!text) throw std::invalid_argument("invalid native Charm identity");
+            const auto result = ESM::FormKey::deserialize(*text);
+            if (result.serialize() != *text) throw std::invalid_argument("noncanonical native Charm identity");
+            return result;
+        };
+        const auto number = [&](std::size_t i) {
+            const auto& value = values.find(sCharmFields[i])->second;
+            const auto* real = std::get_if<double>(&value);
+            const auto* integer = std::get_if<std::int64_t>(&value);
+            if (!real && !integer) throw std::invalid_argument("invalid native Charm number");
+            const double result = real ? *real : double(*integer);
+            if (!std::isfinite(result) || result < 0 || result > 30)
+                throw std::invalid_argument("invalid native Charm number range");
+            return static_cast<float>(result);
+        };
+        OblivionCharm result{key(0), key(1), number(2), number(3)};
+        validateCharm(result);
+        return result;
+    }
+
+    void writeOblivionCharm(ESM4::RuntimeReferenceState& reference, const std::optional<OblivionCharm>& effect)
+    {
+        if (effect) validateCharm(*effect);
+        auto values = reference.mCustomState;
+        std::erase_if(values, [](const auto& entry) { return entry.first.starts_with("native.charm."); });
+        if (effect)
+        {
+            values.emplace(sCharmFields[0], effect->mSpell.serialize());
+            values.emplace(sCharmFields[1], effect->mCaster.serialize());
+            values.emplace(sCharmFields[2], double(effect->mMagnitude));
+            values.emplace(sCharmFields[3], double(effect->mElapsed));
+        }
+        reference.mCustomState.swap(values);
+    }
+
+    std::int32_t oblivionCharmModifier(const ESM4::RuntimeState& state,
+        const ESM::FormKey& actor, const ESM::FormKey& viewer)
+    {
+        const auto owner = std::find_if(state.mReferences.begin(), state.mReferences.end(),
+            [&](const auto& ref) { return ref.mKey == actor; });
+        if (owner == state.mReferences.end()) return 0;
+        const auto effect = readOblivionCharm(*owner);
+        return effect && effect->mCaster == viewer ? static_cast<std::int32_t>(effect->mMagnitude) : 0;
+    }
+
     std::optional<OblivionTargetDamage> resolveOblivionTargetSpellDamage(
         const ESMStore& store, const ESM4::Spell& spell)
     {
@@ -957,7 +1069,8 @@ namespace MWWorld
         const auto* cast = mOblivionCombat->findSpellCast(caster);
         const auto* spell = mStore.get<ESM4::Spell>().search(spellKey);
         const auto* scroll = spell ? nullptr : mStore.get<ESM4::Book>().search(spellKey);
-        const auto damage = spell ? resolveOblivionTargetSpellDamage(mStore, *spell)
+        const auto charm = spell ? resolveOblivionVoiceOfEmperor(mStore, *spell) : std::nullopt;
+        const auto damage = charm ? charm : spell ? resolveOblivionTargetSpellDamage(mStore, *spell)
             : scroll ? resolveOblivionScrollDamage(mStore, *scroll) : std::nullopt;
         if (!cast || cast->mSpell != spellKey || cast->mReleased || !damage
             || !std::isfinite(power) || power < 0 || actor.isEmpty() || !actor.isInCell()
@@ -967,6 +1080,16 @@ namespace MWWorld
         const auto* current = mOblivionCombat->findActorValues(caster);
         if (!current) return false;
         auto values = *current;
+        const auto time = getTimeStamp();
+        const double gameHours = double(time.getDay()) * 24. + time.getHour();
+        if (charm)
+        {
+            if (cast->mCost != 0 || !mOblivionCombat->canUsePlayerPower(spellKey, gameHours)) return false;
+            const auto use = std::find_if(values.mUsedPowers.begin(), values.mUsedPowers.end(),
+                [&](const auto& entry) { return entry.mSpell == spellKey; });
+            if (use == values.mUsedPowers.end()) values.mUsedPowers.push_back({spellKey, gameHours});
+            else use->mUsedAt = gameHours;
+        }
         if (scroll && cast->mCost != 0) return false;
         if (!scroll && ESM4::composeActorValue(values.mValues[9], values.mOwner, values.mProcess) < cast->mCost)
             return false;
@@ -1014,6 +1137,24 @@ namespace MWWorld
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || !mOblivionCombat
             || !mPhysics || !mWorldScene || !mProjectileManager) return;
+        if (!std::isfinite(duration) || duration < 0) throw std::invalid_argument("invalid native magic frame");
+        if (duration > 0)
+            for (auto& reference : mOblivionRuntimeState->mReferences)
+                if (auto effect = readOblivionCharm(reference))
+                {
+                    const float elapsed = static_cast<float>(std::min(30., double(effect->mElapsed) + duration));
+                    const auto* life = mOblivionCombat->findActorLife(reference.mKey);
+                    if (elapsed >= 30 || (life && life->mPhase != ESM4::ActorLifePhase::Alive))
+                    {
+                        writeOblivionCharm(reference, std::nullopt);
+                        Log(Debug::Info) << "M16 Charm expired: target=" << reference.mKey.serialize();
+                    }
+                    else
+                    {
+                        effect->mElapsed = elapsed;
+                        writeOblivionCharm(reference, effect);
+                    }
+                }
         auto& projectiles = mOblivionRuntimeState->mNativeMagicProjectiles;
         if (projectiles.empty() || duration == 0)
         {
@@ -1040,6 +1181,7 @@ namespace MWWorld
             {
                 const auto serial = it->first;
                 float appliedDamage = 0;
+                std::optional<std::pair<ESM::FormKey, float>> appliedCharm;
                 const auto& target = hit.mHitObject;
                 if (!target.isEmpty() && target.getClass().isActor()
                     && !target.getClass().getCreatureStats(target).isDead())
@@ -1049,27 +1191,59 @@ namespace MWWorld
                         : mOblivionCombat->getNonPlayerValue(target, av); };
                     if (value(52) != 0 || value(53) != 0)
                         throw std::runtime_error("native projectile absorption and reflection are not implemented");
-                    const auto resistance = projectile.mEffectCode == ESM::fourCC("SHDG") ? 68 : 61;
-                    float damage = projectile.mMagnitude * std::max(0.f, 1.f - value(resistance) / 100.f)
-                        * std::max(0.f, 1.f - value(64) / 100.f);
-                    const auto role = targetPlayer ? ESM4::PlayerDamageRole::Victim
-                        : caster == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
-                    damage = ESM4::difficultyDamage(damage,
-                        MWMechanics::oblivionNormalizedDifficulty(Settings::game().mDifficulty),
-                        ESM4::buildDifficultyDamageMultiplier(settings), role);
-                    auto adoption = mOblivionCombat->guardLifeAdoption(target, targetPlayer ? mPlayer.get() : nullptr);
-                    adoptOblivionActorLife(target);
-                    const auto recovery = resolveOblivionEssentialRecoverySettings(mStore);
-                    if (targetPlayer) mOblivionCombat->changePlayerHealth(*mPlayer, -damage, projectile.mCaster,
-                        target.getClass().isEssential(target), recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
-                    else mOblivionCombat->changeNonPlayerHealth(target, -damage, projectile.mCaster,
-                        target.getClass().isEssential(target), recovery);
-                    adoption.commit();
-                    appliedDamage = damage;
+                    if (projectile.mEffectCode == ESM::fourCC("CHRM"))
+                    {
+                        const float magnitude = projectile.mMagnitude * std::max(0.f, 1.f - value(64) / 100.f);
+                        if (magnitude > 0)
+                        {
+                            if (projectile.mCaster != ESM::FormKey::dynamic("player", 1) || targetPlayer)
+                                throw std::runtime_error("unsupported native Charm caster or recipient");
+                            auto references = mOblivionRuntimeState->mReferences;
+                            const auto key = target.getCellRef().getFormKey();
+                            auto owner = std::find_if(references.begin(), references.end(),
+                                [&](const auto& ref) { return ref.mKey == key; });
+                            if (owner == references.end())
+                            {
+                                auto live = captureOblivionRuntimeState();
+                                const auto found = std::find_if(live.mReferences.begin(), live.mReferences.end(),
+                                    [&](const auto& ref) { return ref.mKey == key; });
+                                if (found == live.mReferences.end()) throw std::runtime_error("Charm recipient not captured");
+                                references.push_back(*found);
+                                owner = std::prev(references.end());
+                            }
+                            writeOblivionCharm(*owner, OblivionCharm{projectile.mSource, projectile.mCaster, magnitude, 0});
+                            std::sort(references.begin(), references.end(), [](const auto& a, const auto& b) { return a.mKey < b.mKey; });
+                            appliedCharm.emplace(key, magnitude);
+                            mOblivionRuntimeState->mReferences.swap(references);
+                        }
+                    }
+                    else
+                    {
+                        const auto resistance = projectile.mEffectCode == ESM::fourCC("SHDG") ? 68 : 61;
+                        float damage = projectile.mMagnitude * std::max(0.f, 1.f - value(resistance) / 100.f)
+                            * std::max(0.f, 1.f - value(64) / 100.f);
+                        const auto role = targetPlayer ? ESM4::PlayerDamageRole::Victim
+                            : caster == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
+                        damage = ESM4::difficultyDamage(damage,
+                            MWMechanics::oblivionNormalizedDifficulty(Settings::game().mDifficulty),
+                            ESM4::buildDifficultyDamageMultiplier(settings), role);
+                        auto adoption = mOblivionCombat->guardLifeAdoption(target, targetPlayer ? mPlayer.get() : nullptr);
+                        adoptOblivionActorLife(target);
+                        const auto recovery = resolveOblivionEssentialRecoverySettings(mStore);
+                        if (targetPlayer) mOblivionCombat->changePlayerHealth(*mPlayer, -damage, projectile.mCaster,
+                            target.getClass().isEssential(target), recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
+                        else mOblivionCombat->changeNonPlayerHealth(target, -damage, projectile.mCaster,
+                            target.getClass().isEssential(target), recovery);
+                        adoption.commit();
+                        appliedDamage = damage;
+                    }
                 }
                 // Removal cannot throw after Health/death publication, so the
                 // same contact is never retried even if a later frame fails.
                 it = projectiles.erase(it);
+                if (appliedCharm)
+                    Log(Debug::Info) << "M16 Charm applied: target=" << appliedCharm->first.serialize()
+                        << " caster=dynamic:player:0000000000000001 magnitude=" << appliedCharm->second << " duration=30";
                 Log(Debug::Info) << "M16 magic projectile impact: id=" << serial
                     << " actor=" << (!target.isEmpty() && target.getClass().isActor()) << " damage=" << appliedDamage;
             }
@@ -1081,11 +1255,23 @@ namespace MWWorld
 
     void World::validateOblivionMagicProjectiles(const ESM4::RuntimeState& state) const
     {
+        for (const auto& reference : state.mReferences)
+            if (const auto effect = readOblivionCharm(reference))
+            {
+                const auto* spell = mStore.get<ESM4::Spell>().search(effect->mSpell);
+                const auto actor = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                    [&](const auto& values) { return values.mActor == reference.mKey; });
+                if (!spell || !resolveOblivionVoiceOfEmperor(mStore, *spell)
+                    || actor == state.mNativeActorValues.end() || actor->mBase != reference.mBase
+                    || (!mStore.get<ESM4::Npc>().search(reference.mBase)
+                        && !mStore.get<ESM4::Creature>().search(reference.mBase)))
+                    throw std::invalid_argument("saved native Charm recipient or source no longer resolves");
+            }
         for (const auto& actor : state.mNativeActorValues)
             for (const auto& use : actor.mUsedPowers)
             {
                 const auto* spell = mStore.get<ESM4::Spell>().search(use.mSpell);
-                if (!spell || !supportsOblivionStarOfWest(mStore, *spell))
+                if (!spell || (!supportsOblivionStarOfWest(mStore, *spell) && !resolveOblivionVoiceOfEmperor(mStore, *spell)))
                     throw std::invalid_argument("saved native greater-power source no longer resolves");
             }
         for (const auto& [actor, cast] : state.mNativeSpellCasts)
@@ -1094,7 +1280,7 @@ namespace MWWorld
                 spell && spell->mData && spell->mData->mType == 2)
             {
                 if (actor != ESM::FormKey::dynamic("player", 1) || cast.mCost != 0
-                    || !supportsOblivionStarOfWest(mStore, *spell))
+                    || (!supportsOblivionStarOfWest(mStore, *spell) && !resolveOblivionVoiceOfEmperor(mStore, *spell)))
                     throw std::invalid_argument("saved native greater-power cast no longer resolves");
                 if (cast.mReleased)
                 {
@@ -1118,13 +1304,27 @@ namespace MWWorld
         {
             std::optional<OblivionTargetDamage> damage;
             if (const auto* spell = mStore.get<ESM4::Spell>().search(projectile.mSource))
-                damage = resolveOblivionTargetSpellDamage(mStore, *spell);
+                {
+                damage = resolveOblivionVoiceOfEmperor(mStore, *spell);
+                if (!damage) damage = resolveOblivionTargetSpellDamage(mStore, *spell);
+            }
             else if (const auto* scroll = mStore.get<ESM4::Book>().search(projectile.mSource))
                 damage = resolveOblivionScrollDamage(mStore, *scroll);
             else if (const auto* enchantment = mStore.get<ESM4::Enchantment>().search(projectile.mSource);
                 enchantment && !(enchantment->mFlags & ESM4::Rec_Deleted)
                 && enchantment->mData && enchantment->mData->mType == 1)
                 damage = resolveTargetDamage(mStore, enchantment->mEffects);
+            if (projectile.mEffectCode == ESM::fourCC("CHRM"))
+            {
+                const auto playerKey = ESM::FormKey::dynamic("player", 1);
+                const auto values = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                    [&](const auto& actor) { return actor.mActor == playerKey; });
+                if (projectile.mCaster != playerKey || projectile.mMagnitude != 30
+                    || values == state.mNativeActorValues.end()
+                    || std::none_of(values->mUsedPowers.begin(), values->mUsedPowers.end(),
+                        [&](const auto& use) { return use.mSpell == projectile.mSource; }))
+                    throw std::invalid_argument("saved native Charm flight has no Player daily-use owner");
+            }
             const auto* cell = mStore.get<ESM4::Cell>().search(projectile.mCell);
             if (!damage || !cell || (cell->mFlags & ESM4::Rec_Deleted)
                 || damage->mEffectCode != projectile.mEffectCode || damage->mModel != projectile.mModel)

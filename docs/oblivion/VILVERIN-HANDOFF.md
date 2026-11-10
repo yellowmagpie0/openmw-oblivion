@@ -3,13 +3,32 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The full expedition and full milestones remain open.
 
-Current chunk: original Voice of the Emperor047add Target Charm on living
-Canosel bandit04bb63. [Preflight plan](VOICE-EMPEROR-CONTRACT.json). Actual
-owned power is selectable but casting admission rejects its unsupported effect.
-Ordinary route from the healthy camp crosses the coffin/pressure plate/secret
-wall successfully; live-target approach and timed Charm implementation are next.
+Latest closed chunk: original Voice of the Emperor047add Target Charm on
+Canosel Skeleton04bb63/base084b1a. [Contract](VOICE-EMPEROR-CONTRACT.json),
+[record/rule provenance](VOICE-EMPEROR-ORACLE.json),
+[receipt](VOICE-EMPEROR-VERIFICATION.json). Winning CREA audit corrected an
+initial human-bandit assumption. Ordinary swimming resolved the flooded route;
+Player remains at110 Health.
 
-Latest closed chunk: original unowned Canosel bedroll06bf97/base01d5bf default
+Actual hit raises disposition20→50. Fresh-process load preserves the recipient/
+caster timer and rejects daily reuse; one expiration returns20. Three normal
+and three instrumented cases pass final wire/live/timer/state audits. Both broad
+gates pass3,288 components/2,273 engine with identical frozen source70aee55c;
+609 Python pass. Unit leak checks on; rendered leak checks off. Unchanged schema97.
+Amulet locals/identity and earlier bandit kill credit persist. Caster-hit
+dispelling/general Charm and full M16 remain open.
+
+Current genuine continuation:
+`build/oblivion-compat/voice-emperor/normal-expire-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA-256 `4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41`.
+Player110 Health/80 Magicka/170 Fatigue at(-2664,-10358,-2662);19 Iron Arrows,
+two spare torches (earlier lit torch consumed ordinary fuel on the route).
+Skeleton remains alive20 Health; Voice is spent for the day, Charm expired.
+Next action: select and baseline another observed real-content gap, prioritizing
+remaining acceptance requirements such as physical-arrow recovery.
+
+Earlier closed bedroll chunk:
+ original unowned Canosel bedroll06bf97/base01d5bf default
 activation. [Contract](BEDROLL-REST-CONTRACT.json),
 [record/backend provenance](BEDROLL-REST-ORACLE.json),
 [receipt](BEDROLL-REST-VERIFICATION.json). A native sleep-marked furniture action

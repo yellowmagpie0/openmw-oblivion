@@ -32,7 +32,8 @@ namespace ESM4
             || ESM::FormKey::deserialize(mCell.serialize()) != mCell
             || mModel.empty() || mModel.find('\0') != std::string::npos)
             throw std::invalid_argument("invalid native magic projectile identity or model");
-        if (mEffectCode != ESM::fourCC("SHDG") && mEffectCode != ESM::fourCC("FIDG"))
+        if (mEffectCode != ESM::fourCC("SHDG") && mEffectCode != ESM::fourCC("FIDG")
+            && mEffectCode != ESM::fourCC("CHRM"))
             throw std::invalid_argument("unsupported native projectile effect");
         for (float value : mPosition)
             if (!std::isfinite(value)) throw std::invalid_argument("nonfinite magic projectile position");

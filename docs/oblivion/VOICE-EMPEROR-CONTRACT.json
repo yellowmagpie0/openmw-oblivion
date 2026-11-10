@@ -1,5 +1,5 @@
 {
-  "status": "preflight; implementation and actual-target acceptance pending",
+  "status": "accepted bounded original Player Voice of the Emperor application/reload/expiration; full M16 and expedition remain open",
   "milestone": "M16 real Player Target Charm power",
   "content": {
     "spell": "content:oblivion.esm:047add",
@@ -9,7 +9,10 @@
     "duration_seconds": 30,
     "range": "Target",
     "target": "content:oblivion.esm:04bb63",
-    "target_health": 20
+    "target_health": 20,
+    "target_name": "Skeleton",
+    "target_base": "content:oblivion.esm:084b1a",
+    "target_source_list": "content:oblivion.esm:084b22"
   },
   "input": {
     "path": "build/oblivion-compat/next-content/normal-healthy-canosel-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
@@ -18,18 +21,45 @@
   },
   "baseline": {
     "path": "build/oblivion-compat/next-content/normal-voice-cast-baseline-01",
-    "observed": "Original owned power visible/selectable; native casting admission currently supports only Star of the West among greater powers and rejects Charm. No projectile or daily use is published."
+    "observed": "Original owned power visible/selectable; pre-change cast admitted no projectile or daily use. Verified actual recipient is CREA Skeleton084b1a, correcting an initial human-bandit assumption."
   },
   "plan": [
     "Audit original CHRM definition and native disposition effect contribution independently; retain original winning identities.",
     "Admit original single-effect Voice of the Emperor; authored Target release publishes one projectile and daily-use ownership atomically.",
     "Actual impact applies target-owned, Player-viewer Charm contribution with saved remaining simulation duration; no Personality rewrite or script ModDisposition overwrite. Reuse existing saved custom-state envelope.",
-    "Ordinary controls approach living bandit04bb63 and cast. Verify projectile hit, disposition contribution, unchanged Health/inventory, immediate daily rejection, active-effect save/restart and eventual expiration.",
+    "Ordinary controls approach living Skeleton04bb63 and cast. Verify projectile hit, disposition contribution, unchanged Health/inventory, immediate daily rejection, active-effect save/restart and eventual expiration.",
     "Focused development checks followed by appropriate normal/instrumented gates and actual-content cases; commit bounded result and continue."
   ],
   "outside_scope": [
     "No combat cancellation promise: Charm is not Calm.",
     "General Charm spells, alternate casters, area effects, absorption/reflection and full M16 remain open.",
-    "Already-working coffin jump, pressure plate and wall scripts are route evidence, not new implementation."
-  ]
+    "Already-working coffin jump, pressure plate and wall scripts are route evidence, not new implementation.",
+    "Caster-hit dispelling of Charm and full hostile-effect lifecycle remain open; the selected course applies, reloads and expires one original power without a subsequent Player attack."
+  ],
+  "target_correction": "Original placed04bb63 uses a levelled source and resolves in this genuine save to CREA084b1a CreatureSkeleton1Archer, not the initially assumed human bandit. Runtime target identity and disposition response must be verified before acceptance.",
+  "real_target_input": {
+    "path": "build/oblivion-compat/next-content/normal-voice-skeleton-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "31a4573c7e4c369a33a19d16b5c3e3c94c536b8887ee77297f064614bdae62bb",
+    "provenance": "Unmodified healthy bedroll continuation, ordinary coffin jump/plate/wall, actual flooded-passage swimming and final dry approach. Source values untouched.",
+    "distance": 154.78497314453,
+    "player_health": 110,
+    "target_health": 20,
+    "disposition_before": 20
+  },
+  "implementation": {
+    "envelope": "Unchanged97; strict native.charm.* reference fields retain power/caster/magnitude/elapsed and preserve unrelated fields.",
+    "release": "Original Target cast publishes a CHRM projectile and Player daily use together. Hit publication consumes projectile once and stores recipient-owned Charm.",
+    "disposition": "Read-time recipient/viewer contribution; no Personality or permanent script modifier write.",
+    "lifecycle": "Simulation-frame expiration, dead-recipient cleanup and ordinary completed-hour expiration. Incoming save validates concrete recipient AV authority and winning power; saved flight requires Player daily-use ownership.",
+    "development": "22 focused engine checks and609 Python pass. Three normal and three instrumented original-content cases pass final auditor. Broad normal/instrumented3288 components and2273 engine pass with identical frozen source70aee55c. Unit leak checks on; rendered leak checks off."
+  },
+  "acceptance": {
+    "receipt": "docs/oblivion/VOICE-EMPEROR-VERIFICATION.json",
+    "normal_cases": 3,
+    "instrumented_cases": 3,
+    "disposition": "20->50 on actual hit,50 after fresh-process restore with daily rejection,20 after one expiration.",
+    "timer": "Canonical normal1.068->3.021, instrumented.996->2.490; independent clock-delta checks pass. Expiration remaining-duration checks pass in both builds.",
+    "state": "Exact wire/live/save boundary checks; unchanged Health/Personality/inventory/permanent disposition modifiers; Amulet script identity/locals, dynamic serial and earlier bandit kill credit retained.",
+    "schema": 97
+  }
 }

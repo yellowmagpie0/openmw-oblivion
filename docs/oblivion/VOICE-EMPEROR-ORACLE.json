@@ -1,0 +1,62 @@
+{
+  "status": "Independent original-content contract and reused native rule provenance; no instruction-complete Charm lifecycle parity claim",
+  "master": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "audit": "build/oblivion-compat/next-content/voice-winning-records-audit.json",
+    "audit_sha256": "9a957960d043c2d54661d271302a564a6e1d69c7924868e7015fdb8be493fb71",
+    "reader": "build/oblivion-compat/next-content/audit-voice-records.py"
+  },
+  "original_executable": {
+    "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Identity verified before local instruction inspection. Reuse existing disposition arithmetic and daily-use ownership evidence; new Charm lifecycle is bounded gameplay behavior, not a full new executable emulator comparison."
+  },
+  "winning_content": {
+    "power": "content:oblivion.esm:047add",
+    "race": "content:oblivion.esm:000907",
+    "effect_definition": "content:oblivion.esm:05e1d6",
+    "effect_code": "CHRM",
+    "effect_flags": "0x01000c62",
+    "school": 3,
+    "resistance_actor_value": 64,
+    "associated_data": 6,
+    "magnitude": 30,
+    "duration_seconds": 30,
+    "range": 2,
+    "spell_type": 2,
+    "cost": 0,
+    "model": "MagicEffects\\illusion.NIF",
+    "speed_factor": 1,
+    "target_reference": "content:oblivion.esm:04bb63",
+    "target_source_list": "content:oblivion.esm:084b22",
+    "actual_target_base": "content:oblivion.esm:084b1a",
+    "actual_target_editor_id": "CreatureSkeleton1Archer",
+    "actual_target_type": "CREA"
+  },
+  "reused_rules": [
+    "docs/oblivion/M15-DISPOSITION-SCORE-VERIFICATION.json",
+    "docs/oblivion/M15-DISPOSITION-RUNTIME-VERIFICATION.json",
+    "docs/oblivion/STAR-WEST-POWER-ORACLE.json"
+  ],
+  "real_input": {
+    "path": "build/oblivion-compat/next-content/normal-voice-skeleton-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "31a4573c7e4c369a33a19d16b5c3e3c94c536b8887ee77297f064614bdae62bb",
+    "provenance": "Unmodified healthy bedroll continuation, ordinary coffin jump/plate/wall, actual flooded-passage swimming and final dry approach. Source values untouched.",
+    "distance": 154.78497314453,
+    "player_health": 110,
+    "target_health": 20,
+    "disposition_before": 20
+  },
+  "expectation": {
+    "disposition_during": 50,
+    "disposition_after": 20,
+    "derivation": "Original CHRM magnitude30 contributes to this recipient toward its Player caster. Baseline20 is inside the existing native clamp; adding30 gives50. Expiration removes only the owned Charm contribution. No Personality AV or script ModDisposition write.",
+    "timing": "30 simulation seconds total across saves; menu/load/save wall time is excluded. Normal-frame tolerance covers observation intervals; the timer must never reset on load.",
+    "daily_use": "Reuse existing greater-power 24-game-hour owner. One actual release consumes the day even if flight misses; attempted reuse cannot publish another projectile."
+  },
+  "limitations": [
+    "No combat cancellation or general Charm-spell acceptance.",
+    "No exact emulation of Charm rounding/resistance across general actors; this original target has no Magic Resistance and receives30.",
+    "Caster-hit dispelling, general casters/area effects, absorption/reflection and full M16 remain open."
+  ]
+}

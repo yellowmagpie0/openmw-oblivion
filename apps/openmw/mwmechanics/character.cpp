@@ -2470,7 +2470,8 @@ namespace MWMechanics
                 const bool target = scroll ? MWWorld::resolveOblivionScrollDamage(store, *scroll).has_value()
                     : spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
                 const bool chameleon = scroll && MWWorld::resolveOblivionScrollChameleon(store, *scroll).has_value();
-                const bool greaterPower = spell && MWWorld::supportsOblivionStarOfWest(store, *spell);
+                const bool charmPower = spell && MWWorld::resolveOblivionVoiceOfEmperor(store, *spell).has_value();
+                const bool greaterPower = charmPower || (spell && MWWorld::supportsOblivionStarOfWest(store, *spell));
                 float cost = 0.f;
                 if (scroll)
                 {
@@ -2490,7 +2491,8 @@ namespace MWMechanics
                         if (!service->canUsePlayerPower(*key, double(time.getDay()) * 24. + time.getHour()))
                         {
                             windows->messageBox("You can only cast Powers once per day");
-                            Log(Debug::Info) << "M16 Star of the West rejected: reason=daily-use";
+                            if (charmPower) Log(Debug::Info) << "M16 Voice of the Emperor rejected: reason=daily-use";
+                            else Log(Debug::Info) << "M16 Star of the West rejected: reason=daily-use";
                             return false;
                         }
                     }
@@ -2510,7 +2512,8 @@ namespace MWMechanics
                         return false;
                     }
                 }
-                std::string group = greaterPower ? "casttouch" : target ? "casttarget" : "castself";
+                std::string group = (target || charmPower) ? "casttarget"
+                    : greaterPower ? "casttouch" : "castself";
                 auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
                 const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
                 if (mPtr.getClass().getCreatureStats(mPtr).getDrawState() == DrawState::Weapon
@@ -2519,7 +2522,8 @@ namespace MWMechanics
                     const auto id = MWWorld::OblivionProfileServices::nativeItemId(store, weapon->getCellRef().getRefId());
                     if (const auto* definition = store.get<ESM4::Weapon>().search(id);
                         definition && (definition->mData.type == 0 || definition->mData.type == 2))
-                        group = greaterPower ? "onehandcasttouch" : target ? "onehandcasttarget" : "onehandcastself";
+                        group = (target || charmPower) ? "onehandcasttarget"
+                            : greaterPower ? "onehandcasttouch" : "onehandcastself";
                 }
                 const auto* metadata = mAnimation->getControllerSequenceMetadata(group);
                 if (!metadata || metadata->mCycleType != 2 || metadata->mFrequency <= 0)
@@ -2547,7 +2551,8 @@ namespace MWMechanics
                 : spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
             const bool chameleon = scroll && cast.mCost == 0
                 && MWWorld::resolveOblivionScrollChameleon(store, *scroll).has_value();
-            const bool greaterPower = spell && MWWorld::supportsOblivionStarOfWest(store, *spell);
+            const bool charmPower = spell && MWWorld::resolveOblivionVoiceOfEmperor(store, *spell).has_value();
+            const bool greaterPower = charmPower || (spell && MWWorld::supportsOblivionStarOfWest(store, *spell));
             if ((!amounts && !target && !chameleon && !greaterPower) || (!scroll && !ownsSpell(cast.mSpell)))
                 throw std::invalid_argument("pending native cast no longer has an owned supported spell");
             const float nextTime = static_cast<float>(std::min(double(cast.mDuration), double(cast.mElapsed) + duration));
@@ -2580,7 +2585,8 @@ namespace MWMechanics
             MWWorld::Ptr powerTarget;
             const auto update = (target || chameleon || greaterPower)
                 ? service->advanceItemCast(actor, duration,
-                    [&] { return greaterPower ? world->releaseOblivionPlayerAbsorbFatiguePower(cast.mSpell, powerTarget)
+                    [&] { return charmPower ? world->releaseOblivionPlayerSpellProjectile(cast.mSpell, 1.f)
+                        : greaterPower ? world->releaseOblivionPlayerAbsorbFatiguePower(cast.mSpell, powerTarget)
                         : chameleon ? MWWorld::releaseOblivionScrollChameleon(*world, cast.mSpell)
                         : world->releaseOblivionPlayerSpellProjectile(cast.mSpell, scroll ? 1.f : power); })
                 : service->advanceRestorationCast(mPtr, &world->getPlayer(), duration, magnitudes,
