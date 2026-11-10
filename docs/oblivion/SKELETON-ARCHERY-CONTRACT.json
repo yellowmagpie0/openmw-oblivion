@@ -1,0 +1,35 @@
+{
+  "status": "preflight: observed original archer fails to select/fire owned bow; implementation pending",
+  "milestone": "M15 S5/S7 bounded original Creature archery; full bow tactics and expedition remain open",
+  "content": {
+    "reference": "content:oblivion.esm:04bb63",
+    "creature": "content:oblivion.esm:084b1a",
+    "spawn_list": "content:oblivion.esm:084b22",
+    "bow": "content:oblivion.esm:025231",
+    "ammunition": "content:oblivion.esm:017829",
+    "style": "content:oblivion.esm:014f89",
+    "cell": "content:oblivion.esm:0463f5"
+  },
+  "input": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "fa710f96c3115e8f141f6fbd69ef3d8455a2d01acd926a1d1f8554e229e24002",
+    "state": "Genuine collected-arrow continuation: Player110 Health,19 arrows, original Skeleton alive20 with healthy112 Iron Bow and6 owned Iron Arrows; no grants or forged movement/stats."
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/next-content/normal-skeleton-response-baseline-01",
+    "inspection_sha256": "c7fef7ec3464cfd52ba3394f39ce41bc048a59469692928e0923f18802be5f9c",
+    "finding": "One actual Player arrow provokes original Skeleton20->18.096031, then20 simulated seconds. Skeleton approaches to59.6 units, attempts handtohand animations, never equips original bow/ammo and causes no Player Health damage. Live save retains all6 arrows and unchanged112 bow condition."
+  },
+  "plan": [
+    "Admit the actual owned ordinary bow/ammunition into native directed combat selection for the weapon-capable Creature; keep authored ranged preference and a bounded visible-target shooting policy.",
+    "Run actual authored bowattack attachment/release/end for a nonplayer owner using existing prepared bow resources; preserve native NPC ammunition as independently verified, and preserve Creature fatigue-expenditure rules.",
+    "Publish an independent projectile carrying the original Creature reference as caster. Reuse physical collision, native armor/block/difficulty/Health publication and saved schema97 when sufficient. Preserve existing Player arrow recovery unchanged.",
+    "Exercise ordinary Player provocation, actual Skeleton shot/Player damage, save during owned draw or flight where practical, and fresh-process continuation without duplicated shots/resources. Audit exact wire/live/save ownership and prior retained state.",
+    "Focused checks while developing; appropriate broad normal/instrumented integration and actual-content gates; local implementation/receipt commits, then next observed original content gap."
+  ],
+  "outside_scope": [
+    "This live level1 Skeleton, visible Player and healthy ordinary bow/arrow profile are bounded acceptance, not full NPC ranged tactics, evasive movement, leading or all creature/model/style combinations.",
+    "Broken NPC bow drop, NPC static-hit recovery, creature-hit recovery, dead-caster/dead-target matrices and full S5 remain open unless needed by this course.",
+    "Native NPC ammunition is preserved, not debited; source Player provocation still spends exactly1. Approximate tactical spacing/timing must be described honestly; ownership and restart behavior remain strict."
+  ]
+}

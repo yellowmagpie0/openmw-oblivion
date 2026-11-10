@@ -1,0 +1,24 @@
+{
+  "status": "Original winning-record audit and reused original bow/ammunition rules; actual baseline above",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "audit": {
+    "path": "build/oblivion-compat/next-content/skeleton-archer-winning-records-audit.json",
+    "sha256": "9036b4fe8a7bf19624f6f78e291d3a73c7e5339f8db8bb4273c6d46b8be81670",
+    "reader": "build/oblivion-compat/next-content/audit-skeleton-archer-records.py"
+  },
+  "definitions": {
+    "creature": "CreatureSkeleton1Archer084b1a, flags0x1244 including WeaponAndShield4; actual AIDT aggression100/confidence75, styleDefaultSkeletonRanged014f89.",
+    "bow": "Actual LL0CrWeapSkeletonArcherBow10003fae4 level1 entry025231 WeapIronBow. Original bow type5, health112, damage8, speed1; actual retained inventory has1, unequipped.",
+    "ammo": "Original CREA CNTO includes1 Arrow1Iron017829 plus LL0CrWeapSkeletonArcherArrows10003fae5. Actual retained resolved inventory has6, unequipped; preservation is checked against this real baseline."
+  },
+  "reused_rules": {
+    "provenance": "docs/oblivion/M15-NATIVE-RULE-PROVENANCE.md",
+    "ammunition": "S5 checkpoint270: original5FD4A4..5FD4B0 dispatches NPC/Creature ammunition removal to RET60D0A0, versus Player662590.192 independent original cases; never debit NPC ammunition.",
+    "ammunition_evidence": "build/oblivion-compat/m15/S5/native-arrow-ammo-dispatch-oracle-01",
+    "launch": "Existing independently verified ordinary bow launch damage/speed/gravity and NPC full draw. Reuse live AV/condition sampler; extend Creature admission without generating expected values from production helpers.",
+    "fatigue": "Existing original canSpendFatigue distinguishes Creature constructed expenditure flag from Player/NPC; preserve it when admitting Creature bow release.",
+    "fidelity": "Reasonable damage/tactical timing at this actual range; exact original tactical/RNG replay is not an acceptance requirement. Saved identity, release and Health/resource ownership are strict."
+  },
+  "baseline_inspection": "build/oblivion-compat/next-content/normal-skeleton-response-baseline-01/baseline-inspection.json"
+}

@@ -30,9 +30,14 @@ Native-reference2 is taken/count-zero; next dynamic serial3/arrow serial7.
 Skeleton04bb63/base084b1a remains alive20 Health. Both Imperial powers are spent;
 Voice Charm expired, disposition20. Use this collected branch, not expiry branch.
 
-Current chunk / next action: select and baseline another actual-content failure
-from this continuation, prioritizing an acceptance gap; then record a bounded
-contract before implementation. The autonomous content iteration remains active.
+Current chunk: [original Skeleton archery](SKELETON-ARCHERY-CONTRACT.json),
+[winning-record/rule provenance](SKELETON-ARCHERY-ORACLE.json). Actual baseline
+`next-content/normal-skeleton-response-baseline-01`: one ordinary Player arrow
+provokes Skeleton20→18.096; it rushes to59.6 units and attempts handtohand, but
+keeps the original Iron Bow and6 arrows unequipped and never damages Player
+over20 simulation seconds. Next: owned bow selection, authored nonplayer release,
+physical Player contact and strict fresh-process ownership. Full tactics and
+the autonomous content iteration remain open.
 
 Earlier accepted slices and reusable evidence:
 
