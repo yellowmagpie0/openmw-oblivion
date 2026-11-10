@@ -1,0 +1,43 @@
+{
+  "status": "active bounded Player bow integration; real equipped/readied baseline cannot release",
+  "milestone": "M15 S5 basic Player bow shot",
+  "content": {
+    "bow": "content:oblivion.esm:047aca",
+    "bow_name": "Rusty Iron Bow",
+    "ammunition": "content:oblivion.esm:017829",
+    "ammunition_name": "Iron Arrow",
+    "source": "Actually acquired and retained tutorial equipment, equipped through native inventory/avatar UI in genuinely reached Vilverin Canosel.",
+    "target_candidate": "Actual spawned Canosel undead06c2c6, after establishing release and a clear firing position."
+  },
+  "input": {
+    "path": "build/oblivion-compat/player-bow/actual-bow-equip-05/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "22bb71047b91f24156272416d2b639e64cbfc82ff601664f5b50846d588b0b8b",
+    "bow_condition": 90,
+    "ammunition_count": 24,
+    "bow_slot": 65536,
+    "ammo_slot": 131072
+  },
+  "baseline": {
+    "initial": "actual-bow-baseline-01",
+    "explicit_stance": "actual-bow-readied-baseline-01",
+    "path_root": "build/oblivion-compat/player-bow",
+    "observed": "Actual attack hold/release leaves24 ammo, condition90, Fatigue170 and native_bow_states empty. Explicit Lua stance samples are1 (Weapon).",
+    "limit": "Held-draw images are occluded by the nearby player/camera; they do not establish visible animation or physical flight. R is POV toggle in this profile, not weapon-ready; the second case additionally changed view. Equipment counts/stance and missing native release are the diagnostic evidence."
+  },
+  "code_gap": "Native beginBowDraw/playback/held-arrow and prepared release helpers exist, but prepareBowRelease has only test callers and no gameplay caller. Physical projectiles still use the TES3 path; native physical flight/impact persistence needs its own integration.",
+  "reuse": [
+    "docs/oblivion/M15-NATIVE-RULE-PROVENANCE.md checkpoints258\u2013270 and later S5 typed/prepared release evidence, retaining original provenance for unchanged rules.",
+    "docs/oblivion/STAR-WEST-POWER-VERIFICATION.json for the latest full normal/sanitizer source and shared combat/save evidence."
+  ],
+  "plan": [
+    "Record real equipment/stance baseline and original asset/rule provenance.",
+    "Connect Player input and actual bowattack sequence to owned draw/attachment/hold/release and cancellation; reuse existing resource transaction.",
+    "Publish native physical flight and consume exactly one actual equipped arrow with release. Save/load draw and flight without replay.",
+    "Reach a clear actual Canosel firing position, hit named original undead, verify native damage/death/loot preservation and a wall/miss.",
+    "Complete focused and affected normal/sanitizer gates, receipt and concise outgoing handoff; continue to another actual content gap."
+  ],
+  "outside_scope": [
+    "Full S5/M15, NPC bow tactics, all mastery/poison/enchantment branches, generic spawn identity/respawn, exact random or bit-identical arithmetic.",
+    "No synthetic enemies, inventory grants, forged deficits or teleports in fork runtime acceptance."
+  ]
+}

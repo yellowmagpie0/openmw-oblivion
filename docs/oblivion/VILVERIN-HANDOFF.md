@@ -54,9 +54,14 @@ ordinary Club input. Sack `06c2ad` stays opened empty; stone `04929e` remains sp
 Power use timestamp97.54186427593231 hours; new daily use is unavailable.
 
 Actual route: forward walking reached the corridor leading toward door `049424`
-to Vilverin Canosel. Bandit `06c35e` remains alive. Current action: continue from
-the outgoing checkpoint toward that actor/door, exercise actual content, and pick
-the next bounded implementation from an observed unsupported behavior. The full
+to Vilverin Canosel. Bandit `06c35e` remains alive. Current chunk: [basic Player bow integration](PLAYER-BOW-CONTRACT.json).
+The second corridor bandit was defeated with existing Flare; ordinary door049424
+activation reached Canosel0463f5. Its leveled actors materialize correctly.
+Actual carried Rusty Iron Bow047aca and24 Iron Arrows017829 are equipped, but
+ordinary attack hold/release has no native bow/release owner or ammo debit.
+Next action: connect actual authored bow playback to existing native helpers and
+complete basic release/flight/restart/real-undead acceptance. The earlier Flare
+provocation candidate did not establish a gap (close detection/far obstruction). The full
 expedition remains open; historical room/trap/consumable routes stay in receipts.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects
