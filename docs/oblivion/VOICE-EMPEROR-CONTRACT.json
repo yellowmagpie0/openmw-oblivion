@@ -1,0 +1,35 @@
+{
+  "status": "preflight; implementation and actual-target acceptance pending",
+  "milestone": "M16 real Player Target Charm power",
+  "content": {
+    "spell": "content:oblivion.esm:047add",
+    "name": "Voice of the Emperor",
+    "effect": "CHRM",
+    "magnitude": 30,
+    "duration_seconds": 30,
+    "range": "Target",
+    "target": "content:oblivion.esm:04bb63",
+    "target_health": 20
+  },
+  "input": {
+    "path": "build/oblivion-compat/next-content/normal-healthy-canosel-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "be83c612e721c8c56adf23ac4dccd0ecc5cbabc3a27755605081f66f44a5df79",
+    "provenance": "Actual healthy bedroll course followed by ordinary coffin jump, pressure plate and secret-wall passage."
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/next-content/normal-voice-cast-baseline-01",
+    "observed": "Original owned power visible/selectable; native casting admission currently supports only Star of the West among greater powers and rejects Charm. No projectile or daily use is published."
+  },
+  "plan": [
+    "Audit original CHRM definition and native disposition effect contribution independently; retain original winning identities.",
+    "Admit original single-effect Voice of the Emperor; authored Target release publishes one projectile and daily-use ownership atomically.",
+    "Actual impact applies target-owned, Player-viewer Charm contribution with saved remaining simulation duration; no Personality rewrite or script ModDisposition overwrite. Reuse existing saved custom-state envelope.",
+    "Ordinary controls approach living bandit04bb63 and cast. Verify projectile hit, disposition contribution, unchanged Health/inventory, immediate daily rejection, active-effect save/restart and eventual expiration.",
+    "Focused development checks followed by appropriate normal/instrumented gates and actual-content cases; commit bounded result and continue."
+  ],
+  "outside_scope": [
+    "No combat cancellation promise: Charm is not Calm.",
+    "General Charm spells, alternate casters, area effects, absorption/reflection and full M16 remain open.",
+    "Already-working coffin jump, pressure plate and wall scripts are route evidence, not new implementation."
+  ]
+}

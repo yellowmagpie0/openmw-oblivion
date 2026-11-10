@@ -3,6 +3,12 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The full expedition and full milestones remain open.
 
+Current chunk: original Voice of the Emperor047add Target Charm on living
+Canosel bandit04bb63. [Preflight plan](VOICE-EMPEROR-CONTRACT.json). Actual
+owned power is selectable but casting admission rejects its unsupported effect.
+Ordinary route from the healthy camp crosses the coffin/pressure plate/secret
+wall successfully; live-target approach and timed Charm implementation are next.
+
 Latest closed chunk: original unowned Canosel bedroll06bf97/base01d5bf default
 activation. [Contract](BEDROLL-REST-CONTRACT.json),
 [record/backend provenance](BEDROLL-REST-ORACLE.json),
