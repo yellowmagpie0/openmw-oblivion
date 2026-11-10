@@ -3,6 +3,13 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The full expedition and full milestones remain open.
 
+Current chunk: ordinary Iron Arrow017829 static-surface recovery.
+[Preflight](IRON-ARROW-RECOVERY-CONTRACT.json). Actual arrow6 from retained stock
+hits original Canosel floor049be8, consumes19→18, then disappears without a world
+AMMO owner. Next: prepare/publish one recoverable reference, verify normal pickup
+and restart ownership, and apply the existing settled age/fade rule. Actor-hit
+inventory recovery and full bow/S5 acceptance remain open.
+
 Latest closed chunk: original Voice of the Emperor047add Target Charm on
 Canosel Skeleton04bb63/base084b1a. [Contract](VOICE-EMPEROR-CONTRACT.json),
 [record/rule provenance](VOICE-EMPEROR-ORACLE.json),

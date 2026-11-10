@@ -1,0 +1,38 @@
+{
+  "status": "preflight; static-surface arrow materialization/recovery implementation pending",
+  "milestone": "M15 physical-arrow static impact, retained world item and ordinary recovery",
+  "content": {
+    "ammunition": "content:oblivion.esm:017829",
+    "name": "Iron Arrow",
+    "bow": "content:oblivion.esm:047aca",
+    "bow_name": "Rusty Iron Bow",
+    "surface_reference": "content:oblivion.esm:049be8",
+    "surface_base": "content:oblivion.esm:02d59c",
+    "cell": "content:oblivion.esm:0463f5"
+  },
+  "input": {
+    "path": "build/oblivion-compat/voice-emperor/normal-expire-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41",
+    "scope": "Genuine retained Charm continuation:110 Health,19 Iron Arrows, actual bow and ordinary controls. No grants/forged stats or position changes."
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/next-content/normal-iron-arrow-stone-baseline-01",
+    "manifest": "build/oblivion-compat/next-content/iron-arrow-stone-baseline.json",
+    "observed": "Ordinary F/readiness, measured aim, two-second actual held draw and release: arrow6 hits original STAT049be8 with zero actor damage. Save has18 inventory arrows, no physical flight and no dynamic AMMO reference. Current impact path erases flight unconditionally.",
+    "original_audit": "build/oblivion-compat/next-content/iron-arrow-winning-records-audit.json",
+    "original_audit_sha256": "1faec85f92e4188d1f317aa4f4eac25e55e99b08adc56fd1b967ee988f2751e9"
+  },
+  "plan": [
+    "Retain original record/actual-shot provenance and use the original AMMO model and ordinary Take action.",
+    "Prepare a detached native AMMO reference, stable dynamic identity and registry/cell admission for one eligible ordinary STAT impact. Publish the retained item and consume flight before external observers. No source inventory refund at impact.",
+    "Keep source projectile serial, ammo/bow/caster and settled age/opacity in strict saved reference fields; reinspection and fresh-process load retain identity without replay or duplication. Reuse existing dynamic reference restoration and schema97 if sufficient.",
+    "Reuse the independently established90-second age/three-second fade rule for the settled owner. Its age begins at this bounded static impact; full flight aging and process-budget cleanup remain open.",
+    "Use a fresh real shot from19 arrows; ordinary movement/Activate retrieves exactly one arrow after a fresh-process load. Repeated Activate and another reload must not duplicate it. Verify timer/expiry separately using actual waiting.",
+    "Focused development checks, appropriate broad normal/instrumented gates and actual-content cases; local implementation/receipt commits, then another observed gap."
+  ],
+  "outside_scope": [
+    "Actor-hit eligibility and iArrowInventoryChance are separate; do not use the50% corpse-inventory roll for this static surface.",
+    "No full Havok penetration/bounce, moving-body embedding, enchanted ammo, NPC archery or complete M15 S5 claim.",
+    "Only ordinary unenchanted Iron Arrow and original static stone floor are actual acceptance. Settled lifetime starts at impact; full flight lifetime and reference-budget selection remain open."
+  ]
+}
