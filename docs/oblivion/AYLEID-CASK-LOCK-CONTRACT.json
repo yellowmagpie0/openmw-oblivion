@@ -1,5 +1,5 @@
 {
-  "status": "preflight; original-game UI check and implementation pending",
+  "status": "implemented; genuine cancel/attempt/restart and final normal/sanitized gates pending",
   "milestone": "M13 native interactions; manual tumblers remain open",
   "content": {
     "reference": "content:oblivion.esm:066e79",
@@ -25,12 +25,14 @@
     "Normal Space opens paused lock prompt; opening spends no picks and does not alter lock or loot",
     "Cancel preserves exact picks and lock; cold restart retains those values",
     "Only explicit Auto Attempt may roll or spend one pick on failure; failed attempts remain paused for another choice",
-    "Success unlocks and opens actual container; looted result and spent picks persist across restart",
+    "Success unlocks and takes the actual container contents through the existing transfer path; looted result and spent picks persist across restart",
     "Original typed content audit, source-input hashes, actual process identity and loaded libraries; focused engine checks plus normal and sanitized genuine course"
   ],
   "boundaries": [
     "Reuse existing approximate lockpickAutoChance without new native probability parity claim",
     "No manual tumbler game, XP, Skeleton Key, forced locks or leveled-lock recalculation in this chunk",
-    "Key-owned bypass and no-pick behavior remain established paths; no schema change"
-  ]
+    "Key-owned bypass and no-pick behavior remain established paths; no schema change",
+    "Original game resolves this leveled XLOC to lock1; existing forklevel0 is retained and recorded as adjacent work"
+  ],
+  "independent_oracle": "AYLEID-CASK-LOCK-ORACLE.json"
 }

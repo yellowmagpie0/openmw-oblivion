@@ -1062,40 +1062,77 @@ namespace MWWorld
             }
             else
             {
-                const std::optional<ESM::FormKey> lockpick = mStore.findEsm4FormKey("Lockpick");
-                if (!lockpick || oblivionPlayerItemCount(*lockpick) <= 0)
+                while (ptr.getCellRef().isLocked())
                 {
-                    message("Locked (level " + std::to_string(std::max(0, ptr.getCellRef().getLockLevel())) + ")");
-                    report("locked");
-                    return;
+                    const std::optional<ESM::FormKey> lockpick = mStore.findEsm4FormKey("Lockpick");
+                    if (!lockpick || oblivionPlayerItemCount(*lockpick) <= 0)
+                    {
+                        message("Locked (level " + std::to_string(std::max(0, ptr.getCellRef().getLockLevel())) + ")");
+                        report("locked");
+                        return;
+                    }
+                    // Activation offers a choice before any random draw or inventory debit.
+                    // The blocking modal renders and handles input without advancing the
+                    // world, including breath and damage while picking submerged locks.
+                    auto windows = MWBase::Environment::get().getWindowManager();
+                    if (!mOblivionDynamicReferenceIdentity)
+                        mOblivionDynamicReferenceIdentity = std::make_shared<const char>(0);
+                    const std::weak_ptr<const char> worldIdentity = mOblivionDynamicReferenceIdentity;
+                    const auto* cacheOwner = mOblivionRuntimeState.get();
+                    const auto* referenceOwner = &state;
+                    const Ptr player = getPlayerPtr();
+                    const auto pickCount = oblivionPlayerItemCount(*lockpick);
+                    report("lockpick_prompt");
+                    windows->interactiveMessageBox(std::string(ptr.getClass().getName(ptr)) + "\nLocked (level "
+                            + std::to_string(std::max(0, ptr.getCellRef().getLockLevel())) + ")\nLockpicks: "
+                            + std::to_string(pickCount),
+                        { "Auto Attempt", "Cancel" }, true, 1);
+                    const int choice = windows->readPressedButton();
+                    // Input callbacks may replace the world. Never retain a borrowed
+                    // runtime reference across that boundary without checking its owner.
+                    if (worldIdentity.expired() || getPlayerPtr() != player
+                        || mOblivionRuntimeState.get() != cacheOwner)
+                        return;
+                    const auto current = std::find_if(mOblivionRuntimeState->mReferences.begin(),
+                        mOblivionRuntimeState->mReferences.end(),
+                        [&](const auto& value) { return value.mKey == key; });
+                    if (current == mOblivionRuntimeState->mReferences.end() || &*current != referenceOwner)
+                        return;
+                    if (choice != 0)
+                    {
+                        report("lockpick_cancelled");
+                        return;
+                    }
+                    if (oblivionPlayerItemCount(*lockpick) <= 0 || !ptr.getCellRef().isLocked())
+                        return;
+                    const MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
+                    const float chance = ESM4::lockpickAutoChance(
+                        static_cast<int>(player.getClass().getSkill(player, ESM::Skill::Security)),
+                        stats.getAttribute(ESM::Attribute::Agility).getModified(),
+                        stats.getAttribute(ESM::Attribute::Luck).getModified(), ptr.getCellRef().getLockLevel());
+                    state.mCustomState["lockpick_auto_chance"] = static_cast<double>(chance);
+                    std::int64_t attempts = 0;
+                    if (const auto previous = state.mCustomState.find("lockpick_auto_attempts");
+                        previous != state.mCustomState.end())
+                        if (const auto* value = std::get_if<std::int64_t>(&previous->second))
+                            attempts = *value;
+                    state.mCustomState["lockpick_auto_attempts"] = attempts + 1;
+                    if (Misc::Rng::rollProbability(mPrng) * 100.f >= chance)
+                    {
+                        oblivionChangePlayerInventory(*lockpick, -1);
+                        state.mCustomState["lockpick_broken"] = true;
+                        message("Lockpick broke");
+                        report("lockpick_failed");
+                        continue;
+                    }
+                    ptr.getCellRef().setLocked(false);
+                    ptr.getCellRef().setLockLevel(0);
+                    state.mLockLevel = 0;
+                    state.mCustomState["locked"] = false;
+                    state.mCustomState["unlocked_with_lockpick"] = true;
+                    message("Lock opened");
+                    break;
                 }
-                const Ptr player = getPlayerPtr();
-                const MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
-                const float chance = ESM4::lockpickAutoChance(
-                    static_cast<int>(player.getClass().getSkill(player, ESM::Skill::Security)),
-                    stats.getAttribute(ESM::Attribute::Agility).getModified(),
-                    stats.getAttribute(ESM::Attribute::Luck).getModified(), ptr.getCellRef().getLockLevel());
-                state.mCustomState["lockpick_auto_chance"] = static_cast<double>(chance);
-                std::int64_t attempts = 0;
-                if (const auto previous = state.mCustomState.find("lockpick_auto_attempts");
-                    previous != state.mCustomState.end())
-                    if (const auto* value = std::get_if<std::int64_t>(&previous->second))
-                        attempts = *value;
-                state.mCustomState["lockpick_auto_attempts"] = attempts + 1;
-                if (Misc::Rng::rollProbability(mPrng) * 100.f >= chance)
-                {
-                    oblivionChangePlayerInventory(*lockpick, -1);
-                    state.mCustomState["lockpick_broken"] = true;
-                    message("Lockpick broke");
-                    report("lockpick_failed");
-                    return;
-                }
-                ptr.getCellRef().setLocked(false);
-                ptr.getCellRef().setLockLevel(0);
-                state.mLockLevel = 0;
-                state.mCustomState["locked"] = false;
-                state.mCustomState["unlocked_with_lockpick"] = true;
-                message("Lock opened");
             }
         }
 

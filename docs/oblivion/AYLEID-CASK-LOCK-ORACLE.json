@@ -1,0 +1,61 @@
+{
+  "status": "Original-game menu entry, cancellation and pause independently observed",
+  "scope": "UI behavior only; no original auto-attempt probability certification",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "evidence_root": "build/oblivion-compat/lock-dialog/original-native-01",
+  "fixture": {
+    "console": [
+      "coc Vilverin02",
+      "player.removeitem a 10000",
+      "player.additem a 8",
+      "player.setav health 110",
+      "player.setpos x -2204",
+      "player.setpos y -10014",
+      "player.setpos z -2987",
+      "player.setangle x 75",
+      "player.setangle z 241",
+      "prid 066e79",
+      "GetLockLevel",
+      "GetLocked",
+      "player.GetItemCount a",
+      "player.GetAV health"
+    ],
+    "observed_health": 190,
+    "notes": "Original console fixture only, isolated copied prefix. No grants or stat/position setters in fork acceptance. setav health110 yielded observed190; do not label it110."
+  },
+  "observations": [
+    {
+      "case": "Normal Space activation",
+      "result": "Actual Ayleid Cask opens lock menu with Auto Attempt and Close; Picks left8; Skill5; Very Easy"
+    },
+    {
+      "case": "Clean lock menu held8 wall seconds",
+      "result": "Breath bar unchanged across before/after images; Health190 before and after cancellation"
+    },
+    {
+      "case": "Close without attempting",
+      "result": "GetItemCount8 and GetLocked1 after; no pick spent or unlock"
+    }
+  ],
+  "adjacent_discovery": "Original GetLockLevel1 from authored leveled XLOC; existing forklevel0 remains outside this UI chunk",
+  "tolerances": {
+    "health": 0.5,
+    "count": 0,
+    "wall_wait_seconds": 8
+  },
+  "retained_failures": "Initial original launch before Steam ready: application load error P:0000065432; dismissed and retried. First Space immediately after console close did not open menu; next normal Space did. Tutorial overlay dismissed before timed clean-menu observation.",
+  "evidence": {
+    "game-process-epoch.json": "cf58e1fea73cf05dbc925c52cce51cf540f3b7119ae202ad38ead0c0bcc5ff94",
+    "native-prelock-console.png": "36cd10847371742f2f6bb4a27b1339179cfa130b580071808ad8dd08794fa8fa",
+    "native-lock-menu-clean-before.png": "40d024ae35b730b6517c0149f6cd3436c2832c36a9d1caf8368a10a69f83727f",
+    "native-lock-menu-clean-after.png": "4e3fba04717840bda82ab9bb1c38a344e2d290923032801dd8abc85929ddb9c2",
+    "native-cancel-console.png": "8fd642cabac8cec3a9442f338e9fd82c904e46f72fe30bbfa662eb435127b44b",
+    "input-log.jsonl": "3881027925244c65ef48b469cfe6b7eb44977f2710bd7e422092f8cf2a8d5631",
+    "exit-verification.json": "ba2565b8496c0939a142f514d677b7562f46565d2f879292b62486bb77c79982",
+    "breath-bar-comparison.json": "7ad04c68c09b4c8d06bdb8c9648e78ee20bdd9365d7838ea6cc4ac1d9d9c22b5",
+    "owned-xserver-cleanup.json": "300610f9672e97fd03b7726f4e7e8a9d98d9f6a1a6ef87fb88c16d864a4667a8"
+  },
+  "exit_verification": "build/oblivion-compat/lock-dialog/original-native-01/exit-verification.json"
+}
