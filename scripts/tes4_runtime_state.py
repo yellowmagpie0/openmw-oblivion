@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 95
+CURRENT_VERSION = 96
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1850,6 +1850,38 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or not any(value != 0 for value in projectile["velocity"])):
             raise RuntimeStateError("Invalid magic projectile magnitude or flight range")
 
+    arrows = check_collection(state.get("native_arrow_projectiles", []), "native arrow projectile list")
+    next_arrow = state.get("next_arrow_projectile", 1)
+    if (type(next_arrow) is not int or not 0 < next_arrow <= 0xFFFFFFFFFFFFFFFF
+            or (version < 96 and (arrows or next_arrow != 1))):
+        raise RuntimeStateError("Native arrow flight requires runtime-state version96")
+    previous_arrow = 0
+    for arrow in arrows:
+        if not isinstance(arrow, dict) or set(arrow) != {
+                "id", "caster", "bow", "ammunition", "cell", "position", "velocity",
+                "damage", "gravity_factor", "distance", "maximum_distance", "model"}:
+            raise RuntimeStateError("Invalid native arrow shape")
+        ident = arrow["id"]
+        if type(ident) is not int or not previous_arrow < ident < next_arrow:
+            raise RuntimeStateError("Invalid or noncanonical native arrow serial")
+        previous_arrow = ident
+        for key in ("caster", "bow", "ammunition", "cell"):
+            native_key(arrow[key])
+        if arrow["caster"] not in native_keys or any(
+                not arrow[key].startswith("content:") for key in ("bow", "ammunition", "cell")):
+            raise RuntimeStateError("Dangling native arrow identity")
+        model = arrow["model"]
+        if not isinstance(model, str) or not model or len(model.encode('utf-8')) > 4096 or '\0' in model:
+            raise RuntimeStateError("Invalid native arrow model")
+        for key in ("position", "velocity"):
+            if not isinstance(arrow[key], list) or len(arrow[key]) != 3:
+                raise RuntimeStateError("Invalid native arrow vector")
+            for value in arrow[key]:
+                native_float(value)
+        if any(native_float(arrow[key]) < 0 for key in ("damage", "gravity_factor", "distance")) \
+                or native_float(arrow["maximum_distance"]) <= 0:
+            raise RuntimeStateError("Invalid native arrow scalar")
+
     casts = check_collection(state.get("native_spell_casts", []), "native spell cast list")
     if version < 87 and casts:
         raise RuntimeStateError("Native spell casts require version87")
@@ -3648,6 +3680,19 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             if flag > 1:
                 raise RuntimeStateError("Invalid package waiting flag")
             result["package_waiting"].append({"package": key, "waiting": bool(flag)})
+    if version >= 96:
+        result["next_arrow_projectile"] = reader.unpack("<Q")
+        result["native_arrow_projectiles"] = []
+        for _ in range(reader.count()):
+            arrow = {"id": reader.unpack("<Q")}
+            for key in ("caster", "bow", "ammunition", "cell"):
+                arrow[key] = reader.string()
+            for key in ("position", "velocity"):
+                arrow[key] = [reader.unpack("<f") for _ in range(3)]
+            for key in ("damage", "gravity_factor", "distance", "maximum_distance"):
+                arrow[key] = reader.unpack("<f")
+            arrow["model"] = reader.string()
+            result["native_arrow_projectiles"].append(arrow)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -4524,6 +4569,20 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in entries:
             writer.string(entry["package"])
             writer.pack("<B", entry["waiting"])
+    if version >= 96:
+        writer.pack("<Q", state.get("next_arrow_projectile", 1))
+        arrows = state.get("native_arrow_projectiles", [])
+        writer.pack("<I", len(arrows))
+        for arrow in arrows:
+            writer.pack("<Q", arrow["id"])
+            for key in ("caster", "bow", "ammunition", "cell"):
+                writer.string(arrow[key])
+            for key in ("position", "velocity"):
+                for value in arrow[key]:
+                    writer.pack("<f", value)
+            for key in ("damage", "gravity_factor", "distance", "maximum_distance"):
+                writer.pack("<f", arrow[key])
+            writer.string(arrow["model"])
     return writer.finish()
 
 
@@ -4675,6 +4734,11 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 91 and state.get("package_waiting"):
         raise RuntimeStateError("Cannot infer package waiting overrides from an older schema")
     state.setdefault("package_waiting", [])
+    if state.get("schema_version", 1) < 96 and (state.get("native_arrow_projectiles")
+            or state.get("next_arrow_projectile", 1) != 1):
+        raise RuntimeStateError("Cannot infer native arrow flight from an older schema")
+    state.setdefault("native_arrow_projectiles", [])
+    state.setdefault("next_arrow_projectile", 1)
 
 
 def _upgrade_loose_weapons(state: dict[str, Any]) -> None:

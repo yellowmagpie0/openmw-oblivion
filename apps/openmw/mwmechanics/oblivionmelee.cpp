@@ -2094,6 +2094,49 @@ namespace MWMechanics
         return result;
     }
 
+    std::optional<OblivionWeaponContactDamage> resolveOblivionArrowContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        float launchDamage, float normalizedDifficulty)
+    {
+        auto* native = dynamic_cast<MWWorld::World*>(&world);
+        auto* service = native ? native->getOblivionCombatService() : nullptr;
+        if (!service || !std::isfinite(launchDamage) || launchDamage < 0)
+            throw std::invalid_argument("native arrow contact requires finite launch damage and authority");
+        const auto player = world.getPlayerPtr();
+        const auto resistance = victim == player ? service->getPlayerValue(65) : service->getNonPlayerValue(victim, 65);
+        const auto resisted = ESM4::resistNormalWeapon(launchDamage, resistance, false);
+        OblivionWeaponContactDamage result{};
+        if (resisted.mImmune) { result.mImmune = true; return result; }
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const float incoming = resisted.mHealthDamage;
+        const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
+            ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
+        const auto block = prepareOrdinaryBlock(world, *service, attacker, victim, armor.mHealthDamage, 5, settings, false);
+        if (!block) return {};
+        const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
+            : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
+        const auto damage = ESM4::physicalContactDamage({incoming, 0}, block->mRemaining,
+            normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
+        auto wear = prepareOrdinaryArmorWear(world, *service, attacker, victim, incoming, armor.mAbsorbedFraction,
+            settings, block->mConditions, block->mAccepted ? std::optional<float>{ESM4::blockedArmorWear(
+                ESM4::armorWear(incoming, armor.mAbsorbedFraction, ESM4::buildDurabilitySettings(settings)),
+                block->mFraction, block->mUnarmed)} : std::nullopt);
+        if (!wear) return {};
+        result.mHealth = damage.mHealth;
+        result.mVictimConditionChanges = std::move(wear->mConditions);
+        result.mRandomTransition = wear->mRandom;
+        result.mPreArmorDamage = incoming;
+        result.mBlockFatigueDebit = block->mDebit;
+        result.mBlockAbsorbedFraction = block->mFraction;
+        result.mBlockAccepted = block->mAccepted;
+        result.mHitArmorClass = wear->mHitArmorClass;
+        return result;
+    }
+
     static float weaponContactDamage(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& item, ESM4::MeleeStrikeKind kind)
     {

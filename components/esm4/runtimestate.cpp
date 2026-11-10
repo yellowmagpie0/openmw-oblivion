@@ -2626,6 +2626,15 @@ namespace ESM4
             }
         }
         checkSize(mNativeMagicProjectiles.size(), "native magic projectile list");
+        checkSize(mNativeArrowProjectiles.size(), "native arrow projectile list");
+        if (!mNextArrowProjectile || (mVersion < 96 && (!mNativeArrowProjectiles.empty() || mNextArrowProjectile != 1)))
+            throw std::runtime_error("Native arrow flight requires runtime-state version96");
+        for (const auto& [id, projectile] : mNativeArrowProjectiles)
+        {
+            projectile.validate();
+            if (!id || id >= mNextArrowProjectile || !nativeActors.contains(projectile.mCaster))
+                throw std::runtime_error("Dangling native arrow caster or serial");
+        }
         if (!mNextMagicProjectile || (mVersion < 88 && (!mNativeMagicProjectiles.empty() || mNextMagicProjectile != 1)))
             throw std::runtime_error("Invalid native magic projectile serial or state version");
         for (const auto& [id, projectile] : mNativeMagicProjectiles)
@@ -4168,6 +4177,22 @@ namespace ESM4
                 writer.integer<std::uint8_t>(waiting ? 1 : 0);
             }
         }
+        if (mVersion >= 96)
+        {
+            writer.integer(mNextArrowProjectile);
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeArrowProjectiles.size()));
+            for (const auto& [id, arrow] : mNativeArrowProjectiles)
+            {
+                writer.integer(id);
+                writeKey(writer, arrow.mCaster); writeKey(writer, arrow.mBow);
+                writeKey(writer, arrow.mAmmunition); writeKey(writer, arrow.mCell);
+                for (float value : arrow.mPosition) writer.floating(value);
+                for (float value : arrow.mVelocity) writer.floating(value);
+                writer.floating(arrow.mDamage); writer.floating(arrow.mGravityFactor);
+                writer.floating(arrow.mDistance); writer.floating(arrow.mMaximumDistance);
+                writer.string(arrow.mModel);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -5646,6 +5671,27 @@ namespace ESM4
                     throw std::runtime_error("Noncanonical package waiting overrides");
                 previous = key;
                 result.mPackageWaiting.emplace(key, waiting != 0);
+            }
+        }
+        if (result.mVersion >= 96)
+        {
+            result.mNextArrowProjectile = reader.integer<std::uint64_t>();
+            const auto count = reader.count();
+            std::uint64_t previous = 0;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto id = reader.integer<std::uint64_t>();
+                if (id <= previous) throw std::runtime_error("Noncanonical native arrow serials");
+                previous = id;
+                ArrowProjectileState arrow;
+                arrow.mCaster = readKey(reader); arrow.mBow = readKey(reader);
+                arrow.mAmmunition = readKey(reader); arrow.mCell = readKey(reader);
+                for (float& value : arrow.mPosition) value = reader.float32();
+                for (float& value : arrow.mVelocity) value = reader.float32();
+                arrow.mDamage = reader.float32(); arrow.mGravityFactor = reader.float32();
+                arrow.mDistance = reader.float32(); arrow.mMaximumDistance = reader.float32();
+                arrow.mModel = reader.string();
+                result.mNativeArrowProjectiles.emplace(id, std::move(arrow));
             }
         }
         if (!reader.eof())
@@ -7338,6 +7384,33 @@ namespace ESM4
                 stream << "],\"distance\":"; number(projectile.mDistance);
                 stream << ",\"maximum_distance\":"; number(projectile.mMaximumDistance);
                 stream << ",\"model\":\"" << escapeJson(projectile.mModel) << "\"}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 96)
+        {
+            stream << ",\"next_arrow_projectile\":" << mNextArrowProjectile << ",\"native_arrow_projectiles\":[";
+            bool first = true;
+            const auto number = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
+            for (const auto& [id, arrow] : mNativeArrowProjectiles)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"id\":" << id << ",\"caster\":\"" << escapeJson(arrow.mCaster.serialize())
+                    << "\",\"bow\":\"" << escapeJson(arrow.mBow.serialize())
+                    << "\",\"ammunition\":\"" << escapeJson(arrow.mAmmunition.serialize())
+                    << "\",\"cell\":\"" << escapeJson(arrow.mCell.serialize()) << "\",\"position\":[";
+                for (std::size_t i = 0; i < 3; ++i) { if (i) stream << ','; number(arrow.mPosition[i]); }
+                stream << "],\"velocity\":[";
+                for (std::size_t i = 0; i < 3; ++i) { if (i) stream << ','; number(arrow.mVelocity[i]); }
+                stream << "],\"damage\":"; number(arrow.mDamage);
+                stream << ",\"gravity_factor\":"; number(arrow.mGravityFactor);
+                stream << ",\"distance\":"; number(arrow.mDistance);
+                stream << ",\"maximum_distance\":"; number(arrow.mMaximumDistance);
+                stream << ",\"model\":\"" << escapeJson(arrow.mModel) << "\"}";
             }
             stream << ']';
         }

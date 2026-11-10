@@ -78,7 +78,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 95;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 96;
 
     struct RuntimeContentIdentity
     {
@@ -993,6 +993,9 @@ namespace ESM4
         // v88: persistent flight, distinct from once-only cast release ownership.
         std::uint64_t mNextMagicProjectile = 1;
         std::map<std::uint64_t, MagicProjectileState> mNativeMagicProjectiles;
+        // v96: physical arrow flight; never a magic effect or a legacy TES3 shot.
+        std::uint64_t mNextArrowProjectile = 1;
+        std::map<std::uint64_t, ArrowProjectileState> mNativeArrowProjectiles;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

@@ -2039,6 +2039,8 @@ namespace MWWorld
             state.mNativeTrapContacts = mOblivionRuntimeState->mNativeTrapContacts;
             state.mNativeMagicProjectiles = mOblivionRuntimeState->mNativeMagicProjectiles;
             state.mNextMagicProjectile = mOblivionRuntimeState->mNextMagicProjectile;
+            state.mNativeArrowProjectiles = mOblivionRuntimeState->mNativeArrowProjectiles;
+            state.mNextArrowProjectile = mOblivionRuntimeState->mNextArrowProjectile;
             state.mFriendHitCounters = mOblivionRuntimeState->mFriendHitCounters;
             state.mCombatControllers = mOblivionRuntimeState->mCombatControllers;
         }
@@ -7992,6 +7994,7 @@ namespace MWWorld
             flag != state.mPlayer.mActorValues.end())
             ESM4::playerMurdererValue(flag->second);
         validateOblivionMagicProjectiles(state);
+        validateOblivionArrowProjectiles(state);
         validateOblivionEnvironmentalFire(state);
         validateOblivionIngredientRestoration(mStore, state);
         validateOblivionScrollChameleon(mStore, state);
@@ -9342,6 +9345,7 @@ namespace MWWorld
         synchronizeOblivionAnimatedReferencePoses();
         processOblivionTrapContacts();
         updateOblivionMagicProjectiles(duration);
+        updateOblivionArrowProjectiles(duration);
         updateOblivionEnvironmentalFire(duration);
     }
 

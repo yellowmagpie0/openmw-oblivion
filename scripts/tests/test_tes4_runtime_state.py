@@ -632,6 +632,36 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         loaded = state_io.decode_payload(state_io.encode_payload(state))
         self.assertNotIn("used_powers", player(loaded))
 
+    def test_arrow96_launch_snapshot_roundtrip_and_invalid_ownership(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 96
+        state["next_arrow_projectile"] = 2
+        arrow = dict(id=1, caster=state["player"]["reference"],
+                     bow="content:oblivion.esm:047aca", ammunition="content:oblivion.esm:017829",
+                     cell=state["player"]["cell"], position=[10., -0., 30.], velocity=[100., 0., 50.],
+                     damage=8., gravity_factor=2., distance=0., maximum_distance=12000.,
+                     model="weapons/iron/arrow.nif")
+        state["native_arrow_projectiles"] = [arrow]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(loaded["native_arrow_projectiles"], [arrow])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        self.assertEqual(math.copysign(1., loaded["native_arrow_projectiles"][0]["position"][1]), -1.)
+        for mutation in ({"caster": "content:oblivion.esm:001234"}, {"id": 2},
+                         {"gravity_factor": -1.}, {"damage": math.nan}, {"model": ""}):
+            bad = copy.deepcopy(state)
+            bad["native_arrow_projectiles"][0].update(mutation)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        bad["native_arrow_projectiles"].append(arrow)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 95
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["native_arrow_projectiles"] = []
+        state["next_arrow_projectile"] = 1
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("native_arrow_projectiles", loaded)
+
     @classmethod
     def melee_paralysis_state(cls):
         state = cls.combat_controller_state()

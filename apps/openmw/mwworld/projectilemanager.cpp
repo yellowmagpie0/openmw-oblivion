@@ -38,6 +38,7 @@
 
 #include <components/settings/values.hpp>
 #include <components/esm4/magiccaster.hpp>
+#include <components/esm4/projectilerules.hpp>
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
@@ -770,8 +771,47 @@ namespace MWWorld
         }
     }
 
+    void ProjectileManager::syncOblivionArrowProjectiles(
+        const std::map<std::uint64_t, ESM4::ArrowProjectileState>& projectiles)
+    {
+        for (auto it = mOblivionArrowModels.begin(); it != mOblivionArrowModels.end();)
+            if (!projectiles.contains(it->first))
+            {
+                mParent->removeChild(it->second.mNode);
+                it = mOblivionArrowModels.erase(it);
+            }
+            else ++it;
+        for (const auto& [id, arrow] : projectiles)
+        {
+            const osg::Vec3f position(arrow.mPosition[0], arrow.mPosition[1], arrow.mPosition[2]);
+            const osg::Vec3f velocity(arrow.mVelocity[0], arrow.mVelocity[1], arrow.mVelocity[2]);
+            auto it = mOblivionArrowModels.find(id);
+            if (it == mOblivionArrowModels.end())
+            {
+                auto* scene = mResourceSystem->getSceneManager();
+                const auto model = scene->getTemplate(VFS::Path::Normalized(arrow.mModel));
+                const auto geometry = MWRender::cloneOblivionArrowGeometry(*model, *scene);
+                if (!geometry) throw std::runtime_error("native flight model has no Arrow:0");
+                State state{};
+                state.mNode = new osg::PositionAttitudeTransform;
+                state.mNode->setNodeMask(MWRender::Mask_Effect);
+                state.mNode->addChild(geometry);
+                it = mOblivionArrowModels.emplace(id, std::move(state)).first;
+                if (!mParent->addChild(it->second.mNode))
+                {
+                    mOblivionArrowModels.erase(it);
+                    throw std::runtime_error("native arrow scene publication rejected");
+                }
+            }
+            it->second.mNode->setPosition(position);
+            if (velocity.length2() > 0) it->second.mNode->setAttitude(lookAt(velocity));
+        }
+    }
+
     void ProjectileManager::clear()
     {
+        for (auto& [id, state] : mOblivionArrowModels) mParent->removeChild(state.mNode);
+        mOblivionArrowModels.clear();
         for (auto& [id, state] : mOblivionMagicModels) mParent->removeChild(state.mNode);
         mOblivionMagicModels.clear();
         ++mRestoreGeneration;

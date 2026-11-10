@@ -7,6 +7,47 @@
 
 namespace ESM4
 {
+    void ArrowProjectileState::validate() const
+    {
+        if (mCaster.isNull() || !mBow.isContent() || !mAmmunition.isContent() || !mCell.isContent()
+            || mModel.empty() || mModel.size() > 4096 || mModel.find('\0') != std::string::npos)
+            throw std::invalid_argument("invalid native arrow identity or model");
+        for (const auto* key : {&mCaster, &mBow, &mAmmunition, &mCell})
+            if (ESM::FormKey::deserialize(key->serialize()) != *key)
+                throw std::invalid_argument("noncanonical native arrow identity");
+        for (float value : {mDamage, mGravityFactor, mDistance, mMaximumDistance})
+            if (!std::isfinite(value) || value < 0)
+                throw std::invalid_argument("invalid native arrow scalar");
+        if (mMaximumDistance == 0)
+            throw std::invalid_argument("native arrow requires a positive range");
+        for (const auto& vector : {mPosition, mVelocity})
+            for (float value : vector)
+                if (!std::isfinite(value)) throw std::invalid_argument("invalid native arrow vector");
+    }
+
+    ArrowProjectileState advanceArrowProjectile(const ArrowProjectileState& projectile,
+        float duration, const ProjectileVector& gravity)
+    {
+        projectile.validate();
+        if (!std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native arrow frame duration");
+        auto next = projectile;
+        double distanceSquared = 0;
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+            if (!std::isfinite(gravity[i])) throw std::invalid_argument("invalid native arrow gravity");
+            const double acceleration = double(gravity[i]) * projectile.mGravityFactor;
+            const double displacement = double(projectile.mVelocity[i]) * duration
+                + .5 * acceleration * duration * duration;
+            next.mPosition[i] = static_cast<float>(double(projectile.mPosition[i]) + displacement);
+            next.mVelocity[i] = static_cast<float>(double(projectile.mVelocity[i]) + acceleration * duration);
+            distanceSquared += displacement * displacement;
+        }
+        next.mDistance = static_cast<float>(double(projectile.mDistance) + std::sqrt(distanceSquared));
+        next.validate();
+        return next;
+    }
+
     namespace
     {
         void nonnegative(float value)

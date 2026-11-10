@@ -921,6 +921,7 @@ namespace MWRender
         void setAlpha(float alpha);
         virtual void setPitchFactor(float factor) {}
         bool hasOblivionHeldArrow() const noexcept { return bool(mOblivionHeldArrow); }
+        std::optional<osg::Vec3f> getOblivionHeldArrowPosition() const;
         virtual void attachArrow() {}
         virtual void detachArrow() {}
         virtual void releaseArrow(float attackStrength, float attackWindUp) {}

@@ -1,5 +1,5 @@
 {
-  "status": "active bounded Player bow integration; real equipped/readied baseline cannot release",
+  "status": "accepted bounded ordinary Player bow shot, impact and persistence; full S5/M15 and expedition remain open",
   "milestone": "M15 S5 basic Player bow shot",
   "content": {
     "bow": "content:oblivion.esm:047aca",
@@ -7,7 +7,7 @@
     "ammunition": "content:oblivion.esm:017829",
     "ammunition_name": "Iron Arrow",
     "source": "Actually acquired and retained tutorial equipment, equipped through native inventory/avatar UI in genuinely reached Vilverin Canosel.",
-    "target_candidate": "Actual spawned Canosel undead06c2c6, after establishing release and a clear firing position."
+    "target_candidate": "Actual spawned Canosel bandit06bfc2/base03db2d, Health20; complete native route."
   },
   "input": {
     "path": "build/oblivion-compat/player-bow/actual-bow-equip-05/userdata/saves/Bendu_Olo/Quicksave.omwsave",
@@ -24,7 +24,6 @@
     "observed": "Actual attack hold/release leaves24 ammo, condition90, Fatigue170 and native_bow_states empty. Explicit Lua stance samples are1 (Weapon).",
     "limit": "Held-draw images are occluded by the nearby player/camera; they do not establish visible animation or physical flight. R is POV toggle in this profile, not weapon-ready; the second case additionally changed view. Equipment counts/stance and missing native release are the diagnostic evidence."
   },
-  "code_gap": "Native beginBowDraw/playback/held-arrow and prepared release helpers exist, but prepareBowRelease has only test callers and no gameplay caller. Physical projectiles still use the TES3 path; native physical flight/impact persistence needs its own integration.",
   "reuse": [
     "docs/oblivion/M15-NATIVE-RULE-PROVENANCE.md checkpoints258\u2013270 and later S5 typed/prepared release evidence, retaining original provenance for unchanged rules.",
     "docs/oblivion/STAR-WEST-POWER-VERIFICATION.json for the latest full normal/sanitizer source and shared combat/save evidence."
@@ -33,11 +32,30 @@
     "Record real equipment/stance baseline and original asset/rule provenance.",
     "Connect Player input and actual bowattack sequence to owned draw/attachment/hold/release and cancellation; reuse existing resource transaction.",
     "Publish native physical flight and consume exactly one actual equipped arrow with release. Save/load draw and flight without replay.",
-    "Reach a clear actual Canosel firing position, hit named original undead, verify native damage/death/loot preservation and a wall/miss.",
+    "Reach a clear actual Canosel firing position, hit and defeat original bandit06bfc2, verify native damage/death and loot preservation plus wall/miss.",
     "Complete focused and affected normal/sanitizer gates, receipt and concise outgoing handoff; continue to another actual content gap."
   ],
   "outside_scope": [
     "Full S5/M15, NPC bow tactics, all mastery/poison/enchantment branches, generic spawn identity/respawn, exact random or bit-identical arithmetic.",
+    "Embedded-arrow recovery, Marksman experience and ranged mastery reactions remain separate acceptance gaps; this bounded chunk establishes ordinary release, flight, damage and persistence.",
+    "Complete ranged hit reactions, sound-key acceptance, all skill experience, cell crossing and caster-removal flight semantics. Ordinary flight currently has a12000-unit cap.",
     "No synthetic enemies, inventory grants, forged deficits or teleports in fork runtime acceptance."
-  ]
+  ],
+  "baseline_code_gap": "Native beginBowDraw/playback/held-arrow and prepared release helpers exist, but prepareBowRelease has only test callers and no gameplay caller. Physical projectiles still use the TES3 path; native physical flight/impact persistence needs its own integration.",
+  "development_evidence": {
+    "root": "build/oblivion-compat/player-bow",
+    "release": "normal-release-development-03",
+    "held": "normal-held-development-01",
+    "held_restart": "normal-held-restart-development-01",
+    "flight": "normal-flight-development-01",
+    "flight_restart": "normal-flight-restart-development-01",
+    "status": "Original failed attempts are retained. Seven normal and seven instrumented real-content cases pass final semantic/boundary audits; full normal and instrumented gates pass.",
+    "actor_hit": "normal-bandit-shot-development-03",
+    "ordinary_flare_preparation": "normal-bandit-soften-03",
+    "lethal_arrow": "normal-bandit-fatal-development-02",
+    "completed_restart": "normal-bandit-completed-restart-01"
+  },
+  "route_reassessment": "Initial zombie06c2c6 has Health80 and a partial native path ending at blocked stair movement. Ordinary jumps cleared the prior slab, but descent stalled after25 units. Retain real source normal-stair-descent-01 for subsequent bounded movement work. Actor-impact acceptance uses original bandit06bfc2 to keep this Player bow chunk bounded; undead-specific ranged and full expedition acceptance remain open.",
+  "acceptance_detail": "Bandit20\u219218.1609 from a real arrow. Three ordinary already-selected Flare casts reduce Health to1.42085; one close bow release causes\u22120.41534 Health and exactly one Player-credited death. Player survives32.974HP. This is mixed combat, not an all-arrow defeat. Inventory stock is preserved; only shot resources and actual fight armor wear change.",
+  "verification": "docs/oblivion/PLAYER-BOW-VERIFICATION.json"
 }

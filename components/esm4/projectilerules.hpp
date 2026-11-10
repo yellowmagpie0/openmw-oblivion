@@ -2,13 +2,30 @@
 #define OPENMW_ESM4_PROJECTILERULES_H
 
 #include "physicalcombat.hpp"
+#include <components/esm/formkey.hpp>
 
 #include <optional>
 #include <span>
+#include <string>
 
 namespace ESM4
 {
     using ProjectileVector = std::array<float, 3>;
+
+    // A released physical arrow owns its launch snapshot independently of the
+    // equipped weapon and the draw animation. Coordinates/velocity are world units.
+    struct ArrowProjectileState
+    {
+        ESM::FormKey mCaster, mBow, mAmmunition, mCell;
+        ProjectileVector mPosition{}, mVelocity{};
+        float mDamage = 0, mGravityFactor = 0;
+        float mDistance = 0, mMaximumDistance = 12000;
+        std::string mModel;
+        void validate() const;
+        friend bool operator==(const ArrowProjectileState&, const ArrowProjectileState&) = default;
+    };
+    ArrowProjectileState advanceArrowProjectile(const ArrowProjectileState& projectile,
+        float duration, const ProjectileVector& gravity);
 
     // Native world/Havok conversion stores. The original double constants
     // are distinct, not exact reciprocals; neither path permutes xyz.

@@ -46,6 +46,7 @@ class NpcPassiveFixtureTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as folder:
                 source, recipe, plugin, opaque = self.source(Path(folder), idle)
                 original = source.read_bytes(); before = runtime.load_save(source); before['schema_version'] = runtime.CURRENT_VERSION; before['native_movement'] = None; before['spoken_dialogue_infos'] = []; before['ignore_friendly_hits'] = {}; before['disposition_modifiers'] = []; before['faction_reactions'] = []; before['friend_hit_counters'] = {}; before['combat_controllers'] = {}; before['native_getup_idles'] = []; before['native_getup_playback'] = []; before['native_animated_references'] = []; before['native_trap_contacts'] = []; before['native_spell_casts'] = []; before['native_magic_projectiles'] = []; before['next_magic_projectile'] = 1; before['daily_package_completions'] = []; before['package_waiting'] = []
+                before['native_arrow_projectiles'] = []; before['next_arrow_projectile'] = 1
                 output = Path(folder) / 'new/staged.omwsave'
                 report = stage(source, output, recipe, plugin); after = runtime.load_save(output)
                 self.assertEqual(after['native_melee_states'], [recipe['melee_state']])

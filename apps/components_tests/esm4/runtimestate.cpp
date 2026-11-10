@@ -1908,7 +1908,7 @@ namespace
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
                 + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0)
-                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0) + (version >= 88 ? 12 : 0) + (version >= 89 ? 4 : 0) + (version >= 91 ? 4 : 0);
+                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0) + (version >= 88 ? 12 : 0) + (version >= 89 ? 4 : 0) + (version >= 91 ? 4 : 0) + (version >= 96 ? 12 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -6316,7 +6316,7 @@ TEST(ESM4RuntimeState, FactionReactions81PreserveDirectedZeroOverridesAndRejectL
     state.mFactionReactions[{b,a}] = 17;
     auto unordered = state.serializeBinary();
     const auto factionEnd = unordered.end() - (state.mVersion >= 83 ? 4 : 0)
-        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0) - (state.mVersion >= 88 ? 12 : 0) - (state.mVersion >= 89 ? 4 : 0) - (state.mVersion >= 91 ? 4 : 0);
+        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0) - (state.mVersion >= 88 ? 12 : 0) - (state.mVersion >= 89 ? 4 : 0) - (state.mVersion >= 91 ? 4 : 0) - (state.mVersion >= 96 ? 12 : 0);
     std::swap_ranges(factionEnd-2*rowSize, factionEnd-rowSize, factionEnd-rowSize);
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(unordered), std::runtime_error);
     state.mFactionReactions.clear(); state.mVersion = 80;
@@ -6373,11 +6373,12 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     const auto wire = state.serializeBinary();
     // Independent public wire recipe, also checked by the Python inspector.
     const std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
-    const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0) + (state.mVersion >= 91 ? 4 : 0);
+    const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0) + (state.mVersion >= 91 ? 4 : 0) + (state.mVersion >= 96 ? 12 : 0);
     ASSERT_GE(wire.size(),ownerTail.size() + contactSuffix);
     EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin() + contactSuffix));
     std::vector<std::uint8_t> emptySuffix(contactSuffix, 0);
-    if (state.mVersion >= 88) emptySuffix[contactSuffix - 12 - (state.mVersion >= 89 ? 4 : 0) - (state.mVersion >= 91 ? 4 : 0)] = 1; // First unused projectile serial.
+    if (state.mVersion >= 88) emptySuffix[contactSuffix - 12 - (state.mVersion >= 89 ? 4 : 0) - (state.mVersion >= 91 ? 4 : 0) - (state.mVersion >= 96 ? 12 : 0)] = 1; // First unused magic projectile serial.
+    if (state.mVersion >= 96) emptySuffix[contactSuffix - 12] = 1; // First unused arrow serial.
     EXPECT_TRUE(std::equal(emptySuffix.begin(), emptySuffix.end(), wire.end() - contactSuffix));
     const std::vector<std::uint8_t> sourceWire{0x01, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x02, 0x00, 0x00, 0x00};
     EXPECT_NE(std::search(wire.begin(),wire.end(),sourceWire.begin(),sourceWire.end()),wire.end());
@@ -6765,4 +6766,47 @@ TEST(ESM4RuntimeState, GreaterPower95KeepsDailyHistoryAndDoesNotInventLegacyUses
     state.mNativeActorValues[0] = actor;
     state.mNativeActorValues[0].mOwner = ESM4::ActorValueOwner::NonPlayer;
     EXPECT_ANY_THROW(state.serializeBinary());
+}
+
+TEST(ESM4RuntimeState, ArrowFlight96OwnsLaunchSnapshotAndRejectsDowngradeOrDanglingCaster)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("Oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    state.mNativeActorValues = {actor};
+    ESM4::ArrowProjectileState arrow;
+    arrow.mCaster = actor.mActor;
+    arrow.mBow = ESM::FormKey::content("Oblivion.esm", 0x47aca);
+    arrow.mAmmunition = ESM::FormKey::content("Oblivion.esm", 0x17829);
+    arrow.mCell = state.mPlayer.mCell;
+    arrow.mPosition = {10, -0.f, 30};
+    arrow.mVelocity = {100, 0, 50};
+    arrow.mDamage = 8;
+    arrow.mGravityFactor = 2;
+    arrow.mModel = "weapons/iron/arrow.nif";
+    state.mNextArrowProjectile = 2;
+    state.mNativeArrowProjectiles.emplace(1, arrow);
+    const auto wire = state.serializeBinary();
+    auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(loaded.mNativeArrowProjectiles, state.mNativeArrowProjectiles);
+    EXPECT_EQ(loaded.serializeBinary(), wire);
+    EXPECT_NE(loaded.canonicalJson().find("-0.0"), std::string::npos);
+    const auto advanced = ESM4::advanceArrowProjectile(arrow, .5f, {0, 0, -10});
+    EXPECT_EQ(advanced.mPosition, (ESM4::ProjectileVector{60, 0, 52.5f}));
+    EXPECT_EQ(advanced.mVelocity, (ESM4::ProjectileVector{100, 0, 40}));
+    EXPECT_EQ(advanced.mDamage, arrow.mDamage);
+    EXPECT_EQ(advanced.mBow, arrow.mBow);
+    EXPECT_ANY_THROW(ESM4::advanceArrowProjectile(arrow, -1, {0, 0, -10}));
+    state.mNativeArrowProjectiles.at(1).mCaster = ESM::FormKey::content("Oblivion.esm", 0x1234);
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeArrowProjectiles.at(1) = arrow;
+    state.mVersion = 95;
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeArrowProjectiles.clear();
+    state.mNextArrowProjectile = 1;
+    loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(loaded.mNativeArrowProjectiles.empty());
+    EXPECT_EQ(loaded.mNextArrowProjectile, 1);
 }

@@ -1844,6 +1844,21 @@ namespace MWRender
         mOblivionHeldArrow.reset();
     }
 
+    std::optional<osg::Vec3f> Animation::getOblivionHeldArrowPosition() const
+    {
+        if (!mOblivionHeldArrow || mPtr.isEmpty()) return {};
+        auto* placement = mPtr.getRefData().getBaseNode();
+        if (!placement) return {};
+        // The renderer has several camera/shadow paths above the actor. The
+        // actor placement owns the physical pose; require an unambiguous path
+        // only between that placement and the attached arrow.
+        const auto pose = OblivionAttachedWeaponPose::capture(*placement, *mOblivionHeldArrow->getNode());
+        if (!pose) return {};
+        const auto position = pose->getWorldMatrix().getTrans();
+        if (!std::isfinite(position.x()) || !std::isfinite(position.y()) || !std::isfinite(position.z())) return {};
+        return position;
+    }
+
     void Animation::refreshAnimationBindings()
     {
         if (!mObjectRoot)

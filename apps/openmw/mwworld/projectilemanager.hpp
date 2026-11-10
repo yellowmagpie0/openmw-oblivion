@@ -20,7 +20,7 @@ namespace MWPhysics
 {
     class PhysicsSystem;
 }
-namespace ESM4 { struct MagicProjectileState; }
+namespace ESM4 { struct MagicProjectileState; struct ArrowProjectileState; }
 
 namespace Loading
 {
@@ -68,6 +68,7 @@ namespace MWWorld
         void processHits();
         // Native flight lives in RuntimeState; these are disposable visual projections.
         void syncOblivionMagicProjectiles(const std::map<std::uint64_t, ESM4::MagicProjectileState>& projectiles);
+        void syncOblivionArrowProjectiles(const std::map<std::uint64_t, ESM4::ArrowProjectileState>& projectiles);
 
         /// Removes all current projectiles. Should be called when switching to a new worldspace.
         void clear();
@@ -138,6 +139,7 @@ namespace MWWorld
 
         std::vector<MagicBoltState> mMagicBolts;
         std::map<std::uint64_t, State> mOblivionMagicModels;
+        std::map<std::uint64_t, State> mOblivionArrowModels;
         std::vector<ProjectileState> mProjectiles;
 
         void cleanupProjectile(ProjectileState& state);

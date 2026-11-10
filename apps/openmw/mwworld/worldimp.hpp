@@ -959,6 +959,9 @@ namespace MWWorld
         bool releaseOblivionPlayerAbsorbFatiguePower(const ESM::FormKey& spell, Ptr& hitTarget);
         void updateOblivionMagicProjectiles(float duration);
         void validateOblivionMagicProjectiles(const ESM4::RuntimeState& state) const;
+        bool releaseOblivionPlayerArrow(std::uint64_t draw, MWRender::Animation& animation);
+        void updateOblivionArrowProjectiles(float duration);
+        void validateOblivionArrowProjectiles(const ESM4::RuntimeState& state) const;
         bool beginOblivionHeldBlock(const Ptr& actor, std::string_view group);
         bool releaseOblivionHeldBlock(const Ptr& actor);
         bool cancelOblivionHeldBlock(const Ptr& actor);

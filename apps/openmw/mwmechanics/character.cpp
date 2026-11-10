@@ -2716,10 +2716,219 @@ namespace MWMechanics
         }
     }
 
+    bool CharacterController::updateOblivionBow(float duration)
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation || mPtr != world->getPlayerPtr()) return false;
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
+        const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto ammo = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+        const auto bowId = right == inventory.end() ? ESM::RefId{}
+            : MWWorld::OblivionProfileServices::nativeItemId(world->getStore(), right->getCellRef().getRefId());
+        const auto* definition = world->getStore().get<ESM4::Weapon>().search(bowId);
+        const auto stop = [&] {
+            if (const auto* state = service->findBowState(actor))
+            {
+                service->cancelBowDraw(state->mActionId, actor);
+                service->updatePlayerBowTimer(0, -1, ESM4::BowAnimationPhase::End);
+            }
+            if (!mOblivionBowGroup.empty()) mAnimation->disable(std::exchange(mOblivionBowGroup, {}));
+            mAnimation->detachArrow();
+            mAnimation->setPitchFactor(0);
+            mOblivionRenderedBow = 0;
+            if (mUpperBodyState == UpperBodyState::AttackWindUp || mUpperBodyState == UpperBodyState::AttackRelease)
+                mUpperBodyState = UpperBodyState::WeaponEquipped;
+        };
+        if (!definition || definition->mData.type != 5)
+        {
+            if (service->findBowState(actor) || mOblivionRenderedBow) stop();
+            return false;
+        }
+        const auto* life = service->findActorLife(actor);
+        const auto inputManager = MWBase::Environment::get().getInputManager();
+        const auto& stats = mPtr.getClass().getCreatureStats(mPtr);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive || mOblivionRecoveryActive
+            || mSkipAnim || isScriptedAnimPlaying() || isKnockedOut() || isKnockedDown() || isRecovery()
+            || oblivionKnockedState(*world, mPtr) != 0 || oblivionParalyzed(*world, mPtr)
+            || (world->getOblivionAiService() && world->getOblivionAiService()->isRidingHorse(mPtr))
+            || !inputManager->getControlSwitch("playercontrols") || !inputManager->getControlSwitch("playerfighting"))
+        {
+            stop();
+            return false;
+        }
+        if (const auto* melee = service->findMeleeState(actor); melee
+            && (melee->mStrike || melee->mReaction
+                || (melee->mFirstPerson && (melee->mFirstPerson->mStrike || melee->mFirstPerson->mReaction))))
+        {
+            stop();
+            return false; // Existing native reactions retain their controller.
+        }
+        if (stats.getDrawState() != DrawState::Weapon)
+        {
+            stop();
+            if (mWeaponType != ESM::Weapon::None) mAnimation->showWeapons(false);
+            mWeapon = {};
+            mWeaponType = ESM::Weapon::None;
+            mUpperBodyState = UpperBodyState::None;
+            return true;
+        }
+        try
+        {
+            const auto bowKey = world->getStore().get<ESM4::Weapon>().findFormKey(bowId);
+            const auto ammoId = ammo == inventory.end() ? ESM::RefId{}
+                : MWWorld::OblivionProfileServices::nativeItemId(world->getStore(), ammo->getCellRef().getRefId());
+            const auto ammoKey = world->getStore().get<ESM4::Ammunition>().findFormKey(ammoId);
+            if (const auto* state = service->findBowState(actor);
+                state && !state->mReleaseCommitted
+                    && (!bowKey || !ammoKey || state->mBowBase != *bowKey || state->mAmmoBase != *ammoKey))
+                stop();
+            if (mWeapon != *right || mWeaponType != ESM::Weapon::MarksmanBow)
+            {
+                service->endBlocking(actor);
+                service->clearMeleeVisualHistory(actor);
+                if (!mOblivionBlockGroup.empty()) mAnimation->disable(std::exchange(mOblivionBlockGroup, {}));
+                mAnimation->setNativeSequenceLayers({});
+                if (auto* peer = mAnimation->getPlaybackPeer()) peer->setNativeSequenceLayers({});
+                mOblivionMeleeProjection = mOblivionFirstPersonMeleeProjection = false;
+                mWeapon = *right;
+                mWeaponType = ESM::Weapon::MarksmanBow;
+                mAnimation->showWeapons(true);
+            }
+            const auto* scripts = mPtr.getRefData().getLuaScripts();
+            const bool acceptInput = duration > 0 && (!scripts || scripts->isActive());
+            const bool held = getAttackingOrSpell();
+            auto input = service->findMeleeState(actor) ? service->findMeleeState(actor)->mInput : ESM4::RuntimeMeleeInput{};
+            const bool pressed = acceptInput && held && !input.mInputHeld;
+            if (acceptInput)
+            {
+                input.mInputHeld = held;
+                input.mHeldSeconds = 0;
+                input.mQueued = ESM4::MeleeQueuedStrike::None;
+                if (!held) input.mRequireRelease = false;
+                service->setMeleeInput(actor, input);
+            }
+            if (!service->findBowState(actor) && pressed && !input.mRequireRelease)
+            {
+                if (!bowKey || !ammoKey || ammo == inventory.end() || ammo->getCellRef().getCount() <= 0
+                    || right->getClass().getItemHealth(*right) <= 0)
+                {
+                    MWBase::Environment::get().getWindowManager()->messageBox("Equip an unbroken bow and arrows to shoot.");
+                    return true;
+                }
+                const auto* ammunition = world->getStore().get<ESM4::Ammunition>().search(*ammoKey);
+                if (!definition->mEnchantment.isZeroOrUnset() || (definition->mData.flags & 1u)
+                    || !ammunition || !ammunition->mEnchantment.isZeroOrUnset()
+                    || ammunition->mData.mFlags != 0 || !ammunition->mAmmoEffects.empty())
+                {
+                    MWBase::Environment::get().getWindowManager()->messageBox("Use an ordinary bow and arrows.");
+                    return true;
+                }
+                const auto* metadata = mAnimation->getControllerSequenceMetadata("bowattack");
+                if (!metadata || metadata->mCycleType != 2 || metadata->mFrequency <= 0)
+                    throw std::invalid_argument("native bowattack sequence is unavailable");
+                std::vector<ESM4::MeleeTextKey> textKeys;
+                for (const auto& [time, text] : metadata->mTextKeys) textKeys.push_back({time, text});
+                const auto keys = ESM4::bowAnimationKeyTimes(textKeys);
+                if (keys.mMatchedCount != 5) throw std::invalid_argument("native bowattack needs five authored phase keys");
+                ESM4::RuntimeBowState prepared;
+                prepared.mBowBase = *bowKey;
+                prepared.mAmmoBase = *ammoKey;
+                prepared.mAnimationGroup = "bowattack";
+                prepared.mPlaybackRate = definition->mData.speed * metadata->mFrequency;
+                prepared.mKeyTimes = keys.mTimes;
+                prepared.mProgress.mSequenceOffset = keys.mTimes.front() - service->animationClock(actor);
+                const auto id = service->beginBowDraw(actor, std::move(prepared));
+                Log(Debug::Info) << "M15 Player bow draw: id=" << id << " bow=" << bowKey->serialize()
+                    << " ammo=" << ammoKey->serialize();
+            }
+            const auto* owned = service->findBowState(actor);
+            if (!owned)
+            {
+                mUpperBodyState = UpperBodyState::WeaponEquipped;
+                return true;
+            }
+            if (!service->bindBowPlayback(owned->mActionId, actor))
+                throw std::invalid_argument("native bow playback owner is stale");
+            const auto id = owned->mActionId;
+            if (acceptInput && owned->mProgress.mPhase != ESM4::BowAnimationPhase::End)
+                service->advancePlayerBowPlayback(id, actor, duration, held, pressed, true, false, true);
+            const auto state = *service->findBowState(actor);
+            const float sequenceTime = service->animationClock(actor) + state.mProgress.mSequenceOffset;
+            const auto bind = [&](MWRender::Animation& view) {
+                const auto* metadata = view.getControllerSequenceMetadata(state.mAnimationGroup);
+                if (!metadata || metadata->mStopTime <= metadata->mStartTime)
+                    throw std::invalid_argument("native bow view has no authored sequence");
+                std::vector<ESM4::MeleeTextKey> textKeys;
+                for (const auto& [time, text] : metadata->mTextKeys) textKeys.push_back({time, text});
+                const auto keys = ESM4::bowAnimationKeyTimes(textKeys);
+                if (keys.mMatchedCount != 5) throw std::invalid_argument("native bow view lacks phase keys");
+                const auto phase = std::min<std::size_t>(static_cast<std::size_t>(state.mProgress.mPhase), 3);
+                const float span = state.mKeyTimes[phase + 1] - state.mKeyTimes[phase];
+                const float fraction = span > 0 ? std::clamp((sequenceTime - state.mKeyTimes[phase]) / span, 0.f, 1.f) : 0;
+                const float time = keys.mTimes[phase] + fraction * (keys.mTimes[phase + 1] - keys.mTimes[phase]);
+                if (!view.getInfo(state.mAnimationGroup))
+                    view.play(state.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_UpperBody,
+                        false, 0.f, "start", "stop", 0, 0, false, MWRender::Animation::PlaybackScope::ThisView);
+                const float normalized = std::clamp((time - metadata->mStartTime)
+                    / (metadata->mStopTime - metadata->mStartTime), 0.f, 1.f);
+                if (!view.setAnimationFrameTime(state.mAnimationGroup, metadata->mTimelineStart
+                        + normalized * (metadata->mTimelineStop - metadata->mTimelineStart), MWRender::Animation::PlaybackScope::ThisView))
+                    throw std::invalid_argument("native bow renderer refused frame");
+                view.setPitchFactor(1);
+            };
+            bind(*mAnimation);
+            if (auto* peer = mAnimation->getPlaybackPeer()) bind(*peer);
+            mOblivionBowGroup = state.mAnimationGroup;
+            mOblivionRenderedBow = id;
+            mUpperBodyState = state.mReleaseCommitted ? UpperBodyState::AttackRelease : UpperBodyState::AttackWindUp;
+            // Reconstruct held geometry after loading without acknowledging a
+            // second attachment or spending ammunition.
+            if (!state.mReleaseCommitted && state.mProgress.mPhase >= ESM4::BowAnimationPhase::Attach
+                && !mAnimation->hasOblivionHeldArrow()) mAnimation->attachArrow();
+            const auto event = service->pendingBowEvent(actor, true, true);
+            if (event == ESM4::BowActionEvent::Attach)
+            {
+                if (!mAnimation->hasOblivionHeldArrow()
+                    || (mAnimation->getPlaybackPeer() && !mAnimation->getPlaybackPeer()->hasOblivionHeldArrow())
+                    || !service->confirmBowAttachment(id, actor))
+                    throw std::invalid_argument("native held arrow could not be attached");
+                Log(Debug::Info) << "M15 Player bow attached: id=" << id;
+            }
+            else if (event == ESM4::BowActionEvent::Release)
+            {
+                if (!world->releaseOblivionPlayerArrow(id, *mAnimation))
+                    throw std::invalid_argument("native arrow release could not be published");
+                mAnimation->detachArrow();
+            }
+            if (state.mProgress.mPhase == ESM4::BowAnimationPhase::End && acceptInput && !held)
+            {
+                service->updatePlayerBowTimer(0, -1, ESM4::BowAnimationPhase::End);
+                if (!service->finishBowPlayback(id, actor)) throw std::invalid_argument("native bow completion is stale");
+                stop();
+            }
+            return true;
+        }
+        catch (const std::exception& error)
+        {
+            Log(Debug::Warning) << "M15 native bow rejected: " << error.what();
+            stop();
+            if (getAttackingOrSpell())
+            {
+                auto input = service->findMeleeState(actor) ? service->findMeleeState(actor)->mInput : ESM4::RuntimeMeleeInput{};
+                input.mRequireRelease = true;
+                service->setMeleeInput(actor, input);
+            }
+            return true;
+        }
+    }
+
     bool CharacterController::updateOblivionWeaponState(float duration)
     {
         if (updateOblivionSpellCast(duration)) return true;
         if (updateOblivionStaffCast(duration)) return true;
+        if (updateOblivionBow(duration)) return true;
         if (mOblivionRecoveryActive) return true;
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
         auto* service = world ? world->getOblivionCombatService() : nullptr;

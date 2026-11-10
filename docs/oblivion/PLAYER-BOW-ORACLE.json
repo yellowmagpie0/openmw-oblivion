@@ -1,0 +1,75 @@
+{
+  "status": "reused independent native rules; real runtime integration remains active",
+  "identity": {
+    "Oblivion.exe": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe",
+      "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+    },
+    "Data/Oblivion.esm": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+    },
+    "mesh_archive": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Meshes.bsa",
+      "sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+      "bytes": 671405897,
+      "scope": "Installed mesh/animation archive used by real bow courses; winning WEAP/AMMO model paths and historical stock KF/Arrow:0 provenance are separate checks."
+    }
+  },
+  "content": {
+    "047aca": {
+      "type": "WEAP",
+      "editor_id": "CGIronBow",
+      "enchantment": "",
+      "model": "Weapons\\Iron\\Bow.NIF",
+      "type_code": 5,
+      "speed": 1,
+      "health": 90,
+      "damage": 8,
+      "flags": 0
+    },
+    "017829": {
+      "type": "AMMO",
+      "editor_id": "Arrow1Iron",
+      "enchantment": "",
+      "model": "Weapons\\Iron\\Arrow.NIF",
+      "speed": 1,
+      "damage": 8,
+      "flags": 0
+    }
+  },
+  "provenance": "docs/oblivion/M15-NATIVE-RULE-PROVENANCE.md, checkpoints258\u2013272 and later prepared-release acceptance. Existing launch, timer, phase and resource helpers are reused unchanged; only gameplay wiring and independent flight state are new.",
+  "reports": [
+    {
+      "path": "build/oblivion-compat/m15/S5/native-world-gravity-setup-oracle-01/report.json",
+      "sha256": "7e95b59aaa97b7e5e382f290b90ec9de32c14e08f3cb229850f3aefbd7ee187c",
+      "passed": true
+    },
+    {
+      "path": "build/oblivion-compat/m15/S5/native-arrow-coordinate-shape-oracle-02/report.json",
+      "sha256": "1ac954c71910e245b09dc67ccb52ff09531fe5655839cf12435cfff6b7b042da",
+      "passed": true
+    },
+    {
+      "path": "build/oblivion-compat/m15/S5/native-arrow-gravity-store-oracle-01/report.json",
+      "sha256": "1e724d447bf54a8363eeb784edf298fa7fd5fecc9c3f985d497ec5bf7dc2a258",
+      "passed": true
+    }
+  ],
+  "trajectory": {
+    "gravity_havok": [
+      0,
+      0,
+      -73.57500457763672
+    ],
+    "coordinate_multiplier": 6.999040126800537,
+    "implementation": "Constant acceleration in world coordinates, substeps no greater than1/60 second with swept line collision. Ordinary mechanics use reasonable numerical similarity; complete Havok controller/trajectory parity is not claimed.",
+    "limits": [
+      "12000 world-unit range cap",
+      "Interior Player ordinary arrows only",
+      "Embedding/recovery and sound-key acceptance remain open"
+    ]
+  },
+  "record_audit": "build/oblivion-compat/player-bow/original-bow-ammo-records.json",
+  "aiming_decision": "Use the physical held-arrow origin and converge toward the visible crosshair point, then integrate gravity/collision. Original-game aim/autoaim equivalence is not claimed. Actual Canosel body shot hit sarcophagus06bf72; higher shot cleared it but hit rear wall06bf73. Saved muzzle/actor heading predicts39.11 units of lateral miss at bandit06bfc2, motivating camera-to-muzzle convergence rather than numeric damage tuning."
+}
