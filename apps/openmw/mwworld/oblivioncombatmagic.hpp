@@ -32,6 +32,7 @@ namespace MWWorld
     OblivionSpellPresentation describeOblivionSpell(const ESMStore& store, const ESM4::Spell& spell,
         const std::array<std::int32_t, 6>& schoolSkills, std::int32_t luck);
     OblivionSpellPresentation describeOblivionPlayerSpell(MWBase::World& world, const ESM4::Spell& spell);
+    bool supportsOblivionStarOfWest(const ESMStore& store, const ESM4::Spell& spell);
 
     // Complete admission for instant self restoration; no partial application.
     std::optional<std::array<float, 3>> resolveOblivionPotionRestoration(

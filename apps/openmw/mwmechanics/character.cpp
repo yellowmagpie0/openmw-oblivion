@@ -18,6 +18,7 @@
  */
 
 #include "character.hpp"
+#include "../mwworld/timestamp.hpp"
 
 #include "../mwworld/oblivioncombatdata.hpp"
 
@@ -2469,6 +2470,7 @@ namespace MWMechanics
                 const bool target = scroll ? MWWorld::resolveOblivionScrollDamage(store, *scroll).has_value()
                     : spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
                 const bool chameleon = scroll && MWWorld::resolveOblivionScrollChameleon(store, *scroll).has_value();
+                const bool greaterPower = spell && MWWorld::supportsOblivionStarOfWest(store, *spell);
                 float cost = 0.f;
                 if (scroll)
                 {
@@ -2477,13 +2479,23 @@ namespace MWMechanics
                 else
                 {
                     if (!spell || !ownsSpell(*key)
-                        || (!target && !MWWorld::resolveOblivionSpellRestoration(store, *spell)))
+                        || (!target && !greaterPower && !MWWorld::resolveOblivionSpellRestoration(store, *spell)))
                     {
                         windows->messageBox("Select a supported spell or scroll from the magic menu.");
                         return false;
                     }
-                    if (spell->mData->mLevel > 4
-                        || service->getPlayerIntegerValue(target ? 20 : 25) < int(spell->mData->mLevel * 25))
+                    if (greaterPower)
+                    {
+                        const auto time = world->getTimeStamp();
+                        if (!service->canUsePlayerPower(*key, double(time.getDay()) * 24. + time.getHour()))
+                        {
+                            windows->messageBox("You can only cast Powers once per day");
+                            Log(Debug::Info) << "M16 Star of the West rejected: reason=daily-use";
+                            return false;
+                        }
+                    }
+                    if (!greaterPower && (spell->mData->mLevel > 4
+                        || service->getPlayerIntegerValue(target ? 20 : 25) < int(spell->mData->mLevel * 25)))
                     {
                         windows->messageBox(target ? "Your Destruction skill is too low to cast this spell."
                                                    : "Your Restoration skill is too low to cast this spell.");
@@ -2498,7 +2510,7 @@ namespace MWMechanics
                         return false;
                     }
                 }
-                std::string group = target ? "casttarget" : "castself";
+                std::string group = greaterPower ? "casttouch" : target ? "casttarget" : "castself";
                 auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
                 const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
                 if (mPtr.getClass().getCreatureStats(mPtr).getDrawState() == DrawState::Weapon
@@ -2507,7 +2519,7 @@ namespace MWMechanics
                     const auto id = MWWorld::OblivionProfileServices::nativeItemId(store, weapon->getCellRef().getRefId());
                     if (const auto* definition = store.get<ESM4::Weapon>().search(id);
                         definition && (definition->mData.type == 0 || definition->mData.type == 2))
-                        group = target ? "onehandcasttarget" : "onehandcastself";
+                        group = greaterPower ? "onehandcasttouch" : target ? "onehandcasttarget" : "onehandcastself";
                 }
                 const auto* metadata = mAnimation->getControllerSequenceMetadata(group);
                 if (!metadata || metadata->mCycleType != 2 || metadata->mFrequency <= 0)
@@ -2535,7 +2547,8 @@ namespace MWMechanics
                 : spell && MWWorld::resolveOblivionTargetSpellDamage(store, *spell).has_value();
             const bool chameleon = scroll && cast.mCost == 0
                 && MWWorld::resolveOblivionScrollChameleon(store, *scroll).has_value();
-            if ((!amounts && !target && !chameleon) || (!scroll && !ownsSpell(cast.mSpell)))
+            const bool greaterPower = spell && MWWorld::supportsOblivionStarOfWest(store, *spell);
+            if ((!amounts && !target && !chameleon && !greaterPower) || (!scroll && !ownsSpell(cast.mSpell)))
                 throw std::invalid_argument("pending native cast no longer has an owned supported spell");
             const float nextTime = static_cast<float>(std::min(double(cast.mDuration), double(cast.mElapsed) + duration));
             const auto bind = [&](MWRender::Animation& view) {
@@ -2559,14 +2572,16 @@ namespace MWMechanics
             mOblivionCastGroup = cast.mAnimationGroup;
             mUpperBodyState = UpperBodyState::Casting;
             auto magnitudes = amounts.value_or(std::array<float, 3>{});
-            const float power = scroll ? 1.f : oblivionCombatSpellPower(*world, mPtr);
+            const float power = (scroll || greaterPower) ? 1.f : oblivionCombatSpellPower(*world, mPtr);
             for (float& magnitude : magnitudes) magnitude *= power;
-            auto skillUse = !target && !chameleon && !cast.mReleased && nextTime >= cast.mReleaseTime
+            auto skillUse = !target && !chameleon && !greaterPower && !cast.mReleased && nextTime >= cast.mReleaseTime
                 ? MWWorld::prepareOblivionCharacterGenerationSkillUse(*world, 25, 1, 1.f)
                 : std::optional<ESM4::CharacterGenerationState>{};
-            const auto update = (target || chameleon)
+            MWWorld::Ptr powerTarget;
+            const auto update = (target || chameleon || greaterPower)
                 ? service->advanceItemCast(actor, duration,
-                    [&] { return chameleon ? MWWorld::releaseOblivionScrollChameleon(*world, cast.mSpell)
+                    [&] { return greaterPower ? world->releaseOblivionPlayerAbsorbFatiguePower(cast.mSpell, powerTarget)
+                        : chameleon ? MWWorld::releaseOblivionScrollChameleon(*world, cast.mSpell)
                         : world->releaseOblivionPlayerSpellProjectile(cast.mSpell, scroll ? 1.f : power); })
                 : service->advanceRestorationCast(mPtr, &world->getPlayer(), duration, magnitudes,
                     MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
@@ -2577,8 +2592,23 @@ namespace MWMechanics
                     << " applied=" << update->mApplied << " health=" << service->getPlayerValue(8)
                     << " magicka=" << service->getPlayerValue(9);
                 if (!update->mApplied)
-                    windows->messageBox(scroll ? "The scroll could not be released."
-                                               : "You do not have enough Magicka to cast this spell.");
+                    windows->messageBox(greaterPower ? "The power could not be released."
+                        : scroll ? "The scroll could not be released."
+                                 : "You do not have enough Magicka to cast this spell.");
+                // Release ownership is committed before a hostile response can
+                // run authored combat callbacks. No callback can replay the transfer.
+                if (update->mApplied && greaterPower && !powerTarget.isEmpty()
+                    && powerTarget.getRefData().isEnabled() && powerTarget.getCellRef().getCount() > 0)
+                {
+                    const auto key = powerTarget.getCellRef().getFormKey();
+                    const auto* targetLife = service->findActorLife(key);
+                    if (targetLife && targetLife->mPhase == ESM4::ActorLifePhase::Alive
+                        && service->getNonPlayerIntegerValue(powerTarget, 34) > 0
+                        && !world->isOblivionCombatTarget(key, actor).value_or(false)
+                        && world->executeOblivionStartCombat(powerTarget, mPtr))
+                        Log(Debug::Info) << "M16 Star of the West hostile response: actor=" << key.serialize()
+                            << " target=" << actor.serialize();
+                }
             }
             return true;
         }

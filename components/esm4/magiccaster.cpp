@@ -9,6 +9,21 @@
 #include <utility>
 namespace ESM4
 {
+    void PowerUseState::validate() const
+    {
+        if (!mSpell.isContent() || ESM::FormKey::deserialize(mSpell.serialize()) != mSpell
+            || !std::isfinite(mUsedAt) || mUsedAt < 0)
+            throw std::invalid_argument("invalid native greater-power use history");
+    }
+
+    bool PowerUseState::available(double gameHours) const
+    {
+        validate();
+        if (!std::isfinite(gameHours) || gameHours < 0)
+            throw std::invalid_argument("invalid native greater-power clock");
+        return gameHours - mUsedAt >= 24.;
+    }
+
     void MagicProjectileState::validate() const
     {
         if (mCaster.isNull() || !mSource.isContent() || !mCell.isContent()

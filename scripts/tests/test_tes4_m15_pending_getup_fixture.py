@@ -12,7 +12,7 @@ from scripts.tests import test_tes4_runtime_state as runtime_tests
 
 
 class PendingGetUpFixtureTests(unittest.TestCase):
-    def source(self, folder, *, with_food=False, with_chameleon=False, with_potion=False):
+    def source(self, folder, *, with_food=False, with_chameleon=False, with_potion=False, with_power=False):
         state = runtime_tests.Tes4RuntimeStateTests.getup_pending_state()
         runtime._upgrade_actor_knockback(state); state['schema_version'] = runtime.CURRENT_VERSION
         if with_food:
@@ -28,6 +28,9 @@ class PendingGetUpFixtureTests(unittest.TestCase):
             player['values'][1][1] = player['values'][2][1] = -1.
             player['potion_attribute_effects'] = [dict(potion='content:oblivion.esm:0b1201',
                 duration=60., elapsed=12., modifiers=[dict(attribute=1, delta=-1.), dict(attribute=2, delta=-1.)])]
+        if with_power:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['used_powers'] = [dict(spell='content:oblivion.esm:047ade', used_at=73.25)]
         graph = state['native_getup_playback'].pop()
         payload = runtime.encode_payload(state)
         body = struct.pack('<4sII', b'VERS', 4, runtime.CURRENT_VERSION) + struct.pack('<4sI', b'DATA', len(payload)) + payload
@@ -86,6 +89,16 @@ class PendingGetUpFixtureTests(unittest.TestCase):
             player = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)
             self.assertEqual(player(before)['potion_attribute_effects'], player(after)['potion_attribute_effects'])
             self.assertEqual(player(before)['values'][1:3], player(after)['values'][1:3])
+
+    def test_schema95_staging_preserves_unrelated_greater_power_daily_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_power=True)
+            before = runtime.load_save(source)
+            target = source.with_name('pending-power-preserved.omwsave')
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            player = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)
+            self.assertEqual(player(before)['used_powers'], player(after)['used_powers'])
 
     def test_invalid_graph_rejects_before_output_and_preserves_seed(self):
         for mutation in [lambda g: g['pending_requests'].pop(),

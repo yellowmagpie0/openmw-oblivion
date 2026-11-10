@@ -673,3 +673,59 @@ TEST(OblivionMiscConsumableStore, ScriptedProfileAndDeletedWinningSourceDoNotPar
     EXPECT_FALSE(supportedStone(fixture));
     EXPECT_FALSE(MWWorld::isOblivionWelkyndStone(fixture.mStore, previous));
 }
+
+namespace
+{
+    std::string starOfWest(std::uint32_t id = 0x47ade, std::uint32_t magnitude = 100,
+        std::uint32_t type = 2)
+    {
+        const auto spit = bytes(type) + bytes(0u) + bytes(4u) + bytes(0x0b2fbd01u);
+        const auto efit = bytes(ESM::fourCC("ABFA")) + bytes(magnitude) + bytes(0u)
+            + bytes(0u) + bytes(1u) + bytes(10u);
+        return record(ESM4::REC_SPEL, id, sub(ESM::fourCC("SPIT"), spit)
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("ABFA"))) + sub(ESM::fourCC("EFIT"), efit));
+    }
+
+    std::string absorbFatigueEffect()
+    {
+        const auto data = bytes(0x01003825u) + bytes(6.f) + bytes(10u) + bytes(5u) + bytes(64)
+            + std::string(44, '\0');
+        return record(ESM4::REC_MGEF, 0x8ca, sub(ESM::fourCC("EDID"), std::string("ABFA\0", 5))
+            + sub(ESM::fourCC("DATA"), data));
+    }
+
+    const ESM4::Spell& loadedStar(const Fixture& fixture)
+    {
+        return *fixture.mStore.get<ESM4::Spell>().search(ESM::FormId{0x47ade, 1});
+    }
+}
+
+TEST(OblivionCombatMagicStore, OriginalGreaterPowerHasZeroCostAndDoesNotRequireMasterRestoration)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {starOfWest(), absorbFatigueEffect()});
+    ASSERT_TRUE(MWWorld::supportsOblivionStarOfWest(fixture.mStore, loadedStar(fixture)));
+    const auto description = MWWorld::describeOblivionSpell(fixture.mStore, loadedStar(fixture), {}, 0);
+    ASSERT_TRUE(description.mCost);
+    EXPECT_FLOAT_EQ(*description.mCost, 0.f);
+    // The original upper flag bytes contain padding; only the defined byte is semantic.
+    auto copied = loadedStar(fixture);
+    copied.mData->mFlags = 1;
+    EXPECT_TRUE(MWWorld::supportsOblivionStarOfWest(fixture.mStore, copied));
+    copied.mData->mType = 0;
+    EXPECT_FALSE(MWWorld::supportsOblivionStarOfWest(fixture.mStore, copied));
+    copied = loadedStar(fixture);
+    copied.mFormKey = ESM::FormKey::content("other.esm", 0x47ade);
+    EXPECT_FALSE(MWWorld::supportsOblivionStarOfWest(fixture.mStore, copied));
+}
+
+TEST(OblivionCombatMagicStore, GreaterPowerRejectsChangedOrDeletedWinningProfiles)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {starOfWest(), absorbFatigueEffect()});
+    fixture.load("patch.esp", {"oblivion.esm"}, {starOfWest(0x47ade, 101)});
+    EXPECT_FALSE(MWWorld::supportsOblivionStarOfWest(fixture.mStore, loadedStar(fixture)));
+    fixture.load("final.esp", {"oblivion.esm", "patch.esp"}, {starOfWest(),
+        record(ESM4::REC_MGEF, 0x8ca, {}, true)});
+    EXPECT_FALSE(MWWorld::supportsOblivionStarOfWest(fixture.mStore, loadedStar(fixture)));
+}

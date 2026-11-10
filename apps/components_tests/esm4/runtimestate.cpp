@@ -6738,3 +6738,31 @@ TEST(ESM4RuntimeState, PotionAttributes94KeepRepeatedSourcesAndDoNotInventLegacy
     state.mNativeActorValues[0].mOwner = ESM4::ActorValueOwner::NonPlayer;
     EXPECT_ANY_THROW(state.serializeBinary());
 }
+
+TEST(ESM4RuntimeState, GreaterPower95KeepsDailyHistoryAndDoesNotInventLegacyUses)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("Oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mUsedPowers = {{ESM::FormKey::content("Oblivion.esm", 0x47ade), 23.75}};
+    state.mNativeActorValues = {actor};
+    const auto wire = state.serializeBinary();
+    auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(loaded.mNativeActorValues, state.mNativeActorValues);
+    EXPECT_EQ(loaded.serializeBinary(), wire);
+    EXPECT_NE(loaded.canonicalJson().find("used_powers"), std::string::npos);
+    state.mVersion = 94;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeActorValues[0].mUsedPowers.clear();
+    loaded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(loaded.mNativeActorValues[0].mUsedPowers.empty());
+    state.mVersion = ESM4::CurrentRuntimeStateVersion;
+    state.mNativeActorValues[0] = actor;
+    state.mNativeActorValues[0].mUsedPowers.push_back(actor.mUsedPowers[0]);
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeActorValues[0] = actor;
+    state.mNativeActorValues[0].mOwner = ESM4::ActorValueOwner::NonPlayer;
+    EXPECT_ANY_THROW(state.serializeBinary());
+}

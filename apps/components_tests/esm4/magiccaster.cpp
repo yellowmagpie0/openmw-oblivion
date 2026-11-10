@@ -233,3 +233,18 @@ TEST(ESM4ScrollChameleon, SameEnchantmentRefreshesWithoutAnAdditionalContributio
     EXPECT_THROW(ESM4::applyScrollChameleon(effects, effect), std::invalid_argument);
     EXPECT_EQ(effects, before);
 }
+
+TEST(ESM4GreaterPower, ElapsedGameHoursOwnDailyUseAcrossMidnightAndBackwardClock)
+{
+    ESM4::PowerUseState state{ESM::FormKey::content("Oblivion.esm", 0x47ade), 23.75};
+    EXPECT_FALSE(state.available(24.));
+    EXPECT_FALSE(state.available(47.749));
+    EXPECT_TRUE(state.available(47.75));
+    EXPECT_TRUE(state.available(100.));
+    EXPECT_FALSE(state.available(1.));
+    EXPECT_THROW(state.available(std::numeric_limits<double>::infinity()), std::invalid_argument);
+    state.mUsedAt = -1.;
+    EXPECT_THROW(state.validate(), std::invalid_argument);
+    state.mUsedAt = 0.; state.mSpell = ESM::FormKey::dynamic("spell", 1);
+    EXPECT_THROW(state.validate(), std::invalid_argument);
+}

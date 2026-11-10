@@ -1139,6 +1139,16 @@ namespace ESM4
             if (!chameleonSources.insert(effect.mEnchantment).second)
                 throw std::runtime_error("Duplicate TES4 Chameleon enchantment source");
         }
+        if (mUsedPowers.size() > sMaximumCollectionSize
+            || (!mUsedPowers.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 greater-power ownership");
+        std::set<ESM::FormKey> powers;
+        for (const auto& power : mUsedPowers)
+        {
+            power.validate();
+            if (!powers.insert(power.mSpell).second)
+                throw std::runtime_error("Duplicate TES4 greater-power use history");
+        }
         if (mPotionAttributeEffects.size() > sMaximumCollectionSize
             || (!mPotionAttributeEffects.empty() && mOwner != ActorValueOwner::Player))
             throw std::runtime_error("Invalid TES4 potion attribute ownership");
@@ -2095,6 +2105,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 95 && !actor.mUsedPowers.empty())
+                throw std::runtime_error("TES4 greater-power history requires runtime-state version95");
             if (mVersion < 94 && !actor.mPotionAttributeEffects.empty())
                 throw std::runtime_error("TES4 potion attributes require schema94");
             if (mVersion < 93 && !actor.mScrollChameleon.empty())
@@ -3487,6 +3499,15 @@ namespace ESM4
                         }
                     }
                 }
+                if (mVersion >= 95)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mUsedPowers.size()));
+                    for (const auto& power : actor.mUsedPowers)
+                    {
+                        writeKey(writer, power.mSpell);
+                        writer.floating(power.mUsedAt);
+                    }
+                }
             }
         }
         if (mVersion >= 11)
@@ -4700,6 +4721,12 @@ namespace ESM4
                             effect.mModifiers.push_back({reader.integer<std::uint8_t>(), reader.float32()});
                         actor.mPotionAttributeEffects.push_back(std::move(effect));
                     }
+                }
+                if (result.mVersion >= 95)
+                {
+                    const auto powerCount = reader.count();
+                    for (std::uint32_t j = 0; j < powerCount; ++j)
+                        actor.mUsedPowers.push_back({nativeKey(), reader.float64()});
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
@@ -6122,6 +6149,19 @@ namespace ESM4
                         stream << ",\"elapsed\":";
                         stream << std::setprecision(17) << effect.mElapsed;
                         stream << '}';
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 95 && !actor.mUsedPowers.empty())
+                {
+                    stream << ",\"used_powers\":[";
+                    bool first = true;
+                    for (const auto& power : actor.mUsedPowers)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"spell\":\"" << escapeJson(power.mSpell.serialize())
+                            << "\",\"used_at\":" << std::setprecision(17) << power.mUsedAt << '}';
                     }
                     stream << ']';
                 }

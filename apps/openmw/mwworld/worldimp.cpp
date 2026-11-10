@@ -10433,6 +10433,9 @@ namespace MWWorld
         if (!currentCell->getCell()->noSleep() && !player.getClass().getNpcStats(player).isWerewolf())
             result |= Rest_CanSleep;
 
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            Log(Debug::Info) << "M16 native wait eligibility: flags=" << result
+                << " solid_ground=" << mPhysics->isOnSolidGround(player) << " fall_height=" << fallHeight;
         return result;
     }
 

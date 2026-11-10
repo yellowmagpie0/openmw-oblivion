@@ -1977,9 +1977,11 @@ namespace MWGui
 
     bool WindowManager::getRestEnabled()
     {
-        // Enable rest dialogue if character creation finished
+        // TES4 uses the native control and wait-eligibility gates. Its
+        // character creation does not set the TES3 chargenstate global.
         if (mRuntime->mRestAllowed == false
-            && MWBase::Environment::get().getWorld()->getGlobalFloat(MWWorld::Globals::sCharGenState) == -1)
+            && (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                || MWBase::Environment::get().getWorld()->getGlobalFloat(MWWorld::Globals::sCharGenState) == -1))
             mRuntime->mRestAllowed = true;
         return mRuntime->mRestAllowed;
     }

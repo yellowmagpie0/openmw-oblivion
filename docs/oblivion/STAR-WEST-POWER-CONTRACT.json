@@ -1,5 +1,5 @@
 {
-  "status": "active preflight; no implementation yet",
+  "status": "accepted bounded original greater power; full M16 and expedition remain open",
   "milestone": "M16 bounded native greater power and Touch Absorb Fatigue",
   "content": {
     "spell": "content:oblivion.esm:047ade",
@@ -9,8 +9,8 @@
     "target": "original living bandit06c35c/base06c357 in Vilverin01663a"
   },
   "source_save": {
-    "path": "build/oblivion-compat/vilverin-continuation/next-bandit-magic-select-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
-    "sha256": "9905b786cbf2ba9673b9353cfbecd2315574ad5e64819ec0c7e13cf7f1c19f2b"
+    "path": "build/oblivion-compat/vilverin-continuation/star-west-touch-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "a771fe9437cdfd8f0b683ff2639b614d0e5734ac52471f49ea9cba4fbfcc3ea4"
   },
   "baseline": {
     "path": "build/oblivion-compat/vilverin-continuation/star-west-baseline-verification.json",
@@ -26,13 +26,36 @@
     "Close bounded receipt, resume the original expedition and choose its next actual unsupported content."
   ],
   "outside_scope": [
-    "Voice of the Emperor, general Absorb effects, arbitrary greater powers, exact animation/audio/rounding parity, full M16"
+    "Voice of the Emperor, general Absorb effects, arbitrary greater powers, exact animation/audio/rounding parity, full M16",
+    "General spell-induced crime/flee behavior and exact cancellation timing; small generic casting Fatigue expenditure remains approximate."
   ],
   "acceptance": [
     "Original independent behavior before production changes.",
     "No fork grants, synthetic enemies or forged resource deficits.",
     "Two-actor transfer and once-only cast release without partial publication.",
     "Cooldown survives save/load and expires by ordinary game time.",
-    "Original pending/restart ownership and all previous expedition state retained."
-  ]
+    "Original pending/restart ownership and all previous expedition state retained.",
+    "A surviving confident original defender acquires the Player through the existing native combat controller after committed hostile release, with response retained across restart."
+  ],
+  "touch_baseline": {
+    "path": "build/oblivion-compat/vilverin-continuation/star-west-touch-baseline-verification.json",
+    "diagnostic_passed": true,
+    "feature_passed": false,
+    "minimum_player_fatigue": 127.900390625,
+    "target_fatigue_unchanged": 150,
+    "target_health_unchanged": 16,
+    "source_save": "build/oblivion-compat/vilverin-continuation/star-west-touch-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_sha256": "a771fe9437cdfd8f0b683ff2639b614d0e5734ac52471f49ea9cba4fbfcc3ea4"
+  },
+  "implementation_status": [
+    "Schema95 Player native power history and C++/Python codecs retain legacy absence and reject invalid ownership/downgrade.",
+    "Original047ade profile, zero-cost presentation and authored Touch routing bypass ordinary skill mastery and skill XP.",
+    "Prepared two-actor Fatigue transfer and daily use commit once, including miss. A surviving confident defender responds through the existing combat controller after release ownership commits.",
+    "Normal use/restart66, pending/restart66 and ordinary23+1-hour recharge/restart139 semantic checks pass. Instrumented post-release/completed98 and pending/restart66 checks pass.",
+    "Full component3283 and engine2271 gates pass in both configurations; normal606 Python checks pass. Native wait-menu eligibility now admits TES4 ordinary waiting without the TES3 chargen global."
+  ],
+  "selection_source_save": {
+    "path": "build/oblivion-compat/vilverin-continuation/next-bandit-magic-select-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "9905b786cbf2ba9673b9353cfbecd2315574ad5e64819ec0c7e13cf7f1c19f2b"
+  }
 }

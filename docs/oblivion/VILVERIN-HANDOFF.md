@@ -26,47 +26,38 @@ Accepted bounded slices:
   [original-game oracle](MEAD-POTION-ORACLE.json),
   [receipt](MEAD-POTION-VERIFICATION.json).
 
-Latest closed chunk: actual Welkynd Stone `04929e` / MISC `000191`.
-[Contract](WELKYND-STONE-CONTRACT.json), [original oracle](WELKYND-STONE-ORACLE.json),
-[receipt](WELKYND-STONE-VERIFICATION.json). Full native Magicka rejects without
-spending. A real healing deficit admits one selected stone, restores toward the
-current native maximum and debits that instance atomically. Original controls
-show80 full retaining2,61→80 spending1, and59→78 under original Mead spending1.
-Schema94 unchanged; fresh completion reload has no consumption/restoration replay.
+Latest closed chunk: owned Imperial Star of the West `047ade`, ABFA100 instant
+Touch against corridor bandit `06c35c`. [Contract](STAR-WEST-POWER-CONTRACT.json),
+[independent original controls](STAR-WEST-POWER-ORACLE.json),
+[receipt](STAR-WEST-POWER-VERIFICATION.json). Native two-actor transfer, real
+retaliation, pending/post-release/completed ownership and daily reuse now work.
+Schema95 stores the last Player power use. Ordinary23 hours crossing midnight
+still rejects after reload; a further hour admits a miss, whose new use persists.
+The TES4 wait action now passes its native eligibility gates without depending
+on the TES3 chargen global. General powers/crime/flee and full M16 remain open.
 
-Both normal and instrumented use/restart courses pass42 semantic checks.20 focused
-engine checks and fresh full2,269 engine tests pass per configuration. Component
-and Python trees are unchanged:3,281 component tests per configuration and604
-Python checks retain their earlier provenance in the receipt. Rendered ASan uses
-leak detection off; full engine tests use it on. Native full-guard and tooltip
-images reviewed in both configurations. Exact sound/menu parity is outside scope.
+Normal runtime acceptance passes66+66+139 semantic checks; instrumented acceptance
+passes98+66, including an actual0.166-second windup save before0.267-second release.
+Full3,283 component and2,271 engine tests pass per configuration;606 Python checks
+pass. Original reports retain fingerprints and earlier failed driver attempts.
+Rendered ASan leak checks are off; full component/engine leak checks are on.
 
-Reusable latest normal checkpoint:
-`build/oblivion-compat/welkynd-stone/normal-development-01-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256 `291804bb4e836f957f1e1ea8acd24a405d8719b52371ee1e0c641aa5725f865e`.
-Health59.49584, Magicka80, Fatigue170, Intelligence40, Willpower30. Welkynd0,
-Mead0, Flash Bolt0, Chameleon0, nativeAV46=0. Bone1, Crab Meat1, Lettuce1, Rice1
-retained, Club equipped. No owned consumable/scroll timer, cast or projectile;
-next projectile19. Prior five bandit deaths retain Player killer; sack `06c2ad`
-stays opened and empty, original stone `04929e` remains spent.
+Reusable outgoing normal checkpoint:
+`build/oblivion-compat/star-west/normal-recharge-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `dd74a6e89a7fe7b6fc7d5a0a04f56ea0d82328c123772d5a82c6b132941f9818`.
+Health110.0, Magicka80, Fatigue170.0, Intelligence40, Willpower30.
+Bone1, Crab Meat1, Lettuce1, Rice1 and all other inventory retained; Club equipped,
+with ordinary fight wear. Welkynd/Mead/Flash Bolt/Chameleon remain spent. No pending
+cast, projectile or consumable timer; projectile serial19. All five prior bandit
+deaths retain Player credit; corridor bandit `06c35c` is now also defeated by
+ordinary Club input. Sack `06c2ad` stays opened empty; stone `04929e` remains spent.
+Power use timestamp97.54186427593231 hours; new daily use is unavailable.
 
-Actual route progress: tripwire/short maces already worked; one11.5-point hit,
-three lower-room bandit defeats, two Mead pickups and their lifecycles are retained
-in the earlier contracts/receipts. Three ordinary starter heals then actual walking
-around the low room partition and pickup yield38 acquisition checks for the stone.
-Read-only navigation query supplies the room path; early direct approaches and
-incompletely aligned controller attempts remain under
-`build/oblivion-compat/welkynd-stone`. No navigation/collision implementation change
-is claimed. The ordinary unsupported-use baseline and independent original control
-remain distinct from the final feature acceptance.
-
-Current chunk: owned Imperial Star of the West `047ade`, ABFA100 instant Touch,
-against living original bandit `06c35c`. [Contract](STAR-WEST-POWER-CONTRACT.json).
-Actual forward walking reached the bandit corridor. Owned menu selection and
-ordinary Cast expose unsupported admission before implementation; this distant
-baseline does not establish Touch delivery. Independent original controls are
-next, then bounded native transfer/daily-use persistence and actual restart gates.
-Latest immutable input is recorded in the contract. Full expedition remains open.
+Actual route: forward walking reached the corridor leading toward door `049424`
+to Vilverin Canosel. Bandit `06c35e` remains alive. Current action: continue from
+the outgoing checkpoint toward that actor/door, exercise actual content, and pick
+the next bounded implementation from an observed unsupported behavior. The full
+expedition remains open; historical room/trap/consumable routes stay in receipts.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects
 and UI; native spawn-root/child identity, grouped actors, respawn, all Player

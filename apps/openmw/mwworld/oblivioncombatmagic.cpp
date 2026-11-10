@@ -2,6 +2,7 @@
 
 #include "esmstore.hpp"
 #include "worldimp.hpp"
+#include "timestamp.hpp"
 #include "class.hpp"
 #include "player.hpp"
 #include "inventorystore.hpp"
@@ -154,6 +155,25 @@ namespace MWWorld
             }
     }
 
+    bool supportsOblivionStarOfWest(const ESMStore& store, const ESM4::Spell& spell)
+    {
+        if (spell.mFormKey != ESM::FormKey::content("Oblivion.esm", 0x47ade)
+            || (spell.mFlags & ESM4::Rec_Deleted) || !spell.mData
+            || spell.mData->mType != 2 || spell.mData->mCost != 0
+            || (spell.mData->mFlags & 0xff) != 1 || spell.mEffects.size() != 1) return false;
+        if (const auto* winner = store.getFormKeyIndex().winner(spell.mFormKey);
+            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL)) return false;
+        const auto& effect = spell.mEffects.front();
+        if (effect.mId != ESM::fourCC("ABFA") || effect.mMagnitude != 100 || effect.mArea
+            || effect.mDuration || effect.mRange != 1 || effect.mActorValue != 10 || effect.mScriptEffect)
+            return false;
+        const auto* definition = ingredientEffectDefinition(store, effect.mId);
+        if (!definition || !definition->mData) return false;
+        const auto& data = *definition->mData;
+        return data.mFlags == 0x01003825 && !data.mAssociatedForm
+            && data.mAssociatedData == 10 && data.mSchool == 5 && data.mResistanceActorValue == 64;
+    }
+
     OblivionSpellPresentation describeOblivionPlayerSpell(MWBase::World& world, const ESM4::Spell& spell)
     {
         const auto* native = dynamic_cast<const World*>(&world);
@@ -228,6 +248,7 @@ namespace MWWorld
         }
         result.mDescription = description.str();
         if (knownCost && std::isfinite(total)) result.mCost = total;
+        if (supportsOblivionStarOfWest(store, spell)) result.mCost = 0.f;
         return result;
     }
 
@@ -882,6 +903,52 @@ namespace MWWorld
         return true;
     }
 
+    bool World::releaseOblivionPlayerAbsorbFatiguePower(const ESM::FormKey& spellKey, Ptr& hitTarget)
+    {
+        hitTarget = {};
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPhysics) return false;
+        const auto* spell = mStore.get<ESM4::Spell>().search(spellKey);
+        if (!spell || !supportsOblivionStarOfWest(mStore, *spell)) return false;
+        const auto actor = getPlayerPtr();
+        const auto time = getTimeStamp();
+        const double gameHours = double(time.getDay()) * 24. + time.getHour();
+        if (!mOblivionCombat->canUsePlayerPower(spellKey, gameHours)) return false;
+        const auto settings = magicSettings(mStore);
+        const float reach = projectileSetting(settings, "fMagicDefaultTouchDistance", 256.f);
+        osg::Vec3f origin = actor.getRefData().getPosition().asVec3();
+        origin.z() += mPhysics->getRenderingHalfExtents(actor).z() * 1.7f;
+        const auto& rotation = actor.getRefData().getPosition().rot;
+        osg::Vec3f direction = (osg::Quat(rotation[0], osg::Vec3f(-1, 0, 0))
+            * osg::Quat(rotation[2], osg::Vec3f(0, 0, -1))) * osg::Vec3f(0, 1, 0);
+        if (direction.normalize() == 0) return false;
+        const auto hit = mPhysics->castRay(origin, origin + direction * reach, {actor}, {},
+            0xff, MWPhysics::CollisionType_Projectile);
+        Ptr target = hit.mHit && !hit.mHitObject.isEmpty() && hit.mHitObject.getClass().isActor()
+            ? hit.mHitObject : Ptr{};
+        float magnitude = 100.f;
+        if (!target.isEmpty())
+        {
+            const auto* values = mOblivionCombat->findActorValues(target.getCellRef().getFormKey());
+            const auto* life = mOblivionCombat->findActorLife(target.getCellRef().getFormKey());
+            if (!values || !life || life->mPhase != ESM4::ActorLifePhase::Alive) target = {};
+            else magnitude *= 1.f - std::clamp(ESM4::composeActorValue(values->mValues[64],
+                values->mOwner, values->mProcess), 0.f, 100.f) / 100.f;
+        }
+        const auto targetKey = target.isEmpty() ? ESM::FormKey{} : target.getCellRef().getFormKey();
+        const auto before = mOblivionCombat->getPlayerValue(10);
+        const auto targetBefore = target.isEmpty() ? 0.f : mOblivionCombat->getNonPlayerValue(target, 10);
+        hitTarget = target;
+        if (!mOblivionCombat->releasePlayerAbsorbFatiguePower(*mPlayer, target, spellKey, gameHours, magnitude,
+                resolveOblivionPlayerDynamicBaseSettings(mStore))) return false;
+        Log(Debug::Info) << "M16 Star of the West released: spell=" << spellKey.serialize()
+            << " target=" << targetKey.serialize() << " magnitude=" << (target.isEmpty() ? 0.f : magnitude)
+            << " caster_before=" << before << " caster_after=" << mOblivionCombat->getPlayerValue(10)
+            << " target_before=" << targetBefore << " target_after="
+            << (target.isEmpty() ? 0.f : mOblivionCombat->getNonPlayerValue(target, 10))
+            << " used_at=" << gameHours;
+        return true;
+    }
+
     bool World::releaseOblivionPlayerSpellProjectile(const ESM::FormKey& spellKey, float power)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPhysics) return false;
@@ -1014,8 +1081,31 @@ namespace MWWorld
 
     void World::validateOblivionMagicProjectiles(const ESM4::RuntimeState& state) const
     {
+        for (const auto& actor : state.mNativeActorValues)
+            for (const auto& use : actor.mUsedPowers)
+            {
+                const auto* spell = mStore.get<ESM4::Spell>().search(use.mSpell);
+                if (!spell || !supportsOblivionStarOfWest(mStore, *spell))
+                    throw std::invalid_argument("saved native greater-power source no longer resolves");
+            }
         for (const auto& [actor, cast] : state.mNativeSpellCasts)
         {
+            if (const auto* spell = mStore.get<ESM4::Spell>().search(cast.mSpell);
+                spell && spell->mData && spell->mData->mType == 2)
+            {
+                if (actor != ESM::FormKey::dynamic("player", 1) || cast.mCost != 0
+                    || !supportsOblivionStarOfWest(mStore, *spell))
+                    throw std::invalid_argument("saved native greater-power cast no longer resolves");
+                if (cast.mReleased)
+                {
+                    const auto values = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                        [&](const auto& entry) { return entry.mActor == actor; });
+                    if (values == state.mNativeActorValues.end()
+                        || std::none_of(values->mUsedPowers.begin(), values->mUsedPowers.end(),
+                            [&](const auto& use) { return use.mSpell == cast.mSpell; }))
+                        throw std::invalid_argument("released native power has no daily-use owner");
+                }
+            }
             const auto* book = mStore.get<ESM4::Book>().search(cast.mSpell);
             const auto* winner = mStore.getFormKeyIndex().winner(cast.mSpell);
             if (book || (winner && winner->mRecordType == ESM4::REC_BOOK))

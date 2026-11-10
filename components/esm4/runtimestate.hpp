@@ -76,7 +76,9 @@ namespace ESM4
     // v87 retains pending native spells and once-only release ownership.
     // v93 retains Player scroll-owned CHML contributions and refreshed lifetimes.
     // v94 retains each consumed potion's resolved timed attribute contributions.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 94;
+    // v95 retains Player greater-power daily-use history, without inventing
+    // uses for older snapshots.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 95;
 
     struct RuntimeContentIdentity
     {
@@ -413,6 +415,7 @@ namespace ESM4
         // v94: applications own their contributions independently of inventory.
         // A legacy attribute modifier never implies a potion or an expiry time.
         std::vector<PotionAttributeState> mPotionAttributeEffects;
+        std::vector<PowerUseState> mUsedPowers;
 
         // v25: signed native High/MiddleHigh process knocked byte. Absence
         // retains unknown legacy Active-process state; Low queries return zero.

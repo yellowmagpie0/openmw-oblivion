@@ -9,6 +9,17 @@
 
 namespace ESM4
 {
+    // Player greater-power history in elapsed game hours, independent of the
+    // selected spell and the animation's pending release owner.
+    struct PowerUseState
+    {
+        ESM::FormKey mSpell;
+        double mUsedAt = 0;
+        void validate() const;
+        bool available(double gameHours) const;
+        friend bool operator==(const PowerUseState&, const PowerUseState&) = default;
+    };
+
     // Native pending cast ownership. The menu selection can change independently.
     // Release is an attempted transaction, including an insufficient-magicka result;
     // it must never be retried by animation callbacks or after loading a save.

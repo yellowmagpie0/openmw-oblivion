@@ -5499,6 +5499,64 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionCombatService::canUsePlayerPower(const ESM::FormKey& spell, double gameHours) const
+    {
+        ESM4::PowerUseState{spell, gameHours}.validate();
+        const auto& values = playerValues();
+        const auto found = std::find_if(values.mUsedPowers.begin(), values.mUsedPowers.end(),
+            [&](const auto& use) { return use.mSpell == spell; });
+        return found == values.mUsedPowers.end() || found->available(gameHours);
+    }
+
+    bool OblivionCombatService::releasePlayerAbsorbFatiguePower(MWWorld::Player& player,
+        const MWWorld::Ptr& target, const ESM::FormKey& spell, double gameHours, float magnitude,
+        const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        const auto* cast = findSpellCast(key);
+        if (!cast || cast->mSpell != spell || cast->mReleased || cast->mCost != 0
+            || !canUsePlayerPower(spell, gameHours)) return false;
+        if (!std::isfinite(magnitude) || magnitude < 0)
+            throw std::invalid_argument("invalid native Absorb Fatigue magnitude");
+        auto candidate = playerValues();
+        const auto use = std::find_if(candidate.mUsedPowers.begin(), candidate.mUsedPowers.end(),
+            [&](const auto& entry) { return entry.mSpell == spell; });
+        if (use == candidate.mUsedPowers.end()) candidate.mUsedPowers.push_back({spell, gameHours});
+        else use->mUsedAt = gameHours;
+        const auto* life = findActorLife(key);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive) return false;
+        const auto targetKey = target.isEmpty() ? ESM::FormKey{} : target.getCellRef().getFormKey();
+        const auto* targetLife = target.isEmpty() ? nullptr : findActorLife(targetKey);
+        if (!targetLife || targetLife->mPhase != ESM4::ActorLifePhase::Alive
+            || target == player.getPlayer())
+        {
+            publishPlayerValues(player, std::move(candidate), settings);
+            return true;
+        }
+        auto victim = nonPlayerValues(target);
+        victim.mValues[10] = ESM4::changeActorValueModifier(victim.mValues[10], victim.mOwner,
+            10, ESM4::ActorValueModifier::Damage, -magnitude);
+        candidate.mValues[10] = ESM4::changeActorValueModifier(candidate.mValues[10], candidate.mOwner,
+            10, ESM4::ActorValueModifier::Damage, magnitude);
+        preparePlayerValues(candidate, settings);
+        const auto* base = findActorBase(victim.mBase);
+        applyActorBase(victim, base);
+        victim.validate();
+        PreparedNonPlayerView receiving(target, victim, base, targetLife);
+        const auto ptr = player.getPlayer();
+        OblivionActorProjection giving(ptr.getClass().getNpcStats(ptr),
+            actorProjection(candidate, nullptr, life));
+        auto& storedPlayer = mActorValues.at(key);
+        auto& storedTarget = mActorValues.at(targetKey);
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
+        // Both projections and all allocations precede either publication.
+        std::swap(storedPlayer, candidate);
+        std::swap(storedTarget, victim);
+        giving.commit();
+        receiving.commit();
+        return true;
+    }
+
     void OblivionCombatService::cancelSpellCast(const ESM::FormKey& actor) noexcept
     {
         mSpellCasts.erase(actor);

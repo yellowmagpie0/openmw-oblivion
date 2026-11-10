@@ -1078,6 +1078,12 @@ namespace MWMechanics
             const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings);
         const ESM4::SpellCastState* findSpellCast(const ESM::FormKey& actor) const;
         bool beginSpellCast(const ESM::FormKey& actor, ESM4::SpellCastState cast, bool usesMagicka = true);
+        bool canUsePlayerPower(const ESM::FormKey& spell, double gameHours) const;
+        // Commit daily ownership even for a miss. A living target's Fatigue
+        // debit and the capped Player restoration publish with that ownership.
+        bool releasePlayerAbsorbFatiguePower(MWWorld::Player& player, const MWWorld::Ptr& target,
+            const ESM::FormKey& spell, double gameHours, float magnitude,
+            const ESM4::PlayerDynamicBaseSettings& settings);
         void cancelSpellCast(const ESM::FormKey& actor) noexcept;
         struct SpellCastUpdate { bool mReleased; bool mApplied; bool mFinished; };
         // The item release callback prepares all work before its no-throw

@@ -608,6 +608,30 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertNotIn("potion_attribute_effects", player(loaded))
         self.assertEqual(player(loaded)["values"][1:3], actor["values"][1:3])
 
+    def test_greater_power95_history_roundtrip_malformed_and_legacy_unknown(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 95
+        player = lambda s: next(a for a in s["native_actor_values"] if a["owner"] == 0)
+        power = dict(spell="content:oblivion.esm:047ade", used_at=23.75)
+        player(state)["used_powers"] = [power]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(player(loaded)["used_powers"], [power])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        for mutation in ({"used_at": -1.}, {"used_at": math.nan}, {"used_at": True},
+                         {"spell": "dynamic:spell:0000000000000001"}):
+            bad = copy.deepcopy(state)
+            player(bad)["used_powers"][0].update(mutation)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        player(bad)["used_powers"].append(power)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 94
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del player(state)["used_powers"]
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("used_powers", player(loaded))
+
     @classmethod
     def melee_paralysis_state(cls):
         state = cls.combat_controller_state()

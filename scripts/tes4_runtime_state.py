@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 94
+CURRENT_VERSION = 95
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1148,6 +1148,24 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             sources.add(effect["enchantment"])
             if native_float(effect["magnitude"]) != 25 or not 0 <= native_float(effect["elapsed"]) < 30:
                 raise RuntimeStateError("Invalid TES4 scroll Chameleon magnitude or lifetime")
+
+        powers = check_collection(actor.get("used_powers", []), "greater-power use history")
+        if powers and (version < 95 or owner != 0):
+            raise RuntimeStateError("TES4 greater-power history requires Player ownership and version95")
+        sources = set()
+        for power in powers:
+            if not isinstance(power, dict) or set(power) != {"spell", "used_at"}:
+                raise RuntimeStateError("Invalid TES4 greater-power use history")
+            key = power["spell"]
+            if not isinstance(key, str) or not key.startswith("content:"):
+                raise RuntimeStateError("Invalid TES4 greater-power source")
+            native_key(key)
+            if key in sources:
+                raise RuntimeStateError("Duplicate TES4 greater-power use history")
+            sources.add(key)
+            when = power["used_at"]
+            if isinstance(when, bool) or not isinstance(when, (int, float)) or not math.isfinite(when) or when < 0:
+                raise RuntimeStateError("Invalid TES4 greater-power clock")
 
         potions = check_collection(actor.get("potion_attribute_effects", []), "potion attribute list")
         if potions and (version < 94 or owner != 0):
@@ -3062,6 +3080,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     potions.append(effect)
                 if potions:
                     actor["potion_attribute_effects"] = potions
+            if version >= 95:
+                powers = [{"spell": reader.string(), "used_at": reader.unpack("<d")}
+                          for _ in range(reader.count())]
+                if powers:
+                    actor["used_powers"] = powers
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -3923,6 +3946,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     for modifier in effect["modifiers"]:
                         writer.pack("<B", modifier["attribute"])
                         writer.pack("<f", modifier["delta"])
+            if version >= 95:
+                powers = actor.get("used_powers", [])
+                writer.pack("<I", len(powers))
+                for power in powers:
+                    writer.string(power["spell"])
+                    writer.pack("<d", power["used_at"])
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))
