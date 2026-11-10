@@ -1,0 +1,43 @@
+{
+  "status": "active bounded inventory OnEquip integration; real Amulet of Kings remains worn in baseline",
+  "milestone": "M7 inventory script events / M11 equipment interaction",
+  "content": {
+    "item": "content:oblivion.esm:0250a0",
+    "name": "Amulet of Kings",
+    "script": "content:oblivion.esm:027589",
+    "event": "OnEquip player",
+    "independent_expected_behavior": "Original script displays the slips-off message, assigns tempRef from GetContainer, and calls tempRef.UnequipItem AmuletofKings1."
+  },
+  "input": {
+    "path": "build/oblivion-compat/next-content/normal-torch-equip-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "68ff3d3c3d09b9e848e5855e216e9f1db0beea83fc34e1fa8c786f4aa9845b94",
+    "item_count": 1,
+    "item_equipped": false,
+    "health": 40.41400909423828,
+    "scope": "Actual retained quest item after normal Heal Minor Wounds and one carried Torch equip; no grants or forged deficits."
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/next-content/normal-amulet-equip-baseline-01",
+    "observed": "Normal avatar equip succeeds and survives save in slot256; no OnEquip or027589 script instance/message. Item count remains1.",
+    "original_script_audit": {
+      "path": "build/oblivion-compat/next-content/amulet-original-script-audit.json",
+      "sha256": "9852d8f905c1f7f0c7c53e52abfeb20f1bb41594cfa16a7293e27498ef83d5e9"
+    }
+  },
+  "code_gaps": [
+    "No native inventory OnEquip dispatch observed.",
+    "GetContainer currently aliases GetSelf; inventory context needs its actual containing actor.",
+    "Establish a correct stable script instance identity for the admitted inventory item; do not impersonate the actor as the item or silently share locals across items."
+  ],
+  "plan": [
+    "Keep this real baseline and original script/record provenance.",
+    "Bind inventory equip notifications to the original compiled OnEquip entry with correct item/container/action-reference context. Use stable existing identity when suitable; add persistence only if needed.",
+    "Allow the script to unequip the actual item during notification without stale pointers, duplicate notifications or recursion. Reuse current message/UnequipItem commands.",
+    "Repeat actual UI equip, verify one message, item retained un-worn, unrelated equipment/torch state preserved; fresh-process restart and another actual attempt preserve correct ownership.",
+    "Run focused checks while developing, required normal/instrumented gates and real runtime acceptance; receipt and bounded commit, then continue."
+  ],
+  "outside_scope": [
+    "Full inventory scripting, arbitrary stacked scripted-item identity/movement and all M7/M11 acceptance are not claimed by this unique quest-item case.",
+    "Do not hardcode the Amulet rejection instead of executing its original script. No synthetic actors/items, inventory grants, forced deficits or teleports in fork acceptance."
+  ]
+}

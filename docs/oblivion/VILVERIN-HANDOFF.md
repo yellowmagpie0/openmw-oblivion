@@ -26,10 +26,15 @@ Player alive32.974HP,19 arrows, bow condition87.60; worn armor has real fight
 wear. Earlier loot/consumable/power history remains. Cell0463f5 (Vilverin02 /
 Vilverin Canosel), no pending bow or flight, bandit06bfc2 dead with Player credit.
 
-Next action: select the next actual-content gap from this checkpoint. The earned
-Health deficit makes owned healing content a useful candidate; confirm a real
-baseline before choosing implementation. Finish that bounded slice before
-expanding into unrelated dependencies.
+Current chunk: [Amulet of Kings inventory OnEquip](AMULET-KINGS-EQUIP-CONTRACT.json).
+Normal Heal Minor Wounds raises actual Health32.974→40.414. Ordinary Torch02
+split/equip works: one lit torch ages1000→996, two spare torches stay1000.
+These are existing features, not new implementations. Real Amulet0250a0 equip
+incorrectly remains worn in slot256; original027589 OnEquip must show its message
+and unequip through GetContainer. Baseline and pristine pre-equip checkpoint are
+in `build/oblivion-compat/next-content`; use the contract's exact source hash.
+Next action: inventory event ownership/identity, original-script dispatch and
+reentrant unequip; then real UI/restart acceptance and focused/integration gates.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects
 and UI; spawn-root/child identity, grouped actors, respawn, all Player levels;
