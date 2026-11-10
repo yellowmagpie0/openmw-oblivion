@@ -1,0 +1,44 @@
+{
+  "status": "active bounded native bedroll default activation; close-range original baseline is inert",
+  "milestone": "M13 default furniture interaction exposing existing native bed-rest/recovery backend",
+  "content": {
+    "reference": "content:oblivion.esm:06bf97",
+    "base": "content:oblivion.esm:01d5bf",
+    "editor_id": "BedrollSideEntry",
+    "name": "Bedroll",
+    "cell": "content:oblivion.esm:0463f5",
+    "marker_flags": "0x80000001",
+    "ownership": "Original placed reference has no XOWN/XRNK/XGLB; unowned and unoccupied beside defeated real bandit06bfc2."
+  },
+  "input": {
+    "path": "build/oblivion-compat/next-content/normal-bedroll-activation-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "d298e7c12771589da287b6e771c6bcfa86c3d5dcc5eaa8bca540ffa1f307a39f",
+    "health": 40.41400909423828,
+    "scope": "Genuine retained camp continuation; walking/aim only, no grants or forged deficits."
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/next-content/normal-bedroll-close-baseline-01",
+    "observed": "Native Bedroll focus prompt visible at73.254 units; ordinary Space activation leaves world unpaused, no menu and Health40.414. ESM4Named<Furniture> inherits NullAction.",
+    "focused_checkpoint": "build/oblivion-compat/next-content/normal-bedroll-close-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "focused_checkpoint_sha256": "2f71fc486f7f70ce411692f48e99cfd97dabb3c5a9226451786df70a0b3b7bc6",
+    "farther_baseline_limit": "First162-unit visual-ray baseline did not prove native activation range; close73-unit focus-prompt baseline is authoritative.",
+    "original_record_audit": {
+      "path": "build/oblivion-compat/next-content/bedroll-original-audit.json",
+      "sha256": "a6e5d38b8e6dfcf993088bb6fa86c7a52d8927da27fa7c583cde282e33ba61c4"
+    },
+    "recipe": "scripts/data/oblivion_compat/oblivion_canosel_bedroll_activation_baseline.json"
+  },
+  "plan": [
+    "Keep the exact original record/placed-owner audit and real close-range input baseline.",
+    "Give native sleep-marked furniture a Player default action that reuses sleepInBed permission/danger checks and the existing GM_Rest bed pointer path. Leave chairs/seating outside this chunk.",
+    "Initialize absent MNAM sleep flags safely in the typed loader; focus any parser checks on that admission boundary.",
+    "Use ordinary Activate to open and cancel the rest UI; verify no hourly recovery or inventory changes.",
+    "Sleep one ordinary hour from the actual Health deficit; verify native hourly recovery, clock advance and retained quest-item identity/inventory. Fresh-process reopen/cancel must not replay the hour.",
+    "Focused development checks, normal/instrumented regression gates and actual-content cases; concise receipt/local commit, then select another observed content gap."
+  ],
+  "outside_scope": [
+    "No new rest formula or bit-identical numerical parity claim. Reuse existing native rest backend and its earlier provenance.",
+    "Only this original unowned, unoccupied bedroll is runtime acceptance. Full furniture poses/seating, occupied/owned context matrices, leveling and full M13/M16 remain open.",
+    "Pressure plate06bf96/secret wall06bf95 already work: an ordinary coffin jump reaches the plate, original scripts activate/open it, and fresh-process passage succeeds. This exploration is not a new implementation."
+  ]
+}

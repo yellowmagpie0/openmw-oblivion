@@ -37,9 +37,20 @@ flight and save/restart work. An arrow, three ordinary Flare casts, and a final
 arrow defeat real bandit06bfc2 with one Player death credit and preserved stock.
 Fourteen normal/instrumented cases pass. Arrow recovery and full S5 remain open.
 
-Next action: after this bounded local commit, resume actual Canosel content and
-select the next observed unimplemented behavior. Keep accepted saves pristine;
-do not claim the expedition or entire scripting/equipment milestones complete.
+Current chunk: [original bedroll activation](BEDROLL-REST-CONTRACT.json).
+Real unowned bedroll06bf97/base01d5bf shows its focus prompt at73 units but
+ordinary Activate does nothing. Native furniture still uses the generic named
+class/NullAction; native bed-rest UI/recovery backend already exists. Next:
+default Player bed action with existing ownership/danger checks, real open/
+cancel and one-hour recovery/restart acceptance; do not claim a new rest formula.
+
+Route discovery: the old stair blockage was not a proven movement defect.
+Original plate06bf96 requires distance<64 and opens wall06bf95. An ordinary
+jump clears sarcophagus066e60; stepping within35.6 triggers original scripts.
+`next-content/normal-secret-wall-restart-passage-01` crosses the opened wall
+after a fresh process with Health40.414 unchanged. This is existing behavior,
+not another implementation. Keep that exploration checkpoint separate from the
+bedroll contract's genuine camp input; no teleports or forced state changes.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects
 and UI; spawn-root/child identity, grouped actors, respawn, all Player levels;
