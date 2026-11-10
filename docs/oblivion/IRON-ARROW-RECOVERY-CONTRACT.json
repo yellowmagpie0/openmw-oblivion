@@ -1,5 +1,5 @@
 {
-  "status": "preflight; static-surface arrow materialization/recovery implementation pending",
+  "status": "accepted bounded original static-surface recovery; full M15 S5 and expedition remain open",
   "milestone": "M15 physical-arrow static impact, retained world item and ordinary recovery",
   "content": {
     "ammunition": "content:oblivion.esm:017829",
@@ -34,5 +34,11 @@
     "Actor-hit eligibility and iArrowInventoryChance are separate; do not use the50% corpse-inventory roll for this static surface.",
     "No full Havok penetration/bounce, moving-body embedding, enchanted ammo, NPC archery or complete M15 S5 claim.",
     "Only ordinary unenchanted Iron Arrow and original static stone floor are actual acceptance. Settled lifetime starts at impact; full flight lifetime and reference-budget selection remain open."
-  ]
+  ],
+  "implementation": {
+    "source": "apps/openmw/mwworld/oblivionarrowrecovery.cpp and oblivionbow.cpp",
+    "schema": 97,
+    "tests": "Both full C++ gates pass3288 components/2275 engine at identical frozen source82179cee. Four normal and four instrumented canonical actual cases pass final strict audits. Existing609 Python evidence reused with94 unchanged source hashes. Unit leak checks on; rendered leak checks off.",
+    "remaining": "No remaining acceptance check for this bounded chunk. Actor inventory recovery, flight aging, process budgets and full S5 remain open. Separate verification receipt binds the implementation commit, final recipe corrections and actual process/save evidence."
+  }
 }

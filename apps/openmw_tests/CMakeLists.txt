@@ -22,6 +22,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwworld/testoblivioncombatdata.cpp
     mwworld/testoblivionmagicrecords.cpp
     mwworld/testoblivioncombatmagic.cpp
+    mwworld/testoblivionarrowrecovery.cpp
     mwworld/testoblivionnativeidle.cpp
     mwworld/testoblivioncombat.cpp
     mwworld/testoblivionai.cpp

@@ -4,6 +4,9 @@
 #include "esmstore.hpp"
 #include "inventorystore.hpp"
 #include "oblivionactorstats.hpp"
+#include "oblivionarrowrecovery.hpp"
+#include <components/esm4/combatsettings.hpp>
+#include <components/esm4/loadgmst.hpp>
 #include "oblivioncombatdata.hpp"
 #include "player.hpp"
 #include "projectilemanager.hpp"
@@ -27,6 +30,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <set>
 #include <osg/io_utils>
 
 namespace MWWorld
@@ -139,6 +143,54 @@ namespace MWWorld
                 [&](const auto* resident) { return resident->getCell()->isEsm4()
                     && resident->getCell()->getEsm4().mFormKey == cell; });
         };
+        // Settled world items retain their own timer and identity. Pickup and
+        // expiry delete that owner; neither path can regenerate the old flight.
+        std::vector<ESM::FormKey> settled;
+        for (const auto& reference : mOblivionRuntimeState->mReferences)
+            if (readRecoveredArrow(reference)) settled.push_back(reference.mKey);
+        if (!settled.empty() && duration > 0)
+        {
+            std::vector<const ESM4::GameSetting*> settings;
+            std::set<ESM::FormId> seen;
+            for (const auto& record : mStore.get<ESM4::GameSetting>())
+                if (seen.insert(record.mId).second)
+                    if (const auto* winner = mStore.get<ESM4::GameSetting>().search(record.mId);
+                        winner && !(winner->mFlags & ESM4::Rec_Deleted)) settings.push_back(winner);
+            const auto lifetime = ESM4::buildArrowLifetimeSettings(settings);
+            for (const auto& key : settled)
+            {
+                auto& references = mOblivionRuntimeState->mReferences;
+                auto owner = std::find_if(references.begin(), references.end(),
+                    [&](const auto& reference) { return reference.mKey == key; });
+                if (owner == references.end() || owner->mDeleted || !active(owner->mCell)) continue;
+                const auto ptr = mWorldModel.getDynamicNativePtr(key);
+                if (ptr.isEmpty()) continue;
+                if (ptr.getCellRef().getCount() <= 0)
+                {
+                    owner->mDeleted = true;
+                    owner->mCustomState["count"] = std::int64_t(0);
+                    continue;
+                }
+                auto state = *readRecoveredArrow(*owner);
+                const auto step = ESM4::advanceArrowLifetime(state.mLifetime, duration, lifetime);
+                state.mLifetime = step.mState;
+                auto candidate = *owner;
+                writeRecoveredArrow(candidate, state);
+                if (step.mRemove)
+                {
+                    candidate.mDeleted = true;
+                    candidate.mCustomState["count"] = std::int64_t(0);
+                }
+                owner->mCustomState.swap(candidate.mCustomState);
+                owner->mDeleted = candidate.mDeleted;
+                if (step.mRemove)
+                {
+                    deleteObject(ptr);
+                    Log(Debug::Info) << "M15 recovered arrow expired: ref=" << key.serialize();
+                }
+                else if (auto* animation = getAnimation(ptr)) animation->setAlpha(state.mLifetime.mOpacity);
+            }
+        }
         const auto player = getPlayerPtr();
         struct Notification
         {
@@ -210,6 +262,50 @@ namespace MWWorld
                         damage = resolved->mHealth;
                     }
                 }
+                if (!target.isEmpty() && target.getType() == ESM::REC_STAT4 && mRendering)
+                {
+                    auto recovery = prepareArrowRecovery(*this, mRendering->getObjects(), *mPhysics,
+                        target, it->second, serial, hit.mHitPos);
+                    if (recovery)
+                    {
+                        const auto key = recovery->reference().mKey;
+                        struct Impact
+                        {
+                            World* mWorld;
+                            ESM4::RuntimeState* mState;
+                            std::uint64_t mSerial;
+                            ESM4::ArrowProjectileState mArrow;
+                            std::vector<ESM4::RuntimeReferenceState> mBefore, mAfter;
+                            decltype(it)* mIterator;
+                        };
+                        Impact impact{this, mOblivionRuntimeState.get(), serial, it->second,
+                            mOblivionRuntimeState->mReferences, mOblivionRuntimeState->mReferences, &it};
+                        impact.mAfter.push_back(recovery->reference());
+                        std::sort(impact.mAfter.begin(), impact.mAfter.end(),
+                            [](const auto& a, const auto& b) { return a.mKey < b.mKey; });
+                        const auto valid = +[](void* context) noexcept {
+                            const auto& data = *static_cast<Impact*>(context);
+                            if (data.mWorld->mOblivionRuntimeState.get() != data.mState
+                                || data.mState->mReferences != data.mBefore) return false;
+                            const auto entry = data.mState->mNativeArrowProjectiles.find(data.mSerial);
+                            return entry != data.mState->mNativeArrowProjectiles.end() && entry->second == data.mArrow;
+                        };
+                        const auto publish = +[](void* context) noexcept {
+                            auto& data = *static_cast<Impact*>(context);
+                            data.mState->mReferences.swap(data.mAfter);
+                            *data.mIterator = data.mState->mNativeArrowProjectiles.erase(
+                                data.mState->mNativeArrowProjectiles.find(data.mSerial));
+                        };
+                        if (recovery->commit(&impact, valid, publish).isEmpty())
+                            throw std::runtime_error("native arrow recovery admission became stale");
+                        removed = true;
+                        Log(Debug::Info) << "M15 Player arrow recovered reference: projectile=" << serial
+                            << " ref=" << key.serialize() << " surface=" << target.getCellRef().getFormKey().serialize();
+                        Log(Debug::Info) << "M15 Player arrow impact: id=" << serial
+                            << " target=" << target.getCellRef().getFormKey().serialize() << " damage=0";
+                        break;
+                    }
+                }
                 // An impact cannot be replayed by callbacks or a later frame.
                 it = projectiles.erase(it);
                 removed = true;
@@ -244,6 +340,15 @@ namespace MWWorld
 
     void World::validateOblivionArrowProjectiles(const ESM4::RuntimeState& state) const
     {
+        std::set<std::uint64_t> recovered;
+        for (const auto& reference : state.mReferences)
+            if (const auto arrow = readRecoveredArrow(reference))
+            {
+                validateRecoveredArrowSource(mStore, reference, *arrow);
+                if (!recovered.insert(arrow->mProjectile).second || arrow->mProjectile >= state.mNextArrowProjectile
+                    || state.mNativeArrowProjectiles.contains(arrow->mProjectile))
+                    throw std::invalid_argument("duplicate or still-flying recovered arrow owner");
+            }
         for (const auto& [id, arrow] : state.mNativeArrowProjectiles)
         {
             if (arrow.mCaster != ESM::FormKey::dynamic("player", 1)
