@@ -1,0 +1,63 @@
+{
+  "status": "independent original-game novice Bonemeal rule observed",
+  "scope": "Original executable probe; independent of fork implementation. Novice first DGFA only.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "raw_audit": {
+    "path": "build/oblivion-compat/bonemeal/winning-records-audit.json",
+    "sha256": "1aabfd93e85ae34022ba08c14f7c47c734f98d9bcee88b48817e3ba445ea7eb3"
+  },
+  "fixture": {
+    "alchemy": 5,
+    "luck": 50,
+    "fatigue_base": 170,
+    "fatigue_current": 100,
+    "fFatigueReturnBase": 0,
+    "fFatigueReturnMult": 0,
+    "console": [
+      "setgs fFatigueReturnBase 0",
+      "setgs fFatigueReturnMult 0",
+      "player.setav fatigue 30",
+      "player.modav fatigue -70",
+      "player.additem 0001ebff 3",
+      "player.equipitem 0001ebff"
+    ]
+  },
+  "observations": [
+    {
+      "case": "zero regeneration control",
+      "result": "100 remains100 after unpausing",
+      "image": "native-zero-regen-control.png"
+    },
+    {
+      "case": "fresh-load novice single use",
+      "result": "Bonemeal3->2; Fatigue100->97 after12 seconds",
+      "image": "native-clean-low-final.png"
+    },
+    {
+      "case": "novice Active Effects",
+      "result": "Damage Fatigue1, Wortcraft: Bonemeal(1)",
+      "image": "native-clean-low-effect-details.png"
+    },
+    {
+      "case": "two overlapping novice uses",
+      "result": "Damage Fatigue aggregate2",
+      "image": "native-clean-low-two-effects.png"
+    }
+  ],
+  "decision": {
+    "magnitude_per_second": -1,
+    "duration_seconds": 3,
+    "total": -3,
+    "numeric_tolerance": 0.5,
+    "duration_basis": "Observed total3 divided by original Active Effects magnitude1. No frame-exact timing claim.",
+    "admission": "Original non-food Bonemeal DGFA15/1 Self AV10, novice Alchemy5/Luck50/zero Magic Resistance. Food REFA5/1 retains independent Lettuce oracle.",
+    "save": "Persist resolved signed rate and duration per application; old restore-only saves migrate to5/1."
+  },
+  "retained_discovery": "Alchemy100 is materially different and continued damaging after the first measurement. Its general potency and additional known effects remain open; never treat early97->87.61 as a completed total. A fresh load isolated the accepted novice repeat.",
+  "evidence_root": "build/oblivion-compat/bonemeal/original-native-01",
+  "process": "game-process-epoch.json",
+  "input_log": "input-log.jsonl",
+  "exit": "Exit/restoration audit will be recorded before implementation acceptance."
+}

@@ -35,8 +35,13 @@ its next draw. Amulet script identity/locals, spent Imperial powers, taken arrow
 and earlier bandit06bfc2 Player death credit persist. Native next dynamic serial3,
 next arrow serial9. Use this branch, not the separate Player floor regression.
 
-Current chunk / next action: select another observed original-content acceptance
-gap from this continuation, baseline it, then record a bounded implementation.
+Current chunk: [novice Bonemeal ingestion](BONEMEAL-INGREDIENT-CONTRACT.json).
+Original Skeleton defeated with carried Flare and genuinely looted; current
+Bonemeal1 save is linked in the contract. Ordinary use baseline leaves it
+unconsumed. [Original probe](BONEMEAL-INGREDIENT-ORACLE.json) isolates novice
+Damage Fatigue1/second for3seconds; higher Alchemy behaves differently and is
+outside this chunk. Next: persist resolved per-use rate/duration, implement the
+bounded harmful effect, then genuine use/pending/completed fresh processes.
 The autonomous content iteration remains active.
 
 Earlier accepted slices and reusable evidence:

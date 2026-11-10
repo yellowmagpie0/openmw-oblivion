@@ -1,0 +1,36 @@
+{
+  "status": "planned bounded novice Bonemeal ingestion",
+  "milestone": "M16 original harmful ingredient first effect",
+  "content": {
+    "ingredient": "content:oblivion.esm:01ebff",
+    "source": "Original Skeleton04bb63/base084b1a CNTO1, defeated with carried Flare and looted through ordinary input.",
+    "first_effect": "DGFA15/1 Self area0 AV10; non-food ENIT low byte1"
+  },
+  "input": {
+    "path": "build/oblivion-compat/next-content/normal-bonemeal-acquire-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "55cfe393ca9a3db8f669b82fda9615ba230804f5ae12dbe16a21c2bd8baeba68",
+    "state": "Player78.215 Health, novice Alchemy5/Luck50, Bonemeal1; Skeleton dead with Player credit and empty looted inventory. Native next dynamic serial3."
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/next-content/normal-bonemeal-use-baseline-01",
+    "audit": "build/oblivion-compat/next-content/bonemeal-baseline-audit.json",
+    "finding": "Actual tooltip shows Damage Fatigue; one-item drag to avatar leaves Bonemeal1 and no owned effect. Driver success is not feature acceptance."
+  },
+  "plan": [
+    "Admit verified novice first DGFA without partial application of later ingredient effects. Keep non-food scaling outside the observed novice domain explicitly unsupported.",
+    "Consume exactly one earned Bonemeal and publish an independently owned native Fatigue damage timer atomically. Persist resolved signed rate/duration in schema98; migrate existing food timers to5/1.",
+    "Save an unfinished actual use, resume in a fresh process, naturally finish and restart again without duplicated damage or inventory spending. Audit resource regeneration separately from effect contribution.",
+    "Retain a current Lettuce food regression. Run focused checks and appropriate full normal/sanitizer/schema gates; record implementation and acceptance locally, then continue original content."
+  ],
+  "acceptance": [
+    "Normal inventory use Bonemeal1->0, native signed damage1/second for3seconds, all other inventory metadata unchanged.",
+    "Owned effect source/rate/duration/elapsed survive genuine save and fresh-process restart. Remaining effect applies once; completed restart has no effect replay.",
+    "Original Skeleton death/loot ownership, Amulet locals, powers, arrow tombstone and prior loot persist. Structural codec, semantic save/live and actual runtime evidence remain distinct."
+  ],
+  "outside_scope": [
+    "General non-food Alchemy/Luck potency and additional known effects; Alchemy experience/brewing.",
+    "Resistance/absorption beyond the current zero-Magic-Resistance Player.",
+    "Active-effects UI and visual shader parity, bit-identical timing.",
+    "Full M16 or expedition completion."
+  ]
+}
