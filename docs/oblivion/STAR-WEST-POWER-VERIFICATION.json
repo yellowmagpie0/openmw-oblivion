@@ -1,0 +1,3036 @@
+{
+  "status": "accepted bounded original Star of the West; full M16 and expedition remain open",
+  "implementation_commit": "c8ddedf2e8c84621fa451c9c1a76ae767514128b",
+  "contract": "docs/oblivion/STAR-WEST-POWER-CONTRACT.json",
+  "original_oracle": "docs/oblivion/STAR-WEST-POWER-ORACLE.json",
+  "tested_source_files": {
+    "apps/components_tests/esm4/magiccaster.cpp": "6e20ecd3b2bef96ef923824800ec84841dbd83b16c086a5cc6cb742b85654ef0",
+    "apps/components_tests/esm4/runtimestate.cpp": "e8ee4620d8cfbd29881e2b5893e9ee58bb65b4ae32cbfda799ec69b89ebcd982",
+    "apps/openmw/mwgui/windowmanagerimp.cpp": "a26c2b2faa8ff18fe2229f8b6ac79f8d107bb026820173fb9a72fff005c7f618",
+    "apps/openmw/mwmechanics/character.cpp": "4309e0981b5d1636c835ddfb91b44fb8c474a7acd55ad2c87772c5582bcc6b70",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "d89691deeb2136239c5d354eab54e2d88073f2aaea82e9e124a5803b44d5ec52",
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": "b1b354d427ce8e3c2abb7376291ba0c4a2a9f22965f8187afc355755d8b924e6",
+    "apps/openmw/mwworld/oblivioncombatmagic.cpp": "987061458dd178bbdda09149f3101dfa48636a834264160e30008804e6fad91e",
+    "apps/openmw/mwworld/oblivioncombatmagic.hpp": "9a0bc800045d2001bfae5124e86b41631e068160775b8d13e3d069c61e29f5fd",
+    "apps/openmw/mwworld/worldimp.cpp": "de0d37e19a5e7983fa1b2a8502d7ca77fb00553ce7da0caefa113bb317ffe1f6",
+    "apps/openmw/mwworld/worldimp.hpp": "fb45c2793d25a680bd13516e134bd1b4fd249147bbe5a29300625b14570d53dd",
+    "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "6f974bd4ef7a978b46a3228d7d63565cbb56d7798789247e4038d13773b83d4c",
+    "components/esm4/magiccaster.cpp": "d9fe014066ebc4d263608cf345aa0f292198fb553de0d163e90bf15cda819a8d",
+    "components/esm4/magiccaster.hpp": "90ee55f60a058ba8d6d8ca3497920d45a5a56fa6da520054341fbf92ea33253e",
+    "components/esm4/runtimestate.cpp": "befa1084ed32b3ad706d8f9e1d68a6dbe0ae83ec7253ee8153e208b027c64895",
+    "components/esm4/runtimestate.hpp": "0bbd1f8f17181917b710b7edab25262bb62446065e6dbbab4a9d810fd7b0dbce",
+    "scripts/tes4_m15_fixture_preflight.py": "0370fbd56fa128a89ae603fe93322fd02cc8df0c6d6af1c3a2e8989a6b1b85c5",
+    "scripts/tes4_runtime_state.py": "c3ce2b7b7e5f30e5bbf9f28e9d87f68cb1239b50c1a497419b9c287b1b0b6483",
+    "scripts/tests/test_tes4_m15_fixture_preflight.py": "cc0aa8b26c9ea1daec91492049f6a6ffb098698d622ae57097c1b31a4487875c",
+    "scripts/tests/test_tes4_m15_pending_getup_fixture.py": "65c319fee436e94666b306ea9c1cd6fbaaa60bb6ea0ee2cdc69fcfa988bd461b",
+    "scripts/tests/test_tes4_runtime_state.py": "ff0e3990878aa9d96dd3bb57d701414312d3ff3baba7ae6e071b629878e2b99d"
+  },
+  "source_note": "Normal and instrumented gates retain their exact source fingerprints. Production C++/Python files match these hashes; later receipt/handoff and ordinary-wait driver adjustments do not change the implementation. Normal use/pending core runtime evidence predates only the native wait-menu gate and eligibility log. Original binary/process/resource provenance remains attached to each run.",
+  "behavior": [
+    "Original owned047ade: cost0, ABFA100 instant Touch; real authored animation and physics hit.",
+    "Atomic native two-actor Fatigue transfer capped at caster maximum; unarmored real deficit138.999\u2192170, original target150\u219250, no direct Health or Magicka damage.",
+    "Committed hostile release starts existing native combat controller for this surviving confident defender. Real H2H retaliation and save/load continuation are observed.",
+    "Schema95 owns the last use per Player power. Release spends it on hit or miss; pending save has no early owner. Fresh restart releases once and completed restart rejects without replay.",
+    "Actual 23-hour wait crosses midnight and still rejects after fresh reload; one further ordinary hour admits a miss and replaces the timestamp, whose fresh reload rejects again."
+  ],
+  "validation_layers": {
+    "structural": "Schema95 C++/Python wire and legacy tests, plus exact roundtrips of real resulting saves.",
+    "compiler_world": "Full component/engine gates, original winning-record admission fences and actual Oblivion.esm runtime.",
+    "semantic": {
+      "normal-hostile-semantic": {
+        "path": "build/oblivion-compat/star-west/normal-hostile-semantic.json",
+        "sha256": "3ed1a20e4250bb9f99cefc1f73d673da1e251b36ab23183bfb34f11cbf5b1725",
+        "data": {
+          "passed": true,
+          "checks": 66,
+          "observations": [
+            {
+              "case": "normal-hostile-use-01",
+              "save_sha256": "d5930231131d0b955a4c59b4426ed4665ae72d066aa3d0dc206f239cd384474c",
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.27940773963928
+                }
+              ],
+              "player_fatigue": [
+                170.0,
+                0.0,
+                0.0,
+                -1.9273433685302734
+              ],
+              "target_fatigue": [
+                150.0,
+                0.0,
+                0.0,
+                -100.8828125
+              ]
+            },
+            {
+              "case": "normal-hostile-restart-01",
+              "save_sha256": "88ce4c27e657a0c950fabb8d76e226269084633d76a3568a0b4b2ee3fb1794da",
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.27940773963928
+                }
+              ],
+              "player_fatigue": [
+                170.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "target_fatigue": [
+                150.0,
+                0.0,
+                0.0,
+                -92.4970703125
+              ]
+            }
+          ],
+          "semantics": [
+            {
+              "name": "normal-hostile-use-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 immutable actual source and owned binary captured",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 source identity preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 schema95 exact Python wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 original Imperial power has one native use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 daily timestamp retained exactly",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 all Player inventory instance metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 native Health maximum and Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 all unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 caster Fatigue maximum170 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 character generation state retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 target Health16 and unrelated native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 target Fatigue maximum retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 no pending cast or projectile and serial19 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 no prior consumable timer replay",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 participant alive dynamic:player:0000000000000001",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 participant alive content:oblivion.esm:06c35c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 original Vilverin cell retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 sack remains opened empty",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 collected Welkynd remains spent",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 Health changes attributable to real defender melee contacts",
+              "passed": true,
+              "detail": {
+                "actual": 68.64787292480469,
+                "expected": 68.64786923339844,
+                "contacts": [
+                  [
+                    1.90507,
+                    1.92253
+                  ],
+                  [
+                    1.90821,
+                    1.9241
+                  ],
+                  [
+                    1.91469,
+                    1.92734
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "normal-hostile-use-01 Player Fatigue reflects only capped recovery and defender contacts",
+              "passed": true,
+              "detail": 168.07265663146973
+            },
+            {
+              "name": "normal-hostile-use-01 target Fatigue reflects only transfer combat expenditure and recovery",
+              "passed": true,
+              "detail": {
+                "actual": 49.1171875,
+                "start": 50,
+                "costs": [
+                  7.0,
+                  7.0,
+                  7.0
+                ]
+              }
+            },
+            {
+              "name": "normal-hostile-use-01 defender directed controller retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 combat engagement persisted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 one authored cast and one release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 independent original transfer100 and capped actual deficit",
+              "passed": true,
+              "detail": [
+                "100",
+                "138.999",
+                "170",
+                "150",
+                "50",
+                "73.2794"
+              ]
+            },
+            {
+              "name": "normal-hostile-use-01 hostile response after resource and release ownership commit",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-use-01 no item debit or magic projectile creation",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 immutable actual source and owned binary captured",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 source identity preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 schema95 exact Python wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 original Imperial power has one native use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 daily timestamp retained exactly",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 all Player inventory instance metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 native Health maximum and Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 all unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 caster Fatigue maximum170 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 character generation state retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 target Health16 and unrelated native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 target Fatigue maximum retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 no pending cast or projectile and serial19 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 no prior consumable timer replay",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 participant alive dynamic:player:0000000000000001",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 participant alive content:oblivion.esm:06c35c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 original Vilverin cell retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 sack remains opened empty",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 collected Welkynd remains spent",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 Health changes attributable to real defender melee contacts",
+              "passed": true,
+              "detail": {
+                "actual": 66.72102737426758,
+                "expected": 66.72102292480469,
+                "contacts": [
+                  [
+                    1.92685,
+                    1.93342
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "normal-hostile-restart-01 Player Fatigue reflects only capped recovery and defender contacts",
+              "passed": true,
+              "detail": 170.0
+            },
+            {
+              "name": "normal-hostile-restart-01 target Fatigue reflects only transfer combat expenditure and recovery",
+              "passed": true,
+              "detail": {
+                "actual": 57.5029296875,
+                "start": 49.1171875,
+                "costs": [
+                  7.0
+                ]
+              }
+            },
+            {
+              "name": "normal-hostile-restart-01 defender directed controller retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 combat engagement persisted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 ordinary retry rejected by daily ownership",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-restart-01 no cast or resource release replay",
+              "passed": true,
+              "detail": null
+            }
+          ]
+        }
+      },
+      "normal-hostile-pending-semantic": {
+        "path": "build/oblivion-compat/star-west/normal-hostile-pending-semantic.json",
+        "sha256": "5eb34bd7209b047a1d5b184bbd3914af319e8f6884b4430e8776b7331ad8833b",
+        "data": {
+          "passed": true,
+          "checks": 66,
+          "observations": [
+            {
+              "case": "normal-hostile-pending-01",
+              "save_sha256": "7af07fbae9f1441cf687e5b18e7b72edfc0734d2f6147400b60d49527676de4c",
+              "casts": [
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "spell": "content:oblivion.esm:047ade",
+                  "animation_group": "onehandcasttouch",
+                  "cost": 0.0,
+                  "elapsed": 0.18900001049041748,
+                  "release_time": 0.26666688919067383,
+                  "duration": 0.8666667938232422,
+                  "released": false
+                }
+              ],
+              "history": [],
+              "player_health": 74.37583923339844,
+              "player_fatigue": 137.4462890625,
+              "target_fatigue": 150.0
+            },
+            {
+              "case": "normal-hostile-pending-restart-01",
+              "save_sha256": "9d318d82346671f061f237cd0c3b40606124ceb77e93ca5159daa27d25b1ab73",
+              "casts": [],
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.27957475185394
+                }
+              ],
+              "player_health": 74.37583923339844,
+              "player_fatigue": 170.0,
+              "target_fatigue": 55.138671875
+            },
+            {
+              "case": "normal-hostile-pending-completed-restart-01",
+              "save_sha256": "a7924aff825b3ec565dc4a9d2209d705ba0047c6e0476a6e5a9f72b33170b4ed",
+              "casts": [],
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.27957475185394
+                }
+              ],
+              "player_health": 68.6198501586914,
+              "player_fatigue": 168.06843376159668,
+              "target_fatigue": 50.9599609375
+            }
+          ],
+          "semantics": [
+            {
+              "name": "normal-hostile-pending-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 owned process captured and source untouched",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 exact schema95 wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 all inventory metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 native Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 target Health16 and all non-Fatigue channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 same original cell and living participants",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 no projectile fabrication",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 one actual authored windup owner",
+              "passed": true,
+              "detail": [
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "spell": "content:oblivion.esm:047ade",
+                  "animation_group": "onehandcasttouch",
+                  "cost": 0.0,
+                  "elapsed": 0.18900001049041748,
+                  "release_time": 0.26666688919067383,
+                  "duration": 0.8666667938232422,
+                  "released": false
+                }
+              ]
+            },
+            {
+              "name": "normal-hostile-pending-01 no invented daily use before release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 target Fatigue untouched before release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 legitimate jumping deficit retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 Health untouched before hostile release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 no early defender combat controller",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-01 save preceded old-process release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 owned process captured and source untouched",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 exact schema95 wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 all inventory metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 native Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 target Health16 and all non-Fatigue channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 same original cell and living participants",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 no projectile fabrication",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 one daily owner and no pending animation",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 defender retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 symmetric combat engagement retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 daily timestamp remains exact",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 health change attributable only to actual defender contacts",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 Player Fatigue only reflects recovery and real contacts",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 target Fatigue only reflects recovery and real attacks",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 one original100 transfer from owned windup",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-restart-01 one response after release and no new admission",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 owned process captured and source untouched",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 exact schema95 wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 all inventory metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 native Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 target Health16 and all non-Fatigue channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 same original cell and living participants",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 no projectile fabrication",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 one daily owner and no pending animation",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 defender retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 symmetric combat engagement retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 daily timestamp remains exact",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 health change attributable only to actual defender contacts",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 Player Fatigue only reflects recovery and real contacts",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 target Fatigue only reflects recovery and real attacks",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-hostile-pending-completed-restart-01 normal retry rejected without resource or combat-response replay",
+              "passed": true,
+              "detail": null
+            }
+          ]
+        }
+      },
+      "normal-recharge-semantic": {
+        "path": "build/oblivion-compat/star-west/normal-recharge-semantic.json",
+        "sha256": "a3e9c8287c3c33f856efefd338222b23cd7d294149b8b0ef8db5acddac2e754c",
+        "data": {
+          "passed": true,
+          "checks": 139,
+          "observations": [
+            {
+              "case": "normal-after-bandit-02",
+              "save_sha256": "d6f511a256153f428c4b95f20db574170e829edc764a1b4db0fc2d3dfa430f77",
+              "clock": {
+                "year": 433,
+                "month": 7,
+                "day": 29,
+                "hour": 1.4751977920532227,
+                "time_scale": 30.0
+              },
+              "hours": 73.47519779205322,
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.27940773963928
+                }
+              ],
+              "health": 29.330970764160156,
+              "fatigue": 132.78007888793945
+            },
+            {
+              "case": "normal-wait-23-02",
+              "save_sha256": "f8cdb2c597b665c27c28ea841b5f141e0cf3a3654890d76fed2dd68a018c9f21",
+              "clock": {
+                "year": 433,
+                "month": 7,
+                "day": 30,
+                "hour": 0.4964890778064728,
+                "time_scale": 30.0
+              },
+              "hours": 96.49648907780647,
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.27940773963928
+                }
+              ],
+              "health": 110.0,
+              "fatigue": 170.0
+            },
+            {
+              "case": "normal-recharge-03",
+              "save_sha256": "25b4c8ae9c62156dacec95b1037be09259ee8ab1067ebc73b6d39198f9da3329",
+              "clock": {
+                "year": 433,
+                "month": 7,
+                "day": 30,
+                "hour": 1.5546226501464844,
+                "time_scale": 30.0
+              },
+              "hours": 97.55462265014648,
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 97.54186427593231
+                }
+              ],
+              "health": 110.0,
+              "fatigue": 170.0
+            },
+            {
+              "case": "normal-recharge-restart-01",
+              "save_sha256": "dd74a6e89a7fe7b6fc7d5a0a04f56ea0d82328c123772d5a82c6b132941f9818",
+              "clock": {
+                "year": 433,
+                "month": 7,
+                "day": 30,
+                "hour": 1.5964643955230713,
+                "time_scale": 30.0
+              },
+              "hours": 97.59646439552307,
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 97.54186427593231
+                }
+              ],
+              "health": 110.0,
+              "fatigue": 170.0
+            }
+          ],
+          "assertions": [
+            {
+              "name": "normal-after-bandit-02 accepted actual scenario",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 process captured and source immutable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 schema95 exact wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 one original daily use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 first bandit Player-credit death and second untouched alive",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 Player survives",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 prior Player-credit death 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 prior Player-credit death 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 prior Player-credit death 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 prior Player-credit death 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 prior Player-credit death 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 no pending cast projectile or old timed consumable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 original Magicka channel retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 original cell and all loot preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:0661c1",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:0661c3",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:0be335",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:02731a",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:027319",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:027318",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:0250a0",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:03366c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:033681",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:033690",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:02cf9f",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:00000a",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:159826",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:0223a8",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 ordinary Club wear remains usable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:159829",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:090613",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:047aca",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 inventory instance content:oblivion.esm:017829",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-after-bandit-02 prior timestamp unchanged",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 accepted actual scenario",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 process captured and source immutable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 schema95 exact wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 one original daily use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 first bandit Player-credit death and second untouched alive",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 Player survives",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 prior Player-credit death 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 prior Player-credit death 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 prior Player-credit death 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 prior Player-credit death 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 prior Player-credit death 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 no pending cast projectile or old timed consumable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 original Magicka channel retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 original cell and all loot preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:0661c1",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:0661c3",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:0be335",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:02731a",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:027319",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:027318",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:0250a0",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:03366c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:033681",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:033690",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:02cf9f",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:00000a",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:159826",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:0223a8",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 ordinary Club wear remains usable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:159829",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:090613",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:047aca",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 inventory instance content:oblivion.esm:017829",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 prior timestamp unchanged",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-wait-23-02 saved game time crosses midnight but remains below24h",
+              "passed": true,
+              "detail": {
+                "hours": 96.49648907780647,
+                "used_at": 73.27940773963928
+              }
+            },
+            {
+              "name": "normal-recharge-03 accepted actual scenario",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 process captured and source immutable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 schema95 exact wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 one original daily use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 first bandit Player-credit death and second untouched alive",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 Player survives",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 prior Player-credit death 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 prior Player-credit death 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 prior Player-credit death 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 prior Player-credit death 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 prior Player-credit death 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 no pending cast projectile or old timed consumable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 original Magicka channel retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 original cell and all loot preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:0661c1",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:0661c3",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:0be335",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:02731a",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:027319",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:027318",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:0250a0",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:03366c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:033681",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:033690",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:02cf9f",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:00000a",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:159826",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:0223a8",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 ordinary Club wear remains usable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:159829",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:090613",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:047aca",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 inventory instance content:oblivion.esm:017829",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 fresh 23h restart rejected power before further waiting",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-03 after further hour actual miss replaces history exactly once",
+              "passed": true,
+              "detail": {
+                "new": 97.54186427593231,
+                "old": 73.27940773963928
+              }
+            },
+            {
+              "name": "normal-recharge-03 no hostile response on miss",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 accepted actual scenario",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 process captured and source immutable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 schema95 exact wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 one original daily use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 first bandit Player-credit death and second untouched alive",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 Player survives",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 prior Player-credit death 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 prior Player-credit death 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 prior Player-credit death 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 prior Player-credit death 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 prior Player-credit death 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 no pending cast projectile or old timed consumable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 original Magicka channel retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 original cell and all loot preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:0661c1",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:0661c3",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:0be335",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:02731a",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:027319",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:027318",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:0250a0",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:03366c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:033681",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:033690",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:02cf9f",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:00000a",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:159826",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:0223a8",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 ordinary Club wear remains usable",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:159829",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:090613",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:047aca",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 inventory instance content:oblivion.esm:017829",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "normal-recharge-restart-01 recharged timestamp persists and another cast rejected without replay",
+              "passed": true,
+              "detail": null
+            }
+          ]
+        }
+      },
+      "sanitized-semantic": {
+        "path": "build/oblivion-compat/star-west/sanitized-semantic.json",
+        "sha256": "1938bf794bbcf3e6f35f5ef852f84a48742d6df33a9ff3fab7df26423c4f22f4",
+        "data": {
+          "passed": true,
+          "checks": 98,
+          "observations": [
+            {
+              "case": "sanitized-use-01",
+              "save_sha256": "090dd8332949faa3567beba06b20aeb12cb5ea8c4e238b4a7187419cdcd71c9a",
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.26852428913116
+                }
+              ],
+              "native_spell_casts": [
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "spell": "content:oblivion.esm:047ade",
+                  "animation_group": "onehandcasttouch",
+                  "cost": 0.0,
+                  "elapsed": 0.8300000429153442,
+                  "release_time": 0.26666688919067383,
+                  "duration": 0.8666667938232422,
+                  "released": true
+                }
+              ],
+              "player_fatigue": [
+                170.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "target_fatigue": [
+                150.0,
+                0.0,
+                0.0,
+                -96.015625
+              ]
+            },
+            {
+              "case": "sanitized-restart-03",
+              "save_sha256": "182efde6ab0d1a49e52a342f43e2ea4e5052bf7a8dbb7355c16689a9657f196d",
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.26852428913116
+                }
+              ],
+              "native_spell_casts": [],
+              "player_fatigue": [
+                170.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "target_fatigue": [
+                150.0,
+                0.0,
+                0.0,
+                -91.75390625
+              ]
+            },
+            {
+              "case": "sanitized-restart-04",
+              "save_sha256": "40c5ec2d9045136f19c9e2b7d14cb04f46d514c9136d460d0797b12f5073f053",
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.26852428913116
+                }
+              ],
+              "native_spell_casts": [],
+              "player_fatigue": [
+                170.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "target_fatigue": [
+                150.0,
+                0.0,
+                0.0,
+                -87.4921875
+              ]
+            }
+          ],
+          "semantics": [
+            {
+              "name": "sanitized-use-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 immutable actual source and owned binary captured",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 source identity preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 schema95 exact Python wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 original Imperial power has one native use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 daily timestamp retained exactly",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 all Player inventory instance metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 native Health maximum and Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 all unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 caster Fatigue maximum170 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 character generation state retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 target Health16 and unrelated native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 target Fatigue maximum retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 native cast phase admitted without projectile and serial19 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 no prior consumable timer replay",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 participant alive dynamic:player:0000000000000001",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 participant alive content:oblivion.esm:06c35c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 original Vilverin cell retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 sack remains opened empty",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 collected Welkynd remains spent",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 Health changes attributable to real defender melee contacts",
+              "passed": true,
+              "detail": {
+                "actual": 74.37583923339844,
+                "expected": 74.37583923339844,
+                "contacts": []
+              }
+            },
+            {
+              "name": "sanitized-use-01 Player Fatigue reflects only capped recovery and defender contacts",
+              "passed": true,
+              "detail": 170.0
+            },
+            {
+              "name": "sanitized-use-01 target Fatigue reflects only transfer combat expenditure and recovery",
+              "passed": true,
+              "detail": {
+                "actual": 53.984375,
+                "start": 50,
+                "costs": []
+              }
+            },
+            {
+              "name": "sanitized-use-01 defender directed controller retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 combat engagement persisted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 one authored cast and one release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 independent original transfer100 and capped actual deficit",
+              "passed": true,
+              "detail": [
+                "100",
+                "154.941",
+                "170",
+                "150",
+                "50",
+                "73.2685"
+              ]
+            },
+            {
+              "name": "sanitized-use-01 hostile response after resource and release ownership commit",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-use-01 no item debit or magic projectile creation",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 immutable actual source and owned binary captured",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 source identity preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 schema95 exact Python wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 original Imperial power has one native use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 daily timestamp retained exactly",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 all Player inventory instance metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 native Health maximum and Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 all unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 caster Fatigue maximum170 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 character generation state retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 target Health16 and unrelated native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 target Fatigue maximum retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 native cast phase admitted without projectile and serial19 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 no prior consumable timer replay",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 participant alive dynamic:player:0000000000000001",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 participant alive content:oblivion.esm:06c35c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 original Vilverin cell retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 sack remains opened empty",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 collected Welkynd remains spent",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 Health changes attributable to real defender melee contacts",
+              "passed": true,
+              "detail": {
+                "actual": 70.52201080322266,
+                "expected": 70.52200923339844,
+                "contacts": [
+                  [
+                    1.92013,
+                    1.93006
+                  ],
+                  [
+                    1.9337,
+                    1.93685
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "sanitized-restart-03 Player Fatigue reflects only capped recovery and defender contacts",
+              "passed": true,
+              "detail": 170.0
+            },
+            {
+              "name": "sanitized-restart-03 target Fatigue reflects only transfer combat expenditure and recovery",
+              "passed": true,
+              "detail": {
+                "actual": 58.24609375,
+                "start": 53.984375,
+                "costs": [
+                  7.0,
+                  7.0
+                ]
+              }
+            },
+            {
+              "name": "sanitized-restart-03 defender directed controller retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 combat engagement persisted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 ordinary retry rejected by daily ownership",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-03 no cast or resource release replay",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 immutable actual source and owned binary captured",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 source identity preserved",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 schema95 exact Python wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 original Imperial power has one native use owner",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 daily timestamp retained exactly",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 all Player inventory instance metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 native Health maximum and Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 all unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 caster Fatigue maximum170 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 character generation state retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 target Health16 and unrelated native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 target Fatigue maximum retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 native cast phase admitted without projectile and serial19 retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 no prior consumable timer replay",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 participant alive dynamic:player:0000000000000001",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 participant alive content:oblivion.esm:06c35c",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 original Vilverin cell retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 sack remains opened empty",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 collected Welkynd remains spent",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 Health changes attributable to real defender melee contacts",
+              "passed": true,
+              "detail": {
+                "actual": 66.61389923095703,
+                "expected": 66.61390080322266,
+                "contacts": [
+                  [
+                    1.94727,
+                    1.94364
+                  ],
+                  [
+                    1.96084,
+                    1.95042
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "sanitized-restart-04 Player Fatigue reflects only capped recovery and defender contacts",
+              "passed": true,
+              "detail": 170.0
+            },
+            {
+              "name": "sanitized-restart-04 target Fatigue reflects only transfer combat expenditure and recovery",
+              "passed": true,
+              "detail": {
+                "actual": 62.5078125,
+                "start": 58.24609375,
+                "costs": [
+                  7.0,
+                  7.0
+                ]
+              }
+            },
+            {
+              "name": "sanitized-restart-04 defender directed controller retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 combat engagement persisted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 ordinary retry rejected by daily ownership",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-restart-04 no cast or resource release replay",
+              "passed": true,
+              "detail": null
+            }
+          ]
+        }
+      },
+      "sanitized-pending-semantic": {
+        "path": "build/oblivion-compat/star-west/sanitized-pending-semantic.json",
+        "sha256": "475a4560952db5eeda69a7cd3a7ac15427bfe3853f18091d8d5a9f49c64a43e2",
+        "data": {
+          "passed": true,
+          "checks": 66,
+          "observations": [
+            {
+              "case": "sanitized-pending-01",
+              "save_sha256": "c8538a476b851f4160aec49a4da88699cc1fa244bac17330855821252f685aee",
+              "casts": [
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "spell": "content:oblivion.esm:047ade",
+                  "animation_group": "onehandcasttouch",
+                  "cost": 0.0,
+                  "elapsed": 0.16600000858306885,
+                  "release_time": 0.26666688919067383,
+                  "duration": 0.8666667938232422,
+                  "released": false
+                }
+              ],
+              "history": [],
+              "player_health": 74.37583923339844,
+              "player_fatigue": 153.28125,
+              "target_fatigue": 150.0
+            },
+            {
+              "case": "sanitized-pending-restart-01",
+              "save_sha256": "822df0b19322f6b4eda29b6d67147c3fa099717bdf652e0aa29bb1a626d75d6b",
+              "casts": [],
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.27682411670685
+                }
+              ],
+              "player_health": 72.4557113647461,
+              "player_fatigue": 170.0,
+              "target_fatigue": 55.28515625
+            },
+            {
+              "case": "sanitized-pending-completed-restart-01",
+              "save_sha256": "7e9f51901a4a52d9415de7ed4a3c174d039a35344b179eaf01bb82ecf2061e9d",
+              "casts": [],
+              "history": [
+                {
+                  "spell": "content:oblivion.esm:047ade",
+                  "used_at": 73.27682411670685
+                }
+              ],
+              "player_health": 68.57474136352539,
+              "player_fatigue": 170.0,
+              "target_fatigue": 59.546875
+            }
+          ],
+          "semantics": [
+            {
+              "name": "sanitized-pending-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 owned process captured and source untouched",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 exact schema95 wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 all inventory metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 native Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 target Health16 and all non-Fatigue channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 same original cell and living participants",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 no projectile fabrication",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 one actual authored windup owner",
+              "passed": true,
+              "detail": [
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "spell": "content:oblivion.esm:047ade",
+                  "animation_group": "onehandcasttouch",
+                  "cost": 0.0,
+                  "elapsed": 0.16600000858306885,
+                  "release_time": 0.26666688919067383,
+                  "duration": 0.8666667938232422,
+                  "released": false
+                }
+              ]
+            },
+            {
+              "name": "sanitized-pending-01 no invented daily use before release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 target Fatigue untouched before release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 legitimate jumping deficit retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 Health untouched before hostile release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 no early defender combat controller",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-01 save preceded old-process release",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 owned process captured and source untouched",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 exact schema95 wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 all inventory metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 native Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 target Health16 and all non-Fatigue channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 same original cell and living participants",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 no projectile fabrication",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 one daily owner and no pending animation",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 defender retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 symmetric combat engagement retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 daily timestamp remains exact",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 health change attributable only to actual defender contacts",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 Player Fatigue only reflects recovery and real contacts",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 target Fatigue only reflects recovery and real attacks",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 one original100 transfer from owned windup",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-restart-01 one response after release and no new admission",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 actual scenario accepted",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 owned process captured and source untouched",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 exact schema95 wire roundtrip",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 all inventory metadata retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 native Magicka channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 unrelated Player native values retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 target Health16 and all non-Fatigue channels retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 same original cell and living participants",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 no projectile fabrication",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 prior Player-credit death retained 06c356",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 prior Player-credit death retained 06c359",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 prior Player-credit death retained 04bb72",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 prior Player-credit death retained 04bb73",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 prior Player-credit death retained 06bfba",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 one daily owner and no pending animation",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 defender retains Player target",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 symmetric combat engagement retained",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 daily timestamp remains exact",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 health change attributable only to actual defender contacts",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 Player Fatigue only reflects recovery and real contacts",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 target Fatigue only reflects recovery and real attacks",
+              "passed": true,
+              "detail": null
+            },
+            {
+              "name": "sanitized-pending-completed-restart-01 normal retry rejected without resource or combat-response replay",
+              "passed": true,
+              "detail": null
+            }
+          ]
+        }
+      }
+    },
+    "runtime": "Ordinary original-content SDL input courses with immutable save inputs, owned process epochs, ELF/library/resource provenance and fresh processes."
+  },
+  "normal": {
+    "path": "build/oblivion-compat/star-west/normal-recovery/verification.json",
+    "sha256": "477649b9454002f9d3aabaa99451063c0cedb0b07eebd522f1b3b18c942401dd",
+    "data": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "components-tests",
+            "-j",
+            "2"
+          ],
+          "log": "components-build.log",
+          "returncode": 0,
+          "seconds": 1.619
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "components-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.116
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/star-west/normal-recovery/components.xml"
+          ],
+          "log": "components.log",
+          "returncode": 0,
+          "seconds": 15.354
+        },
+        {
+          "argv": [
+            "/usr/bin/python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "scripts/tests"
+          ],
+          "log": "python.log",
+          "returncode": 0,
+          "seconds": 117.652
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "openmw-tests",
+            "openmw",
+            "esmtool",
+            "-j",
+            "2"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 37.716
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.165
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/star-west/normal-recovery/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 54.254
+        }
+      ],
+      "results": {
+        "components": {
+          "executed": 3283,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "170ffb8adcb12c7b46defea1d05e792868bb2df4e5e07a13ecd1c83f5ca45cd1",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "435ddf81c196a3b3109c88ecb82e32735e30711621e65d56043a7a973e63f935",
+          "inventory_sha256": "71c08fd54c786f0d26b4661d780297250359081ea48643de9ecdcb884296f7ee",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 606,
+          "passed": true,
+          "log_sha256": "88d30a5a8720d9f232e224efe1f75117bce46967d0ec8d557e2c24aaae7eb0f5"
+        },
+        "engine": {
+          "executed": 2271,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f37d0c45efca57f3cc76e3f55abd9ed00985b67afa914718f02f19b81edf247e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "7a8daf45530a6976c23047e56345f9505a2372089143d54518a01c0d7cc4f46c",
+          "inventory_sha256": "2ff4110cf9ce550cdb8b0bb9d7d6ba1d82bf2c6822c849fa5b9a10650b52d6e0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "e0a201b0fdca88db3d1206119761a1a9bd0971a6",
+        "source_fingerprint": "f849e0b7a3a5f3f0a3a4daaceee0d274d745a83e477472559908fefc24f9e198"
+      },
+      "source_after": {
+        "head": "e0a201b0fdca88db3d1206119761a1a9bd0971a6",
+        "source_fingerprint": "f849e0b7a3a5f3f0a3a4daaceee0d274d745a83e477472559908fefc24f9e198"
+      }
+    }
+  },
+  "instrumented": {
+    "path": "build/oblivion-compat/star-west/sanitized-final-01/verification.json",
+    "sha256": "2e4338bb093061fa3c5853f62e738d2138aa0d2f0c724a5344b8fe1ee73a0137",
+    "data": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "components-tests",
+            "-j",
+            "2"
+          ],
+          "log": "components-build.log",
+          "returncode": 0,
+          "seconds": 1.569
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "components-inventory.txt",
+          "returncode": 0,
+          "seconds": 1.168
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/star-west/sanitized-final-01/components.xml"
+          ],
+          "log": "components.log",
+          "returncode": 0,
+          "seconds": 87.263
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw-tests",
+            "openmw",
+            "esmtool",
+            "-j",
+            "2"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 317.359
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 2.572
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/star-west/sanitized-final-01/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 316.238
+        }
+      ],
+      "results": {
+        "components": {
+          "executed": 3283,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "463692937a67a485a760105e992ae4efd3dfef8b8e309f03b2dfc3f70a121906",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "4d404a4136d3a8ee40f1f146dbb79d56321cad9427c70b9ab78f8bd41d3064e8",
+          "inventory_sha256": "ac5ed47a6fc9d591e5f7804ad61127c136931faaf93a72de24f4bb5b1bda7b72",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2271,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "75233e55241a75c6a451fe5b8741c8600cf1d5936c0a4e8235f7e1314924a7e4",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "8133ceec73a916fbfd2bd95ecc34d6b326f317c778acd077cacc815e9a0f73e8",
+          "inventory_sha256": "2ff4110cf9ce550cdb8b0bb9d7d6ba1d82bf2c6822c849fa5b9a10650b52d6e0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "e0a201b0fdca88db3d1206119761a1a9bd0971a6",
+        "source_fingerprint": "6af1dada149bb86593dab0af12a38e5e398c4c7e0184bc66ae5742d91db423c5"
+      },
+      "source_after": {
+        "head": "e0a201b0fdca88db3d1206119761a1a9bd0971a6",
+        "source_fingerprint": "6af1dada149bb86593dab0af12a38e5e398c4c7e0184bc66ae5742d91db423c5"
+      }
+    }
+  },
+  "visual_reviews": [
+    {
+      "path": "build/oblivion-compat/star-west/normal-hostile-use-01/star-west-real-touch-cast.png",
+      "sha256": "2cbe6d0eb97bf6457f0206485f98dd8b7ebb9bb69e18b3608d95413819dabc7c",
+      "review": "Actual native scene/selected power and target, or actual23-hour wait selection; inspected."
+    },
+    {
+      "path": "build/oblivion-compat/star-west/sanitized-use-01/star-west-real-touch-cast.png",
+      "sha256": "c1c959b6cae9933708dece8bb399cb9721a86ff4b719d2558e2f56829437e695",
+      "review": "Actual native scene/selected power and target, or actual23-hour wait selection; inspected."
+    },
+    {
+      "path": "build/oblivion-compat/star-west/normal-wait-23-02/wait-23-selected.png",
+      "sha256": "5d3f0cc5be737f7e31035f72c213a5b2a2c1fe36f5efe0b53961b9e43b004226",
+      "review": "Actual native scene/selected power and target, or actual23-hour wait selection; inspected."
+    }
+  ],
+  "retained_development_findings": [
+    "Three initial continuation cases used the prior Welkynd resource version marker; retained failures, replaced resource snapshot; no added error whitelist.",
+    "Fixture-preflight ceiling and three explicit fixture recipe schema pins required95; retained failed reports and full606 Python passing reruns.",
+    "Sanitized restart01 sent inputs during loading; readonly observer now requires one second of simulation frames before readiness.",
+    "The first instrumented use save retains a released animation at0.830/0.8667 seconds; restart03 finishes it without replay, and restart04 independently reloads the completed owner.",
+    "Sanitized restart02 ended on signal9 without a sanitizer diagnostic; original failure retained, later instrumented gameplay serialized.",
+    "Initial wait selected23 hours but saved while waiting; further-hour attempt also raced autosave. Revised recipes wait for resumed observer frames and explicit Quicksave. Failed/partial cases retained."
+  ],
+  "outside_scope": [
+    "Arbitrary powers/Absorb effects, Voice of the Emperor, crime/flee/reflect/absorption and exact cancellation timing.",
+    "Original missed casting costs1 Fatigue; this narrow path currently omits that small generic casting expenditure.",
+    "Nonzero Magic Resistance and fork armor cases are not runtime acceptance claims; independent original93% armor probe establishes unchanged100 transfer.",
+    "No full M16, expedition completion, native bow tactics, spawn/respawn or generic NPC hostility claim."
+  ],
+  "sanitizer_scope": "Rendered game ASan leak detection off, UBSan halt on; full component/engine ASan leak detection on. Direct sanitizer-linked ELF/libraries captured, no LD_PRELOAD requirement.",
+  "outgoing_checkpoint": {
+    "case": "normal-recharge-restart-01",
+    "save_sha256": "dd74a6e89a7fe7b6fc7d5a0a04f56ea0d82328c123772d5a82c6b132941f9818",
+    "clock": {
+      "year": 433,
+      "month": 7,
+      "day": 30,
+      "hour": 1.5964643955230713,
+      "time_scale": 30.0
+    },
+    "hours": 97.59646439552307,
+    "history": [
+      {
+        "spell": "content:oblivion.esm:047ade",
+        "used_at": 97.54186427593231
+      }
+    ],
+    "health": 110.0,
+    "fatigue": 170.0,
+    "path": "build/oblivion-compat/star-west/normal-recharge-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+  },
+  "original_oracle_sha256": "2e8dc9282afaf9d51eb10c1165f064caf730c363d0e8d66b0df38565015fafe3"
+}
