@@ -3,41 +3,50 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The expedition and full milestones remain open.
 
-Latest closed chunk: original novice Bonemeal ingestion.
-[Contract](BONEMEAL-INGREDIENT-CONTRACT.json),
-[independent original-game rule](BONEMEAL-INGREDIENT-ORACLE.json),
-[verification](BONEMEAL-INGREDIENT-VERIFICATION.json).
-Actual Skeleton04bb63/base084b1a defeated with carried Flare and genuinely looted.
-Bonemeal01ebff count1→0 through ordinary inventory use; Damage Fatigue1/sec
-for3sec. Partial save resumes only its remainder; completed reload stays clear.
-Schema98 stores each use's resolved signed rate/duration; old food retains5/1.
-Legacy Lettuce92 migration completes its existing remainder without replay.
+Latest closed chunk: original submerged Ayleid Cask066e79 lock choices.
+[Contract](AYLEID-CASK-LOCK-CONTRACT.json),
+[original-game UI oracle](AYLEID-CASK-LOCK-ORACLE.json),
+[verification](AYLEID-CASK-LOCK-VERIFICATION.json).
+Activation now pauses before offering Auto Attempt / Cancel. Cancel spends no
+pick; explicit failure breaks one and offers another paused choice. Actual
+normal attempts fail once, then unlock and take13 Gold, a Bronze Necklace and
+a Weak Potion of Healing. Cancelled and emptied states survive cold reload.
 
-Four normal/four instrumented actual courses pass exact wire/live/save and
-inventory/state audits. Both full gates pass3,290 components/2,276 engine;
-611 Python pass. Unit leak checks on; rendered off. Recipe capture and read-only
-legacy-null comparison corrections are recorded separately from unchanged C++.
-Higher Alchemy differed in the original probe; non-food admission remains
-Alchemy5/Luck50/zero Magic Resistance. General potency, XP/miscstats, brewing,
-resistance/absorption and native active-effects presentation remain open.
+Four normal and three linked instrumented courses pass live/wire/save audits.
+Normal/SAN engine gates each pass2,276; current Python611 passes. Components
+reuse the unchanged Bonemeal provenance. Schema98 is unchanged. Original menus
+hold breath/Health and preserve picks on Close; fork menu holds8 wall seconds
+with only0.166 simulation seconds across boundary frames. Manual tumblers,
+Skeleton Key/XP and full lock/device matrices remain open; existing auto chance
+is approximate. Original leveled lock1 versus fork0 is recorded separately.
 
-Current genuine continuation:
-`build/oblivion-compat/bonemeal/normal-completed_restart-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256 e75b5f5a47873a7461627091a816904c12f818a9320e0af3b6d585de072f1959.
-Player78.2150 Health/69.8641 Magicka/170 Fatigue
-in Canosel0463f5 at(-2779.292,-10392.376,-2662.209), both prior powers spent.
-Bonemeal0/no pending ingredient effect. Iron Arrows24:17 equipped and7 in the
-other stack. Looted Iron Bow retains109.12 condition; Rusty bow wear retained.
-Skeleton remains Player-credited dead with empty inventory. Amulet script owner1/
-locals and taken arrow2 tombstone persist. Next dynamic serial3, next arrow14.
-The separate legacy-food regression is historical; use the continuation above.
+Current genuine continuation, surfaced with air and retained actual loot:
+`build/oblivion-compat/lock-dialog/normal-loot-surface-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 f98a69ceb53b487e35498819e84291df4ae30fbf525fc869c41014ee7728a81c.
+Player53.0011 Health/42.2032 Magicka/170 Fatigue; breath20.5;
+Canosel0463f5 at(-2204.043,-10014.338,-2860.883), looking straight up.
+Cask066e79 is unlocked/empty. Picks7; new loot13 Gold, Bronze Necklace038027,
+Weak Potion of Healing009310. Arrows24, looted Iron Bow109.12 condition,
+Player-credited dead/emptied Skeleton04bb63, Amulet script owner1/locals and
+arrow2 tombstone persist. Next dynamic serial3, next arrow14. Both powers remain
+spent. The instrumented branch rolled different actual loot and is historical;
+use the normal surfaced continuation above for expedition progress.
 
-Next action: approach original lower-floor Cask066e79/base03767e, inspect its
-actual lock/contents and baseline the next unsupported behavior. Read-only
-candidate records are in `build/oblivion-compat/next-content/canosel-item-candidates.json`.
+Next bounded piece: untouched unowned/unlocked Cask04bb85/base03767e at
+(-5298.3,-10061.1,-2624.0), still holding8 authored LVLI roots. Implement its
+native item-selection window: open/close without taking, take one item, reload
+the remainder, take all, then reload empty. Current container activation takes
+all stock immediately, and ESM4Container lacks a ContainerStore view. First
+reach it through ordinary movement from the safe checkpoint and save before
+activation; retain the real automatic-transfer baseline. Read-only candidates:
+`build/oblivion-compat/next-content/canosel-item-candidates.json`.
 The autonomous content iteration remains active; full expedition/milestones open.
 
 Earlier accepted slices and reusable evidence:
+
+- [Novice Bonemeal](BONEMEAL-INGREDIENT-VERIFICATION.json): earned Skeleton
+  loot, Damage Fatigue1/sec for3sec with remaining-duration restart; schema98
+  retains legacy food5/1. Higher Alchemy/general potency remain open.
 
 - [Original Skeleton archery](SKELETON-ARCHERY-VERIFICATION.json): live
   Creature084b1a equips its actual Iron Bow/Arrows, saves an owned draw, releases

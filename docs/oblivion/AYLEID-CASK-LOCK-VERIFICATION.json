@@ -1,0 +1,481 @@
+{
+  "status": "bounded original-cask lock-choice chunk accepted; full M13 and expedition remain open",
+  "implementation_revision": "befd52b883bd6942f9f9dc0fc44a4d77734f36b3",
+  "preflight_revision": "7f4105817e3b308db8d27d6310fe85e427a7c1f7",
+  "production_source_proof": {
+    "implementation_revision": "befd52b883bd6942f9f9dc0fc44a4d77734f36b3",
+    "built_base": "7f4105817e3b308db8d27d6310fe85e427a7c1f7",
+    "files": {
+      "apps/openmw/mwworld/oblivioninteraction.cpp": "74a32b51a8b14b15f6df216ed8699da3be6fabf343b65aba6cd0861600c08f07"
+    },
+    "scope": "The committed C++ bytes match the frozen bytes built and exercised by both final gates. Git/receipt metadata commits do not require rebuilding unchanged source."
+  },
+  "gates": {
+    "normal-integration-03": {
+      "path": "build/oblivion-compat/lock-dialog/normal-integration-03/verification.json",
+      "sha256": "30927aba804843845157f34c96d1024496d04d4ddcf9b55346583a0548d7b455",
+      "source": {
+        "head": "7f4105817e3b308db8d27d6310fe85e427a7c1f7",
+        "source_fingerprint": "1f6fb88a075d5f23db4d1b98e5bfb28c493993654c8c67dd8b367f208023aa37"
+      },
+      "engine": {
+        "executed": 2276,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "41922aac9e4e22877f79a10f6d09bc9e15d93f7d00aadb78fc5bf0acea4b934f",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "d9c772da440f0fc986d967114002e32ab75b7f1d4347db3f0129e0e3a903ab8f",
+        "inventory_sha256": "248fcc1d75ff54cd37172cd43cf0bc3114ade4c52cd110a0ee99cfe3d26ec8bb",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized-integration-01": {
+      "path": "build/oblivion-compat/lock-dialog/sanitized-integration-01/verification.json",
+      "sha256": "fee58ecdc2edb98a05d682a21473daab897e85141af8abdcb35115f71e7babee",
+      "source": {
+        "head": "7f4105817e3b308db8d27d6310fe85e427a7c1f7",
+        "source_fingerprint": "1f6fb88a075d5f23db4d1b98e5bfb28c493993654c8c67dd8b367f208023aa37"
+      },
+      "engine": {
+        "executed": 2276,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "3ea550b40c5e767b8c68cec0067ff3f15db63c3b76f87f9f42146ff7e2be85ee",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "8dea181d2f93ddcaf1f044563b3516142e9e4b7a8ff43ce8010ae01cdcc1a6e4",
+        "inventory_sha256": "248fcc1d75ff54cd37172cd43cf0bc3114ade4c52cd110a0ee99cfe3d26ec8bb",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "python": {
+      "path": "build/oblivion-compat/lock-dialog/python-integration-01/verification.json",
+      "sha256": "a57f40f7fe360b61aa926e880df03a7a8bf5b776518351d87f398caf83669b3f",
+      "source": {
+        "head": "befd52b883bd6942f9f9dc0fc44a4d77734f36b3",
+        "source_fingerprint": "545499ac38ca43c20f879974e34599ee50b88c49151646629a1832ec95b129b4"
+      },
+      "result": {
+        "python": {
+          "executed": 611,
+          "passed": true,
+          "log_sha256": "70db0a3a0fce768af31493c8d91c88ff577a786ee5c3ec4cafdae8ff66bca025"
+        }
+      }
+    }
+  },
+  "courses": {
+    "normal-cancel-03": {
+      "audit": {
+        "passed": true,
+        "phase": "cancel",
+        "source_sha256": "add795ead46d2d4b593da4eee2d6357c8c82247f5c5f8c5cb17563f06b103b7a",
+        "save_sha256": "8af8d8681b8ed698fb55b8aaebd719c2363bba102fbdb1a192dfb69c46041a5b",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 8,
+        "picks_after": 8,
+        "attempts": 0,
+        "failures": 0,
+        "pause": {
+          "wall_seconds": 8.000069943955168,
+          "simulated_seconds_including_boundary_frames": 0.16600000858309993
+        },
+        "loot_delta": {},
+        "process": {
+          "pid": 1373938,
+          "start_ticks": 208202748,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/normal-cancel-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-cask-short-dive-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "dc12992963190e106374e5b124cf99d61d6c1acd575867f6c83aaad259f7c3ae"
+        },
+        "cask_locked": true,
+        "source_unchanged": true
+      },
+      "files": {
+        "audit.json": "d07e673f3795d214f77a7149f3d830847b48cb7a7ed0e755dba096d9649f2c3e",
+        "driver-process.json": "5328a1cfcc9233da2b45dfa36d1c98e23fa2dd4ccacfb914753d1067bc4a4ca9",
+        "process-epoch.json": "627ceb0345357f23ec056cab797fe5f1670dac62fc13095dafe97eaf5c94f7a7",
+        "loaded-libraries.json": "1683923c6b8fbb694286e673fa76b74e198b5524b2828cf30a8cdff26a3006d2",
+        "events.jsonl": "915223d687dd0fc9bc046d848b90a9ebdfc24eed94aa3ef5fe769fbc6589851b",
+        "sdl-input.txt": "c67c2d159a56731ccad9bba6105601d54702c40f07eeb8d0ba8701bfeb1a3ff2"
+      }
+    },
+    "normal-attempt-03": {
+      "audit": {
+        "passed": true,
+        "phase": "attempt",
+        "source_sha256": "add795ead46d2d4b593da4eee2d6357c8c82247f5c5f8c5cb17563f06b103b7a",
+        "save_sha256": "1a4469b77e83704d74fbd328666a7d2b68f450a405f262b3d3fa4370eda51310",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 8,
+        "picks_after": 7,
+        "attempts": 2,
+        "failures": 1,
+        "pause": {
+          "wall_seconds": 8.000060840975493,
+          "simulated_seconds_including_boundary_frames": 0.166000008583
+        },
+        "loot_delta": {
+          "content:oblivion.esm:009310": 1,
+          "content:oblivion.esm:038027": 1,
+          "content:oblivion.esm:00000f": 13
+        },
+        "process": {
+          "pid": 1374359,
+          "start_ticks": 208234073,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/normal-attempt-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-cask-short-dive-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "dc12992963190e106374e5b124cf99d61d6c1acd575867f6c83aaad259f7c3ae"
+        },
+        "cask_locked": false,
+        "source_unchanged": true
+      },
+      "files": {
+        "audit.json": "54972c4cc98c104f6d3792495b7af59892455674a5f51b67d4a82b55333e27d7",
+        "driver-process.json": "7023cba87f52e50887aa091cd6113f53194a048c0d2524369c31ee3de348d53b",
+        "process-epoch.json": "d57191a23c49ecb80c959970bcd6cf6cf87c44d37931ffb529eb0f411c6ee7dc",
+        "loaded-libraries.json": "b87d85507dc3bd548211c88c011e5d4246e479e37eeb5b66b8a988fb5c9ef6ac",
+        "events.jsonl": "c8c329ba87862966274f82d00460e02c3635cb3ecdc01641313b2bc7b60c8b17",
+        "sdl-input.txt": "57a506bb3c77c510a2329c2dea02e314149bbde87f62967de395d6a08473eaa6"
+      }
+    },
+    "normal-cancel-restart-01": {
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "source_sha256": "8af8d8681b8ed698fb55b8aaebd719c2363bba102fbdb1a192dfb69c46041a5b",
+        "save_sha256": "97a36b0ecbaf7e8f00f3715de74e86dad881d6ac036490f0fcfaa663807b4b52",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 8,
+        "picks_after": 8,
+        "attempts": 0,
+        "failures": 0,
+        "pause": null,
+        "loot_delta": {},
+        "process": {
+          "pid": 1374508,
+          "start_ticks": 208242805,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/normal-cancel-restart-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/normal-cancel-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "dc12992963190e106374e5b124cf99d61d6c1acd575867f6c83aaad259f7c3ae"
+        },
+        "cask_locked": true,
+        "source_unchanged": true
+      },
+      "files": {
+        "audit.json": "b5563aa5d1b20b13f3d4ff57a520ba71037cdcbde9a4de473263f35b2153f39f",
+        "driver-process.json": "f36c8c11934aabfe0f0e6dd3496fb06e305020ff7993c20ff5a2ffdb5471213c",
+        "process-epoch.json": "ba04dbf206add54d2b4651531b09afa8868d5a56bab5c43665e6462ce7bce4a7",
+        "loaded-libraries.json": "d9288a18623774ef3b3c26a7c92271bfc8b81662f7099c92b13f315f05cc1da1",
+        "events.jsonl": "28baa163d161bece2fdbb8745406c59bdac528525725e80429b2b7fefaa910cd",
+        "sdl-input.txt": "f879d6eb4789ede3d3f5e4e95f862dc0ca619c56373249a0213a11e75e5bca03"
+      }
+    },
+    "normal-loot-restart-01": {
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "source_sha256": "1a4469b77e83704d74fbd328666a7d2b68f450a405f262b3d3fa4370eda51310",
+        "save_sha256": "c5042d1a29a673aa7d3bce859e0ccf3d965fa3d02d2e48c90085968d42ac9344",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 7,
+        "picks_after": 7,
+        "attempts": 0,
+        "failures": 0,
+        "pause": null,
+        "loot_delta": {},
+        "process": {
+          "pid": 1374683,
+          "start_ticks": 208257716,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/normal-loot-restart-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/normal-attempt-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "dc12992963190e106374e5b124cf99d61d6c1acd575867f6c83aaad259f7c3ae"
+        },
+        "cask_locked": false,
+        "source_unchanged": true
+      },
+      "files": {
+        "audit.json": "cac4be86eea9cfdcbf6eb969fda2e9648fbae753a585f4d7256341aa44826b2c",
+        "driver-process.json": "ea841eb84025db98f3eb9bb5fc99ffcf967de89703d19c1401849c7d647a9a6a",
+        "process-epoch.json": "65fe19056aa53604ba1e71d9d4698ca6c87ec3fdf64c99bd286deb7ffa16f700",
+        "loaded-libraries.json": "a3edc037791c16448c94b03dfe18034b3abd893c98970ebb4e63a52b32e95021",
+        "events.jsonl": "494e27a59db4ad9f87d3e64572796e42433ed5e2c63ded88bdcc3c37594e511b",
+        "sdl-input.txt": "f879d6eb4789ede3d3f5e4e95f862dc0ca619c56373249a0213a11e75e5bca03"
+      }
+    },
+    "sanitized-cancel-04": {
+      "audit": {
+        "passed": true,
+        "phase": "cancel",
+        "source_sha256": "add795ead46d2d4b593da4eee2d6357c8c82247f5c5f8c5cb17563f06b103b7a",
+        "save_sha256": "63b4d1f0f086a41e00999d45cbf853ef339e40873cca0269b6fa28b30460515f",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 8,
+        "picks_after": 8,
+        "attempts": 0,
+        "failures": 0,
+        "pause": {
+          "wall_seconds": 8.000074419891462,
+          "simulated_seconds_including_boundary_frames": 0.166000008583
+        },
+        "loot_delta": {},
+        "process": {
+          "pid": 1387093,
+          "start_ticks": 208380485,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/sanitized-cancel-04/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-cask-short-dive-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fa00e0916a946442ba35f5d1ada4672e991d3cf0486d84fa09a2ca9e0e161b8b"
+        },
+        "cask_locked": true,
+        "source_unchanged": true
+      },
+      "files": {
+        "audit.json": "c36757ae189e8b0d7ee6cefaa60644f8a663fbc41c89fb6e7a006f5cf1524206",
+        "driver-process.json": "4bc1f0192291f196fc7bda28da32cab06a95fbcf53e1f75bc25ae2d0010e52d6",
+        "process-epoch.json": "1a322d9b46121010f3bb6b0f4a890d1d24ce11d51e3c62a9aeeecaf91740116d",
+        "loaded-libraries.json": "3bf3041f12df09ece0d2210cf40f6fe16d00cc06379a1aeec63d3c0d6443082b",
+        "events.jsonl": "063d8033bb86038f11d708f5d4a41c2345ecc9ead38e87d35ec6782e5e2a9ed2",
+        "sdl-input.txt": "c67c2d159a56731ccad9bba6105601d54702c40f07eeb8d0ba8701bfeb1a3ff2"
+      }
+    },
+    "sanitized-attempt-01": {
+      "audit": {
+        "passed": true,
+        "phase": "attempt",
+        "source_sha256": "63b4d1f0f086a41e00999d45cbf853ef339e40873cca0269b6fa28b30460515f",
+        "save_sha256": "47ff2534720b178bea4294bbea2d24dc301db93567153805abdfa509e8421556",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 8,
+        "picks_after": 8,
+        "attempts": 1,
+        "failures": 0,
+        "pause": {
+          "wall_seconds": 8.00007338495925,
+          "simulated_seconds_including_boundary_frames": 0.16600000858310038
+        },
+        "loot_delta": {
+          "content:oblivion.esm:01ebff": 1,
+          "content:oblivion.esm:00000f": 10,
+          "content:oblivion.esm:017829": 8
+        },
+        "process": {
+          "pid": 1387368,
+          "start_ticks": 208416633,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/sanitized-attempt-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/sanitized-cancel-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fa00e0916a946442ba35f5d1ada4672e991d3cf0486d84fa09a2ca9e0e161b8b"
+        },
+        "cask_locked": false,
+        "source_unchanged": true
+      },
+      "files": {
+        "audit.json": "f79e0e6fc6b4cb7c9cb4572663dc22fe2b7f82f6e8a8fb27d2eabc7088cbd888",
+        "driver-process.json": "c57781343009fb9c83fb750f2d322f6f947b7e2742bdd7dbacf14354e063d25e",
+        "process-epoch.json": "07142b288eed9e989acf14e5330b90af21be66073f3e2c6ecec38ba1461a926a",
+        "loaded-libraries.json": "cb6705841c72945e27361e1e8f832ec4504d8c053415dfc492b796bf705e60f3",
+        "events.jsonl": "41fc8bff2a64384ae4d2a0795ce3244c35db2ae3c1e5a4da6b3b46aa7ec950ec",
+        "sdl-input.txt": "dd2f6fd194d4c60372325c408f341d2aad8373523d72d875e14c8d8d5db9e485"
+      }
+    },
+    "sanitized-loot-restart-01": {
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "source_sha256": "47ff2534720b178bea4294bbea2d24dc301db93567153805abdfa509e8421556",
+        "save_sha256": "74237b7cecfb4e4a2a22357d624614882a6b638ca888db75a01d5802e049d48a",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 8,
+        "picks_after": 8,
+        "attempts": 0,
+        "failures": 0,
+        "pause": null,
+        "loot_delta": {},
+        "process": {
+          "pid": 1387633,
+          "start_ticks": 208446642,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/sanitized-loot-restart-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lock-dialog/sanitized-attempt-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fa00e0916a946442ba35f5d1ada4672e991d3cf0486d84fa09a2ca9e0e161b8b"
+        },
+        "cask_locked": false,
+        "source_unchanged": true
+      },
+      "files": {
+        "audit.json": "930dcf8b23f9e7cd7d876ce453599d017dd735fd8a616f02696261fc2a6b5349",
+        "driver-process.json": "c87805bf448773ebf2ad51024e83e8c8f257bcc7fb1cd0e782d466ea5f662358",
+        "process-epoch.json": "952d4eb5b495fbe1b7776dd16b8af24eda7c63dd1a4612405deb6e901e0b41b0",
+        "loaded-libraries.json": "672e179a7c265d72a07e4867ae03c0455f27417ae90f2fdee93417ccffaa3705",
+        "events.jsonl": "072d27157a2082388b4b71b2ae4840b97e9e3edf3207a5a02a64cf108f47dc59",
+        "sdl-input.txt": "f879d6eb4789ede3d3f5e4e95f862dc0ca619c56373249a0213a11e75e5bca03"
+      }
+    }
+  },
+  "current_auditor_sha256": "d2e2a6fc57cc0d30f92a4efd60425ee51bf43c6b6b3a6b60e2ab7decfabf5500",
+  "linked_instrumented_restarts": [
+    {
+      "source": "sanitized-cancel-04",
+      "restart": "sanitized-attempt-01",
+      "save_sha256": "63b4d1f0f086a41e00999d45cbf853ef339e40873cca0269b6fa28b30460515f",
+      "exact_inventory_cask_and_breath_at_load": true
+    },
+    {
+      "source": "sanitized-attempt-01",
+      "restart": "sanitized-loot-restart-01",
+      "save_sha256": "47ff2534720b178bea4294bbea2d24dc301db93567153805abdfa509e8421556",
+      "exact_inventory_cask_and_breath_at_load": true
+    }
+  ],
+  "current_genuine_continuation": {
+    "path": "build/oblivion-compat/lock-dialog/normal-loot-surface-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "f98a69ceb53b487e35498819e84291df4ae30fbf525fc869c41014ee7728a81c",
+    "health": 53.00106430053711,
+    "magicka": 42.20318603515625,
+    "fatigue": 170.0,
+    "breath": 20.5,
+    "position": [
+      -2204.04345703125,
+      -10014.337890625,
+      -2860.883056640625,
+      -1.5707963705062866,
+      0.0,
+      -2.086456060409546
+    ],
+    "picks": 7,
+    "loot": "13 Gold, Bronze Necklace038027, Weak Potion of Healing009310",
+    "next_dynamic_serial": 3,
+    "next_arrow_projectile": 14
+  },
+  "semantics": {
+    "opening": "Paused Auto Attempt / Cancel prompt before a random draw or pick debit",
+    "cancel": "Exact original stock and locked state retained, including cold reload",
+    "explicit_failure": "Normal actual course breaks one pick, stays locked and opens another paused choice",
+    "explicit_success": "Normal second attempt and instrumented first attempt unlock and transfer actual loot",
+    "reload": "Normal cancelled and looted states, plus linked instrumented cancellation and success, retain inventory and lock/empty state",
+    "wire": "Schema98 unchanged; exact encoded payload/live/save audits pass"
+  },
+  "independent_oracle": "AYLEID-CASK-LOCK-ORACLE.json",
+  "content_audit": {
+    "path": "build/oblivion-compat/next-content/cask-winning-records-audit.json",
+    "sha256": "4cefdfd7d57cba2d524ebebbc5006346d3d43f5c3c0b17decc9e9997f1044142",
+    "records": 447,
+    "note": "Raw closure includes ammunition and clothing; earlier405-record audit omitted those leaf types and is retained",
+    "typed_projection": {
+      "path": "build/oblivion-compat/lock-dialog/typed-cask-verification.json",
+      "sha256": "b32432ba0d25c994caebc31f6f59bf436165ea992cda1f78ea82191fae421821",
+      "records": 66,
+      "entries": 709,
+      "passed": true
+    }
+  },
+  "reuse": {
+    "reference": "BONEMEAL-INGREDIENT-VERIFICATION.json",
+    "components_normal": 3290,
+    "components_sanitized": 3290,
+    "qualification": "Existing original-provenance results reused only for unchanged components/persistence modules; no new component/formula/wire changes. Both engine gates are fresh2276 and the current Python suite is fresh611."
+  },
+  "instrumentation": {
+    "unit_leak_checks": true,
+    "rendered_leak_checks": false,
+    "preload": "Use actual ELF libasan linked by ldd before SDL diagnostic preload; compiler libasan.so is a linker script",
+    "generated_sanitized_recipes": "Canonical normal manifest plus actual ELF LD_PRELOAD and two fresh simulation observations after each camera turn",
+    "native_screenshot": "F12 completion is deferred by existing blocking modal loop; prompt evidence uses read-only X11 capture",
+    "recipe_deadlines": "Readiness extended180->600 and overall600->1200 only; normal input/Lua semantics unchanged"
+  },
+  "retained_attempts": {
+    "normal_integration_01": "Compile failure: auto* could not bind NotNullPtr; corrected to auto",
+    "normal_integration_02": "Passed before empty-identity fix; superseded by final03",
+    "normal_cancel_01": "Native F12 capture waited during blocking prompt; replaced capture with read-only X11",
+    "normal_cancel_02": "Empty lifetime identity caused early return after choice; wait then drowned test player. Initialized token; immutable input remained unchanged",
+    "normal_attempt_01": "Preflight rejected unsupported Left key in SDL diagnostic input",
+    "normal_attempt_02": "Virtual controller injection did not deliver inside paused prompt; used keyboard Tab/Return; no controller support claim",
+    "normal_loot_surface_01": "Observer feet threshold missed actual physics surface by0.046; head was above water and Health stable. Corrected read-only guard, not movement",
+    "sanitized_cancel_01": "ASan runtime ordering failure before run-start; interrupted unreachable readiness wait",
+    "sanitized_cancel_02": "Compiler libasan.so was a linker script, not pre-loadable ELF; stopped startup wait and used ldd-linked ELF",
+    "sanitized_cancel_03": "Slow frames reused a pre-turn observation; no successful activation. Added two fresh observations between turns"
+  },
+  "remaining": [
+    "Manual tumbler game, Skeleton Key, XP and full lock/owner/key/device matrices",
+    "Existing auto chance remains approximate; original leveled lock resolves1 while fork retains0",
+    "Native container item-selection window: current transfer still takes all stock",
+    "Full M13, M15/M16, expedition continuation and return remain open"
+  ],
+  "next_action": "Reach another original Cask04bb85/base03767e and implement native container item selection: open/close without taking, take one, reload remainder, take all and reload empty"
+}

@@ -1,5 +1,5 @@
 {
-  "status": "implemented; genuine cancel/attempt/restart and final normal/sanitized gates pending",
+  "status": "bounded original-cask lock-choice chunk accepted; manual tumblers/full M13 remain open",
   "milestone": "M13 native interactions; manual tumblers remain open",
   "content": {
     "reference": "content:oblivion.esm:066e79",
@@ -34,5 +34,6 @@
     "Key-owned bypass and no-pick behavior remain established paths; no schema change",
     "Original game resolves this leveled XLOC to lock1; existing forklevel0 is retained and recorded as adjacent work"
   ],
-  "independent_oracle": "AYLEID-CASK-LOCK-ORACLE.json"
+  "independent_oracle": "AYLEID-CASK-LOCK-ORACLE.json",
+  "verification": "AYLEID-CASK-LOCK-VERIFICATION.json"
 }
