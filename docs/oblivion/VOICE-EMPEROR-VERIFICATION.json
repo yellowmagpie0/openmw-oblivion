@@ -1,0 +1,351 @@
+{
+  "status": "accepted bounded original Voice of the Emperor application/reload/expiration; full M16 and expedition remain open",
+  "implementation_commit": "a4c71d5fa3c7b5c9fbd4ed9c959ae92825b38267",
+  "contract": "docs/oblivion/VOICE-EMPEROR-CONTRACT.json",
+  "oracle": "docs/oblivion/VOICE-EMPEROR-ORACLE.json",
+  "content": {
+    "power": "content:oblivion.esm:047add",
+    "reference": "content:oblivion.esm:04bb63",
+    "base": "content:oblivion.esm:084b1a",
+    "type": "CREA",
+    "name": "Skeleton",
+    "source_list": "content:oblivion.esm:084b22"
+  },
+  "behavior": {
+    "actual": "Original owned Target power hits concrete Skeleton, raises disposition20 to50 with30-point Charm, preserves Health/Personality/inventory and permanent disposition modifiers; fresh-process load preserves timer and rejects daily reuse; expiration returns20 once.",
+    "ownership": "Unchanged schema97; strict recipient reference fields contain power/caster/magnitude/elapsed. Projectile/daily use publish together; contact consumes flight once before observable impact log. No spell regrant or synthetic content/AV/position writes.",
+    "retained": "Amulet inventory identity/locals and earlier bandit death credit remain. Route consumed the previously lit torch through ordinary fuel use; the selected close input and outgoing course retain two spare torches and19 arrows.",
+    "scope": "No NPC combat cancellation, full Charm lifecycle, absorption/reflection, alternate casters or full M16 claim. Caster-hit dispelling remains open."
+  },
+  "gates": {
+    "frozen_source": {
+      "head": "b79c3dab41deef8fc2758c0610a6a8a662709348",
+      "source_fingerprint": "70aee55c3bcfeb7da56c3e07c0613f8d328ae8bb72460f4c6ef92ef2722717de"
+    },
+    "normal": {
+      "path": "build/oblivion-compat/voice-emperor/normal-integration-01",
+      "verification_sha256": "a306e07943c11177875a342a021ca53a6f7cb96acf8c88009fe936923ff78561",
+      "counts": {
+        "components": 3288,
+        "engine": 2273
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/voice-emperor/sanitized-integration-01",
+      "verification_sha256": "6e023d509c9fe60845b2f9ac61cd96463fdeb16ab1850f009e14f873d826f10d",
+      "counts": {
+        "components": 3288,
+        "engine": 2273
+      },
+      "asan": "detect_leaks=1:halt_on_error=1",
+      "ubsan": "halt_on_error=1:print_stacktrace=1",
+      "environment_proof": "build/oblivion-compat/voice-emperor/sanitized-integration-01-launch.json"
+    },
+    "python": {
+      "path": "build/oblivion-compat/voice-emperor/python-01",
+      "verification_sha256": "5e09a85f8359eaf4c75602702b9c0419a04cb25d01abcf7b5df912f304cfe599",
+      "executed": 609,
+      "scope": "Full Python gate preceded final C++-only ownership adjustments and later read-only course-audit strengthening. Codec and unit source hashes are unchanged and match this commit. The final auditor executes on all six actual cases."
+    }
+  },
+  "frozen_code_and_recipe_hashes": {
+    "apps/openmw/mwmechanics/character.cpp": "7f85e06787262a2b46815f1fd0ba6329ab74afd02a6468b371e7a4ae1c406eba",
+    "apps/openmw/mwworld/oblivioncombatmagic.cpp": "38d4dae2c4c948cb6a97431ddbc384d56777768e4b912becf5e2067310cb3f87",
+    "apps/openmw/mwworld/oblivioncombatmagic.hpp": "06a37274cdf4863818753031cf8cf68bb2fe00e45bd462d20699b699e02c6b71",
+    "apps/openmw/mwworld/worldimp.cpp": "1430ac30cf52cf6ab61f19e80aa7e54861e73eee5186904940841a89c9490937",
+    "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "8b97af1199f1c1ee286bb80aef79a51aeb5102375e4a937bdc84c19381e1ec2d",
+    "components/esm4/magiccaster.cpp": "a5a67edb1287a2564b3ad01ed8c49f1eb02f17f8302096c23154f56ee8d5e372",
+    "scripts/data/oblivion_compat/oblivion_voice_emperor_apply.json": "5a0de79594c87bfbf69fe223f901cda1a7826d92702d599d109ead800f7d4ca5",
+    "scripts/data/oblivion_compat/oblivion_voice_emperor_apply_sanitized.json": "c87c0c2fe238cc4e52af2f46fe9472b72dae084c1f5bd705d92188fffd818723",
+    "scripts/data/oblivion_compat/oblivion_voice_emperor_expire.json": "8e8999b82cbd82d2d68bc9cd1be772ac1fb88ba82eaaf0836a71b8b5508fd160",
+    "scripts/data/oblivion_compat/oblivion_voice_emperor_expire_sanitized.json": "b5ae7747e8cb953799ac0692edd3029b9573de081d612d67125b99e224aafacd",
+    "scripts/data/oblivion_compat/oblivion_voice_emperor_restart.json": "84fb82b01d42df2ccfb7274df77a0a87e0993f910bc3ed2fb27a1b95eae33f5b",
+    "scripts/data/oblivion_compat/oblivion_voice_emperor_restart_sanitized.json": "d2a0a1c3ad2bb22619f0e4e22286fb9cc39e7a12b88130782197f1c008ab5d38",
+    "scripts/tes4_runtime_state.py": "466b9bb2976c63de1444b41c4fbfa9c2f9ff95d656a5f9c6a8842df1aa8c910c",
+    "scripts/tests/test_tes4_runtime_state.py": "f074c53cf9da5278205de1c18af1d8a99580aa931f8dd1dfe73f2ed46b494a30"
+  },
+  "final_auditor": {
+    "path": "scripts/verify_oblivion_voice_emperor_course.py",
+    "sha256": "f978cca82974170ab5f11e5acf6d53d2a4c4053d637a6edef567e71f2b7dc454",
+    "scope": "Added retained Amulet/kill-credit and independent clock-delta checks after frozen C++ gates; no runtime/codec/recipe change. Re-audited all six cases with final script."
+  },
+  "cases": [
+    {
+      "path": "build/oblivion-compat/voice-emperor/normal-apply-final-01",
+      "phase": "apply",
+      "instrumented": false,
+      "process": {
+        "pid": 1268163,
+        "start_ticks": 204688787,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-apply-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-voice-skeleton-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "603e010a66c2e0a21e56bf487a148127fce91707b4cf909274ea55104d6d3388"
+      },
+      "input_sha256": "31a4573c7e4c369a33a19d16b5c3e3c94c536b8887ee77297f064614bdae62bb",
+      "output_sha256": "5a769920a9136d361d6b2403607e9de687b1bb0b89ce84aa42048a73c9879585",
+      "audit_sha256": "47c828f8f5c9fd08f03c7704e0a476c7730bd2265bfaa74543a74b0d03e78fc3",
+      "elapsed_simulation_seconds": 4.8346710205078125,
+      "disposition_values": [
+        20,
+        50
+      ],
+      "charm_before": {},
+      "charm_after": {
+        "native.charm.caster": "dynamic:player:0000000000000001",
+        "native.charm.elapsed": 1.0679999589920044,
+        "native.charm.magnitude": 30.0,
+        "native.charm.spell": "content:oblivion.esm:047add"
+      },
+      "libraries_sha256": "0baefae6625a35274d484ec643df8dc1a26f726e06a7919de88e467084e5e0aa"
+    },
+    {
+      "path": "build/oblivion-compat/voice-emperor/normal-restart-final-01",
+      "phase": "restart",
+      "instrumented": false,
+      "process": {
+        "pid": 1273229,
+        "start_ticks": 204697775,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-restart-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-apply-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "603e010a66c2e0a21e56bf487a148127fce91707b4cf909274ea55104d6d3388"
+      },
+      "input_sha256": "5a769920a9136d361d6b2403607e9de687b1bb0b89ce84aa42048a73c9879585",
+      "output_sha256": "9326b673fd098a6a678e7b0211830f57fec6d88808158e4d078399f4282ca79f",
+      "audit_sha256": "053ed63bd4b45bbbc83d69490969fa93e8e29b2a92679ebb5840dd93c2730147",
+      "elapsed_simulation_seconds": 1.953277587890625,
+      "disposition_values": [
+        50
+      ],
+      "charm_before": {
+        "native.charm.caster": "dynamic:player:0000000000000001",
+        "native.charm.elapsed": 1.0679999589920044,
+        "native.charm.magnitude": 30.0,
+        "native.charm.spell": "content:oblivion.esm:047add"
+      },
+      "charm_after": {
+        "native.charm.caster": "dynamic:player:0000000000000001",
+        "native.charm.elapsed": 3.0210001468658447,
+        "native.charm.magnitude": 30.0,
+        "native.charm.spell": "content:oblivion.esm:047add"
+      },
+      "libraries_sha256": "67367172bb1d521136195bf9fe41899f2e27298d5fd21bba646f4654c80d7bd3"
+    },
+    {
+      "path": "build/oblivion-compat/voice-emperor/normal-expire-final-01",
+      "phase": "expire",
+      "instrumented": false,
+      "process": {
+        "pid": 1273875,
+        "start_ticks": 204703555,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-expire-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "603e010a66c2e0a21e56bf487a148127fce91707b4cf909274ea55104d6d3388"
+      },
+      "input_sha256": "9326b673fd098a6a678e7b0211830f57fec6d88808158e4d078399f4282ca79f",
+      "output_sha256": "4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41",
+      "audit_sha256": "e181e377c4b7d9083ce92e943c411955b0db667d0d58210b21e5fda1fd3bd5ad",
+      "elapsed_simulation_seconds": 28.563880920410156,
+      "disposition_values": [
+        20,
+        50
+      ],
+      "charm_before": {
+        "native.charm.caster": "dynamic:player:0000000000000001",
+        "native.charm.elapsed": 3.0210001468658447,
+        "native.charm.magnitude": 30.0,
+        "native.charm.spell": "content:oblivion.esm:047add"
+      },
+      "charm_after": {},
+      "libraries_sha256": "bbdc96af0c783cc36bd7d9dea418e2f8941191b98f2d3514fe254cb0aa5e2764"
+    },
+    {
+      "path": "build/oblivion-compat/voice-emperor/sanitized-apply-final-01",
+      "phase": "apply",
+      "instrumented": true,
+      "process": {
+        "pid": 1281127,
+        "start_ticks": 204881794,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/sanitized-apply-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-voice-skeleton-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "92b80464f2e5c54fb20fa064769e5acdcee92114aca7b9ec8d750046aeaf7eba"
+      },
+      "input_sha256": "31a4573c7e4c369a33a19d16b5c3e3c94c536b8887ee77297f064614bdae62bb",
+      "output_sha256": "fd44833e47795bb875789723ae01f7cf97f1ab3bebfec0576366a5d49711bc11",
+      "audit_sha256": "b59320e6fe9d5b886cf0fc8e615d48f75b1ba39accf7b81ab0696102b6c2001e",
+      "elapsed_simulation_seconds": 4.8035430908203125,
+      "disposition_values": [
+        20,
+        50
+      ],
+      "charm_before": {},
+      "charm_after": {
+        "native.charm.caster": "dynamic:player:0000000000000001",
+        "native.charm.elapsed": 0.9960000514984131,
+        "native.charm.magnitude": 30.0,
+        "native.charm.spell": "content:oblivion.esm:047add"
+      },
+      "libraries_sha256": "edd640c4be3d3c8022a90d23178a4f8f58a8c92630066fc5a8e59424a5a310d9",
+      "observed_sanitizer_environment_sha256": "97ef75be53d56f03685fdf1eca146642604f2fa3cfd4dbfae597e3f8b57d8d86"
+    },
+    {
+      "path": "build/oblivion-compat/voice-emperor/sanitized-restart-final-01",
+      "phase": "restart",
+      "instrumented": true,
+      "process": {
+        "pid": 1281476,
+        "start_ticks": 204920350,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/sanitized-restart-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/sanitized-apply-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "92b80464f2e5c54fb20fa064769e5acdcee92114aca7b9ec8d750046aeaf7eba"
+      },
+      "input_sha256": "fd44833e47795bb875789723ae01f7cf97f1ab3bebfec0576366a5d49711bc11",
+      "output_sha256": "f061a36cc2b8b16a756077809c610d7b0563e79d6858ea9fdc0e124353fae26c",
+      "audit_sha256": "608bb927f6759484309d37717ee5e40523f2e03434b2ff047c881ecb2ff4e706",
+      "elapsed_simulation_seconds": 1.4944839477539062,
+      "disposition_values": [
+        50
+      ],
+      "charm_before": {
+        "native.charm.caster": "dynamic:player:0000000000000001",
+        "native.charm.elapsed": 0.9960000514984131,
+        "native.charm.magnitude": 30.0,
+        "native.charm.spell": "content:oblivion.esm:047add"
+      },
+      "charm_after": {
+        "native.charm.caster": "dynamic:player:0000000000000001",
+        "native.charm.elapsed": 2.489999771118164,
+        "native.charm.magnitude": 30.0,
+        "native.charm.spell": "content:oblivion.esm:047add"
+      },
+      "libraries_sha256": "1813952c8d9d91048a243dc154dcf2bb05b034fc4f1b0a2ad69975b6ec1f4734",
+      "observed_sanitizer_environment_sha256": "90ec1e7164f2ac548533a1b7bb869879409151fc7154f2fb9dee10c0aa0df286"
+    },
+    {
+      "path": "build/oblivion-compat/voice-emperor/sanitized-expire-final-01",
+      "phase": "expire",
+      "instrumented": true,
+      "process": {
+        "pid": 1281829,
+        "start_ticks": 204964257,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/sanitized-expire-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/sanitized-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "92b80464f2e5c54fb20fa064769e5acdcee92114aca7b9ec8d750046aeaf7eba"
+      },
+      "input_sha256": "f061a36cc2b8b16a756077809c610d7b0563e79d6858ea9fdc0e124353fae26c",
+      "output_sha256": "7ce1550cb660be997a94ef214f2e368400e8458536a02d1a95a396daea9118b2",
+      "audit_sha256": "9b668c9a94fe7f19836cff8c107ff819a8f0841ef5e27ca99a0a55ad158de0c1",
+      "elapsed_simulation_seconds": 28.063087463378906,
+      "disposition_values": [
+        20,
+        50
+      ],
+      "charm_before": {
+        "native.charm.caster": "dynamic:player:0000000000000001",
+        "native.charm.elapsed": 2.489999771118164,
+        "native.charm.magnitude": 30.0,
+        "native.charm.spell": "content:oblivion.esm:047add"
+      },
+      "charm_after": {},
+      "libraries_sha256": "5a6d72b605805cacbda72be9384d32576c90be46d533e844853811279e020906",
+      "observed_sanitizer_environment_sha256": "84c39a45a806d60d4feeb25d8b9a28ed7ebd793e515c52cdcab6221b4a28b1da"
+    }
+  ],
+  "outgoing": {
+    "path": "build/oblivion-compat/voice-emperor/normal-expire-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41",
+    "position": [
+      -2664.0693359375,
+      -10358.2412109375,
+      -2662.20947265625,
+      0.109375,
+      0.0,
+      -2.0590767860412598
+    ],
+    "clock": {
+      "year": 433,
+      "month": 7,
+      "day": 30,
+      "hour": 11.56702709197998,
+      "time_scale": 30.0
+    },
+    "health": 110.0,
+    "magicka": 80.0,
+    "fatigue": 170.0,
+    "used_powers": [
+      {
+        "spell": "content:oblivion.esm:047ade",
+        "used_at": 97.54186427593231
+      },
+      {
+        "spell": "content:oblivion.esm:047add",
+        "used_at": 107.3028564453125
+      }
+    ]
+  },
+  "retained_development_attempts": [
+    {
+      "path": "build/oblivion-compat/voice-emperor/normal-focused-01",
+      "result": "Normal giant test compilation killed for memory while a rendered game ran; corrected by closing rendered games during giant normal/instrumented compilation."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/normal-voice-bandit-approach-01",
+      "result": "Ordinary floor-following route drowned Player; retained failure. Genuine swimming checkpoints and ordinary depth control resolved route."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/normal-voice-bandit-corridor-swim-01",
+      "result": "Actual route/save succeeded but scenario correctly failed a resource-version warning while build resources changed. Final close approach and all accepted cases use matching binary/resources."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/voice-winning-records-audit.json",
+      "result": "Winning record audit corrected initial human-bandit assumption to concrete Skeleton CREA084b1a; actual disposition20 validated recipient before acceptance."
+    }
+  ]
+}
