@@ -3577,7 +3577,7 @@ def run_m5_acceptance(args: argparse.Namespace) -> dict[str, Any]:
             "look_ud_seconds": "3.2",
             "approach_seconds": "0",
             "after_seconds": "0",
-            "expected_interaction": "M5 interaction: kind=loot result=looted",
+            "expected_interaction": "M5 interaction: kind=loot result=opened",
         },
         "book": {
             "start": "GoblinJimsCave::ref=0x5e300",
@@ -3647,7 +3647,8 @@ def run_m5_acceptance(args: argparse.Namespace) -> dict[str, Any]:
     }
     for label, values in scenario_specs.items():
         scenario_dir = output / "scenarios" / label
-        variables = dict(base_variables, label=label, **values)
+        take_all_hold = "0.18" if label == "container" else "0"
+        variables = dict(base_variables, label=label, take_all_hold=take_all_hold, **values)
         scenarios[label] = run_scenario(
             manifests / "oblivion_m5_interaction.json", scenario_dir, variables
         )

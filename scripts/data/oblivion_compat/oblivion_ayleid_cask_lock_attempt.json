@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "name": "Explicit auto attempts against original underwater Ayleid Cask",
+  "name": "Auto Attempt opens the original submerged cask selection window",
   "cwd": "{source}",
   "files": [
     {
@@ -144,7 +144,7 @@
     },
     {
       "type": "repeat_until_log",
-      "pattern": "kind=loot result=(?:looted|empty|locked) ref=content:oblivion.esm:066e79",
+      "pattern": "kind=loot result=(?:opened|empty|locked) ref=content:oblivion.esm:066e79",
       "maximum_iterations": 8,
       "timeout_seconds": 90,
       "actions": [
@@ -166,14 +166,23 @@
     },
     {
       "type": "wait_log",
-      "pattern": "kind=loot result=looted ref=content:oblivion.esm:066e79",
+      "pattern": "kind=loot result=opened ref=content:oblivion.esm:066e79",
       "timeout_seconds": 10,
       "abort_on_failure": true
     },
     {
       "type": "screenshot",
-      "name": "actual-cask-loot-summary.png",
+      "name": "unlocked-cask-window.png",
       "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
+      "value": "x",
+      "hold_seconds": 0.24
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.6
     },
     {
       "type": "key_down",
@@ -208,7 +217,7 @@
     "VilverinContinue dive sample",
     "Writing saved game",
     "result=lockpick_prompt",
-    "result=looted"
+    "kind=loot result=opened ref=content:oblivion.esm:066e79"
   ],
   "forbidden_log": [
     "AddressSanitizer",
@@ -232,7 +241,7 @@
     "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
     "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
     "OPENMW_M15_EVENTS": "{output}/events.jsonl",
-    "OPENMW_M15_RUN_ID": "ayleid-cask-lock-attempt",
+    "OPENMW_M15_RUN_ID": "locked-cask-selection-regression",
     "OPENMW_M15_EPOCH": "1"
   },
   "sdl_input_timeout_seconds": 60,

@@ -640,12 +640,13 @@ namespace MWWorld
         bool oblivionEquipPlayerItem(const ESM::FormKey& key, bool equip);
         void notifyOblivionItemEquipped(const Ptr& actor, const Ptr& item);
         bool oblivionEquipActorItem(const Ptr& actor, const ESM::FormKey& key, bool equip);
-        int oblivionAddActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
-        int oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
-        std::vector<ESM4::RuntimeInventoryItem> captureOblivionActorInventory(const Ptr& actor) const;
+        int oblivionAddNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count);
+        int oblivionRemoveNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count);
+        std::vector<ESM4::RuntimeInventoryItem> captureOblivionInventory(const Ptr& actor) const;
         void updateOblivionBoundEquipment(const Ptr& actor);
         void removeOblivionDeadBoundEquipment();
         std::unique_ptr<InventoryStore> prepareOblivionSavedActorInventory(const Ptr& actor) const;
+        std::unique_ptr<InventoryStore> prepareOblivionContainerInventory(const Ptr& container);
         bool oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const;
         std::uint32_t oblivionEquipmentSlots(const Ptr& item, int sharedSlot) const;
         void oblivionPlayerEquipmentChanged();

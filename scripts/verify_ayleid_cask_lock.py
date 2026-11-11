@@ -18,7 +18,7 @@ import tes4_runtime_state as runtime
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('course', type=Path)
-    parser.add_argument('phase', choices=('cancel', 'attempt', 'restart'))
+    parser.add_argument('phase', choices=('cancel', 'attempt', 'attempt-window', 'restart'))
     args = parser.parse_args()
     root, phase = args.course, args.phase
     digest = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
@@ -61,18 +61,22 @@ def main():
     log = (root / 'process.log').read_text().split("Writing saved game 'Quicksave'", 1)[0]
     failures = log.count('result=lockpick_failed')
     attempts = new['custom_state'].get('lockpick_auto_attempts', 0) - old['custom_state'].get('lockpick_auto_attempts', 0)
+    success = 'result=opened' if phase == 'attempt-window' else 'result=looted'
     pause = None
     if phase == 'cancel':
         assert inventory(after) == inventory(before)
         assert old['inventory'] == new['inventory'] and new['custom_state']['locked']
         assert attempts == 0 and failures == 0
         assert log.count('result=lockpick_prompt') == log.count('result=lockpick_cancelled') == 1
-        assert 'result=looted' not in log
-    elif phase == 'attempt':
+        assert not any(result in log for result in ('result=looted', 'result=opened ref=content:oblivion.esm:066e79'))
+    elif phase in ('attempt', 'attempt-window'):
         assert attempts == failures + 1 and attempts >= 1
         assert new['custom_state']['unlocked_with_lockpick'] and not new['custom_state']['locked']
         assert new['custom_state']['opened'] and not new['inventory']
-        assert log.count('result=looted') == 1 and 'result=lockpick_cancelled' not in log
+        assert log.count(f'{success} ref=content:oblivion.esm:066e79') == 1
+        assert 'result=lockpick_cancelled' not in log
+        if phase == 'attempt-window':
+            assert 'result=looted ref=content:oblivion.esm:066e79' not in log
         loot = json.loads((root / 'reviewed-loot.json').read_text())
         assert isinstance(loot, dict) and loot
         assert all(isinstance(k, str) and type(v) is int and v > 0 for k,v in loot.items())
@@ -92,10 +96,10 @@ def main():
         assert attempts == failures == 0 and 'result=lockpick_prompt' not in log
     else:
         raise ValueError(phase)
-    if phase in ('cancel', 'attempt'):
+    if phase in ('cancel', 'attempt', 'attempt-window'):
         lines = log.splitlines()
         start = next(i for i,x in enumerate(lines) if 'result=lockpick_prompt' in x)
-        finish = next(i for i in range(start+1,len(lines)) if any(k in lines[i] for k in ('result=lockpick_cancelled','result=lockpick_failed','result=looted')))
+        finish = next(i for i in range(start+1,len(lines)) if any(k in lines[i] for k in ('result=lockpick_cancelled','result=lockpick_failed',success)))
         sample = re.compile(r'VilverinContinue sample sim=([\d.e+-]+) health=([\d.e+-]+) game=([\d.e+-]+)')
         earlier = [sample.search(x) for x in lines[:start] if sample.search(x)][-1]
         later = next(sample.search(x) for x in lines[finish:] if sample.search(x))

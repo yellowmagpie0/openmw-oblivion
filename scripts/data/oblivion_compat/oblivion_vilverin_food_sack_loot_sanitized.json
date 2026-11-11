@@ -9,7 +9,7 @@
     },
     {
       "path": "config/settings.cfg",
-      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
     },
     {
       "path": "test-data/events.txt",
@@ -135,20 +135,30 @@
     },
     {
       "type": "wait_log",
-      "pattern": "M5 interaction: kind=loot result=looted ref=content:oblivion.esm:06c2ad",
+      "pattern": "M5 interaction: kind=loot result=opened ref=content:oblivion.esm:06c2ad",
       "timeout_seconds": 900,
       "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-food-sack-selection-window.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "Left",
+      "seconds": 0.18
+    },
+    {
+      "type": "key_hold",
+      "value": "Return",
+      "seconds": 0.18
     },
     {
       "type": "wait_log",
       "pattern": "VilverinSackLoot concrete transfer quantity=",
       "timeout_seconds": 900,
       "abort_on_failure": true
-    },
-    {
-      "type": "screenshot",
-      "name": "original-food-sack-baseline-loot-message.png",
-      "minimum_entropy": 0.02
     },
     {
       "type": "key",
@@ -170,7 +180,7 @@
   "expected_exit": 0,
   "expected_log": [
     "VilverinSackLoot ready",
-    "M5 interaction: kind=loot result=looted ref=content:oblivion.esm:06c2ad",
+    "M5 interaction: kind=loot result=opened ref=content:oblivion.esm:06c2ad",
     "Writing saved game",
     "M13 container lists resolved: ref=content:oblivion.esm:06c2ad",
     "VilverinSackLoot concrete transfer quantity="

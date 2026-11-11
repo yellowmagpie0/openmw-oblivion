@@ -35,6 +35,8 @@
     {"type": "focus_window", "name": "OpenMW"},
     {"type": "key_held", "value": "space"},
     {"type": "sleep", "seconds": 3},
+    {"type": "key_hold", "value": "Left", "seconds": "{take_all_hold}"},
+    {"type": "key_hold", "value": "Return", "seconds": "{take_all_hold}"},
     {"type": "key_hold", "value": "w", "seconds": "{after_seconds}"},
     {"type": "sleep", "seconds": 2},
     {"type": "screenshot", "name": "after.png"},

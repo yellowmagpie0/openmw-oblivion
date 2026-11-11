@@ -51,7 +51,7 @@ def scancode(value):
     if not isinstance(value, str) or not value:
         raise ValueError("Offscreen keys must be nonempty strings")
     aliases = {"Return": 40, "Escape": 41, "BackSpace": 42, "Tab": 43, "space": 44,
-               "grave": 53, "KP_2": 90, "Shift_L": 225, "Control_L": 224, "Alt_L": 226}
+               "grave": 53, "Left": 80, "KP_2": 90, "Shift_L": 225, "Control_L": 224, "Alt_L": 226}
     if value in aliases:
         return aliases[value]
     if len(value) == 1 and "a" <= value.lower() <= "z":

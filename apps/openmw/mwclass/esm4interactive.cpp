@@ -1,4 +1,5 @@
 #include "esm4interactive.hpp"
+#include "container.hpp"
 
 #include <algorithm>
 #include <array>
@@ -174,6 +175,28 @@ namespace MWClass
         MWGui::ToolTipInfo info = ESM4InteractiveBase::getToolTipInfo(ptr, count);
         appendReferenceState(info, ptr);
         return info;
+    }
+
+    void ESM4Container::ensureCustomData(const MWWorld::Ptr& ptr) const
+    {
+        if (ptr.getRefData().getCustomData())
+            return;
+
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+        if (!world)
+            throw std::logic_error("Native container inventory requires a world");
+        auto data = std::make_unique<ContainerCustomData>();
+        world->getWorldModel().registerPtr(ptr);
+        auto staged = world->prepareOblivionContainerInventory(ptr);
+        data->mStore = std::move(static_cast<MWWorld::ContainerStore&>(*staged));
+        data->mStore.setPtr(ptr);
+        ptr.getRefData().setCustomData(std::move(data));
+    }
+
+    MWWorld::ContainerStore& ESM4Container::getContainerStore(const MWWorld::Ptr& ptr) const
+    {
+        ensureCustomData(ptr);
+        return ptr.getRefData().getCustomData()->asContainerCustomData().mStore;
     }
 
     ESM4Creature::ESM4Creature()

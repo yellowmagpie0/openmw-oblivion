@@ -1670,11 +1670,11 @@ TEST(OblivionDialogueMenu, NativeWeekdayUsesElapsedDaysAndPcAchievementHasNoSide
         world.setGlobalInt(MWWorld::Globals::sDaysPassed, 7);
         EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), 0);
         // PC AddAchievement must not alter inventory, quests or character state.
-        const auto inventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+        const auto inventory = world.captureOblivionInventory(world.getPlayerPtr());
         const auto stage = f.stage();
         const auto sequence = f.sequence();
         EXPECT_NO_THROW(scripts.call("AddAchievement", {}, {std::int64_t(1)}, context, {}));
-        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), inventory);
+        EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), inventory);
         EXPECT_EQ(f.stage(), stage);
         EXPECT_EQ(f.sequence(), sequence);
         EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), 0);
@@ -2774,18 +2774,18 @@ TEST(OblivionBoundItems, InitialGrantWaitsForPlayerPlacementAndPublishesOnceOnRe
         auto* cell = world.getPlayerPtr().getCell();
         ASSERT_NE(cell, nullptr);
         world.getPlayer().setCell(nullptr);
-        const auto before = world.captureOblivionActorInventory(f.mActor);
+        const auto before = world.captureOblivionInventory(f.mActor);
         EXPECT_NO_THROW(world.activateOblivionActor(f.mActor));
-        EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), before);
+        EXPECT_EQ(world.captureOblivionInventory(f.mActor), before);
         world.getPlayer().setCell(cell);
         world.updateOblivionBoundEquipment(f.mActor);
-        const auto granted = world.captureOblivionActorInventory(f.mActor);
+        const auto granted = world.captureOblivionInventory(f.mActor);
         ASSERT_EQ(granted.size(), 3u);
         const auto saved = world.captureOblivionRuntimeState();
         ASSERT_EQ(saved.mNativeBoundAbilities.at(f.mActor.getCellRef().getFormKey()).size(), 1u);
         EXPECT_NO_THROW(saved.serializeBinary());
         world.updateOblivionBoundEquipment(f.mActor);
-        EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), granted);
+        EXPECT_EQ(world.captureOblivionInventory(f.mActor), granted);
         EXPECT_EQ(world.captureOblivionRuntimeState().mNativeBoundAbilities, saved.mNativeBoundAbilities);
     }
 }
@@ -2799,7 +2799,7 @@ TEST(OblivionBoundItems, LiveGrantPublishesOwnershipInventoryCacheAndEquipmentOb
         auto& world = f.mFixture.mWorld;
         // An ordinary item with the same base must remain separate from the
         // effect's new instance, including its original fractional condition.
-        ASSERT_EQ(world.oblivionAddActorItem(f.mActor, key(0xe10), 1), 1);
+        ASSERT_EQ(world.oblivionAddNativeInventoryItem(f.mActor, key(0xe10), 1), 1);
         ASSERT_TRUE(world.oblivionEquipActorItem(f.mActor, key(0xe10), true));
         auto& inventory = f.mActor.getClass().getInventoryStore(f.mActor);
         inventory.getSlot(MWWorld::InventoryStore::Slot_Cuirass)->getCellRef().setNativeItemCondition(121.5f);
@@ -2829,7 +2829,7 @@ TEST(OblivionBoundItems, LiveGrantPublishesOwnershipInventoryCacheAndEquipmentOb
         ASSERT_EQ(owned.size(), 1u);
         ASSERT_EQ(owned[0].mDisplacedEquipment.size(), 1u);
         EXPECT_EQ(owned[0].mDisplacedEquipment[0].mCondition, 121.5);
-        const auto snapshot = world.captureOblivionActorInventory(f.mActor);
+        const auto snapshot = world.captureOblivionInventory(f.mActor);
         ASSERT_EQ(snapshot.size(), 4u);
         EXPECT_EQ(ESM4::inventoryCount(snapshot, key(0xe10)), 2);
         for (auto it = inventory.begin(); it != inventory.end(); ++it)
@@ -2838,9 +2838,9 @@ TEST(OblivionBoundItems, LiveGrantPublishesOwnershipInventoryCacheAndEquipmentOb
             EXPECT_EQ(it->getContainerStore(), &inventory);
         }
         inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight)->getCellRef().setNativeItemCondition(4190.5f);
-        const auto worn = world.captureOblivionActorInventory(f.mActor);
+        const auto worn = world.captureOblivionInventory(f.mActor);
         world.updateOblivionBoundEquipment(f.mActor);
-        EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), worn);
+        EXPECT_EQ(world.captureOblivionInventory(f.mActor), worn);
         EXPECT_EQ(observer.mCalls, 1u); // No repeat publication or repair.
         inventory.setInvListener(nullptr);
         const ESM::FormKeyResolver resolver(world.getContentFiles());
@@ -2865,14 +2865,14 @@ TEST(OblivionBoundItems, TerminalDeathRemovesGearButEssentialKnockoutRetainsIt)
         LiveBoundFixture f(false);
         auto& world = f.mFixture.mWorld;
         auto& combat = *world.getOblivionCombatService();
-        ASSERT_EQ(world.oblivionAddActorItem(f.mActor, key(0xe10), 1), 1);
+        ASSERT_EQ(world.oblivionAddNativeInventoryItem(f.mActor, key(0xe10), 1), 1);
         ASSERT_TRUE(world.oblivionEquipActorItem(f.mActor, key(0xe10), true));
         world.updateOblivionBoundEquipment(f.mActor);
-        const auto before = world.captureOblivionActorInventory(f.mActor);
+        const auto before = world.captureOblivionInventory(f.mActor);
         ASSERT_EQ(before.size(), 4u);
         ASSERT_TRUE(combat.killNonPlayer(f.mActor, ESM::FormKey::dynamic("player", 1), essential, {}));
         world.removeOblivionDeadBoundEquipment();
-        const auto after = world.captureOblivionActorInventory(f.mActor);
+        const auto after = world.captureOblivionInventory(f.mActor);
         if (essential)
         {
             EXPECT_EQ(after, before);
@@ -2887,7 +2887,7 @@ TEST(OblivionBoundItems, TerminalDeathRemovesGearButEssentialKnockoutRetainsIt)
             EXPECT_TRUE(world.captureOblivionRuntimeState().mNativeBoundAbilities.empty());
             EXPECT_EQ(MWClass::ESM4Npc::getEquippedArmor(f.mActor).size(), 1u);
             world.updateOblivionBoundEquipment(f.mActor);
-            EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), after);
+            EXPECT_EQ(world.captureOblivionInventory(f.mActor), after);
         }
     }
 }
@@ -2933,7 +2933,7 @@ TEST(OblivionBoundItems, DeathCleanupIncludesDispositionActorsRegisteredAfterThe
         EXPECT_EQ(after.mDispositionModifiers, before.mDispositionModifiers);
         EXPECT_FALSE(after.mPendingDeathEvents.empty());
         EXPECT_NO_THROW(after.serializeBinary());
-        for (const auto& item : world.captureOblivionActorInventory(f.mActor))
+        for (const auto& item : world.captureOblivionInventory(f.mActor))
             EXPECT_FALSE(item.mBoundSource);
     }
 }
@@ -2942,17 +2942,17 @@ TEST(OblivionBoundItems, SourceRemovalRestoresOrdinaryItemAndGenericRemovalRejec
 {
     LiveBoundFixture f(false);
     auto& world = f.mFixture.mWorld;
-    ASSERT_EQ(world.oblivionAddActorItem(f.mActor, key(0xe10), 1), 1);
+    ASSERT_EQ(world.oblivionAddNativeInventoryItem(f.mActor, key(0xe10), 1), 1);
     ASSERT_TRUE(world.oblivionEquipActorItem(f.mActor, key(0xe10), true));
     world.updateOblivionBoundEquipment(f.mActor);
-    const auto before = world.captureOblivionActorInventory(f.mActor);
-    EXPECT_THROW(world.oblivionRemoveActorItem(f.mActor, key(0xe12), 1), std::invalid_argument);
-    EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), before);
+    const auto before = world.captureOblivionInventory(f.mActor);
+    EXPECT_THROW(world.oblivionRemoveNativeInventoryItem(f.mActor, key(0xe12), 1), std::invalid_argument);
+    EXPECT_EQ(world.captureOblivionInventory(f.mActor), before);
     auto npc = *world.getStore().search<ESM4::Npc>(key(0x800));
     npc.mSpell.clear();
     world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
     world.updateOblivionBoundEquipment(f.mActor);
-    const auto after = world.captureOblivionActorInventory(f.mActor);
+    const auto after = world.captureOblivionInventory(f.mActor);
     ASSERT_EQ(after.size(), 1u);
     EXPECT_EQ(after[0].mBase, key(0xe10));
     EXPECT_EQ(after[0].mEquippedSlots, 0x3cu);

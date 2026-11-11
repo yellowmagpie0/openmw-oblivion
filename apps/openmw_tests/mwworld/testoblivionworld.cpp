@@ -1301,7 +1301,7 @@ namespace
         const auto authority = captureNativeActorState(fixture, actor).serializeBinary();
         auto& inventory = actor.getClass().getInventoryStore(actor);
         EXPECT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 3);
-        const auto captured = world.captureOblivionActorInventory(actor);
+        const auto captured = world.captureOblivionInventory(actor);
         ASSERT_EQ(captured.size(), 2);
         EXPECT_EQ(captured[0].mCount, 1);
         EXPECT_EQ(captured[0].mCondition, 55.125);
@@ -1367,7 +1367,7 @@ namespace
             EXPECT_EQ(prepared->begin(), prepared->end());
             EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
             EXPECT_EQ(actor.getClass().getInventoryStore(actor).begin(), actor.getClass().getInventoryStore(actor).end());
-            EXPECT_TRUE(world.captureOblivionActorInventory(actor).empty());
+            EXPECT_TRUE(world.captureOblivionInventory(actor).empty());
             EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
         }
     }
@@ -1464,7 +1464,7 @@ namespace
                 item.mBase = weapon; item.mCount = 3;
                 saved.mReferences.front().mInventory = {item};
                 acceptNativeSnapshot(fixture, saved);
-                const auto inventory = world.captureOblivionActorInventory(actor);
+                const auto inventory = world.captureOblivionInventory(actor);
                 // Existing legacy equip migration splits one equipped weapon
                 // from the two remaining unequipped items; it conserves three.
                 ASSERT_EQ(inventory.size(), version < 4 ? 2u : 1u);
@@ -1548,7 +1548,7 @@ namespace
             // This script command persists a newly encountered reference, without
             // explicitly reading or editing its inventory.
             ASSERT_NO_THROW(host.call("StopLook", {}, {}, context, {}));
-            const auto inventory = world.captureOblivionActorInventory(actor);
+            const auto inventory = world.captureOblivionInventory(actor);
             ASSERT_EQ(inventory.size(), 1u);
             EXPECT_EQ(inventory.front().mBase, weapon);
             EXPECT_EQ(inventory.front().mCount, materialized ? 2 : 3);
@@ -1560,7 +1560,7 @@ namespace
             auto staged = world.prepareOblivionSavedActorInventory(actor);
             ASSERT_NE(staged, nullptr);
             actor.getRefData().setCustomData(nullptr);
-            EXPECT_EQ(world.captureOblivionActorInventory(actor), inventory);
+            EXPECT_EQ(world.captureOblivionInventory(actor), inventory);
             EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
             EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
         }
@@ -1584,7 +1584,7 @@ namespace
         context.mSelf = actor.getCellRef().getFormKey();
         const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}, std::int64_t(0)};
         EXPECT_NO_THROW(EXPECT_EQ(ObScript::asInteger(host.call("AddItem", {}, args, context, {})), 0));
-        const auto captured = world.captureOblivionActorInventory(actor);
+        const auto captured = world.captureOblivionInventory(actor);
         ASSERT_EQ(captured.size(), 1u);
         EXPECT_EQ(captured.front().mCount, 3);
         EXPECT_EQ(captured.front().mCondition, 43.125f);
@@ -1613,7 +1613,7 @@ namespace
         const auto player = world.getPlayerPtr();
         installEquipmentInventory(fixture, player, saved.mPlayer.mInventory);
         const auto before = captureNativeActorState(fixture, actor).serializeBinary();
-        EXPECT_EQ(world.captureOblivionActorInventory(player), saved.mPlayer.mInventory);
+        EXPECT_EQ(world.captureOblivionInventory(player), saved.mPlayer.mInventory);
         EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
         const auto key = ESM::FormKey::dynamic("player", 1);
         EXPECT_EQ(world.getOblivionCombatService()->findActorValues(key), nullptr);
@@ -1711,10 +1711,10 @@ namespace
         installEquipmentInventory(fixture, actor, {item});
         // This is explicit rejection outside the supported physical AddItem
         // domain, not a claim of native overflow-delta parity.
-        EXPECT_THROW(world.oblivionAddActorItem(actor, weapon, 1), std::invalid_argument);
-        EXPECT_EQ(world.oblivionAddActorItem(actor, weapon, 0), 0);
-        EXPECT_EQ(world.oblivionAddActorItem({}, weapon, 2), 0);
-        const auto captured = world.captureOblivionActorInventory(actor);
+        EXPECT_THROW(world.oblivionAddNativeInventoryItem(actor, weapon, 1), std::invalid_argument);
+        EXPECT_EQ(world.oblivionAddNativeInventoryItem(actor, weapon, 0), 0);
+        EXPECT_EQ(world.oblivionAddNativeInventoryItem({}, weapon, 2), 0);
+        const auto captured = world.captureOblivionInventory(actor);
         ASSERT_EQ(captured.size(), 1u);
         EXPECT_EQ(captured.front().mCount, item.mCount);
         EXPECT_EQ(captured.front().mCondition, item.mCondition);
@@ -1735,7 +1735,7 @@ namespace
         context.mSelf = actor.getCellRef().getFormKey();
         const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}, std::int64_t(-1)};
         EXPECT_THROW(host.call("AddItem", {}, args, context, {}), std::invalid_argument);
-        EXPECT_TRUE(world.captureOblivionActorInventory(actor).empty());
+        EXPECT_TRUE(world.captureOblivionInventory(actor).empty());
         EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
         EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
     }
@@ -1760,7 +1760,7 @@ namespace
         {
             const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}, count};
             EXPECT_EQ(ObScript::asInteger(host.call("RemoveItem", {}, args, context, {})), 0);
-            const auto captured = world.captureOblivionActorInventory(actor);
+            const auto captured = world.captureOblivionInventory(actor);
             ASSERT_EQ(captured.size(), 1u);
             EXPECT_EQ(captured.front().mCount, 3);
             EXPECT_EQ(captured.front().mCondition, 43.125f);
@@ -1793,8 +1793,8 @@ namespace
             std::numeric_limits<std::int32_t>::min());
         // Original command clamps against the signed query result before the
         // positive-count gate: a wrapped INT_MIN must never touch inventory.
-        EXPECT_EQ(world.oblivionRemoveActorItem(actor, weapon, 1), 0);
-        const auto captured = world.captureOblivionActorInventory(actor);
+        EXPECT_EQ(world.oblivionRemoveNativeInventoryItem(actor, weapon, 1), 0);
+        const auto captured = world.captureOblivionInventory(actor);
         ASSERT_EQ(captured.size(), 2u);
         EXPECT_EQ(captured[0].mCount, first.mCount);
         EXPECT_EQ(captured[0].mCondition, first.mCondition);
@@ -1810,10 +1810,10 @@ namespace
         auto& world = fixture.mWorld;
         const auto actor = addNativeNpc(fixture, 0x900);
         const auto weapon = addEquipmentWeapon(fixture);
-        EXPECT_EQ(world.oblivionRemoveActorItem(actor, weapon, 7), 0);
-        EXPECT_EQ(world.oblivionRemoveActorItem({}, weapon, 7), 0);
-        EXPECT_TRUE(world.captureOblivionActorInventory(actor).empty());
-        EXPECT_TRUE(world.captureOblivionActorInventory({}).empty());
+        EXPECT_EQ(world.oblivionRemoveNativeInventoryItem(actor, weapon, 7), 0);
+        EXPECT_EQ(world.oblivionRemoveNativeInventoryItem({}, weapon, 7), 0);
+        EXPECT_TRUE(world.captureOblivionInventory(actor).empty());
+        EXPECT_TRUE(world.captureOblivionInventory({}).empty());
         EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
         EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
     }
@@ -2863,7 +2863,7 @@ namespace
         inventory.setContListener(&listener);
         EXPECT_EQ(world.oblivionAddPlayerInventoryItem(item), 2);
         EXPECT_EQ(listener.mCalls, 1);
-        const auto captured = world.captureOblivionActorInventory(player);
+        const auto captured = world.captureOblivionInventory(player);
         ASSERT_EQ(captured.size(), 1u);
         EXPECT_EQ(captured.front().mCount, 3);
         EXPECT_EQ(captured.front().mCondition, 43.125);
@@ -2883,7 +2883,7 @@ namespace
         ESM4::RuntimeInventoryItem item; item.mBase = weapon; item.mCount = 1; item.mCondition = 43.125;
         // Finish ordinary lazy Player/inventory admission before recording
         // the mutation boundary; observation itself must not register Player.
-        EXPECT_TRUE(world.captureOblivionActorInventory(player).empty());
+        EXPECT_TRUE(world.captureOblivionInventory(player).empty());
         const auto revision = world.getWorldModel().getPtrRegistryRevision();
         const auto serial = world.getWorldModel().getLastGeneratedRefNum();
         for (int invalid = 0; invalid < 12; ++invalid)
@@ -2903,14 +2903,14 @@ namespace
             if (invalid == 10) bad.mOwner.mValue = 1;
             if (invalid == 11) bad.mOwnershipGlobal.mNamespace = "dirty-null";
             EXPECT_EQ(world.oblivionAddPlayerInventoryItem(bad), 0);
-            EXPECT_TRUE(world.captureOblivionActorInventory(player).empty());
+            EXPECT_TRUE(world.captureOblivionInventory(player).empty());
             EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
             EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), serial);
         }
         // Canonical keys of the wrong winning type are a preflight error.
         item.mOwnershipGlobal = weapon;
         EXPECT_THROW(world.oblivionAddPlayerInventoryItem(item), std::invalid_argument);
-        EXPECT_TRUE(world.captureOblivionActorInventory(player).empty());
+        EXPECT_TRUE(world.captureOblivionInventory(player).empty());
         EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
         EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), serial);
     }
@@ -3021,7 +3021,7 @@ namespace
         ESM4::RuntimeInventoryItem item; item.mBase = weapon; item.mCount = 1; item.mCondition = 43.125;
         EXPECT_EQ(world.oblivionAddPlayerInventoryItem(item), 1);
         EXPECT_EQ(listener.mCalls, 1);
-        EXPECT_TRUE(world.captureOblivionActorInventory(world.getPlayerPtr()).empty());
+        EXPECT_TRUE(world.captureOblivionInventory(world.getPlayerPtr()).empty());
     }
 
     TEST(OblivionWorldTest, PreparedNativeAdditionRejectsReplacedMovedAndReboundStores)
@@ -3087,7 +3087,7 @@ namespace
         inventory.setContListener(&listener);
         EXPECT_EQ(world.oblivionAddPlayerInventoryItem(item), 1);
         EXPECT_EQ(listener.mCalls, 1);
-        EXPECT_TRUE(world.captureOblivionActorInventory(player).empty());
+        EXPECT_TRUE(world.captureOblivionInventory(player).empty());
         EXPECT_FALSE(world.oblivionSetPlayerHotkey(ESM::RefId(ESM::FormId{0x940, 0}), 1));
         inventory.setContListener(nullptr);
     }
@@ -3133,7 +3133,7 @@ namespace
             inventory.setContListener(&listener);
             EXPECT_THROW(world.oblivionAddPlayerInventoryItem(item), std::runtime_error);
             EXPECT_EQ(listener.mCalls, 1);
-            const auto actual = world.captureOblivionActorInventory(player);
+            const auto actual = world.captureOblivionInventory(player);
             EXPECT_EQ(actual.empty(), clear);
             EXPECT_EQ(world.oblivionSetPlayerHotkey(ESM::RefId(ESM::FormId{0x940, 0}), 1), !clear);
             inventory.setContListener(nullptr);
@@ -11056,7 +11056,7 @@ TEST(OblivionWorldTest, NativePlayerReequipAmmunitionRetainsRestackedPhysicalSlo
     const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
     ASSERT_NE(equipped, inventory.end());
     EXPECT_EQ(equipped->getCellRef().getCount(), 24);
-    const auto captured = world.captureOblivionActorInventory(player);
+    const auto captured = world.captureOblivionInventory(player);
     ASSERT_EQ(captured.size(), 1u);
     EXPECT_EQ(captured.front().mBase, key);
     EXPECT_EQ(captured.front().mCount, 24);
@@ -13626,7 +13626,7 @@ TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejects
             animation.showWeapons(true);
             retained = animation.captureCarriedWeaponPose(item);
             ASSERT_TRUE(retained);
-            const auto inventoryBefore = fixture.mWorld.captureOblivionActorInventory(actor);
+            const auto inventoryBefore = fixture.mWorld.captureOblivionInventory(actor);
             EXPECT_FLOAT_EQ(inventoryBefore.front().mCondition, 0.f);
             EXPECT_FLOAT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
             EXPECT_EQ(item.getCellRef().getCount(), 1);
@@ -13933,7 +13933,7 @@ TEST(OblivionWorldTest, ActualInventoryStackingDistinguishesNativeRankPresenceAn
         listener.mInventory = &inventory; inventory.setContListener(&listener);
         EXPECT_EQ(world.oblivionChangePlayerInventory(key, -3), 3);
         EXPECT_EQ(listener.mCalls, 1);
-        EXPECT_TRUE(world.captureOblivionActorInventory(player).empty());
+        EXPECT_TRUE(world.captureOblivionInventory(player).empty());
         EXPECT_FALSE(world.oblivionSetPlayerHotkey(ESM::RefId(ESM::FormId{0x940, 0}), 1));
         inventory.setContListener(nullptr);
     }
@@ -14100,7 +14100,7 @@ TEST(OblivionWorldTest, ActualInventoryStackingDistinguishesNativeRankPresenceAn
         player.getClass().getInventoryStore(player).setContListener(&listener);
         EXPECT_EQ(world.oblivionChangePlayerInventory(key, -2), 2);
         EXPECT_EQ(listener.mCalls, 1);
-        EXPECT_TRUE(world.captureOblivionActorInventory(world.getPlayerPtr()).empty());
+        EXPECT_TRUE(world.captureOblivionInventory(world.getPlayerPtr()).empty());
     }
 
     TEST(OblivionWorldTest, PreparedNativeRemovalPreservesSignedStackAndWrappedCountRules)
@@ -14155,15 +14155,15 @@ TEST(OblivionWorldTest, NativeRemovalPartialNpcAmmunitionPreservesInstanceUntilD
     } listener;
     listener.mInventory = &inventory;
     inventory.setInvListener(&listener); inventory.setContListener(&listener);
-    EXPECT_EQ(world.oblivionRemoveActorItem(actor, key, 1), 1);
+    EXPECT_EQ(world.oblivionRemoveNativeInventoryItem(actor, key, 1), 1);
     EXPECT_EQ(ammunition.getCellRef().getCount(), 2);
     EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), ammunition);
     EXPECT_EQ(listener.mEquipment, 0); EXPECT_EQ(listener.mCalls, 1); EXPECT_EQ(listener.mRemoved, 1);
-    EXPECT_EQ(world.oblivionRemoveActorItem(actor, key, 9), 2);
+    EXPECT_EQ(world.oblivionRemoveNativeInventoryItem(actor, key, 9), 2);
     EXPECT_EQ(ammunition.getCellRef().getCount(), 0);
     EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
     EXPECT_EQ(listener.mEquipment, 1); EXPECT_EQ(listener.mCalls, 2); EXPECT_EQ(listener.mRemoved, 3);
-    EXPECT_EQ(world.oblivionRemoveActorItem(actor, key, 1), 0);
+    EXPECT_EQ(world.oblivionRemoveNativeInventoryItem(actor, key, 1), 0);
     EXPECT_EQ(listener.mCalls, 2);
     inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
 }
@@ -14400,7 +14400,7 @@ TEST(OblivionWorldTest, NativePickupCapturesObserverClearedInventoryBeforePropag
     catch (const std::runtime_error& error) { EXPECT_STREQ(error.what(), "pickup cleared inventory"); }
     EXPECT_EQ(listener.mCalls, 1);
     EXPECT_EQ(fixture.mSource.getCellRef().getCount(), 0);
-    EXPECT_TRUE(world.captureOblivionActorInventory(world.getPlayerPtr()).empty());
+    EXPECT_TRUE(world.captureOblivionInventory(world.getPlayerPtr()).empty());
     EXPECT_FALSE(world.oblivionSetPlayerHotkey(ESM::RefId(ESM::FormId{0x940, 0}), 1));
     inventory.setContListener(nullptr);
 }
@@ -14478,7 +14478,7 @@ TEST(OblivionWorldTest, NativePickupPreservesRawAbsentZeroFractionalAndOwnership
         ASSERT_NO_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
         EXPECT_EQ(listener.mCalls, 1);
         EXPECT_EQ(ref.getCount(), 0);
-        const auto captured = world.captureOblivionActorInventory(player);
+        const auto captured = world.captureOblivionInventory(player);
         ASSERT_EQ(captured.size(), 1u);
         EXPECT_EQ(captured.front().mOwnershipGlobal, permissionKey);
         EXPECT_EQ(captured.front().mOwnershipRank, ranks[i]);
@@ -14522,7 +14522,7 @@ TEST(OblivionWorldTest, NativePickupSavedSourceDeletionAndInventoryExtrasRestore
         readNativeSnapshot(fresh, saved);
         ASSERT_NO_THROW(fresh.mWorld.applyOblivionRuntimeState());
         EXPECT_EQ(fresh.mSource.getCellRef().getCount(), 0);
-        const auto inventory = fresh.mWorld.captureOblivionActorInventory(fresh.mWorld.getPlayerPtr());
+        const auto inventory = fresh.mWorld.captureOblivionInventory(fresh.mWorld.getPlayerPtr());
         ASSERT_EQ(inventory.size(), 1u);
         EXPECT_EQ(inventory[0].mCount, 2);
         EXPECT_EQ(inventory[0].mCondition, 43.125);
@@ -14531,7 +14531,7 @@ TEST(OblivionWorldTest, NativePickupSavedSourceDeletionAndInventoryExtrasRestore
         EXPECT_EQ(inventory[0].mOwnershipRank, -2);
         EXPECT_EQ(inventory[0].mOwnershipGlobal, permissionKey);
         EXPECT_NO_THROW(fresh.mWorld.interactWithOblivionReference(fresh.mSource, MWWorld::OblivionInteractionKind::Take));
-        EXPECT_EQ(fresh.mWorld.captureOblivionActorInventory(fresh.mWorld.getPlayerPtr())[0].mCount, 2);
+        EXPECT_EQ(fresh.mWorld.captureOblivionInventory(fresh.mWorld.getPlayerPtr())[0].mCount, 2);
     }
 }
 
@@ -14619,7 +14619,7 @@ TEST(OblivionWorldTest, NativeRestoreCharacterBindingsRejectBeforeWorldPublicati
     const auto characterClass = record->mClass;
     const auto male = record->isMale();
     const auto birthSign = world.getPlayer().getBirthSign();
-    const auto inventory = world.captureOblivionActorInventory(player);
+    const auto inventory = world.captureOblivionInventory(player);
     const auto lastGenerated = world.getWorldModel().getLastGeneratedRefNum();
     const auto clock = world.getTimeStamp();
     auto pending = world.prepareOblivionDynamicReferenceKey();
@@ -14647,13 +14647,13 @@ TEST(OblivionWorldTest, NativeRestoreCharacterBindingsRejectBeforeWorldPublicati
         EXPECT_EQ(record->mClass, characterClass);
         EXPECT_EQ(record->isMale(), male);
         EXPECT_EQ(world.getPlayer().getBirthSign(), birthSign);
-        EXPECT_EQ(world.captureOblivionActorInventory(player), inventory);
+        EXPECT_EQ(world.captureOblivionInventory(player), inventory);
         EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), lastGenerated);
         EXPECT_TRUE(pending->isValid());
     }
     readNativeSnapshot(fixture, saved);
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
-    EXPECT_EQ(world.captureOblivionActorInventory(player), inventory);
+    EXPECT_EQ(world.captureOblivionInventory(player), inventory);
     EXPECT_FALSE(pending->isValid());
 }
 
@@ -14677,7 +14677,7 @@ TEST(OblivionWorldTest, NativeRestoreInventoryPublicationPreservesExtrasAndDoesN
         readNativeSnapshot(fixture, saved);
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(listener.mCalls, 0);
-        EXPECT_EQ(world.captureOblivionActorInventory(player), saved.mPlayer.mInventory);
+        EXPECT_EQ(world.captureOblivionInventory(player), saved.mPlayer.mInventory);
         EXPECT_TRUE(world.getWorldModel().getPtr(oldId).isEmpty());
         const auto item = *inventory.begin();
         EXPECT_EQ(item.getContainerStore(), &inventory);
@@ -14729,7 +14729,7 @@ TEST(OblivionWorldTest, NativeRestoreResidentProjectionRejectsBeforeInventoryClo
     ASSERT_TRUE(world.initializeOblivionNonPlayerActor(npc, ESM4::ActorValueProcess::Active));
     ASSERT_NO_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
     const auto saved = world.captureOblivionRuntimeState();
-    const auto beforeInventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+    const auto beforeInventory = world.captureOblivionInventory(world.getPlayerPtr());
     const auto beforeClock = world.getTimeStamp();
     const auto beforeHealth = npc.getClass().getCreatureStats(npc).getHealth().getCurrent();
     const auto beforeRegistry = world.getWorldModel().getLastGeneratedRefNum();
@@ -14747,7 +14747,7 @@ TEST(OblivionWorldTest, NativeRestoreResidentProjectionRejectsBeforeInventoryClo
     readNativeSnapshot(fixture, candidate);
     EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
     EXPECT_EQ(world.getTimeStamp(), beforeClock);
-    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), beforeInventory);
+    EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), beforeInventory);
     EXPECT_EQ(npc.getClass().getCreatureStats(npc).getHealth().getCurrent(), beforeHealth);
     EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), beforeRegistry);
     EXPECT_TRUE(pending->isValid());
@@ -14994,8 +14994,8 @@ TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedPlayerAndNpcInventoriesFro
         EXPECT_EQ(decoded.mPlayer.mInventory, legacy.mPlayer.mInventory);
         EXPECT_EQ(decoded.mReferences.front().mInventory, legacy.mReferences.front().mInventory);
         const auto beforeClock = world.getTimeStamp();
-        const auto beforePlayer = world.captureOblivionActorInventory(world.getPlayerPtr());
-        const auto beforeActor = world.captureOblivionActorInventory(fixture.mActor);
+        const auto beforePlayer = world.captureOblivionInventory(world.getPlayerPtr());
+        const auto beforeActor = world.captureOblivionInventory(fixture.mActor);
         auto pending = world.prepareOblivionDynamicReferenceKey();
         auto invalid = decoded;
         invalid.mNextDynamicSerial += 10;
@@ -15003,8 +15003,8 @@ TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedPlayerAndNpcInventoriesFro
         readNativeSnapshot(fixture, invalid);
         EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
         EXPECT_EQ(world.getTimeStamp(), beforeClock);
-        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), beforePlayer);
-        EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), beforeActor);
+        EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), beforePlayer);
+        EXPECT_EQ(world.captureOblivionInventory(fixture.mActor), beforeActor);
         EXPECT_TRUE(pending->isValid());
         readNativeSnapshot(fixture, decoded);
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
@@ -15023,8 +15023,8 @@ TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedPlayerAndNpcInventoriesFro
             expectedActor = {expectedPlayer.front(), equipped};
             expectedActor.front().mCount = 2;
         }
-        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), expectedPlayer);
-        EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), expectedActor);
+        EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), expectedPlayer);
+        EXPECT_EQ(world.captureOblivionInventory(fixture.mActor), expectedActor);
         const auto migrated = world.captureOblivionRuntimeState();
         EXPECT_EQ(migrated.mVersion, ESM4::CurrentRuntimeStateVersion);
         EXPECT_EQ(migrated.mNativeCrime, ESM4::CrimeStateContracts{});
@@ -15147,7 +15147,7 @@ TEST(OblivionWorldTest, NativeScriptBindingsRejectBeforeInventoryClockIdentityAn
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     const auto before = world.captureOblivionRuntimeState();
     const auto clock = world.getTimeStamp();
-    const auto inventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+    const auto inventory = world.captureOblivionInventory(world.getPlayerPtr());
     auto pending = world.prepareOblivionDynamicReferenceKey();
     for (int invalid : {0, 1, 2, 3, 4})
     {
@@ -15174,7 +15174,7 @@ TEST(OblivionWorldTest, NativeScriptBindingsRejectBeforeInventoryClockIdentityAn
         readNativeSnapshot(fixture, candidate);
         EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
         EXPECT_EQ(world.getTimeStamp(), clock);
-        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), inventory);
+        EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), inventory);
         ESM4::RuntimeState scriptsAfter;
         scripts.capture(scriptsAfter);
         EXPECT_EQ(scriptsAfter.mScriptInstances, before.mScriptInstances);
@@ -15348,7 +15348,7 @@ TEST(OblivionWorldTest, NativeAiRestoreRejectsBindingsAndConversionsBeforeWorldP
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     const auto before = world.captureOblivionRuntimeState();
     const auto clock = world.getTimeStamp();
-    const auto inventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+    const auto inventory = world.captureOblivionInventory(world.getPlayerPtr());
     auto pending = world.prepareOblivionDynamicReferenceKey();
     for (int invalid : {0, 1, 2, 3, 4, 5, 6, 7, 8})
     {
@@ -15381,7 +15381,7 @@ TEST(OblivionWorldTest, NativeAiRestoreRejectsBindingsAndConversionsBeforeWorldP
         readNativeSnapshot(fixture, candidate);
         EXPECT_ANY_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(world.getTimeStamp(), clock);
-        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), inventory);
+        EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), inventory);
         ESM4::RuntimeState after;
         world.getOblivionAiService()->capture(after);
         EXPECT_EQ(after.mActorAi, before.mActorAi);
@@ -15678,8 +15678,8 @@ TEST(OblivionWorldTest, PendingNativeSnapshotCannotReplaceAcceptedCachesOnPrepar
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
     // Rebuilding a cold class view reads only the previously accepted inventory.
     fixture.mActor.getRefData().setCustomData(nullptr);
-    EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), std::vector{item});
-    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), before.mPlayer.mInventory);
+    EXPECT_EQ(world.captureOblivionInventory(fixture.mActor), std::vector{item});
+    EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), before.mPlayer.mInventory);
     for (int attempt = 0; attempt != 2; ++attempt)
     {
         EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
@@ -16035,7 +16035,7 @@ TEST(OblivionWorldTest, NativeDynamicActorReconstructsAuthorityInventoryAndDrawV
     });
     ASSERT_FALSE(actor.isEmpty());
     EXPECT_EQ(actor.getType(), ESM::REC_NPC_4);
-    EXPECT_EQ(world.captureOblivionActorInventory(actor), saved.mReferences.front().mInventory);
+    EXPECT_EQ(world.captureOblivionInventory(actor), saved.mReferences.front().mInventory);
     EXPECT_EQ(world.getOblivionCombatService()->findActorValues(key)->mValues[8].mModifiers[2], -9);
     EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Weapon);
     EXPECT_EQ(world.getWorldModel().getPtr(actor.getCellRef().getRefNum()), actor);
@@ -16668,7 +16668,7 @@ TEST(OblivionWorldTest, PreparedActorInventoriesSurviveOutgoingOverridesAndPrese
             EXPECT_EQ(ptr.getContainerStore(), &inventory);
             EXPECT_EQ(world.getWorldModel().getPtr(ptr.getCellRef().getRefNum()), ptr);
         }
-        EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), saved.mReferences.front().mInventory);
+        EXPECT_EQ(world.captureOblivionInventory(fixture.mActor), saved.mReferences.front().mInventory);
         EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mInventory, saved.mPlayer.mInventory);
     }
 }
@@ -16702,8 +16702,8 @@ TEST(OblivionWorldTest, PreparedInventoriesMatchDirectMigrationForEveryAcceptedV
         const auto decoded = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
         readNativeSnapshot(fixture, decoded);
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
-        const auto expectedPlayer = world.captureOblivionActorInventory(world.getPlayerPtr());
-        const auto expectedNpc = world.captureOblivionActorInventory(fixture.mActor);
+        const auto expectedPlayer = world.captureOblivionInventory(world.getPlayerPtr());
+        const auto expectedNpc = world.captureOblivionInventory(fixture.mActor);
         const auto before = world.captureOblivionRuntimeState().serializeBinary();
         auto invalid = decoded;
         invalid.mReferences.front().mInventory.front().mBase = ESM::FormKey::content("headless.esm", 0xdead);
@@ -16714,8 +16714,8 @@ TEST(OblivionWorldTest, PreparedInventoriesMatchDirectMigrationForEveryAcceptedV
         ASSERT_TRUE(plan->install());
         restorePreparedSaveActorFixture(fixture, decoded);
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
-        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), expectedPlayer);
-        EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), expectedNpc);
+        EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), expectedPlayer);
+        EXPECT_EQ(world.captureOblivionInventory(fixture.mActor), expectedNpc);
     }
 }
 
@@ -16755,7 +16755,7 @@ TEST(OblivionWorldTest, PreparedCreatureInventorySurvivesClearAndDynamicReconstr
     const auto held = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
     ASSERT_NE(held, inventory.end());
     EXPECT_EQ((*held).get<ESM::Weapon>()->mBase, accepted);
-    EXPECT_EQ(world.captureOblivionActorInventory(restored), reference.mInventory);
+    EXPECT_EQ(world.captureOblivionInventory(restored), reference.mInventory);
     EXPECT_EQ(world.getWorldModel().getPtr((*held).getCellRef().getRefNum()), *held);
 }
 
@@ -16777,15 +16777,15 @@ TEST(OblivionWorldTest, GeneratedSharedActorGearCapturesAndSurvivesAdmissionClea
     item.mEquippedSlots = ESM4::InventorySlotWeapon;
     installEquipmentInventory(fixture, world.getPlayerPtr(), {item});
     installEquipmentInventory(fixture, fixture.mActor, {item});
-    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), (std::vector{item}));
-    EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), (std::vector{item}));
+    EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), (std::vector{item}));
+    EXPECT_EQ(world.captureOblivionInventory(fixture.mActor), (std::vector{item}));
     // The generated item was added to the live store after the last accepted
     // native snapshot. The public quickkey adapter must use that live view.
     ASSERT_TRUE(world.oblivionSetPlayerHotkey(weapon.mId, 3));
     item.mHotkey = 3;
-    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), (std::vector{item}));
+    EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), (std::vector{item}));
     auto actorItem = item; actorItem.mHotkey = -1;
-    EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), (std::vector{actorItem}));
+    EXPECT_EQ(world.captureOblivionInventory(fixture.mActor), (std::vector{actorItem}));
     auto saved = world.captureOblivionRuntimeState();
     saved = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
     const auto before = world.captureOblivionRuntimeState().serializeBinary();
@@ -16817,9 +16817,9 @@ TEST(OblivionWorldTest, GeneratedSharedActorGearCapturesAndSurvivesAdmissionClea
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mInventory, saved.mPlayer.mInventory);
     ASSERT_TRUE(world.oblivionSetPlayerHotkey(weapon.mId, 7));
-    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()).front().mHotkey, 7);
+    EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()).front().mHotkey, 7);
     ASSERT_TRUE(world.oblivionSetPlayerHotkey(weapon.mId, -1));
-    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()).front().mHotkey, -1);
+    EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()).front().mHotkey, -1);
     const auto unchanged = world.captureOblivionRuntimeState().serializeBinary();
     EXPECT_FALSE(world.oblivionSetPlayerHotkey(weapon.mId, 8));
     EXPECT_FALSE(world.oblivionSetPlayerHotkey(weapon.mId, -2));
@@ -16828,7 +16828,7 @@ TEST(OblivionWorldTest, GeneratedSharedActorGearCapturesAndSurvivesAdmissionClea
     // Removing a live generated item invalidates a stale cached assignment.
     world.getPlayerPtr().getClass().getInventoryStore(world.getPlayerPtr()).clear();
     EXPECT_FALSE(world.oblivionSetPlayerHotkey(weapon.mId, 3));
-    EXPECT_TRUE(world.captureOblivionActorInventory(world.getPlayerPtr()).empty());
+    EXPECT_TRUE(world.captureOblivionInventory(world.getPlayerPtr()).empty());
 }
 
 TEST(OblivionWorldTest, HotkeySlotClearingUsesLiveInventoryWithoutClearingMovedOrOtherAssignments)
@@ -16868,13 +16868,13 @@ TEST(OblivionWorldTest, HotkeySlotClearingUsesLiveInventoryWithoutClearingMovedO
         if (item.mBase == firstKey) item.mHotkey = -1;
     const auto cleared = world.captureOblivionRuntimeState();
     EXPECT_EQ(cleared.serializeBinary(), expected.serializeBinary());
-    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), expected.mPlayer.mInventory);
-    EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), (std::vector{first}));
+    EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), expected.mPlayer.mInventory);
+    EXPECT_EQ(world.captureOblivionInventory(fixture.mActor), (std::vector{first}));
     EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(cleared.serializeBinary()).mPlayer.mInventory,
         expected.mPlayer.mInventory);
     EXPECT_FALSE(world.oblivionSetPlayerHotkey({}, 7));
     EXPECT_TRUE(world.oblivionSetPlayerHotkey({}, 4));
-    const auto inventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+    const auto inventory = world.captureOblivionInventory(world.getPlayerPtr());
     for (const auto& item : inventory) EXPECT_EQ(item.mHotkey, -1);
 }
 
@@ -23203,7 +23203,7 @@ TEST(OblivionWorldTest, InventoryExtraScaleCaptureAndRestorePreservesBothActorIn
     EXPECT_EQ(fixture.mItem.getCellRef().getScale(),2);
     for (const auto actor : {world.getPlayerPtr(),fixture.mNpc})
     {
-        const auto actual = world.captureOblivionActorInventory(actor);
+        const auto actual = world.captureOblivionInventory(actor);
         ASSERT_EQ(actual.size(),items.size());
         for (unsigned i=0; i<actual.size(); ++i)
         {
@@ -23278,7 +23278,7 @@ TEST(OblivionWorldTest, InventoryExtraScaleCaptureRejectsCorruptMetadataWithoutD
     ESM::ObjectState raw; bow.getCellRef().writeState(raw);
     raw.mRef.mNativeItemScale = std::numeric_limits<float>::quiet_NaN();
     bow.getCellRef() = MWWorld::CellRef(raw.mRef);
-    EXPECT_THROW(fixture.mWorld.captureOblivionActorInventory(actors.actor),std::runtime_error);
+    EXPECT_THROW(fixture.mWorld.captureOblivionInventory(actors.actor),std::runtime_error);
     EXPECT_EQ(bow.getCellRef().getCount(),1);
     EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),bow);
 }
@@ -27071,9 +27071,9 @@ TEST(OblivionWorldTest, BlockingWeaponWearToZeroAtomicallyUnequipsAndWithdrawsPo
             const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             const auto snapshot = [&] {
                 auto state = captureNativeActorState(fixture, attacker);
-                state.mReferences.front().mInventory = world.captureOblivionActorInventory(attacker);
+                state.mReferences.front().mInventory = world.captureOblivionInventory(attacker);
                 auto reference = captureNativeActorState(fixture, victim).mReferences.front();
-                reference.mInventory = world.captureOblivionActorInventory(victim); state.mReferences.push_back(reference);
+                reference.mInventory = world.captureOblivionInventory(victim); state.mReferences.push_back(reference);
                 return state;
             };
             const auto action = world.beginOblivionPhysicalAction(attacker);
@@ -27189,9 +27189,9 @@ TEST(OblivionWorldTest, BlockingRetainedShieldBreakProjectsRemovalBeforeArmorSel
             const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
             const auto snapshot = [&] {
                 auto state = captureNativeActorState(fixture, attacker);
-                state.mReferences.front().mInventory = world.captureOblivionActorInventory(attacker);
+                state.mReferences.front().mInventory = world.captureOblivionInventory(attacker);
                 auto reference = captureNativeActorState(fixture, victim).mReferences.front();
-                reference.mInventory = world.captureOblivionActorInventory(victim); state.mReferences.push_back(reference);
+                reference.mInventory = world.captureOblivionInventory(victim); state.mReferences.push_back(reference);
                 return state;
             };
             const auto action = world.beginOblivionPhysicalAction(attacker);
@@ -28097,7 +28097,7 @@ TEST(OblivionWorldTest, NativePickupCleansUnprojectedDropperCacheAndFreshWorldPr
         EXPECT_EQ(residentPickupActorCount(fresh.mWorld,actorKey),0u);
         EXPECT_EQ(fresh.mSource.getCellRef().getCount(),0);
         EXPECT_EQ(fresh.mSource.getCellRef().getNativeDropRelations().mDropper,actorKey);
-        EXPECT_EQ(fresh.mWorld.captureOblivionActorInventory(fresh.mWorld.getPlayerPtr()).front().mCount,2);
+        EXPECT_EQ(fresh.mWorld.captureOblivionInventory(fresh.mWorld.getPlayerPtr()).front().mCount,2);
         EXPECT_EQ(recaptured.mNextDynamicSerial,saved.mNextDynamicSerial);
     }
 }
@@ -28363,7 +28363,7 @@ TEST(OblivionWorldTest, LaterSelectedNpcShieldBreakPublishesOneBodyAndRollsBackM
         EXPECT_EQ(after.mCombatRngState, 752224798u);
         EXPECT_TRUE(service.isActionConsumed(action));
         EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
-        EXPECT_EQ(world.captureOblivionActorInventory(victim).size(), 1u); // Right sword survives.
+        EXPECT_EQ(world.captureOblivionInventory(victim).size(), 1u); // Right sword survives.
     }
 }
 
@@ -38394,7 +38394,7 @@ TEST(OblivionWorldTest, NativeRecoveryQueriesShareDrawEquipmentAndScriptConditio
                      MWMechanics::DrawState::Spell})
             {
                 actor.getClass().getCreatureStats(actor).setDrawState(draw);
-                const auto inventoryBefore = world.captureOblivionActorInventory(actor);
+                const auto inventoryBefore = world.captureOblivionInventory(actor);
                 combat.capture(before);
                 const double out = actor != low && draw == MWMechanics::DrawState::Weapon ? 1.0 : 0.0;
                 const double family = actor != low && type < 6 ? categories[type] : 0;
@@ -38423,7 +38423,7 @@ TEST(OblivionWorldTest, NativeRecoveryQueriesShareDrawEquipmentAndScriptConditio
                     EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)),
                         ESM4::ConditionResult::False);
                 }
-                EXPECT_EQ(world.captureOblivionActorInventory(actor), inventoryBefore);
+                EXPECT_EQ(world.captureOblivionInventory(actor), inventoryBefore);
                 combat.capture(after);
                 EXPECT_EQ(after, before);
             }
@@ -38433,7 +38433,7 @@ TEST(OblivionWorldTest, NativeRecoveryQueriesShareDrawEquipmentAndScriptConditio
                 // the cached weapon entry must still be worn.
                 inventory.unequipSlot(MWWorld::InventoryStore::Slot_CarriedRight, false);
                 EXPECT_EQ(world.getOblivionScriptWeaponAnimationType(key), 0.0);
-                EXPECT_FALSE(world.captureOblivionActorInventory(actor).empty());
+                EXPECT_FALSE(world.captureOblivionInventory(actor).empty());
             }
         }
     }
@@ -39603,9 +39603,9 @@ TEST(OblivionWorldTest, MeleeAiEquipsTheExactUsableOwnedStackWithoutRepairOrRepe
     fixture.mPhysics->addActor(actor, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
     fixture.mPhysics->addActor(target, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
     ASSERT_TRUE(world.executeOblivionStartCombat(actor, target));
-    const auto before = world.captureOblivionActorInventory(actor);
+    const auto before = world.captureOblivionInventory(actor);
     ASSERT_TRUE(MWMechanics::updateOblivionMeleeAi(world, actor, false, 1.f / 60.f));
-    EXPECT_EQ(world.captureOblivionActorInventory(actor), before);
+    EXPECT_EQ(world.captureOblivionInventory(actor), before);
     ASSERT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
     const auto random = world.getOblivionCombatService()->combatRandomState();
     const auto health = world.getOblivionCombatService()->getNonPlayerValue(target, 8);
@@ -39615,7 +39615,7 @@ TEST(OblivionWorldTest, MeleeAiEquipsTheExactUsableOwnedStackWithoutRepairOrRepe
     EXPECT_EQ(right->getCellRef().getCount(), 1);
     EXPECT_EQ(right->getCellRef().getNativeItemCondition(), 80.25f);
     EXPECT_EQ(right->getCellRef().getEnchantmentCharge(), 7.25f);
-    const auto after = world.captureOblivionActorInventory(actor);
+    const auto after = world.captureOblivionInventory(actor);
     EXPECT_EQ(ESM4::inventoryCount(after, weaponKey), 4);
     EXPECT_EQ(std::count_if(after.begin(), after.end(), [](const auto& item) {
         return item.mCondition == 0 && item.mCount == 1 && item.mEquippedSlots == 0;
@@ -39630,7 +39630,7 @@ TEST(OblivionWorldTest, MeleeAiEquipsTheExactUsableOwnedStackWithoutRepairOrRepe
         EXPECT_EQ(registered.getContainerStore(), &inventory);
     }
     ASSERT_TRUE(MWMechanics::updateOblivionMeleeAi(world, actor, true, 1.f / 60.f));
-    EXPECT_EQ(world.captureOblivionActorInventory(actor), after);
+    EXPECT_EQ(world.captureOblivionInventory(actor), after);
     EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(), random);
     EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(target, 8), health);
 }

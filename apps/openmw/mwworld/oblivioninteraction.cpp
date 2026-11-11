@@ -44,6 +44,7 @@
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
 
+#include "actionopen.hpp"
 #include "class.hpp"
 #include "datetimemanager.hpp"
 #include "inventorystore.hpp"
@@ -330,7 +331,7 @@ namespace MWWorld
         const int requested = delta == std::numeric_limits<int>::min()
             ? std::numeric_limits<int>::max()
             : -delta;
-        return oblivionRemoveActorItem(player, key, requested);
+        return oblivionRemoveNativeInventoryItem(player, key, requested);
     }
 
     int World::oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item)
@@ -400,7 +401,7 @@ namespace MWWorld
             return item.mCount;
         }
         if (mOblivionRuntimeState)
-            mOblivionRuntimeState->mPlayer.mInventory = captureOblivionActorInventory(getPlayerPtr());
+            mOblivionRuntimeState->mPlayer.mInventory = captureOblivionInventory(getPlayerPtr());
         if (observerFailure) std::rethrow_exception(observerFailure);
         return item.mCount;
     }
@@ -480,9 +481,18 @@ namespace MWWorld
         return false;
     }
 
-    int World::oblivionAddActorItem(const Ptr& actor, const ESM::FormKey& key, int count)
+    namespace
     {
-        if (mGameProfile != ESM::GameProfile::Oblivion || !nativeEquipmentActor(actor)
+        bool nativeInventoryOwner(const Ptr& owner)
+        {
+            return nativeEquipmentActor(owner)
+                || (!owner.isEmpty() && owner.getType() == ESM::REC_CONT4 && owner.getRefData().getCustomData());
+        }
+    }
+
+    int World::oblivionAddNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !nativeInventoryOwner(actor)
             || key.isNull() || count <= 0)
             return 0;
         const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
@@ -492,7 +502,7 @@ namespace MWWorld
         if (!definition)
             return 0;
         const auto shared = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
-        auto& inventory = actor.getClass().getInventoryStore(actor);
+        auto& inventory = actor.getClass().getContainerStore(actor);
         std::uint32_t existing = 0;
         const auto capacity = static_cast<std::uint32_t>(std::numeric_limits<int>::max() - count);
         for (auto it = inventory.begin(); it != inventory.end(); ++it)
@@ -516,19 +526,21 @@ namespace MWWorld
         return count;
     }
 
-    int World::oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count)
+    int World::oblivionRemoveNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || actor.isEmpty() || key.isNull() || count <= 0
             || ESM::FormKey::deserialize(key.serialize()) != key)
             return 0;
         const bool player = actor == getPlayerPtr();
-        if (!player && !nativeEquipmentActor(actor)) return 0;
+        if (!player && !nativeInventoryOwner(actor)) return 0;
         const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
         if (!id) return 0;
         const auto definition = OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id));
         if (!definition) return 0;
-        auto& inventory = actor.getClass().getInventoryStore(actor);
         const auto shared = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
+        if (actor.getType() == ESM::REC_CONT4)
+            return actor.getClass().getContainerStore(actor).remove(shared, count);
+        auto& inventory = actor.getClass().getInventoryStore(actor);
         auto removal = inventory.prepareItemRemoval(shared, count);
         const int removed = removal->getCount();
         if (!removed) return 0;
@@ -570,7 +582,7 @@ namespace MWWorld
         }
         if (current() && mOblivionRuntimeState)
         {
-            auto live = captureOblivionActorInventory(actor);
+            auto live = captureOblivionInventory(actor);
             if (player) mOblivionRuntimeState->mPlayer.mInventory = std::move(live);
             else
                 for (auto& reference : mOblivionRuntimeState->mReferences)
@@ -748,7 +760,7 @@ namespace MWWorld
             return std::nullopt;
         std::array<ESM::RefId, 8> result;
         const ESM::FormKeyResolver resolver(mContentFiles);
-        for (const auto& item : captureOblivionActorInventory(mPlayer ? mPlayer->getPlayer() : Ptr{}))
+        for (const auto& item : captureOblivionInventory(mPlayer ? mPlayer->getPlayer() : Ptr{}))
         {
             if (item.mCount <= 0 || item.mHotkey < 0)
                 continue;
@@ -784,7 +796,7 @@ namespace MWWorld
         // Live inventory owns item presence and instance metadata. The cached
         // save DTO may precede a shared generated-item addition or removal.
         // Stage the assignment without creating authority for a missing item.
-        auto inventory = captureOblivionActorInventory(getPlayerPtr());
+        auto inventory = captureOblivionInventory(getPlayerPtr());
         if (sharedId.empty())
         {
             // GUI removal/replacement owns a slot, not an item which may have
@@ -984,7 +996,7 @@ namespace MWWorld
             try
             {
                 if (mOblivionRuntimeState)
-                    mOblivionRuntimeState->mPlayer.mInventory = captureOblivionActorInventory(getPlayerPtr());
+                    mOblivionRuntimeState->mPlayer.mInventory = captureOblivionInventory(getPlayerPtr());
             }
             catch (...) { if (!failure) failure = std::current_exception(); }
         }
@@ -994,6 +1006,82 @@ namespace MWWorld
             windows->messageBox("Taken: " + name + (item.mCount > 1 ? " (" + std::to_string(item.mCount) + ")" : ""));
         Log(Debug::Info) << "M5 interaction: kind=take result=taken ref=" << key.serialize()
                          << " base=" << item.mBase.serialize();
+    }
+
+    namespace
+    {
+        std::optional<std::vector<ESM4::RuntimeInventoryItem>> resolveContainerLists(const ESMStore& store,
+            const ESM::FormKeyResolver& resolver, const std::vector<ESM4::RuntimeInventoryItem>& stock,
+            int level, Misc::Rng::Generator& random)
+        {
+            const auto levelledForm = [&](const ESM4::RuntimeInventoryItem& item) -> std::optional<ESM::FormId> {
+                const auto id = resolver.toFormId(item.mBase);
+                if (item.mCount > 0 && id && store.get<ESM4::LevelledItem>().search(ESM::RefId(*id)))
+                    return id;
+                return std::nullopt;
+            };
+            if (std::none_of(stock.begin(), stock.end(), [&](const auto& item) { return levelledForm(item).has_value(); }))
+                return std::nullopt;
+
+            std::vector<ESM4::RuntimeInventoryItem> expanded;
+            for (const auto& item : stock)
+            {
+                const auto form = levelledForm(item);
+                if (!form)
+                {
+                    expanded.push_back(item);
+                    continue;
+                }
+                for (const auto& generated :
+                    expandOblivionLevelledItems(store, {{form->toUint32(), item.mCount}}, level, random))
+                {
+                    auto concrete = item;
+                    concrete.mBase = resolver.toFormKey(ESM::FormId::fromUint32(generated.item));
+                    concrete.mCount = generated.count;
+                    expanded.push_back(std::move(concrete));
+                }
+            }
+            return expanded;
+        }
+    }
+
+    std::unique_ptr<InventoryStore> World::prepareOblivionContainerInventory(const Ptr& container)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || container.isEmpty() || container.getType() != ESM::REC_CONT4)
+            throw std::invalid_argument("Invalid native container inventory owner");
+        if (!mOblivionRuntimeState)
+            mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+        const auto key = container.getCellRef().getFormKey();
+        auto& references = mOblivionRuntimeState->mReferences;
+        const auto saved = std::find_if(references.begin(), references.end(),
+            [&](const auto& reference) { return reference.mKey == key; });
+        if (saved == references.end() || mStore.search<ESM4::Container>(saved->mBase) != container.get<ESM4::Container>()->mBase)
+            throw std::invalid_argument("Native container inventory has an invalid reference/base binding");
+
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        const Ptr player = getPlayerPtr();
+        const int level = player.getClass().getCreatureStats(player).getLevel();
+        auto random = mPrng;
+        auto expanded = resolveContainerLists(mStore, resolver, saved->mInventory, level, random);
+        auto stock = expanded ? std::move(*expanded) : saved->mInventory;
+        for (auto& item : stock)
+        {
+            if (item.mCount <= 0 || item.mEquippedSlots != 0 || item.mHotkey >= 0 || item.mBoundSource)
+                throw std::invalid_argument("Invalid native container stack metadata");
+            if (item.mOwner.isNull() && saved->mOwner && !saved->mCustomState.contains("opened"))
+                item.mOwner = *saved->mOwner;
+        }
+
+        auto staged = OblivionProfileServices::stageActorInventory(
+            OblivionProfileServices::prepareActorInventory(mStore, resolver, stock));
+        if (expanded)
+        {
+            mPrng = random;
+            Log(Debug::Info) << "M13 container lists resolved: ref=" << key.serialize()
+                             << " entries=" << stock.size();
+        }
+        saved->mInventory = std::move(stock);
+        return staged;
     }
 
     void World::interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor)
@@ -1030,11 +1118,12 @@ namespace MWWorld
             throw std::runtime_error("M5 interaction reference is absent from native TES4 state: " + key.serialize());
 
         ESM4::RuntimeReferenceState& state = *found;
+        const auto base = state.mBase;
         auto report = [&](std::string_view result) {
             const Ptr player = getPlayerPtr();
             const ESM::Position& playerPosition = player.getRefData().getPosition();
             Log(Debug::Info) << "M5 interaction: kind=" << kindName(kind) << " result=" << result
-                             << " ref=" << key.serialize() << " base=" << state.mBase.serialize()
+                             << " ref=" << key.serialize() << " base=" << base.serialize()
                              << " grounded=" << (isOnGround(player) ? "true" : "false")
                              << " player_z=" << playerPosition.pos[2];
         };
@@ -1143,36 +1232,23 @@ namespace MWWorld
                 break; // Handled before any borrowed cached reference state.
             case OblivionInteractionKind::Container:
             {
-                const auto levelledForm = [&](const ESM4::RuntimeInventoryItem& item) -> std::optional<ESM::FormId> {
-                    const auto id = resolver.toFormId(item.mBase);
-                    return item.mCount > 0 && id && mStore.get<ESM4::LevelledItem>().search(ESM::RefId(*id))
-                        ? id : std::nullopt;
-                };
-                if (std::any_of(state.mInventory.begin(), state.mInventory.end(),
-                        [&](const auto& item) { return levelledForm(item).has_value(); }))
+                const Ptr player = getPlayerPtr();
+                if (ptr.getType() == ESM::REC_CONT4)
                 {
-                    const Ptr player = getPlayerPtr();
-                    const int level = player.getClass().getCreatureStats(player).getLevel();
-                    std::vector<ESM4::RuntimeInventoryItem> expanded;
-                    for (const auto& item : state.mInventory)
-                    {
-                        if (const auto form = levelledForm(item))
-                        {
-                            for (const auto& generated : expandOblivionLevelledItems(
-                                     mStore, {{form->toUint32(), item.mCount}}, level, mPrng))
-                            {
-                                auto concrete = item;
-                                concrete.mBase = resolver.toFormKey(ESM::FormId::fromUint32(generated.item));
-                                concrete.mCount = generated.count;
-                                expanded.push_back(std::move(concrete));
-                            }
-                        }
-                        else
-                            expanded.push_back(item);
-                    }
-                    // Publish concrete stock once, including a chance-none result.
-                    // Saved empty inventories never consult the base lists again.
-                    state.mInventory.swap(expanded);
+                    auto windows = MWBase::Environment::get().getWindowManager();
+                    if ((!actor.isEmpty() && actor != player) || !windows->isAllowed(MWGui::GW_Inventory))
+                        break;
+                    ptr.getClass().getContainerStore(ptr);
+                    state.mCustomState["opened"] = true;
+                    ActionOpen(ptr).execute(player);
+                    if (windows->getMode() == MWGui::GM_Container)
+                        report("opened");
+                    break;
+                }
+                const int level = player.getClass().getCreatureStats(player).getLevel();
+                if (auto expanded = resolveContainerLists(mStore, resolver, state.mInventory, level, mPrng))
+                {
+                    state.mInventory = std::move(*expanded);
                     state.mCustomState["opened"] = true;
                     Log(Debug::Info) << "M13 container lists resolved: ref=" << key.serialize()
                                      << " entries=" << state.mInventory.size();

@@ -1673,7 +1673,7 @@ namespace MWWorld
             OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
     }
 
-    std::vector<ESM4::RuntimeInventoryItem> World::captureOblivionActorInventory(const Ptr& owner) const
+    std::vector<ESM4::RuntimeInventoryItem> World::captureOblivionInventory(const Ptr& owner) const
     {
         std::vector<ESM4::RuntimeInventoryItem> result;
         const ESM::FormKey ownerKey = owner.isEmpty() ? ESM::FormKey{} : owner.getCellRef().getFormKey();
@@ -1685,7 +1685,9 @@ namespace MWWorld
                 return result;
             const bool player = mPlayer && owner == mPlayer->getPlayer();
             const unsigned ownerType = owner.getClass().getType();
-            if (!player && ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4)
+            const bool container = ownerType == ESM::REC_CONT4;
+            if (container ? !owner.getRefData().getCustomData()
+                          : (!player && ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4))
                 return result;
             // Hotkeys have no shared-store field. Join the existing Player
             // assignment once per base, just as full world capture does.
@@ -1695,7 +1697,8 @@ namespace MWWorld
                     if (item.mHotkey >= 0)
                         previousHotkeys.emplace(item.mBase, item.mHotkey);
             const ESM::FormKeyResolver inventoryResolver(mContentFiles);
-            InventoryStore& inventory = owner.getClass().getInventoryStore(owner);
+            ContainerStore& inventory = owner.getClass().getContainerStore(owner);
+            auto* equipment = container ? nullptr : &owner.getClass().getInventoryStore(owner);
             for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
             {
                 const Ptr itemPtr = *iterator;
@@ -1727,8 +1730,8 @@ namespace MWWorld
                         throw std::runtime_error("remaining usage time for item " + item.mBase.serialize()
                             + ": " + std::string(error.what()));
                     }
-                    if (inventory.isEquipped(itemPtr))
-                        item.mEquippedSlots = getNativeEquippedSlots(inventory, itemPtr, *definition);
+                    if (equipment && equipment->isEquipped(itemPtr))
+                        item.mEquippedSlots = getNativeEquippedSlots(*equipment, itemPtr, *definition);
                 }
                 if (generatedKey)
                 {
@@ -1739,10 +1742,10 @@ namespace MWWorld
                         : -1.f;
                     item.mCharge = itemPtr.getCellRef().getEnchantmentCharge();
                     item.mRemainingUsageTime = itemClass.getRemainingUsageTime(itemPtr);
-                    if (inventory.isEquipped(itemPtr))
+                    if (equipment && equipment->isEquipped(itemPtr))
                         for (int slot = 0; slot != InventoryStore::Slots; ++slot)
                         {
-                            const auto equipped = inventory.getSlot(slot);
+                            const auto equipped = equipment->getSlot(slot);
                             if (equipped != inventory.end() && *equipped == itemPtr)
                             {
                                 item.mEquippedSlots = OblivionInventory::slotMask(
@@ -1772,7 +1775,7 @@ namespace MWWorld
         }
         catch (const std::exception& error)
         {
-            throw std::runtime_error("TES4 runtime-state actor inventory " + ownerKey.serialize()
+            throw std::runtime_error("TES4 runtime-state inventory " + ownerKey.serialize()
                 + " capture failed: " + std::string(error.what()));
         }
     }
@@ -2139,7 +2142,7 @@ namespace MWWorld
 
         // Player and native actor transactions serialize the same live
         // metadata; preserve Player-only hotkey assignments in that adapter.
-        state.mPlayer.mInventory = captureOblivionActorInventory(player);
+        state.mPlayer.mInventory = captureOblivionInventory(player);
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
             if (Misc::StringUtils::ciEqual(nativeName, "GameDaysPassed"))
@@ -2359,9 +2362,11 @@ namespace MWWorld
                     }
                     if (actorReference)
                     {
-                        reference.mInventory = captureOblivionActorInventory(mutablePtr);
+                        reference.mInventory = captureOblivionInventory(mutablePtr);
                         reference.mActorDrawState = captureOblivionActorDrawState(mutablePtr);
                     }
+                    else if (ptr.getType() == ESM::REC_CONT4 && ptr.getRefData().getCustomData())
+                        reference.mInventory = captureOblivionInventory(mutablePtr);
                     reference.mCustomState["count"]
                         = static_cast<std::int64_t>(ptr.getCellRef().getCount(false));
                     reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
@@ -7745,6 +7750,11 @@ namespace MWWorld
                 if (ptr.getClass().getType() == ESM::REC_NPC_4)
                     MWClass::ESM4Npc::refreshNativeEquipment(ptr);
             }
+            else if (ptr.getType() == ESM::REC_CONT4)
+            {
+                // The restored native stock is authoritative on the next access.
+                ptr.getRefData().setCustomData(nullptr);
+            }
 
             if (binding.mAnimation)
             {
@@ -9553,7 +9563,7 @@ namespace MWWorld
                     // inventory is not a saved empty store. Retry construction
                     // after a failure without rolling another actor or list.
                     actor.getClass().getInventoryStore(actor);
-                    saved.mInventory = captureOblivionActorInventory(actor);
+                    saved.mInventory = captureOblivionInventory(actor);
                     saved.mCustomState.erase("native.levelled_actor.inventory_pending");
                 };
                 if (mOblivionRuntimeState)

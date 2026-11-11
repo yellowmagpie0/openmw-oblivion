@@ -1,0 +1,37 @@
+{
+  "scope": "Original executable UI observations on the placed cask, with console positioning and ordinary interaction.",
+  "reference": "content:oblivion.esm:04bb85",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "positioning": [
+    "coc Vilverin02",
+    "player.setpos x -5298",
+    "player.setpos y -10135",
+    "player.setpos z -2658",
+    "player.setangle x 35",
+    "player.setangle z 0",
+    "prid 04bb85"
+  ],
+  "observations": [
+    "GetLocked returned 0. The cask held 14 Gold and the player held 0. Opening and closing preserved both counts.",
+    "A plain click on Gold took the entire stack of 14 without a quantity dialog. This corrected the initial one-coin expectation.",
+    "Deposited the existing Sack Cloth Pants and Sack Cloth Shirt through the player pane. Selecting the shirt from the cask left the pants visible.",
+    "Take All returned the remaining clothing. The final screenshot showed no displayed entries, while a later GetItemCount f on the cask reported 1. The original empty state is unresolved by this probe."
+  ],
+  "evidence_root": "build/oblivion-compat/container-window/original-native-01",
+  "evidence": {
+    "game-process-epoch.json": "2d8d953bdd310125a6cdf734f252ea3344c31464db2bded4f5e4e188407ef54e",
+    "input-log.jsonl": "b7a0b5b084eab02164eb4adc6491abcf5585f6e51f07cce535e57e99ba17de4a",
+    "native-before-container-console.png": "72697ab12cab365616301e62b88b086b290a2bfa82cbbd216b223b6e162cc1ac",
+    "native-cask-closer.png": "338d2e5ad4f6cb42fec4965bedf02fa62b58d133e759e4097fa62d3e2a3ae503",
+    "native-close-no-transfer.png": "6d08ff9ad1097fb7d6e5cb8f5fced7184d184d76dbfa24e1cec571fd42999ee6",
+    "native-cask-reopen.png": "ba847074818f2c6e2e3ef433a771db493804e36626d2a9b47b110ca4ba49b9b7",
+    "native-cask-quantity.png": "89a1b18b8fdefd12b86d30c604e05969b02523f55b6335c7ccfc038931f40a16",
+    "native-cask-two-owned-items.png": "c11ee10602e4083b17639ee9b67986c615418465a5f407466c3b3e229e700606",
+    "native-selected-shirt-leaves-pants.png": "df0d1db6b84042bad731a64eb852adb852a8fa3041276bb764a09901f5e94a53",
+    "native-reopen-empty.png": "41db9fbd340d91e501436ed2d78486b9ebda86edc567853c25f38994b92bdfcf",
+    "native-final-counts.png": "11aadf30c172fa4d222ffcafd3c2ca6cfa998d58ae14dee7aa1d1194c4507fb4",
+    "exit-verification.json": "4055d6a99e6cbaa8d766b5e94cf78f1eebf6427fa4df557378a7bfba43baf2b6"
+  }
+}

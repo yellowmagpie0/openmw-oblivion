@@ -184,7 +184,7 @@ namespace MWWorld
             explicit Guard(bool& flag) : mFlag(flag) { mFlag = true; }
             ~Guard() { mFlag = false; }
         } guard(mUpdatingOblivionBoundEquipment);
-        const auto inventory = captureOblivionActorInventory(actor);
+        const auto inventory = captureOblivionInventory(actor);
         auto update = ESM4::prepareBoundEquipmentUpdate(inventory, owners, grants, dead);
         if (update.mInventory == inventory && update.mAbilities == owners)
         {

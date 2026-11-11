@@ -179,10 +179,12 @@ namespace MWWorld
             }
         };
 
-        bool nativeInventoryActor(const Ptr& actor)
+        bool nativeInventoryOwner(const Ptr& actor)
         {
             if (actor.isEmpty())
                 return false;
+            if (actor.getType() == ESM::REC_CONT4)
+                return actor.getRefData().getCustomData() != nullptr;
             if (actor.getType() == ESM::REC_NPC_4)
                 return actor.get<ESM4::Npc>()->mBase && actor.get<ESM4::Npc>()->mBase->mIsTES4;
             if (actor.getType() == ESM::REC_CREA4)
@@ -1414,7 +1416,7 @@ namespace MWWorld
                 // be mistaken for an authoritative saved empty inventory by
                 // lazy class construction. Existing saved empties stay intact.
                 if (ptr.getType() == ESM::REC_NPC_4 || ptr.getType() == ESM::REC_CREA4)
-                    state.mInventory = mWorld.captureOblivionActorInventory(ptr);
+                    state.mInventory = mWorld.captureOblivionInventory(ptr);
                 try
                 {
                     state.mLockLevel = ptr.getCellRef().getLockLevel();
@@ -1974,7 +1976,7 @@ namespace MWWorld
             if (name == "getitemcount" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
             {
                 const Ptr actor = ptrFor(owner);
-                if (nativeInventoryActor(actor))
+                if (nativeInventoryOwner(actor))
                 {
                     const auto id = mResolver.toFormId(*item);
                     const auto count = id ? oblivionInventoryItemCount(actor.getClass().getContainerStore(actor),
@@ -1988,15 +1990,15 @@ namespace MWWorld
             if (name == "additem" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
             {
                 const Ptr actor = ptrFor(owner);
-                if (nativeInventoryActor(actor))
+                if (nativeInventoryOwner(actor))
                 {
                     const auto count = boundedCount(argument(itemArg + 1));
                     if (count < 0)
                         throw std::invalid_argument("Native AddItem negative-count delta semantics are unsupported");
-                    const int added = mWorld.oblivionAddActorItem(actor, *item, count);
+                    const int added = mWorld.oblivionAddNativeInventoryItem(actor, *item, count);
                     if (added > 0)
                     {
-                        auto inventory = mWorld.captureOblivionActorInventory(actor);
+                        auto inventory = mWorld.captureOblivionInventory(actor);
                         if (auto* current = referenceState(owner))
                             current->mInventory = std::move(inventory);
                     }
@@ -2010,13 +2012,13 @@ namespace MWWorld
             if (name == "removeitem" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
             {
                 const Ptr actor = ptrFor(owner);
-                if (nativeInventoryActor(actor))
+                if (nativeInventoryOwner(actor))
                 {
                     const auto count = boundedCount(argument(itemArg + 1));
-                    const int removed = mWorld.oblivionRemoveActorItem(actor, *item, count);
+                    const int removed = mWorld.oblivionRemoveNativeInventoryItem(actor, *item, count);
                     if (removed > 0)
                     {
-                        auto inventory = mWorld.captureOblivionActorInventory(actor);
+                        auto inventory = mWorld.captureOblivionInventory(actor);
                         // Reacquire after observers, which may mutate saved references.
                         if (auto* current = referenceState(owner))
                             current->mInventory = std::move(inventory);

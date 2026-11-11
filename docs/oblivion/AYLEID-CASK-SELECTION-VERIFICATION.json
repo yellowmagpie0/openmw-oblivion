@@ -1,0 +1,589 @@
+{
+  "status": "verified",
+  "contract": "AYLEID-CASK-SELECTION-CONTRACT.json",
+  "parent_revision": "3df67e07d5f5d8ff2da9706edd473494ed742891",
+  "cpp_file_sha256": {
+    "apps/openmw/mwclass/container.hpp": "a8dbfc4f63fa9649919a9cb09771aa354ae6a3028db86c7fd277ed52d9185024",
+    "apps/openmw/mwclass/esm4interactive.cpp": "26784ed34a2553e853553b63c49699c77452c87918b67e8e5cc4ceaa1267dd5c",
+    "apps/openmw/mwclass/esm4interactive.hpp": "9de77dc88dba930df7129ab41632c8e78dc36e7ef6fbb6eb313a0e18b7c34ecd",
+    "apps/openmw/mwgui/container.cpp": "0f3aef4d614e49973fdf35d3b58d59b4d710a17bc50c77a99e8ff5ee1d7ff47a",
+    "apps/openmw/mwworld/oblivionbounditems.cpp": "3e1bc314faac84fdc95ee6cc56e97111e1a676a65b25b9849d3a4508b85e32da",
+    "apps/openmw/mwworld/oblivioninteraction.cpp": "d261b08a6083b1c470129adefafb2dadaf3df8f33a3c4d804fe7d63c0082d552",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "c005510555fb56bd767e5e04632e1a8556c7631f717591e3137ba5d823d60a17",
+    "apps/openmw/mwworld/worldimp.cpp": "92cdfde6c317621c4a40b17200bc1ae8dbb1e86e0a59c6be3fe6c0d8c0b38135",
+    "apps/openmw/mwworld/worldimp.hpp": "702cb7217bae2d8a5bed35d8ae24fc4acc0c529f54bd047d683c9698658fc62a",
+    "apps/openmw_tests/mwworld/testobliviondialogue.cpp": "59203f435593e98bd5a19db80126e567dbeba4f665443f63a5fbaac1cd6a1c09",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "5bee7d90bf96269f574ca176f170a4ec5ad8e2bd9f58018767ed9caa4dd6bf35"
+  },
+  "cases": {
+    "normal-automatic-transfer-baseline-02": {
+      "audit": {
+        "passed": true,
+        "phase": "baseline",
+        "source_sha256": "0a89f411f0aab9518297408e46316da92c1399b864f2885ef736a58304403110",
+        "save_sha256": "3bca4929ac82e68b678f6c432302e024acd479dc1aff13ae4c6479149afcd7df",
+        "exe_sha256": "dc12992963190e106374e5b124cf99d61d6c1acd575867f6c83aaad259f7c3ae",
+        "process": 1417600,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:014931": 1,
+          "content:oblivion.esm:0cb214": 1,
+          "content:oblivion.esm:032d7a": 1,
+          "content:oblivion.esm:032d6f": 1,
+          "content:oblivion.esm:06feba": 1,
+          "content:oblivion.esm:03e4c7": 1,
+          "content:oblivion.esm:06febb": 1,
+          "content:oblivion.esm:0a7541": 1
+        },
+        "cask_after": {},
+        "player_added": {
+          "content:oblivion.esm:00000f": 20
+        },
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "8b8e2db21ce3c3dc97891ac5221c329a6573bcafa26edb4d732720509c671cc2",
+        "scenario.json": "e3f2477b7a9ab6d2a3d9cc551fd35e506b060ac71ab93dbe493f14127405e37b",
+        "driver-process.json": "5a430d2a572b8d90d61b343ee3130c2514156f1cd355792ab658e5c3760c93c4",
+        "process-epoch.json": "496ed177200e9735344614e85046ff7265b6e1d438e610bc3e7482fe75ec3533",
+        "captured-input-manifest.json": "40c3e95b3b7473e47f5679604aac476089701abebdd96cb104ae641cf2e463a0",
+        "loaded-libraries.json": "bc347fd00c112bf6885938d0f49137e132bfc04b6093b5a5cc29cf0bf7ebd8a1",
+        "original-cask-actual-loot.png": "2d033d4bb5eabd870db229e82b2931fe966d56bbdac4aa95bcdae3a0bd787f82"
+      }
+    },
+    "normal-open-close-01": {
+      "audit": {
+        "passed": true,
+        "phase": "open-close",
+        "source_sha256": "0a89f411f0aab9518297408e46316da92c1399b864f2885ef736a58304403110",
+        "save_sha256": "d6be2f71c9db6a336de6f0fb86ff756f331423534ee296acb765bde701748854",
+        "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f",
+        "process": 1419164,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:014931": 1,
+          "content:oblivion.esm:0cb214": 1,
+          "content:oblivion.esm:032d7a": 1,
+          "content:oblivion.esm:032d6f": 1,
+          "content:oblivion.esm:06feba": 1,
+          "content:oblivion.esm:03e4c7": 1,
+          "content:oblivion.esm:06febb": 1,
+          "content:oblivion.esm:0a7541": 1
+        },
+        "cask_after": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:00000f": 10,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "player_added": {},
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "9d8d35277059a8545b3e0f1faa3862cbac0d412d04345d4e727191878b0468e1",
+        "scenario.json": "2e368c5bbe31368a8f63c959ee35ccb00aa397d68f65d90a4e34ea0214c8e96b",
+        "driver-process.json": "6f0fa2c4417f1ac90ac3c3a8aae4ed1d7f0c45b35eb876295f2326df6f9d3172",
+        "process-epoch.json": "8c6e0d8a30a6a05f8f42418e0bdf3090d27246fc3748281aba17c1d50cdc3262",
+        "captured-input-manifest.json": "31f8ec8d2d0475e60da93d94a83ec676ee10f7c1ea3ccb21c6520add8b9d5ef4",
+        "loaded-libraries.json": "56b147f4c3c4307ae59145a89239e10bba2ad386fc3ccde1dff69c5b85f1f02f",
+        "original-cask-open.png": "38d280c3a2ded1955976537522ff7b79956c0243a62daed1babff4657cbc3694"
+      }
+    },
+    "normal-select-gold-02": {
+      "audit": {
+        "passed": true,
+        "phase": "select",
+        "source_sha256": "d6be2f71c9db6a336de6f0fb86ff756f331423534ee296acb765bde701748854",
+        "save_sha256": "7b44ce5c208ceb5b4f1e1eeba4c8c4338129e99032cfeaadff0a28c3cc18b4b5",
+        "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f",
+        "process": 1419479,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:00000f": 10,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "cask_after": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "player_added": {
+          "content:oblivion.esm:00000f": 10
+        },
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "2921b2f8b7168f7df3660841a70b56bfa2e18ec10be4079320554d301a23578e",
+        "scenario.json": "a4a287ec67f567763ae1df9eeeeed18a99483a29e26a7328266f6340d2e64f40",
+        "driver-process.json": "a2d14cea9e3727812e03c3d3f5ef05f3c1bd678b2f7defc0507578218b31104d",
+        "process-epoch.json": "51d0973d79c1219fe3fa4fec401067ba017b74581d32906271df5c814d7b6623",
+        "captured-input-manifest.json": "790ed863f629a9e6443b31542e6efb088de99fc43000e663cec561517ae27577",
+        "loaded-libraries.json": "d2e327743cde869ce0d0613fef0352269f27ce580331fe022a65dc2c1712ad3d",
+        "after-select.png": "96bda20096cd36922287d94676bd78aebabbcbe93d3822a1eaa260cf4671f437",
+        "before-select.png": "d10e79a5c1ad4bfa4a665733f14e7624f88f9d694533eafc43b7716228d58706"
+      }
+    },
+    "normal-take-all-01": {
+      "audit": {
+        "passed": true,
+        "phase": "take-all",
+        "source_sha256": "7b44ce5c208ceb5b4f1e1eeba4c8c4338129e99032cfeaadff0a28c3cc18b4b5",
+        "save_sha256": "924ddf38ca363770591e22c89852717c6e423296db24df4e55cb6d5499939157",
+        "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f",
+        "process": 1419709,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "cask_after": {},
+        "player_added": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "056ca3bda3e3b82e3ba9907c875cb152dc1854ce69de543bdbb9e08d788b1479",
+        "scenario.json": "9159b7751aa0d52fe6d0938e4028d68ed4033cc485e2c3a85203d228018ff127",
+        "driver-process.json": "07104ca65e773142cb68445a44483b9adf527be9aedfa64d81c3bed8a678e4dd",
+        "process-epoch.json": "c98b78499465a80e32fbb669772e08adda280fd15a17c3b930883560098eac54",
+        "captured-input-manifest.json": "7d3e9c04484533d1782adcdc0950f274948e9edf496db29732b8234a871be1f5",
+        "loaded-libraries.json": "efe81857c7fcafc51b31f86b58310a6d36752f8eff0c0a80743df19a89d1baa2",
+        "original-cask-open.png": "e1ff4ae893014aef218b21b4d053f70000775128e107e422fadc9303c1c32d27"
+      }
+    },
+    "normal-empty-restart-01": {
+      "audit": {
+        "passed": true,
+        "phase": "empty",
+        "source_sha256": "924ddf38ca363770591e22c89852717c6e423296db24df4e55cb6d5499939157",
+        "save_sha256": "b23acab4f165351d71e81185fd985fa4bedca5c15120ca825eac78de2db78637",
+        "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f",
+        "process": 1419883,
+        "health": 53.00106430053711,
+        "cask_before": {},
+        "cask_after": {},
+        "player_added": {},
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "63923b4175d6b2723d44796f153f4e6fa0edc6b3539e3e75e0fdccb8def10900",
+        "scenario.json": "88a79058a100229daaa740a7497424f02568e7bf048bcf63de496a731219d3b6",
+        "driver-process.json": "36492613da7eca50713fdab1f54e6823bced75aa41d84fdde631f4f9fabb81ad",
+        "process-epoch.json": "3f95870f04992fdfe8659cec171e316c5181c466e7e456b611bd7789b33205ab",
+        "captured-input-manifest.json": "7b4217fe52b7132838bb991afb5e4985b108905ca161ceacddfe9db979f72f9a",
+        "loaded-libraries.json": "567cc266560b84186d05a43973f14d8495fa449c1af74b537358819144ed10ca",
+        "original-cask-open.png": "0ca56262aa1afd466740ba9dd97880d21fe96ac2ac6185e789b53cc7696bcfe3"
+      }
+    },
+    "normal-same-process-01": {
+      "audit": {
+        "passed": true,
+        "phase": "reload",
+        "source_sha256": "7b44ce5c208ceb5b4f1e1eeba4c8c4338129e99032cfeaadff0a28c3cc18b4b5",
+        "save_sha256": "4fae2f182433005d72f768720ee6822c4469d8fc5b3145c4a240b84e9a1c2e47",
+        "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f",
+        "process": 1420036,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "cask_after": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "player_added": {},
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "53e57a28f2bb4bbc2709706fd414aa8e1ce0ccb0d16968c232e52527a7ffff8a",
+        "scenario.json": "3a185d05b3db3ef7820a3fcf6d6cb5215b24a3bae7b4ae3d893b7daed2bf9795",
+        "driver-process.json": "ab32b9252b280115bbf6173fba3c3703dcbf5614844a2d79afd864eb0544c42f",
+        "process-epoch.json": "c6d6097d61d11948688d5b8ef55948dfcc35d36d14a3f86bc45f78a64c51fdc6",
+        "captured-input-manifest.json": "8f2f17848ba4d10997b8a31a01fa85d47434234f43c262052538c6461fe440ca",
+        "loaded-libraries.json": "dcdd1cb54a791f1bbf3dad6a9f848f68792477f362f0e887a0ab6da33be00ea7",
+        "same-process-after-take-all.png": "0b3464ffacc23263068e9183566b4f0aabc7b46916faa21948d533dcba73de66",
+        "same-process-initial-stock.png": "c8abe0b92485faf307ba217899f17cc8e68e836df8e6cdc12689739fcfcf8cfa",
+        "same-process-reopened-stock.png": "3f7d4091a4423e541253d9ed2e464c8bee2c6925a77add4dcd655095c7cd7e22"
+      }
+    },
+    "normal-take-all-keyboard-02": {
+      "audit": {
+        "passed": true,
+        "phase": "take-all",
+        "source_sha256": "7b44ce5c208ceb5b4f1e1eeba4c8c4338129e99032cfeaadff0a28c3cc18b4b5",
+        "save_sha256": "225eeea5bce4a699f1349b8c8a3dbc6f79f8b37b9d395372c30c08158f2137bc",
+        "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f",
+        "process": 1420832,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "cask_after": {},
+        "player_added": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "a6213b95b5cc0dbc38e85561310a461aaf642d8101fc89e2f746b34e123f4876",
+        "scenario.json": "fd8a4816486c3cb97dac9d8b8dbc17a25d5a94ff521f738361bec622084e32b6",
+        "driver-process.json": "cab07e92135c4830a56d0c099cddd9e4fd4772c828692c831940e316f5f349a0",
+        "process-epoch.json": "de65af07904d5fd52916326e625df1ec31feef330cb686afe88994442723a93d",
+        "captured-input-manifest.json": "26e2025cbc4aa49c68827a1186cd7f12e1fb26d5d25156c6fdcf4b51c9af61ae",
+        "loaded-libraries.json": "ca020cf41c17f2b26c9f908b21bca0260b141a11ec486467e0e96ebb97c3eaae",
+        "after-select.png": "251029d57179ae4eab04d8d02574dbcab7ec8bba407bff78e6fc6f86951f6ffd",
+        "before-select.png": "ddcffe5398e410c37d0e04f4efc64df6a5cf1d5500a4e7cf299179e3e050e44b"
+      }
+    },
+    "normal-locked-window-attempt-01": {
+      "audit": {
+        "passed": true,
+        "phase": "attempt-window",
+        "source_sha256": "add795ead46d2d4b593da4eee2d6357c8c82247f5c5f8c5cb17563f06b103b7a",
+        "save_sha256": "234c2beae610b8fb6360d13cb9804623aa50f9049cf1b386ff5ea4a0cb4156a8",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 8,
+        "picks_after": 8,
+        "attempts": 1,
+        "failures": 0,
+        "pause": {
+          "wall_seconds": 8.000080367084593,
+          "simulated_seconds_including_boundary_frames": 0.18000000342729994
+        },
+        "loot_delta": {
+          "content:oblivion.esm:09847f": 1,
+          "content:oblivion.esm:00000f": 6
+        },
+        "process": {
+          "pid": 1420244,
+          "start_ticks": 208933042,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/container-window/normal-locked-window-attempt-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-cask-short-dive-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f"
+        },
+        "cask_locked": false,
+        "source_unchanged": true
+      },
+      "artifacts": {
+        "audit.json": "7a17689d8f3e31464e66a98d114248c8105617251038e5d3dea919db37415a36",
+        "scenario.json": "abf4111dd4e515b64553920d0d258f5471485caf99403faff6a83c85e7fb3954",
+        "driver-process.json": "56c393b1cfa3df9b23619d08f3c3eabee76c95758240fc97b80428504f62baf7",
+        "process-epoch.json": "2394c3b70e4a4c80f060b35c886f64a762a51a22959f0d6f00f26876d2ca6c79",
+        "captured-input-manifest.json": "d12d490e35d7aee34a63d75a4d5e1d826ef061d2c0b61e30acb8a456f8079eee",
+        "loaded-libraries.json": "7788913cf858585687d9c0ba170f1d80c70faa35c43f03587bd981908b7deffe",
+        "paused-original-cask-lock.png": "49b612f8f6b5bf9e6dfb94c296f82935b6f2cf9bbef1aabe20c8aee7c0f62df7",
+        "unlocked-cask-window.png": "15316d79f9eda63d891dc9957149552b589d17eb984676f733afda8d2e3d4d2d"
+      }
+    },
+    "normal-locked-window-cancel-01": {
+      "audit": {
+        "passed": true,
+        "phase": "cancel",
+        "source_sha256": "add795ead46d2d4b593da4eee2d6357c8c82247f5c5f8c5cb17563f06b103b7a",
+        "save_sha256": "4595cb022d5dc8008be7768fc32489e379ef7bc5ceb2eb2762629e37c5e79aa5",
+        "schema": 98,
+        "health": 53.00106430053711,
+        "picks_before": 8,
+        "picks_after": 8,
+        "attempts": 0,
+        "failures": 0,
+        "pause": {
+          "wall_seconds": 8.00007786997594,
+          "simulated_seconds_including_boundary_frames": 0.166000008583
+        },
+        "loot_delta": {},
+        "process": {
+          "pid": 1420460,
+          "start_ticks": 208941565,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/container-window/normal-locked-window-cancel-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-cask-short-dive-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f"
+        },
+        "cask_locked": true,
+        "source_unchanged": true
+      },
+      "artifacts": {
+        "audit.json": "411a439d280c8eca53fa530a2f3a60ab76d32be2be96a131f59f55dc098dd761",
+        "scenario.json": "6159861b8ae37bf4c30365b97d6dae31709e96e8f84f5ff4dc72aad379831933",
+        "driver-process.json": "2ff2e83c4dbe9527b5cf33a8c0ff76051a4cd681625cc427ad257600948bb7b2",
+        "process-epoch.json": "d9c004285cf82c4aa8c61f684f9b8a37e675c4784778482ad600b3fbc1a63f85",
+        "captured-input-manifest.json": "ef392832dae4167eed60b1345443b463ab967b882b3052ec08626814a8bdb7c0",
+        "loaded-libraries.json": "768659c80cf7c417acd435d1c56e43f7cc7a18e1efc5124ad69f8160145920ca",
+        "paused-original-cask-lock.png": "55229fa0a1429097944e645bc3ebd8f8811d2a487aa2edd5898b22ec74b8b266"
+      }
+    },
+    "normal-food-sack-window-03": {
+      "audit": {
+        "passed": true,
+        "phase": "food-sack-keyboard-take-all",
+        "source_sha256": "eab6a2452e4a707d2b5284e1552bbac6996bf80ea92e2f532a9460f60cc7a107",
+        "save_sha256": "602cd3cf5487d52abf465c71073d3c8887e38bca5a786a500393535da6aa93e2",
+        "exe_sha256": "003c9e3589d70cd08fdbb0629447c41208548cf5e1cc7777542ac06c0581ef9f",
+        "player_added": {
+          "content:oblivion.esm:033666": 1,
+          "content:oblivion.esm:033681": 1,
+          "content:oblivion.esm:03368b": 1,
+          "content:oblivion.esm:03368c": 1
+        },
+        "schema_before": 91,
+        "schema_after": 98,
+        "original_authored_inventory": [
+          {
+            "base": "content:oblivion.esm:053f26",
+            "count": 4,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 0,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null
+          }
+        ]
+      },
+      "artifacts": {
+        "audit.json": "707ad33fc46749867e0333ae22d138e60372f0d982824fb3943be11960096c06",
+        "scenario.json": "49d44b36357760965f4d54575849484ad0de4496b5d7bf005580e7f254845b58",
+        "driver-process.json": "0d4f6418fc00a18189f29d4aa76594315b11c4b9bde728315549ade7a77c82c4",
+        "process-epoch.json": "ee431254f0e75646315258da0a99534435c13e22f4719a6284efb45b8cc0cd39",
+        "captured-input-manifest.json": "84aaa9387905c5e7410877925fc3048e40c66a89f80df3e18a33b33c7fc0063b",
+        "loaded-libraries.json": "9f5fc8c76df8403c90da9ee43a50f968a63dcedab8dacce765feef2373e08513",
+        "original-food-sack-before-activation.png": "af42374739d187d90f8bf57f83eaedc5bb0ec1bc79087775d4911988497c3e94",
+        "original-food-sack-selection-window.png": "7d668bd95b35fe6e7f552ff0b003953ceb7fc4b14d3b993a555604c84200fff4"
+      }
+    }
+  },
+  "normal_evidence": {
+    "path": "build/oblivion-compat/container-window/normal-gameplay-receipt.json",
+    "sha256": "b14a71ed7c1d59b7b5d1d3b7f1aeb1ccaf1a4e0b0566c425652889b583ad16ac"
+  },
+  "gates": {
+    "normal": {
+      "path": "build/oblivion-compat/container-window/normal-integration-01/verification.json",
+      "sha256": "96793a59b342a59c66ef30ca86e86597f18de4ee71e007e5188c6d8b06504b61",
+      "source": {
+        "head": "3df67e07d5f5d8ff2da9706edd473494ed742891",
+        "source_fingerprint": "9d83aed534279e59f72121451a684e212b446b96f63d43fa65596f036a9ded8a"
+      },
+      "results": {
+        "python": {
+          "executed": 611,
+          "passed": true,
+          "log_sha256": "72510edcc755e9573ed0ab30f3bf132584e34e0e8cf34de9dfa385cc17f6d5ac"
+        },
+        "engine": {
+          "executed": 2276,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c65a6f5c2d81fb364b26796038a0c82dfb9afa95c9b8293972dd88cf285bce67",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ef2f8acefeecaff6b5ee8b89e5d113b06cd9d6dfae85dc0d46e742a3c1a08dbd",
+          "inventory_sha256": "248fcc1d75ff54cd37172cd43cf0bc3114ade4c52cd110a0ee99cfe3d26ec8bb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/container-window/sanitized-integration-01/verification.json",
+      "sha256": "aca7b5405f7e7469fe81ea205a7638bcab1aca6af5a7a20dafd86db25fbd63b0",
+      "source": {
+        "head": "3df67e07d5f5d8ff2da9706edd473494ed742891",
+        "source_fingerprint": "9d83aed534279e59f72121451a684e212b446b96f63d43fa65596f036a9ded8a"
+      },
+      "results": {
+        "engine": {
+          "executed": 2276,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8af3abe2fbb318e8271d0e8fa13a90fe29479d783dcdd60cffb1e50cda6065b3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "52fc3ac7f4d9de599cb1b3350bb5414676c9eff47079aa56de76d598292c6d13",
+          "inventory_sha256": "248fcc1d75ff54cd37172cd43cf0bc3114ade4c52cd110a0ee99cfe3d26ec8bb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "instrumented_cases": {
+    "sanitized-open-close-01": {
+      "audit": {
+        "passed": true,
+        "phase": "open-close",
+        "source_sha256": "0a89f411f0aab9518297408e46316da92c1399b864f2885ef736a58304403110",
+        "save_sha256": "5621f170dfe9f94109cf5327267bc7219cd37f495af5fe4a64d2a6a167c6dd47",
+        "exe_sha256": "034c526bf52192f4be0c95e0ea58f546b9cc632b5c78ab50b280d1cbca509d3f",
+        "process": 1436302,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:014931": 1,
+          "content:oblivion.esm:0cb214": 1,
+          "content:oblivion.esm:032d7a": 1,
+          "content:oblivion.esm:032d6f": 1,
+          "content:oblivion.esm:06feba": 1,
+          "content:oblivion.esm:03e4c7": 1,
+          "content:oblivion.esm:06febb": 1,
+          "content:oblivion.esm:0a7541": 1
+        },
+        "cask_after": {
+          "content:oblivion.esm:00000f": 14
+        },
+        "player_added": {},
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "37d4c264652cbfdd2e683d1018bd82d69303afc7f6327d2927d750227cf6cdb9",
+        "scenario.json": "c73d61b215bc71ee5bbd77a30d6802523c7d3763cb52ef824d87bf0b3eb918ac",
+        "driver-process.json": "58d55b144e13cadc0763ac63dbdcbffada6f6793865957c3dae0d10133ea655a",
+        "captured-input-manifest.json": "8f6165213b3ea4ce850f64579def33403e9a310fc3106b980c6b4a691d1d612b",
+        "process-epoch.json": "f7053e8f50038445d456afd239bdc43a9d82d82d32b37f5ee67b8947a644834e",
+        "loaded-libraries.json": "7671f151fa752529124dd31ee09f637074ab19478f0975c3c9f8bd44b8695c0d",
+        "observed-sanitizer-environment.json": "8a7aa62d98b2f963ac1eb2572349b0c06aaae851406883560926cbfba57f66ad",
+        "events.jsonl": "67ba70b26d604f72ce4d12ec4b2be24ee30d25e4f919a061a195229b7f9e79b6",
+        "original-cask-open.png": "5906e475fde2f722706d22d1c2be560988a290e6f152212dbd1db3f882de6a74"
+      }
+    },
+    "sanitized-select-gold-03": {
+      "audit": {
+        "passed": true,
+        "phase": "select",
+        "source_sha256": "d6be2f71c9db6a336de6f0fb86ff756f331423534ee296acb765bde701748854",
+        "save_sha256": "530046cb58d3455f8f1bf3d8d456ce77e4090189ce15dde326d02d341aa72cf0",
+        "exe_sha256": "034c526bf52192f4be0c95e0ea58f546b9cc632b5c78ab50b280d1cbca509d3f",
+        "process": 1437657,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:00000f": 10,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "cask_after": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "player_added": {
+          "content:oblivion.esm:00000f": 10
+        },
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "3d3994fd56876bf4404c88474f36c12a11c06788dae4858bea8bf4fc0b5ead4d",
+        "scenario.json": "6d0dcabbaa42c82b0939644af29239f89056ae5264c4e0130dc99dc0a927a1df",
+        "driver-process.json": "01d8e7632a0e7067b7712742fe0874a8bdd2a937d12060d509ed17679f7c4773",
+        "captured-input-manifest.json": "080e424fdc5a99a5e47b0d2191325ce4166f6b844022fb3d2e1a5c6b939136f0",
+        "process-epoch.json": "8e989b2a91c57335f472dc4ad008cd676badbfb962da97934c9aa9581cb1f25e",
+        "loaded-libraries.json": "69ca0e0da8710d7a838dd74eb8967700e8a22a479eba3fc863e493adb7342ba9",
+        "observed-sanitizer-environment.json": "da71ff2c7db1d06071f09744ba8303bdb7e4a45d521a21d89cddb8d011b90ba9",
+        "events.jsonl": "0186fd81e615e55e5c466e83b3e12641cc838afceb2a984cbef3e3a2967d44f4",
+        "after-select.png": "e3c21be1714b21c79fc8d11c2943a28fe9bc5b5ff3ff919053e2aadf24f86cd9",
+        "before-select.png": "f016db1f2a484370928b614169a5b9274771e12ed7256a82a0f01c21f88d8bf4",
+        "x11-click.json": "069392e81b5ab97e82976520913d4b57960fa29a22243a1e8c3530c571df9718"
+      }
+    },
+    "sanitized-same-process-01": {
+      "audit": {
+        "passed": true,
+        "phase": "reload",
+        "source_sha256": "530046cb58d3455f8f1bf3d8d456ce77e4090189ce15dde326d02d341aa72cf0",
+        "save_sha256": "6f63809777e65f7b98381cfd8f55c96686db0320c2b1d92a3306928823b85c89",
+        "exe_sha256": "034c526bf52192f4be0c95e0ea58f546b9cc632b5c78ab50b280d1cbca509d3f",
+        "process": 1438115,
+        "health": 53.00106430053711,
+        "cask_before": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "cask_after": {
+          "content:oblivion.esm:00920f": 1,
+          "content:oblivion.esm:017829": 6,
+          "content:oblivion.esm:000c0c": 1
+        },
+        "player_added": {},
+        "player_removed": {}
+      },
+      "artifacts": {
+        "audit.json": "bd5215f2f1cac36668789905815cc61e7a4ac334b1744c0b7c11b33d34451374",
+        "scenario.json": "2576180ae1ab4fdef04ef41063d73dca2b37a4760b162993828bf610658cd6f5",
+        "driver-process.json": "372892d4529caf6dcf19be6e2840ff3714ef127122a00b5de397338ab04ac6a3",
+        "captured-input-manifest.json": "6326183f2e04a90267ddaed6f93c07d9aa04efe3d8f1159af6be2f9c2ee790a0",
+        "process-epoch.json": "5e534d6ae8cd30af1e5b35b5f396ffd1f02c91ad74f7b585502f53582dea3442",
+        "loaded-libraries.json": "09f98e904929c88bd6c560f56a079439381ec9d1b9a7361d19d8d778e40da6c9",
+        "observed-sanitizer-environment.json": "b2c4783cfee78cf7aff3f42aa3eb7dc80a655df45aeb226cf1b6891229ea628b",
+        "events.jsonl": "6c06aeda41dcfcc85a50efa301e656e3836711010ec558b59f1b9d703c189b5a",
+        "same-process-after-take-all.png": "f30c33706253a92f034bbdf6ba4a336613511e317cb7dd587e9fefb726191eb8",
+        "same-process-initial-stock.png": "35ba6bfd385252a40c65815700edda71fa3824a92c05cb19418aec757bc09196",
+        "same-process-reopened-stock.png": "b798f485fd9e091edc3673e1f0b13982084babaeaa4f23974199e706197f2690"
+      }
+    }
+  },
+  "retained_attempts": {
+    "sanitized-select-gold-01": {
+      "result": "The X11 activation did not reach the cask window.",
+      "scenario_sha256": "76eb56fff39045bf709f95b1fd2c058906da3883e4b0c1e9035f63b154e51ee4"
+    },
+    "sanitized-select-gold-02": {
+      "result": "SDL activated the cask. The D-pad barrier failed to acknowledge input and blocked the queued quit.",
+      "cleanup_sha256": "dc0a013e1221c88da505ad24344ef5c8be7cd80eb5afd2c0776d53333694ce07"
+    }
+  },
+  "oracle": {
+    "path": "docs/oblivion/AYLEID-CASK-SELECTION-ORACLE.json",
+    "sha256": "bb01d773dd8d38c7ec14d5601438e158a28d13cef1028b48b651c0fad8f31ddb"
+  },
+  "component_coverage": "Unchanged components use the prior provenance recorded in AYLEID-CASK-LOCK-VERIFICATION.json.",
+  "continuation": {
+    "path": "build/oblivion-compat/container-window/normal-empty-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "b23acab4f165351d71e81185fd985fa4bedca5c15120ca825eac78de2db78637"
+  }
+}
