@@ -1171,6 +1171,17 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 potion attribute ownership");
         for (const auto& effect : mPotionAttributeEffects)
             effect.validate();
+        if (mPotionLightEffects.size() > sMaximumCollectionSize
+            || (!mPotionLightEffects.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 potion Light ownership");
+        for (const auto& effect : mPotionLightEffects)
+            if (!effect.mPotion.isContent() || !effect.mLight.isContent()
+                || ESM::FormKey::deserialize(effect.mPotion.serialize()) != effect.mPotion
+                || ESM::FormKey::deserialize(effect.mLight.serialize()) != effect.mLight
+                || !std::isfinite(effect.mMagnitude) || effect.mMagnitude <= 0
+                || !std::isfinite(effect.mDuration) || effect.mDuration <= 0
+                || !std::isfinite(effect.mElapsed) || effect.mElapsed < 0 || effect.mElapsed >= effect.mDuration)
+                throw std::runtime_error("Invalid TES4 potion Light source or lifetime");
         if (mMeleeParalysis.size() > sMaximumCollectionSize)
             throw std::runtime_error("TES4 melee paralysis list exceeds the size limit");
         std::set<std::uint64_t> paralysisCauses;
@@ -2122,6 +2133,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 99 && !actor.mPotionLightEffects.empty())
+                throw std::runtime_error("TES4 potion Light requires schema99");
             if (mVersion < 95 && !actor.mUsedPowers.empty())
                 throw std::runtime_error("TES4 greater-power history requires runtime-state version95");
             if (mVersion < 94 && !actor.mPotionAttributeEffects.empty())
@@ -3556,6 +3569,18 @@ namespace ESM4
                         writer.floating(power.mUsedAt);
                     }
                 }
+                if (mVersion >= 99)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mPotionLightEffects.size()));
+                    for (const auto& effect : actor.mPotionLightEffects)
+                    {
+                        writeKey(writer, effect.mPotion);
+                        writeKey(writer, effect.mLight);
+                        writer.floating(effect.mMagnitude);
+                        writer.floating(effect.mDuration);
+                        writer.floating(effect.mElapsed);
+                    }
+                }
             }
         }
         if (mVersion >= 11)
@@ -4799,6 +4824,13 @@ namespace ESM4
                     const auto powerCount = reader.count();
                     for (std::uint32_t j = 0; j < powerCount; ++j)
                         actor.mUsedPowers.push_back({nativeKey(), reader.float64()});
+                }
+                if (result.mVersion >= 99)
+                {
+                    const auto count = reader.count();
+                    for (std::uint32_t j = 0; j < count; ++j)
+                        actor.mPotionLightEffects.push_back(
+                            {nativeKey(), nativeKey(), reader.float32(), reader.float32(), reader.float32()});
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
@@ -6282,6 +6314,22 @@ namespace ESM4
                                 << ",\"delta\":" << std::setprecision(17) << modifier.mDelta << '}';
                         }
                         stream << "]}";
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 99 && !actor.mPotionLightEffects.empty())
+                {
+                    stream << ",\"potion_light_effects\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mPotionLightEffects)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"potion\":\"" << escapeJson(effect.mPotion.serialize())
+                            << "\",\"light\":\"" << escapeJson(effect.mLight.serialize())
+                            << "\",\"magnitude\":" << std::setprecision(17) << effect.mMagnitude
+                            << ",\"duration\":" << effect.mDuration
+                            << ",\"elapsed\":" << effect.mElapsed << '}';
                     }
                     stream << ']';
                 }

@@ -1,0 +1,50 @@
+{
+  "status": "verified for the bounded earned-bottle course; full M16 remains open",
+  "milestone": "M16",
+  "item": {
+    "form_key": "content:oblivion.esm:09847f",
+    "editor_id": "PotionLightW",
+    "name": "Weak Potion of Light"
+  },
+  "effect": {
+    "form_key": "content:oblivion.esm:001882",
+    "code": "LGHT",
+    "magnitude": 20,
+    "duration_seconds": 60
+  },
+  "acquisition": {
+    "reference": "content:oblivion.esm:066e79",
+    "receipt": "AYLEID-CASK-SELECTION-VERIFICATION.json",
+    "course": "normal-locked-window-attempt-01",
+    "save_sha256": "234c2beae610b8fb6360d13cb9804623aa50f9049cf1b386ff5ea4a0cb4156a8"
+  },
+  "evidence_root": "build/oblivion-compat/potion-light",
+  "acceptance": [
+    "Surface alive with the earned bottle by ordinary movement. Use it through the regular inventory on a disposable baseline branch.",
+    "Observe the original executable consuming the authored bottle and illuminating a dark room. Use a fixed view for brightness comparisons and an isolated named save for an active reload.",
+    "Consume exactly one bottle on successful use. The light follows the player and illuminates nearby geometry. The authored duration advances on simulation time.",
+    "Save and cold-load during the active effect. Preserve the remaining duration and depleted inventory. Expiration removes the illumination once and persists across another reload.",
+    "Audit rendered gameplay and native saved state. Run the applicable integration checks."
+  ],
+  "oracle": "WEAK-POTION-OF-LIGHT-ORACLE.json",
+  "replay_recipes": [
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_active_restart.json",
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_active_restart_sanitized.json",
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_expired_restart.json",
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_expired_restart_sanitized.json",
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_movement.json",
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_movement_sanitized.json",
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_nearby_view.json",
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_use.json",
+    "scripts/data/oblivion_compat/oblivion_weak_potion_light_use_sanitized.json"
+  ],
+  "verifier": "scripts/verify_weak_potion_light.py COURSE PHASE --dark-view SAME-VIEW-DARK-PNG",
+  "replay_source": {
+    "path": "build/oblivion-compat/potion-light/normal-nearby-earned-potion-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "180441056e20c9ec72bd5685e6e7890e3cee9c7be0db94fdb8b2a7a4b4b99847",
+    "framing_audit": "build/oblivion-compat/potion-light/normal-nearby-earned-potion-03/audit.json",
+    "potion_count": 1,
+    "health": 53.00106430053711
+  },
+  "verification": "WEAK-POTION-OF-LIGHT-VERIFICATION.json"
+}

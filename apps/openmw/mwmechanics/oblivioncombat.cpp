@@ -5927,6 +5927,17 @@ namespace MWMechanics
             }
             prepareIngredientRestoration(candidate, elapsed, deadOrEssential, processEffects);
             prepareScrollChameleon(candidate, elapsed, dead, processEffects);
+            if (processEffects)
+            {
+                for (auto& light : candidate.mPotionLightEffects)
+                    light.mElapsed += elapsed;
+                std::erase_if(candidate.mPotionLightEffects, [&](const auto& light) {
+                    if (!dead && light.mElapsed < light.mDuration) return false;
+                    Log(Debug::Info) << "M16 potion Light expired: potion=" << light.mPotion.serialize()
+                                     << " elapsed=" << light.mElapsed << " dead=" << dead;
+                    return true;
+                });
+            }
             if (applications && !prepareParalysis)
                 throw std::invalid_argument("native paralysis application requires World preparation");
             for (unsigned i = 0; i < applications; ++i) prepareParalysis();

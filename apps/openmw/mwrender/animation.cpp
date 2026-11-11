@@ -4337,15 +4337,17 @@ namespace MWRender
             mExtraLightSource->setActorFade(alpha);
     }
 
-    void Animation::setLightEffect(float effect)
+    void Animation::setLightEffect(float effect, const ESM4::Light* definition)
     {
-        if (mPlaybackPeer) mPlaybackPeer->setLightEffect(effect);
+        // Both Player views collect lights on update, including the view hidden during cull.
+        if (mPlaybackPeer) mPlaybackPeer->setLightEffect(definition ? 0.f : effect);
         if (effect == 0)
         {
             if (mGlowLight)
             {
                 mInsert->removeChild(mGlowLight);
                 mGlowLight = nullptr;
+                mGlowLightDefinition = nullptr;
             }
         }
         else
@@ -4353,9 +4355,9 @@ namespace MWRender
             // 1 pt of Light magnitude corresponds to 1 foot of radius
             float radius = effect * std::ceil(Constants::UnitsPerFoot);
             // Arbitrary multiplier used to make the obvious cut-off less obvious
-            float cutoffMult = 3;
+            const float cutoffMult = definition ? 1.f : 3.f;
 
-            if (!mGlowLight || (radius * cutoffMult) != mGlowLight->getRadius())
+            if (!mGlowLight || (radius * cutoffMult) != mGlowLight->getRadius() || definition != mGlowLightDefinition)
             {
                 if (mGlowLight)
                 {
@@ -4363,13 +4365,23 @@ namespace MWRender
                     mGlowLight = nullptr;
                 }
 
+                const bool exterior = mPtr.isInCell() && mPtr.getCell()->getCell()->isExterior();
+                mGlowLightDefinition = definition;
+                if (definition)
+                {
+                    SceneUtil::LightCommon appearance(*definition);
+                    appearance.mRadius = radius;
+                    mGlowLight = SceneUtil::createLightSource(appearance, Mask_Lighting, exterior, osg::Vec4f());
+                    mInsert->addChild(mGlowLight);
+                    return;
+                }
+
                 osg::ref_ptr<SceneUtil::Light> light(new SceneUtil::Light);
                 light->setDiffuse(osg::Vec4f(0, 0, 0, 0));
                 light->setSpecular(osg::Vec4f(0, 0, 0, 0));
                 light->setAmbient(osg::Vec4f(1.5f, 1.5f, 1.5f, 1.f));
 
-                bool isExterior = mPtr.isInCell() && mPtr.getCell()->getCell()->isExterior();
-                SceneUtil::configureLight(light, radius, isExterior);
+                SceneUtil::configureLight(light, radius, exterior);
 
                 mGlowLight = new SceneUtil::LightSource;
                 mGlowLight->setNodeMask(Mask_Lighting);

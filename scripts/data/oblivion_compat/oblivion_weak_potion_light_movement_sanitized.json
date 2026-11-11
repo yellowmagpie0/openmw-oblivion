@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "name": "Move with the consumed original Weak Potion of Light under ASan and UBSan",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal camera=require('openmw.camera')\nlocal t=0\nlocal origin=nil\nreturn {{engineHandlers={{onFrame=function(dt)\n t=t+dt;if t<.2 then return end;t=0\n if not origin then origin=self.position end\n if (self.position-origin):length()>=100 then print('PotionLight backstep reached') end\n assert(not Actor.isDead(self),'Player died during original potion inventory survey')\n print('VilverinContinue potion stock='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x9847f))..' health='..Actor.stats.dynamic.health(self).current..' magicka='..Actor.stats.dynamic.magicka(self).current..' fatigue='..Actor.stats.dynamic.fatigue(self).current..' position='..tostring(self.position)..' pitch='..camera.getPitch()..' paused='..tostring(core.isWorldPaused()))\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": ""
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinContinue potion stock=0",
+      "timeout_seconds": 420,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "pool-surface-active.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "pool-level-active.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "s"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "PotionLight backstep reached",
+      "timeout_seconds": 120,
+      "maximum_iterations": 1200,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "sleep",
+          "seconds": 0.1
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "s"
+        }
+      ]
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "pool-backstep-active.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "VilverinContinue potion stock=0",
+    "position=",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died during original potion inventory survey",
+    "M16 potion Light applied",
+    "M16 potion Light expired"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "earned-potion-light-movement",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

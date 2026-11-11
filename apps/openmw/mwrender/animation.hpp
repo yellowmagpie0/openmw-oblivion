@@ -35,7 +35,7 @@ namespace ESM
     struct MagicEffect;
 }
 
-namespace ESM4 { struct RuntimeMeleePoseSnapshot; }
+namespace ESM4 { struct Light; struct RuntimeMeleePoseSnapshot; }
 
 namespace Resource
 {
@@ -366,6 +366,7 @@ namespace MWRender
         bool mHasMagicEffects;
 
         osg::ref_ptr<SceneUtil::LightSource> mGlowLight;
+        const ESM4::Light* mGlowLightDefinition = nullptr;
         osg::ref_ptr<SceneUtil::GlowUpdater> mGlowUpdater;
         osg::ref_ptr<TransparencyUpdater> mTransparencyUpdater;
         osg::ref_ptr<SceneUtil::LightSource> mExtraLightSource;
@@ -929,7 +930,7 @@ namespace MWRender
         // TODO: move outside of this class
         /// Makes this object glow, by placing a Light in its center.
         /// @param effect Controls the radius and intensity of the light.
-        virtual void setLightEffect(float effect);
+        virtual void setLightEffect(float effect, const ESM4::Light* definition = nullptr);
 
         virtual void setHeadPitch(float pitchRadians);
         virtual void setHeadYaw(float yawRadians);

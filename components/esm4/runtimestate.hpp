@@ -78,7 +78,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 98;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 99;
 
     struct RuntimeContentIdentity
     {
@@ -373,6 +373,16 @@ namespace ESM4
         friend bool operator==(const RuntimeIngredientRestoration&, const RuntimeIngredientRestoration&) = default;
     };
 
+    struct RuntimePotionLight
+    {
+        ESM::FormKey mPotion;
+        ESM::FormKey mLight;
+        float mMagnitude = 0;
+        float mDuration = 0;
+        float mElapsed = 0;
+        friend bool operator==(const RuntimePotionLight&, const RuntimePotionLight&) = default;
+    };
+
     struct RuntimeActorValues
     {
         ESM::FormKey mActor;
@@ -423,6 +433,9 @@ namespace ESM4
         // A legacy attribute modifier never implies a potion or an expiry time.
         std::vector<PotionAttributeState> mPotionAttributeEffects;
         std::vector<PowerUseState> mUsedPowers;
+
+        // v99: the consumed potion owns the light until its simulation lifetime ends.
+        std::vector<RuntimePotionLight> mPotionLightEffects;
 
         // v25: signed native High/MiddleHigh process knocked byte. Absence
         // retains unknown legacy Active-process state; Low queries return zero.

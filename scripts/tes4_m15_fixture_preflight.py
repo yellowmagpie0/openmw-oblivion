@@ -156,6 +156,8 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
+    Version99 retains Player potion Light sources and their elapsed durations.
+    Older seeds have no active potion Light applications.
     Version98 retains resolved signed ingredient magnitude/duration per use.
     Copies preserve these fields independently of later caster skills.
     Version97 adds inventory script identity after physical arrow flight. Fixture copies retain its
@@ -182,7 +184,7 @@ def is_current_fixture_schema(target, current, minimum):
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 98)
+            and target == current and minimum <= target <= 99)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):

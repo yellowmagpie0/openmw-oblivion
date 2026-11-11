@@ -3,35 +3,49 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The expedition and full milestones remain open.
 
-Latest chunk is native item selection for unowned Ayleid Cask04bb85 in
-Canosel. The player reached the cask by swimming through the flooded tunnel,
-surfacing and defeating Skeleton06c2e6. Opening resolves the eight authored
-leveled lists once. Closing preserves all rolled entries. One click takes the
-entire gold stack. The remaining entries survive same-process quickload and
-a fresh process, and Take All leaves an empty cask after another cold load.
-Keyboard and gamepad Take All agree. The submerged Cask066e79 and the earlier
-food sack retain their verified lock and leveled-loot paths.
-[Contract](AYLEID-CASK-SELECTION-CONTRACT.json),
-[original-game UI oracle](AYLEID-CASK-SELECTION-ORACLE.json),
-[verification](AYLEID-CASK-SELECTION-VERIFICATION.json).
+Latest accepted chunk: the original Weak Potion of Light, ALCH09847f, earned
+from submerged Cask066e79 on the locked-cask branch. Ordinary swimming surfaced
+alive; ordinary camera input framed nearby stone. Inventory use consumes one
+bottle, lights nearby geometry with the authored green LIGH, and saves an owned
+20-foot/60-second timer in schema99. Cold loading preserves remaining duration;
+one expiration removes illumination and stays absent after another cold load.
+Ordinary backward movement retains the light and timer. All eight normal and
+ASan/UBSan gameplay courses pass, with images inspected and real native payloads
+matching live saved state. [Contract](WEAK-POTION-OF-LIGHT-CONTRACT.json),
+[original oracle and baseline](WEAK-POTION-OF-LIGHT-ORACLE.json),
+[verification and retained failed attempts](WEAK-POTION-OF-LIGHT-VERIFICATION.json).
 
-The normal and instrumented engine gates each execute 2,276 tests. Python
-executes 611 checks. Reused component evidence and real gameplay artifacts are
-linked in the verification receipt. Schema 98 is unchanged.
+Integration passes 2,276 normal engine, 3,290 component and 611 Python checks;
+instrumented coverage passes 2,276 engine and 1,111 TES4 component checks. Exact
+inventories match, without failures/skips. Both guarded runs record source
+fingerprint `de75356f4877ed9e89d2b5f387a7a5455abd70ff37ef146ccb927d7c3480fc42`
+at parent b21faea6f7aa0fef12a52891cfb8da56cd9ff0c1. Later changes only revise
+receipts and instrumented input recipes for slow startup/simulation and release
+the backward key at a read-only observed100-unit distance. All18 production
+source bytes and both game binaries retain tested provenance. Rendered sanitizer
+courses disable leak detection. Exact pixels/pulse phase, overlap and general
+Light/magic UI are outside this bounded course.
 
-The expedition continuation is
+The expedition continuation remains
 `build/oblivion-compat/container-window/normal-empty-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
 SHA256 `b23acab4f165351d71e81185fd985fa4bedca5c15120ca825eac78de2db78637`.
-The player is alive with 53.0011 Health and the cask is empty.
+The player is alive with53.0011 Health and Cask04bb85 is empty. The independent
+Light branch's expired normal save is
+`build/oblivion-compat/potion-light/normal-light-restart-empty-03/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `3744a7a03fc57de3566a572772e966a18243825b38128e388d91768bbc07835f`.
 
-Next chunk is the original Weak Potion of Light earned on the independent
-locked-cask branch. The candidate evidence identifies the actual bottle, save
-and remaining breath. Surface by ordinary swimming, record the existing use
-behavior in inventory, and verify the light in original Oblivion. The main
-expedition save above remains available.
-`build/oblivion-compat/potion-light/earned-potion-candidate.json`
+Next action: continue the genuine expedition, identify the next concrete
+unsupported content behavior, establish its baseline and choose a bounded
+implementation around the acceptance gap. Do not treat general M16 or the
+expedition as complete. Detailed Light artifacts are under
+`build/oblivion-compat/potion-light`; the verification receipt maps exact inputs,
+processes, manifests, images, saves, integration and independent original evidence.
 
 Earlier accepted slices and reusable evidence:
+
+- [Ayleid cask selection](AYLEID-CASK-SELECTION-VERIFICATION.json): unowned
+  Cask04bb85 rolls once; close, one-stack selection, keyboard/gamepad Take All
+  and empty cold restart preserve native ownership and inventory.
 
 - [Submerged Ayleid cask lock](AYLEID-CASK-LOCK-VERIFICATION.json): a paused
   choice preserves picks on Cancel. Explicit auto failure spends one pick and

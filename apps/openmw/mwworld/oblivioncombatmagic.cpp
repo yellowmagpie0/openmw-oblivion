@@ -26,6 +26,7 @@
 #include <components/esm4/combatmagicprofile.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadmgef.hpp>
+#include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadspel.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
@@ -384,10 +385,92 @@ namespace MWWorld
         return true;
     }
 
-    std::string describeOblivionPotionAttributes(MWBase::World& world, const ConstPtr& item)
+    namespace
+    {
+        std::optional<ESM4::RuntimePotionLight> resolvePotionLight(const ESMStore& store, const ESM4::Potion& potion)
+        {
+            if ((potion.mFlags & ESM4::Rec_Deleted) || !potion.mScriptId.isZeroOrUnset()
+                || potion.mEffects.size() != 1)
+                return {};
+            const auto& effect = potion.mEffects.front();
+            if (effect.mId != ESM::fourCC("LGHT") || effect.mMagnitude <= 0 || effect.mDuration <= 0
+                || effect.mArea || effect.mRange || effect.mActorValue != 8 || effect.mScriptEffect)
+                return {};
+            const auto key = store.get<ESM4::Potion>().findFormKey(ESM::RefId(potion.mId));
+            if (!key || !key->isContent()) return {};
+            if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
+                return {};
+            const auto* definition = ingredientEffectDefinition(store, effect.mId);
+            if (!definition || !definition->mData) return {};
+            const auto& data = *definition->mData;
+            if (data.mFlags != 0x80001872 || data.mAssociatedForm || data.mAssociatedData != 0
+                || data.mSchool != 3 || data.mResistanceActorValue != -1 || !data.mLight || !data.mLight->isContent())
+                return {};
+            const auto* light = store.get<ESM4::Light>().search(*data.mLight);
+            if (!light || (light->mFlags & ESM4::Rec_Deleted) || (light->mData.flags & ESM4::Light::Negative))
+                return {};
+            if (const auto* winner = store.getFormKeyIndex().winner(*data.mLight);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_LIGH))
+                return {};
+            return ESM4::RuntimePotionLight{
+                *key, *data.mLight, static_cast<float>(effect.mMagnitude), static_cast<float>(effect.mDuration), 0.f};
+        }
+    }
+
+    bool consumeOblivionPotionLight(World& world, const Ptr& item, const Ptr& actor, const ESM4::Potion& potion)
+    {
+        auto* combat = world.getOblivionCombatService();
+        if (!combat || actor != world.getPlayerPtr() || actor.getClass().getCreatureStats(actor).isDead())
+            return false;
+        const auto effect = resolvePotionLight(world.getStore(), potion);
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        const auto* before = combat->findActorValues(key);
+        const auto* life = combat->findActorLife(key);
+        if (!effect || !before || !life || life->mPhase != ESM4::ActorLifePhase::Alive)
+            return false;
+        auto candidate = *before;
+        candidate.mPotionLightEffects.push_back(*effect);
+        candidate.validate();
+        const auto settings = resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        auto debit = inventory.prepareItemRemoval(item, 1);
+        if (debit->getCount() != 1 || !debit->isValid()) return false;
+        MWBase::Environment::get().getWorldModel()->registerPtr(item);
+        combat->publishPlayerValues(world.getPlayer(), std::move(candidate), settings);
+        if (!debit->commit()) throw std::logic_error("native potion Light debit changed during publication");
+        Log(Debug::Info) << "M16 potion Light applied: potion=" << effect->mPotion.serialize()
+                         << " light=" << effect->mLight.serialize() << " magnitude=" << effect->mMagnitude
+                         << " duration=" << effect->mDuration << " count=1";
+        MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
+        debit->notify();
+        return true;
+    }
+
+    void validateOblivionPotionLight(const ESMStore& store, const ESM4::RuntimeState& state)
+    {
+        for (const auto& actor : state.mNativeActorValues)
+            for (const auto& effect : actor.mPotionLightEffects)
+            {
+                const auto* potion = store.get<ESM4::Potion>().search(effect.mPotion);
+                auto profile = potion ? resolvePotionLight(store, *potion) : std::nullopt;
+                if (profile) profile->mElapsed = effect.mElapsed;
+                if (!profile || *profile != effect)
+                    throw std::invalid_argument("saved native potion Light source no longer resolves");
+            }
+    }
+
+    std::string describeOblivionPotion(MWBase::World& world, const ConstPtr& item)
     {
         const auto* potion = world.getStore().get<ESM4::Potion>().search(item.getCellRef().getRefId());
-        if (!potion || !resolveOblivionPotionAttributes(world.getStore(), *potion)) return {};
+        if (!potion) return {};
+        if (resolvePotionLight(world.getStore(), *potion))
+        {
+            const auto& light = potion->mEffects.front();
+            return "Light " + std::to_string(light.mMagnitude) + " ft for " + std::to_string(light.mDuration)
+                + "s on Self";
+        }
+        if (!resolveOblivionPotionAttributes(world.getStore(), *potion)) return {};
         return "Drain Intelligence 1 pt for 60s on Self\nDrain Willpower 1 pt for 60s on Self"
             "\nRestore Fatigue 2 pts on Self";
     }

@@ -20,6 +20,8 @@ namespace ESM4
         // Presence identifies an authored item-reference field; otherwise the
         // data word remains numeric. Ready-game flags/data are resolved later.
         std::optional<ESM::FormKey> mAssociatedForm;
+        // The Light effect's authored LIGH appearance, independent of radius.
+        std::optional<ESM::FormKey> mLight;
     };
 
     // TES4 authored inputs, distinct from the original compiled/loaded rules.

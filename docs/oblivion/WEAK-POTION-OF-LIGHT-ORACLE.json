@@ -1,0 +1,161 @@
+{
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "original_game": {
+    "evidence_root": "build/oblivion-compat/potion-light/original-native-01",
+    "fixture": "Positioned in Canosel with coc Vilverin02. One authored bottle was supplied in the isolated save. Ordinary inventory input drank it.",
+    "counts": {
+      "before_fixture": 0,
+      "after_fixture": 1,
+      "after_drink": 0,
+      "after_active_reload": 0
+    },
+    "authored_light": {
+      "effect": "content:oblivion.esm:001882",
+      "appearance": "content:oblivion.esm:0052b4",
+      "appearance_editor_id": "SpellILightSpellMedium",
+      "rgb": [
+        187,
+        255,
+        187
+      ],
+      "magnitude_feet": 20,
+      "duration_seconds": 60
+    },
+    "camera_roi": [
+      70,
+      265,
+      450,
+      555
+    ],
+    "mean_rgb": {
+      "native-light-before.png": [
+        13.516,
+        18.085,
+        18.196
+      ],
+      "native-light-active.png": [
+        116.072,
+        165.036,
+        111.249
+      ],
+      "native-applied-near-expiry.png": [
+        116.223,
+        165.284,
+        111.4
+      ],
+      "native-applied-expired.png": [
+        13.502,
+        18.066,
+        18.177
+      ],
+      "native-reloaded-room.png": [
+        116.2,
+        165.24,
+        111.375
+      ]
+    },
+    "active_at_approximate_gameplay_wall_seconds": 52.36,
+    "expired_at_approximate_gameplay_wall_seconds": 68.45,
+    "observations": [
+      "Nearby stone becomes green while distant geometry stays dark.",
+      "After expiration, loading the separately named active save restores illumination once the console closes.",
+      "The first click left the bottle present. The successful attempt used a longer pointer settle and click."
+    ],
+    "evidence": {
+      "native-light-before.png": "c5e131f62f8a16bbc5c7059926e7a343e3e826bdc5deccb39a444540db6827bd",
+      "native-light-active.png": "d3abb642e86bdc506d4c4107456dcaf0a4a32caa0bcf595c14775458421f95dc",
+      "native-applied-near-expiry.png": "423fba918990b2966096a8605aab79eb45c6462803faf8d60228bca641b21635",
+      "native-applied-expired.png": "0fc2b667bffcae6a73f62792b17f803d3c2b0f3b1d65e2cdff0d8b275376bdb5",
+      "native-reloaded-room.png": "42630d522aa376094a1955a4bebb3a551e7c5c3ef8a2147ca91c7c8df589afa4",
+      "native-potion-fixture-count.png": "a24be949d9aee40843af56f8fe55932723180b8d23d358817f390ef6245faedf",
+      "native-retry-after-click.png": "037e1da4e24aa7b30eb5624c8809f227a87d78281d6dc3ac7af90aa2949da33b",
+      "native-applied-save-count.png": "22adcfd7137a36794d92ba490266498545c9e2620971d0d84673b99a6dacac51",
+      "native-reloaded-potion-count.png": "4e0b192f43fda3b551567e977dc7ad549ab45802d0db36749b77540b6934de44",
+      "input-log.jsonl": "9a005c9b772ccbb1c32808ce99af66acb99dd5fce311babcf256ed6260598a15",
+      "exit.json": "b78302384c56f3bf95034a28b3985f28b66245d742671f535a512aa65aa5fee9",
+      "configuration-restored.json": "e9e0ee53e65bd44658d00b2c2dbf0539dc836fc726eeb9503a5aba2c56216482"
+    }
+  },
+  "fork_baseline": {
+    "course": "build/oblivion-compat/potion-light/normal-earned-potion-baseline-02",
+    "source_sha256": "61040eed9905fef03233ca3251726959b0e8ffa83fc0dbee624c0fff56691c50",
+    "save_sha256": "b0f70662088846304da6e96447a5e0dbb205971f34f692892d2bd8d74a6670f4",
+    "potion_count_before_after": [
+      1,
+      1
+    ],
+    "player_inventory_unchanged": true,
+    "camera_roi": [
+      90,
+      45,
+      520,
+      260
+    ],
+    "mean_rgb": {
+      "build/oblivion-compat/potion-light/normal-earned-potion-inventory-01/surfaced-room-survey.png": [
+        26.212,
+        34.826,
+        33.509
+      ],
+      "build/oblivion-compat/potion-light/normal-earned-potion-baseline-02/fixed-view-after-potion.png": [
+        26.221,
+        34.843,
+        33.522
+      ]
+    },
+    "observations": [
+      "The item use attempt leaves the bottle on the cursor. Cancelling the drag returns it to inventory.",
+      "The second Escape closes inventory. The earlier attempt with a single Escape could not save.",
+      "The first baseline capture showed the loading screen. The comparison uses the same view from the independent inventory survey of the same source save."
+    ],
+    "evidence": {
+      "build/oblivion-compat/potion-light/normal-earned-potion-baseline-02/scenario.json": "98d9aa6b72176d12259f199951aa033d75b1c030f7804de75a5fe73fc633aca2",
+      "build/oblivion-compat/potion-light/normal-earned-potion-baseline-02/driver-process.json": "b12cac198f50ddda92142494b30a27aada4c6966640484582072749916b439c7",
+      "build/oblivion-compat/potion-light/normal-earned-potion-baseline-02/events.jsonl": "1f6c20aa32f78b4624c2301fda3cbe35a372a8dbe64be1147e9161f59e32fd03",
+      "build/oblivion-compat/potion-light/normal-earned-potion-baseline-02/original-potion-light-tooltip-before-use.png": "eae7c8a2eb32b6e3a0e03a071580288561fa20f60af72dfb4035f0fe555afebf",
+      "build/oblivion-compat/potion-light/normal-earned-potion-baseline-02/original-potion-light-use-attempt.png": "4a9f50dadd409966e966c5b4a5469c73dc342901ebc8ac4908b4a2c6acf0baf9",
+      "build/oblivion-compat/potion-light/normal-earned-potion-inventory-01/surfaced-room-survey.png": "09fb52bb196f5023c39936b0f6e3c42221d903bffc0c0a205bdced2c391d4f6f",
+      "build/oblivion-compat/potion-light/normal-earned-potion-baseline-02/fixed-view-after-potion.png": "26bc4bfa68be9525a737a4a1bcbda86259ec894b15c9e7ab87b924f38b1ff4c8"
+    }
+  },
+  "typed_content_audit": {
+    "evidence_root": "build/oblivion-compat/potion-light/normal-official-potion-preflight-01",
+    "passed": true,
+    "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "esmtool_sha256": "ec53c9d423189d00659f10ce4499821547fd4e020a17791303456905c326d699",
+    "restoration_definitions": {
+      "REFA": {
+        "flags": 16779376,
+        "resource": 10,
+        "school": 5,
+        "resistance": -1
+      },
+      "REHE": {
+        "flags": 16779376,
+        "resource": 8,
+        "school": 5,
+        "resistance": -1
+      },
+      "RESP": {
+        "flags": 16779376,
+        "resource": 9,
+        "school": 5,
+        "resistance": -1
+      }
+    },
+    "light_definition": 21172,
+    "light_matches": true,
+    "records": 253,
+    "effects": 330,
+    "missing": [],
+    "unexpected": [],
+    "different": [],
+    "evidence": {
+      "verification.json": "a38f207cd42535bb7b46a8825fd071280692222d4bc5bf67b680bf5e95409b26",
+      "typed-dump.txt": "a8139f48b64ff6d3bec0a9d5a031ea2ba3b5cd7f5ac4a772517efec3319275f6",
+      "effect-dump.txt": "6ace2f30868fc17b9e917db8a15e7819c0f04a9f27029bbc4cf50e59ceb0cb79"
+    }
+  }
+}

@@ -23,6 +23,7 @@
 #include "../mwworld/oblivioncombatdata.hpp"
 
 #include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadligh.hpp>
 
 #include "../mwsound/nativeaudioutils.hpp"
 #include <components/esm4/loadsoun.hpp>
@@ -5383,7 +5384,24 @@ namespace MWMechanics
                           .getMagicEffects()
                           .getOrDefault(ESM::MagicEffect::Light)
                           .getMagnitude();
-        mAnimation->setLightEffect(light);
+        const ESM4::Light* lightDefinition = nullptr;
+        if (mPtr == getPlayer())
+            if (auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+                world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+            {
+                const auto* combat = world->getOblivionCombatService();
+                const auto* values = combat ? combat->findActorValues(ESM::FormKey::dynamic("player", 1)) : nullptr;
+                if (values && !values->mPotionLightEffects.empty())
+                {
+                    const auto& strongest = *std::max_element(values->mPotionLightEffects.begin(),
+                        values->mPotionLightEffects.end(),
+                        [](const auto& a, const auto& b) { return a.mMagnitude < b.mMagnitude; });
+                    lightDefinition = world->getStore().get<ESM4::Light>().search(strongest.mLight);
+                    if (lightDefinition)
+                        light = strongest.mMagnitude;
+                }
+            }
+        mAnimation->setLightEffect(light, lightDefinition);
 
         // If you're dead you don't care about whether you've started/stopped being a vampire or not
         if (mPtr.getClass().getCreatureStats(mPtr).isDead())

@@ -104,7 +104,7 @@ namespace MWClass
         auto* world = MWBase::Environment::get().getWorldOrNull();
         if (world && world->getGameProfile() == ESM::GameProfile::Oblivion)
         {
-            const auto description = MWWorld::describeOblivionPotionAttributes(*world, ptr);
+            const auto description = MWWorld::describeOblivionPotion(*world, ptr);
             if (!description.empty())
             {
                 info.text = MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, "#{Interface:Weight}")

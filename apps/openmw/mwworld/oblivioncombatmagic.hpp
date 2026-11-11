@@ -16,6 +16,7 @@ namespace MWWorld
     class ESMStore;
     class Ptr;
     class ConstPtr;
+    class World;
 
     // Native INGR data/presentation and first-effect Player ingestion only.
     std::optional<ESM4::IngredientFatigueProfile> resolveOblivionIngredientFatigue(
@@ -45,8 +46,10 @@ namespace MWWorld
     std::optional<ESM4::PotionAttributeState> resolveOblivionPotionAttributes(
         const ESMStore& store, const ESM4::Potion& potion);
     bool consumeOblivionPotionAttributes(MWBase::World& world, const Ptr& item, const Ptr& actor);
-    std::string describeOblivionPotionAttributes(MWBase::World& world, const ConstPtr& item);
+    std::string describeOblivionPotion(MWBase::World& world, const ConstPtr& item);
     void validateOblivionPotionAttributes(const ESMStore& store, const ESM4::RuntimeState& state);
+    bool consumeOblivionPotionLight(World& world, const Ptr& item, const Ptr& actor, const ESM4::Potion& potion);
+    void validateOblivionPotionLight(const ESMStore& store, const ESM4::RuntimeState& state);
 
     std::optional<std::array<float, 3>> resolveOblivionSpellRestoration(
         const ESMStore& store, const ESM4::Spell& spell);

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 98
+CURRENT_VERSION = 99
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1162,6 +1162,22 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             sources.add(effect["enchantment"])
             if native_float(effect["magnitude"]) != 25 or not 0 <= native_float(effect["elapsed"]) < 30:
                 raise RuntimeStateError("Invalid TES4 scroll Chameleon magnitude or lifetime")
+
+        lights = check_collection(actor.get("potion_light_effects", []), "potion Light list")
+        if lights and (version < 99 or owner != 0):
+            raise RuntimeStateError("TES4 potion Light requires Player ownership and schema99")
+        for effect in lights:
+            if not isinstance(effect, dict) or set(effect) != {"potion", "light", "magnitude", "duration", "elapsed"}:
+                raise RuntimeStateError("Invalid TES4 potion Light state")
+            for field in ("potion", "light"):
+                key = effect[field]
+                if not isinstance(key, str) or not key.startswith("content:"):
+                    raise RuntimeStateError("Invalid TES4 potion Light source")
+                native_key(key)
+            magnitude = native_float(effect["magnitude"])
+            duration, elapsed = native_float(effect["duration"]), native_float(effect["elapsed"])
+            if magnitude <= 0 or duration <= 0 or not 0 <= elapsed < duration:
+                raise RuntimeStateError("Invalid TES4 potion Light magnitude or lifetime")
 
         powers = check_collection(actor.get("used_powers", []), "greater-power use history")
         if powers and (version < 95 or owner != 0):
@@ -3157,6 +3173,12 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                           for _ in range(reader.count())]
                 if powers:
                     actor["used_powers"] = powers
+            if version >= 99:
+                lights = [{"potion": reader.string(), "light": reader.string(),
+                           "magnitude": reader.unpack("<f"), "duration": reader.unpack("<f"),
+                           "elapsed": reader.unpack("<f")} for _ in range(reader.count())]
+                if lights:
+                    actor["potion_light_effects"] = lights
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -4040,6 +4062,15 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 for power in powers:
                     writer.string(power["spell"])
                     writer.pack("<d", power["used_at"])
+            if version >= 99:
+                lights = actor.get("potion_light_effects", [])
+                writer.pack("<I", len(lights))
+                for effect in lights:
+                    writer.string(effect["potion"])
+                    writer.string(effect["light"])
+                    writer.pack("<f", effect["magnitude"])
+                    writer.pack("<f", effect["duration"])
+                    writer.pack("<f", effect["elapsed"])
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))

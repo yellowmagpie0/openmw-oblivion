@@ -6686,6 +6686,7 @@ namespace MWWorld
                 winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
                 return false;
         if (consumeOblivionPotionAttributes(*this, item, actor)) return true;
+        if (consumeOblivionPotionLight(*this, item, actor, *potion)) return true;
         const auto amounts = resolveOblivionPotionRestoration(mStore, *potion);
         if (!amounts) return false;
         const bool player = actor == getPlayerPtr();
@@ -8014,6 +8015,7 @@ namespace MWWorld
         validateOblivionIngredientRestoration(mStore, state);
         validateOblivionScrollChameleon(mStore, state);
         validateOblivionPotionAttributes(mStore, state);
+        validateOblivionPotionLight(mStore, state);
         auto getupResources = prepareOblivionGetUpResources(state, incoming);
         if (prepared) prepared->mGetUpResources = std::move(getupResources);
         for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)

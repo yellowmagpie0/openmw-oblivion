@@ -258,6 +258,7 @@ namespace EsmTool
                               << " resistance=" << data.mResistanceActorValue << " counters=" << data.mCounterCount
                               << " padding=" << data.mCounterPadding;
                     if (data.mAssociatedForm) std::cout << " associatedForm=" << data.mAssociatedForm->serialize();
+                    if (data.mLight) std::cout << " light=" << data.mLight->serialize();
                 }
             }
             if constexpr (std::is_same_v<T, ESM4::LevelledCreature> || std::is_same_v<T, ESM4::LevelledItem>)

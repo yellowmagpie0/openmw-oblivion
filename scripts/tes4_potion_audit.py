@@ -24,6 +24,7 @@ if source_hash != 'a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4
     raise ValueError('unreviewed master hash')
 expected = {}
 restoration_definitions = {}
+light_definition = None
 for tag, ident, payload in records(source):
     if tag == 'MGEF':
         fields = {s['name']: s['payload'] for s in _subrecords(payload, str(args.master), tag)}
@@ -32,6 +33,8 @@ for tag, ident, payload in records(source):
             flags, cost, resource, school, resistance = struct.unpack('<IfIIi', fields['DATA'][:20])
             restoration_definitions[code] = {'flags': flags, 'resource': resource,
                                              'school': school, 'resistance': resistance}
+        elif code == 'LGHT':
+            light_definition = struct.unpack_from('<I', fields['DATA'], 24)[0]
     if tag != 'ALCH':
         continue
     subs = _subrecords(payload, str(args.master), tag)
@@ -43,6 +46,8 @@ for code, resource in (('REHE', 8), ('RESP', 9), ('REFA', 10)):
         raise ValueError('reviewed restoration definition changed')
 if len(expected) != 253 or sum(map(len, expected.values())) != 330:
     raise ValueError('reviewed potion inventory changed')
+if light_definition != 0x0052b4:
+    raise ValueError('reviewed Light appearance changed')
 run = subprocess.run([str(args.esmtool), 'dump', '-t', 'ALCH', str(args.master)], capture_output=True, text=True)
 args.output.mkdir(parents=True, exist_ok=False)
 (args.output / 'typed-dump.txt').write_text(run.stdout)
@@ -53,9 +58,19 @@ for block in run.stdout.split('  Record: ALCH')[1:]:
     name = re.search(r'  EditorId: ([^\n]+)', block).group(1).strip()
     actual[name] = [list(map(int, match)) for match in re.findall(
         r'PotionEffect: code=(\d+) magnitude=(\d+) area=(\d+) duration=(\d+) range=(\d+) actorValue=(\d+)', block)]
-result = {'passed': actual == expected, 'source_sha256': source_hash,
+light_run = subprocess.run([str(args.esmtool), 'dump', '-t', 'MGEF', str(args.master)],
+                           capture_output=True, text=True)
+(args.output / 'effect-dump.txt').write_text(light_run.stdout)
+(args.output / 'effect-stderr.txt').write_text(light_run.stderr)
+light_run.check_returncode()
+light_blocks = [block for block in light_run.stdout.split('  Record: MGEF')[1:]
+                if re.search(r'^  EditorId: LGHT$', block, re.MULTILINE)]
+light_matches = (len(light_blocks) == 1 and re.search(
+    rf' light=content:oblivion\.esm:{light_definition:06x}(?=\s|$)', light_blocks[0]) is not None)
+result = {'passed': actual == expected and light_matches, 'source_sha256': source_hash,
           'esmtool_sha256': hashlib.sha256(args.esmtool.read_bytes()).hexdigest(),
           'restoration_definitions': restoration_definitions,
+          'light_definition': light_definition, 'light_matches': light_matches,
           'records': len(actual), 'effects': sum(map(len, actual.values())),
           'missing': sorted(expected.keys() - actual.keys()),
           'unexpected': sorted(actual.keys() - expected.keys()),
