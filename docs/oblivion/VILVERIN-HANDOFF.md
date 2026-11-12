@@ -33,14 +33,55 @@ eight inspected images and fresh Python612 checks; unchanged C++ reuses the
 engine evidence above with its original provenance. No engine fix was needed.
 [Corpse loot verification](SKELETON-CORPSE-LOOT-VERIFICATION.json).
 
-Primary continuation — looted corpse after a cold load:
-`build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `8506b0938d99f6101b40c0566e179f4e009994a3661176aa26450ede675bac3f`.
-Player51.4047 Health, Blunt35/XP2.0, Restoration6/XP1.3062, retained Bonemeal and
-Steel War Axe. Corpse06c2ed is natively Dead (killer Player) with raw Health0.597,
-one17-body physical owner and empty inventory. Next: ordinary navigation back
-toward bedroll06bf97 and the exit; choose the next observed content gap. No
-item/actor-stat/save edits or unresolved-effect bypass. Expedition remains open.
+Primary continuation — actual return obstruction below the upper Vilverin maces:
+`build/oblivion-compat/expedition-return/normal-outside-door-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `fec79d98e5222b121d406e9d2bc8e8ad3908914f381f9be638d7794c95945aab`.
+Player110 Health after an ordinary hour at bedroll06bf97; Blunt35/XP2.0,
+Restoration6/XP1.3062, retained Bonemeal and Steel War Axe. Normal route audit
+preserves exact inventory, progression, character history and native death state.
+The original Skeleton remains Dead/empty with its17-body physical owner.
+
+The return crossed the opened secret wall in reverse, reached the bedroll and
+activated door049b4a into upper Vilverin. Images were inspected. At approximately
+(-4988,-2105,-1102), original short swinging maces06c605/0c4986 obstruct the
+stair return: center approach, left side-step, Jump and Sneak did not clear it;
+Health stays110. Cold read-only inspection and a three-second W attempt both completed. Existing
+`OPENMW_TRACE_PLAYER_OBSTACLES` identifies actual blocker0c4986 at upper-body
+height109.96 (capsule half-height66.5), grounded, no step. Its eight-body dynamic
+chain/head remains owned; body54 is settled. Rays alone miss these shapes and
+were not sufficient to identify the blocker. Independent original-game comparison confirms passage from near the same
+position: Y-2109.75 to-1949.94 after W3sec, then-1708.22 after another2sec. Both
+maces remain enabled/triggered3. Their placement differs visually, so a missing
+Player-push rule is not established. NIF inspection rules out an Unequip root-transform change: its two interpolators
+are constant identity, no key data, duration0.03333sec; text keys are start/sound/end.
+Next: resolve original settled physical body placement (including the native
+probe frame-time/settling boundary) against the owned fixed anchor and seven
+constraints before choosing a fix. Do not assume a Player-push rule or reset
+saved bodies merely to pass the stair.
+Original Script053259 only lowers potency after5sec; it does not reset/disable
+spent maces. Oracle evidence and retained native ESS are under
+`build/oblivion-compat/settled-mace-push/original-02/observation.json`; the original
+prefix was restored exactly, pristine67d927… unchanged. No games remain live.
+No production change or outside acceptance claimed. Both inspector/trace courses
+are terminal; evidence names end `-inspect-01` and `-trace-01`.
+
+Evidence root `build/oblivion-compat/expedition-return` retains editable manifests,
+manual ordinary-input receipts and `route-state-audit.json`. First long path
+ended early at a wall; shorter routes succeeded. A preflight Caps Lock name was
+unsupported, so ordinary Shift Run is used. The outside-door manifest also had
+its target height below the observed landing; corrected
+`outside-door-floor.json` uses path endpoint(-5415.79,74.8,517.6).
+The long outside attempt is a retained failed diagnostic with actual F5 saves,
+not an accepted outside course. No item/actor-stat/save edits or effect bypass.
+
+Next content candidate after the return obstruction: original Nirnroot06f184
+at(53306.80,91007.98,82.94), plant base066a26/066538 and ingredient04e940.
+Its original OnAdd starts MS39(04e936), increments quest counters and miscstat27;
+current generic harvesting appears to omit that event, but this is not yet a
+runtime-established failure. Read-only original-record surveys and an editable
+ordinary pickup manifest are under the return root and
+`build/oblivion-compat/nirnroot-pickup/first-plant.json`. Do not implement a
+speculative fix before the actual pickup. Unknown innate ownership stays unknown.
 
 Loot baseline01 selected floor STAT049cc7 beside the thin bones. Tighter
 camera-relative aim at a rendering-ray-confirmed bone point succeeded, so this
