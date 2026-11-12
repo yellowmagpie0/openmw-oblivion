@@ -6891,10 +6891,12 @@ namespace
         ability.mData = ESM4::SpellData{4, 0, 0, 0, {}};
         // Stock Goblin SABS30, plus the supported Daedric weakness channel.
         ability.mEffects = {{ESM::fourCC("SABS"), 30, 0, 0, 0, 52, {}},
-            {ESM::fourCC("WKSH"), 20, 0, 0, 0, 68, {}}};
+            {ESM::fourCC("WKSH"), 20, 0, 0, 0, 68, {}},
+            {ESM::fourCC("RSPA"), 100, 0, 0, 0, 66, {}}};
         store.getWritable<ESM4::Spell>().insertStatic(ability, spellKey);
         for (const auto [id, code] : {std::pair{0x997u, ESM::fourCC("SABS")},
-                 std::pair{0x998u, ESM::fourCC("WKSH")}, std::pair{0x996u, ESM::fourCC("DRAT")}})
+                 std::pair{0x998u, ESM::fourCC("WKSH")}, std::pair{0x996u, ESM::fourCC("DRAT")},
+                 std::pair{0x995u, ESM::fourCC("RSPA")}})
         {
             ESM4::EffectSetting effect{}; effect.mId = {id, 0}; effect.mEffectCode = code;
             effect.mData = ESM4::EffectSettingData{}; effect.mData->mSchool = 2;
@@ -6922,6 +6924,7 @@ namespace
         ASSERT_TRUE(world.activateOblivionActor(actor));
         EXPECT_EQ(service.getNonPlayerValue(actor, 52), 30);
         EXPECT_EQ(service.getNonPlayerValue(actor, 68), -20);
+        EXPECT_EQ(service.getNonPlayerValue(actor, 66), 100);
         EXPECT_EQ(service.getNonPlayerBaseValue(actorKey, 52, store), 0);
         EXPECT_EQ(service.getNonPlayerValue(other, 52), 0);
         ASSERT_TRUE(world.activateOblivionActor(other));
@@ -6942,6 +6945,7 @@ namespace
         ASSERT_NO_THROW(service.restore(ESM4::RuntimeState::deserializeBinary(binary), store));
         ASSERT_TRUE(world.activateOblivionActor(actor));
         EXPECT_EQ(*service.findActorValues(actorKey), savedActor);
+        EXPECT_EQ(service.getNonPlayerValue(actor, 66), 100);
         for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
             EXPECT_TRUE(MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, victim, 0, false, kind));
 
@@ -6999,7 +7003,17 @@ namespace
         const MWWorld::Ptr unsupported(cell.insert(&unsupportedLive), &cell);
         ASSERT_TRUE(world.activateOblivionActor(unsupported));
         EXPECT_EQ(service.getNonPlayerValue(unsupported, 52), 0);
-        EXPECT_FALSE(service.findActorValues(reference.mFormKey)->mPassiveAbilities);
+        ASSERT_TRUE(service.findActorValues(reference.mFormKey)->mPassiveAbilities);
+        EXPECT_TRUE(service.findActorValues(reference.mFormKey)->mPassiveAbilities->empty());
+        ability.mEffects.back() = {ESM::fourCC("RSPA"), 100, 0, 0, 0, 66, {}};
+        store.getWritable<ESM4::Spell>().insertStatic(ability, spellKey);
+        // A constructor with unsupported effects still knew that no grant ran.
+        ASSERT_TRUE(world.activateOblivionActor(unsupported));
+        EXPECT_EQ(service.getNonPlayerValue(unsupported, 52), 30);
+        EXPECT_EQ(service.getNonPlayerValue(unsupported, 66), 100);
+        ASSERT_TRUE(world.activateOblivionActor(unsupported));
+        EXPECT_EQ(service.getNonPlayerValue(unsupported, 66), 100);
+        ASSERT_EQ(service.findActorValues(reference.mFormKey)->mPassiveAbilities->size(), 1u);
         ability.mEffects.back() = {ESM::fourCC("DRAT"), 20, 0, 0, 0, 5, {}};
         store.getWritable<ESM4::Spell>().insertStatic(ability, spellKey);
         EXPECT_FALSE(MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, base.mFormKey));

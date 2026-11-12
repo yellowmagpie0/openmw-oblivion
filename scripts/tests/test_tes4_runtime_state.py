@@ -2035,6 +2035,24 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertNotEqual(known, unknown)
         self.assertEqual(state_io.decode_payload(known)["native_actor_values"][0]["passive_abilities"], [])
 
+    def test_original_undead_bone_resistances_retains_all_owned_effects(self):
+        state = make_state()
+        state.update(schema_version=78, ai_rng_state=1)
+        # Original SPEL02b532; WABR's compiled NoMagnitude resolves to one.
+        authored = [("RSDI", 63, 100), ("RSPO", 67, 100), ("RSFR", 62, 70),
+                    ("WABR", 55, 1), ("RSPA", 66, 100)]
+        effects = [[i, int.from_bytes(code.encode("ascii"), "little"), av, value, value]
+                   for i, (code, av, value) in enumerate(authored)]
+        ability = {"spell": "content:oblivion.esm:02b532", "spell_type": 4, "effects": effects}
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "passive_abilities": [ability]}
+        state["native_actor_values"] = [actor]
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["native_actor_values"][0]["passive_abilities"], [ability])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+
     def test_passive_ownership_rejects_malformed_duplicates_and_unsupported_effects(self):
         state = make_state()
         state["schema_version"] = 18

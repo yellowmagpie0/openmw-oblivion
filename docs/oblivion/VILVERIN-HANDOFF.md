@@ -3,40 +3,38 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. Expedition and broader content acceptance remain open.
 
-Latest accepted chunk: original crypt Skeleton06c2e4 (CreatureSkeleton1,
-resolved024ddb) now equips its own rolled Iron War Axe000d81. The helper admits
-native creatures with WeapAndShield bit4 and retains the NPC physical-stack
-selector. One auto-equip changes slot0→65536, visibly holds the axe and uses
-native onehand attacks. Normal and instrumented cold loads retain the same
-112 condition/count/metadata and do not equip again. No item, repair or stat
-grant. [Contract](CRYPT-SKELETON-WEAPON-CONTRACT.json),
-[raw original data, runtime audits and source provenance](CRYPT-SKELETON-WEAPON-VERIFICATION.json).
+Latest accepted chunk: original Undead Bone Resistances SPEL02b532, including
+RSPA/Resist Paralysis AV66. Genuine pre-Canosel source has no crypt Skeleton
+state; ordinary entry grants all five innate effects exactly once. Normal and
+instrumented fresh-process reloads retain the complete owner and values:
+Disease100, Poison100, Frost70, WaterBreathing1, Paralysis100. Schema99 retained.
+[Contract](BONE-RESISTANCES-CONTRACT.json),
+[independent original facts](BONE-RESISTANCES-ORACLE.json),
+[runtime/check receipts](BONE-RESISTANCES-VERIFICATION.json).
 
-Focused 8 and full normal/sanitizer 2,278 engine tests pass; Python 611 passes.
-Two normal and two instrumented courses pass, plus a captured empty-handed
-baseline. All 10 primary images inspected. Schema 99; existing inventory and
-active-strike ownership retained. Engine sanitizer gates use leak checking;
-rendered sanitizer courses disable it. Historical backend acceptance is unchanged.
+Full normal/instrumented2,278 engine checks, 20 ability cases per build and
+Python612 pass. Six original-content courses cover grant, cold load, secret-wall
+continuation and old-null ownership; 11 accepted primary images inspected.
+Engine sanitizer gates include leak checking; rendered courses disable it.
+Historical backend acceptance is unchanged. Hostile Paralysis immunity and the
+actual physical-contact encounter remain separate runtime gates.
 
-This is equipment-only acceptance. The Skeleton still cannot publish physical
-damage: original Undead Bone Resistances SPEL02b532 includes RSPA, absent from
-the admitted permanent passive definitions. Keep the unresolved-contact guard;
-the whole encounter and general M13/M15/M16 content matrices remain open.
+Fresh ability-owned normal continuation:
+`build/oblivion-compat/bone-resistances/normal-fresh-secret-wall-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `2e1ff0b90fffaa1c36e550a228f8b182a5981549104c69ec18f2133f8baccc50`.
+Player64.4808 Health through the original secret wall, with original inventory.
+This replays an earlier genuine expedition branch. Next: continue the actual
+encounter from this owned state and select the next observed unsupported piece.
+Do not bypass unresolved effects or hand-edit saves.
 
-Current expedition continuation:
+Earlier crypt branch remains preserved:
 `build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
 SHA256 `db0a894a0dbcc3e7b0a71dba3a23c0030a26eb3aca14650150e5f9e52ebd5da6`.
-Player alive with 53.0011 Health, Security 6 and six earned picks, near the active
-Skeleton in Canosel through open Gate049bba. Original Skeleton alive with 20,
-Iron War Axe at 112 equipped; no health damage or wear yet because the passive/
-contact boundary remains. Prior XP branches keep their original provenance.
-
-Next action: implement the bounded original Undead Bone Resistances ability,
-starting with RSPA/permanent resistance admission and reviewing safe ownership
-for legacy null passive state. Verify the actual Skeleton can then publish its
-ordinary contact damage, retain innate values/ownership through cold loading,
-and never double-apply grants. Do not bypass unresolved effects or silently
-invent already-applied legacy ownership; use original rules/evidence as needed.
+It retains Security6/six earned picks/Player53.0011 Health and the exact owned
+IronWarAxe112. Null innate ownership is unknown and remains conservatively
+unresolved; the real compatibility course confirms no grant, repair or repeated
+equip. Newly constructed unsupported creatures now record known empty ownership
+so later support can grant safely. [Equipment chunk](CRYPT-SKELETON-WEAPON-VERIFICATION.json).
 
 Earlier accepted slices and reusable evidence:
 

@@ -103,7 +103,8 @@ namespace ESM4
             std::pair{ESM::fourCC("RSFR"), LoadedEffectSetting{0x100007a, 62}},
             std::pair{ESM::fourCC("RSMA"), LoadedEffectSetting{0x100007a, 64}},
             std::pair{ESM::fourCC("RSDI"), LoadedEffectSetting{0x100007a, 63}},
-            std::pair{ESM::fourCC("RSPO"), LoadedEffectSetting{0x100007a, 67}}
+            std::pair{ESM::fourCC("RSPO"), LoadedEffectSetting{0x100007a, 67}},
+            std::pair{ESM::fourCC("RSPA"), LoadedEffectSetting{0x100007a, 66}}
         };
         for (const auto& [candidate, definition] : definitions)
             if (candidate == code)

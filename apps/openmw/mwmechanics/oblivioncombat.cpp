@@ -4347,12 +4347,14 @@ namespace MWMechanics
         life.validate();
         if (actor.getType() == ESM::REC_CREA4)
         {
+            // A fresh reference has never received a native passive grant, even
+            // when its current effects are unsupported. Retain that known empty
+            // ownership so later support can grant them on activation. Existing
+            // null ownership remains unknown and must not be reconstructed.
+            if (!oldValues) values.mPassiveAbilities.emplace();
             const auto abilities = MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, baseKey);
             if (abilities && !abilities->empty())
             {
-                // A fresh Low reference owns a known pending grant. Unknown
-                // legacy ownership stays unknown; activation must not invent it.
-                if (!oldValues) values.mPassiveAbilities.emplace();
                 if ((!oldValues || activate) && values.mPassiveAbilities
                     && values.mProcess == ESM4::ActorValueProcess::Active
                     && life.mPhase == ESM4::ActorLifePhase::Alive)

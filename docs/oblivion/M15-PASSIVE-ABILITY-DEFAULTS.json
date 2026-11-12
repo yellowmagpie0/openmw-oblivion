@@ -4,7 +4,7 @@
   "initializer": "00417420",
   "creator_boundary": "00417220",
   "source_report_sha256": "74e29aba76f4901ada4cdd2e2957eea6c2e44b23f71be53eb1400df16088aae7",
-  "scope": "Compiled flag/data/resistance facts for14 original-master racial/birthsign passive codes and stock Dog Witbane DRAT. Registry/factory and apply/remove instruction checks are scoped separately; this manifest is not gameplay acceptance.",
+  "scope": "Compiled flag/data/resistance facts for14 original-master racial/birthsign passive codes and stock Dog Witbane DRAT and Undead Bone Resistances RSPA. Registry/factory and apply/remove instruction checks are scoped separately; this manifest is not gameplay acceptance.",
   "records": [
     {
       "code": "WABR",
@@ -95,6 +95,12 @@
       "flags": 1048695,
       "data": 0,
       "resistance": 64
+    },
+    {
+      "code": "RSPA",
+      "flags": 16777338,
+      "data": 66,
+      "resistance": 4294967295
     }
   ],
   "drat_evidence": [
@@ -111,5 +117,6 @@
       "sha256": "cb6c6670832aba170d8151c9cf619091d19049f7eb94e77c3366a16d7aeaaeda"
     }
   ],
-  "drat_scope": "36 factory and48 apply/remove original-instruction cases; Player type1 Maximum versus type4 base writer selection. Actor reads/storage and Player notification are boundaries. No infection, NPC storage or normal-input acceptance."
+  "drat_scope": "36 factory and48 apply/remove original-instruction cases; Player type1 Maximum versus type4 base writer selection. Actor reads/storage and Player notification are boundaries. No infection, NPC storage or normal-input acceptance.",
+  "rspa_evidence": "BONE-RESISTANCES-ORACLE.json"
 }

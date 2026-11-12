@@ -1085,7 +1085,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             seen_spells = set()
             codes = {int.from_bytes(code.encode("ascii"), "little") for code in
                 ("WABR", "WKFI", "WKFR", "WKSH", "WKMA", "FOSP", "SABS", "STMA",
-                 "FOAT", "DRAT", "RSFI", "RSPO", "RSDI", "RSMA", "RSFR")}
+                 "FOAT", "DRAT", "RSFI", "RSPO", "RSDI", "RSMA", "RSFR", "RSPA")}
             for ability in check_collection(abilities, "passive ability ownership list"):
                 if not isinstance(ability, dict):
                     raise RuntimeStateError("Invalid TES4 passive ability")

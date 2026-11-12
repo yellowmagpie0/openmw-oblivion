@@ -1,0 +1,50 @@
+{
+  "status": "Accepted bounded original Undead Bone Resistances grant/ownership and cold load; full encounter, M15/M16 and expedition remain open.",
+  "scope": "Original SPEL02b532 Undead Bone Resistances permanent innate grant/ownership. Full M15/M16 and expedition remain open.",
+  "reference": "content:oblivion.esm:06c2e4",
+  "base": "content:oblivion.esm:024ddb",
+  "ability": "content:oblivion.esm:02b532",
+  "effects": [
+    [
+      "RSDI",
+      63,
+      100
+    ],
+    [
+      "RSPO",
+      67,
+      100
+    ],
+    [
+      "RSFR",
+      62,
+      70
+    ],
+    [
+      "WABR",
+      55,
+      1
+    ],
+    [
+      "RSPA",
+      66,
+      100
+    ]
+  ],
+  "source": "build/oblivion-compat/flare-retaliation/second-bandit-flare-defeat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "source_sha256": "2e85af01a7af40eb7fe7ab9ab3ee09487ad570ff7da5e1747e71f7543d46b56d",
+  "source_reason": "Genuine expedition save before Canosel entry; no crypt Skeleton reference or actor-value state yet exists. Ordinary door approach/activation initializes original content.",
+  "acceptance": [
+    "Admit RSPA using original compiled/factory facts and winning original MGEF. Grant all five effects exactly once to original Skeleton on activation.",
+    "Save/quit/fresh-process load retains exactly one complete owner and unchanged innate modifiers; semantic live/save equality and exact wire roundtrip.",
+    "Preserve existing null ownership as unknown; do not reconstruct or reset modifiers. Newly initialized unsupported creatures retain known empty ownership and can grant when support becomes available.",
+    "Focused ownership and effect checks, normal/sanitized integration and real normal/instrumented content courses."
+  ],
+  "limits": [
+    "Hostile Paralysis casting/immunity, ordinary physical-contact encounter completion, broader effects and full expedition are separate runtime gates.",
+    "Existing crypt continuation db0a894a has unknown null ownership and remains conservatively unresolved. No save hand-edit, actor replacement, repair or stat grant."
+  ],
+  "evidence_root": "build/oblivion-compat/bone-resistances",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+}

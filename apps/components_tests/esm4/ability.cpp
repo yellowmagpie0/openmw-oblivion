@@ -65,11 +65,11 @@ TEST(ESM4AbilityInputs, ConstructorFlagsOverrideMagnitudeAndDurationWithoutApply
 TEST(ESM4AbilityInputs, CompiledPassiveDefinitionsRetainOriginalFlagsAndStaticActorValues)
 {
     struct Expected {const char code[5]; std::uint32_t flags, av;};
-    const std::array<Expected, 15> original{{
+    const std::array<Expected, 16> original{{
         {"WABR",0x1000172,55}, {"WKFI",0x100007f,61}, {"WKFR",0x100007f,62},
         {"WKSH",0x100007f,68}, {"WKMA",0x100007f,64}, {"FOSP",0x1000072,9},
         {"SABS",0x1000072,52}, {"STMA",0x1000112,57}, {"FOAT",0x100072,0},
-        {"RSFI",0x100007a,61}, {"RSPO",0x100007a,67}, {"RSDI",0x100007a,63},
+        {"RSPA",0x100007a,66}, {"RSFI",0x100007a,61}, {"RSPO",0x100007a,67}, {"RSDI",0x100007a,63},
         {"RSMA",0x100007a,64}, {"RSFR",0x100007a,62}, {"DRAT",0x100077,0}
     }};
     for (const auto& row : original)
