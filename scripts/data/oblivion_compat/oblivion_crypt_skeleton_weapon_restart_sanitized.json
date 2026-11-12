@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "name": "Cold load original Skeleton owned axe and onehand combat",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal anim=require('openmw.animation')\nlocal elapsed=0\nlocal first=true\nreturn {{engineHandlers={{onFrame=function(dt)\n elapsed=elapsed+dt;if elapsed<.5 then return end;elapsed=0\n local actor=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x6c2e4))\n assert(actor and actor:isValid(),'Actual crypt Skeleton unavailable')\n local distance=(actor.position-self.position):length()\n print('CryptSkeleton sample pos='..tostring(self.position)..' target='..tostring(actor.position)..' distance='..distance..' player_health='..Actor.stats.dynamic.health(self).current..' skeleton_health='..Actor.stats.dynamic.health(actor).current..' dead='..tostring(Actor.isDead(actor)))\n assert(not Actor.isDead(self),'Player died during actual crypt Skeleton survey')\n if anim.hasAnimation(actor) then\n  if first then\n   for _,group in ipairs({{'idle','handtohandidle','onehandidle','bowidle','walkforward','handtohandforward','onehandforward','attackleft','handtohandattackleft','onehandattackleft'}}) do print('CryptSkeleton group '..group..' available='..tostring(anim.hasGroup(actor,group))) end\n   first=false\n  end\n  print('CryptSkeleton aggression='..Actor.stats.ai.fight(actor).modified)\n  print('CryptSkeleton active lower='..tostring(anim.getActiveGroup(actor,anim.BONE_GROUP.LowerBody))..' torso='..tostring(anim.getActiveGroup(actor,anim.BONE_GROUP.Torso)))\n end\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": ""
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "CryptSkeleton sample",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "original-crypt-skeleton-before.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "original-crypt-skeleton-after-approach.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1800,
+  "expected_exit": 0,
+  "expected_log": [
+    "CryptSkeleton sample",
+    "Writing saved game",
+    "CryptSkeleton active lower=onehand"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died during actual crypt Skeleton survey"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "crypt-skeleton-owned-melee-restart",
+    "OPENMW_M15_EPOCH": "1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

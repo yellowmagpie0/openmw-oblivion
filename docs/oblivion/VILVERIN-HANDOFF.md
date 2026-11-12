@@ -1,45 +1,50 @@
 # Vilverin — current handoff
 
 Target course: genuine sewer exit → independent Vilverin expedition → outside
-alive with retained loot. The expedition and broader content acceptance remain open.
+alive with retained loot. Expedition and broader content acceptance remain open.
 
-Latest accepted chunk: ordinary Security experience on original Canosel
-Gate049bbc and adjacent Gate049bba. Cancel awards none; one explicit success
-or failure awards 1.5 XP from the authored use value. A second genuine attempt raises Security 5→6,
-retaining 0.106209 XP and one Agility/Stealth/per-skill advancement. Minor-skill
-character-level progress stays 0. Cold loads preserve experience, native
-base/modifiers, earned picks and counters without replay.
-[Contract](SECURITY-USE-CONTRACT.json), [original evidence](SECURITY-USE-ORACLE.json),
-[verification, failed probes and provenance](SECURITY-USE-VERIFICATION.json).
+Latest accepted chunk: original crypt Skeleton06c2e4 (CreatureSkeleton1,
+resolved024ddb) now equips its own rolled Iron War Axe000d81. The helper admits
+native creatures with WeapAndShield bit4 and retains the NPC physical-stack
+selector. One auto-equip changes slot0→65536, visibly holds the axe and uses
+native onehand attacks. Normal and instrumented cold loads retain the same
+112 condition/count/metadata and do not equip again. No item, repair or stat
+grant. [Contract](CRYPT-SKELETON-WEAPON-CONTRACT.json),
+[raw original data, runtime audits and source provenance](CRYPT-SKELETON-WEAPON-VERIFICATION.json).
 
-The real level gain exposed missing shared attribute-tooltip settings. Ten
-original compiled defaults now allow Stats to render; a consuming regression
-covers that failure. Full normal and dedicated-display sanitizer engine gates
-pass 2,278 each; Python passes 611; focused checks pass 28. An X11 failure's 79
-cases pass in isolation before the full sanitizer rerun. Five normal and five
-instrumented courses pass. All primary screenshots were inspected. Engine
-sanitizer checks enable leak detection; rendered courses disable it.
+Focused 8 and full normal/sanitizer 2,278 engine tests pass; Python 611 passes.
+Two normal and two instrumented courses pass, plus a captured empty-handed
+baseline. All 10 primary images inspected. Schema 99; existing inventory and
+active-strike ownership retained. Engine sanitizer gates use leak checking;
+rendered sanitizer courses disable it. Historical backend acceptance is unchanged.
 
-Experience remains in existing shared NPCS STPR, native skill base in AV30,
-advancement in existing INCR/SPEC/LPRO and per-skill bookkeeping; schema 99.
-Exact native use-slot/scaling is uncertified. General skill use, notifications,
-character leveling and full content matrices remain open. Historical M12/M13
-backend acceptance is unchanged; this extension is bounded by its real courses.
+This is equipment-only acceptance. The Skeleton still cannot publish physical
+damage: original Undead Bone Resistances SPEL02b532 includes RSPA, absent from
+the admitted permanent passive definitions. Keep the unresolved-contact guard;
+the whole encounter and general M13/M15/M16 content matrices remain open.
 
 Current expedition continuation:
-`build/oblivion-compat/security-use/normal-final-security-level-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `2a961a70f39988b4e4ade170ed8b7353259a97718ce982f9beb589094f29ccd2`.
-Health 53.0011, six earned picks, Security 6; at(-4812.42,-10930.57,-2661.21),
-Canosel. Gate049bbc is open; Gate049bba remains locked 20 after one failure.
-The three earlier normal XP courses retain their pre-tooltip binary 183b45…
-provenance; final normal gain/restart and all sanitizer courses use the fix.
+`build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `db0a894a0dbcc3e7b0a71dba3a23c0030a26eb3aca14650150e5f9e52ebd5da6`.
+Player alive with 53.0011 Health, Security 6 and six earned picks, near the active
+Skeleton in Canosel through open Gate049bba. Original Skeleton alive with 20,
+Iron War Axe at 112 equipped; no health damage or wear yet because the passive/
+contact boundary remains. Prior XP branches keep their original provenance.
 
-Next action: use this genuine continuation to find another actual content
-case with observed unsupported behavior. Finish its bounded acceptance before
-expanding. Reuse linked evidence with its original provenance. The native
-probability/precision questions remain adjacent unless gameplay requires them.
+Next action: implement the bounded original Undead Bone Resistances ability,
+starting with RSPA/permanent resistance admission and reviewing safe ownership
+for legacy null passive state. Verify the actual Skeleton can then publish its
+ordinary contact damage, retain innate values/ownership through cold loading,
+and never double-apply grants. Do not bypass unresolved effects or silently
+invent already-applied legacy ownership; use original rules/evidence as needed.
 
 Earlier accepted slices and reusable evidence:
+
+- [Security-use extension](SECURITY-USE-VERIFICATION.json): original Gate049bbc
+  and Gate049bba; authored1.5XP on explicit success/failure, none on Cancel or
+  reload. Real Security5→6 retains fractional XP and Agility/Stealth/per-skill
+  counts. Ten normal/instrumented courses; missing tooltip defaults fixed from
+  original compiled values. Exact native use-slot/scaling remains uncertified.
 
 - [First Canosel gate](IRON-GATE-LOCK-VERIFICATION.json): Gate049bbd paused
   lock choice, Cancel, failure/success, open-pose cold load and passage. The

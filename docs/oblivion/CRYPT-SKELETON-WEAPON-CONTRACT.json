@@ -1,0 +1,39 @@
+{
+  "status": "accepted bounded native Creature melee equipment; contact damage and whole Skeleton encounter remain open",
+  "scope": "Allow weapon-capable native Creature combat to auto-equip its existing intact ordinary melee weapon through the established physical-stack selector.",
+  "reference": "content:oblivion.esm:06c2e4",
+  "resolved_base": "content:oblivion.esm:024ddb",
+  "original_levelled_root": "content:oblivion.esm:0340cf",
+  "weapon": "content:oblivion.esm:000d81",
+  "weapon_name": "Iron War Axe",
+  "condition": 112,
+  "source": "build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "source_sha256": "463fb8c514c628ac6da152d2689ea92a0a509e4755ac443a3a93610ca8ed3e3d",
+  "baseline": {
+    "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-close-baseline-02",
+    "scenario_passed": true,
+    "process_identity_captured": true,
+    "observed": "Skeleton aggression100, alive20, has rolled IronWarAxe112 unequipped; at57.57units plays handtohandattackleft/right with PlayerHealth unchanged53.0010643. Combat controller/AI intent already targets Player.",
+    "earlier_probe": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-baseline-01",
+    "earlier_probe_limit": "Scenario passed but generic driver did not capture CryptSkeleton marker; retained observation only."
+  },
+  "acceptance": [
+    "Ordinary approach causes original Skeleton to equip its existing IronWarAxe, visible in its hand, and use native one-handed melee attack groups.",
+    "Retain exact native inventory stack/count and loaded condition; no repair, grant or stat setter. Legitimate later contact wear remains allowed.",
+    "Cold-load equipped/attacking save; retain equipped physical stack without repeated equip or condition reset.",
+    "Run focused owned-weapon/Creature regressions and required normal/sanitized integration and gameplay gates."
+  ],
+  "deferred": "Undead Bone Resistances SPEL02b532 includes RSPA, absent from admitted passive definitions. Keep its unresolved-contact boundary; damage/innate-ability support is a following chunk, not accepted here.",
+  "provenance": "Raw installed master audits under build/oblivion-compat/crypt-skeleton; masterSHA a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70. Existing Creature bow path uses the same WeapAndShield capability; retain that guard.",
+  "verification": "CRYPT-SKELETON-WEAPON-VERIFICATION.json",
+  "validation": {
+    "normal_equipment_and_restart_courses": 2,
+    "sanitized_equipment_and_restart_courses": 2,
+    "captured_baseline": 1,
+    "engine_normal": 2278,
+    "engine_sanitized": 2278,
+    "python": 611,
+    "focused": 8,
+    "native_schema": 99
+  }
+}

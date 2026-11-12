@@ -1,0 +1,743 @@
+{
+  "schema_version": 1,
+  "status": "accepted bounded native Creature melee equipment; whole Skeleton encounter/contact damage remains open",
+  "parent_commit": "5babb12481d7876c035af05992f50cac7bf3b113",
+  "contract": "CRYPT-SKELETON-WEAPON-CONTRACT.json",
+  "behavior": "Weapon-capable native creatures use the existing owned physical-melee selector. Original Skeleton06c2e4 equips its rolled IronWarAxe112 once, visibly holds it and uses onehand attacks. Cold load retains the exact stack/condition and does not auto-equip again.",
+  "implementation": "Three-line capability guard extension in oblivionmelee.cpp; NPC selector/rating/cancellation/instance validation retained. Creatures lacking WeapAndShield remain excluded.",
+  "checks": {
+    "normal-focused-01": {
+      "path": "build/oblivion-compat/crypt-skeleton/normal-focused-01/verification.json",
+      "sha256": "0e5be13ed2085a0125340b710d6e059bb5f4e98480982d4f3adf637df18f7818",
+      "source": {
+        "head": "5babb12481d7876c035af05992f50cac7bf3b113",
+        "source_fingerprint": "7f42512af96ceb617bd0c9227424892ad756895aaf96c4c0f8de2fbe062f8608"
+      },
+      "results": {
+        "engine": {
+          "executed": 8,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*MeleeAi*:*CreatureArmed*:*CreatureWeapon*",
+          "binary_sha256": "c7aaac01061767d1b7fae73cfb10e0e82d076651803b84fb2effd0df85e66b9f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "a60bf6e26a9e1aab2b853df4b210b0bc7957621750e965f587b0949537f2ebd7",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal-integration-01": {
+      "path": "build/oblivion-compat/crypt-skeleton/normal-integration-01/verification.json",
+      "sha256": "00317b05b271b562deccce4e84e9defa00cefdfca39a0f00539759042c9d76b8",
+      "source": {
+        "head": "5babb12481d7876c035af05992f50cac7bf3b113",
+        "source_fingerprint": "4897d01e87edb19fb33ceb87bb63763bd28377673c125b3929f1c8c12b59e971"
+      },
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c7aaac01061767d1b7fae73cfb10e0e82d076651803b84fb2effd0df85e66b9f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e59a9744fd7bacd56854fb38eb6cafd94dd9f73a65b5ab44afcda3ddbdc27359",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 611,
+          "passed": true,
+          "log_sha256": "af8a3f0d7146e894119c8dc2e8386898d556da941faa8d3e5e551bcb74c9588d"
+        }
+      }
+    },
+    "sanitized-integration-01": {
+      "path": "build/oblivion-compat/crypt-skeleton/sanitized-integration-01/verification.json",
+      "sha256": "79ab0330353637b0499bc5e864de1005d4acf610f07e587647deaf4a8fc3bf0e",
+      "source": {
+        "head": "5babb12481d7876c035af05992f50cac7bf3b113",
+        "source_fingerprint": "4897d01e87edb19fb33ceb87bb63763bd28377673c125b3929f1c8c12b59e971"
+      },
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a6f3c2336540f348a13f9c88848057ae51802fac1968345a06a48eaec815468d",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "7f53eb0b0688ce6174c87f4f1cc726a83bce3470d57a1f6f55abcd8184ba71b1",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "production_source_hashes": {
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "ec587b64176b35161ab2d914f4a7cdd65e859039ce0b11db67544f59a24b4605",
+    "scripts/verify_crypt_skeleton_weapon.py": "9005f30eab6e9e63f52a1bfafe539f5cf75716a932c060e8795274f9bde5ea11",
+    "scripts/data/oblivion_compat/oblivion_crypt_skeleton_weapon_equip.json": "376aa683811adcff7fa6c00129722f30a3947e2d6a63558de55d0c43b0343650",
+    "scripts/data/oblivion_compat/oblivion_crypt_skeleton_weapon_equip_sanitized.json": "3bebc3f8ee6be5b531ad18ef3366f863a0b38dc432081709e1ac5703fd8b5b08",
+    "scripts/data/oblivion_compat/oblivion_crypt_skeleton_weapon_restart.json": "e24c6b61fadbeb3e9ffed445a42980e398b9c2ba9f84514f2199e570e6ded20e",
+    "scripts/data/oblivion_compat/oblivion_crypt_skeleton_weapon_restart_sanitized.json": "24be7466b5cfaa09a4b731fc3b5245d54bcb506cc7248c9f00773979339945ae"
+  },
+  "original_content": {
+    "audit": {
+      "path": "build/oblivion-compat/crypt-skeleton/original-equipment-audit.json",
+      "sha256": "8becab354c8c6381ea5e06ad3f0ffefb9e0db1f29eebc7b40dc7f69368ea9694"
+    },
+    "facts": {
+      "passed": true,
+      "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "reference": "content:oblivion.esm:06c2e4",
+      "original_reference_type": "REFR",
+      "cell": "content:oblivion.esm:0463f5",
+      "original_actor_list": "content:oblivion.esm:0340cf",
+      "level1_path": [
+        "content:oblivion.esm:0340cf",
+        "content:oblivion.esm:034094",
+        "content:oblivion.esm:084b1d",
+        "content:oblivion.esm:024ddb"
+      ],
+      "creature": {
+        "editor_id": "CreatureSkeleton1",
+        "full_name": "Skeleton",
+        "model": "Creatures\\Skeleton\\skeleton.NIF",
+        "flags": 4932,
+        "weapon_and_shield_bit": 4,
+        "inventory": [
+          [
+            317483,
+            1
+          ],
+          [
+            125951,
+            1
+          ]
+        ]
+      },
+      "weapon_list": {
+        "key": "content:oblivion.esm:04d82b",
+        "editor_id": "LL0CrWeapSkeleton100",
+        "entries": [
+          {
+            "level": 1,
+            "item": 3457,
+            "count": 1
+          },
+          {
+            "level": 1,
+            "item": 141757,
+            "count": 1
+          },
+          {
+            "level": 1,
+            "item": 3457,
+            "count": 1
+          }
+        ]
+      },
+      "actual_rolled_weapon": {
+        "key": "content:oblivion.esm:000d81",
+        "editor_id": "WeapIronWarAxe",
+        "full_name": "Iron War Axe",
+        "model": "Weapons\\Iron\\WarAxe.NIF",
+        "type": 2,
+        "health": 112,
+        "speed": 1.100000023841858,
+        "reach": 0.800000011920929,
+        "damage": 8
+      },
+      "scope": "Independent raw installed-master hierarchy/record/data audit. Actual rolled inventory and equipment are separately verified in real saves; no exact original AI ranking claim."
+    },
+    "policy_reuse": "Existing native weapon-capable Creature bow path and existing NPC physical-melee selection/instance invariants; no new formula or exact original weapon-ranking claim."
+  },
+  "runtime_courses": {
+    "normal-crypt-skeleton-close-baseline-02": {
+      "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-close-baseline-02/weapon-audit.json",
+      "sha256": "4b738adfe3c2683821f30f49d943bb6a24fd54840ed77eb78686165a0761c033",
+      "audit": {
+        "passed": true,
+        "phase": "baseline",
+        "sanitized": false,
+        "input_sha256": "463fb8c514c628ac6da152d2689ea92a0a509e4755ac443a3a93610ca8ed3e3d",
+        "save_sha256": "5d0c97d3e20498f4a02bf426689c945b4f04c6d21b377551277af28d8da6fb13",
+        "binary_sha256": "9160a1218eb1b89d5a2b2370ef9e63e7d7bdd1f874d53153b9021d248c1312d2",
+        "actor": "content:oblivion.esm:06c2e4",
+        "weapon": "content:oblivion.esm:000d81",
+        "before_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 0,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "loaded_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112,
+          "charge": -1,
+          "equipped_slots": 0,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "after_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 0,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "auto_equip_count": 0,
+        "armed_attack_observed": false,
+        "player_health_before": 53.00106430053711,
+        "player_health_after": 53.00106430053711,
+        "scope": "Equipment/animation/owned-save course; intrinsic-resistance/contact-damage support is separate."
+      },
+      "process": {
+        "pid": 52193,
+        "start_ticks": 1040585,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-close-baseline-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "9160a1218eb1b89d5a2b2370ef9e63e7d7bdd1f874d53153b9021d248c1312d2"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-close-baseline-02/scenario.json",
+        "sha256": "9e18391b0f4255a0d5f2de39ffeba9da944157ad00515f3d402b6a56d4f6a0be"
+      },
+      "recipe": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-close-baseline-02/captured-input-manifest.json",
+        "sha256": "45e81f1724b81100594a1224baa2bab9595c15f87018a6268b98e55cee93517d"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-close-baseline-02/sdl-input.txt.delivered",
+        "sha256": "c921fa1eadfc2a6299c120d957a7535f591e6b6ddfff1964c7cdd2f901fbb611"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-close-baseline-02/loaded-libraries.json",
+        "sha256": "d0ac988a8b6f742ea96ed08cffdd4e7b5c8fc79c9c05f92fc651c68b41469056"
+      }
+    },
+    "normal-crypt-skeleton-melee-equip-01": {
+      "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-melee-equip-01/weapon-audit.json",
+      "sha256": "44b23590d727dfb32ef12ab6c59811af11911bbc00ac25c00d9dd2c3ff398c37",
+      "audit": {
+        "passed": true,
+        "phase": "equip",
+        "sanitized": false,
+        "input_sha256": "463fb8c514c628ac6da152d2689ea92a0a509e4755ac443a3a93610ca8ed3e3d",
+        "save_sha256": "ca50db43a54460f7ab86484ae24bf2bc92009ba62e7f085434a04392fe1eca65",
+        "binary_sha256": "f4d77bae4f93f3f4937d421f11bda789f670104e0cc7ce27cbf7d4fa48ec2ff1",
+        "actor": "content:oblivion.esm:06c2e4",
+        "weapon": "content:oblivion.esm:000d81",
+        "before_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 0,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "loaded_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112,
+          "charge": -1,
+          "equipped_slots": 0,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "after_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "auto_equip_count": 1,
+        "armed_attack_observed": true,
+        "player_health_before": 53.00106430053711,
+        "player_health_after": 53.00106430053711,
+        "scope": "Equipment/animation/owned-save course; intrinsic-resistance/contact-damage support is separate."
+      },
+      "process": {
+        "pid": 53127,
+        "start_ticks": 1146976,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-melee-equip-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "f4d77bae4f93f3f4937d421f11bda789f670104e0cc7ce27cbf7d4fa48ec2ff1"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-melee-equip-01/scenario.json",
+        "sha256": "cd1017bd6b332a9c452cbd93e8c60778caa545caa851e2b116d63f9e797ed9c3"
+      },
+      "recipe": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-melee-equip-01/captured-input-manifest.json",
+        "sha256": "45e81f1724b81100594a1224baa2bab9595c15f87018a6268b98e55cee93517d"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-melee-equip-01/sdl-input.txt.delivered",
+        "sha256": "c921fa1eadfc2a6299c120d957a7535f591e6b6ddfff1964c7cdd2f901fbb611"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-melee-equip-01/loaded-libraries.json",
+        "sha256": "0efc8d8162e0bd64d3d2104af09b32926ee70a381b4c20622902cd15ab93be06"
+      }
+    },
+    "normal-crypt-skeleton-weapon-restart-01": {
+      "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/weapon-audit.json",
+      "sha256": "78603dfcf0bef3a5e30ddae92801144a0c4ce104f105b811c81ef96b3a15ddb2",
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "input_sha256": "ca50db43a54460f7ab86484ae24bf2bc92009ba62e7f085434a04392fe1eca65",
+        "save_sha256": "db0a894a0dbcc3e7b0a71dba3a23c0030a26eb3aca14650150e5f9e52ebd5da6",
+        "binary_sha256": "f4d77bae4f93f3f4937d421f11bda789f670104e0cc7ce27cbf7d4fa48ec2ff1",
+        "actor": "content:oblivion.esm:06c2e4",
+        "weapon": "content:oblivion.esm:000d81",
+        "before_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "loaded_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112,
+          "charge": -1,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "after_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "auto_equip_count": 0,
+        "armed_attack_observed": true,
+        "player_health_before": 53.00106430053711,
+        "player_health_after": 53.00106430053711,
+        "scope": "Equipment/animation/owned-save course; intrinsic-resistance/contact-damage support is separate."
+      },
+      "process": {
+        "pid": 53316,
+        "start_ticks": 1192722,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-melee-equip-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "f4d77bae4f93f3f4937d421f11bda789f670104e0cc7ce27cbf7d4fa48ec2ff1"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/scenario.json",
+        "sha256": "d0fffbfcaed6300076446926435f6a46569324387db00eb207ce20a22c05ad30"
+      },
+      "recipe": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/captured-input-manifest.json",
+        "sha256": "e24c6b61fadbeb3e9ffed445a42980e398b9c2ba9f84514f2199e570e6ded20e"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/sdl-input.txt.delivered",
+        "sha256": "60b10e59fc75a4163fba4286a18b8a5a14e1b7e95651b164128a98a22c99abd6"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/loaded-libraries.json",
+        "sha256": "8a9d35820b4bbbdc026d1c071945d6ac42fbd8c6ea5f3dc406af7e686566db52"
+      }
+    },
+    "sanitized-crypt-skeleton-weapon-equip-01": {
+      "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/weapon-audit.json",
+      "sha256": "78ede70d1d44d04f821efbc9c022c819cf08333f64008999864884d897966537",
+      "audit": {
+        "passed": true,
+        "phase": "equip",
+        "sanitized": true,
+        "input_sha256": "463fb8c514c628ac6da152d2689ea92a0a509e4755ac443a3a93610ca8ed3e3d",
+        "save_sha256": "e568e3d51a9092c0eb02fad9071ab84550f6cb6b7a3d9672dc1842741bfaea8f",
+        "binary_sha256": "04f5afa98651e3754421e5895c9a49ad85a5f0906727153ae4e708acce204f1d",
+        "actor": "content:oblivion.esm:06c2e4",
+        "weapon": "content:oblivion.esm:000d81",
+        "before_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 0,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "loaded_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112,
+          "charge": -1,
+          "equipped_slots": 0,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "after_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "auto_equip_count": 1,
+        "armed_attack_observed": true,
+        "player_health_before": 53.00106430053711,
+        "player_health_after": 53.00106430053711,
+        "scope": "Equipment/animation/owned-save course; intrinsic-resistance/contact-damage support is separate."
+      },
+      "process": {
+        "pid": 59815,
+        "start_ticks": 1221856,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "04f5afa98651e3754421e5895c9a49ad85a5f0906727153ae4e708acce204f1d"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/scenario.json",
+        "sha256": "5dee3be548a881d9e991ce3abf27eb6560fc87d5f162d6db059478344fc895a4"
+      },
+      "recipe": {
+        "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/captured-input-manifest.json",
+        "sha256": "3bebc3f8ee6be5b531ad18ef3366f863a0b38dc432081709e1ac5703fd8b5b08"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/sdl-input.txt.delivered",
+        "sha256": "c921fa1eadfc2a6299c120d957a7535f591e6b6ddfff1964c7cdd2f901fbb611"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/loaded-libraries.json",
+        "sha256": "800f0ddc60850f667d97e93cd50c8e7b9bbbd72094872a89248bfc3b620fe17a"
+      },
+      "observed_environment": {
+        "process": {
+          "pid": 59815,
+          "start_ticks": 1221856,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "04f5afa98651e3754421e5895c9a49ad85a5f0906727153ae4e708acce204f1d"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/sdl-input.so"
+        }
+      }
+    },
+    "sanitized-crypt-skeleton-weapon-restart-01": {
+      "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-restart-01/weapon-audit.json",
+      "sha256": "b6d8e99fcc8752d71a4fd76ecd1e9fa44bf8bc723dc43ecdd666e05ab03d22d6",
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "input_sha256": "e568e3d51a9092c0eb02fad9071ab84550f6cb6b7a3d9672dc1842741bfaea8f",
+        "save_sha256": "5d1954edd3403d4729cc7835f101d6b5e9d0eab3f4b41ee45b965b4040cf6834",
+        "binary_sha256": "04f5afa98651e3754421e5895c9a49ad85a5f0906727153ae4e708acce204f1d",
+        "actor": "content:oblivion.esm:06c2e4",
+        "weapon": "content:oblivion.esm:000d81",
+        "before_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "loaded_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112,
+          "charge": -1,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "after_axe": {
+          "base": "content:oblivion.esm:000d81",
+          "count": 1,
+          "condition": 112.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "auto_equip_count": 0,
+        "armed_attack_observed": true,
+        "player_health_before": 53.00106430053711,
+        "player_health_after": 53.00106430053711,
+        "scope": "Equipment/animation/owned-save course; intrinsic-resistance/contact-damage support is separate."
+      },
+      "process": {
+        "pid": 64942,
+        "start_ticks": 1252855,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "04f5afa98651e3754421e5895c9a49ad85a5f0906727153ae4e708acce204f1d"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-restart-01/scenario.json",
+        "sha256": "a9ea4dae4a376e1ab9b1ce6e9134dcfe2c2b5e0a2c2d1a76b79963ebb698a1fd"
+      },
+      "recipe": {
+        "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-restart-01/captured-input-manifest.json",
+        "sha256": "24be7466b5cfaa09a4b731fc3b5245d54bcb506cc7248c9f00773979339945ae"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-restart-01/sdl-input.txt.delivered",
+        "sha256": "60b10e59fc75a4163fba4286a18b8a5a14e1b7e95651b164128a98a22c99abd6"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-restart-01/loaded-libraries.json",
+        "sha256": "07b40417aa8e8ae22b041ae96030b05a60258acba3421e56aac0b00b4e45382e"
+      },
+      "observed_environment": {
+        "process": {
+          "pid": 64942,
+          "start_ticks": 1252855,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-restart-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-equip-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "04f5afa98651e3754421e5895c9a49ad85a5f0906727153ae4e708acce204f1d"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crypt-skeleton/sanitized-crypt-skeleton-weapon-restart-01/sdl-input.so"
+        }
+      }
+    }
+  },
+  "visual_inspection": [
+    {
+      "path": "build/oblivion-compat/crypt-skeleton/normal-visual-inspection.json",
+      "sha256": "4826bfa44aaee9aaf1db034e5c33454123f768fd627bdbaba3d4bcfae3596506"
+    },
+    {
+      "path": "build/oblivion-compat/crypt-skeleton/sanitized-visual-inspection.json",
+      "sha256": "70a3a399a7ff106a9a0f82149dca50701a163ca25f1b66f1c3a4c87af647be6d"
+    }
+  ],
+  "source_and_evidence_reuse": {
+    "entry_save": "Accepted prior Security-use sanitizer success/cold-load branch, SHA463fb8c514c628ac6da152d2689ea92a0a509e4755ac443a3a93610ca8ed3e3d; real Gate049bba unlocked, six earned picks, Security6, Health53.0011. No fork grants/setters.",
+    "baseline": "Normal closebaseline02 uses accepted pre-equipment binary9160a121\u2026 and captured actual process; actor owns Axe112 but uses fists. Baseline01 scenario passed but generic driver lacked CryptSkeleton marker and captured no process epoch; retained as observation only.",
+    "normal_equip": "Normal equip01 uses the baseline action recipe with unchanged controls; subsequent editable equip recipe adds stronger expected marker assertions. The semantic audit requires actual equip/armed-attack outputs.",
+    "post_gate_changes": "Only closure metadata after checks; six code/verifier/recipe source hashes verified unchanged."
+  },
+  "acceptance_layers": {
+    "structural": "Raw installed-master hierarchy proves original REFR\u2192eligible LVLC path\u2192CreatureSkeleton1, capabilitybit4, weaponLVLI and IronWarAxe type2/fullcondition112. Actual rolled stack is audited from real source save.",
+    "compiler": "Focused8, full normal2278 and full sanitizer2278 exact engine inventories; Python611.",
+    "semantic": "Actor inventory metadata/count and loaded condition retained; slot65536, one auto-equip then zero on restart; actual live/save native payload equality and exact binary roundtrip.",
+    "runtime": "Two normal and two instrumented normal-input equipment/restart courses; original actor and owned gear, visible weapon and native onehand playback. All10 primary screenshots including baseline inspected."
+  },
+  "limits": [
+    "Whole Skeleton combat is not accepted: original AbUndeadBoneResist SPEL02b532 contains RSPA absent from passive definition admission; unresolved creature contact/passive boundary remains intact. PlayerHealth was unchanged in these courses.",
+    "Selector uses the existing practical damage-rate policy, not independently certified original AI weapon ranking. No new original-executable/live probe was needed for this capability extension.",
+    "Broken replacements, bows without ammo, enchanted melee contact matrices, all creature models/classes and broader M13/M15 content acceptance remain open.",
+    "State assertions permit legitimate later contact wear while rejecting repair or reset; loaded condition is exact. This equipment fixture does not require the current damage gap to remain zero forever.",
+    "Engine sanitizer gates use leak checking; rendered sanitizer courses disable leak checking."
+  ],
+  "continuation": {
+    "save": "build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "db0a894a0dbcc3e7b0a71dba3a23c0030a26eb3aca14650150e5f9e52ebd5da6",
+    "player": "Alive53.0011 Health, Security6 and six earned picks; close to original Skeleton in Canosel through open Gate049bba.",
+    "skeleton": "Alive20, originalIronWarAxe112 equipped in right hand, nativeonehand attack; innate resistance/contact admission remains the next bounded gap."
+  },
+  "next_content": "Original Undead Bone Resistances ability02b532; review permanent RSPA support and safe ownership/adoption before physical-contact acceptance."
+}

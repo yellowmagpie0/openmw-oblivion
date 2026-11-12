@@ -166,7 +166,9 @@ namespace MWMechanics
         void equipOwnedMeleeWeapon(MWWorld::World& world, const MWWorld::Ptr& actor,
             OblivionCombatService& combat)
         {
-            if (actor.getType() != ESM::REC_NPC_4) return;
+            const bool weaponCreature = actor.getType() == ESM::REC_CREA4
+                && (actor.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_WeapAndShield);
+            if (actor.getType() != ESM::REC_NPC_4 && !weaponCreature) return;
             auto& inventory = actor.getClass().getInventoryStore(actor);
             if (inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight) != inventory.end()) return;
             const auto selected = selectUsablePhysicalWeapon(world, actor, {}, 3);
