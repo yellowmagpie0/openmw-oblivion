@@ -3,49 +3,51 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. Expedition and broader content acceptance remain open.
 
-Latest accepted chunk: a Player melee contact activates confident idle native
-Creature defense. Actual Skeleton06c2ed acquires Player, equips its existing
-Steel War Axe0229bd and hits back. New idle-Creature acquisition precedes OnHit;
-the callback's StopCombat/redirect result is left intact. Existing fights keep
-their previous order. Native StartCombat owns admission and the controller.
-[Contract](SKELETON-RETALIATION-CONTRACT.json),
-[original facts](SKELETON-RETALIATION-ORACLE.json),
-[verification](SKELETON-RETALIATION-VERIFICATION.json).
+Latest accepted chunk: supported dead native actors enter the existing owned
+physical scene/body path. Actual Skeleton06c2ed now collapses using its original
+17-body/13-joint NIF. Both retained-corpse admission and fresh Club kills are
+verified; cold loads retain body identities and filters, native death state,
+Health/XP/inventory and one innate grant. No GetUp owner is created for a corpse.
+Existing recovery death cleanup rebinds actor pointers after publication.
+[Contract](SKELETON-DEATH-POSE-CONTRACT.json),
+[original asset facts](SKELETON-DEATH-POSE-ORACLE.json),
+[verification](SKELETON-DEATH-POSE-VERIFICATION.json).
 
-Four actual-content courses plus baseline; six primary and two baseline images
-inspected. Focused4 and full2,278 engine checks in each build, Python612 pass.
-Engine sanitizer gates include leak checking; rendered courses disable it.
-Normal save retains consumed strike873; cold continuation hits with874 and does
-not replay873. Incoming hits retain Player Blunt XP1.0, one directed target,
-owned axe wear, unchanged inventory counts and one five-effect innate grant.
-Schema99. Normal R switches to first person and clears the obstructed view;
-no camera implementation change was needed.
+Seven accepted actual-content courses, nine primary images; old death/bind-pose
+baseline has three reviewed images. Focused336 and full2,278 engine checks in
+each build, Python612 pass. Engine sanitizer gates include leak checking;
+rendered courses disable it. A sanitizer input-loop failure after native death
+is retained separately: its combat aim logger stopped when the actor died.
+Retry keeps aim observations across that transition; C++ was unchanged.
 
-The positive-Confidence response and OnHit order are practical policies; the
-original melee caller/order is not instruction-certified. This Skeleton has no
-OnHit script, so live authored StopCombat/redirect remains a separate gate.
-General NPC assault/friendly-hit/crime, fleeing, automatic Creature perception,
-tactics and general M15/M16 remain open. Unknown innate ownership stays unknown.
+This reuses the current Down profile, not an instruction-certified original
+death controller/impulse sequence. Unsupported nonphysical models retain legacy
+death handling. Other Creature/NPC death courses, resurrection and independent
+loose-weapon death drops remain separate acceptance work. Schema99 unchanged.
 
-Checkpoint: actual owned Creature contact now works in both directions and
-continues after a fresh process. Finish this encounter and loot, then continue
-the expedition route. Choose the next implementation from the next observed
-content failure; avoid expanding into more XP hooks without an expedition need.
+Checkpoint: genuine contact, provocation, fight, native death and physical corpse
+presentation now work on the original Skeleton. Resume corpse activation and
+real loot transfer, then the expedition exit route. Choose the next observed
+content gap; avoid more XP hooks without an expedition need. Unknown ability
+ownership remains unknown and must not be reconstructed.
 
-Primary expedition continuation:
+Primary continuation — corpse after a fresh kill and cold load:
+`build/oblivion-compat/skeleton-death-pose/normal-hot-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `201979758edd473452d8f735fe999689814d45da0235e8d3901f3de2a6c8d123`.
+Player51.4047 Health, Blunt35/XP2.0, Restoration6/XP1.3062. Corpse06c2ed is
+natively Dead (killer Player) with raw Health0.597, one17-body physical owner,
+Bonemeal1 and Steel War Axe1 (condition149.7999). Loot has not been taken.
+The view is aimed down at its rendered body. Next: use ordinary activation and
+Take All on the actual corpse, audit transfer/ownership, cold-load, then resume
+navigation toward exit. No item/actor-stat/save edits or unresolved-effect bypass.
+
+Reusable pre-kill source:
 `build/oblivion-compat/skeleton-retaliation/normal-retaliation-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
 SHA256 `16f23ad74d5b7fde691e9aa6d011096155957c0049251528ec22faccd4c39fb9`.
-Player61.6072 Health; Skeleton06c2ed alive at10.2595, attacking with its original
-Steel War Axe (condition151.5999). Player Club condition60.3400,
-Blunt35/XP1.0, Restoration6/XP1.3062; original inventory and level counters.
-Next: use ordinary controls to defeat this wounded Skeleton, activate its corpse,
-inspect/take the real loot, cold-load it, then resume navigation toward exit.
-No item/actor-stat/save edits or unresolved-effect bypass.
-
-Historical source formation and camera/idle baseline are preserved in the
-[Blunt verification](BLUNT-USE-VERIFICATION.json) and current retaliation evidence.
-Previous continuation95208… remains the healthy pre-provocation input. The old
-crypt null-ownership branch is a compatibility source only.
+Player61.6072, Skeleton10.2595, owned Steel War Axe151.5999, Club60.3400,
+Blunt35/XP1.0. Native Actor.isDead/life is authoritative; float Health<=0 is not
+an adequate death observer. Old defeat01/02 were harness failures after actual
+native death, not proof of missing pursuit. Their records remain preserved.
 
 Recent independent branches retain their progress:
 

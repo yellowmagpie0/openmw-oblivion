@@ -3786,12 +3786,11 @@ namespace MWWorld
                                                : actor.getCellRef().getFormKey();
         const auto* values = service.findActorValues(key); const auto* life = service.findActorLife(key);
         if (!values || !life || values->mProcess == ESM4::ActorValueProcess::Low) return false;
-        if (life->mPhase == ESM4::ActorLifePhase::Dead)
+        const bool dead = life->mPhase == ESM4::ActorLifePhase::Dead;
+        const auto previousGraph = dead ? service.getUpPlayback(key) : std::nullopt;
+        if (previousGraph && (!previousGraph->mResources.empty() || !previousGraph->mPendingRequests.empty()
+                || previousGraph->mPhysicalHit))
         {
-            const auto previousGraph = service.getUpPlayback(key);
-            if (!previousGraph || (previousGraph->mResources.empty() && previousGraph->mPendingRequests.empty()
-                    && !previousGraph->mPhysicalHit))
-                return false;
             MWMechanics::OblivionCombatService::GetUpPlaybackUpdate stopped;
             stopped.mPlayback.mNextIdentity = previousGraph->mNextIdentity;
             stopped.mKnockedState = 0; stopped.mAction = -1;
@@ -3813,7 +3812,8 @@ namespace MWWorld
             }
             if (!state->commit() || !scene->commit()) throw std::logic_error("recovery death cleanup publication changed");
             mOblivionGetUpResources = std::move(resources);
-            return false;
+            values = service.findActorValues(key); life = service.findActorLife(key);
+            if (!values || !life) throw std::logic_error("death cleanup lost actor authority");
         }
         const auto fatigue = actor == getPlayerPtr() ? service.getPlayerValue(10) : service.getNonPlayerValue(actor, 10);
         const auto paralysis = service.getProcessParalysis(key);
@@ -3821,16 +3821,16 @@ namespace MWWorld
         const auto hitGraph = service.getUpPlayback(key);
         const bool physicalHit = hitGraph && hitGraph->mPhysicalHit;
         const bool pendingHit = physicalHit && !hitGraph->mPhysicalHit->mApplied;
-        if ((raw == 1 || raw == 2) && !physicalHit) return false;
+        if (!dead && (raw == 1 || raw == 2) && !physicalHit) return false;
         // Initial restore is observational. A pending contact must retain its
         // exact saved owner until the first advancing frame applies the force.
         if (pendingHit && duration == 0) return true;
-        const bool incapacitated = ESM4::requiresIncapacitation(fatigue, paralysis != 0,
+        const bool incapacitated = dead || ESM4::requiresIncapacitation(fatigue, paralysis != 0,
             life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious);
         if (!raw && !incapacitated) return false;
         const auto previous = service.actorRagdoll(key);
-        if (duration == 0 && !raw && !previous) return false;
-        if (!animation.hasPhysicalPose() && (previous || pendingHit || (raw == 0 && incapacitated)))
+        if (duration == 0 && !previous && (dead || !raw)) return false;
+        if (!animation.hasPhysicalPose() && (previous || pendingHit || dead || (raw == 0 && incapacitated)))
         {
             if (!mPhysics) throw std::invalid_argument("recovery requires World physics");
             auto model = previous ? VFS::Path::Normalized(previous->mModel) : actor.getClass().getCorrectedModel(actor);
@@ -3840,6 +3840,7 @@ namespace MWWorld
                     Misc::ResourceHelpers::correctMeshPath(actor.get<ESM::NPC>()->mBase->mModel.getNormalized()),
                     mResourceSystem->getVFS());
             const auto source = animation.captureNativePhysicalSource(model);
+            if (dead && !source) return false; // Retain legacy death handling for models without physical bodies.
             if (!source || source->definition()->mBodies.empty())
                 throw std::invalid_argument("recovery requires the rendered actor's physical NIF");
             const auto placement = oblivionRecoveryPlacement(actor);
@@ -3976,19 +3977,24 @@ namespace MWWorld
             entering.mAction = previous && !pendingHit ? values->mProcessAction : std::optional<std::int16_t>(-1);
             entering.mResetCombat = true;
             const auto random = service.combatRandomState(); entering.mRandom = {random, random, 0};
-            auto state = service.prepareGetUpPlayback(key, std::move(entering));
+            auto state = dead ? nullptr : service.prepareGetUpPlayback(key, std::move(entering));
             auto* peer = animation.getPlaybackPeer();
             auto first = peer ? peer->prepareNativeSequenceLayers({}) : nullptr;
-            if (!state || !state->isValid() || !cache || !cache->isValid()
+            if ((!dead && (!state || !state->isValid())) || !cache || !cache->isValid()
                 || !renderer->isValid() || !bodies->isValid() || (peer && (!first || !first->isValid())))
                 throw std::invalid_argument("recovery body changed during preparation");
-            if (!bodies->commit() || !animation.commitNativeScene(*renderer) || !cache->commit() || !state->commit())
+            if (!bodies->commit() || !animation.commitNativeScene(*renderer) || !cache->commit()
+                || (!dead && !state->commit()))
                 throw std::logic_error("recovery body publication changed");
             if (first && !first->commit()) throw std::logic_error("recovery first-person reset changed");
             raw = service.getProcessKnockedState(key);
-            Log(Debug::Verbose) << "M15 recovery body admitted: actor=" << key.serialize()
+            Log(Debug::Verbose) << (dead ? "M15 death body admitted: actor=" : "M15 recovery body admitted: actor=")
+                                << key.serialize()
                                 << " state=" << unsigned(raw) << " restored=" << bool(previous);
         }
+        // A corpse keeps its physical owner and saved blend state, without a
+        // recovery graph or any route back into GetUp selection.
+        if (dead) return false;
         if (pendingHit && !service.getUpPlayback(key)->mPhysicalHit->mApplied)
         {
             // A recovered actor can retain its physical renderer/body. Reuse

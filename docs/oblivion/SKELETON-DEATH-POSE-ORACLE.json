@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "asset": {
+    "archive": "Oblivion - Meshes.bsa",
+    "member": "meshes/creatures/skeleton/skeleton.nif",
+    "sha256": "2b20eb7c173d3b8cf20c22f4952f93f2fdb8769768f9546dd35fde8a9b6f2abc",
+    "runtime_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+    "bodies": 17,
+    "joints": 13,
+    "death_kf_present": false
+  },
+  "asset_extraction": "build/oblivion-compat/skeleton-death-pose/asset-extraction.json",
+  "structural_probe": "build/oblivion-compat/skeleton-death-pose/rig-inspector.json",
+  "structural_probe_source": "build/oblivion-compat/skeleton-death-pose/inspect-rig.cpp",
+  "scope": "Original archive bytes identify the model. Body/joint structure is decoded by this fork\u2019s NIF reader; this is structural evidence, not an independent original-executable death/controller oracle.",
+  "native_policy": "Existing immutable NIF definitions and owned Down/scene/snapshot pipeline are reused. Reasonable collapse and persistence are required; bit-identical original physics is not claimed.",
+  "baseline": {
+    "corpse_source_sha256": "99d9e0ee200476312e3cabfce7448aec5e4f81d1596aa067f36ea5dcb7495d5f",
+    "cold_course": "build/oblivion-compat/skeleton-defeat/normal-corpse-presentation-01",
+    "observation": "Actor.isDead is true while raw Health retains0.597; legacy numbered death groups do not give this original Skeleton a death animation. Cold load leaves a bind pose.",
+    "note": "The assembly ragdoll_bones log counts applied saved pose bones; zero alone is not proof of a missing physical rig."
+  }
+}

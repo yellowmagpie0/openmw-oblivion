@@ -1,0 +1,672 @@
+{
+  "schema_version": 1,
+  "accepted": true,
+  "scope": "Original Skeleton physical death admission, fresh kill/collapse and owned corpse restoration; full M15 and expedition remain open",
+  "tested_cpp": {
+    "path": "apps/openmw/mwworld/worldimp.cpp",
+    "sha256": "055025a2c9f4b73107c953a22343c42eb6586ef502fc902f67e8898fbf261bfa"
+  },
+  "checks": [
+    {
+      "receipt": "build/oblivion-compat/skeleton-death-pose/normal-focused-01/verification.json",
+      "sha256": "7b549321183798d21fa54b66eb79ac8cb736f0a496275e315e7adcb3bdc5dbbc",
+      "selection": {
+        "executed": 336,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*Recovery*:*Ragdoll*:*GetUp*",
+        "binary_sha256": "53e7a8095c530ed50cea172e86b13023bcd5e4237cfd93125a69e28f21917a13",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "8b096ade564581c0560036dca7ea087f6e600ce01bfd137407da7c3838f9241a",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "d20a6e71f87bf7ca9ec01b23e23348e12eccfcc4",
+        "source_fingerprint": "c649a73ad13061073b71386477f2ed9e5725d39fa16b6a00386b0c718acb9d25"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/skeleton-death-pose/sanitized-focused-01/verification.json",
+      "sha256": "ad2f49d80983f4acf3b419c39ae9990a5b968553610961953f5fac59b45288dd",
+      "selection": {
+        "executed": 336,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*Recovery*:*Ragdoll*:*GetUp*",
+        "binary_sha256": "f04efbe005620e83887346eb18b635377780f4d136214e56ed8039d865333b4a",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "23dd37b2f79f14ecda9a332c325010840cb52d2e59c7a23ea166ee7aeac04efd",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "d20a6e71f87bf7ca9ec01b23e23348e12eccfcc4",
+        "source_fingerprint": "c649a73ad13061073b71386477f2ed9e5725d39fa16b6a00386b0c718acb9d25"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/skeleton-death-pose/normal-integration-01/verification.json",
+      "sha256": "2297c213efe317d47ad12b488b1fe7251466ec2485d7c3b88ba960134931c8b7",
+      "selection": {
+        "executed": 2278,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "53e7a8095c530ed50cea172e86b13023bcd5e4237cfd93125a69e28f21917a13",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "5e7d900010a44e5ace2b832e76ded0650c4fceeb54cb56081228c2f763baa55b",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "d20a6e71f87bf7ca9ec01b23e23348e12eccfcc4",
+        "source_fingerprint": "c649a73ad13061073b71386477f2ed9e5725d39fa16b6a00386b0c718acb9d25"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/skeleton-death-pose/sanitized-integration-01/verification.json",
+      "sha256": "0fefeca2acb851b09093ff18ed68fb405e0d3f9aabe90b2ac2ebc8d06588080a",
+      "selection": {
+        "executed": 2278,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "f04efbe005620e83887346eb18b635377780f4d136214e56ed8039d865333b4a",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "364ac066097d205030cfd7f80b92baeb05e980aba5cd00e260167197507f60f0",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "d20a6e71f87bf7ca9ec01b23e23348e12eccfcc4",
+        "source_fingerprint": "c649a73ad13061073b71386477f2ed9e5725d39fa16b6a00386b0c718acb9d25"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/skeleton-death-pose/python-01/verification.json",
+      "sha256": "9e8f613e0d60d5d9fc2485f910180f3239ac30fd224c924769a7a1c206e2da49",
+      "selection": {
+        "executed": 612,
+        "passed": true,
+        "log_sha256": "60c592547735880143e76b54c3c2e99814724c82ab3c692b403bd30ac5f1f3de"
+      },
+      "tested_source": {
+        "head": "d20a6e71f87bf7ca9ec01b23e23348e12eccfcc4",
+        "source_fingerprint": "bee01309fa8ff09420d4f6acea587f2cb56645005ea3f3ac1a064d7b860c4a14"
+      }
+    }
+  ],
+  "courses": [
+    {
+      "course": "build/oblivion-compat/skeleton-death-pose/normal-corpse-pose-01",
+      "audit": "build/oblivion-compat/skeleton-death-pose/normal-corpse-pose-01/death-pose-audit.json",
+      "audit_sha256": "aa36cd0cd93df8c40bfcc7131497eeebc6e64fbe0e490977c66872c7795aa845",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_death_pose.json",
+      "manifest_sha256": "82615a1251217dca762c037f7bddc2c72f2f01f546f9480ab6bc4db03fa89798",
+      "result": {
+        "phase": "admit",
+        "sanitized": false,
+        "source_sha256": "99d9e0ee200476312e3cabfce7448aec5e4f81d1596aa067f36ea5dcb7495d5f",
+        "save_sha256": "6a05f194e4572def13d2b270a8309239c8b63dba68bfd0687a3d856de9812d98",
+        "binary_sha256": "cde56dd6bbfcf0c17c6ec8e3ced94aa6efd344cb4717d04557b8b0b39f6974b5",
+        "player_health": 51.40465545654297,
+        "blunt_before": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "blunt_after": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "life": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "base": "content:oblivion.esm:024ddb",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "bodies": 17,
+        "asset_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+        "rendered_center_height": -8.421142578125,
+        "death_callbacks": []
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-death-pose/normal-corpse-inspect-01",
+      "audit": "build/oblivion-compat/skeleton-death-pose/normal-corpse-inspect-01/death-pose-audit.json",
+      "audit_sha256": "db3806fcb6952a870e304929b1e7ee317b32f92e1b8fce569c9a79305ad80c44",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_death_pose_inspect.json",
+      "manifest_sha256": "fc78bcc2a1dcbf3c0977029fa47c2e8cb9097aff184f699cb1269953706080d7",
+      "result": {
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "6a05f194e4572def13d2b270a8309239c8b63dba68bfd0687a3d856de9812d98",
+        "save_sha256": "f7754ce5fc3327e7fdcedbc105cbe03550f93b68772d29b87f9e104ea772ca28",
+        "binary_sha256": "cde56dd6bbfcf0c17c6ec8e3ced94aa6efd344cb4717d04557b8b0b39f6974b5",
+        "player_health": 51.40465545654297,
+        "blunt_before": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "blunt_after": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "life": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "base": "content:oblivion.esm:024ddb",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "bodies": 17,
+        "asset_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+        "rendered_center_height": -1.671142578125,
+        "death_callbacks": []
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-death-pose/sanitized-corpse-pose-01",
+      "audit": "build/oblivion-compat/skeleton-death-pose/sanitized-corpse-pose-01/death-pose-audit.json",
+      "audit_sha256": "9562f32acc66496a96dd1ff759860fd4a7a7d16afc2154f18dab84cf98052d6c",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_death_pose_sanitized.json",
+      "manifest_sha256": "14b72f669065e3b32aaac884aa5959983b3af052c010adc144a32e6808bbaa94",
+      "result": {
+        "phase": "admit",
+        "sanitized": true,
+        "source_sha256": "99d9e0ee200476312e3cabfce7448aec5e4f81d1596aa067f36ea5dcb7495d5f",
+        "save_sha256": "3adef52287948ffa8cc2c25bde58aca99bea3041ff7103273c816e0614fb842d",
+        "binary_sha256": "1a305a647638d1329863b9ab073b90768085a6e73ccc7c298b80eb0aa77110ff",
+        "player_health": 51.40465545654297,
+        "blunt_before": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "blunt_after": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "life": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "base": "content:oblivion.esm:024ddb",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "bodies": 17,
+        "asset_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+        "rendered_center_height": 58.313232421875,
+        "death_callbacks": []
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-death-pose/sanitized-corpse-inspect-01",
+      "audit": "build/oblivion-compat/skeleton-death-pose/sanitized-corpse-inspect-01/death-pose-audit.json",
+      "audit_sha256": "7be1f12682a820e6eeca0bb65b5704e7354099f4081e2b333e005e401f6b4b12",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_death_pose_inspect_sanitized.json",
+      "manifest_sha256": "ec783f1911f7b51ca509934e60604d14dce2633f99b97a3fcc6ce5f76660bd77",
+      "result": {
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "3adef52287948ffa8cc2c25bde58aca99bea3041ff7103273c816e0614fb842d",
+        "save_sha256": "7e47c4fd0825ba5aa99dd819133fb610af51464cd7a4e53f2c3f23e590b373a5",
+        "binary_sha256": "1a305a647638d1329863b9ab073b90768085a6e73ccc7c298b80eb0aa77110ff",
+        "player_health": 51.40465545654297,
+        "blunt_before": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "blunt_after": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "life": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "base": "content:oblivion.esm:024ddb",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "bodies": 17,
+        "asset_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+        "rendered_center_height": -2.761962890625,
+        "death_callbacks": []
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-death-pose/normal-hot-death-01",
+      "audit": "build/oblivion-compat/skeleton-death-pose/normal-hot-death-01/death-pose-audit.json",
+      "audit_sha256": "7fa5d6937b96928af0f7486e344fe1294f379834377b2d71b61f4c999573311c",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_death_pose_hot.json",
+      "manifest_sha256": "57f9bbd431cc049440fe2516efcc4a296c63c68498c031cf3e7816b01e73a3e0",
+      "result": {
+        "phase": "hot",
+        "sanitized": false,
+        "source_sha256": "16f23ad74d5b7fde691e9aa6d011096155957c0049251528ec22faccd4c39fb9",
+        "save_sha256": "43a5cbec994c77178d03c9c502bb3d472fa05b61acba84de3307671494ea8510",
+        "binary_sha256": "cde56dd6bbfcf0c17c6ec8e3ced94aa6efd344cb4717d04557b8b0b39f6974b5",
+        "player_health": 51.40465545654297,
+        "blunt_before": {
+          "base": 35.0,
+          "experience": 1.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "blunt_after": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "life": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "base": "content:oblivion.esm:024ddb",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "bodies": 17,
+        "asset_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+        "rendered_center_height": 0.20361328125,
+        "death_callbacks": [
+          "51"
+        ]
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-death-pose/normal-hot-restart-01",
+      "audit": "build/oblivion-compat/skeleton-death-pose/normal-hot-restart-01/death-pose-audit.json",
+      "audit_sha256": "26945e77bb6df3fa047a6e02aa6d6f86d65bb9aedb641feeb53ecca53b3de449",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_death_pose_inspect.json",
+      "manifest_sha256": "fc78bcc2a1dcbf3c0977029fa47c2e8cb9097aff184f699cb1269953706080d7",
+      "result": {
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "43a5cbec994c77178d03c9c502bb3d472fa05b61acba84de3307671494ea8510",
+        "save_sha256": "201979758edd473452d8f735fe999689814d45da0235e8d3901f3de2a6c8d123",
+        "binary_sha256": "cde56dd6bbfcf0c17c6ec8e3ced94aa6efd344cb4717d04557b8b0b39f6974b5",
+        "player_health": 51.40465545654297,
+        "blunt_before": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "blunt_after": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "life": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "base": "content:oblivion.esm:024ddb",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "bodies": 17,
+        "asset_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+        "rendered_center_height": -0.39453125,
+        "death_callbacks": []
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-death-pose/sanitized-hot-death-02",
+      "audit": "build/oblivion-compat/skeleton-death-pose/sanitized-hot-death-02/death-pose-audit.json",
+      "audit_sha256": "2e34cc7fdfe2eb8a053c3724fb44e3243a454285beaa97610e1de0eb731f68e3",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_death_pose_hot_sanitized.json",
+      "manifest_sha256": "eff01526c049317c79c081acffcc66cb506fe60642cfbf2691d8b42d24f858c2",
+      "result": {
+        "phase": "hot",
+        "sanitized": true,
+        "source_sha256": "16f23ad74d5b7fde691e9aa6d011096155957c0049251528ec22faccd4c39fb9",
+        "save_sha256": "c291c036274bf40e9ba298e8606634e7633b2489220dbd48099de3c4c91d00a5",
+        "binary_sha256": "1a305a647638d1329863b9ab073b90768085a6e73ccc7c298b80eb0aa77110ff",
+        "player_health": 21.151260375976562,
+        "blunt_before": {
+          "base": 35.0,
+          "experience": 1.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "blunt_after": {
+          "base": 35.0,
+          "experience": 3.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "life": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "base": "content:oblivion.esm:024ddb",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        "bodies": 17,
+        "asset_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+        "rendered_center_height": -0.090087890625,
+        "death_callbacks": [
+          "51"
+        ]
+      }
+    }
+  ],
+  "images": [
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/normal-corpse-pose-01/original-Skeleton-corpse-cold-load.png",
+      "sha256": "c16238df68a575110a71fc103f8413a298c669246327540db35ff4faaa05aae7",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/normal-corpse-inspect-01/original-collapsed-Skeleton-focused.png",
+      "sha256": "25c620423d2e45458e33b5329bfe5eb8a44f598a0c47bc4a4041803c90696806",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/sanitized-corpse-pose-01/original-Skeleton-corpse-cold-load.png",
+      "sha256": "85443e40387ef0e3de4863cedc3e77a0d10a883e70a62242a8f6ece11fad5319",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/sanitized-corpse-inspect-01/original-collapsed-Skeleton-focused.png",
+      "sha256": "418d1522d395535c0925951064d4b6df3c6f8827986968b2f30fda9f67eb7498",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/normal-hot-death-01/original-Skeleton-defeat-after.png",
+      "sha256": "d70c4089ea07ddfbe0efb4abbaf16f7494758f7010097f243dc063c76db5e22e",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/normal-hot-death-01/original-Skeleton-defeat-before.png",
+      "sha256": "e8d3297472f8e9b577e94935bf0e9187e0d8c449db72f4a78ef25ab793a3237e",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/normal-hot-restart-01/original-collapsed-Skeleton-focused.png",
+      "sha256": "e70d47421166ff01d43efd015e1738ddaf08101a71d6773576322579560011d6",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/sanitized-hot-death-02/original-Skeleton-defeat-after.png",
+      "sha256": "652846a5021b7cc27f11d7ec15bab39a7943acd447c5911b7e4a008895a5af8b",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-death-pose/sanitized-hot-death-02/original-Skeleton-defeat-before.png",
+      "sha256": "d14c8c3d0ef8dce198a7cbecc22792c4d30650d0e29a422fb747291679c90e96",
+      "visual_review": "Inspected. Initial level-camera views establish context; focused views and fresh-kill after frames show the collapsed original Skeleton."
+    }
+  ],
+  "baseline": {
+    "hot_course": "build/oblivion-compat/skeleton-defeat/normal-defeat-baseline-03",
+    "cold_course": "build/oblivion-compat/skeleton-defeat/normal-corpse-presentation-01",
+    "images_inspected": 3,
+    "observation": "Native life is Dead but old presentation retains attack/bind pose. Raw Health0.597 is not a living-state test."
+  },
+  "original_asset": {
+    "extraction": "build/oblivion-compat/skeleton-death-pose/asset-extraction.json",
+    "sha256": "2b20eb7c173d3b8cf20c22f4952f93f2fdb8769768f9546dd35fde8a9b6f2abc",
+    "runtime_hash": "d5618e8d5d15575282fffed5ffdc92b6",
+    "structural_probe": "build/oblivion-compat/skeleton-death-pose/rig-inspector.json",
+    "bodies": 17,
+    "joints": 13
+  },
+  "retained_observation_failure": {
+    "course": "build/oblivion-compat/skeleton-death-pose/sanitized-hot-death-01",
+    "reason": "Actor died and body fell, but the input loop waited for the combat aim message which stopped after death. Retry02 keeps aim observations available across that transition.",
+    "cpp_changed": false
+  },
+  "sanitizers": {
+    "engine": "ASan and UBSan; leak checking enabled",
+    "rendered": "ASan and UBSan; leak checking disabled"
+  },
+  "limits": [
+    "Physical Down profile is reused; exact original death motors, forces and weapon impulse/drop policy are not instruction-certified.",
+    "Only supported physical NIFs enter this path; nonphysical models retain their previous legacy handling.",
+    "NPC death courses, other Creature rigs, resurrection, loose-weapon death drops and general M15 remain separate.",
+    "Loot and the Vilverin exit course remain open."
+  ]
+}

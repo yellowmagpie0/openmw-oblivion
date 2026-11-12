@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "feature": "Owned physical presentation of supported dead native actors",
+  "milestone": "M15 and Vilverin expedition remain open",
+  "real_content": {
+    "reference": "content:oblivion.esm:06c2ed",
+    "base": "content:oblivion.esm:024ddb",
+    "model": "meshes/creatures/skeleton/skeleton.nif",
+    "parts": [
+      "Skellie.NIF",
+      "Skull.NIF"
+    ]
+  },
+  "behavior": [
+    "Dead native actors with a rendered physical NIF can enter the existing owned scene/body path. Previously the death branch returned before that admission, leaving the Skeleton in its attack pose or a bind pose after reload.",
+    "The original Skeleton collapses using its authored17 bodies and13 joints. Physics, renderer and cached snapshot publish together; an existing snapshot restores its body identities and collision filters.",
+    "Dead actors retain physical ownership without entering GetUp. Existing recovery cleanup still retires its graph, then rebinds actor pointers after publication.",
+    "Cold corpses retain life/killer, Health, XP, inventory, native death counts and innate ownership. A fresh kill emits one death callback and creates one physical owner. Schema99 unchanged."
+  ],
+  "limits": [
+    "This reuses the existing physical Down profile; exact original death motor timing, impulses and weapon-drop behavior are not certified.",
+    "Models without a physical definition retain their existing legacy death handling.",
+    "This course certifies Skeleton presentation and ownership, not all Creature models, NPC death courses, resurrection or general M15 completion.",
+    "The axe remains in the original corpse inventory; independent loose-weapon death drops and corpse loot are separate work."
+  ]
+}
