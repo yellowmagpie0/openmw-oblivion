@@ -1,0 +1,629 @@
+{
+  "schema_version": 1,
+  "accepted": true,
+  "scope": "Original Club/Skeleton Player Blunt damaging use, completed cold loads and turned-away misses; whole expedition remains open",
+  "tested_cpp": {
+    "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+    "sha256": "ddde379e790079535b661cb1a937ebdb15948245c96de093dbdc70881e623627"
+  },
+  "checks": [
+    {
+      "receipt": "build/oblivion-compat/blunt-use/normal-focused-01/verification.json",
+      "sha256": "5799ddcfd12e940a764d6de26ca4cbc2c69ae18491713ec8c214a09656fb6e66",
+      "selection": {
+        "executed": 5,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*SkillTraining*:*SkillUse*:*MeleeContact*",
+        "binary_sha256": "c82de4c07a4511e22785277440011e84fd0817e3bb1a9e93dc7d4a31a61820fa",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "c02799310ea3c49fab64586b2b5e60741ca992ce47b229eeaf771bb003a15af4",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "59c4a994347faa61c326a9bd5f9d1b86f5dd77fd",
+        "source_fingerprint": "f426434c454855c275204a13e78f242cc54e3a261aff95d5fcba5674f6c25909"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/blunt-use/sanitized-focused-01/verification.json",
+      "sha256": "24fac321f2069ade822e15230bab806b794d94e37909f84871b1525cac96e6cb",
+      "selection": {
+        "executed": 5,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*SkillTraining*:*SkillUse*:*MeleeContact*",
+        "binary_sha256": "486d3c3f0e8d5068267d883605f44e1656ec62036206f298c3e9deaced5d46a0",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "47d5666fda34806c53190023944cdb23b20af210c9a9963547af9c1d35330c0e",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "59c4a994347faa61c326a9bd5f9d1b86f5dd77fd",
+        "source_fingerprint": "f426434c454855c275204a13e78f242cc54e3a261aff95d5fcba5674f6c25909"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/blunt-use/normal-integration-01/verification.json",
+      "sha256": "59c67e7c9bb4df3e80dd1c5bfb6fcfed984a5290eb9d4013a4f354d17f3d3131",
+      "selection": {
+        "executed": 2278,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "c82de4c07a4511e22785277440011e84fd0817e3bb1a9e93dc7d4a31a61820fa",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "b60544dbb99f1810a1874875bc94b992d27e37839f5abedd5ac742bfd3997f89",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "59c4a994347faa61c326a9bd5f9d1b86f5dd77fd",
+        "source_fingerprint": "f426434c454855c275204a13e78f242cc54e3a261aff95d5fcba5674f6c25909"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/blunt-use/sanitized-integration-01/verification.json",
+      "sha256": "0bea690629cc3444fa15eb12b4672ef963688c9348e46226803c3f01e083fcf4",
+      "selection": {
+        "executed": 2278,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "486d3c3f0e8d5068267d883605f44e1656ec62036206f298c3e9deaced5d46a0",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "1fbd4d2e1b0da66d7578a95c6e09543239b1602b156cdf0afa426a8cc59668f7",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "59c4a994347faa61c326a9bd5f9d1b86f5dd77fd",
+        "source_fingerprint": "f426434c454855c275204a13e78f242cc54e3a261aff95d5fcba5674f6c25909"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/blunt-use/python-01/verification.json",
+      "sha256": "90d10cc96472cf059764a8b36f974c91c89aa353284621338ef66d7e4db983d9",
+      "selection": {
+        "executed": 612,
+        "passed": true,
+        "log_sha256": "f00ba09e8b8fefbb003dfeb1f6f48ae20cb3b987ecade56f4db5b9326ec368ef"
+      },
+      "tested_source": {
+        "head": "59c4a994347faa61c326a9bd5f9d1b86f5dd77fd",
+        "source_fingerprint": "0f415580184be3bba3cfa3ddbebf7ba3ca89440610203ad7208e6d801b400006"
+      }
+    }
+  ],
+  "courses": [
+    {
+      "course": "build/oblivion-compat/blunt-use/normal-blunt-hit-01",
+      "audit": "build/oblivion-compat/blunt-use/normal-blunt-hit-01/blunt-audit.json",
+      "audit_sha256": "cbfc8fbd823bd519e0c6dca0d344ee21cdb798c5d8657e64a9eb87fabd8ef6e6",
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": false,
+        "source_sha256": "4163ec28dc8c3bb2c60df226c6d1682b3a5b65335b744f92fa2bac4fac47bf17",
+        "save_sha256": "b3a643bab575c89667e3d64cd709cc9fa1a644cd5a22cdc652870724282c2442",
+        "binary_sha256": "acb93515f7e971c1a13a031eb61eb2ea707d68f6749903826873b0167c7dd46e",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "hits": [
+          "id=859 fatigue_cost=39 before=170 after=131 action=3 health_damage=7.31124 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=60.76 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 12.68876314163208,
+        "club_condition_before": 61.18003845214844,
+        "club_condition_after": 60.760040283203125
+      }
+    },
+    {
+      "course": "build/oblivion-compat/blunt-use/normal-blunt-restart-01",
+      "audit": "build/oblivion-compat/blunt-use/normal-blunt-restart-01/blunt-audit.json",
+      "audit_sha256": "8beea0d329450e70607bb06656e88f9e308943c2cbfda5f75b19bc130d1e5f4d",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "b3a643bab575c89667e3d64cd709cc9fa1a644cd5a22cdc652870724282c2442",
+        "save_sha256": "95208c28560da5b8ce0110e597d11631a67821b2e1a814382072cb8a997eea4b",
+        "binary_sha256": "acb93515f7e971c1a13a031eb61eb2ea707d68f6749903826873b0167c7dd46e",
+        "before": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "hits": [],
+        "enemy_health_before": 12.68876314163208,
+        "enemy_health_after": 12.68876314163208,
+        "club_condition_before": 60.760040283203125,
+        "club_condition_after": 60.760040283203125
+      }
+    },
+    {
+      "course": "build/oblivion-compat/blunt-use/normal-blunt-miss-01",
+      "audit": "build/oblivion-compat/blunt-use/normal-blunt-miss-01/blunt-audit.json",
+      "audit_sha256": "6a227298b65703e5fa6a53ed4dfe894f51aa88afaaaee480d5e65355fff86a9d",
+      "result": {
+        "passed": true,
+        "phase": "miss",
+        "sanitized": false,
+        "source_sha256": "4163ec28dc8c3bb2c60df226c6d1682b3a5b65335b744f92fa2bac4fac47bf17",
+        "save_sha256": "4f08f7e378965f16eef4e5bc5ce570dd4e202aa19798d45d40e662805ba5e65c",
+        "binary_sha256": "acb93515f7e971c1a13a031eb61eb2ea707d68f6749903826873b0167c7dd46e",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=858 fatigue_cost=7.8 before=170 after=162.2 action=3 health_damage=0 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=none victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 20.0,
+        "club_condition_before": 61.18003845214844,
+        "club_condition_after": 61.18003845214844
+      }
+    },
+    {
+      "course": "build/oblivion-compat/blunt-use/sanitized-blunt-hit-01",
+      "audit": "build/oblivion-compat/blunt-use/sanitized-blunt-hit-01/blunt-audit.json",
+      "audit_sha256": "db117882fe404a00e718f8eeb3fbe7f922179f35addbbc30a594251dee78f79f",
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": true,
+        "source_sha256": "4163ec28dc8c3bb2c60df226c6d1682b3a5b65335b744f92fa2bac4fac47bf17",
+        "save_sha256": "1ed648cd4928ba66250bd916e3745efbd79393d076d877833b9c20d3389f51af",
+        "binary_sha256": "66ff52e045b725bac965fa183bc2a75866d4edd380c052f7bf6d51722fe7e7d9",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=858 fatigue_cost=7.8 before=170 after=162.2 action=3 health_damage=2.43708 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=60.76 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 17.562921047210693,
+        "club_condition_before": 61.18003845214844,
+        "club_condition_after": 60.760040283203125
+      }
+    },
+    {
+      "course": "build/oblivion-compat/blunt-use/sanitized-blunt-restart-01",
+      "audit": "build/oblivion-compat/blunt-use/sanitized-blunt-restart-01/blunt-audit.json",
+      "audit_sha256": "05a38d686be93848277139042569e13b68abffae72e900aacca9d7c8f61b08ed",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "1ed648cd4928ba66250bd916e3745efbd79393d076d877833b9c20d3389f51af",
+        "save_sha256": "8536c121f4320c862976ab44bea0be5d191db2300c232123ee2dcceb95b1b560",
+        "binary_sha256": "66ff52e045b725bac965fa183bc2a75866d4edd380c052f7bf6d51722fe7e7d9",
+        "before": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [],
+        "enemy_health_before": 17.562921047210693,
+        "enemy_health_after": 17.562921047210693,
+        "club_condition_before": 60.760040283203125,
+        "club_condition_after": 60.760040283203125
+      }
+    },
+    {
+      "course": "build/oblivion-compat/blunt-use/sanitized-blunt-miss-01",
+      "audit": "build/oblivion-compat/blunt-use/sanitized-blunt-miss-01/blunt-audit.json",
+      "audit_sha256": "6d8987fcef4fc4c099de56bea68a7bab42c40eba97acedc272f45d7ef093c6e2",
+      "result": {
+        "passed": true,
+        "phase": "miss",
+        "sanitized": true,
+        "source_sha256": "4163ec28dc8c3bb2c60df226c6d1682b3a5b65335b744f92fa2bac4fac47bf17",
+        "save_sha256": "d860e2a1d890fbb6376e6e653fa03a82f5e37ee1ff5aec2b5758265eed2020ce",
+        "binary_sha256": "66ff52e045b725bac965fa183bc2a75866d4edd380c052f7bf6d51722fe7e7d9",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=858 fatigue_cost=7.8 before=170 after=162.2 action=3 health_damage=0 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=none victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 20.0,
+        "club_condition_before": 61.18003845214844,
+        "club_condition_after": 61.18003845214844
+      }
+    }
+  ],
+  "images": [
+    {
+      "path": "build/oblivion-compat/blunt-use/normal-blunt-hit-01/original-Skeleton-contact-after.png",
+      "sha256": "d82b9ebac50b632287a32997b901da55910b56f8f28d14e5174ca9288acf601f",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/normal-blunt-hit-01/original-Skeleton-contact-before.png",
+      "sha256": "03deb0fdf07ad6d78044b2aaf5dd1f9c642e8d402204dfe9bd480ff8ae358564",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/normal-blunt-restart-01/original-Skeleton-cold-load.png",
+      "sha256": "034fae420108e9af119243318a64e51b08a7d9df073e24b0776df60f7fa00f68",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/normal-blunt-miss-01/original-Skeleton-contact-after.png",
+      "sha256": "53630921197ce5ef769cd718d6110bce58d13491f0895a3cf47152ddd26c146b",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/normal-blunt-miss-01/original-Skeleton-contact-before.png",
+      "sha256": "f6e0e978755369158f1c4f6fe57e25cc2698f19dfbfe7b9a187b216ce99fd065",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/sanitized-blunt-hit-01/original-Skeleton-contact-after.png",
+      "sha256": "465a3c9d6bb8642e5637437624cda35e5abb19a5b280172f759d04e67aaa6732",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/sanitized-blunt-hit-01/original-Skeleton-contact-before.png",
+      "sha256": "55e2f3a3366b45edb5347f6f0064122bbab97961b9fe9d5fb99c15f1984c1df0",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/sanitized-blunt-restart-01/original-Skeleton-cold-load.png",
+      "sha256": "2d8d79d09528b2d28ca699e647b8c4418f7bf9b0af07a101555faf89e00a39b0",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/sanitized-blunt-miss-01/original-Skeleton-contact-after.png",
+      "sha256": "8227251a669f4b1e6a4c6560744d759d5bb796b56b46c5ac3e3df526cb0c2c56",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    },
+    {
+      "path": "build/oblivion-compat/blunt-use/sanitized-blunt-miss-01/original-Skeleton-contact-before.png",
+      "sha256": "180be34888e7e3845cf28ee5a7d15bd15de9319245393598b6eabb412ac8770b",
+      "visual_review": "Inspected original rendered frame; normal restart has obscured camera geometry. State acceptance uses independent damage/XP/save observations."
+    }
+  ],
+  "baseline": {
+    "course": "build/oblivion-compat/expedition-contact/normal-skeleton-contact-baseline-01",
+    "audit": {
+      "passed": true,
+      "phase": "baseline",
+      "sanitized": false,
+      "source_sha256": "4163ec28dc8c3bb2c60df226c6d1682b3a5b65335b744f92fa2bac4fac47bf17",
+      "save_sha256": "61d7a0089cd228b102a2f4c58b03412eb8ef3b2dd90e0162f5ffef417c623d79",
+      "binary_sha256": "4cc8c0c90ba642b8bdd4c299c9dd78e596d71d2b6c06e37f881cd6292c35ddfe",
+      "before": {
+        "base": 35.0,
+        "experience": 0.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          1,
+          0
+        ]
+      },
+      "after": {
+        "base": 35.0,
+        "experience": 0.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          1,
+          0
+        ]
+      },
+      "contacts": [
+        "id=858 fatigue_cost=7.8 before=170 after=162.2 action=3 health_damage=2.43708 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=60.76 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+      ],
+      "enemy_health_before": 20.0,
+      "enemy_health_after": 17.562921047210693,
+      "club_condition_before": 61.18003845214844,
+      "club_condition_after": 60.760040283203125
+    },
+    "images_inspected": 2
+  },
+  "original_dispatcher": {
+    "report": "build/oblivion-compat/blunt-use/original-use-report.json",
+    "sha256": "88261eb1b47c0082832d342eae3c9c56a3c8448ebf3b49bdd21264daf6514377",
+    "cases": 18,
+    "caller_policy_certified": false
+  },
+  "source_creation": {
+    "health_preparation_audit": "build/oblivion-compat/expedition-contact/health-preparation-audit.json",
+    "prepared_save_sha256": "8b8fb196e04df1977c877bbdd166c83b5895df13da47991c3b48bd24f7698b47",
+    "actual_contact_save_sha256": "4163ec28dc8c3bb2c60df226c6d1682b3a5b65335b744f92fa2bac4fac47bf17",
+    "manual_input": "build/oblivion-compat/expedition-contact/normal-crypt-approach-03/manual-save-input.json",
+    "manual_input_sha256": "125ee8fd2e3e4c301c814399efe79a158bce0ee6e97a5b3b229677fcbf73178e",
+    "navigation_manifest_passed": false,
+    "reason": "Final45-unit waypoint tolerance was tighter than actual46-unit actor spacing. Ordinary X11 F5 saved the genuine reached location; nav manifest was then canceled, not called passed.",
+    "health_preparation_images_inspected": 4,
+    "navigation_image_inspected": 1
+  },
+  "retained_failed_navigation": [
+    "build/oblivion-compat/expedition-contact/normal-crypt-approach-01",
+    "build/oblivion-compat/expedition-contact/normal-crypt-approach-02",
+    "build/oblivion-compat/expedition-contact/normal-crypt-approach-03"
+  ],
+  "sanitizers": {
+    "engine": "ASan and UBSan; leak checking enabled",
+    "rendered": "ASan and UBSan; leak checking disabled"
+  },
+  "limits": [
+    "Original melee caller use/blocked/miss policy is not instruction-certified.",
+    "Blunt level crossing, cap gameplay and saved pending contact remain open.",
+    "Camera obstruction after reload and actual creature retaliation need further encounter work.",
+    "No complete Vilverin expedition or general M15/M16 closure."
+  ]
+}

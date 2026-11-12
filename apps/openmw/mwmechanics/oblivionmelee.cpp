@@ -1276,7 +1276,12 @@ namespace MWMechanics
         const bool attackerRecoil = blockHit && requestsAttackerRecoil
             && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4
                 || attacker.getType() == ESM::REC_CREA4);
-        const auto observeCommittedEnchantment = [&] {
+        const bool trainBlunt = attacker == playerContact && deltas.mVictimHealth < 0
+            && deltas.mOrdinaryHitArguments && deltas.mOrdinaryHitArguments->mUsedSkill == 16;
+        const auto finishCommittedContact = [&] {
+            // Train after the strike is consumed, before an OnHit callback can
+            // save or change actors. Rejected contacts and misses grant no use.
+            if (trainBlunt) nativeWorld->useOblivionPlayerSkill(16, 0);
             if (!observeEnchantment) return;
             const bool spent = !deltas.mEnchantmentChargeChanges.empty();
             Log(Debug::Verbose) << "M15 weapon enchantment contact: actor=" << actor.serialize()
@@ -1294,7 +1299,7 @@ namespace MWMechanics
             });
             if (!draws) return std::nullopt;
             result.mRandomDraws = *draws;
-            observeCommittedEnchantment();
+            finishCommittedContact();
             // All contact continuations have published before a script can
             // Kill, change a quest, or save. The consumed strike owns once-only
             // dispatch, including after restore; misses have no struck script.
@@ -1306,7 +1311,7 @@ namespace MWMechanics
         if (!prepared || !prepared->commit())
             return std::nullopt;
         result.mRandomDraws = prepared->randomDraws();
-        observeCommittedEnchantment();
+        finishCommittedContact();
         dispatchCommittedMeleeHit(*nativeWorld, attacker, *contact);
         return result;
     }

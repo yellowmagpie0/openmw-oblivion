@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_record_facts": {
+    "skill_form": "000041",
+    "editor_id": "SkillBlunt",
+    "actor_value": 16,
+    "governing_attribute": 0,
+    "specialization": 0,
+    "primary_use": 0.5,
+    "secondary_use": 1,
+    "player_class": "023787",
+    "class_specialization": 0,
+    "major_skills": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+    ],
+    "club_form": "159829",
+    "club_editor_id": "CGClub",
+    "weapon_type": 2
+  },
+  "instruction_probe": {
+    "entry": "00668c30",
+    "cases": 18,
+    "levels": [
+      35,
+      99,
+      100
+    ],
+    "slots": [
+      0,
+      1
+    ],
+    "scale_arguments": [
+      0,
+      1,
+      2
+    ],
+    "boundaries": [
+      "565C50 skill lookup and446AF0 record lookup return independently audited SKIL fixture.",
+      "5F1910 returns declared Player base skill;668B30 captures XP publication.",
+      "Final progression publication, caller hit/miss policy, save/load and original live gameplay are not emulated."
+    ],
+    "report": "build/oblivion-compat/blunt-use/original-use-report.json",
+    "probe": "build/oblivion-compat/blunt-use/original-use-probe.py"
+  },
+  "record_audit": "build/oblivion-compat/blunt-use/original-skill-content-audit.json",
+  "record_audit_script": "build/oblivion-compat/blunt-use/audit-original-blunt.py"
+}

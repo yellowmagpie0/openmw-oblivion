@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "feature": "Player Blunt use from committed damaging physical contact",
+  "milestone": "M15 remains open",
+  "real_content": {
+    "reference": "content:oblivion.esm:06c2ed",
+    "levelled_base": "content:oblivion.esm:03409c",
+    "resolved_creature": "content:oblivion.esm:024ddb",
+    "weapon": "content:oblivion.esm:159829",
+    "ability": "content:oblivion.esm:02b532"
+  },
+  "behavior": [
+    "A committed ordinary or power Player physical strike using native skill16 and lowering victim Health grants winning SKIL primary-use XP once, before OnHit callbacks.",
+    "The original Club/Skeleton course grants0.5 XP. Blunt35, level/attribute/specialization counters and tutorial history retain their previous values.",
+    "Completed cold loads retain XP and damage without repeating them. A turned-away committed miss grants no XP, damage or wear.",
+    "No ability-ownership reconstruction or unresolved-effect bypass. Existing schema99."
+  ],
+  "limits": [
+    "Damaging-only use policy is practical; the original melee caller is not instruction-certified.",
+    "Counter and blocked/immune/zero-health contacts, Blade, HandToHand, defensive skills and saved pending strike playback are separate acceptance cases.",
+    "Blunt level crossing and cap gameplay are not certified by these low-XP courses.",
+    "Creature retaliation, camera visibility and whole Vilverin expedition acceptance remain open."
+  ]
+}
