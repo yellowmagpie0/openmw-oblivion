@@ -2596,6 +2596,11 @@ namespace MWMechanics
             if (update && update->mReleased)
             {
                 if (update->mApplied && skillUse) world->getPlayer().swapOblivionCharacterGenerationState(skillUse);
+                // Successful ordinary self-restoration uses SKIL's spellcast
+                // slot, after the saved release owner commits. Powers, scrolls
+                // and rejected releases do not train Restoration here.
+                if (update->mApplied && amounts && !scroll && !greaterPower)
+                    world->useOblivionPlayerSkill(25, 1);
                 Log(Debug::Info) << "M16 native cast release: spell=" << cast.mSpell.serialize()
                     << " applied=" << update->mApplied << " health=" << service->getPlayerValue(8)
                     << " magicka=" << service->getPlayerValue(9);

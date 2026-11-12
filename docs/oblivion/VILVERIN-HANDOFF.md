@@ -3,68 +3,58 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. Expedition and broader content acceptance remain open.
 
-Latest accepted chunk: ordinary damaging Player-arrow Marksman use. Actual
-Rusty Iron Bow047aca/Iron Arrow017829 hits bandit06bfc2 for about1.84 damage and
-adds authored0.8 XP once. Base5 and level/attribute/specialization counts stay
-unchanged; Lua progress0.276454 matches the native requirement. Both builds
-retain XP through cold load, with20 arrows and the same bow condition. A saved
-flight hitting original ARNHallTurn01/06bf42 awards none; two incoming Skeleton
-arrows lower Player110→99.3822 without awarding Player Marksman. Schema99.
-[Contract](MARKSMAN-USE-CONTRACT.json), [original facts](MARKSMAN-USE-ORACLE.json),
-[verification](MARKSMAN-USE-VERIFICATION.json).
+Latest accepted chunk: owned Heal Minor Wounds136 grants original Restoration
+secondary-use0.6 XP after successful release. Actual Skeleton-arrow injury:
+spend19 Magicka, restore about7.44 Health under further incoming fire. Base5,
+level/attribute/specialization counts and tutorial history stay unchanged. Menu
+selection/cancel gives none. Normal and instrumented cold loads retain XP; an
+instrumented saved released castself pose completes without a new heal/debit/
+award. Schema99. [Contract](RESTORATION-USE-CONTRACT.json),
+[original facts](RESTORATION-USE-ORACLE.json),
+[verification](RESTORATION-USE-VERIFICATION.json).
 
-Six original-content courses plus a captured pre-change hit baseline; all10
-primary/baseline images inspected. Focused14 and full2,278 engine tests in each
-build, Python612 pass. Broader ordinary XP remains open: zero-damage/blocked/
-immune/corpse policy, a Marksman level crossing and saved-flight delayed actor
-impact are not certified here. Original use amount/cap are independently checked;
-exact original projectile-caller policy remains uncertified.
+Five actual-content courses plus baseline; all14 images inspected. Focused8 and
+full2,278 engine checks in each build, Python612 pass. Engine sanitizer gates
+include leak checking; rendered courses disable it. Full-health, canceled
+windup, rejected cast, level crossing and other-school XP remain open. Exact
+original cast-caller policy is not certified; authored slot/cap are independently
+checked. Historical backend acceptance is unchanged.
 
-Marksman-owned combat continuation:
-`build/oblivion-compat/marksman-use/normal-marksman-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `3ce1f747e0ac4424405341a736ee4e0121cd5661f1927290344165b29ca5ab77`.
-Player64.4808 Health, base5/XP0.8,20 arrows; original bandit alive about18.158.
-This genuine earlier combat branch isolates XP. The separate innate-owned
-secret-wall continuation below remains the expedition route.
+Checkpoint: Security, Marksman and Restoration ordinary-use hooks now have real
+content evidence. Resume the creature-contact/expedition course before choosing
+more XP work; choose the next chunk from an observed failure or acceptance gap.
+The old crypt null-ownership branch remains conservatively unresolved.
 
-Adjacent actual source: incoming Skeleton-arrow course leaves Player99.3822/110
-Health at `build/oblivion-compat/marksman-use/normal-marksman-npc-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `df6747123211c25c94b78690b0f95e79fc0868ebfaa60ddfbf23336c9d5936c1`.
-Next action: inspect an ordinary known healing spell on this actual wound and
-select its observed missing functionality, while preserving the expedition route.
-
-Previous accepted chunk: original Undead Bone Resistances SPEL02b532, including
-RSPA/Resist Paralysis AV66. Genuine pre-Canosel source has no crypt Skeleton
-state; ordinary entry grants all five innate effects exactly once. Normal and
-instrumented fresh-process reloads retain the complete owner and values:
-Disease100, Poison100, Frost70, WaterBreathing1, Paralysis100. Schema99 retained.
-[Contract](BONE-RESISTANCES-CONTRACT.json),
-[independent original facts](BONE-RESISTANCES-ORACLE.json),
-[runtime/check receipts](BONE-RESISTANCES-VERIFICATION.json).
-
-Full normal/instrumented2,278 engine checks, 20 ability cases per build and
-Python612 pass. Six original-content courses cover grant, cold load, secret-wall
-continuation and old-null ownership; 11 accepted primary images inspected.
-Engine sanitizer gates include leak checking; rendered courses disable it.
-Historical backend acceptance is unchanged. Hostile Paralysis immunity and the
-actual physical-contact encounter remain separate runtime gates.
-
-Fresh ability-owned normal continuation:
+Primary expedition continuation with known innate ownership:
 `build/oblivion-compat/bone-resistances/normal-fresh-secret-wall-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
 SHA256 `2e1ff0b90fffaa1c36e550a228f8b182a5981549104c69ec18f2133f8baccc50`.
-Player64.4808 Health through the original secret wall, with original inventory.
-This replays an earlier genuine expedition branch. Next: continue the actual
-encounter from this owned state and select the next observed unsupported piece.
-Do not bypass unresolved effects or hand-edit saves.
+Player64.4808 Health through the original secret wall, original inventory. Next:
+prepare Health with the known healing spell using ordinary controls, continue
+toward an actual Skeleton encounter, and verify creature contact/owned equipment.
+No save edits or unresolved-effect bypass. The whole expedition remains open.
 
-Earlier crypt branch remains preserved:
-`build/oblivion-compat/crypt-skeleton/normal-crypt-skeleton-weapon-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `db0a894a0dbcc3e7b0a71dba3a23c0030a26eb3aca14650150e5f9e52ebd5da6`.
-It retains Security6/six earned picks/Player53.0011 Health and the exact owned
-IronWarAxe112. Null innate ownership is unknown and remains conservatively
-unresolved; the real compatibility course confirms no grant, repair or repeated
-equip. Newly constructed unsupported creatures now record known empty ownership
-so later support can grant safely. [Equipment chunk](CRYPT-SKELETON-WEAPON-VERIFICATION.json).
+Recent independent branches retain their progress:
+
+- [Undead Bone Resistances](BONE-RESISTANCES-VERIFICATION.json): RSPA fixedAV66
+  enables original SPEL02b532's complete five-effect innate grant. Normal and
+  instrumented reloads retain one owner. Fresh unsupported creatures keep known
+  empty ownership; existing null state stays unknown. Hostile Paralysis immunity
+  and actual physical-contact encounter acceptance remain separate runtime gates.
+- [Marksman use](MARKSMAN-USE-VERIFICATION.json): actual Rusty Iron Bow047aca/
+  Iron Arrow017829 hits bandit06bfc2 for about1.84 and grants0.8 XP once. Two cold
+  loads retain it; static ARNHallTurn01/06bf42 miss and incoming Skeleton arrows
+  grant no Player Marksman. Incoming-arrow continuation supplies the heal wound.
+- [Creature owned axe](CRYPT-SKELETON-WEAPON-VERIFICATION.json): old crypt source
+  `crypt-skeleton/normal-crypt-skeleton-weapon-restart-01` retains Security6/six
+  earned picks/Player53.0011 Health and IronWarAxe112. Its null innate ownership
+  stays unresolved; actual compatibility check confirms no grant/repair/re-equip.
+
+Restoration branch:
+`build/oblivion-compat/restoration-use/normal-heal-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `2899425e4b21ae020b908da6abbda20dfddc5485ebb4ca54dd252d93efb957e2`.
+Player85.6551 under active Skeleton arrows, Restoration5/XP0.6 and selected heal.
+This is a separate genuine earlier combat branch, not the primary innate-owned
+route. All source histories remain linked in their receipts.
 
 Earlier accepted slices and reusable evidence:
 
