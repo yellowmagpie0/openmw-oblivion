@@ -1,5 +1,6 @@
 #include "oblivioninteraction.hpp"
 #include "oblivionscriptmanager.hpp"
+#include "obliviontrespass.hpp"
 
 #include <algorithm>
 #include <array>
@@ -1095,7 +1096,14 @@ namespace MWWorld
         if (dispatchOblivionActivation(ptr, actor))
             return;
 
-        if (kind == OblivionInteractionKind::Door || kind == OblivionInteractionKind::Actor)
+        const bool isDoor = kind == OblivionInteractionKind::Door;
+        const ESM::RefId doorKey = ptr.getCellRef().getKey();
+        // Keep the door's existing key, NPC and permitted-exit paths. A Player
+        // without a key can use the same explicit lock choice as a container.
+        const bool pickDoor = isDoor && actor == getPlayerPtr() && ptr.getCellRef().isLocked()
+            && (doorKey.empty() || !oblivionPlayerHasItem(doorKey))
+            && !oblivionPlayerHasDoorExitPermission(*this, ptr, actor);
+        if ((isDoor && !pickDoor) || kind == OblivionInteractionKind::Actor)
         {
             activateOblivionReferenceDefault(ptr, actor);
             return;
@@ -1136,7 +1144,8 @@ namespace MWWorld
         if (isOwned)
             state.mCustomState["ownership_checked"] = true;
 
-        if (kind == OblivionInteractionKind::Container && !isPlaceholderCreature && ptr.getCellRef().isLocked())
+        if ((kind == OblivionInteractionKind::Container || pickDoor)
+            && !isPlaceholderCreature && ptr.getCellRef().isLocked())
         {
             state.mCustomState["lock_checked"] = true;
             const ESM::RefId lockKey = ptr.getCellRef().getKey();
@@ -1285,7 +1294,9 @@ namespace MWWorld
                 break;
             }
             case OblivionInteractionKind::Actor:
+                break;
             case OblivionInteractionKind::Door:
+                activateOblivionReferenceDefault(ptr, actor);
                 break;
             case OblivionInteractionKind::Book:
             {

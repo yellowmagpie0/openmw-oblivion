@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "name": "Unlock original Gate049bbd through explicit Auto Attempt with earned picks",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal camera=require('openmw.camera')\nlocal util=require('openmw.util')\nlocal elapsed=0\nreturn {{engineHandlers={{onFrame=function(dt)\n elapsed=elapsed+dt;if elapsed<.2 then return end;elapsed=0\n assert(not Actor.isDead(self),'Player died approaching authored iron gate')\n local gate=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x49bbd))\n assert(gate and gate:isValid(),'Authored iron gate unavailable')\n local bounds=gate:getBoundingBox()\n local target=bounds.center-util.vector3(0,0,bounds.halfSize.z*.6)\n local delta=target-self.position\n local distance=math.sqrt(delta.x*delta.x+delta.y*delta.y)\n print('VilverinContinue gate geometry center='..tostring(target))\n local eye=camera.getPosition()\n local direction=camera.viewportToWorldVector(util.vector2(.5,.5)):normalize()\n local ray=nearby.castRenderingRay(eye,eye+direction*145,{{ignore=self}})\n if ray.hitObject and ray.hitObject.id==gate.id then print('VilverinContinue gate focus confirmed') end\n print('VilverinContinue gate ray object='..tostring(ray.hitObject and ray.hitObject.id)..' distance='..tostring(ray.hitPos and (ray.hitPos-eye):length()))\n local p=camera.getViewTransform():apply(target)\n local yaw=math.atan2(p.x,-p.z)\n local pitch=-math.atan2(p.y,math.sqrt(p.x*p.x+p.z*p.z))\n print(string.format('VilverinContinue gate aim x=%d y=%d',math.max(-150,math.min(150,math.floor(yaw*64+.5))),math.max(-100,math.min(100,math.floor(pitch*64+.5)))))\n print('VilverinContinue gate first_person='..tostring(camera.getMode()==camera.MODE.FirstPerson))\n print('VilverinContinue gate sample pos='..tostring(self.position)..' distance='..distance..' health='..Actor.stats.dynamic.health(self).current)\n if distance<90 then print('VilverinContinue gate reached') end\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": ""
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinContinue gate sample",
+      "timeout_seconds": 420,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "VilverinContinue gate focus confirmed",
+      "after_start": true,
+      "timeout_seconds": 15,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "space",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M5 interaction: kind=door result=lockpick_prompt ref=content:oblivion.esm:049bbd",
+      "timeout_seconds": 15,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "(?:M5 door activation: result=animated|M5 interaction: kind=door result=locked) ref=content:oblivion.esm:049bbd",
+      "timeout_seconds": 120,
+      "maximum_iterations": 8,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "key_hold",
+          "value": "Tab",
+          "seconds": 0.15
+        },
+        {
+          "type": "key_hold",
+          "value": "Return",
+          "seconds": 0.2
+        },
+        {
+          "type": "sleep",
+          "seconds": 1.5
+        }
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M5 door activation: result=animated ref=content:oblivion.esm:049bbd",
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "original-gate-after-auto-attempt.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "M5 interaction: kind=door result=lockpick_prompt ref=content:oblivion.esm:049bbd",
+    "M5 door activation: result=animated ref=content:oblivion.esm:049bbd",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died during original potion inventory survey",
+    "M16 potion Light applied",
+    "M16 potion Light expired"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-iron-gate-baseline",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

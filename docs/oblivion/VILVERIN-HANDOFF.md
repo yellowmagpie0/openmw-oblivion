@@ -3,45 +3,51 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. The expedition and full milestones remain open.
 
-Latest accepted chunk: the original Weak Potion of Light, ALCH09847f, earned
-from submerged Cask066e79 on the locked-cask branch. Ordinary swimming surfaced
-alive; ordinary camera input framed nearby stone. Inventory use consumes one
-bottle, lights nearby geometry with the authored green LIGH, and saves an owned
-20-foot/60-second timer in schema99. Cold loading preserves remaining duration;
-one expiration removes illumination and stays absent after another cold load.
-Ordinary backward movement retains the light and timer. All eight normal and
-ASan/UBSan gameplay courses pass, with images inspected and real native payloads
-matching live saved state. [Contract](WEAK-POTION-OF-LIGHT-CONTRACT.json),
-[original oracle and baseline](WEAK-POTION-OF-LIGHT-ORACLE.json),
-[verification and retained failed attempts](WEAK-POTION-OF-LIGHT-VERIFICATION.json).
+Latest accepted chunk: original Canosel Gate049bbd (ARGateDoor01), reached from
+the earned cask-loot continuation by ordinary input. Space offers a paused
+Auto Attempt/Cancel choice. Cancel preserves seven picks and lock7 across a
+cold load. An early course observes four one-pick failures, then unlock/open;
+three remaining picks and the open pose survive cold loading and traversal.
+Final normal and instrumented chains each verify Cancel, first-attempt success,
+open-state cold load and ordinary passage. All rendered images were inspected.
+[Contract](IRON-GATE-LOCK-CONTRACT.json),
+[original-game oracle](IRON-GATE-LOCK-ORACLE.json),
+[verification and retained attempts](IRON-GATE-LOCK-VERIFICATION.json).
 
-Integration passes 2,276 normal engine, 3,290 component and 611 Python checks;
-instrumented coverage passes 2,276 engine and 1,111 TES4 component checks. Exact
-inventories match, without failures/skips. Both guarded runs record source
-fingerprint `de75356f4877ed9e89d2b5f387a7a5455abd70ff37ef146ccb927d7c3480fc42`
-at parent b21faea6f7aa0fef12a52891cfb8da56cd9ff0c1. Later changes only revise
-receipts and instrumented input recipes for slow startup/simulation and release
-the backward key at a read-only observed100-unit distance. All18 production
-source bytes and both game binaries retain tested provenance. Rendered sanitizer
-courses disable leak detection. Exact pixels/pulse phase, overlap and general
-Light/magic UI are outside this bounded course.
+The actual old locked-door baseline exposed a deferred temporary-message
+use-after-free. FailedAction now owns its text; a targeted delayed-execution
+regression passes normally and under ASan/UBSan. Both full engine gates pass
+2,277 tests; Python passes611. Focused normal/instrumented gates pass23 each.
+Full gates share parentdf3cbe11887c5bbf6a734939cce466e0a3687c59 and source
+fingerprint `31f6393483f2a2fab06a9aa36ab21f92a7eef32f92035147bc3ed8d04dc93313`.
+Only completion metadata changes afterward. Rendered sanitizer courses disable
+leak detection; engine sanitizer gates enable it. Earlier failure/depleted-stock
+recordings retain their pre-message-fix executable provenance in the receipt.
+The original probe certifies menu/Close/failure debits, not successful native
+Auto Attempt or exact chance. Original leveled lock8 vs fork7 remains adjacent.
 
-The expedition continuation remains
-`build/oblivion-compat/container-window/normal-empty-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `b23acab4f165351d71e81185fd985fa4bedca5c15120ca825eac78de2db78637`.
-The player is alive with53.0011 Health and Cask04bb85 is empty. The independent
-Light branch's expired normal save is
-`build/oblivion-compat/potion-light/normal-light-restart-empty-03/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `3744a7a03fc57de3566a572772e966a18243825b38128e388d91768bbc07835f`.
+Current expedition continuation is
+`build/oblivion-compat/iron-gate/normal-final-gate-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `7ecd4febfef2c4a1011501a1a65679fc460eed82fe3b9c804f8834b5ff17daa1`.
+The player is alive with53.0011 Health and seven earned picks, through the open
+gate at(-5305.18,-10544.99,-2662.21). The earlier cask continuation and the
+three-pick alternate branch remain linked in the gate contract/verification.
 
-Next action: continue the genuine expedition, identify the next concrete
-unsupported content behavior, establish its baseline and choose a bounded
-implementation around the acceptance gap. Do not treat general M16 or the
-expedition as complete. Detailed Light artifacts are under
-`build/oblivion-compat/potion-light`; the verification receipt maps exact inputs,
-processes, manifests, images, saves, integration and independent original evidence.
+Next action: choose the next observed unsupported behavior using this genuine
+continuation. Original failed gate Auto Attempts raised Security5→7, while
+ordinary-use XP remains unimplemented in the fork. Investigate that bounded
+M12/M13 gap with another actual locked gate before adding general skill-use
+coverage. Native probabilities/XP precision should be investigated only as
+needed for meaningful gameplay and owned save state. All original probe
+processes are stopped and isolated configuration restored. Full M13/M16 and the
+expedition remain open.
 
 Earlier accepted slices and reusable evidence:
+
+- [Weak Potion of Light](WEAK-POTION-OF-LIGHT-VERIFICATION.json): original
+  earned ALCH09847f, authored green20-foot/60-second owned timer; ordinary use,
+  active/expired cold loads and movement in eight normal/instrumented courses.
+  Schema99; overlapping sources/general M16 remain open.
 
 - [Ayleid cask selection](AYLEID-CASK-SELECTION-VERIFICATION.json): unowned
   Cask04bb85 rolls once; close, one-stack selection, keyboard/gamepad Take All

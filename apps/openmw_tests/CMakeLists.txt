@@ -13,6 +13,7 @@ file(GLOB UNITTEST_SRC_FILES
 
     mwworld/teststore.cpp
     mwworld/testduration.cpp
+    mwworld/testfailedaction.cpp
     mwworld/testoblivionactorstats.cpp
     mwworld/testoblivionworld.cpp
     mwworld/oblivionworldfixture.cpp

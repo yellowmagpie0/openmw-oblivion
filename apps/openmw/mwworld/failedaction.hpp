@@ -4,11 +4,15 @@
 #include "action.hpp"
 #include "ptr.hpp"
 
+#include <string>
+#include <string_view>
+
 namespace MWWorld
 {
     class FailedAction : public Action
     {
-        std::string_view mMessage;
+        // Activation can return an action built from a temporary error message.
+        std::string mMessage;
 
         void executeImp(const Ptr& actor) override;
 

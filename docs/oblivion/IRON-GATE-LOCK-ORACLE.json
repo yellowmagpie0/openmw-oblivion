@@ -1,0 +1,69 @@
+{
+  "status": "Original gate lock-menu entry, cancellation and failed Auto Attempts independently observed",
+  "scope": "UI, exact inventory debits on observed failures, and persistent lock. No success/probability certification from this probe.",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "evidence_root": "build/oblivion-compat/iron-gate/original-native-01",
+  "content": {
+    "reference": "content:oblivion.esm:049bbd",
+    "base": "content:oblivion.esm:0228c8",
+    "editor_id": "ARGateDoor01",
+    "name": "Gate",
+    "authored_leveled_seed": 7,
+    "native_observed_lock_level": 8,
+    "fork_lock_level": 7
+  },
+  "fixture": {
+    "original_only": true,
+    "console": [
+      "tai",
+      "player.additem a 7",
+      "coc Vilverin02",
+      "prid 00049bbd",
+      "getlocklevel",
+      "player.setpos x -5405",
+      "player.setpos y -10425",
+      "player.setpos z -2662",
+      "player.setangle z 127.4",
+      "player.setangle x 11"
+    ],
+    "notes": [
+      "Original pristine save has zero picks. Seven were supplied only to this isolated original-game fixture; all fork courses use earned inventory.",
+      "AI was disabled only in the original fixture to isolate lock interaction.",
+      "Player Security started5 and ended7; Agility30 and Luck50 were observed. The fork also starts at Security5. Native skill gains during these failures and the lock8 vs fork7 difference prevent a matched probability comparison."
+    ]
+  },
+  "observations": [
+    "Ordinary Space opens the actual gate lock menu: Easy, Auto Attempt, Close, seven picks. First-use tutorial overlay was dismissed.",
+    "Close without attempting retains GetItemCount7 and GetLocked1 at GetLockLevel8.",
+    "Five individual Auto Attempt clicks each lost one pick and left the lock menu open. Final GetItemCount2, GetLocked1 and GetLockLevel8.",
+    "No successful native Auto Attempt was observed; intermediate fading UI and a Security-increase message did not establish an unlock. Settled console state remained locked."
+  ],
+  "adjacent_discoveries": [
+    "Original leveled lock resolves8 from authored seed7; existing fork7 remains an approximate boundary.",
+    "Security increased5\u21927 while the observed Auto Attempts failed; ordinary-use XP remains outside this gate-choice chunk."
+  ],
+  "retained_failures": [
+    "Initial moveto could not resolve this temporary reference before Canosel was loaded; coc resolved it.",
+    "One console query opened before the UI settled lost its first two characters; repeated query and final count/state capture establish the values."
+  ],
+  "evidence": {
+    "launch-environment.json": "d8bbc96e13f9e369189a8c4e0778bfb3af8be573183fd2405df51ad86dfa35ed",
+    "game-process-epoch.json": "a9870e9cf02ae33edb7d557fb86cd44db743d68cc6f571daca266cadf9622db3",
+    "input-log.jsonl": "461c47a20def5017e7b975304190b8ff640d83a5b2fd8526ec45374e9e7263bf",
+    "native-pristine-pick-count.png": "6a3f0d9f4811f7903070fcedb2c1a5d3f5a011d74460d3b0ab9388a34077b7c1",
+    "native-gate-fixture-and-lock.png": "50465f71478b95ae3e047024b6800f7123f219a94c28866440f5a2a86e2b346d",
+    "native-gate-menu-seven-picks.png": "5f3a7d3ef3d170f328e140b507b2a5be4573d4a4a754213775d634fd03acff5f",
+    "native-gate-cancel-preserves-count-lock.png": "3fe009a669a5171e2f3b893ee4e8a7dfa4f98f2982b31c5394724bd512ebe813",
+    "native-gate-first-auto-attempt.png": "5b7da294a6d21ab8e2e21adc0742d4b70d03d0934c579fa1322fcb642df20c1e",
+    "native-gate-second-auto-attempt.png": "d288a7e3e459dccf31fa27f8a3277f9525dbd4b7466f4500b8a345edfcd8cd3f",
+    "native-gate-third-auto-attempt.png": "d31b4e3e28ec3c7382847a1f3f80a76cad14d60566fe4fbe5692bbc7f5058d2d",
+    "native-gate-fourth-auto-attempt.png": "09f568633c1ac284afbabc5cce64feea35a0b3f493367edfa1352aa1e1252c9d",
+    "native-gate-fifth-auto-attempt.png": "57beb4093057a537acaf2708d32b7c3d171e0e5f9599e65b624a6157b13f0113",
+    "native-gate-final-failed-count-and-context.png": "f4c9571a3853850562d95193c1e5d9f369fa933fd4f7d89fd8cf8887803b40c5",
+    "exit.json": "9c9c1b18777f4af52461fbda081e92ff7e26ac34866e294407d2e82fc88c5704",
+    "cleanup-and-restoration.json": "80d1ce501b42964527dd11fee61e03ee223a639c4b5ac615a530b25773ce9af6"
+  },
+  "reusable_rule_evidence": "AYLEID-CASK-LOCK-ORACLE.json"
+}
