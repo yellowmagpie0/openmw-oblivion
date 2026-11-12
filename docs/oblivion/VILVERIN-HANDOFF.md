@@ -3,7 +3,37 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. Expedition and broader content acceptance remain open.
 
-Latest accepted chunk: original Undead Bone Resistances SPEL02b532, including
+Latest accepted chunk: ordinary damaging Player-arrow Marksman use. Actual
+Rusty Iron Bow047aca/Iron Arrow017829 hits bandit06bfc2 for about1.84 damage and
+adds authored0.8 XP once. Base5 and level/attribute/specialization counts stay
+unchanged; Lua progress0.276454 matches the native requirement. Both builds
+retain XP through cold load, with20 arrows and the same bow condition. A saved
+flight hitting original ARNHallTurn01/06bf42 awards none; two incoming Skeleton
+arrows lower Player110→99.3822 without awarding Player Marksman. Schema99.
+[Contract](MARKSMAN-USE-CONTRACT.json), [original facts](MARKSMAN-USE-ORACLE.json),
+[verification](MARKSMAN-USE-VERIFICATION.json).
+
+Six original-content courses plus a captured pre-change hit baseline; all10
+primary/baseline images inspected. Focused14 and full2,278 engine tests in each
+build, Python612 pass. Broader ordinary XP remains open: zero-damage/blocked/
+immune/corpse policy, a Marksman level crossing and saved-flight delayed actor
+impact are not certified here. Original use amount/cap are independently checked;
+exact original projectile-caller policy remains uncertified.
+
+Marksman-owned combat continuation:
+`build/oblivion-compat/marksman-use/normal-marksman-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `3ce1f747e0ac4424405341a736ee4e0121cd5661f1927290344165b29ca5ab77`.
+Player64.4808 Health, base5/XP0.8,20 arrows; original bandit alive about18.158.
+This genuine earlier combat branch isolates XP. The separate innate-owned
+secret-wall continuation below remains the expedition route.
+
+Adjacent actual source: incoming Skeleton-arrow course leaves Player99.3822/110
+Health at `build/oblivion-compat/marksman-use/normal-marksman-npc-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `df6747123211c25c94b78690b0f95e79fc0868ebfaa60ddfbf23336c9d5936c1`.
+Next action: inspect an ordinary known healing spell on this actual wound and
+select its observed missing functionality, while preserving the expedition route.
+
+Previous accepted chunk: original Undead Bone Resistances SPEL02b532, including
 RSPA/Resist Paralysis AV66. Genuine pre-Canosel source has no crypt Skeleton
 state; ordinary entry grants all five innate effects exactly once. Normal and
 instrumented fresh-process reloads retain the complete owner and values:

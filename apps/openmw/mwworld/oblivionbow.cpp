@@ -218,6 +218,7 @@ namespace MWWorld
             Ptr mCaster;
             std::unique_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
             std::vector<MWMechanics::OblivionPhysicalConditionChange> mEquipment;
+            bool mTrainMarksman;
         };
         std::vector<Notification> notifications;
         notifications.reserve(projectiles.size());
@@ -277,7 +278,8 @@ namespace MWWorld
                                 mPlayer.get(), target.getClass().isEssential(target), resolveOblivionEssentialRecoverySettings(mStore),
                                 resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
                             if (!prepared || !prepared->commit()) throw std::runtime_error("stale native arrow contact");
-                            notifications.push_back({target, caster, std::move(prepared), std::move(deltas.mConditionChanges)});
+                            notifications.push_back({target, caster, std::move(prepared),
+                                std::move(deltas.mConditionChanges), caster == player && resolved->mHealth > 0.f});
                         }
                         catch (...)
                         {
@@ -343,6 +345,12 @@ namespace MWWorld
             }
             if (!removed) ++it;
         }
+        // Train once for each accepted damaging Player hit, after consuming
+        // every impact owner and before observers can save or change the scene.
+        // Draws, releases, static hits and nonplayer shots do not train here.
+        for (const auto& notification : notifications)
+            if (notification.mTrainMarksman)
+                useOblivionPlayerSkill(28, 0);
         // Native equipment/combat observers can save or change the scene. All
         // impact owners have been consumed before any such callback runs.
         for (auto& notification : notifications)
