@@ -6,6 +6,7 @@
 #include "apps/openmw/mwworld/class.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
+#include "apps/openmw/mwworld/oblivionskilltraining.hpp"
 #include "apps/openmw/mwworld/oblivionscriptmanager.hpp"
 #include "apps/openmw/mwworld/player.hpp"
 #include "apps/openmw/mwworld/worldmodel.hpp"
@@ -125,4 +126,48 @@ TEST(OblivionSkillTraining, InvalidRewardInputsLeaveNativeValuesAndBookkeepingUn
     EXPECT_EQ(after.mPlayer.mActorValues, before.mPlayer.mActorValues);
     EXPECT_EQ(stats.getLevelProgress(), 0);
     EXPECT_EQ(stats.getSkillIncreasesForAttribute(ESM::Attribute::Personality), 0);
+}
+
+TEST(OblivionSkillTraining, OrdinaryUseRetainsFractionalExperienceAndAwardsOnlyEarnedLevels)
+{
+    TrainingFixture fixture(true);
+    auto& world = fixture.mWorld;
+    auto& combat = *world.getOblivionCombatService();
+    const auto player = world.getPlayerPtr();
+    auto& stats = player.getClass().getNpcStats(player);
+    auto& skill = stats.getSkill(ESM::RefId(ESM::Skill::Mercantile));
+    const float required = MWWorld::oblivionPlayerSkillProgressRequirement(world.getStore(), player, 29);
+    skill.setProgress(required - .5f);
+    stats.setLevelProgress(4);
+    world.useOblivionPlayerSkill(29, 0);
+    EXPECT_EQ(combat.getPlayerBaseValue(29), 99);
+    EXPECT_EQ(combat.getPlayerValue(29), 103);
+    EXPECT_FLOAT_EQ(skill.getProgress(), .5f);
+    EXPECT_EQ(stats.getLevelProgress(), 5);
+    EXPECT_EQ(stats.getSkillIncreasesForAttribute(ESM::Attribute::Personality), 1);
+    const auto saved = world.captureOblivionRuntimeState();
+    EXPECT_EQ(saved.mPlayer.mActorValues.at("skill_advances.29"), 1);
+    ESM::NpcStats shared{}; shared.blank(); stats.writeState(shared);
+    auto stream = std::make_unique<std::stringstream>();
+    ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+    writer.startRecord(ESM::REC_PLAY); shared.save(writer); writer.endRecord(ESM::REC_PLAY); writer.close();
+    ESM::ESMReader reader;
+    reader.open(std::move(stream), "ordinary-skill-shared-stats"); reader.getRecName(); reader.getRecHeader();
+    ESM::NpcStats restored{}; restored.blank(); restored.load(reader);
+    EXPECT_FLOAT_EQ(restored.mSkills.at(ESM::RefId(ESM::Skill::Mercantile)).mProgress, .5f);
+    EXPECT_EQ(restored.mLevelProgress, 5);
+    world.useOblivionPlayerSkill(29, 0, 0);
+    EXPECT_FLOAT_EQ(skill.getProgress(), .5f);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mActorValues.at("skill_advances.29"), 1);
+    EXPECT_THROW(world.useOblivionPlayerSkill(29, 2), std::invalid_argument);
+    EXPECT_THROW(world.useOblivionPlayerSkill(29, 0, -1), std::invalid_argument);
+    EXPECT_FLOAT_EQ(skill.getProgress(), .5f);
+    world.useOblivionPlayerSkill(29, 0, 1000);
+    EXPECT_EQ(combat.getPlayerBaseValue(29), 100);
+    EXPECT_EQ(combat.getPlayerValue(29), 104);
+    EXPECT_FLOAT_EQ(skill.getProgress(), 0);
+    EXPECT_EQ(stats.getLevelProgress(), 6);
+    world.useOblivionPlayerSkill(29, 0, 1000);
+    EXPECT_EQ(stats.getLevelProgress(), 6);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mActorValues.at("skill_advances.29"), 2);
 }

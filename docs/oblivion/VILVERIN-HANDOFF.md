@@ -1,48 +1,52 @@
 # Vilverin — current handoff
 
 Target course: genuine sewer exit → independent Vilverin expedition → outside
-alive with retained loot. The expedition and full milestones remain open.
+alive with retained loot. The expedition and broader content acceptance remain open.
 
-Latest accepted chunk: original Canosel Gate049bbd (ARGateDoor01), reached from
-the earned cask-loot continuation by ordinary input. Space offers a paused
-Auto Attempt/Cancel choice. Cancel preserves seven picks and lock7 across a
-cold load. An early course observes four one-pick failures, then unlock/open;
-three remaining picks and the open pose survive cold loading and traversal.
-Final normal and instrumented chains each verify Cancel, first-attempt success,
-open-state cold load and ordinary passage. All rendered images were inspected.
-[Contract](IRON-GATE-LOCK-CONTRACT.json),
-[original-game oracle](IRON-GATE-LOCK-ORACLE.json),
-[verification and retained attempts](IRON-GATE-LOCK-VERIFICATION.json).
+Latest accepted chunk: ordinary Security experience on original Canosel
+Gate049bbc and adjacent Gate049bba. Cancel awards none; one explicit success
+or failure awards 1.5 XP from the authored use value. A second genuine attempt raises Security 5→6,
+retaining 0.106209 XP and one Agility/Stealth/per-skill advancement. Minor-skill
+character-level progress stays 0. Cold loads preserve experience, native
+base/modifiers, earned picks and counters without replay.
+[Contract](SECURITY-USE-CONTRACT.json), [original evidence](SECURITY-USE-ORACLE.json),
+[verification, failed probes and provenance](SECURITY-USE-VERIFICATION.json).
 
-The actual old locked-door baseline exposed a deferred temporary-message
-use-after-free. FailedAction now owns its text; a targeted delayed-execution
-regression passes normally and under ASan/UBSan. Both full engine gates pass
-2,277 tests; Python passes611. Focused normal/instrumented gates pass23 each.
-Full gates share parentdf3cbe11887c5bbf6a734939cce466e0a3687c59 and source
-fingerprint `31f6393483f2a2fab06a9aa36ab21f92a7eef32f92035147bc3ed8d04dc93313`.
-Only completion metadata changes afterward. Rendered sanitizer courses disable
-leak detection; engine sanitizer gates enable it. Earlier failure/depleted-stock
-recordings retain their pre-message-fix executable provenance in the receipt.
-The original probe certifies menu/Close/failure debits, not successful native
-Auto Attempt or exact chance. Original leveled lock8 vs fork7 remains adjacent.
+The real level gain exposed missing shared attribute-tooltip settings. Ten
+original compiled defaults now allow Stats to render; a consuming regression
+covers that failure. Full normal and dedicated-display sanitizer engine gates
+pass 2,278 each; Python passes 611; focused checks pass 28. An X11 failure's 79
+cases pass in isolation before the full sanitizer rerun. Five normal and five
+instrumented courses pass. All primary screenshots were inspected. Engine
+sanitizer checks enable leak detection; rendered courses disable it.
 
-Current expedition continuation is
-`build/oblivion-compat/iron-gate/normal-final-gate-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `7ecd4febfef2c4a1011501a1a65679fc460eed82fe3b9c804f8834b5ff17daa1`.
-The player is alive with53.0011 Health and seven earned picks, through the open
-gate at(-5305.18,-10544.99,-2662.21). The earlier cask continuation and the
-three-pick alternate branch remain linked in the gate contract/verification.
+Experience remains in existing shared NPCS STPR, native skill base in AV30,
+advancement in existing INCR/SPEC/LPRO and per-skill bookkeeping; schema 99.
+Exact native use-slot/scaling is uncertified. General skill use, notifications,
+character leveling and full content matrices remain open. Historical M12/M13
+backend acceptance is unchanged; this extension is bounded by its real courses.
 
-Next action: choose the next observed unsupported behavior using this genuine
-continuation. Original failed gate Auto Attempts raised Security5→7, while
-ordinary-use XP remains unimplemented in the fork. Investigate that bounded
-M12/M13 gap with another actual locked gate before adding general skill-use
-coverage. Native probabilities/XP precision should be investigated only as
-needed for meaningful gameplay and owned save state. All original probe
-processes are stopped and isolated configuration restored. Full M13/M16 and the
-expedition remain open.
+Current expedition continuation:
+`build/oblivion-compat/security-use/normal-final-security-level-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `2a961a70f39988b4e4ade170ed8b7353259a97718ce982f9beb589094f29ccd2`.
+Health 53.0011, six earned picks, Security 6; at(-4812.42,-10930.57,-2661.21),
+Canosel. Gate049bbc is open; Gate049bba remains locked 20 after one failure.
+The three earlier normal XP courses retain their pre-tooltip binary 183b45…
+provenance; final normal gain/restart and all sanitizer courses use the fix.
+
+Next action: use this genuine continuation to find another actual content
+case with observed unsupported behavior. Finish its bounded acceptance before
+expanding. Reuse linked evidence with its original provenance. The native
+probability/precision questions remain adjacent unless gameplay requires them.
 
 Earlier accepted slices and reusable evidence:
+
+- [First Canosel gate](IRON-GATE-LOCK-VERIFICATION.json): Gate049bbd paused
+  lock choice, Cancel, failure/success, open-pose cold load and passage. The
+  actual old baseline exposed a deferred temporary-message use-after-free;
+  FailedAction owns its text. Original menu/Close/failure debits certified;
+  original leveled8 vs fork7 remains adjacent. Historical depleted-stock and
+  seven-pick sources retain their original binary/source provenance there.
 
 - [Weak Potion of Light](WEAK-POTION-OF-LIGHT-VERIFICATION.json): original
   earned ALCH09847f, authored green20-foot/60-second owned timer; ordinary use,
@@ -56,7 +60,8 @@ Earlier accepted slices and reusable evidence:
 - [Submerged Ayleid cask lock](AYLEID-CASK-LOCK-VERIFICATION.json): a paused
   choice preserves picks on Cancel. Explicit auto failure spends one pick and
   success unlocks the cask. Cold-load state and held breath are verified.
-  Manual tumblers, Skeleton Key and skill experience remain open.
+  Manual tumblers and Skeleton Key remain open; the later Security-use
+  extension above is exercised on gates.
 
 - [Novice Bonemeal](BONEMEAL-INGREDIENT-VERIFICATION.json): earned Skeleton
   loot, Damage Fatigue1/sec for3sec with remaining-duration restart; schema98
@@ -100,7 +105,7 @@ the older bedroll camp/wall exploration inputs remain historical branches.
 
 Remaining acceptance gaps: expedition continuation/return; general M16 effects/UI;
 spawn-root/child identity, grouped actors, respawn/all levels; full S5/M15, actor
-arrow recovery, XP, sound/reaction/view/device matrices and general bow tactics.
+arrow recovery, general XP, sound/reaction/view/device matrices and general bow tactics.
 Zombie06c2c6 is deferred at historical `normal-stair-descent-01` (slab cleared by
 jump; further descent stopped after25 units). Restoration chest04bb8b remains
 behind an earlier route/ledge gap. Learned target-SPEL mastery still reads

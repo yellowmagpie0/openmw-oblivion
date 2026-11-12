@@ -629,6 +629,10 @@ namespace MWWorld
         bool executeOblivionActorValueCommand(const Ptr& actor, std::uint8_t value,
             ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested);
 
+        // Explicit native Player skill use; fractional XP lives in shared NPC stats.
+        void useOblivionPlayerSkill(unsigned skill, unsigned usage, float scale = 1.f);
+        void updateOblivionPlayerSkill(unsigned skill, std::int32_t count, float experience = 0.f);
+
         const MWMechanics::OblivionAiService* getOblivionAiService() const { return mOblivionAi.get(); }
         OblivionScriptManager* getOblivionScriptManager() { return mOblivionScriptManager.get(); }
         const OblivionScriptManager* getOblivionScriptManager() const { return mOblivionScriptManager.get(); }

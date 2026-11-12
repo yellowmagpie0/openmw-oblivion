@@ -41,6 +41,26 @@ namespace ESM4
         float mExperience;
     };
 
+    // Ordinary use consumes fractional experience at each level and stops at 100.
+    inline ScriptedSkillTraining trainUsedSkill(std::int32_t base, float experience, float earned,
+        bool major, bool specialized, const SkillTrainingSettings& settings)
+    {
+        if (base < 0 || !std::isfinite(experience) || experience < 0.f
+            || !std::isfinite(earned) || earned < 0.f || !std::isfinite(experience + earned))
+            throw std::invalid_argument("invalid native ordinary skill use");
+        skillExperienceRequirement(base, major, specialized, settings);
+        if (base >= 100 || earned == 0.f) return {base, experience};
+        experience += earned;
+        while (base < 100)
+        {
+            const float required = skillExperienceRequirement(base, major, specialized, settings);
+            if (experience < required) break;
+            experience -= required;
+            ++base;
+        }
+        return {base, base == 100 ? 0.f : experience};
+    }
+
     // Positive/zero ModPCSkill levels; no ordinary-use skill-100 cap. The caller
     // owns native publication and per-skill/attribute/specialization/major counts.
     inline ScriptedSkillTraining trainScriptedSkill(std::int32_t base, float experience, std::int32_t count,

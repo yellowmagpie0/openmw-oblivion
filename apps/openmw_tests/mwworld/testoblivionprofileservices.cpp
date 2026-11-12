@@ -3,6 +3,7 @@
 #include <components/esm/records.hpp>
 #include <components/esm3/readerscache.hpp>
 #include "apps/openmw/mwbase/environment.hpp"
+#include "apps/openmw/mwmechanics/npcstats.hpp"
 #include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/clothing.hpp"
@@ -460,6 +461,19 @@ namespace
         EXPECT_FLOAT_EQ(settings.find("fFatigueBase")->mValue.getFloat(), 42.f);
         EXPECT_FLOAT_EQ(settings.find("fMaxWalkSpeed")->mValue.getFloat(), 137.f);
         EXPECT_EQ(settings.find("iMaxActivateDist")->mValue.getInteger(), 150);
+        // Opening Stats after an ordinary skill increase must be able to render
+        // the shared attribute-advancement tooltip using native profile settings.
+        {
+            MWBase::Environment environment;
+            environment.setESMStore(store);
+            MWMechanics::NpcStats stats(&store);
+            stats.setSkillIncreasesForAttribute(ESM::Attribute::Agility, 1);
+            EXPECT_EQ(stats.getLevelupAttributeMultiplier(ESM::Attribute::Agility), 2);
+            stats.setSkillIncreasesForAttribute(ESM::Attribute::Agility, 5);
+            EXPECT_EQ(stats.getLevelupAttributeMultiplier(ESM::Attribute::Agility), 3);
+            EXPECT_EQ(stats.getLevelupAttributeMultiplier(ESM::Attribute::Strength), 1);
+        }
+
         EXPECT_FLOAT_EQ(settings.find("fSwimHeightScale")->mValue.getFloat(), 0.75f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSneakBase")->mValue.getFloat(), 1.5f);
         EXPECT_FLOAT_EQ(settings.find("fFatigueSneakMult")->mValue.getFloat(), 1.5f);

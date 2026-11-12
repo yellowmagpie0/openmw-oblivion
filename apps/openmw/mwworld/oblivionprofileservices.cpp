@@ -1225,6 +1225,19 @@ namespace MWWorld
         // Oblivion does not ship the identically named Morrowind settings.
         addInt("iMaxInfoDist", 150);
         addInt("iLevelUpTotal", 10);
+        // Native compiled defaults used by the shared advancement tooltip.
+        // Winning TES4 GMST overrides were installed above. Full leveling stays separate.
+        addInt("iLevelUp01Mult", 2);
+        addInt("iLevelUp02Mult", 2);
+        addInt("iLevelUp03Mult", 2);
+        addInt("iLevelUp04Mult", 2);
+        addInt("iLevelUp05Mult", 3);
+        addInt("iLevelUp06Mult", 3);
+        addInt("iLevelUp07Mult", 3);
+        addInt("iLevelUp08Mult", 4);
+        addInt("iLevelUp09Mult", 4);
+        addInt("iLevelUp10Mult", 5);
+
         addInt("iMonthsToRespawn", 1);
         addString("sDefaultCellname", "Wilderness");
         addString("FontColor_color_header", "223,201,159");

@@ -1215,7 +1215,11 @@ namespace MWWorld
                         if (const auto* value = std::get_if<std::int64_t>(&previous->second))
                             attempts = *value;
                     state.mCustomState["lockpick_auto_attempts"] = attempts + 1;
-                    if (Misc::Rng::rollProbability(mPrng) * 100.f >= chance)
+                    const bool failed = Misc::Rng::rollProbability(mPrng) * 100.f >= chance;
+                    // One award per explicit Auto Attempt, including a broken pick.
+                    // Compute this attempt's chance before publishing skill increases.
+                    useOblivionPlayerSkill(30, 0);
+                    if (failed)
                     {
                         oblivionChangePlayerInventory(*lockpick, -1);
                         state.mCustomState["lockpick_broken"] = true;
