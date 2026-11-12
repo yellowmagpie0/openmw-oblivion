@@ -955,8 +955,32 @@ namespace MWMechanics
             const MWWorld::Ptr& victim)
         {
             if (victim.isEmpty()) return;
+            bool provokedIdleCreature = false;
+            if (auto* combat = world.getOblivionCombatService(); combat && attacker == world.getPlayerPtr()
+                && victim.getType() == ESM::REC_CREA4 && victim.getRefData().isEnabled()
+                && attacker.getRefData().isEnabled() && victim.getCellRef().getCount() > 0)
+            {
+                const auto source = ESM::FormKey::dynamic("player", 1);
+                const auto target = ESM4::runtimeReferenceKey(victim.getCellRef().getFormKey());
+                const auto* sourceLife = combat->findActorLife(source);
+                const auto* targetLife = combat->findActorLife(target);
+                if (sourceLife && targetLife && sourceLife->mPhase == ESM4::ActorLifePhase::Alive
+                    && targetLife->mPhase == ESM4::ActorLifePhase::Alive
+                    && !world.hasOblivionCombatController(target).value_or(false)
+                    && combat->getNonPlayerIntegerValue(victim, 34) > 0)
+                {
+                    // An idle defender needs a controller before OnHit so an
+                    // authored StopCombat or redirect can override provocation.
+                    provokedIdleCreature = world.executeOblivionStartCombat(victim, attacker)
+                        && world.isOblivionCombatTarget(target, source).value_or(false);
+                    if (provokedIdleCreature)
+                        Log(Debug::Info) << "M15 idle Creature provoked: actor=" << target.serialize()
+                                         << " target=" << source.serialize();
+                }
+            }
             if (auto* scripts = world.getOblivionScriptManager())
                 scripts->dispatchObjectEvent(victim, "onhit", attacker);
+            if (provokedIdleCreature) return; // Keep the script's resulting controller state.
 
             // A committed attack on the controller's intended opponent is a
             // hostile act. Let a surviving native defender acquire that actor

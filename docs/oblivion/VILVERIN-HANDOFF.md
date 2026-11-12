@@ -3,45 +3,49 @@
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. Expedition and broader content acceptance remain open.
 
-Latest accepted chunk: Player Club159829 hits actual Skeleton06c2ed and grants
-original Blunt primary-use0.5 XP once after committed damage. Blunt35 and its
-level/attribute/specialization counters retain their previous values. Normal
-power contact deals about7.31; instrumented ordinary contact about2.44. Completed
-cold loads retain XP, damage and wear; turned-away misses grant none. One owned
-Undead Bone Resistances grant with five effects remains intact. Schema99.
-[Contract](BLUNT-USE-CONTRACT.json), [original facts](BLUNT-USE-ORACLE.json),
-[verification](BLUNT-USE-VERIFICATION.json).
+Latest accepted chunk: a Player melee contact activates confident idle native
+Creature defense. Actual Skeleton06c2ed acquires Player, equips its existing
+Steel War Axe0229bd and hits back. New idle-Creature acquisition precedes OnHit;
+the callback's StopCombat/redirect result is left intact. Existing fights keep
+their previous order. Native StartCombat owns admission and the controller.
+[Contract](SKELETON-RETALIATION-CONTRACT.json),
+[original facts](SKELETON-RETALIATION-ORACLE.json),
+[verification](SKELETON-RETALIATION-VERIFICATION.json).
 
-Six actual-content courses plus baseline; ten primary and two baseline images
-inspected. Focused5 and full2,278 engine checks in each build, Python612 pass.
+Four actual-content courses plus baseline; six primary and two baseline images
+inspected. Focused4 and full2,278 engine checks in each build, Python612 pass.
 Engine sanitizer gates include leak checking; rendered courses disable it.
-Original use dispatcher18 cases certifies authored values/scaling/cap at its
-stated boundaries, not the original melee caller. Blocked/immune/zero-health
-contacts, Blunt level crossing and saved pending strikes remain separate gates.
-The normal cold-load camera view is obscured; no full encounter claim.
+Normal save retains consumed strike873; cold continuation hits with874 and does
+not replay873. Incoming hits retain Player Blunt XP1.0, one directed target,
+owned axe wear, unchanged inventory counts and one five-effect innate grant.
+Schema99. Normal R switches to first person and clears the obstructed view;
+no camera implementation change was needed.
 
-Checkpoint: actual Player→Creature physical damage now works with known innate
-ownership. Security, Marksman, Restoration and Blunt ordinary uses have real
-content evidence. Resume the creature exchange/defeat, loot and expedition route
-before choosing more XP work. Investigate visibility and actual retaliation
-through ordinary movement/view controls; implement the next observed gap.
-Existing null innate ownership remains unknown and must not be reconstructed.
+The positive-Confidence response and OnHit order are practical policies; the
+original melee caller/order is not instruction-certified. This Skeleton has no
+OnHit script, so live authored StopCombat/redirect remains a separate gate.
+General NPC assault/friendly-hit/crime, fleeing, automatic Creature perception,
+tactics and general M15/M16 remain open. Unknown innate ownership stays unknown.
+
+Checkpoint: actual owned Creature contact now works in both directions and
+continues after a fresh process. Finish this encounter and loot, then continue
+the expedition route. Choose the next implementation from the next observed
+content failure; avoid expanding into more XP hooks without an expedition need.
 
 Primary expedition continuation:
-`build/oblivion-compat/blunt-use/normal-blunt-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `95208c28560da5b8ce0110e597d11631a67821b2e1a814382072cb8a997eea4b`.
-Player110 Health, original Club condition60.7600, Blunt35/XP0.5,
-Restoration6/XP1.3062. Actual Skeleton06c2ed remains alive at about12.69 Health.
-Seven ordinary heals prepared Health and crossed Restoration5→6, retaining one
-Willpower/Magic advance and no major advance. No item/actor-stat/save edits.
-Preparation audit: `build/oblivion-compat/expedition-contact/health-preparation-audit.json`.
+`build/oblivion-compat/skeleton-retaliation/normal-retaliation-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `16f23ad74d5b7fde691e9aa6d011096155957c0049251528ec22faccd4c39fb9`.
+Player61.6072 Health; Skeleton06c2ed alive at10.2595, attacking with its original
+Steel War Axe (condition151.5999). Player Club condition60.3400,
+Blunt35/XP1.0, Restoration6/XP1.3062; original inventory and level counters.
+Next: use ordinary controls to defeat this wounded Skeleton, activate its corpse,
+inspect/take the real loot, cold-load it, then resume navigation toward exit.
+No item/actor-stat/save edits or unresolved-effect bypass.
 
-Source formation is explicit: original secret-wall save2e1ff… → two healing
-courses → genuine walking approach. The final45-unit waypoint check stalled at
-46-unit actor spacing; ordinary X11 F5 retained that reached location as4163ec….
-The navigation manifest was canceled and is not passed. Its failed attempts,
-manual input receipt and source hashes are linked in the latest verification.
-The old crypt null-ownership branch remains a compatibility source only.
+Historical source formation and camera/idle baseline are preserved in the
+[Blunt verification](BLUNT-USE-VERIFICATION.json) and current retaliation evidence.
+Previous continuation95208… remains the healthy pre-provocation input. The old
+crypt null-ownership branch is a compatibility source only.
 
 Recent independent branches retain their progress:
 

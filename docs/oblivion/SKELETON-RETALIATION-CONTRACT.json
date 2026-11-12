@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "feature": "Player melee provokes a confident idle native Creature",
+  "milestone": "M15 and Vilverin expedition remain open",
+  "real_content": {
+    "reference": "content:oblivion.esm:06c2ed",
+    "levelled_base": "content:oblivion.esm:03409c",
+    "resolved_creature": "content:oblivion.esm:024ddb",
+    "creature_weapon": "content:oblivion.esm:0229bd",
+    "player_weapon": "content:oblivion.esm:159829",
+    "ability": "content:oblivion.esm:02b532"
+  },
+  "behavior": [
+    "A living enabled idle Creature with positive Confidence can acquire a living Player who commits a melee contact against it. Native StartCombat still owns target admission, riders, controller installation and engagement.",
+    "The new idle-Creature acquisition runs before OnHit. The script can stop or redirect that controller; the helper does not overwrite its resulting state afterward. Existing fights retain their previous callback order.",
+    "Actual Skeleton06c2ed equips its existing Steel War Axe0229bd and damages Player. It retains one directed controller targeting Player, one innate grant and its existing inventory counts.",
+    "Fresh-process combat continues without repeating a source strike whose contact was already committed. Incoming hits do not award Player Blunt XP. Schema99 unchanged."
+  ],
+  "limits": [
+    "Positive-Confidence provocation is a practical response policy, consistent with existing arrow impact handling; the original melee reaction caller and OnHit order are not instruction-certified.",
+    "The Skeleton has no authored OnHit script. Live authored StopCombat/redirect callbacks are not separately certified by this content course.",
+    "General NPC assault/friendly-hit/crime behavior, fleeing, automatic Creature perception and broader tactics remain separate.",
+    "Unknown ability ownership remains unknown; no unresolved-contact bypass.",
+    "Defeating/looting this Skeleton and completing the expedition remain open."
+  ]
+}

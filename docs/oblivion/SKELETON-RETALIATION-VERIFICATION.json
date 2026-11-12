@@ -1,0 +1,930 @@
+{
+  "schema_version": 1,
+  "accepted": true,
+  "retained_observation_failure": {
+    "course": "build/oblivion-compat/skeleton-retaliation/sanitized-retaliation-restart-01",
+    "reason": "Original five-second observation retained the controller but recorded no new hit. Final manifest waits for an actual new hit; rerun02 is required for acceptance.",
+    "image_inspected": true
+  },
+  "scope": "Original confident idle Creature provocation, owned Steel War Axe physical retaliation and fresh-process continuing combat; whole expedition remains open",
+  "tested_cpp": {
+    "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+    "sha256": "5f572dba45920ed670b64a25e4e4341bd0acaef570ad1aa038558f7d3db11a41"
+  },
+  "checks": [
+    {
+      "receipt": "build/oblivion-compat/skeleton-retaliation/normal-focused-01/verification.json",
+      "sha256": "d827c1543f29219c3f8679a11f1b693fb3cec4133a185ee59aa3a034bab977ed",
+      "selection": {
+        "executed": 4,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*StartCombat*:*DirectedCombatController*:*MeleeContact*",
+        "binary_sha256": "d2020aed4cbbdc5ef3353c3410598301b244b4851ccd6f623c1c79cd8d10af67",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "a6aba14073c74b311bf36701b0dd3234cacf39bafd5bc16fc975ab4561fe4b80",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "ec091b04dd2e7a63a10d31b476a0c67fc0dbda37",
+        "source_fingerprint": "a69cec87bb8792ebeb9b4a288810c3c857be11f5fee9df64a35b811fd1bc59a5"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/skeleton-retaliation/sanitized-focused-01/verification.json",
+      "sha256": "3bc51baf0642059275236d3d4479d97ebd7a21e6a3a1d9b5cf3cc12a0f2f6ef9",
+      "selection": {
+        "executed": 4,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*StartCombat*:*DirectedCombatController*:*MeleeContact*",
+        "binary_sha256": "3d0cee718b7404bf6929511948f46b35aacb9c1b3f2368680995fa8d35413e1d",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "ecf2c0d3c70cd391a621d5ba3b3d8b0edfd880879bfb5de0e36810a65863d535",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "ec091b04dd2e7a63a10d31b476a0c67fc0dbda37",
+        "source_fingerprint": "a69cec87bb8792ebeb9b4a288810c3c857be11f5fee9df64a35b811fd1bc59a5"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/skeleton-retaliation/normal-integration-01/verification.json",
+      "sha256": "9e7170477b75140d8945ab7be18a79f7ae3439d868bc97fbd2f3c5b16d197f4e",
+      "selection": {
+        "executed": 2278,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "d2020aed4cbbdc5ef3353c3410598301b244b4851ccd6f623c1c79cd8d10af67",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "cadea7cf86990237b427df8c23d55700bba1a270f15967194a4f548605e795ba",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "ec091b04dd2e7a63a10d31b476a0c67fc0dbda37",
+        "source_fingerprint": "a69cec87bb8792ebeb9b4a288810c3c857be11f5fee9df64a35b811fd1bc59a5"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/skeleton-retaliation/sanitized-integration-01/verification.json",
+      "sha256": "d77b559f327ddd6dd2a54f87382254679e65747c329bf7b754e7a65d513b6389",
+      "selection": {
+        "executed": 2278,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "3d0cee718b7404bf6929511948f46b35aacb9c1b3f2368680995fa8d35413e1d",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "e302941a2a41c8f7616adb0452f2b2f2bdcf582d7dc573412b4ecdf362b21724",
+        "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "ec091b04dd2e7a63a10d31b476a0c67fc0dbda37",
+        "source_fingerprint": "a69cec87bb8792ebeb9b4a288810c3c857be11f5fee9df64a35b811fd1bc59a5"
+      }
+    },
+    {
+      "receipt": "build/oblivion-compat/skeleton-retaliation/python-01/verification.json",
+      "sha256": "9901fc79ac9d25b368bb3d9c494d9f8feda021eae9a74ebfaee20004d67ce996",
+      "selection": {
+        "executed": 612,
+        "passed": true,
+        "log_sha256": "a6b47a07893675a709eb728c7b8408f19ce9f896566959180d363f08e08822fb"
+      },
+      "tested_source": {
+        "head": "ec091b04dd2e7a63a10d31b476a0c67fc0dbda37",
+        "source_fingerprint": "3767313672f24b59b067573efe8bf7c46fb1ee048a3fb53f7f07bcb71a9d6cdd"
+      }
+    }
+  ],
+  "courses": [
+    {
+      "course": "build/oblivion-compat/skeleton-retaliation/normal-retaliation-provoke-01",
+      "audit": "build/oblivion-compat/skeleton-retaliation/normal-retaliation-provoke-01/retaliation-audit.json",
+      "audit_sha256": "74db50043d29e80fceeac68f7263364f9190e984fd2272bfe93aa24232f2374a",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_retaliation_provoke.json",
+      "manifest_sha256": "3b4cf99476ee8582e0b8fae00e1af06744b9ef4484b5bd73065c2b9751978941",
+      "result": {
+        "passed": true,
+        "phase": "provoke",
+        "sanitized": false,
+        "source_sha256": "95208c28560da5b8ce0110e597d11631a67821b2e1a814382072cb8a997eea4b",
+        "save_sha256": "cab9c2ed83ec86ae78cd77037cf24b6e2ccf6d91537c03d48578d2aeb16e0af5",
+        "binary_sha256": "aaf9c7fd0a2656cc9535411e23cf90334cd3f69f7bfa1e57c065c859ee450cb7",
+        "before": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 1.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          [
+            "dynamic:player:0000000000000001",
+            "860",
+            "fatigue_cost=7.8 before=170 after=162.2 action=3 health_damage=2.42928 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=60.34 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "861",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.49927 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=159.4 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=4"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "862",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.49271 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=158.8 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "863",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.48615 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=158.2 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "864",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.47959 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=157.6 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=6"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "865",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.47303 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=157 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "866",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.46647 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=156.4 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "867",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.45991 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=155.8 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "868",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.45335 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=155.2 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "869",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.44679 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=154.6 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "870",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.44022 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=154 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "871",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.43366 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=153.4 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=5"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "872",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.4271 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=152.8 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "873",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.42054 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=152.2 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ]
+        ],
+        "player_health_before": 110.0,
+        "player_health_after": 65.02120208740234,
+        "enemy_health_before": 12.68876314163208,
+        "enemy_health_after": 10.25948715209961,
+        "controller": [
+          {
+            "target": "dynamic:player:0000000000000001",
+            "priority": 200,
+            "marker": 1,
+            "value_0c": 0.0,
+            "value_10": 0.0
+          }
+        ],
+        "npc_weapon": {
+          "base": "content:oblivion.esm:0229bd",
+          "count": 1,
+          "condition": 152.19992065429688,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "pending_strike_before": null,
+        "native_melee_state": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": false,
+            "queued": 0,
+            "require_release": false
+          },
+          "strike": {
+            "id": 873,
+            "kind": 0,
+            "weapon_base": "content:oblivion.esm:0229bd",
+            "animation_group": "onehandattackleft",
+            "playback_speed": 1.100000023841858,
+            "animation_time": 1.28033447265625,
+            "contact_committed": true,
+            "ordinary_phase": 2,
+            "sequence_timing": {
+              "easing": false,
+              "offset": -668.8199462890625,
+              "ease_start": 1.09771728515625,
+              "last_input": 1.28033447265625,
+              "ease_end": 669.021240234375,
+              "weighted_time": 1.28033447265625,
+              "output_time": 1.28033447265625
+            },
+            "power_phase": null,
+            "pose_snapshot": null
+          },
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:oblivion.esm:02f47d"
+          },
+          "reaction": null,
+          "retiring_sequences": [],
+          "first_person": null,
+          "passive_sequence": null,
+          "held_blocks": []
+        }
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-retaliation/normal-retaliation-restart-01",
+      "audit": "build/oblivion-compat/skeleton-retaliation/normal-retaliation-restart-01/retaliation-audit.json",
+      "audit_sha256": "ca0d362e8e6ef0bccf43ecc9dc6e627be323ac1cfa72501c23fc0f565d04eb2f",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_retaliation_observe.json",
+      "manifest_sha256": "d4b1685c2d47fd60b660e505a441972991daa8985c22dbfb744dbf88ac928777",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "cab9c2ed83ec86ae78cd77037cf24b6e2ccf6d91537c03d48578d2aeb16e0af5",
+        "save_sha256": "16f23ad74d5b7fde691e9aa6d011096155957c0049251528ec22faccd4c39fb9",
+        "binary_sha256": "aaf9c7fd0a2656cc9535411e23cf90334cd3f69f7bfa1e57c065c859ee450cb7",
+        "before": {
+          "base": 35.0,
+          "experience": 1.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 1.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          [
+            "content:oblivion.esm:06c2ed",
+            "874",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.41398 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=151.6 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3"
+          ]
+        ],
+        "player_health_before": 65.02120208740234,
+        "player_health_after": 61.60722351074219,
+        "enemy_health_before": 10.25948715209961,
+        "enemy_health_after": 10.25948715209961,
+        "controller": [
+          {
+            "target": "dynamic:player:0000000000000001",
+            "priority": 200,
+            "marker": 1,
+            "value_0c": 0.0,
+            "value_10": 0.0
+          }
+        ],
+        "npc_weapon": {
+          "base": "content:oblivion.esm:0229bd",
+          "count": 1,
+          "condition": 151.59991455078125,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "pending_strike_before": {
+          "id": 873,
+          "kind": 0,
+          "weapon_base": "content:oblivion.esm:0229bd",
+          "animation_group": "onehandattackleft",
+          "playback_speed": 1.100000023841858,
+          "animation_time": 1.28033447265625,
+          "contact_committed": true,
+          "ordinary_phase": 2,
+          "sequence_timing": {
+            "easing": false,
+            "offset": -668.8199462890625,
+            "ease_start": 1.09771728515625,
+            "last_input": 1.28033447265625,
+            "ease_end": 669.021240234375,
+            "weighted_time": 1.28033447265625,
+            "output_time": 1.28033447265625
+          },
+          "power_phase": null,
+          "pose_snapshot": null
+        },
+        "native_melee_state": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0,
+            "require_release": false
+          },
+          "strike": {
+            "id": 874,
+            "kind": 1,
+            "weapon_base": "content:oblivion.esm:0229bd",
+            "animation_group": "onehandattackright",
+            "playback_speed": 1.100000023841858,
+            "animation_time": 0.69732666015625,
+            "contact_committed": true,
+            "ordinary_phase": 2,
+            "sequence_timing": {
+              "easing": false,
+              "offset": -670.384033203125,
+              "ease_start": 0.53125,
+              "last_input": 0.69732666015625,
+              "ease_end": 670.5322875976562,
+              "weighted_time": 0.69732666015625,
+              "output_time": 0.69732666015625
+            },
+            "power_phase": null,
+            "pose_snapshot": null
+          },
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:oblivion.esm:02f47d"
+          },
+          "reaction": null,
+          "retiring_sequences": [],
+          "first_person": null,
+          "passive_sequence": null,
+          "held_blocks": []
+        }
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-retaliation/sanitized-retaliation-provoke-01",
+      "audit": "build/oblivion-compat/skeleton-retaliation/sanitized-retaliation-provoke-01/retaliation-audit.json",
+      "audit_sha256": "f23d019f67d13f185e3303de3aebf2c00e44f8f929ca5fb5af9ca8d4f1aa8e11",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_retaliation_provoke_sanitized.json",
+      "manifest_sha256": "32a4f967ee9b611cbac9ed944292c786d672301cf61dadc7f658fa0cda6056ca",
+      "result": {
+        "passed": true,
+        "phase": "provoke",
+        "sanitized": true,
+        "source_sha256": "95208c28560da5b8ce0110e597d11631a67821b2e1a814382072cb8a997eea4b",
+        "save_sha256": "7e9b02d19ed358ad460f1ffb1d16611e0a1725427466f04d43bcbf2418bfb778",
+        "binary_sha256": "b7ef65d8744eda64cef95de7f6506964b53f31c9d63535abbfbdfbf3bdd26c52",
+        "before": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 1.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          [
+            "dynamic:player:0000000000000001",
+            "860",
+            "fatigue_cost=7.8 before=170 after=162.2 action=3 health_damage=2.42928 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=60.34 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "861",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.49927 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=159.4 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=4"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "862",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.49271 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=158.8 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ],
+          [
+            "content:oblivion.esm:06c2ed",
+            "863",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.48615 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=158.2 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+          ]
+        ],
+        "player_health_before": 110.0,
+        "player_health_after": 99.52185821533203,
+        "enemy_health_before": 12.68876314163208,
+        "enemy_health_after": 10.25948715209961,
+        "controller": [
+          {
+            "target": "dynamic:player:0000000000000001",
+            "priority": 200,
+            "marker": 1,
+            "value_0c": 0.0,
+            "value_10": 0.0
+          }
+        ],
+        "npc_weapon": {
+          "base": "content:oblivion.esm:0229bd",
+          "count": 1,
+          "condition": 158.19998168945312,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "pending_strike_before": null,
+        "native_melee_state": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": false,
+            "queued": 0,
+            "require_release": false
+          },
+          "strike": {
+            "id": 863,
+            "kind": 0,
+            "weapon_base": "content:oblivion.esm:0229bd",
+            "animation_group": "onehandattackleft",
+            "playback_speed": 1.100000023841858,
+            "animation_time": 1.26171875,
+            "contact_committed": true,
+            "ordinary_phase": 2,
+            "sequence_timing": {
+              "easing": false,
+              "offset": -655.7838745117188,
+              "ease_start": 1.0791015625,
+              "last_input": 1.26171875,
+              "ease_end": 655.9834594726562,
+              "weighted_time": 1.26171875,
+              "output_time": 1.26171875
+            },
+            "power_phase": null,
+            "pose_snapshot": null
+          },
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:oblivion.esm:02f47d"
+          },
+          "reaction": null,
+          "retiring_sequences": [],
+          "first_person": null,
+          "passive_sequence": null,
+          "held_blocks": []
+        }
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-retaliation/sanitized-retaliation-restart-02",
+      "audit": "build/oblivion-compat/skeleton-retaliation/sanitized-retaliation-restart-02/retaliation-audit.json",
+      "audit_sha256": "52b91fe56e63721e86304892394598d66c5c7d790c407cddc1d66436f75ef84a",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_retaliation_observe_sanitized.json",
+      "manifest_sha256": "8dd21411970071cbba7fda4c6775e90d939080edfe78d9100f468d84c3f4ac67",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "7e9b02d19ed358ad460f1ffb1d16611e0a1725427466f04d43bcbf2418bfb778",
+        "save_sha256": "45e7f884b9fc3c6faf741135a90f1ae7830c48c84f08aa6b8d42b4770b70ad1e",
+        "binary_sha256": "b7ef65d8744eda64cef95de7f6506964b53f31c9d63535abbfbdfbf3bdd26c52",
+        "before": {
+          "base": 35.0,
+          "experience": 1.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 1.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          [
+            "content:oblivion.esm:06c2ed",
+            "864",
+            "fatigue_cost=8.6 before=100 after=91.4 action=3 health_damage=3.47959 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=157.6 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=6"
+          ]
+        ],
+        "player_health_before": 99.52185821533203,
+        "player_health_after": 96.04226684570312,
+        "enemy_health_before": 10.25948715209961,
+        "enemy_health_after": 10.25948715209961,
+        "controller": [
+          {
+            "target": "dynamic:player:0000000000000001",
+            "priority": 200,
+            "marker": 1,
+            "value_0c": 0.0,
+            "value_10": 0.0
+          }
+        ],
+        "npc_weapon": {
+          "base": "content:oblivion.esm:0229bd",
+          "count": 1,
+          "condition": 157.5999755859375,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": null,
+          "script_owner": null
+        },
+        "pending_strike_before": {
+          "id": 863,
+          "kind": 0,
+          "weapon_base": "content:oblivion.esm:0229bd",
+          "animation_group": "onehandattackleft",
+          "playback_speed": 1.100000023841858,
+          "animation_time": 1.26171875,
+          "contact_committed": true,
+          "ordinary_phase": 2,
+          "sequence_timing": {
+            "easing": false,
+            "offset": -655.7838745117188,
+            "ease_start": 1.0791015625,
+            "last_input": 1.26171875,
+            "ease_end": 655.9834594726562,
+            "weighted_time": 1.26171875,
+            "output_time": 1.26171875
+          },
+          "power_phase": null,
+          "pose_snapshot": null
+        },
+        "native_melee_state": {
+          "actor": "content:oblivion.esm:06c2ed",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0,
+            "require_release": false
+          },
+          "strike": {
+            "id": 864,
+            "kind": 1,
+            "weapon_base": "content:oblivion.esm:0229bd",
+            "animation_group": "onehandattackright",
+            "playback_speed": 1.100000023841858,
+            "animation_time": 1.0791015625,
+            "contact_committed": true,
+            "ordinary_phase": 2,
+            "sequence_timing": {
+              "easing": false,
+              "offset": -657.2946166992188,
+              "ease_start": 0.896484375,
+              "last_input": 1.0791015625,
+              "ease_end": 657.4776000976562,
+              "weighted_time": 1.0791015625,
+              "output_time": 1.0791015625
+            },
+            "power_phase": null,
+            "pose_snapshot": null
+          },
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:oblivion.esm:02f47d"
+          },
+          "reaction": null,
+          "retiring_sequences": [],
+          "first_person": null,
+          "passive_sequence": null,
+          "held_blocks": []
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "path": "build/oblivion-compat/skeleton-retaliation/normal-retaliation-provoke-01/original-Skeleton-retaliation-after.png",
+      "sha256": "819781bf60cfb383abeba71567dba9ad9ac3b61fe1525b1178569738c08212c4",
+      "visual_review": "Inspected original rendered first-person Skeleton encounter, owned Steel War Axe and Player Health UI."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-retaliation/normal-retaliation-provoke-01/original-Skeleton-retaliation-before.png",
+      "sha256": "bd7df3620e74db062077fbcf1e8e7df5bc31d3a917d036a646c0a7b75df23d0a",
+      "visual_review": "Inspected original rendered first-person Skeleton encounter, owned Steel War Axe and Player Health UI."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-retaliation/normal-retaliation-restart-01/original-Skeleton-retaliation-cold-load.png",
+      "sha256": "0ae78704a001179bb6e84efb1f557dd4b309fb30b2617b6d944a49c988d52b97",
+      "visual_review": "Inspected original rendered first-person Skeleton encounter, owned Steel War Axe and Player Health UI."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-retaliation/sanitized-retaliation-provoke-01/original-Skeleton-retaliation-after.png",
+      "sha256": "4b16250ec8b61dca6c08517bf34f2b88c8d04301e6859a5372f04ad278ac2cd6",
+      "visual_review": "Inspected original rendered first-person Skeleton encounter, owned Steel War Axe and Player Health UI."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-retaliation/sanitized-retaliation-provoke-01/original-Skeleton-retaliation-before.png",
+      "sha256": "de1bb9107ae0277ccb991a9feba173bc5a491e0a4691ad0d9d648592446dc6a1",
+      "visual_review": "Inspected original rendered first-person Skeleton encounter, owned Steel War Axe and Player Health UI."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-retaliation/sanitized-retaliation-restart-02/original-Skeleton-retaliation-cold-load.png",
+      "sha256": "8755b2ae49e8a3b0d4c79fccd840bb8f120de201e2c5b037150c75f7a76ba84a",
+      "visual_review": "Inspected original rendered first-person Skeleton encounter, owned Steel War Axe and Player Health UI."
+    }
+  ],
+  "baseline": {
+    "course": "build/oblivion-compat/skeleton-retaliation/normal-retaliation-baseline-01",
+    "audit": {
+      "passed": true,
+      "phase": "baseline",
+      "sanitized": false,
+      "source_sha256": "95208c28560da5b8ce0110e597d11631a67821b2e1a814382072cb8a997eea4b",
+      "save_sha256": "4654161ae6a27c3747df25d2e0c6408f90d3462cf1fd6d5da062d3113c3cac4d",
+      "binary_sha256": "acb93515f7e971c1a13a031eb61eb2ea707d68f6749903826873b0167c7dd46e",
+      "before": {
+        "base": 35.0,
+        "experience": 0.5,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          1,
+          0
+        ]
+      },
+      "after": {
+        "base": 35.0,
+        "experience": 1.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          1,
+          0
+        ]
+      },
+      "contacts": [
+        [
+          "dynamic:player:0000000000000001",
+          "860",
+          "fatigue_cost=7.8 before=170 after=162.2 action=3 health_damage=2.42928 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=60.34 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ]
+      ],
+      "player_health_before": 110.0,
+      "player_health_after": 110.0,
+      "enemy_health_before": 12.68876314163208,
+      "enemy_health_after": 10.25948715209961,
+      "controller": null,
+      "npc_weapon": {
+        "base": "content:oblivion.esm:0229bd",
+        "count": 1,
+        "condition": 160.0,
+        "charge": -1.0,
+        "equipped_slots": 0,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null,
+        "script_owner": null
+      },
+      "native_melee_state": {
+        "actor": "content:oblivion.esm:06c2ed",
+        "input": {
+          "held_seconds": 0.0,
+          "input_held": false,
+          "prefer_left": true,
+          "queued": 0,
+          "require_release": false
+        },
+        "strike": null,
+        "ai_intent": null,
+        "reaction": null,
+        "retiring_sequences": [],
+        "first_person": null,
+        "passive_sequence": null,
+        "held_blocks": []
+      }
+    },
+    "images_inspected": 2
+  },
+  "source": {
+    "save": "build/oblivion-compat/blunt-use/normal-blunt-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "95208c28560da5b8ce0110e597d11631a67821b2e1a814382072cb8a997eea4b",
+    "history": "docs/oblivion/BLUNT-USE-VERIFICATION.json"
+  },
+  "original_content": {
+    "audit": "build/oblivion-compat/skeleton-retaliation/original-skill-content-audit.json",
+    "sha256": "757418d63c57230f3eed61b12cb67e054de8530298796dc0ac5b9537d537703e",
+    "facade_evidence": "docs/oblivion/M15-CONTROLLER-PRODUCER-VERIFICATION.json",
+    "melee_reaction_caller_certified": false,
+    "live_authored_OnHit_override_certified": false
+  },
+  "sanitizers": {
+    "engine": "ASan and UBSan; leak checking enabled",
+    "rendered": "ASan and UBSan; leak checking disabled"
+  },
+  "limits": [
+    "Practical positive-Confidence Creature response; original melee caller and script order are not instruction-certified.",
+    "OnHit StopCombat/redirect is respected by code ordering; this original Skeleton has no OnHit script and does not independently certify authored overrides.",
+    "General NPC assault, friendly-hit/crime, cowardice/fleeing and automatic Creature perception remain separate.",
+    "No unknown ability ownership repair, unresolved-contact bypass or schema change.",
+    "Creature defeat/loot and whole Vilverin expedition remain open."
+  ]
+}
