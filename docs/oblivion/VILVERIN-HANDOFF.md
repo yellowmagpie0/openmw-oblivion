@@ -25,21 +25,27 @@ death controller/impulse sequence. Unsupported nonphysical models retain legacy
 death handling. Other Creature/NPC death courses, resurrection and independent
 loose-weapon death drops remain separate acceptance work. Schema99 unchanged.
 
-Checkpoint: genuine contact, provocation, fight, native death and physical corpse
-presentation now work on the original Skeleton. Resume corpse activation and
-real loot transfer, then the expedition exit route. Choose the next observed
-content gap; avoid more XP hooks without an expedition need. Unknown ability
-ownership remains unknown and must not be reconstructed.
+Latest integration checkpoint: ordinary activation and Take All transfer the
+physical Skeleton's Bonemeal1 and Steel War Axe1 exactly once. Normal and
+sanitized cold loads keep its inventory explicitly empty, Player items and axe
+condition149.7999 intact, and the same17-body corpse owner. Four accepted courses,
+eight inspected images and fresh Python612 checks; unchanged C++ reuses the
+engine evidence above with its original provenance. No engine fix was needed.
+[Corpse loot verification](SKELETON-CORPSE-LOOT-VERIFICATION.json).
 
-Primary continuation — corpse after a fresh kill and cold load:
-`build/oblivion-compat/skeleton-death-pose/normal-hot-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `201979758edd473452d8f735fe999689814d45da0235e8d3901f3de2a6c8d123`.
-Player51.4047 Health, Blunt35/XP2.0, Restoration6/XP1.3062. Corpse06c2ed is
-natively Dead (killer Player) with raw Health0.597, one17-body physical owner,
-Bonemeal1 and Steel War Axe1 (condition149.7999). Loot has not been taken.
-The view is aimed down at its rendered body. Next: use ordinary activation and
-Take All on the actual corpse, audit transfer/ownership, cold-load, then resume
-navigation toward exit. No item/actor-stat/save edits or unresolved-effect bypass.
+Primary continuation — looted corpse after a cold load:
+`build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `8506b0938d99f6101b40c0566e179f4e009994a3661176aa26450ede675bac3f`.
+Player51.4047 Health, Blunt35/XP2.0, Restoration6/XP1.3062, retained Bonemeal and
+Steel War Axe. Corpse06c2ed is natively Dead (killer Player) with raw Health0.597,
+one17-body physical owner and empty inventory. Next: ordinary navigation back
+toward bedroll06bf97 and the exit; choose the next observed content gap. No
+item/actor-stat/save edits or unresolved-effect bypass. Expedition remains open.
+
+Loot baseline01 selected floor STAT049cc7 beside the thin bones. Tighter
+camera-relative aim at a rendering-ray-confirmed bone point succeeded, so this
+was an input-observer failure rather than an inventory/engine picking defect.
+Evidence root: `build/oblivion-compat/skeleton-corpse-loot`.
 
 Reusable pre-kill source:
 `build/oblivion-compat/skeleton-retaliation/normal-retaliation-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
