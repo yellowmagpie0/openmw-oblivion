@@ -618,6 +618,21 @@ namespace
                 + bytes(5u) + bytes(std::int32_t{-1}) + std::string(44, '\0')));
     }
 
+    std::string cheapWinePotion(unsigned restoration = 10, unsigned duration = 120, unsigned lastAttribute = 6)
+    {
+        auto body = sub(ESM::fourCC("DATA"), bytes(1.f))
+            + sub(ESM::fourCC("ENIT"), bytes(2) + bytes(0xffffff03u));
+        // Original037f7f: instant restoration precedes the three timed drains.
+        for (const auto& effect : std::array{std::array{ESM::fourCC("REFA"), restoration, 0u, 10u},
+                 std::array{ESM::fourCC("DRAT"), 5u, duration, 3u},
+                 std::array{ESM::fourCC("DRAT"), 5u, duration, 1u},
+                 std::array{ESM::fourCC("DRAT"), 10u, duration, lastAttribute}})
+            body += sub(ESM::fourCC("EFID"), bytes(effect[0]))
+                + sub(ESM::fourCC("EFIT"), bytes(effect[0]) + bytes(effect[1])
+                    + bytes(0u) + bytes(effect[2]) + bytes(0u) + bytes(effect[3]));
+        return record(ESM4::REC_ALCH, 0x37f7f, body);
+    }
+
     auto resolveMead(const Fixture& fixture)
     {
         const auto* potion = fixture.mStore.get<ESM4::Potion>().search(ESM::FormId{0xb1201, 1});
@@ -644,6 +659,37 @@ TEST(OblivionCombatMagicStore, OriginalMeadRequiresAllThreeEffectsAndTheirWinnin
     fixture.load("final.esp", {"oblivion.esm", "patch.esp"}, {record(ESM4::REC_ALCH, 0xb1201, {}, true)});
     EXPECT_EQ(fixture.mStore.get<ESM4::Potion>().search(ESM::FormId{0xb1201, 1}), nullptr);
     EXPECT_FALSE(MWWorld::resolveOblivionPotionAttributes(fixture.mStore, previous));
+}
+
+TEST(OblivionCombatMagicStore, OriginalCheapWineAdmitsAllFourEffectsWithThreeIndependentAttributeContributions)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {cheapWinePotion(), drainAttributeDefinition(), fatigueRestorationDefinition()});
+    const auto* potion = fixture.mStore.get<ESM4::Potion>().search(ESM::FormId{0x37f7f, 1});
+    ASSERT_NE(potion, nullptr);
+    const auto profile = MWWorld::resolveOblivionPotionAttributes(fixture.mStore, *potion);
+    ASSERT_TRUE(profile);
+    EXPECT_EQ(profile->mPotion, ESM::FormKey::content("Oblivion.esm", 0x37f7f));
+    EXPECT_FLOAT_EQ(profile->mDuration, 120.f);
+    EXPECT_EQ(profile->mModifiers,
+        (std::vector<ESM4::PotionAttributeModifier>{{3, -5.f}, {1, -5.f}, {6, -10.f}}));
+    EXPECT_FALSE(MWWorld::resolveOblivionPotionRestoration(fixture.mStore, *potion));
+    const auto previous = *potion;
+    fixture.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_ALCH, 0x37f7f, {}, true)});
+    EXPECT_FALSE(MWWorld::resolveOblivionPotionAttributes(fixture.mStore, previous));
+}
+
+TEST(OblivionCombatMagicStore, CheapWineRejectsChangedInstantAmountLifetimeOrAttributeBeforePartialAdmission)
+{
+    for (const auto& wine : {cheapWinePotion(9), cheapWinePotion(10, 119), cheapWinePotion(10, 120, 5)})
+    {
+        Fixture fixture;
+        fixture.load("oblivion.esm", {}, {wine, drainAttributeDefinition(), fatigueRestorationDefinition()});
+        const auto* potion = fixture.mStore.get<ESM4::Potion>().search(ESM::FormId{0x37f7f, 1});
+        ASSERT_NE(potion, nullptr);
+        EXPECT_FALSE(MWWorld::resolveOblivionPotionAttributes(fixture.mStore, *potion));
+        EXPECT_FALSE(MWWorld::resolveOblivionPotionRestoration(fixture.mStore, *potion));
+    }
 }
 
 TEST(OblivionCombatMagicStore, MeadRejectsChangedAttributesLifetimeFoodFlagsAndRecoverySemantics)

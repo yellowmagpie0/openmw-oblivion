@@ -363,30 +363,50 @@ namespace MWWorld
         const ESMStore& store, const ESM4::Potion& potion)
     {
         if ((potion.mFlags & ESM4::Rec_Deleted) || !potion.mScriptId.isZeroOrUnset()
-            || (potion.mItem.flags & 0xffu) != 3 || potion.mEffects.size() != 3) return {};
+            || (potion.mItem.flags & 0xffu) != 3) return {};
         const auto key = store.get<ESM4::Potion>().findFormKey(ESM::RefId(potion.mId));
         if (!key) return {};
         if (const auto* winner = store.getFormKeyIndex().winner(*key);
             winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH)) return {};
-        for (unsigned i = 0; i < 2; ++i)
-        {
-            const auto& effect = potion.mEffects[i];
-            if (effect.mId != ESM::fourCC("DRAT") || effect.mMagnitude != ESM4::MeadAttributeDrain
-                || effect.mDuration != ESM4::MeadDuration || effect.mArea || effect.mRange
-                || effect.mActorValue != i + 1 || effect.mScriptEffect) return {};
-        }
-        const auto& restoration = potion.mEffects.back();
-        if (restoration.mId != ESM::fourCC("REFA") || restoration.mMagnitude != ESM4::MeadFatigueRestoration
-            || restoration.mDuration || restoration.mArea || restoration.mRange
-            || restoration.mActorValue != 10 || restoration.mScriptEffect) return {};
+        // Admit the two independently audited original profiles. Keep the
+        // existing Mead restrictions; this is not arbitrary mixed-effect use.
+        using Effect = std::array<std::uint32_t, 4>; // code, magnitude, duration, actor value
+        const std::array mead{Effect{ESM::fourCC("DRAT"), 1, 60, 1},
+            Effect{ESM::fourCC("DRAT"), 1, 60, 2}, Effect{ESM::fourCC("REFA"), 2, 0, 10}};
+        const std::array wine{Effect{ESM::fourCC("REFA"), 10, 0, 10},
+            Effect{ESM::fourCC("DRAT"), 5, 120, 3}, Effect{ESM::fourCC("DRAT"), 5, 120, 1},
+            Effect{ESM::fourCC("DRAT"), 10, 120, 6}};
+        const auto matches = [&](const auto& expected) {
+            if (potion.mEffects.size() != expected.size()) return false;
+            for (std::size_t i = 0; i < expected.size(); ++i)
+            {
+                const auto& effect = potion.mEffects[i];
+                const auto& row = expected[i];
+                if (effect.mId != row[0] || effect.mMagnitude != row[1] || effect.mDuration != row[2]
+                    || effect.mActorValue != row[3] || effect.mArea || effect.mRange || effect.mScriptEffect)
+                    return false;
+            }
+            return true;
+        };
+        if (!matches(mead) && !matches(wine)) return {};
+        const auto restoration = std::find_if(potion.mEffects.begin(), potion.mEffects.end(),
+            [](const auto& effect) { return effect.mId == ESM::fourCC("REFA"); });
         const auto* drain = ingredientEffectDefinition(store, ESM::fourCC("DRAT"));
         if (!drain || !drain->mData) return {};
         const auto& data = *drain->mData;
         if (data.mFlags != 0x00101c77 || data.mAssociatedForm || data.mAssociatedData != 0
             || data.mSchool != 2 || data.mResistanceActorValue != 64) return {};
-        if (!resolveInstantRestoration(store, {restoration})) return {};
-        return ESM4::PotionAttributeState{*key, ESM4::MeadDuration, 0.f,
-            {{1, -ESM4::MeadAttributeDrain}, {2, -ESM4::MeadAttributeDrain}}};
+        if (!resolveInstantRestoration(store, {*restoration})) return {};
+        ESM4::PotionAttributeState result{*key, 0.f, 0.f, {}};
+        for (const auto& effect : potion.mEffects)
+            if (effect.mId == ESM::fourCC("DRAT"))
+            {
+                result.mDuration = effect.mDuration;
+                result.mModifiers.push_back({static_cast<std::uint8_t>(effect.mActorValue),
+                    -static_cast<float>(effect.mMagnitude)});
+            }
+        result.validate();
+        return result;
     }
 
     bool consumeOblivionPotionAttributes(MWBase::World& world, const Ptr& item, const Ptr& actor)
@@ -411,9 +431,11 @@ namespace MWWorld
             candidate.mValues[modifier.mAttribute] = ESM4::changeActorValueModifier(
                 candidate.mValues[modifier.mAttribute], candidate.mOwner, modifier.mAttribute,
                 ESM4::ActorValueModifier::Maximum, modifier.mDelta);
+        const auto restoration = std::find_if(potion->mEffects.begin(), potion->mEffects.end(),
+            [](const auto& entry) { return entry.mId == ESM::fourCC("REFA"); });
         const float fatigueDamage = candidate.mValues[10].mModifiers[2].value_or(0.f);
         candidate.mValues[10] = ESM4::changeActorValueModifier(candidate.mValues[10], candidate.mOwner,
-            10, ESM4::ActorValueModifier::Damage, ESM4::MeadFatigueRestoration);
+            10, ESM4::ActorValueModifier::Damage, static_cast<float>(restoration->mMagnitude));
         const float restored = candidate.mValues[10].mModifiers[2].value_or(0.f) - fatigueDamage;
         candidate.validate();
         const auto settings = resolveOblivionPlayerDynamicBaseSettings(store);
@@ -423,8 +445,8 @@ namespace MWWorld
         combat->publishPlayerValues(world.getPlayer(), std::move(candidate), settings);
         if (!debit->commit()) throw std::logic_error("native potion debit changed during publication");
         Log(Debug::Info) << "M16 potion attributes applied: potion=" << effect->mPotion.serialize()
-            << " duration=" << effect->mDuration << " intelligence_delta=-1 willpower_delta=-1"
-            << " fatigue_restored=" << restored << " count=1";
+            << " duration=" << effect->mDuration << " modifiers=" << effect->mModifiers.size()
+            << " fatigue_amount=" << restoration->mMagnitude << " fatigue_restored=" << restored << " count=1";
         MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
         debit->notify();
         return true;
@@ -516,8 +538,21 @@ namespace MWWorld
                 + "s on Self";
         }
         if (!resolveOblivionPotionAttributes(world.getStore(), *potion)) return {};
-        return "Drain Intelligence 1 pt for 60s on Self\nDrain Willpower 1 pt for 60s on Self"
-            "\nRestore Fatigue 2 pts on Self";
+        constexpr std::array attributes{"Strength", "Intelligence", "Willpower", "Agility",
+            "Speed", "Endurance", "Personality", "Luck"};
+        std::ostringstream result;
+        for (const auto& effect : potion->mEffects)
+        {
+            if (result.tellp() > 0) result << "\n";
+            if (effect.mId == ESM::fourCC("DRAT"))
+                result << "Drain " << attributes[effect.mActorValue];
+            else
+                result << "Restore Fatigue";
+            result << " " << effect.mMagnitude << (effect.mMagnitude == 1 ? " pt" : " pts");
+            if (effect.mDuration) result << " for " << effect.mDuration << "s";
+            result << " on Self";
+        }
+        return result.str();
     }
 
     void validateOblivionPotionAttributes(const ESMStore& store, const ESM4::RuntimeState& state)
