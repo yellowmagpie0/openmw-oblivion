@@ -1299,6 +1299,7 @@ namespace MWWorld
         }
         const auto player = getPlayerPtr();
         const auto settings = magicSettings(mStore);
+        std::size_t destructionUses = 0;
         for (auto it = projectiles.begin(); it != projectiles.end();)
         {
             const auto& projectile = it->second;
@@ -1317,6 +1318,7 @@ namespace MWWorld
             {
                 const auto serial = it->first;
                 float appliedDamage = 0;
+                bool trainDestruction = false;
                 std::optional<std::pair<ESM::FormKey, float>> appliedCharm;
                 const auto& target = hit.mHitObject;
                 if (!target.isEmpty() && target.getClass().isActor()
@@ -1355,6 +1357,14 @@ namespace MWWorld
                     }
                     else
                     {
+                        // Resolve the learned-spell owner before publishing Health.
+                        // Scrolls, powers and nonplayer sources do not train here.
+                        const auto* source = caster == player && !targetPlayer
+                            ? mStore.get<ESM4::Spell>().search(projectile.mSource) : nullptr;
+                        const auto* winner = source ? mStore.getFormKeyIndex().winner(projectile.mSource) : nullptr;
+                        const bool ordinaryDestruction = source
+                            && (!winner || (!winner->mDeleted && winner->mRecordType == ESM4::REC_SPEL))
+                            && resolveOblivionTargetSpellDamage(mStore, *source).has_value();
                         const auto resistance = projectile.mEffectCode == ESM::fourCC("SHDG") ? 68 : 61;
                         float damage = projectile.mMagnitude * std::max(0.f, 1.f - value(resistance) / 100.f)
                             * std::max(0.f, 1.f - value(64) / 100.f);
@@ -1372,20 +1382,27 @@ namespace MWWorld
                             target.getClass().isEssential(target), recovery);
                         adoption.commit();
                         appliedDamage = damage;
+                        trainDestruction = ordinaryDestruction && damage > 0;
                     }
                 }
                 // Removal cannot throw after Health/death publication, so the
                 // same contact is never retried even if a later frame fails.
                 it = projectiles.erase(it);
+                if (trainDestruction) ++destructionUses;
                 if (appliedCharm)
                     Log(Debug::Info) << "M16 Charm applied: target=" << appliedCharm->first.serialize()
                         << " caster=dynamic:player:0000000000000001 magnitude=" << appliedCharm->second << " duration=30";
                 Log(Debug::Info) << "M16 magic projectile impact: id=" << serial
-                    << " actor=" << (!target.isEmpty() && target.getClass().isActor()) << " damage=" << appliedDamage;
+                    << " actor=" << (!target.isEmpty() && target.getClass().isActor()) << " damage=" << appliedDamage
+                    << " destruction_use=" << trainDestruction;
             }
             else if (next.mDistance >= next.mMaximumDistance) it = projectiles.erase(it);
             else { std::swap(it->second, next); ++it; }
         }
+        // Every impact owner is consumed before progression or observers can
+        // save. Loading a pending flight can award once; a completed hit cannot.
+        for (std::size_t i = 0; i < destructionUses; ++i)
+            useOblivionPlayerSkill(22, 1);
         mProjectileManager->syncOblivionMagicProjectiles(projectiles);
     }
 

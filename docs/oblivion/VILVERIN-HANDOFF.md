@@ -4,48 +4,54 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open.
 
-Latest accepted chunk: original Immortal Blood066cc1/base0243fc grants
-Hand-to-Hand35→36 once per book base. Schema101 persists successful award
-history; reads at skill100 remain eligible. XP/modifiers survive, governing
-attribute/specialization/major advances increment once, and original misc
-statistics distinguish every read from successful awards.
-[Contract](SKILL-BOOK-READ-CONTRACT.json), [original-game oracle](SKILL-BOOK-READ-ORACLE.json),
-[verification](SKILL-BOOK-READ-VERIFICATION.json).
+Latest accepted chunk: M16 post-class Destruction experience from original
+Flare0a97df against Skeleton04bb63/base084b1a. Four actual5.58-damage hits
+raise5/XP0→6/XP1.90621, Willpower/Magic advances+1 and misc2+1, major progress
+unchanged. Saved in-flight projectile26 hasXP0; cold impact awards1.2 once.
+Completed reload retains6/XP1.90621 with no release/impact replay. Static miss
+and real Flash Bolt20-damage scroll grant no Destruction XP. Only newly earned
+ordinary-use level counts are added; historical missing misc2 is not invented.
+[Contract](DESTRUCTION-USE-CONTRACT.json), [original oracle](DESTRUCTION-USE-ORACLE.json),
+[verification](DESTRUCTION-USE-VERIFICATION.json).
 
-Two normal and two instrumented actual read/save courses pass, including fresh
-process repeats. All eight book captures reviewed; separate normal character
-UI shows Hand-to-Hand36/Warrior/level1/Health83. Full normal3,294 components,
-2,281 engine/Python616; native sanitizer1,115 components and audited complete
-2,281 engine inventory pass. Engine sanitizer gates check leaks; rendered and
-component courses disable leak checks. Original process exited, Documents and
-Plugins inputs restored. Failed launch/repeat attempts and unproven outer143
-shutdowns remain explicit in the receipt. Post-gate changes only add acceptance
-docs and the separate sanitizer preload recipe; tested implementation unchanged.
+Six normal/four instrumented actual courses pass. Eighteen primary captures
+reviewed; separate read-only UI shows Destruction6/Warrior/level1/Health78/110.
+Fresh full normal2,282 engine and complete audited instrumented2,282 engine
+inventory pass. Reuse original book3,294 normal/1,115 native sanitizer components
+and Python616 provenance: those implementations/tests are unchanged. Engine
+sanitizer gates check leaks; rendered/component gates disable leak checks.
+Fixed-wall-time sanitizer cast attempts, scroll observation/schema92 comparison
+failures, UI marker mistakes and unproven outer143 interruptions remain explicit.
+All actual gate subprocesses exited0; independent XML union verifies11+2,271
+without missing/duplicate/failed/skipped cases. Post-gate changes only correct
+input recipes and acceptance docs; production C++/tests unchanged. Original
+Docs/Plugins restored exactly after interrupted cleanup; pristine unchanged,
+no owned original process remains.
 
-Book continuation (independent branch from the earlier genuine Vilverin exit):
-`build/oblivion-compat/skill-book/normal-book-repeat-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `fb073ae38596c6e476dcaf3aae4dad4fd65b394d6f4ae15e849132dd28b2613b`.
-Hand-to-Hand36/XP0, major progress1, one book-base award, Health83 from the
-actual campfire approach, prior earned loot and dead/looted Skeleton06c2ed
-retained. Genuine fork positive-XP and inventory-copy book courses are not
-claimed; original-game and World tests cover those rules. General book UI,
-pagination, OnRead scripts and ordinary-book statistics remain open.
+Destruction test continuation (earlier genuine Canosel branch):
+`build/oblivion-compat/destruction-use/normal-flare-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `ef3dcbd5cdbd131f6bc6d5ae3c2a39a075166b3f0d6bd7bf1cb56a7fd2646cd2`.
+Health78.215/Fatigue170, Destruction6/XP1.90621; Skeleton04bb63 dead with Player
+credit and17 bodies. Its authored Bonemeal remains unlooted. This branch
+predates the later Crypt/harvest/book progress; do not merge its save state.
 
-The accepted Nirnroot branch remains available independently:
-`build/oblivion-compat/nirnroot-use/normal-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165`.
-Health110/Fatigue170, one earned Nirnroot owner1/Found1, Seeking Your Roots
-stage10/counters2/misc27=2, Blunt35/XP2, Restoration6/XP1.3062, Bonemeal/Steel
-War Axe/Club retained. Skeleton06c2ed remains dead/empty,17-body ownership and
-one innate grant. Current101 also passes genuine100 active-Nirnroot migration
-and expiry with those owners retained. [Nirnroot receipt](NIRNROOT-USE-VERIFICATION.json).
+Independent retained outside continuations:
 
-Current chunk / next action: establish missing Destruction use experience with
-original Flare against a genuine placed enemy. Reuse existing cast/flight
-ownership and normal-input encounters, first verify the original hit-use rule,
-then implement only the missing progression/publication and cold-load behavior.
-Do not expand into the adjacent learned-target spell mastery AV20/22 issue
-unless needed by this deliverable. No new implementation or acceptance yet.
+- Nirnroot: `build/oblivion-compat/nirnroot-use/normal-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+  SHA256 `6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165`.
+  Health110, one Nirnroot owner1/Found1, Seeking Your Roots stage10/counters2,
+  Blunt35/XP2, Restoration6/XP1.3062, Bonemeal/Steel War Axe/Club retained;
+  Skeleton06c2ed dead/empty with17 bodies and one innate grant.
+  [Receipt](NIRNROOT-USE-VERIFICATION.json).
+- Immortal Blood: `build/oblivion-compat/skill-book/normal-book-repeat-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+  SHA256 `fb073ae38596c6e476dcaf3aae4dad4fd65b394d6f4ae15e849132dd28b2613b`.
+  Hand-to-Hand36/XP0, major progress1, one base award, Health83 from actual
+  campfire approach. [Receipt](SKILL-BOOK-READ-VERIFICATION.json).
+
+Current chunk finished. Next action: inspect installed nearby flora/loot or
+weapon uses for another unsupported native interaction and establish its genuine
+baseline before implementation. An initial Restore-Health flora survey found
+no matching Vilverin placement; no ingredient implementation chosen or started.
 
 Previous accepted chunks:
 

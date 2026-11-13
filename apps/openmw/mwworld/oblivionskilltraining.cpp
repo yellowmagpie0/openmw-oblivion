@@ -154,6 +154,7 @@ namespace MWWorld
         auto& sharedSkill = stats.getSkill(oblivionSkillIds()[skill - 12]);
         const auto base = combat->getPlayerBaseValue(skill);
         const bool readingBook = !skillBook.isNull();
+        const bool ordinaryUse = !readingBook && count == 0;
         if (readingBook && (!skillBook.isContent() || count != 1 || experience != 0.f))
             throw std::invalid_argument("invalid native skill-book reward request");
         const bool exhausted = readingBook && mOblivionRuntimeState
@@ -185,6 +186,11 @@ namespace MWWorld
         if (!mOblivionRuntimeState)
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
         auto counters = mOblivionRuntimeState->mPlayer.mActorValues;
+        if (ordinaryUse && count > 0)
+        {
+            auto& increases = counters[ESM4::playerMiscStatKey(2)];
+            increases = ESM4::addPlayerMiscStat(ESM4::playerMiscStatValue(increases), count);
+        }
         // Prepare all allocations before native skill publication. The history
         // is by book base, independently of the placed reference or container.
         std::set<ESM::FormKey> awardedBooks;

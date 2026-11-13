@@ -19,6 +19,7 @@
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadrace.hpp>
 #include <components/esm4/loadclas.hpp>
+#include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadskil.hpp>
 #include <components/esm4/runtimestate.hpp>
@@ -233,4 +234,45 @@ TEST(OblivionSkillTraining, SkillBooksPreserveExperienceModifiersAndBaseHistoryA
         EXPECT_EQ(stats.getLevelProgress(), major ? 3 : 0);
         EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mAwardedSkillBooks.size(), 3u);
     }
+}
+
+TEST(OblivionSkillTraining, OriginalDestructionUsesCrossOneMinorLevelAndPersistItsStatistics)
+{
+    TrainingFixture fixture(false);
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    ESM4::Skill definition{};
+    definition.mId = {0x840, 0}; definition.mIndex = 22;
+    definition.mData = ESM4::SkillData{22, 2, 1, {0, 1.2f}};
+    store.getWritable<ESM4::Skill>().insertStatic(definition, ESM::FormKey::content("headless.esm", 0x840));
+    std::uint32_t id = 0x841;
+    for (const auto& [name, value] : std::array{
+             std::pair{"fSkillUseFactor", .35f}, std::pair{"fSkillUseExp", 1.5f}})
+    {
+        ESM4::GameSetting setting{};
+        setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+        store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", id++));
+    }
+    auto& combat = *world.getOblivionCombatService();
+    auto values = *combat.findActorValues(ESM::FormKey::dynamic("player", 1));
+    values.mValues[22].mBase = 5;
+    values.mValues[22].mModifiers = {2.f, 3.f, -1.f};
+    combat.publishPlayerValues(world.getPlayer(), values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+    const auto player = world.getPlayerPtr();
+    auto& stats = player.getClass().getNpcStats(player);
+    auto& skill = stats.getSkill(ESM::RefId(ESM::Skill::Destruction));
+    skill.setProgress(0);
+    for (int i = 0; i < 4; ++i) world.useOblivionPlayerSkill(22, 1);
+    EXPECT_EQ(combat.getPlayerBaseValue(22), 6);
+    EXPECT_EQ(combat.getPlayerValue(22), 10);
+    EXPECT_NEAR(skill.getProgress(), 1.9062095f, .001f);
+    EXPECT_EQ(stats.getLevelProgress(), 0);
+    EXPECT_EQ(stats.getSkillIncreasesForAttribute(ESM::Attribute::Willpower), 1);
+    EXPECT_EQ(stats.getSkillIncreasesForSpecialization(ESM::Class::Magic), 1);
+    const auto saved = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+    EXPECT_EQ(saved.mPlayer.mActorValues.at("skill_advances.22"), 1);
+    EXPECT_EQ(saved.mPlayer.mActorValues.at("pc_misc_stat.2"), 1);
+    world.useOblivionPlayerSkill(22, 1, 0);
+    EXPECT_NEAR(skill.getProgress(), 1.9062095f, .001f);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mActorValues.at("pc_misc_stat.2"), 1);
 }

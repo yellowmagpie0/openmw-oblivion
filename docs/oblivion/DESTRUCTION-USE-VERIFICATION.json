@@ -1,0 +1,492 @@
+{
+  "status": "Accepted bounded post-class native Destruction use on original Flare hits",
+  "full_milestone_complete": false,
+  "normal": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/normal-flare-four-hits-01/destruction-use-audit.json",
+        "sha256": "53e3d891f74b7a4ee46af104c16bf07bf6dd05b54079dde448eb001b3ca9c555"
+      },
+      "phase": "four_hits",
+      "input_sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad",
+      "output_sha256": "0175926fd869f8c28505c4ba1651ff14b52c50e097749f5cf7acd91237a9c108",
+      "base_before": 5.0,
+      "base_after": 6.0,
+      "xp_before": 0.0,
+      "xp_after": 1.9062094688415527,
+      "health": 78.21504974365234,
+      "impacts": 4,
+      "new_cast_releases": 4,
+      "pending_flights": 0,
+      "game_sha256": "ad28a78bea92d6a8fac83b5753cee1d1235c6ae63d6ddf72f29f858c917692b2"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/normal-flare-pending-01/destruction-use-audit.json",
+        "sha256": "381c6dff0d43f8d36369a6bd9ff56d5c21c6f1f8cbffda7ba82fe220ff7b478c"
+      },
+      "phase": "pending",
+      "input_sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad",
+      "output_sha256": "82afebc242fc81c5d430bf473ab9c762c5d27998839d0eec769656a2ff2bb0af",
+      "base_before": 5.0,
+      "base_after": 5.0,
+      "xp_before": 0.0,
+      "xp_after": 0.0,
+      "health": 99.38224792480469,
+      "impacts": 0,
+      "new_cast_releases": 1,
+      "pending_flights": 1,
+      "game_sha256": "ad28a78bea92d6a8fac83b5753cee1d1235c6ae63d6ddf72f29f858c917692b2"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/normal-flare-resume-01/destruction-use-audit.json",
+        "sha256": "c01b80963b28e9fe13c094c08f18c0190bc3c65c384a4431465435dfbf85507b"
+      },
+      "phase": "resume",
+      "input_sha256": "82afebc242fc81c5d430bf473ab9c762c5d27998839d0eec769656a2ff2bb0af",
+      "output_sha256": "93824eef7c85dd7a528171149baa0abdb143e82aa30f2d211f6680b0cc3900aa",
+      "base_before": 5.0,
+      "base_after": 5.0,
+      "xp_before": 0.0,
+      "xp_after": 1.2000000476837158,
+      "health": 94.08191680908203,
+      "impacts": 1,
+      "new_cast_releases": 0,
+      "pending_flights": 0,
+      "game_sha256": "ad28a78bea92d6a8fac83b5753cee1d1235c6ae63d6ddf72f29f858c917692b2"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/normal-flare-completed-restart-01/destruction-use-audit.json",
+        "sha256": "f311960dd88069e2120a3ffe78931017a754d3af2130d5aa14f0bff22f711c8b"
+      },
+      "phase": "completed",
+      "input_sha256": "0175926fd869f8c28505c4ba1651ff14b52c50e097749f5cf7acd91237a9c108",
+      "output_sha256": "ef3dcbd5cdbd131f6bc6d5ae3c2a39a075166b3f0d6bd7bf1cb56a7fd2646cd2",
+      "base_before": 6.0,
+      "base_after": 6.0,
+      "xp_before": 1.9062094688415527,
+      "xp_after": 1.9062094688415527,
+      "health": 78.21504974365234,
+      "impacts": 0,
+      "new_cast_releases": 0,
+      "pending_flights": 0,
+      "game_sha256": "ad28a78bea92d6a8fac83b5753cee1d1235c6ae63d6ddf72f29f858c917692b2"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/normal-flare-miss-01/destruction-use-audit.json",
+        "sha256": "32526ddc102b8d1131d3ee06d2b0b76f12446cd687039a9b958dadeda8507a52"
+      },
+      "phase": "miss",
+      "input_sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad",
+      "output_sha256": "d4b881f1562936c2d3718e2f4e2b5949d2788c159c5e95bd3ef57108f9464a2c",
+      "base_before": 5.0,
+      "base_after": 5.0,
+      "xp_before": 0.0,
+      "xp_after": 0.0,
+      "health": 94.08191680908203,
+      "impacts": 1,
+      "new_cast_releases": 1,
+      "pending_flights": 0,
+      "game_sha256": "ad28a78bea92d6a8fac83b5753cee1d1235c6ae63d6ddf72f29f858c917692b2"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/normal-flash-bolt-regression-03/destruction-use-audit.json",
+        "sha256": "b6c95d14fbcf989c251b205ab4bccdd58c5abf5a7ef5c5957942820f2fd8de64"
+      },
+      "phase": "scroll",
+      "input_sha256": "1ff625dc4b87dbdc1fda320597f1d7640b1c43b9b315e26684a313636ef9e7fe",
+      "output_sha256": "afd732ae845670784e728deb921046a76329c0d3555095ba8aa34f39f5914f51",
+      "base_before": 5.0,
+      "base_after": 5.0,
+      "xp_before": 0.0,
+      "xp_after": 0.0,
+      "health": 67.67945861816406,
+      "impacts": 1,
+      "new_cast_releases": 0,
+      "pending_flights": 0,
+      "game_sha256": "ad28a78bea92d6a8fac83b5753cee1d1235c6ae63d6ddf72f29f858c917692b2"
+    }
+  ],
+  "sanitized": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/sanitized-flare-four-hits-02/destruction-use-audit.json",
+        "sha256": "1e523b6cd9ad976a25e44f1259f907f53969124496acaf0ffb97ebaddc89d606"
+      },
+      "phase": "four_hits",
+      "input_sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad",
+      "output_sha256": "96ee4f18408918fc3e7234e2d1c658f2e1cdc102d3af66e21bd4c3df36bca853",
+      "base_before": 5.0,
+      "base_after": 6.0,
+      "xp_before": 0.0,
+      "xp_after": 1.9062094688415527,
+      "health": 88.78726959228516,
+      "impacts": 4,
+      "new_cast_releases": 4,
+      "pending_flights": 0,
+      "game_sha256": "27dbb6bce2bdf242496391b6565a714933978bfa47c88a4e5df3aafe458c1844"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/sanitized-flare-pending-01/destruction-use-audit.json",
+        "sha256": "b539917179668d720d77a3cc28f934b801881d90310f580ca679bd97de28301e"
+      },
+      "phase": "pending",
+      "input_sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad",
+      "output_sha256": "44e4f6812164dfe13e0c4c1d8b10c125ec71450715c4257282189aba1f6b2959",
+      "base_before": 5.0,
+      "base_after": 5.0,
+      "xp_before": 0.0,
+      "xp_after": 0.0,
+      "health": 99.38224792480469,
+      "impacts": 0,
+      "new_cast_releases": 1,
+      "pending_flights": 1,
+      "game_sha256": "27dbb6bce2bdf242496391b6565a714933978bfa47c88a4e5df3aafe458c1844"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/sanitized-flare-resume-01/destruction-use-audit.json",
+        "sha256": "ef5a948dfad20b1123fb43fcbf8fdf00f97cc81a7d29628d049163a00e5c062d"
+      },
+      "phase": "resume",
+      "input_sha256": "44e4f6812164dfe13e0c4c1d8b10c125ec71450715c4257282189aba1f6b2959",
+      "output_sha256": "6fc54101a2211b78ea97d4483fea1baed15d63e05105e62bb0febc51c547884d",
+      "base_before": 5.0,
+      "base_after": 5.0,
+      "xp_before": 0.0,
+      "xp_after": 1.2000000476837158,
+      "health": 94.08191680908203,
+      "impacts": 1,
+      "new_cast_releases": 0,
+      "pending_flights": 0,
+      "game_sha256": "27dbb6bce2bdf242496391b6565a714933978bfa47c88a4e5df3aafe458c1844"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/sanitized-flare-completed-restart-01/destruction-use-audit.json",
+        "sha256": "b2d195c313989d01fd880698e92234cc19d85a374e8a48d0e70fd9ae25c5e794"
+      },
+      "phase": "completed",
+      "input_sha256": "96ee4f18408918fc3e7234e2d1c658f2e1cdc102d3af66e21bd4c3df36bca853",
+      "output_sha256": "a000df3439439c356bc13722496d8fcc4731afae5de361fc9b027c5045377bce",
+      "base_before": 6.0,
+      "base_after": 6.0,
+      "xp_before": 1.9062094688415527,
+      "xp_after": 1.9062094688415527,
+      "health": 88.78726959228516,
+      "impacts": 0,
+      "new_cast_releases": 0,
+      "pending_flights": 0,
+      "game_sha256": "27dbb6bce2bdf242496391b6565a714933978bfa47c88a4e5df3aafe458c1844"
+    }
+  ],
+  "fresh_engine_gates": {
+    "integration-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/integration-normal-01/verification.json",
+        "sha256": "3bb6c117ad2f483cf5a7c895efdc6263562abf88439aab299e118eda59990129"
+      },
+      "source": {
+        "head": "69bea229692d80a6b1cda10919c9c9546dae4a20",
+        "source_fingerprint": "cc82934e58d73df4df6345c6131643c9e1dc2ad710405e34e9549189452a898f"
+      },
+      "result": {
+        "executed": 2282,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "c2449137360ecb0b0c3f403ef20cedf1e9edbf016744321772f972d9eaeaa3e7",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "5e1ff13c72d4737671a951a8dcb699e6ca8b78a03247f10f55644e2da3009785",
+        "inventory_sha256": "dc8b50aede7fa503d40e04e8374b0cbfe5048e73e96a47d08db522455a2d64ce",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "integration-sanitized-actorbounds-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/integration-sanitized-actorbounds-01/verification.json",
+        "sha256": "5ea05d46fd996c94167b2bc16a38a7544b60d464a68e85915b228716e131e01a"
+      },
+      "source": {
+        "head": "69bea229692d80a6b1cda10919c9c9546dae4a20",
+        "source_fingerprint": "cc82934e58d73df4df6345c6131643c9e1dc2ad710405e34e9549189452a898f"
+      },
+      "result": {
+        "executed": 11,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*ActorBounds*",
+        "binary_sha256": "34266034f1f85e2952ac019c8d41fb3806d93e6e7c1d3667360413938ddcef40",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "3e7b6b0596a78f99a8b88c811011fa8739542b91cc356b4cf8330c412c40258c",
+        "inventory_sha256": "dc8b50aede7fa503d40e04e8374b0cbfe5048e73e96a47d08db522455a2d64ce",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "integration-sanitized-rest-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/destruction-use/integration-sanitized-rest-01/verification.json",
+        "sha256": "34ee5402697605b086c081e29075e622b4d06badff9946883da201c4d4703a20"
+      },
+      "source": {
+        "head": "69bea229692d80a6b1cda10919c9c9546dae4a20",
+        "source_fingerprint": "cc82934e58d73df4df6345c6131643c9e1dc2ad710405e34e9549189452a898f"
+      },
+      "result": {
+        "executed": 2271,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*-*ActorBounds*",
+        "binary_sha256": "34266034f1f85e2952ac019c8d41fb3806d93e6e7c1d3667360413938ddcef40",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "4421169ade33bd4ad7dfcfdf4fff6c2b847abd09ba2516f5d1684a63fb07cc12",
+        "inventory_sha256": "dc8b50aede7fa503d40e04e8374b0cbfe5048e73e96a47d08db522455a2d64ce",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "sanitized_inventory_union": {
+    "path": "build/oblivion-compat/destruction-use/sanitized-inventory-union.json",
+    "sha256": "30e8d3bac49ba15571bc808fc44f5b507ef99a932b794b85e3ea0277b00a5e69"
+  },
+  "reused_component_codec_gates": {
+    "components": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-normal-01/verification.json",
+        "sha256": "a0c3534965501aa7551f71476011600b67c1a46ff43c588d37fd440b9fc16a35"
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "15a12753b47cace52efc78c17e0ba9fbe20595d229c4f9ae79f06b6b5e7d1992"
+      },
+      "result": {
+        "executed": 3294,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "886aa11db910e9c4f8cbf5fd6e63ffbb89861ca92dbba9002a98bc961dee81a9",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "83e25f8e948776f6aae19021df2ec0fcb89e57927f1b4a7ef0b03661c02692d4",
+        "inventory_sha256": "99ad5ba0cbe0afb4b450b1ba8335b0ab5bec217f1bfa4750727deb7d7a206c20",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "scope": "Reused original provenance: component implementations/tests and Python codec/tests unchanged by this World-only feature. New verifier exercised through actual save audits; these are not fresh code gates for this revision."
+    },
+    "python": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-normal-01/verification.json",
+        "sha256": "a0c3534965501aa7551f71476011600b67c1a46ff43c588d37fd440b9fc16a35"
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "15a12753b47cace52efc78c17e0ba9fbe20595d229c4f9ae79f06b6b5e7d1992"
+      },
+      "result": {
+        "executed": 616,
+        "passed": true,
+        "log_sha256": "5060b312be75337772ec90483e9b8022e7549e70d94c6688441f7e4078c0f723"
+      },
+      "scope": "Reused original provenance: component implementations/tests and Python codec/tests unchanged by this World-only feature. New verifier exercised through actual save audits; these are not fresh code gates for this revision."
+    },
+    "sanitize": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-sanitized-components-01/verification.json",
+        "sha256": "e4969f64d683d469f2cfce85f5b7425654c40db3c01ff722504f309091eda83a"
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "15a12753b47cace52efc78c17e0ba9fbe20595d229c4f9ae79f06b6b5e7d1992"
+      },
+      "result": {
+        "executed": 1115,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "f993b5df17e60cbe53a5524f36b10b39a630c748d912261ddc90f590eaf88db0",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "ae70bc58c0b53c342763a7efda334f4f53936f226539f1dcbe98a70e7ffe1272",
+        "inventory_sha256": "be6800224787ab61e5b0e8cfad702400886458ebcda7355d2ed455159e5bd241",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "scope": "Reused original provenance: component implementations/tests and Python codec/tests unchanged by this World-only feature. New verifier exercised through actual save audits; these are not fresh code gates for this revision."
+    }
+  },
+  "implementation_sources": [
+    {
+      "path": "apps/openmw/mwworld/oblivioncombatmagic.cpp",
+      "sha256": "ec87fc878ea42997926d3312b5c6132caac4c30075116a5cd10e6a14594b0fb8"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionskilltraining.cpp",
+      "sha256": "08594fb27982e7eccd5b0b421ea97b27a2506a2be9826264fbdc5a10614beb62"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionskilltraining.cpp",
+      "sha256": "a4af9cdb1ff760a784320165d3ab87ce200f3a14bf27ab7671884f763741ef7f"
+    }
+  ],
+  "captures": [
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-four-hits-01/Destruction-Flare-menu.png",
+      "sha256": "123d76371c1c3469f3cca1c51d86286980befd79a70d042b71268e4b2d877941",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-four-hits-01/Destruction-Flare-selected.png",
+      "sha256": "7ecf3294f71afd035700f791e222c8b7bbacb40ca3ad1b32f835af7b6c704772",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-four-hits-01/Destruction-Skeleton-defeated.png",
+      "sha256": "3b77a7cdc55363efa4dce1c078db55dcb3267a645633aac57919ecbb1a9745de",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-pending-01/Destruction-Flare-menu.png",
+      "sha256": "bbae87c2eb97bc3dd9fe6f9cd0e3c2bc7e6cfe52c6bb9ed89795aadeb90948da",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-pending-01/Destruction-Flare-selected.png",
+      "sha256": "12294a8f521cf8de154708ce23cce71e5aaa163f982af9e0cefc33835c9443a0",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-resume-01/Destruction-resume.png",
+      "sha256": "9a8d0ab84b952427141712120f1780836f0d3d5bff97876911a34473a5cd76ae",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-completed-restart-01/Destruction-completed_restart.png",
+      "sha256": "217307c6ee28df99b38af43910b1ae59fb291bc31682e8b4df118a42a04700fb",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-miss-01/Destruction-Flare-menu.png",
+      "sha256": "656780ec186250f83d4a5b9046dcd35bce5d695400c630e868642a3b7c1ab4c0",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-miss-01/Destruction-Flare-miss.png",
+      "sha256": "454424640da42b1a18100e598be1513032c6d025cc061587cf2de31851371c92",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flare-miss-01/Destruction-Flare-selected.png",
+      "sha256": "96edc223a8e8d85632d9cac79496689ff92799cdae26b8a03a6630f89507320c",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/normal-flash-bolt-regression-03/original-bandit-after-scroll-restart.png",
+      "sha256": "0f2a69d26e98acccf6d02001edac6766fe5d8ff4aa35f8a918e32a96b88ab88e",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/sanitized-flare-four-hits-02/Destruction-Flare-menu.png",
+      "sha256": "1f950562a25e584ea04a50cd6c74f76770b53dc9e2b7369a72f72433e84223d8",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/sanitized-flare-four-hits-02/Destruction-Flare-selected.png",
+      "sha256": "860176eed5d5ff64f2626ccb1050a3e79195fa17c8378674486069010ee347c2",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/sanitized-flare-four-hits-02/Destruction-Skeleton-defeated.png",
+      "sha256": "7dd1045ee7e00cf5e566b590c42e49abf171173d98f0def3a1c9e06cb77a12f4",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/sanitized-flare-pending-01/Destruction-Flare-menu.png",
+      "sha256": "408ee342e7f00d74f72c0d20c400f2ebcdb51a8723155251cac23cbc1e2a500f",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/sanitized-flare-pending-01/Destruction-Flare-selected.png",
+      "sha256": "a41868173b8db3033a76e134f5ebcc70d0641fae7f2006b4b41cc500f93accee",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/sanitized-flare-resume-01/Destruction-resume.png",
+      "sha256": "832deff4517a358fc44cabce0424662a3fb801ea90ece8799f3a0a66e93dac6a",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/sanitized-flare-completed-restart-01/Destruction-completed_restart.png",
+      "sha256": "4ee8a52dd7ffd22ccc85525040a8f4771b88414388f1a42dff343d1627d10341",
+      "visually_reviewed": true
+    }
+  ],
+  "character_ui": {
+    "path": "build/oblivion-compat/destruction-use/normal-earned-destruction-ui-02/ui-audit.json",
+    "sha256": "8adcdc159abe4a5f091ba6cd41d1cc9e63f3ed0d292d565c21fb4af8678c847c"
+  },
+  "independent_oracle": "DESTRUCTION-USE-ORACLE.json",
+  "contract": "DESTRUCTION-USE-CONTRACT.json",
+  "source_note": "After frozen engine gates only acceptance docs, verifier-independent evidence and input-only sanitizer recipe acknowledgements changed. Production C++ and its tests unchanged.",
+  "coverage": "Normal: four-hit level crossing, pending flight, resumed hit, completed reload, static miss, real Flash Bolt damage/no-XP. Instrumented: four-hit progression and pending/completed ownership across fresh loads; no full sanitizer control-matrix claim.",
+  "retained_attempts": [
+    "sanitized-flare-four-hits-01: fixed wall-time intervals produce two casts, not four; corrected02 requires fresh real impact acknowledgements.",
+    "normal-flash-bolt-regression-01: runtime succeeded but inherited driver missed process capture;02 captured process but old recipe lacked live load/save journal;03 adds observation environment/timeouts only.",
+    "Initial old92 inventory comparison missed absent script_owner\u2192null migration; corrected audit preserves real owners and bounds worn-condition loss to actual damage wear.",
+    "normal-earned-destruction-ui-01: game/actions completed, copied expected marker still named old Hand-to-Hand and overview hid minor skills; corrected02 scrolls to visible Destruction6.",
+    "Initial sanitizer-rest watcher used old book root and was refused because output existed. No prior evidence overwritten; corrected watcher used fresh root."
+  ],
+  "wrapper_anomalies": [
+    {
+      "path": "build/oblivion-compat/destruction-use/integration-sanitized-rest-01/wrapper-shutdown-note.json",
+      "sha256": "67181ae828430dcaa3c36a3b3cda610c14d31b4899a9d9d76a7bbec42376a291"
+    },
+    {
+      "path": "build/oblivion-compat/destruction-use/sanitized-core-watcher-interruption.json",
+      "sha256": "9cc19322f733aba463a6f606b2b5fc8d582f9318f85a017d86686ec51935f95c"
+    }
+  ],
+  "limits": [
+    "Positive damaging contacts from current supported instant single-effect learned fire/shock target spells. Fully resisted contacts, absorption/reflection, duration/area/multi-effect and other schools remain open.",
+    "Actual course uses completed Warrior class. Tutorial Destruction recommendation-history handling remains an adjacent open gap.",
+    "Original probe certifies one positive damaging use and geometric misses, not original repeated-hit level crossing. Reuse generic training provenance for thresholds; actual fork four-hit level crossing is separately verified.",
+    "Engine sanitizer gates enable leak detection; rendered instrumented courses disable it.",
+    "Newly use-earned levels increment Skills Increased; missing historical ordinary-use counts are not reconstructed."
+  ]
+}
