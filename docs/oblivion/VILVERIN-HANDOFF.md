@@ -4,18 +4,29 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open; do not merge independent save branches.
 
-Latest accepted chunk: ordinary armor skill use on original Rusty Iron Cuirass
-0661c1/Greaves0661c3. Unblocked bites now grant1.25 Heavy XP per selected body
-hit: normal3hits→3.75, instrumented2hits→2.5, instead of baseline0. Cold loads
-retain earned use without replay; weapon-blocked hits still wear armor but grant
-no armor XP and retain their Block1.25. Heavy base40, other skill bases/counters,
-original inventory/ability/source ownership and schema101 remain intact.
-[Contract](ARMOR-USE-CONTRACT.json), [oracle](ARMOR-USE-ORACLE.json),
-[verification](ARMOR-USE-VERIFICATION.json). Normal2284 and instrumented2284 engine
-inventories pass; six actual courses plus reused real baseline, seven primary
-captures reviewed. Original armor-tail16cases plus Heavy/Light dispatcher18cases
-each establish the rule with declared boundaries. Light Armor/projectiles and
-level crossing remain outside actual acceptance.
+Latest accepted chunk: ordinary Blade use with original loose Iron Claymore
+0c56f9/base01c6cd, acquired and equipped normally in Vilverin. One4.325-damage
+hit on Bandit Bowman04bb73 now grants Blade35/XP0.5 instead of0. Normal and
+instrumented hit/miss/cold-load courses pass; miss grants no use/wear, cold load
+retains0.5 without replay. Original winning SKIL03f and dispatcher18cases establish
+primary0.5 with declared boundaries. Normal2284 and full instrumented2284 engine
+tests pass. Blade level crossing, power/zero/immune/fully blocked contacts remain
+open. [Contract](BLADE-USE-CONTRACT.json), [oracle](BLADE-USE-ORACLE.json),
+[verification](BLADE-USE-VERIFICATION.json). Actual incoming dagger hits legitimately
+advance Heavy Armor; do not erase that progress.
+
+Blade continuation (independent first-zone branch):
+`build/oblivion-compat/blade-use/normal-blade-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `c0424880f85c83b54ad6f857cb252446487fc9d260acb90f443ee2ae50871909`.
+Player alive Health23.825, Blade35/XP0.5, Heavy41/XP6.78445; bandit alive9.675,
+claymore equipped once/condition167.28. Source deleted/taken/count0. Normal input
+and observer preparation failures are retained in the verification receipt.
+
+Previous accepted chunk: Heavy Armor use on original Rusty Iron body armor;
+unblocked hits grant1.25 per selected body hit, weapon-blocked hits grant0 while
+retaining Block use. Normal/instrumented hit/block/cold-load courses and engine
+inventories pass. [Verification](ARMOR-USE-VERIFICATION.json). Light Armor,
+projectiles and level crossing remain outside actual acceptance.
 
 Armor continuation (disease-free shore branch):
 `build/oblivion-compat/armor-use/normal-armor-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
@@ -64,10 +75,13 @@ The healthier precontact checkpointa8519941… lives under
 its native actor source was selected naturally after genuine sewer-exitcb89…
 without native authority for06c927/06c92a. No seed setters or unknown-owner repair.
 
-Next action: audit the carried Blade weapons and their currently missing contact
-use, then choose a real damaging-hit case. Armor use is finished; avoid expanding
-it into projectile or mixed-armor work without a selected real-content case.
-Evidence roots `build/oblivion-compat/armor-use` and `build/oblivion-compat/block-use`.
+Current chunk: original taken Iron Claymore0c56f9 still receives a zero-count
+facing label after cold load. Saved deletion/inventory are correct. Read-only
+code inspection finds Oblivion's fallback focus scan accepts content references
+with count0 because they remain script-accessible; it checks enabled/tooltips
+but omits deletion. Next: reproduce with scene/ray/focus observations, exclude
+deleted fallback candidates, and verify taken/untaken controls plus restart.
+Do not claim a resurrected model or duplicate inventory transfer from the label.
 
 Independent retained continuations:
 

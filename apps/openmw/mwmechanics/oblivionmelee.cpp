@@ -1324,7 +1324,8 @@ namespace MWMechanics
                 || attacker.getType() == ESM::REC_CREA4);
         const int trainedSkill = attacker == playerContact && deltas.mVictimHealth < 0
                 && deltas.mOrdinaryHitArguments
-                && (deltas.mOrdinaryHitArguments->mUsedSkill == 16
+                && (deltas.mOrdinaryHitArguments->mUsedSkill == 14
+                    || deltas.mOrdinaryHitArguments->mUsedSkill == 16
                     || deltas.mOrdinaryHitArguments->mUsedSkill == 17)
             ? deltas.mOrdinaryHitArguments->mUsedSkill : -1;
         // Original blocking-cost caller trains positive absorption, or an

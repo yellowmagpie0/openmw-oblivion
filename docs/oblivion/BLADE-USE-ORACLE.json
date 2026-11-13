@@ -1,0 +1,18 @@
+{
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "winning_records": {
+    "path": "build/oblivion-compat/blade-use/real-content-audit.json",
+    "sha256": "f03e5cfc23a54749352ac19842146e587ae7dc4cb8079cb5bf1b77703104d350"
+  },
+  "use_dispatch": {
+    "path": "build/oblivion-compat/blade-use/original-use-report.json",
+    "sha256": "d97170246942bc4c3aba3c4ef3301118616f6e39edf747529c2de22b0d977ad9"
+  },
+  "use_dispatch_cases": 18,
+  "expected": "Native Blade14/SKIL03f primary use0.5, secondary1, governing Strength0/Combat0. Original668C30 maps default scale argument0 to1 and caps at100. Ordinary positive-health-damage contact follows the existing accepted Blunt/Hand consumption policy.",
+  "limits": [
+    "Dispatcher skill lookup, base getter and final progression sink are supplied/captured boundaries; no original live Blade hit or complete caller proof.",
+    "Do not extrapolate current positive-damage course to zero-damage/immune/fully blocked use, mastery or level crossing."
+  ]
+}

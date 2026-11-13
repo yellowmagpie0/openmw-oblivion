@@ -1,0 +1,26 @@
+{
+  "feature": "Ordinary Player Blade experience from original placed Iron Claymore",
+  "milestone": "M15/M16 remain open",
+  "real_content": {
+    "reference": "content:oblivion.esm:0c56f9",
+    "weapon": "content:oblivion.esm:01c6cd",
+    "weapon_type": 1,
+    "target": "content:oblivion.esm:04bb73",
+    "resolved_npc": "content:oblivion.esm:03dc45",
+    "skill": "content:oblivion.esm:00003f"
+  },
+  "behavior": [
+    "Include native Blade14 in successful Player melee training after committed/consumed positive Health damage, before OnHit.",
+    "Use the winning SKIL primary amount and existing ownership/progression; rejected contacts, misses or replayed consumed actions grant no new Blade use.",
+    "Preserve real defensive armor use, wear, NPC hit/voice/crime behavior and schema101."
+  ],
+  "acceptance": [
+    "Ordinary approach, static weapon pickup, inventory drag-to-avatar equip: no generated plugin/stat/seed/owner/save editing.",
+    "Actual baseline4.32499 damage with Blade35/XP0; fixed positive contacts grant0.5 each.",
+    "Normal/instrumented actual hit, cold load and admitted miss; meaningful focused/integration checks."
+  ],
+  "limits": [
+    "No actual level-crossing, shield/zero-health/immune or power-specific acceptance from this ordinary course.",
+    "Taken weapon is correctly owned once/deleted in save but a zero-count world label was observed on cold load; separate rendering/picking follow-up, not a duplicate pickup claim."
+  ]
+}
