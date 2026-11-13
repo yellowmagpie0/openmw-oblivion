@@ -1,0 +1,792 @@
+{
+  "status": "Accepted bounded ordinary Hand-to-Hand use chunk",
+  "full_milestone_complete": false,
+  "contract": "HANDTOHAND-USE-CONTRACT.json",
+  "independent_oracle": "HANDTOHAND-USE-ORACLE.json",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "normal": {
+    "baseline": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/normal-skeleton-first-punch-baseline-01/handtohand-audit.json",
+        "sha256": "9451474a93f6dde2ddd19acf77effaa0e65e29e07d250809fa7ca10ab38bacd4"
+      },
+      "result": {
+        "passed": true,
+        "phase": "baseline",
+        "sanitized": false,
+        "source_sha256": "4a3a11b773c2aea4b6107d79f3e8e3c48ebe432bd2a689db91320379be1dfb21",
+        "save_sha256": "f27bddda97df9e8d1deec8d5696a1954491469722ee34cfd11fbf1eee4ffacf0",
+        "binary_sha256": "ad28a78bea92d6a8fac83b5753cee1d1235c6ae63d6ddf72f29f858c917692b2",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=858 fatigue_cost=7 before=170 after=163 action=3 health_damage=3.02125 fatigue_damage=2.51063 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 16.978749752044678
+      }
+    },
+    "hit": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/normal-hit-01/handtohand-audit.json",
+        "sha256": "0c4373a4b54ca45b77d9615bffabd5770b126f42b22b01a1e72b1c647e68cdae"
+      },
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": false,
+        "source_sha256": "4a3a11b773c2aea4b6107d79f3e8e3c48ebe432bd2a689db91320379be1dfb21",
+        "save_sha256": "2e0f54ad11cfe209a2a432f181e89f6f87f17d9a227eada0065280d0d66c558a",
+        "binary_sha256": "47f07739a1ef7b6bfd10382f813a1544e2cbfd781b87c57792b457d73fced007",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=858 fatigue_cost=7 before=170 after=163 action=3 health_damage=3.02125 fatigue_damage=2.51063 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 16.978749752044678
+      }
+    },
+    "completed": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/normal-completed-restart-01/handtohand-audit.json",
+        "sha256": "7382518ee9c024fb96202b1a9c7e27f7aae4f60fcccb4f14461a2979c4d14241"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "2e0f54ad11cfe209a2a432f181e89f6f87f17d9a227eada0065280d0d66c558a",
+        "save_sha256": "a991290dd0727c1ee4be180c1f9337800e92fcb30387305d1784ef05070c5926",
+        "binary_sha256": "47f07739a1ef7b6bfd10382f813a1544e2cbfd781b87c57792b457d73fced007",
+        "before": {
+          "base": 35.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [],
+        "enemy_health_before": 16.978749752044678,
+        "enemy_health_after": 16.978749752044678
+      }
+    },
+    "miss": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/normal-miss-01/handtohand-audit.json",
+        "sha256": "89868b1a389ed2788bb2aea52bd162e136c45a713d2f5bb18aefbb7b269172f6"
+      },
+      "result": {
+        "passed": true,
+        "phase": "miss",
+        "sanitized": false,
+        "source_sha256": "4a3a11b773c2aea4b6107d79f3e8e3c48ebe432bd2a689db91320379be1dfb21",
+        "save_sha256": "a4b5376da5965b5ad077e5c3c302b9216254a2309d34ca0bc274a8424d29e59f",
+        "binary_sha256": "47f07739a1ef7b6bfd10382f813a1544e2cbfd781b87c57792b457d73fced007",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=858 fatigue_cost=7 before=170 after=163 action=3 health_damage=0 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=none victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 20.0
+      }
+    },
+    "blunt_regression": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/normal-blunt-regression-01/blunt-audit.json",
+        "sha256": "0a496ab9452be060d22aeb7b364fbba7623c20f0130b72ac9e5414016b9ee1ef"
+      },
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": false,
+        "source_sha256": "4163ec28dc8c3bb2c60df226c6d1682b3a5b65335b744f92fa2bac4fac47bf17",
+        "save_sha256": "379666494ba2e37c7c78c8f278e98e1cf201e1016f85f1b12f465acd8f7a0b84",
+        "binary_sha256": "47f07739a1ef7b6bfd10382f813a1544e2cbfd781b87c57792b457d73fced007",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.5,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=859 fatigue_cost=39 before=170 after=131 action=3 health_damage=7.31124 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=60.76 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 12.68876314163208,
+        "club_condition_before": 61.18003845214844,
+        "club_condition_after": 60.760040283203125
+      }
+    },
+    "blunt_preserves_handtohand": {
+      "path": "build/oblivion-compat/handtohand-use/normal-blunt-regression-01/unchanged-handtohand-audit.json",
+      "sha256": "1b63cd4ee97831ba082b9e54e0887da888a060f69ed36cdc03879fc0ee84d293"
+    }
+  },
+  "sanitized": {
+    "hit": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/sanitized-hit-02/handtohand-audit.json",
+        "sha256": "44cd42421834424b34e5c535788559cd5e3adf0cf974bb512c5612db7cf65038"
+      },
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": true,
+        "source_sha256": "4a3a11b773c2aea4b6107d79f3e8e3c48ebe432bd2a689db91320379be1dfb21",
+        "save_sha256": "cb37b21e8e7f0ee73bfbbcfa8ef9e443e755967667601b289a276f786bd0651b",
+        "binary_sha256": "82c8d3694a32a3e8a41b9da9c0e8a2094c01b8958d46dc998710a82e4931f4de",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=858 fatigue_cost=7 before=170 after=163 action=3 health_damage=3.02125 fatigue_damage=2.51063 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=content:oblivion.esm:06c2ed victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 16.978749752044678
+      }
+    },
+    "completed": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/sanitized-completed-restart-01/handtohand-audit.json",
+        "sha256": "977be0dae65f16d0d78cb43fb50d0295e0189d6aa49a0d8a32b67785dfd4598a"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "cb37b21e8e7f0ee73bfbbcfa8ef9e443e755967667601b289a276f786bd0651b",
+        "save_sha256": "6e7bd32f8cfbe524f364d95fb143182bd34a3ce87b5f6b15740efa1a9140b9aa",
+        "binary_sha256": "82c8d3694a32a3e8a41b9da9c0e8a2094c01b8958d46dc998710a82e4931f4de",
+        "before": {
+          "base": 35.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [],
+        "enemy_health_before": 16.978749752044678,
+        "enemy_health_after": 16.978749752044678
+      }
+    },
+    "miss": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/sanitized-miss-01/handtohand-audit.json",
+        "sha256": "4eec46dcaa55ead95499b81b0818f95432dde57b8b35c378b43ba6d36653c7eb"
+      },
+      "result": {
+        "passed": true,
+        "phase": "miss",
+        "sanitized": true,
+        "source_sha256": "4a3a11b773c2aea4b6107d79f3e8e3c48ebe432bd2a689db91320379be1dfb21",
+        "save_sha256": "fdc2c7447c4370626806fc64cca2331d08adbec24f1cb45036f55c59daa47363",
+        "binary_sha256": "82c8d3694a32a3e8a41b9da9c0e8a2094c01b8958d46dc998710a82e4931f4de",
+        "before": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "after": {
+          "base": 35.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "contacts": [
+          "id=858 fatigue_cost=7 before=170 after=163 action=3 health_damage=0 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=none victim_action=-1 armor_condition_writes=0 combat_random_draws=0"
+        ],
+        "enemy_health_before": 20.0,
+        "enemy_health_after": 20.0
+      }
+    }
+  },
+  "fresh_engine_gates": {
+    "normal": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/engine-normal-02/verification.json",
+        "sha256": "29f7b6f903a5689a9a3ca3399e504fce01309e09e6174114128c4d6ba4f1524f"
+      },
+      "source": {
+        "head": "cd2bd0536238f6c5094bf4e404a98ac2d7f0bbda",
+        "source_fingerprint": "156a8a132ba1aee85ed03ad579a4f8d852b7d39be533b07493451c4eb2cf2614"
+      },
+      "result": {
+        "executed": 2282,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "a551bebab373d60e0893250981b8f35f46be388da6f531d4dcdf6b915bda299c",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "0cfabe8e24f36ebf584153d2cbe8fd65fa0d4bc04750a0da4f2baffaf04be344",
+        "inventory_sha256": "dc8b50aede7fa503d40e04e8374b0cbfe5048e73e96a47d08db522455a2d64ce",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized_union": {
+      "receipt": {
+        "path": "build/oblivion-compat/handtohand-use/sanitized-inventory-union.json",
+        "sha256": "87e132ad862e48e1ab72a5d601c756ceda1d3055afe6f71db82839ea24299b3c"
+      },
+      "result": {
+        "passed": true,
+        "executed": 2282,
+        "inventory_union_matches": true,
+        "duplicates": 0,
+        "missing": 0,
+        "failed": 0,
+        "skipped": 0,
+        "source": {
+          "head": "cd2bd0536238f6c5094bf4e404a98ac2d7f0bbda",
+          "source_fingerprint": "156a8a132ba1aee85ed03ad579a4f8d852b7d39be533b07493451c4eb2cf2614"
+        },
+        "test_binary_sha256": "2fc33de47e74064162ad3ca78f858dc45c96ce3a5efeb82955b42697fcf81665",
+        "parts": [
+          {
+            "path": "build/oblivion-compat/handtohand-use/sanitized-part-worker0-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/0"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/handtohand-use/sanitized-part-worker1-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/1"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/handtohand-use/sanitized-part-worker2-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/2"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/handtohand-use/sanitized-part-rest-01/verification.json",
+            "result": {
+              "executed": 2036,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "*-WorkerCounts/*"
+            }
+          }
+        ],
+        "sanitizer": {
+          "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+        },
+        "method": "Fresh disjoint parameter groups plus remaining inventory, same binary and frozen source; individually verified XML inventories."
+      }
+    }
+  },
+  "reused_component_codec_gates": {
+    "components": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-normal-01/verification.json",
+        "sha256": "a0c3534965501aa7551f71476011600b67c1a46ff43c588d37fd440b9fc16a35"
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "15a12753b47cace52efc78c17e0ba9fbe20595d229c4f9ae79f06b6b5e7d1992"
+      },
+      "result": {
+        "executed": 3294,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "886aa11db910e9c4f8cbf5fd6e63ffbb89861ca92dbba9002a98bc961dee81a9",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "83e25f8e948776f6aae19021df2ec0fcb89e57927f1b4a7ef0b03661c02692d4",
+        "inventory_sha256": "99ad5ba0cbe0afb4b450b1ba8335b0ab5bec217f1bfa4750727deb7d7a206c20",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "scope": "Reused original provenance: component implementations/tests and Python codec/tests unchanged by this World-only feature. New verifier exercised through actual save audits; these are not fresh code gates for this revision."
+    },
+    "python": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-normal-01/verification.json",
+        "sha256": "a0c3534965501aa7551f71476011600b67c1a46ff43c588d37fd440b9fc16a35"
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "15a12753b47cace52efc78c17e0ba9fbe20595d229c4f9ae79f06b6b5e7d1992"
+      },
+      "result": {
+        "executed": 616,
+        "passed": true,
+        "log_sha256": "5060b312be75337772ec90483e9b8022e7549e70d94c6688441f7e4078c0f723"
+      },
+      "scope": "Reused original provenance: component implementations/tests and Python codec/tests unchanged by this World-only feature. New verifier exercised through actual save audits; these are not fresh code gates for this revision."
+    },
+    "sanitize": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-sanitized-components-01/verification.json",
+        "sha256": "e4969f64d683d469f2cfce85f5b7425654c40db3c01ff722504f309091eda83a"
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "15a12753b47cace52efc78c17e0ba9fbe20595d229c4f9ae79f06b6b5e7d1992"
+      },
+      "result": {
+        "executed": 1115,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "f993b5df17e60cbe53a5524f36b10b39a630c748d912261ddc90f590eaf88db0",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "ae70bc58c0b53c342763a7efda334f4f53936f226539f1dcbe98a70e7ffe1272",
+        "inventory_sha256": "be6800224787ab61e5b0e8cfad702400886458ebcda7355d2ed455159e5bd241",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "scope": "Reused original provenance: component implementations/tests and Python codec/tests unchanged by this World-only feature. New verifier exercised through actual save audits; these are not fresh code gates for this revision."
+    }
+  },
+  "source_creation": {
+    "prepared_save_sha256": "4a3a11b773c2aea4b6107d79f3e8e3c48ebe432bd2a689db91320379be1dfb21",
+    "original_crypt_checkpoint_sha256": "4163ec28dc8c3bb2c60df226c6d1682b3a5b65335b744f92fa2bac4fac47bf17",
+    "provenance": "BLUNT-USE-VERIFICATION.json source_creation: genuine reached Crypt approach; navigation manifest missed tolerance, ordinary F5 saved reached location. Current normal-skeleton-unequip-ready-02 uses ordinary inventory input only. No stats, actor placement, winning records or passive ownership edited."
+  },
+  "implementation_sources": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+      "sha256": "94c629405e0dfb9848e2117564987c56ed6790eabc661e2f1896850b97a253e8"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testobliviondialogue.cpp",
+      "sha256": "909ad2b5d810485ff4834c43a8dafe33d0d29065276d725f7893d6032d915a6b"
+    },
+    {
+      "path": "scripts/verify_handtohand_use.py",
+      "sha256": "89b7283d9bd06808a21d5a99ce6e1334529c386a0672e611ae4f8966d1f07941"
+    }
+  ],
+  "captures": [
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-skeleton-unequip-ready-02/actual-equipped-club-inventory.png",
+      "sha256": "942bd29d5e1b806061ea79142100400641ad14a1c67a96745935199560d13602",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-skeleton-unequip-ready-02/readied-empty-hands.png",
+      "sha256": "99797d0a42c46c74023f851f4e2ae7d98a39eedc22df7abbdfdd4d07eef744f5",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-skeleton-unequip-ready-02/unequipped-club-inventory.png",
+      "sha256": "30b40d8e593b7c38d78dd83f830da11387bc923b4d1544fd7694a526d290c3c4",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-skeleton-first-punch-baseline-01/original-skeleton-after-punch.png",
+      "sha256": "a3498176bcb8d9447b9c62bf379ea80f4b49eff92d861390af21b8521900241b",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-skeleton-first-punch-baseline-01/original-skeleton-before-punch.png",
+      "sha256": "23473e6044d1308d572f56b2b6e3d3e4a4378869ed45b0b5c963f5ff99e944bd",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-hit-01/original-skeleton-after-punch.png",
+      "sha256": "dde2f9b23423c58963af78d947d0d80a920ccedb4f580f77dd431bbc870d1f53",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-hit-01/original-skeleton-before-punch.png",
+      "sha256": "426df625cdc83220b19b4359016b2e2b6c80d1ee4c6b7774886f5114e23ea7bd",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-completed-restart-01/original-skeleton-completed-reload.png",
+      "sha256": "ceb9fe6d88b24b8575d8d3e24391bcb0d3a36b347f2dec91482223c4e35aa8df",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-miss-01/original-skeleton-after-punch.png",
+      "sha256": "1608c56cff5b5549d2efd05712d532a6762527c62f7d0fb6a94ba9239f1ca3e0",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-miss-01/original-skeleton-before-punch.png",
+      "sha256": "3ba9a15cd7a25a0d4a8db3a0f089aa2d237ebe6ed6c79d7df17c547f66612473",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-blunt-regression-01/original-Skeleton-contact-after.png",
+      "sha256": "bb608f3cfe637ce16c7e110369e383834241abfb26d83f364826919eede496e6",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/normal-blunt-regression-01/original-Skeleton-contact-before.png",
+      "sha256": "b6e437f0f06950e201e6d5c9d7830dfc6806272404f5c19ed7e4663f4167f4ca",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/sanitized-hit-02/original-skeleton-after-punch.png",
+      "sha256": "6d5e10c324cd1e3f925ee45222daa02bd10f5abb575e77c2ccc8f8df59d2c916",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/sanitized-hit-02/original-skeleton-before-punch.png",
+      "sha256": "7e41fc48a84c0ff08fdd73672d3fde8d2f3ba89fd7da1d380eca4aa1ba1a6535",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/sanitized-completed-restart-01/original-skeleton-completed-reload.png",
+      "sha256": "9855d23762e250a33d8213a3b842fec877abfd194398237193ef1f0b94756fb4",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/sanitized-miss-01/original-skeleton-after-punch.png",
+      "sha256": "7f96da76c4c494c4e921faa92028628097ca521a68e5ff536c819dda9a181886",
+      "visually_reviewed": true
+    },
+    {
+      "path": "build/oblivion-compat/handtohand-use/sanitized-miss-01/original-skeleton-before-punch.png",
+      "sha256": "73c3e16d2689d883848e094c734f7a357fa9f03b451c39874c086e5b56ecaaec",
+      "visually_reviewed": true
+    }
+  ],
+  "source_note": "Production C++ and test fixture unchanged since frozen engine gates. Later changes are stronger actual-save verifier assertions, oracle provenance, input-only sanitizer deadlines, handoff and acceptance docs. Reused components/codec evidence retains its original provenance; those implementations/tests are unchanged.",
+  "coverage": "Normal real ordinary punch, completed cold reload, turned-away committed miss and Club/Blunt regression; same Hand hit/reload/miss under ASan/UBSan. Raw PLAY XP plus native T4ST, ownership, counters, process-bound live/save equality and exact source hashes audited.",
+  "retained_attempts": [
+    "normal-skeleton-unequip-ready-01: SDL backend rejected absolute UI pointer action before launch;02 uses X11 UI.",
+    "Earlier Mudcrab preparation/contact is not an XP baseline: unresolved Swamp Fever list admission prevented committed contact; separate follow-up, no authority bypass.",
+    "Initial save reader slice26:end crossed later STBA fields; corrected26:27; final actual baseline/hit/reload/miss audits rerun.",
+    "engine-normal-01: existing synthetic script fixture lacked native Hand SKIL; adding the winning values makes focused02 and full normal02 pass.",
+    "engine-focused-01: outer helper disappeared with143 while compiler continued; retained, waited for existing compiler and collected fresh focused02 receipt.",
+    "engine-sanitized-01: Bullet cumulative thread-counter assertion in scheduler case. Exact failing case passes independently; four fresh disjoint processes cover the complete2282 inventory without omissions.",
+    "sanitized-hit-01:240s overall deadline expired during restore before any punch. Retry02 uses900s and passes."
+  ],
+  "wrapper_recovery": {
+    "receipt": {
+      "path": "build/oblivion-compat/handtohand-use/sanitized-hit-02/driver-process.json",
+      "sha256": "f29ab84141662ae6bc4a32580092320aed1a29691c0835da13caa3b9d02fa3e0"
+    },
+    "exit_observation": {
+      "path": "build/oblivion-compat/handtohand-use/sanitized-hit-02/driver-exit-observation.json",
+      "sha256": "00819c0a574891b6b5800de254c1b96d4fff2943a7bd9c361010f046f5e0d3cc"
+    },
+    "scope": "Outer capture wrapper disappeared across continuation while existing driver/game continued. Read-only PTRACE_SEIZE on Python driver observed actual exit0; no game attach/memory writes. Input/command recovery scope is explicit in receipt. Subsequent courses use detached capture writers."
+  },
+  "limits": [
+    "Practical positive-damaging-contact policy; no original full melee-caller instruction certification.",
+    "Ordinary unarmed course only: blocked/immune/zero-health, pending strike saves, level crossing/cap, Blade/defensive skills and tutorial history remain open.",
+    "Fresh full normal engine run; sanitizer full inventory is a verified disjoint union, not one uninterrupted full process. Engine sanitizer gates enable leak detection; rendered courses disable it.",
+    "Whole Vilverin/M15 course remains open."
+  ]
+}

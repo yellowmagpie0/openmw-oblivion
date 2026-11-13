@@ -3016,6 +3016,11 @@ TEST(OblivionMeleeScripts, AcquiredHitPublishesDamageBeforeFilteredCallbackAndCa
         const auto npcSource = attacker;
         if (playerHit)
         {
+            // A committed Player punch now consults its winning native SKIL.
+            ESM4::Skill hand{};
+            hand.mId = {0xb31, base->mId.mContentFile}; hand.mIndex = 17;
+            hand.mData = ESM4::SkillData{17, 0, 0, {.6f, 1.f}};
+            store.getWritable<ESM4::Skill>().insertStatic(hand, key(0xb31));
             auto playerSource = *base;
             playerSource.mId = {7,base->mId.mContentFile + 1};
             playerSource.mFormKey = ESM::FormKey::content("Oblivion.esm",7);

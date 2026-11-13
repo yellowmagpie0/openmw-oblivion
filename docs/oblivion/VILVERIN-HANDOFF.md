@@ -48,10 +48,33 @@ Independent retained outside continuations:
   Hand-to-Hand36/XP0, major progress1, one base award, Health83 from actual
   campfire approach. [Receipt](SKILL-BOOK-READ-VERIFICATION.json).
 
-Current chunk finished. Next action: inspect installed nearby flora/loot or
-weapon uses for another unsupported native interaction and establish its genuine
-baseline before implementation. An initial Restore-Health flora survey found
-no matching Vilverin placement; no ingredient implementation chosen or started.
+Accepted latest chunk: [ordinary Hand-to-Hand use](HANDTOHAND-USE-VERIFICATION.json)
+against original Skeleton06c2ed/Creature024ddb. Genuine Crypt checkpoint plus
+ordinary Club unequip gives Hand35/XP0; one3.02-damage punch now grants0.6XP.
+Normal and instrumented hit/reload/miss pass, Club still grants Blunt0.5,
+shared advancement and original ability ownership remain unchanged. Normal2282
+engine tests and sanitizer2282 disjoint inventory union pass; all17 primary
+captures reviewed. Schema101 unchanged. Reused original Rat0.6 observation and
+SKIL000042, with original provenance; no new original launch.
+
+Hand-to-Hand test continuation (earlier Crypt branch, Skeleton still alive):
+`build/oblivion-compat/handtohand-use/normal-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `a991290dd0727c1ee4be180c1f9337800e92fcb30387305d1784ef05070c5926`.
+Hand35/XP0.6, target Health16.97875; do not merge with later death/harvest/book
+branches. Retained timeouts, Bullet test-process partition and capture-wrapper
+recovery are explicit in the receipt. No pending-strike, level-crossing, blocked
+or immune Hand acceptance. Next action: address the observed Mudcrab disease
+selection/contact-admission gap below, starting before actor initialization.
+
+Adjacent discovery: original Mudcrab06c927 has LVSP181d18 selecting Swamp
+Fever098415 (Strength/Endurance drains). Current contact admission supports
+only a single Intelligence drain, so its otherwise complete WABR ownership
+cannot admit a punch. Retained approach/empty-hand checkpoints and failed
+contact in `build/oblivion-compat/handtohand-use/mudcrab-contact-blocker.json`.
+No damage committed, so this is not evidence of missing Hand XP. Defer disease
+admission to a separate content chunk; start before actor initialization rather
+than repairing cached unknown disease ownership. Healing ingredient candidate
+also deferred: no local loose/carried example, flora11k/33%.
 
 Previous accepted chunks:
 
