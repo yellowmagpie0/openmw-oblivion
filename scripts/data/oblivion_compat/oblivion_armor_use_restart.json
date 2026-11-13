@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "name": "Original Rusty Iron body armor skill use restart",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": ""
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal types=require('openmw.types')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal t=.2\nreturn {{engineHandlers={{onFrame=function(dt)\n t=t+dt;if t<.2 then return end;t=0\n assert(not types.Actor.isDead(self),'Player died during original unarmed course')\n local target=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x6c927));assert(target and target:isValid(),'Original Mudcrab missing')\n print('ArmorUse sample base='..types.NPC.stats.skills.heavyarmor(self).base..' xp='..types.NPC.stats.skills.heavyarmor(self).progress..' health='..types.Actor.stats.dynamic.health(self).current)\n local item=types.Actor.getEquipment(self,types.Actor.EQUIPMENT_SLOT.CarriedRight)\n print('VilverinContinue AxeContact sample health='..types.Actor.stats.dynamic.health(self).current..' enemy='..types.Actor.stats.dynamic.health(target).current..' distance='..(target.position-self.position):length()..' hand='..types.NPC.stats.skills.handtohand(self).base..' xp='..types.NPC.stats.skills.handtohand(self).progress..' weapon='..(item and item.recordId or 'none')..' stance='..tostring(types.Actor.getStance(self)))\n if types.Actor.stats.dynamic.health(target).current<9.99 then print('VilverinContinue AxeContact contact hurt') end\n if item then print('VilverinContinue AxeContact equipped weapon');if types.Actor.getStance(self)==types.Actor.STANCE.Weapon then print('VilverinContinue AxeContact readied') end end\n if (target.position-self.position):length()<80 then print('VilverinContinue AxeContact in reach') end\n local aim=target:getBoundingBox().center;local p=camera.getViewTransform():apply(aim);local yaw=math.atan2(p.x,-p.z);local pitch=-math.atan2(p.y,math.sqrt(p.x*p.x+p.z*p.z))\n print(string.format('VilverinContinue AxeContact aim x=%d y=%d',math.max(-150,math.min(150,math.floor(yaw*256+.5))),math.max(-100,math.min(100,math.floor(pitch*256+.5)))))\n if math.abs(yaw)<.02 and math.abs(pitch)<.02 then print('VilverinContinue AxeContact facing') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "ArmorUse sample",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Tab"
+    },
+    {
+      "type": "key_up",
+      "value": "Tab"
+    },
+    {
+      "type": "screenshot",
+      "name": "original-rusty-iron-armor-restart.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 900,
+  "expected_exit": 0,
+  "expected_log": [
+    "ArmorUse sample"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died during original VilverinContinue acquisition",
+    "M16 Welkynd consumed:",
+    "M16 potion attributes applied:",
+    "M16 native scroll consumed:",
+    "Error in frame",
+    "onFrame failed"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-rusty-iron-armor-use",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

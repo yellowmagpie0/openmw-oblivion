@@ -1,0 +1,25 @@
+{
+  "feature": "Ordinary Player armor experience on original Rusty Iron Cuirass/Greaves body hits",
+  "milestone": "M15/M16 remain open",
+  "real_content": {
+    "cuirass": "content:oblivion.esm:0661c1",
+    "greaves": "content:oblivion.esm:0661c3",
+    "attacker": "content:oblivion.esm:06c927",
+    "heavy_skill": "content:oblivion.esm:000043"
+  },
+  "behavior": [
+    "Award native18/27 primary use once for selected body-hit armor after successful contact consumption, before OnHit.",
+    "Capture material class before wear/equipment callbacks. Earlier block sound dispatch suppresses armor use, including real weapon blocks that still wear body armor.",
+    "Misses, immune/rejected contacts, absent armor selection, held-only or replayed consumed strikes grant no armor use; preserve Block and attacking skill use.",
+    "Retain native bases, other skill/counter semantics, inventory/source ownership and schema101."
+  ],
+  "acceptance": [
+    "Reuse actual unblocked two-bite baseline: Heavy40/XP0 unchanged while both authored heavy pieces wear.",
+    "Fixed real unblocked contacts grant1.25 Heavy XP each; original weapon-block contacts keep Heavy XP unchanged and retain1.25 Block use each.",
+    "Normal/instrumented actual positive/control/cold process load; focused checks and appropriate engine integration."
+  ],
+  "limits": [
+    "No real Light Armor, projectile, level crossing, zero-condition/break, mixed armor or god-mode/terminal gameplay acceptance from this course.",
+    "Native melee route only; broader armor/Block projectile use remains separate work."
+  ]
+}

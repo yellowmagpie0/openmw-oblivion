@@ -4,7 +4,26 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open; do not merge independent save branches.
 
-Latest accepted chunk: ordinary melee Block experience using original Mudcrab
+Latest accepted chunk: ordinary armor skill use on original Rusty Iron Cuirass
+0661c1/Greaves0661c3. Unblocked bites now grant1.25 Heavy XP per selected body
+hit: normal3hits→3.75, instrumented2hits→2.5, instead of baseline0. Cold loads
+retain earned use without replay; weapon-blocked hits still wear armor but grant
+no armor XP and retain their Block1.25. Heavy base40, other skill bases/counters,
+original inventory/ability/source ownership and schema101 remain intact.
+[Contract](ARMOR-USE-CONTRACT.json), [oracle](ARMOR-USE-ORACLE.json),
+[verification](ARMOR-USE-VERIFICATION.json). Normal2284 and instrumented2284 engine
+inventories pass; six actual courses plus reused real baseline, seven primary
+captures reviewed. Original armor-tail16cases plus Heavy/Light dispatcher18cases
+each establish the rule with declared boundaries. Light Armor/projectiles and
+level crossing remain outside actual acceptance.
+
+Armor continuation (disease-free shore branch):
+`build/oblivion-compat/armor-use/normal-armor-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `e2cc058c132543438caa236715582808b29e0d80427011562085fa12c91af097`.
+Health61.231/110, Heavy40/XP3.75, Block30/XP0; Mudcrab06c927 alive8.69796,
+known-none and WABR retained. Separate from the older Block and infected branches.
+
+Previous accepted chunk: ordinary melee Block experience using original Mudcrab
 06c927 and Rusty Iron War Axe090613. Two actual15%-absorbed bites now grant
 2.5XP (1.25 each) instead of0, with identical damage/wear. Native Block30 remains
 base30; other skills, advancement counters and original ability/source ownership
@@ -45,11 +64,10 @@ The healthier precontact checkpointa8519941… lives under
 its native actor source was selected naturally after genuine sewer-exitcb89…
 without native authority for06c927/06c92a. No seed setters or unknown-owner repair.
 
-Next action: audit original worn armor and its skill-use policy, then choose
-an actual hit case from the verified unblocked course. Armor conditions changed
-there while other skill experience remained unchanged. Both current bounded
-chunks are complete; avoid expanding their scope. Evidence roots:
-`build/oblivion-compat/block-use` and `build/oblivion-compat/swamp-fever-contact`.
+Next action: audit the carried Blade weapons and their currently missing contact
+use, then choose a real damaging-hit case. Armor use is finished; avoid expanding
+it into projectile or mixed-armor work without a selected real-content case.
+Evidence roots `build/oblivion-compat/armor-use` and `build/oblivion-compat/block-use`.
 
 Independent retained continuations:
 

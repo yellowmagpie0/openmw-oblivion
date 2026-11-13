@@ -1246,6 +1246,12 @@ namespace MWMechanics
                 position[i] = static_cast<float>((double(from.pos[i]) + to.pos[i]) * .5);
             result.mHitSoundPosition = position;
         }
+        // Original armor-use tail runs for selected ARMO in the general-hit
+        // sound path. Earlier weapon/shield block dispatch skips that tail,
+        // even when the same contact still wears body armor.
+        const int trainedArmor = !contact->isEmpty() && *contact == playerContact && !result.mHitSounds
+                && hitArmorClass >= 0
+            ? (hitArmorClass == 1 ? 18 : 27) : -1;
         deltas.mVictimHealth = -result.mDamage.mHealth;
         if (!contact->isEmpty() && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4
                 || contact->getType() == ESM::REC_CREA4)
@@ -1332,6 +1338,7 @@ namespace MWMechanics
             // save or change actors. Rejected contacts and misses grant no use.
             if (trainedSkill >= 0) nativeWorld->useOblivionPlayerSkill(trainedSkill, 0);
             if (trainedBlock) nativeWorld->useOblivionPlayerSkill(15, 0);
+            if (trainedArmor >= 0) nativeWorld->useOblivionPlayerSkill(trainedArmor, 0);
             if (!observeEnchantment) return;
             const bool spent = !deltas.mEnchantmentChargeChanges.empty();
             Log(Debug::Verbose) << "M15 weapon enchantment contact: actor=" << actor.serialize()
