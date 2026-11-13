@@ -4,7 +4,22 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open; do not merge independent save branches.
 
-Latest accepted chunk: ordinary Blade use with original loose Iron Claymore
+Latest accepted chunk: original taken Iron Claymore0c56f9 no longer receives a
+zero-count world label after cold load. Oblivion fallback focus now excludes
+deleted references while retaining content scripting accessibility. Before pickup,
+the same original still shows Iron Claymore with one scene owner; after pickup it
+is absent from the scene and owned once. Normal/instrumented taken, untaken and
+restart courses pass;23 affected engine tests pass per build. Full world HUD
+captures are reviewed separately from state audits. [Contract](TAKEN-CLAYMORE-FOCUS-CONTRACT.json),
+[verification](TAKEN-CLAYMORE-FOCUS-VERIFICATION.json). No resurrected model or
+duplicate transfer was established. Broad focus cone/occlusion remains open.
+
+Focus continuation (earlier first-zone pickup branch, axe still equipped):
+`build/oblivion-compat/taken-claymore-focus/normal-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `d4ecc9d1bfc7e4d3fcef35499ee2bd006602cebbc2eb8c28f432049ff3071fb6`.
+Original claymore owned once/deleted, Player alive; separate from Blade combat.
+
+Previous accepted chunk: ordinary Blade use with original loose Iron Claymore
 0c56f9/base01c6cd, acquired and equipped normally in Vilverin. One4.325-damage
 hit on Bandit Bowman04bb73 now grants Blade35/XP0.5 instead of0. Normal and
 instrumented hit/miss/cold-load courses pass; miss grants no use/wear, cold load
@@ -75,13 +90,10 @@ The healthier precontact checkpointa8519941… lives under
 its native actor source was selected naturally after genuine sewer-exitcb89…
 without native authority for06c927/06c92a. No seed setters or unknown-owner repair.
 
-Current chunk: original taken Iron Claymore0c56f9 still receives a zero-count
-facing label after cold load. Saved deletion/inventory are correct. Read-only
-code inspection finds Oblivion's fallback focus scan accepts content references
-with count0 because they remain script-accessible; it checks enabled/tooltips
-but omits deletion. Next: reproduce with scene/ray/focus observations, exclude
-deleted fallback candidates, and verify taken/untaken controls plus restart.
-Do not claim a resurrected model or duplicate inventory transfer from the label.
+Current chunk: select original content exercising the next missing behavior.
+Next candidate: actual Cure Disease use against the independently retained Swamp
+Fever owner; inspect winning ingredients/potions and acquisition availability
+before committing scope. Preserve the infected branch and normal input provenance.
 
 Independent retained continuations:
 

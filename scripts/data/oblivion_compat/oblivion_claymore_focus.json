@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "name": "Original taken/untaken Iron Claymore world focus on cold load",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": ""
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal types=require('openmw.types')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal elapsed=0;local frames=0;local total=0\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1;total=total+dt;elapsed=elapsed+dt;if elapsed<.2 then return end;elapsed=0\n assert(not types.Actor.isDead(self),'Player died during claymore focus observation')\n local source=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0xc56f9))\n local valid=source and source:isValid();local count=valid and source.count or -1;local enabled=valid and tostring(source.enabled) or 'unavailable'\n local scene=0;for _,item in ipairs(nearby.items) do if item==source then scene=scene+1 end end\n local owned=types.Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x1c6cd))\n print('FocusProbe sample count='..count..' scene='..scene..' owned='..owned..' enabled='..enabled..' valid='..tostring(valid))\n if frames>=30 and total>=1 then print('FocusProbe ready') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "FocusProbe ready",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-claymore-world-focus.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "key_down",
+      "value": "Tab"
+    },
+    {
+      "type": "key_up",
+      "value": "Tab"
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 900,
+  "expected_exit": 0,
+  "expected_log": [
+    "FocusProbe ready"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died during claymore focus observation",
+    "M16 Welkynd consumed:",
+    "M16 potion attributes applied:",
+    "M16 native scroll consumed:",
+    "Error in frame",
+    "onFrame failed"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-claymore-taken-focus",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

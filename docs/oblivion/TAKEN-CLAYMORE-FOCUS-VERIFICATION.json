@@ -1,0 +1,285 @@
+{
+  "status": "Accepted bounded exclusion of deleted content references from Oblivion fallback focus",
+  "full_milestone_complete": false,
+  "contract": "TAKEN-CLAYMORE-FOCUS-CONTRACT.json",
+  "production": "World::getFocusObject fallback scan now checks LiveCellRefBase::isDeleted, retaining existing enabled/tool-tip checks and content scripting accessibility.",
+  "original_content": {
+    "provenance": "BLADE-USE-ORACLE.json",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "reference": "content:oblivion.esm:0c56f9",
+    "base": "content:oblivion.esm:01c6cd"
+  },
+  "courses": [
+    {
+      "mode": "normal",
+      "phase": "baseline",
+      "audit": {
+        "path": "build/oblivion-compat/taken-claymore-focus/normal-taken-baseline-03/claymore-focus-audit.json",
+        "sha256": "93dd9a1490695aee91b115e747033c005af750cfac1550117df062d117254a1b"
+      },
+      "source_sha256": "21b9653d8882ed2fc810a572d3acd4d1b9b65665ff03c354331a660b251e42ea",
+      "save_sha256": "c792706edd7d0622b243b47b0b97d1e46c8fca086394c2b690900773b26de00a",
+      "binary_sha256": "2432f656181d20694b5f9d9e8af111649634d2785420a4e173a611268da8a9ef",
+      "observation": {
+        "count": "-1",
+        "scene": "0",
+        "owned": "1",
+        "enabled": "unavailable",
+        "valid": "false"
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "taken",
+      "audit": {
+        "path": "build/oblivion-compat/taken-claymore-focus/normal-taken-01/claymore-focus-audit.json",
+        "sha256": "9b909d56d74ca9510e7fe4cc83109ba406ad8860f68a40abecddb321b05df394"
+      },
+      "source_sha256": "21b9653d8882ed2fc810a572d3acd4d1b9b65665ff03c354331a660b251e42ea",
+      "save_sha256": "d4c4fd99619459c25348b364c60713a55ed8b91bdebf6a034689e8e6bd12f00f",
+      "binary_sha256": "e98c4e77e4bc86bba92a044a744cbbcf2b7801511423a61612eacda5a0354f70",
+      "observation": {
+        "count": "-1",
+        "scene": "0",
+        "owned": "1",
+        "enabled": "unavailable",
+        "valid": "false"
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "untaken",
+      "audit": {
+        "path": "build/oblivion-compat/taken-claymore-focus/normal-untaken-01/claymore-focus-audit.json",
+        "sha256": "9cf885204349ba985b3fe02fa179e34bc31797d1e4d7670c1649a113f93ee0ec"
+      },
+      "source_sha256": "3d749ab5b61f3413b1683b50c76a6983bca0d9da8a575ad18d705c771bd7dde6",
+      "save_sha256": "feaf891bff5da46b6cf1d156a23a8d31e1ba5eaf701f318a33b4440c46c5c215",
+      "binary_sha256": "e98c4e77e4bc86bba92a044a744cbbcf2b7801511423a61612eacda5a0354f70",
+      "observation": {
+        "count": "1",
+        "scene": "1",
+        "owned": "0",
+        "enabled": "true",
+        "valid": "true"
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "restart",
+      "audit": {
+        "path": "build/oblivion-compat/taken-claymore-focus/normal-restart-01/claymore-focus-audit.json",
+        "sha256": "b37b51389065b6ff2c59e7e87706f2ef339caea1ba1f42b7983bf2e94fe13e2c"
+      },
+      "source_sha256": "d4c4fd99619459c25348b364c60713a55ed8b91bdebf6a034689e8e6bd12f00f",
+      "save_sha256": "d4ecc9d1bfc7e4d3fcef35499ee2bd006602cebbc2eb8c28f432049ff3071fb6",
+      "binary_sha256": "e98c4e77e4bc86bba92a044a744cbbcf2b7801511423a61612eacda5a0354f70",
+      "observation": {
+        "count": "-1",
+        "scene": "0",
+        "owned": "1",
+        "enabled": "unavailable",
+        "valid": "false"
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "taken",
+      "audit": {
+        "path": "build/oblivion-compat/taken-claymore-focus/sanitized-taken-01/claymore-focus-audit.json",
+        "sha256": "8931b30b622c2320f84ffca31765f4155d81707bb27e51e35313557a4576a4b5"
+      },
+      "source_sha256": "21b9653d8882ed2fc810a572d3acd4d1b9b65665ff03c354331a660b251e42ea",
+      "save_sha256": "c5ca2760841ccf1adbacd2d637ab4f0580188b7596903e4b00a45cc7b76750da",
+      "binary_sha256": "9db807f2150625bdb849ad5042d6a00caecc9b3b93fe64bb8c4682a2fe6eb06e",
+      "observation": {
+        "count": "-1",
+        "scene": "0",
+        "owned": "1",
+        "enabled": "unavailable",
+        "valid": "false"
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "untaken",
+      "audit": {
+        "path": "build/oblivion-compat/taken-claymore-focus/sanitized-untaken-01/claymore-focus-audit.json",
+        "sha256": "588d71f67631a047d3e623f2bec88aaf548fbc61745a3f1c7a7b5b4fed23ebd4"
+      },
+      "source_sha256": "3d749ab5b61f3413b1683b50c76a6983bca0d9da8a575ad18d705c771bd7dde6",
+      "save_sha256": "8c195de71b418fd40a07c83ed115d77c66ca4b7507c6c6d2116d51092a3863bf",
+      "binary_sha256": "9db807f2150625bdb849ad5042d6a00caecc9b3b93fe64bb8c4682a2fe6eb06e",
+      "observation": {
+        "count": "1",
+        "scene": "1",
+        "owned": "0",
+        "enabled": "true",
+        "valid": "true"
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "restart",
+      "audit": {
+        "path": "build/oblivion-compat/taken-claymore-focus/sanitized-restart-01/claymore-focus-audit.json",
+        "sha256": "443376d73557414b20b04226897a55495eefa3dadf2f9fe5cb35293077bac720"
+      },
+      "source_sha256": "c5ca2760841ccf1adbacd2d637ab4f0580188b7596903e4b00a45cc7b76750da",
+      "save_sha256": "84d1fcbf27cfead1d850bd0637952cd0c16dc56c31d6b7a1c6ae5bbf800c90a8",
+      "binary_sha256": "9db807f2150625bdb849ad5042d6a00caecc9b3b93fe64bb8c4682a2fe6eb06e",
+      "observation": {
+        "count": "-1",
+        "scene": "0",
+        "owned": "1",
+        "enabled": "unavailable",
+        "valid": "false"
+      }
+    }
+  ],
+  "gates": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/taken-claymore-focus/focused-normal-01/verification.json",
+        "sha256": "77fd957473efaf6cdfa09824762dc318f38e36c4d61f1ec16c2b3c226212bc7c"
+      },
+      "source": {
+        "head": "f4e523d5416c2f92f9d3d64ddedf81f722cca6df",
+        "source_fingerprint": "180284ef7a80c66d17b1abf194156f2944a06ec7b546d6160fd5c404c472c6e6"
+      },
+      "engine": {
+        "executed": 23,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionWorldTest.NativePickup*:OblivionWorldTest.*Enable*:OblivionWorldTest.*NativeReference*",
+        "binary_sha256": "7dcd2a46ed41a28c9915fd94697aeb77de776c8dc127ab12a42e69b1259e3707",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "28c70baf4e638cf04709ab8caa92a28a24a2deb1c59dbdc6a5e70c8371f6d048",
+        "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/taken-claymore-focus/focused-sanitized-01/verification.json",
+        "sha256": "57536a6c9c7593ef6ac8a96ed7ab25a17c8f898c142b93947952c10ade77292a"
+      },
+      "source": {
+        "head": "f4e523d5416c2f92f9d3d64ddedf81f722cca6df",
+        "source_fingerprint": "180284ef7a80c66d17b1abf194156f2944a06ec7b546d6160fd5c404c472c6e6"
+      },
+      "engine": {
+        "executed": 23,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionWorldTest.NativePickup*:OblivionWorldTest.*Enable*:OblivionWorldTest.*NativeReference*",
+        "binary_sha256": "a2c0d0948df395a3d0234d2038a6cba1a741b6de29738eda9474d7ac5cd093df",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "8be0198551d81cc6e9947971e105be6a54a56079dd3c528684d188f1663c891b",
+        "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  ],
+  "captures_reviewed": [
+    {
+      "image": {
+        "path": "build/oblivion-compat/taken-claymore-focus/normal-taken-baseline-03/original-claymore-world-focus.png",
+        "sha256": "f024623cbad0b39bebd1d8ab76a460d0bccab6f728ffd7f61598674eb81af981"
+      },
+      "world_hud_label": "Iron Claymore (0)",
+      "review": "Full Vilverin world image manually inspected, separate from automated state audit."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/taken-claymore-focus/normal-taken-01/original-claymore-world-focus.png",
+        "sha256": "a5d0704ca61fb2ace4e42a05b611d64552caf21dd5a1ef279e4c5f4235b093a9"
+      },
+      "world_hud_label": "Iron Boots",
+      "review": "Full Vilverin world image manually inspected, separate from automated state audit."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/taken-claymore-focus/normal-untaken-01/original-claymore-world-focus.png",
+        "sha256": "e6b4ea0d48fc2be3a51a2e38e4a0c3cdeed844ae7c695243a815f079b66a9ab2"
+      },
+      "world_hud_label": "Iron Claymore",
+      "review": "Full Vilverin world image manually inspected, separate from automated state audit."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/taken-claymore-focus/normal-restart-01/original-claymore-world-focus.png",
+        "sha256": "17532372a0c0c5147ef425ffeb986837c81e4d2bebbe052dcd278adea14da228"
+      },
+      "world_hud_label": "Iron Boots",
+      "review": "Full Vilverin world image manually inspected, separate from automated state audit."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/taken-claymore-focus/sanitized-taken-01/original-claymore-world-focus.png",
+        "sha256": "93eb52265d2ebe470f70da0373099ae2e26a9e4359aa99698741c3258747a879"
+      },
+      "world_hud_label": "No world object label",
+      "review": "Full Vilverin world image manually inspected, separate from automated state audit."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/taken-claymore-focus/sanitized-untaken-01/original-claymore-world-focus.png",
+        "sha256": "0fe7e4b897ae77489822cf580841a962c9db7db095d3e65865be6457adbd796d"
+      },
+      "world_hud_label": "Iron Claymore",
+      "review": "Full Vilverin world image manually inspected, separate from automated state audit."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/taken-claymore-focus/sanitized-restart-01/original-claymore-world-focus.png",
+        "sha256": "2bb88c7fa3b402c641b820253ab21548cc70f99a368c30013796612a9c58d923"
+      },
+      "world_hud_label": "Iron Boots",
+      "review": "Full Vilverin world image manually inspected, separate from automated state audit."
+    }
+  ],
+  "acceptance_layers": {
+    "structural": "Source hashes/manifests unchanged; exactly one successful load/save epoch; schema101 payload roundtrip.",
+    "semantic": "Deleted/taken/count0 source remains owned once, absent from nearby.items and invalid in nearby lookup. Untaken source count1/one scene entry/no inventory copy. Inventory totals conserved, Player alive, live/save native state equal.",
+    "runtime": "Before fix HUD names deleted claymore at0. Same taken input after fix no longer labels the deleted claymore (normal focus names nearby Iron Boots; instrumented view has no label); untaken original remains Iron Claymore. Distinct normal/instrumented cold restarts retain this behavior.",
+    "compiler": "Fresh normal and ASan/UBSan runtime builds;23 affected engine tests per build. Instrumented engine leak detection enabled; rendered courses disabled."
+  },
+  "retained_attempts": [
+    {
+      "case": "normal-taken-baseline-01",
+      "accepted": false,
+      "reason": "Observer assumed nearby lookup could validate an inactive deleted reference; assertion failed. Ordinary SDL quit stopped game; driver later returned1. Final observer records inactive/invalid source explicitly."
+    },
+    {
+      "case": "normal-taken-baseline-02",
+      "accepted": false,
+      "reason": "State audit passed and zero-count HUD label reproduced, but first capture preceded full world drawing. Primary03 waits at least30 frames/1 simulation second before capture; same timing used for fixed controls."
+    }
+  ],
+  "reused_evidence": {
+    "receipt": "BLADE-USE-VERIFICATION.json",
+    "scope": "Immediate preceding full2284 normal and2284 sanitizer engine inventory, prior unchanged components3294/native sanitizer1115/Python616 checks. Those broad gates retain their original source provenance; current World focus edit has fresh affected23-test gates and actual six rendered courses."
+  },
+  "limits": [
+    "Fallback deletion gating only. No focus cone/occlusion, telekinesis, other device/view matrix or generalized UI acceptance.",
+    "The zero-count label did not prove a resurrected model or duplicate transfer; source absence/deletion and ownership are checked separately.",
+    "HUD labels are manually reviewed; the state verifier explicitly does not claim automated HUD acceptance.",
+    "No numerical mechanic, original executable launch, save schema or content-authoring/MCP change."
+  ],
+  "post_gate_changes": "Acceptance documentation/handoff only. Production C++, public observer recipes and state verifier unchanged after frozen affected gates."
+}

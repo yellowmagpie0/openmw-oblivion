@@ -9852,7 +9852,10 @@ namespace MWWorld
             {
                 cell->forEach(
                     [&](const Ptr& candidate) {
-                        if (!candidate.getRefData().isEnabled() || !candidate.getClass().hasToolTip(candidate))
+                        // Deleted content references remain script-accessible,
+                        // but must not regain a world interaction label.
+                        if (candidate.mRef->isDeleted() || !candidate.getRefData().isEnabled()
+                            || !candidate.getClass().hasToolTip(candidate))
                             return true;
                         const osg::Vec3f delta
                             = candidate.getRefData().getPosition().asVec3() - cameraPosition;
