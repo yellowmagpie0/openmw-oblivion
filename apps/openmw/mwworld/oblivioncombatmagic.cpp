@@ -189,6 +189,11 @@ namespace MWWorld
         combat->publishPlayerValues(world.getPlayer(), std::move(candidate), settings);
         if (!debit->commit()) throw std::logic_error("native ingredient debit changed during publication");
         if (!scriptOwner.isNull()) scripts->retireConsumedInventoryOwner(scriptOwner);
+        if (!(ingredient->mEnchantment.flags & 2))
+        {
+            native->useOblivionPlayerSkill(19, 1);
+            Log(Debug::Info) << "M16 Alchemy ingredient use: ingredient=" << key->serialize();
+        }
         Log(Debug::Info) << "TES4 ingredient consumed: ingredient=" << key->serialize()
             << " magnitude=" << profile->mMagnitude << " duration=" << profile->mDuration;
         MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);

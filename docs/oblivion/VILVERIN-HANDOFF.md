@@ -4,7 +4,26 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open; do not merge independent save branches.
 
-Latest accepted chunk: native Acrobatics primary use on a real grounded jump
+Latest accepted chunk: native Alchemy secondary use from genuinely looted
+Bonemeal01ebff. Successful non-food ingestion now earns0.5 XP; actual Lettuce
+food033681 consumes normally and earns0. Normal/instrumented consumption and
+cold-load courses pass. Partially saved Bonemeal damage finishes after4 simulation
+seconds without another item debit or XP award. Alchemy5/XP0.5, Athletics4.066545,
+Acrobatics0.3, Health110 and unrelated full item metadata persist. Normal2284 and
+full instrumented2284 engine inventories, focused10 each and Python616 pass.
+[Contract](ALCHEMY-USE-CONTRACT.json), [oracle](ALCHEMY-USE-ORACLE.json),
+[verification](ALCHEMY-USE-VERIFICATION.json). Original food-flag branch24 and
+use-dispatch30 cases have declared boundaries. Retained input/verifier mistakes
+are in the receipt; no general potency, brewing, higher-skill or full M16 claim.
+
+Alchemy continuation (healthy retained expedition at entrance):
+`build/oblivion-compat/alchemy-use/normal-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `9fe07697f095bfa48f13478bd1536b4d8e832114dc2ab9491e9c909f3658b5d8`.
+Player alive110, Alchemy5/XP0.5, no pending ingredient effect; Bonemeal consumed,
+Lettuce1/Rice1 and original loot/Nirnroot ownership retained. Food control is a
+separate fork; do not merge branches.
+
+Previous accepted chunk: native Acrobatics primary use on a real grounded jump
 at original Vilverin entrance066ac8. One jump rises65.918 units, spends30 Fatigue,
 lands alive Health110 and now earns0.3 XP rather than0. Normal/instrumented jump,
 idle and cold-load courses pass; idle/cold add0. Existing Athletics4.066545,
@@ -127,16 +146,15 @@ The healthier precontact checkpointa8519941… lives under
 its native actor source was selected naturally after genuine sewer-exitcb89…
 without native authority for06c927/06c92a. No seed setters or unknown-owner repair.
 
-Next chunk: native Alchemy secondary use from genuinely looted Bonemeal01ebff,
-using the healthy Acrobatics continuation. Existing successful ingestion consumes
-one item and applies supported Fatigue damage but grants no XP. Original SKIL044
-has primary5/secondary0.5; original ingredient caller passes19/usage1 only for
-successful non-food use. Food bit2 (Lettuce flags3) bypasses XP; use actual carried
-Lettuce as the negative control. Ignored original caller24cases and dispatcher30
-pass with explicit boundaries; no implementation or gameplay acceptance yet.
-Evidence: `build/oblivion-compat/alchemy-use`. Cure Disease remains deferred:
-no carried/directly placed Vilverin source found; container loot unverified,
-nearest outdoor Mandrake found70k away.
+Next action: select another actual missing native behavior. Repair Hammer00000c
+is a candidate: current carried inventory has none and there is no directly
+placed Vilverin hammer; original tutorial CGChest02/CGChestSword01 each contain1.
+Live repair UI still calls legacy mechanics/GMSTs while the older M13 standalone
+backend restores maximum condition. First find an earned acquisition checkpoint
+and demonstrate the actual failure before choosing this chunk. No repair change
+or acceptance yet. Read-only survey: `build/oblivion-compat/repair-hammer`.
+Cure Disease remains deferred: no carried/directly placed Vilverin source found;
+container loot unverified, nearest outdoor Mandrake found70k away.
 
 Independent retained continuations:
 
