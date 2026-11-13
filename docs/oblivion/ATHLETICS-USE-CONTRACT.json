@@ -1,0 +1,28 @@
+{
+  "feature": "Native Player Athletics use during original shore-to-Vilverin travel",
+  "real_content": {
+    "destination": "content:oblivion.esm:066ac8",
+    "source_save_sha256": "6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165",
+    "start": [
+      48406.95703125,
+      94482.796875,
+      -9.474376678466797
+    ],
+    "source": "Retained genuine Nirnroot-use continuation, Health110; preserve inventory-script owner and expedition loot."
+  },
+  "behavior": [
+    "Live Player directional movement trains winning native Athletics13 primary0.03 per running second and secondary0.04 per swimming second. Existing movement eligibility excludes land walking/sneaking and incapacitated zero vectors.",
+    "Fractional frame-scaled use is stored immediately in existing raw PLAY skill8 progress. No hidden remainder or new save schema.",
+    "Keep existing whole-second Lua/character-generation notifications and native skill progression ownership/caps/counters."
+  ],
+  "acceptance": [
+    "Independent original SKIL03e and hash-identified use-dispatch scaling/cap probes.",
+    "Alive original-content baseline and fixed ordinary run/swim route to entrance; winning-rate integral matches saved progress.",
+    "Grounded idle, ordinary backward walking and distinct cold restart grant no extra use; normal and instrumented courses.",
+    "Affected and appropriate integration checks; preserve actual lifecycle, inventory/script ownership and schema101."
+  ],
+  "limits": [
+    "Existing controller movement admissibility with continuous integration, not exact original movement-update timing or wall-running/underwater/corner-policy certification.",
+    "Whole milestone and all mastery/view/device matrices remain open."
+  ]
+}

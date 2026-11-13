@@ -4615,6 +4615,22 @@ namespace MWMechanics
                 // advance athletics
                 if (isPlayer)
                 {
+                    if (duration > 0 && (inwater || (isrunning && !sneak))
+                        && world->getGameProfile() == ESM::GameProfile::Oblivion)
+                    {
+                        auto* native = dynamic_cast<MWWorld::World*>(world);
+                        const auto* combat = native ? native->getOblivionCombatService() : nullptr;
+                        const auto* life = combat ? combat->findActorLife(ESM::FormKey::dynamic("player", 1)) : nullptr;
+                        if (life && life->mPhase == ESM4::ActorLifePhase::Alive)
+                        {
+                            // Store fractional use in native skill progress each
+                            // frame, rather than losing a partial second on load.
+                            native->useOblivionPlayerSkill(13, inwater ? 1 : 0, duration);
+                            Log(Debug::Verbose) << "M16 Athletics use: usage=" << (inwater ? 1 : 0)
+                                << " seconds=" << duration << " experience="
+                                << cls.getNpcStats(mPtr).getSkill(ESM::Skill::Athletics).getProgress();
+                        }
+                    }
                     if (inwater)
                     {
                         mSecondsOfSwimming += duration;

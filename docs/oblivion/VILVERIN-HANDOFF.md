@@ -4,7 +4,27 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open; do not merge independent save branches.
 
-Latest accepted chunk: original taken Iron Claymore0c56f9 no longer receives a
+Latest accepted chunk: native Athletics on the original inlet crossing to
+Vilverin entrance066ac8. Winning SKIL03e rates0.03 run/0.04 swim now grant frame-
+scaled experience: normal27.121/81.323 seconds→4.066545XP; instrumented42.496/
+73.870→4.229675XP. Both arrive alive Health110, Athletics base30 and all other
+skills/inventory retained. Grounded idle/walking/cold load add0 and retain earned
+progress exactly; final instrumented walking moves36units. Raw PLAY skill8 owns
+fractional progress, with no new unsaved timer or schema. [Contract](ATHLETICS-USE-CONTRACT.json),
+[oracle](ATHLETICS-USE-ORACLE.json), [verification](ATHLETICS-USE-VERIFICATION.json).
+Normal2284/instrumented2284 engine inventories, focused9 each and full616 Python
+checks pass. The necessary replay lookup64KiB→1MiB fixes original exterior AI
+log bursts. Final observers latch arrival, emit neutral terminal steering and wait
+for measured walking distance. Retained failures and fixture variants are recorded.
+No exact original movement-caller, level-crossing/cap or full movement-policy claim.
+
+Athletics continuation (healthy retained Nirnroot-use branch at entrance):
+`build/oblivion-compat/athletics-use/normal-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `b49b0a431aadd4d34b677c6e0460e17b25cbb2ab668da457dc8ca2e478f9e2e0`.
+Player Health110, Athletics30/XP4.066545, original expedition loot and one remaining
+Nirnroot owner/Found1 retained. Distinct from first-zone Blade/focus branches.
+
+Previous accepted chunk: original taken Iron Claymore0c56f9 no longer receives a
 zero-count world label after cold load. Oblivion fallback focus now excludes
 deleted references while retaining content scripting accessibility. Before pickup,
 the same original still shows Iron Claymore with one scene owner; after pickup it
@@ -90,10 +110,11 @@ The healthier precontact checkpointa8519941… lives under
 its native actor source was selected naturally after genuine sewer-exitcb89…
 without native authority for06c927/06c92a. No seed setters or unknown-owner repair.
 
-Current chunk: select original content exercising the next missing behavior.
-Next candidate: actual Cure Disease use against the independently retained Swamp
-Fever owner; inspect winning ingredients/potions and acquisition availability
-before committing scope. Preserve the infected branch and normal input provenance.
+Current chunk: choose the next missing native hook exercised by nearby original
+content. Candidate: an actual jump/landing at the original Vilverin entrance and
+Acrobatics use; inspect current jump admission and winning SKIL before scope/code.
+Cure Disease survey stays deferred: no carried/directly placed Vilverin source
+found; container loot unverified, nearest outdoor Mandrake found70k away.
 
 Independent retained continuations:
 

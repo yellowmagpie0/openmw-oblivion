@@ -1,0 +1,22 @@
+{
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "winning_skill": {
+    "path": "build/oblivion-compat/athletics-use/winning-skill-audit.json",
+    "sha256": "0754b047bea1d4a98f4b96b575a5e952dd257c3dd981f97d4723d8bc88262d6f"
+  },
+  "route_anchors": {
+    "path": "build/oblivion-compat/athletics-use/original-route-anchors.json",
+    "sha256": "622e606ec4ead24a9fe3678391923d0fc8fdd579f051460c006be266313ca0fb"
+  },
+  "dispatcher": {
+    "path": "build/oblivion-compat/athletics-use/original-use-report.json",
+    "sha256": "95cdb50f6fe4923003dd9bd512fd465f0819a350fe199b5e6a591eedd63eb997"
+  },
+  "cases": 30,
+  "expected": "Athletics13/SKIL03e, Speed4/Combat0, primary0.03 secondary0.04, positive fractional scaling and cap100.",
+  "boundaries": [
+    "Original668C30 executes; skill lookup, base getter and final publication sink supplied/captured. No complete native movement-update caller or original live running/swimming probe.",
+    "Ordinary per-frame gameplay integration uses existing controller eligibility; no exact RNG or arithmetic parity requirement."
+  ]
+}

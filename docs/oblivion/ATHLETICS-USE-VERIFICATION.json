@@ -1,0 +1,529 @@
+{
+  "status": "Accepted bounded native Player Athletics on original shore-to-Vilverin travel",
+  "full_milestone_complete": false,
+  "contract": "ATHLETICS-USE-CONTRACT.json",
+  "original_oracle": "ATHLETICS-USE-ORACLE.json",
+  "cases": [
+    {
+      "mode": "normal",
+      "phase": "baseline",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/normal-exterior-baseline-04/athletics-use-audit.json",
+        "sha256": "4aa212954f05f5194c82b9f9c52ac9c361b12518e6cf388778b903483c7ea086"
+      },
+      "result": {
+        "passed": true,
+        "phase": "baseline",
+        "sanitized": false,
+        "source_sha256": "6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165",
+        "save_sha256": "825c877d7e4e7e333396f125e009159bd7a3e69c5187184c64e1bc18b9de8f8e",
+        "binary_sha256": "e98c4e77e4bc86bba92a044a744cbbcf2b7801511423a61612eacda5a0354f70",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 0.0
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 0.0
+        },
+        "committed_run_seconds": 0.0,
+        "committed_swim_seconds": 0.0,
+        "observed_run_intent_seconds": 26.377001330256,
+        "observed_swim_intent_seconds": 81.515004113317,
+        "horizontal_displacement": 7847.078924154308,
+        "endpoint": [
+          51914.90234375,
+          87463.46875,
+          301.738525390625
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "run",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/normal-running-02/athletics-use-audit.json",
+        "sha256": "a17fbe6a9bc09ee20b17e82df0ade326e2407cf4d84c523706f8c6e8390e9853"
+      },
+      "result": {
+        "passed": true,
+        "phase": "run",
+        "sanitized": false,
+        "source_sha256": "6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165",
+        "save_sha256": "74e68790fa21fbc7ffa60be446d024b66d56c4f9f9fb7f36821a4bdb4c472e41",
+        "binary_sha256": "5703d9afba3a1ce205ced2df92aceeb7b11f28506b5d4ed04afc9d79c1e4ad9d",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 0.0
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "committed_run_seconds": 27.12100000000004,
+        "committed_swim_seconds": 81.32299999999934,
+        "observed_run_intent_seconds": 27.121001347899,
+        "observed_swim_intent_seconds": 81.323003984988,
+        "horizontal_displacement": 7848.902805181004,
+        "endpoint": [
+          51918.82421875,
+          87463.390625,
+          301.983642578125
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "idle",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/normal-idle-01/athletics-use-audit.json",
+        "sha256": "7705d331cd3b47cabde41909e1b3f560d8f3fc3b3433f085fd252e463e2f2f1b"
+      },
+      "result": {
+        "passed": true,
+        "phase": "idle",
+        "sanitized": false,
+        "source_sha256": "74e68790fa21fbc7ffa60be446d024b66d56c4f9f9fb7f36821a4bdb4c472e41",
+        "save_sha256": "8cf2e99a929ac7ea4a8b252d9d042f95e6d4babfb562a3680ffc0f02d85dbf1c",
+        "binary_sha256": "5703d9afba3a1ce205ced2df92aceeb7b11f28506b5d4ed04afc9d79c1e4ad9d",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "committed_run_seconds": 0.0,
+        "committed_swim_seconds": 0.0,
+        "observed_run_intent_seconds": 0.0,
+        "observed_swim_intent_seconds": 0.0,
+        "horizontal_displacement": 0.0,
+        "endpoint": [
+          51918.82421875,
+          87463.390625,
+          301.983642578125
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "walk",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/normal-walk-01/athletics-use-audit.json",
+        "sha256": "46167fea5585c89597b291a9d3a76ea92b565f49328219fa092a12f784599c34"
+      },
+      "result": {
+        "passed": true,
+        "phase": "walk",
+        "sanitized": false,
+        "source_sha256": "74e68790fa21fbc7ffa60be446d024b66d56c4f9f9fb7f36821a4bdb4c472e41",
+        "save_sha256": "347371f38bd31d0159673eca25c07619a37d5ddf8b59378bb74947704053126f",
+        "binary_sha256": "5703d9afba3a1ce205ced2df92aceeb7b11f28506b5d4ed04afc9d79c1e4ad9d",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "committed_run_seconds": 0.0,
+        "committed_swim_seconds": 0.0,
+        "observed_run_intent_seconds": 0.0,
+        "observed_swim_intent_seconds": 0.0,
+        "horizontal_displacement": 31.539388825488544,
+        "endpoint": [
+          51888.5546875,
+          87472.25,
+          300.091796875
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "restart",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/normal-restart-01/athletics-use-audit.json",
+        "sha256": "f03fb67c2e01d2c3fbb80ba2a40c3a4a0654f171a16c5dc41dad1546ff0c1649"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "74e68790fa21fbc7ffa60be446d024b66d56c4f9f9fb7f36821a4bdb4c472e41",
+        "save_sha256": "b49b0a431aadd4d34b677c6e0460e17b25cbb2ab668da457dc8ca2e478f9e2e0",
+        "binary_sha256": "5703d9afba3a1ce205ced2df92aceeb7b11f28506b5d4ed04afc9d79c1e4ad9d",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "committed_run_seconds": 0.0,
+        "committed_swim_seconds": 0.0,
+        "observed_run_intent_seconds": 0.0,
+        "observed_swim_intent_seconds": 0.0,
+        "horizontal_displacement": 0.0,
+        "endpoint": [
+          51918.82421875,
+          87463.390625,
+          301.983642578125
+        ]
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "run",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/sanitized-running-03/athletics-use-audit.json",
+        "sha256": "4a993f1a491277af1bee480b4ca93a58a17dbed0e30c8337398fb36f1e7cc56c"
+      },
+      "result": {
+        "passed": true,
+        "phase": "run",
+        "sanitized": true,
+        "source_sha256": "6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165",
+        "save_sha256": "4da12ba55d33e21adf71e4daa185048d9515474b4554137f54cad0b6f7c58027",
+        "binary_sha256": "cf28ae314a51dfec2341e6503be52d381f42b6202979b8a26da285e011b35b64",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 0.0
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.229674816131592
+        },
+        "committed_run_seconds": 42.49599999999986,
+        "committed_swim_seconds": 73.86999999999927,
+        "observed_run_intent_seconds": 42.496002197266,
+        "observed_swim_intent_seconds": 73.870003819466,
+        "horizontal_displacement": 7855.3208639734485,
+        "endpoint": [
+          51920.98828125,
+          87457.296875,
+          302.118896484375
+        ]
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "idle",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/sanitized-idle-01/athletics-use-audit.json",
+        "sha256": "c69e9a914db00508e197ed0027a93d36da2bd56f54149e7b3690f8a4295f40eb"
+      },
+      "result": {
+        "passed": true,
+        "phase": "idle",
+        "sanitized": true,
+        "source_sha256": "4da12ba55d33e21adf71e4daa185048d9515474b4554137f54cad0b6f7c58027",
+        "save_sha256": "c2448149385771de38d877d93fa66433bb16a46fbe81b596ed442dd6162e6769",
+        "binary_sha256": "cf28ae314a51dfec2341e6503be52d381f42b6202979b8a26da285e011b35b64",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 4.229674816131592
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.229674816131592
+        },
+        "committed_run_seconds": 0.0,
+        "committed_swim_seconds": 0.0,
+        "observed_run_intent_seconds": 0.0,
+        "observed_swim_intent_seconds": 0.0,
+        "horizontal_displacement": 0.0,
+        "endpoint": [
+          51920.98828125,
+          87457.296875,
+          302.118896484375
+        ]
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "walk",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/sanitized-walk-02/athletics-use-audit.json",
+        "sha256": "18c61bad85e68130ece44bd467b67740deab7b39ad215f399c509a8950bab6ed"
+      },
+      "result": {
+        "passed": true,
+        "phase": "walk",
+        "sanitized": true,
+        "source_sha256": "4da12ba55d33e21adf71e4daa185048d9515474b4554137f54cad0b6f7c58027",
+        "save_sha256": "e7017208b957d3bcb8aa0e8d843614fc0f9b01cd3baed9399419e1765ad5ed31",
+        "binary_sha256": "cf28ae314a51dfec2341e6503be52d381f42b6202979b8a26da285e011b35b64",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 4.229674816131592
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.229674816131592
+        },
+        "committed_run_seconds": 0.0,
+        "committed_swim_seconds": 0.0,
+        "observed_run_intent_seconds": 0.0,
+        "observed_swim_intent_seconds": 0.0,
+        "horizontal_displacement": 36.0648829368681,
+        "endpoint": [
+          51886.11328125,
+          87466.484375,
+          299.939208984375
+        ]
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "restart",
+      "audit": {
+        "path": "build/oblivion-compat/athletics-use/sanitized-restart-01/athletics-use-audit.json",
+        "sha256": "5972075091e49309b10309ff75aa8bbb13e24bbe4e3cadf68328f3260565e7d9"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "4da12ba55d33e21adf71e4daa185048d9515474b4554137f54cad0b6f7c58027",
+        "save_sha256": "c2448149385771de38d877d93fa66433bb16a46fbe81b596ed442dd6162e6769",
+        "binary_sha256": "cf28ae314a51dfec2341e6503be52d381f42b6202979b8a26da285e011b35b64",
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 4.229674816131592
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.229674816131592
+        },
+        "committed_run_seconds": 0.0,
+        "committed_swim_seconds": 0.0,
+        "observed_run_intent_seconds": 0.0,
+        "observed_swim_intent_seconds": 0.0,
+        "horizontal_displacement": 0.0,
+        "endpoint": [
+          51920.98828125,
+          87457.296875,
+          302.118896484375
+        ]
+      }
+    }
+  ],
+  "gates": {
+    "focused-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/athletics-use/focused-normal-01/verification.json",
+        "sha256": "1a5f656267704c117840489e564024e24227ca93ec09670c55a16163f3c5035a"
+      },
+      "source": {
+        "head": "bc882ef736431979024320449f298bd3654b8086",
+        "source_fingerprint": "41c3071fd2d0b99b524a468eff0f6ae26ea6cb5c97188b848887012dd9bb122e"
+      },
+      "results": {
+        "engine": {
+          "executed": 9,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionSkillTraining.*:OblivionWorldTest.*Skill*:OblivionWorldTest.*ActorLife*",
+          "binary_sha256": "45780a3bc8490ba28ca89b2b7dedba0cb005b36162f1114917271a6d90a39eba",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "2008faf1f5f3df820d8f50b049c981fe200b6f823ece7c182d30e018b4e12eb6",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "focused-sanitized-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/athletics-use/focused-sanitized-01/verification.json",
+        "sha256": "36eb9576f9622f6a772b198d831e0e15c1197668c007731eb141b26db9bfc864"
+      },
+      "source": {
+        "head": "bc882ef736431979024320449f298bd3654b8086",
+        "source_fingerprint": "41c3071fd2d0b99b524a468eff0f6ae26ea6cb5c97188b848887012dd9bb122e"
+      },
+      "results": {
+        "engine": {
+          "executed": 9,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionSkillTraining.*:OblivionWorldTest.*Skill*:OblivionWorldTest.*ActorLife*",
+          "binary_sha256": "588a682d58a9256ad4a606bea6a2b654b3f05aa1d9d8fffa485ade0d1ee9b214",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "9ca3bffb157bda86c0208c3216b4c588670d3914812746db72da69622df5a1cd",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "full-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/athletics-use/full-normal-01/verification.json",
+        "sha256": "43e215261d75858be18547ef3ae70c39ef65a3994741b200c32cd029b47156ca"
+      },
+      "source": {
+        "head": "bc882ef736431979024320449f298bd3654b8086",
+        "source_fingerprint": "41c3071fd2d0b99b524a468eff0f6ae26ea6cb5c97188b848887012dd9bb122e"
+      },
+      "results": {
+        "engine": {
+          "executed": 2284,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "45780a3bc8490ba28ca89b2b7dedba0cb005b36162f1114917271a6d90a39eba",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "4e9fb7a14692a49a64fe7880972d83bb098fadde7fd706030bb2408ca702f8fd",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "python-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/athletics-use/python-01/verification.json",
+        "sha256": "bb94c393e9761a7c1f514e95552768ff0996495442086c1e2912ef0cb00d38c1"
+      },
+      "source": {
+        "head": "bc882ef736431979024320449f298bd3654b8086",
+        "source_fingerprint": "ce48ea3cb7c9671e85ce2d6309967f292fc8d835367ec603476aa1e35012386c"
+      },
+      "results": {
+        "python": {
+          "executed": 616,
+          "passed": true,
+          "log_sha256": "7b2077fb62bbd074c01f4f878835fa83bfb593acb073102f619b071112c320b5"
+        }
+      }
+    },
+    "full-sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/athletics-use/sanitized-inventory-union.json",
+        "sha256": "8e0214f7660ab668e67c3138133e250e0081b66da465f2c331b70d92b125452c"
+      },
+      "source": {
+        "head": "bc882ef736431979024320449f298bd3654b8086",
+        "source_fingerprint": "41c3071fd2d0b99b524a468eff0f6ae26ea6cb5c97188b848887012dd9bb122e"
+      },
+      "executed": 2284,
+      "duplicates": 0,
+      "missing": 0,
+      "skipped": 0,
+      "leak_detection": true
+    }
+  },
+  "captures_reviewed": [
+    {
+      "path": "build/oblivion-compat/athletics-use/normal-exterior-baseline-04/original-leveled-food-sack-visible.png",
+      "sha256": "77eee6c7feda23ec49ad86cb28c1d0b32906d6afc136a92c5ad5d2f3845045e5"
+    },
+    {
+      "path": "build/oblivion-compat/athletics-use/normal-running-02/original-vilverin-athletics-run.png",
+      "sha256": "ed162f405db619657b12d5dc059c0d0933de386785d22ca55ace184fc965428f"
+    },
+    {
+      "path": "build/oblivion-compat/athletics-use/normal-idle-01/original-vilverin-athletics-idle.png",
+      "sha256": "3f87ff87410fe26ad8cc67910cabdd91d60be99a86ed93a96629f38602c2318d"
+    },
+    {
+      "path": "build/oblivion-compat/athletics-use/normal-walk-01/original-vilverin-athletics-walk.png",
+      "sha256": "ce5d2964febc7ace364157fd778119f4a973bdf90943e266d76def11901b424a"
+    },
+    {
+      "path": "build/oblivion-compat/athletics-use/normal-restart-01/original-vilverin-athletics-restart.png",
+      "sha256": "83a91ea2b409e715acfd58e6770422486538d54a23a53358a9da2324c034f1bf"
+    },
+    {
+      "path": "build/oblivion-compat/athletics-use/sanitized-running-03/original-vilverin-athletics-run.png",
+      "sha256": "1ec20d7bfea3262b39912e7b525fafcc0df0e08047fb6036675c9ef4d0290938"
+    },
+    {
+      "path": "build/oblivion-compat/athletics-use/sanitized-idle-01/original-vilverin-athletics-idle.png",
+      "sha256": "15ccfe6f114eec87dbcc4f4b333d4c5e14ebf2e399e2066b8357b3004d7c5609"
+    },
+    {
+      "path": "build/oblivion-compat/athletics-use/sanitized-walk-02/original-vilverin-athletics-walk.png",
+      "sha256": "47df13d09941179346d2e447e447c30ed2df656a94122316afcce8e383ee36bb"
+    },
+    {
+      "path": "build/oblivion-compat/athletics-use/sanitized-restart-01/original-vilverin-athletics-restart.png",
+      "sha256": "15ccfe6f114eec87dbcc4f4b333d4c5e14ebf2e399e2066b8357b3004d7c5609"
+    }
+  ],
+  "production": "Existing admitted Player directional movement grants native Athletics13 using winning primary/secondary rates scaled by the controller frame duration. Only Alive lifecycle enters publication; stopped, incapacitated zero vectors and land walking do not train. Raw PLAY skill8 stores fractional earned progress each frame, avoiding a new unsaved timer. Existing whole-second Lua/character-generation notifications remain.",
+  "actual_course": "Original retained Nirnroot-use continuation6a4d\u2026 at48406,94483 crosses the inlet and reaches original Vilverin entrance066ac8 alive. No stat setters, grants, generated content, teleports, RNG seeds, source-owner repair or save editing. Grounded controls start from the corresponding actual completed route save.",
+  "semantic_audit": "Winning original0.03 run/0.04 swim rates integrate admitted controller durations to saved raw experience within0.002. Runtime trace is committed input/publication evidence, not an independent original-game oracle. Other26 shared skills, native Athletics base30, passive ownership, inventory/script-owner counts and Nirnroot statistic27 remain unchanged. Exact schema101 payload roundtrip and process-bound live/save equality. No Player attack. Distinct cold load retains raw experience with no new use; walking changes actual position while adding0.",
+  "retained_attempts": [
+    {
+      "case": "normal-run-baseline-01",
+      "accepted_as_running": false,
+      "reason": "Read-only characterization showed run=false: a valid ordinary walking route with0XP, not proof of a missing running award."
+    },
+    {
+      "case": "normal-running-baseline-02",
+      "accepted": false,
+      "reason": "Shift-running observed49.895 seconds and0XP, but actual bandit combat killed Player before arrival. No accepted output save; moved acceptance course to already retained cleared exterior branch."
+    },
+    {
+      "case": "normal-exterior-baseline-03",
+      "accepted": false,
+      "reason": "Exterior AI log burst clipped the latest complete aim outside the replay helper64KiB window; no accepted save. Baseline04 explicitly waits for fresh samples and completed alive with0XP."
+    },
+    {
+      "case": "normal-running-01",
+      "accepted": false,
+      "reason": "Fresh sample wait still raced a large AI burst before bounded lookup. Actual experience grew, but no save. Enlarged read window to1MiB;37 existing focused tests and616 Python checks pass. Normal02 completed using that helper."
+    },
+    {
+      "case": "sanitized-running-01",
+      "accepted": false,
+      "reason": "Reached entrance alive, then momentum moved beyond the transient standing-point predicate. Final camera-alignment observer stopped emitting look samples and timed out without save. Final03 latches previously measured arrival and emits a neutral final steering sample; no gameplay or experience assertion changed."
+    },
+    {
+      "case": "sanitized-running-02",
+      "accepted": false,
+      "reason": "Arrival was latched but stopped publishing aim samples. A pending nested aim wait therefore held forward input until timeout; no save. Final03 emits a neutral completed-path aim to release that wait immediately."
+    },
+    {
+      "case": "sanitized-walk-01",
+      "accepted": false,
+      "reason": "Two wall-clock seconds produced only about9 units under instrumentation, below unchanged minimum10. Final02 waits for measured25-unit horizontal displacement instead of wall-clock delay; experience and movement assertions unchanged."
+    }
+  ],
+  "fixture_provenance": "Normal02 passed the stricter unlatched camera fixture with1MiB helper. Final instrumented03 uses latched arrival, final neutral steering and the same1MiB helper. Normal walking01 used two wall-clock seconds and moved31.539 units; final instrumented walking02 waits for measured25-unit horizontal movement. The unchanged verifier requires more than10 units. Captured per-course editable manifests, input hashes, SDL receipts and process/library epochs retain these differences. No passing C++ gate is represented as covering a changed C++ source.",
+  "reused_unchanged_checks": {
+    "receipt": "BLADE-USE-VERIFICATION.json",
+    "scope": "Original book provenance3294 normal component and1115 native sanitizer component checks; components and codec unchanged. Full616 Python suite fresh because replay helper changed."
+  },
+  "limits": [
+    "Ordinary forward running/surface-swimming travel and grounded idle/backward-walking controls only; no actual Athletics level-crossing, cap100, jumping, flying, sneak, underwater, wall-running or full movement-policy certification.",
+    "Original dispatcher30cases executes with declared lookup/base/publication boundaries. No complete original movement-update caller or original live Athletics probe. Continuous timing is a reasonable gameplay implementation, without exact arithmetic/random-sequence claims.",
+    "Engine tests enable sanitizer leak detection; rendered courses disable it. Full sanitizer inventory is an audited disjoint union avoiding cumulative Bullet worker counters.",
+    "Broader M13/M15/M16/M18 acceptance and existing exterior asset/material/view gaps remain open."
+  ],
+  "post_engine_gate_changes": "Replay helper bounded observation window64KiB to1MiB, verified by37 focused/616 full Python tests and actual successful normal02; arrival latching/neutral final steering and measured-distance walking observer in final recipes; acceptance handoff/docs. Production C++ and semantic verifier unchanged after frozen engine gates.",
+  "cold_processes_distinct": true
+}

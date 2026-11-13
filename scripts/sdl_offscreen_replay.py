@@ -120,7 +120,7 @@ def observed_mouse_motion(action, output):
     if not path.is_relative_to(output.resolve()):
         raise ValueError('Observed motion log must be inside the scenario output')
     with path.open('rb') as stream:
-        stream.seek(max(0, path.stat().st_size - 65536))
+        stream.seek(max(0, path.stat().st_size - 1024 * 1024))
         offset = stream.tell()
         text = stream.read().decode('utf-8', errors='surrogateescape')
     complete_end = text.rfind('\n')
