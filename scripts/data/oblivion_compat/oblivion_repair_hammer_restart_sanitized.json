@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "name": "Native repaired original cuirass cold persistence",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function()\n frames=frames+1;if frames<30 or frames%5~=0 then return end\n assert(not Actor.isDead(self),'Player died at earned repair chest')\n print('RepairAcquire ready hammer='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0xc))..' health='..Actor.stats.dynamic.health(self).current)\n print('RepairAcquire mode='..(core.isWorldPaused() and 'opened' or 'closed'))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "RepairAcquire ready hammer=",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "original-repaired-cold-world.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "RepairAcquire ready hammer=",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "fWortChanceValue",
+    "Water Breathing",
+    "M13 repair requested",
+    "M13 repair committed:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-repair-hammer",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false
+}

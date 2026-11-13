@@ -4,7 +4,27 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open; do not merge independent save branches.
 
-Latest accepted chunk: native Alchemy secondary use from genuinely looted
+Latest accepted chunk: original Repair Hammer00000c on genuinely worn Rusty
+Iron Cuirass0661c1. Normal/instrumented ordinary repair changes43.584934→52/250
+and earns1.5 Armorer XP once. Unforced rolls exercise both tool retention(normal71)
+and breakage(instrumented11) against29%; cold loads retain each result without
+replay. Health80, Security6/XP1.606209, Acrobatics5/XP0.3, other full item metadata
+and original tutorial armor flags persist. Normal3298 components/2284 engine/616
+Python and instrumented1119 native components/2284 engine pass. Focused4 rules
+and69 engine cases each pass. [Contract](REPAIR-HAMMER-CONTRACT.json),
+[oracle](REPAIR-HAMMER-ORACLE.json), [verification](REPAIR-HAMMER-VERIFICATION.json).
+Original amount8/break25 cases have declared instruction boundaries. Normal cap,
+unenchanted single targets only; Expert125%, enchanted/stacked/runtime-script-owner
+repair and broader M13 remain open. The base cuirass's original tutorial script
+only handles OnAdd/OnEquip; condition-only repair retains its quest flags.
+
+Repair continuation (separate earlier sewer branch):
+`build/oblivion-compat/repair-hammer/normal-restart-06/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `3e0a7cecdfc70acbd758527f8e4f2f43ac35147c71369d853502599ad87dc258`.
+Health80, Armorer5/XP1.5, cuirass52, hammer1, source chest04931b hammer0.
+The instrumented branch naturally broke its hammer; do not merge branches.
+
+Previous accepted chunk: native Alchemy secondary use from genuinely looted
 Bonemeal01ebff. Successful non-food ingestion now earns0.5 XP; actual Lettuce
 food033681 consumes normally and earns0. Normal/instrumented consumption and
 cold-load courses pass. Partially saved Bonemeal damage finishes after4 simulation
@@ -146,13 +166,14 @@ The healthier precontact checkpointa8519941… lives under
 its native actor source was selected naturally after genuine sewer-exitcb89…
 without native authority for06c927/06c92a. No seed setters or unknown-owner repair.
 
-Next action: select another actual missing native behavior. Repair Hammer00000c
-is a candidate: current carried inventory has none and there is no directly
-placed Vilverin hammer; original tutorial CGChest02/CGChestSword01 each contain1.
-Live repair UI still calls legacy mechanics/GMSTs while the older M13 standalone
-backend restores maximum condition. First find an earned acquisition checkpoint
-and demonstrate the actual failure before choosing this chunk. No repair change
-or acceptance yet. Read-only survey: `build/oblivion-compat/repair-hammer`.
+Next chunk: original Cheap Wine037f7f, whose REFA10 instant restoration and
+three120s drains(Agility5, Intelligence5, Personality10) are rejected by the
+current Mead-only mixed-potion resolver. Original loose bottles06752a/06752d
+are at ImperialSewerNorthExitExterior, about23.4k from the retained healthy
+Alchemy entrance checkpoint. Next action: reach/acquire one with ordinary input,
+audit ownership and establish the actual unsupported-use baseline, then extend
+mixed-potion admission/publication and active/expired cold-load acceptance.
+Do not merge the healthy expedition with the separate Repair sewer branch.
 Cure Disease remains deferred: no carried/directly placed Vilverin source found;
 container loot unverified, nearest outdoor Mandrake found70k away.
 
