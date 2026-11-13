@@ -457,13 +457,15 @@ namespace MWClass
 
     void ESM4Creature::adjustScale(const MWWorld::ConstPtr& ptr, osg::Vec3f& scale, bool rendering) const
     {
-        if (!rendering) return;
         const auto* base = ptr.get<ESM4::Creature>()->mBase;
         if (!base->mAttackReach)
         {
-            scale *= base->mBaseScale;
+            if (rendering) scale *= base->mBaseScale;
             return;
         }
+        // Native Creature BNAM scales the actor, including its collision and
+        // navigation body. Rendering-only scaling leaves small creatures too
+        // large to approach within their equally scaled natural attack reach.
         osg::Vec3f prepared;
         for (unsigned axis = 0; axis < 3; ++axis)
         {

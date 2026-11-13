@@ -7668,6 +7668,113 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, contactDiseaseEndurancePublishesLifeAndDerivedValuesAtomically)
+    {
+        sharedStats();
+        ESM::NPC facade{}; facade.blank(); facade.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(facade);
+        ESM4::Creature creature{}; creature.mId = {0x800, 3}; creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 1;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf(); MWClass::ESM4Creature::registerSelf();
+        MWWorld::Player player(playerRecord); const auto ptr = player.getPlayer();
+        ESM::NpcState initial{}; initial.blank(); ptr.getClass().readAdditionalState(ptr, initial);
+        ESM4::ActorCreature reference{}; reference.mId = {0x900, 3};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900); reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr carrier(&live);
+        const ESM4::PlayerDynamicBaseSettings settings{2, 1.5f, 5};
+        const ESM4::PassiveAbilityInput fever{ESM::FormKey::content("Oblivion.esm", 0x98415),
+            {{0, ESM::fourCC("DRAT"), 0x100077, {0, 10, 0}},
+             {1, ESM::fourCC("DRAT"), 0x100077, {5, 10, 0}}}, 1};
+        // Healthy; exactly1 Health after Endurance; and a physical hit that
+        // crosses the threshold only after the disease has left2 Health.
+        for (const int damage : {0, -59, -58})
+        for (const bool essential : {false, true})
+        for (const bool godMode : {false, true})
+        {
+            SCOPED_TRACE(damage);
+            SCOPED_TRACE(essential);
+            SCOPED_TRACE(godMode);
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues pv; pv.mActor = ESM::FormKey::dynamic("player", 1);
+            pv.mBase = ESM::FormKey::dynamic("player-base", 1); pv.mOwner = ESM4::ActorValueOwner::Player;
+            pv.mPlayerFormValues = {{0, 0, 0, 0}}; pv.mPassiveAbilities.emplace();
+            for (unsigned i = 0; i < 8; ++i) pv.mValues[i].mBase = 40;
+            pv.mValues[8].mModifiers[2] = damage;
+            service.publishPlayerValues(player, pv, settings);
+            service.publishPlayerLife(player, {pv.mActor, pv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ESM4::RuntimeActorValues cv; cv.mActor = reference.mFormKey; cv.mBase = mActorKey;
+            cv.mValues[8].mBase = 20; cv.mValues[10].mBase = 60;
+            service.publishNonPlayerValues(carrier, cv);
+            service.publishNonPlayerLife(carrier, {cv.mActor, cv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ASSERT_TRUE(service.engage(cv.mActor, pv.mActor));
+            const auto id = service.allocateAction(cv.mActor), victimAction = service.allocateAction(pv.mActor);
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = pv.mActor; saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            ESM4::RuntimeReferenceState ref; ref.mKey = cv.mActor; ref.mBase = cv.mBase;
+            ref.mCell = saved.mPlayer.mCell; saved.mReferences.push_back(ref);
+            const auto snapshot = [&] { service.capture(saved); return saved.serializeBinary(); };
+            const auto before = snapshot();
+            MWMechanics::OblivionPhysicalContactDeltas deltas{-7, damage == -59 ? 0.f : -2.f, 0};
+            deltas.mVictimDisease = std::make_shared<const ESM4::PassiveAbilityInput>(fever);
+            auto malformed = fever; malformed.mEffects[1].mValues.mActorValue = 8;
+            auto rejected = deltas; rejected.mVictimDisease = std::make_shared<const ESM4::PassiveAbilityInput>(malformed);
+            EXPECT_THROW(service.preparePhysicalContact(id, carrier, ptr, rejected, &player,
+                essential, {4, .5f}, settings, godMode), std::invalid_argument);
+            EXPECT_EQ(snapshot(), before);
+            auto contact = service.preparePhysicalContact(id, carrier, ptr, deltas, &player,
+                essential, {4, .5f}, settings, godMode);
+            ASSERT_TRUE(contact); EXPECT_EQ(snapshot(), before);
+            const auto position = carrier.getRefData().getPosition();
+            auto moved = position; moved.pos[0] += 1; carrier.getRefData().setPosition(moved);
+            EXPECT_FALSE(contact->commit()); EXPECT_EQ(snapshot(), before);
+            carrier.getRefData().setPosition(position);
+            ASSERT_TRUE(contact->commit()); EXPECT_FALSE(contact->commit());
+            const bool diseaseTerminal = damage == -59;
+            const bool physicalTerminal = damage == -58 && !godMode;
+            const bool terminal = diseaseTerminal || physicalTerminal;
+            const auto phase = !terminal ? ESM4::ActorLifePhase::Alive
+                : essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
+            const auto killer = diseaseTerminal ? pv.mActor : physicalTerminal ? cv.mActor : ESM::FormKey{};
+            EXPECT_EQ(service.findActorLife(pv.mActor)->mPhase, phase);
+            EXPECT_EQ(service.findActorLife(pv.mActor)->mKiller, killer);
+            EXPECT_EQ(service.findActorLife(pv.mActor)->mRecoveryRemaining, terminal && essential ? 4 : 0);
+            EXPECT_EQ(service.isActionPending(victimAction, pv.mActor), !terminal);
+            EXPECT_TRUE(service.isActionConsumed(id));
+            EXPECT_EQ(service.isInCombatWith(cv.mActor, pv.mActor), phase != ESM4::ActorLifePhase::Dead);
+            EXPECT_EQ(service.getPlayerBaseValue(0), 40); EXPECT_EQ(service.getPlayerBaseValue(5), 40);
+            EXPECT_EQ(service.getPlayerValue(0), 30); EXPECT_EQ(service.getPlayerValue(5), 30);
+            const auto* values = service.findActorValues(pv.mActor);
+            EXPECT_EQ(values->mValues[8].mBase, 60);
+            EXPECT_EQ(values->mValues[10].mBase, 140); EXPECT_EQ(values->mValues[11].mBase, 150);
+            const float health = terminal && essential ? 30.f : 60.f + damage - (godMode ? 0.f : -deltas.mVictimHealth);
+            EXPECT_EQ(service.getPlayerValue(8), health);
+            ASSERT_EQ(values->mPassiveAbilities->size(), 1);
+            EXPECT_EQ(values->mPassiveAbilities->front().mSpellType, 1u);
+            ASSERT_EQ(values->mPassiveAbilities->front().mEffects.size(), 2);
+            for (const auto& effect : values->mPassiveAbilities->front().mEffects)
+                EXPECT_EQ(effect.mStoredMagnitude, -10);
+            const auto event = service.takeNextDeathEvent();
+            EXPECT_EQ(event.has_value(), terminal && !essential);
+            if (event) EXPECT_EQ(event->mKiller, killer);
+            EXPECT_FALSE(service.takeNextDeathEvent());
+            EXPECT_EQ(service.getDeadCount(pv.mBase), terminal && !essential ? 1 : 0);
+            const auto after = snapshot();
+            service.restore(ESM4::RuntimeState::deserializeBinary(after));
+            EXPECT_EQ(snapshot(), after); EXPECT_FALSE(service.takeNextDeathEvent());
+            EXPECT_EQ(service.findActorLife(pv.mActor)->mPhase, phase);
+            EXPECT_FALSE(service.preparePhysicalContact(id, carrier, ptr, deltas, &player,
+                essential, {4, .5f}, settings, godMode));
+            EXPECT_EQ(snapshot(), after);
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, physicalPlayerCreatureContactOwnsDeathEssentialGodModeAndEventFailure)
     {
         sharedStats();

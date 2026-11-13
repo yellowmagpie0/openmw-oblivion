@@ -1,0 +1,443 @@
+{
+  "status": "Accepted bounded original Mudcrab compound Swamp Fever contact chunk",
+  "full_milestone_complete": false,
+  "contract": "SWAMP-FEVER-CONTACT-CONTRACT.json",
+  "independent_oracle": "SWAMP-FEVER-CONTACT-ORACLE.json",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "normal": {
+    "infection": {
+      "receipt": {
+        "path": "build/oblivion-compat/swamp-fever-contact/normal-carrier-infection-scaled-01/swamp-fever-audit.json",
+        "sha256": "64bdd65bd05ea825ed6c7e9b998bfadd4fa5a8f9a06b8bbd82d1740ff1e9bfe4"
+      },
+      "result": {
+        "passed": true,
+        "phase": "infection",
+        "sanitized": false,
+        "source_sha256": "a8519941b077543214b24cc68e8997a5bd3fe23152c44ee0bcb16321c13f4024",
+        "save_sha256": "9b540c770fb466a1671c871cd3b0ab6198d50e8bcf1bf2c3b2b671c681a7ce00",
+        "binary_sha256": "8b04f27f9a0169e611d06efe84f2e7054c0229a4b227117fba8b7d1280dae370",
+        "hits": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3",
+          "id=721 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3",
+          "id=722 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2",
+          "id=723 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3"
+        ],
+        "physical_damage": 38.8,
+        "health": 25.71137237548828,
+        "grant": {
+          "spell": "content:oblivion.esm:098415",
+          "effects": [
+            [
+              0,
+              1413567044,
+              0,
+              -10.0,
+              10.0
+            ],
+            [
+              1,
+              1413567044,
+              5,
+              -10.0,
+              10.0
+            ]
+          ],
+          "spell_type": 1
+        },
+        "derived_bases": {
+          "8": 90.0,
+          "9": 80.0,
+          "10": 150.0,
+          "11": 225.0
+        }
+      }
+    },
+    "cold_restart": {
+      "receipt": {
+        "path": "build/oblivion-compat/swamp-fever-contact/normal-infected-retreat-restart-01/swamp-fever-audit.json",
+        "sha256": "e1bf0cc24193ea72db2d1ad5679b2c5655474c82445feb04266aa794f06cd685"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "9b540c770fb466a1671c871cd3b0ab6198d50e8bcf1bf2c3b2b671c681a7ce00",
+        "save_sha256": "3e3b8ff571d350b04dd73fd7f4cbf6f379b5ba1d7f59e6eb6c499f143f29e693",
+        "binary_sha256": "8b04f27f9a0169e611d06efe84f2e7054c0229a4b227117fba8b7d1280dae370",
+        "hits": [
+          "id=724 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2"
+        ],
+        "physical_damage": 7.76,
+        "health": 17.951370239257812,
+        "grant": {
+          "spell": "content:oblivion.esm:098415",
+          "effects": [
+            [
+              0,
+              1413567044,
+              0,
+              -10.0,
+              10.0
+            ],
+            [
+              1,
+              1413567044,
+              5,
+              -10.0,
+              10.0
+            ]
+          ],
+          "spell_type": 1
+        },
+        "derived_bases": {
+          "8": 90.0,
+          "9": 80.0,
+          "10": 150.0,
+          "11": 225.0
+        }
+      }
+    }
+  },
+  "sanitized": {
+    "infection": {
+      "receipt": {
+        "path": "build/oblivion-compat/swamp-fever-contact/sanitized-carrier-infection-01/swamp-fever-audit.json",
+        "sha256": "79326ea826647739447770a614a5caeade13bfe5d4027fc82d5d871222c1f727"
+      },
+      "result": {
+        "passed": true,
+        "phase": "infection",
+        "sanitized": true,
+        "source_sha256": "a8519941b077543214b24cc68e8997a5bd3fe23152c44ee0bcb16321c13f4024",
+        "save_sha256": "268d2af5295e06190ebb94109ffdb9afddf6ac743732a001760bff191a69b50e",
+        "binary_sha256": "42ae90e970c7c29eb80b27306c74fae7b8fcd4aa21c9c08a03e452060e5d05ac",
+        "hits": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3",
+          "id=721 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3",
+          "id=722 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2",
+          "id=723 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3",
+          "id=724 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2",
+          "id=725 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2"
+        ],
+        "physical_damage": 54.32,
+        "health": 10.191368103027344,
+        "grant": {
+          "spell": "content:oblivion.esm:098415",
+          "effects": [
+            [
+              0,
+              1413567044,
+              0,
+              -10.0,
+              10.0
+            ],
+            [
+              1,
+              1413567044,
+              5,
+              -10.0,
+              10.0
+            ]
+          ],
+          "spell_type": 1
+        },
+        "derived_bases": {
+          "8": 90.0,
+          "9": 80.0,
+          "10": 150.0,
+          "11": 225.0
+        }
+      }
+    },
+    "cold_restart": {
+      "receipt": {
+        "path": "build/oblivion-compat/swamp-fever-contact/sanitized-infected-restart-01/swamp-fever-audit.json",
+        "sha256": "5b44d0f400e638d89a1f143eafdafed5d084cb82f02e22c9b77a735ad4de2eef"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "268d2af5295e06190ebb94109ffdb9afddf6ac743732a001760bff191a69b50e",
+        "save_sha256": "4c514b18e64e7d3944aa0d224744577db99e1c82e3052b2a02f82efe7f38de55",
+        "binary_sha256": "42ae90e970c7c29eb80b27306c74fae7b8fcd4aa21c9c08a03e452060e5d05ac",
+        "hits": [
+          "id=726 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2"
+        ],
+        "physical_damage": 7.76,
+        "health": 2.431365966796875,
+        "grant": {
+          "spell": "content:oblivion.esm:098415",
+          "effects": [
+            [
+              0,
+              1413567044,
+              0,
+              -10.0,
+              10.0
+            ],
+            [
+              1,
+              1413567044,
+              5,
+              -10.0,
+              10.0
+            ]
+          ],
+          "spell_type": 1
+        },
+        "derived_bases": {
+          "8": 90.0,
+          "9": 80.0,
+          "10": 150.0,
+          "11": 225.0
+        }
+      }
+    }
+  },
+  "gates": {
+    "normal_focused": {
+      "receipt": {
+        "path": "build/oblivion-compat/swamp-fever-contact/scale-focused-normal-04/verification.json",
+        "sha256": "09f8b4f391890aba79d066dcdcd671adf22b530e7e283fdca67d3eae1ad457f5"
+      },
+      "source": {
+        "head": "8235e31b2ca7e10f48411fca86a7f792108be8de",
+        "source_fingerprint": "642c01d462ccb8f6ac16533a885b88c7b855687d2b9d30bb71c10fd0982783e5"
+      },
+      "result": {
+        "engine": {
+          "executed": 7,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorBoundsTest.NativeCreatureBaseScaleChangesActualCollisionBoundary:OblivionWorldTest.NativeCreatureRenderedAndPhysicalScaleUseAbsoluteStoredBnamProduct:OblivionActorStatsTest.contactDiseaseEndurancePublishesLifeAndDerivedValuesAtomically:OblivionActorStatsTest.playerPassiveEnduranceReactionStagesLifeEventsAndEssentialRecovery:OblivionActorStatsTest.diseaseDrainUsesTemporaryOwnershipAndSurvivesRestoreAndCharacterChanges:OblivionWorldTest.CreatureLeveledDiseaseSelectionAndContactAreOwnedAcrossRestore:OblivionCreatureSpells.*",
+          "binary_sha256": "63def44707c579d3e1fad8a817520eba31fb3a23477914bc591b451b5d0c016d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "815aa91397722d923c39994268544e3a084d6ea5fd49e4fb05c6c60f0cd35537",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal_full": {
+      "receipt": {
+        "path": "build/oblivion-compat/swamp-fever-contact/full-normal-01/verification.json",
+        "sha256": "8a20c1ddb535215b1b3eb40255d7349bcf6af7745195363449539f2130dba445"
+      },
+      "source": {
+        "head": "8235e31b2ca7e10f48411fca86a7f792108be8de",
+        "source_fingerprint": "f3974f174e3d9f1f0e847817282b058e321145c586b5e3ccbda33d6657325b50"
+      },
+      "result": {
+        "engine": {
+          "executed": 2284,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "63def44707c579d3e1fad8a817520eba31fb3a23477914bc591b451b5d0c016d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9359444ecac743133b3e127e6b494855943f9364efe2b9a4bb634a3def4afb0e",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized_focused": {
+      "receipt": {
+        "path": "build/oblivion-compat/swamp-fever-contact/scale-focused-sanitized-02/verification.json",
+        "sha256": "098547e7ed5bea68bd7082a59a10b3ccda795d872860506ddd7378c148181c78"
+      },
+      "source": {
+        "head": "8235e31b2ca7e10f48411fca86a7f792108be8de",
+        "source_fingerprint": "f3974f174e3d9f1f0e847817282b058e321145c586b5e3ccbda33d6657325b50"
+      },
+      "result": {
+        "engine": {
+          "executed": 7,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorBoundsTest.NativeCreatureBaseScaleChangesActualCollisionBoundary:OblivionWorldTest.NativeCreatureRenderedAndPhysicalScaleUseAbsoluteStoredBnamProduct:OblivionActorStatsTest.contactDiseaseEndurancePublishesLifeAndDerivedValuesAtomically:OblivionActorStatsTest.playerPassiveEnduranceReactionStagesLifeEventsAndEssentialRecovery:OblivionActorStatsTest.diseaseDrainUsesTemporaryOwnershipAndSurvivesRestoreAndCharacterChanges:OblivionWorldTest.CreatureLeveledDiseaseSelectionAndContactAreOwnedAcrossRestore:OblivionCreatureSpells.*",
+          "binary_sha256": "95df6dd36c0f86235017b6bb2bd9db988a3f4c26e2da71077cd9d2439738f1ba",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "bdc63f73bf652181a9bf054bf165fa7f318605a92b168053f730facfb839ee12",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized_full": {
+      "receipt": {
+        "path": "build/oblivion-compat/swamp-fever-contact/sanitized-inventory-union.json",
+        "sha256": "d2fdf62249e2411e6a8a3ce4c622f0ab6c07bfaf650094d4cd4dca23a32935b8"
+      },
+      "result": {
+        "passed": true,
+        "executed": 2284,
+        "inventory_union_matches": true,
+        "duplicates": 0,
+        "missing": 0,
+        "failed": 0,
+        "skipped": 0,
+        "source": {
+          "head": "8235e31b2ca7e10f48411fca86a7f792108be8de",
+          "source_fingerprint": "f3974f174e3d9f1f0e847817282b058e321145c586b5e3ccbda33d6657325b50"
+        },
+        "test_binary_sha256": "95df6dd36c0f86235017b6bb2bd9db988a3f4c26e2da71077cd9d2439738f1ba",
+        "parts": [
+          {
+            "path": "build/oblivion-compat/swamp-fever-contact/sanitized-part-worker0-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/0"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/swamp-fever-contact/sanitized-part-worker1-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/1"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/swamp-fever-contact/sanitized-part-worker2-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/2"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/swamp-fever-contact/sanitized-part-rest-01/verification.json",
+            "result": {
+              "executed": 2038,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "*-WorkerCounts/*"
+            }
+          }
+        ],
+        "sanitizer": {
+          "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+        },
+        "method": "Fresh disjoint parameter groups plus remaining inventory, same binary and frozen source; individually verified XML inventories."
+      }
+    }
+  },
+  "source_chain": {
+    "original_sewer_exit_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+    "carrier_precontact_sha256": "a8519941b077543214b24cc68e8997a5bd3fe23152c44ee0bcb16321c13f4024",
+    "description": "Genuine sewer exit before both native actor authorities. Normal ordinary shore approach initializes 74 actors; 06c927 known-none, 06c92a selects 098415 without seed changes. Normal axe contact on 06c927 and two-leg ordinary carrier approach retain original Rusty Iron War Axe, authored WABR, Health84.511 and Strength/Endurance55.",
+    "carrier_source_provenance": {
+      "path": "build/oblivion-compat/swamp-fever-contact/carrier-source-provenance.json",
+      "sha256": "4963390c519347b371fe7c297e585750d0b3696be5991898e8d40f0c69366fe0"
+    },
+    "fresh_actor_audit": {
+      "path": "build/oblivion-compat/swamp-fever-contact/normal-approach-01/fresh-contact-source-audit.json",
+      "sha256": "6b70e6959633515605bf8edc9c97fe36ab4cc3b43ab87d1904a159f11012a776"
+    },
+    "carrier_ready_audit": {
+      "path": "build/oblivion-compat/swamp-fever-contact/normal-carrier-approach-01/carrier-ready-audit.json",
+      "sha256": "2f80dd3861aaf641562a67f105a8dc35d32bfa247eac15f96c8c823e4c945e2b"
+    }
+  },
+  "geometry_dependency": {
+    "before_trace": {
+      "path": "build/oblivion-compat/swamp-fever-contact/normal-carrier-geometry-trace-01/process.log",
+      "sha256": "f3f842eb7f36e7bce840e27d5876e4b4dd806bcc703b55276b3216e733a2a9f8"
+    },
+    "description": "BNAM0.5 scaled rendering and reach16, but adjustScale(false) skipped BNAM. Unscaled hull prevented separation below about106; computed contact distance41 exceeded reach16. Shared native scale product now applies to physics/navigation; actual collision ray and real bites verify the correction. No range/shape inflation.",
+    "normal_known_none_contact": {
+      "path": "build/oblivion-compat/swamp-fever-contact/normal-known-none-axe-contact-01/scenario.json",
+      "sha256": "86ded4c7fcf44dd995478216b32705b9edfb08253a22319222c549c0b5405340"
+    }
+  },
+  "retained_failures": {
+    "scale_focused_sanitized_01": "Outer supervisor exited143 while CMake/compiler continued. Waited for that same build to finish; detached fresh focused02 passed with a complete receipt. Interrupted01 is not accepted gate evidence.",
+    "focused_normal_01": "SCOPED_TRACE macro calls on same source line: compile error, fixed.",
+    "scale_focused_normal_01": "Isolated collision fixture lacked native attributes: map::at exception.",
+    "scale_focused_normal_02": "Fixture had attributes but no WorldModel: SafePtr segfault during creature inventory setup.",
+    "scale_focused_normal_03": "Shared world fixture used without ESM4Creature class registration: unknown class key.",
+    "normal_contact_ready_01": "Unarmed approach could not close original too-large collider.",
+    "normal_known_none_contact_01": "Punch committed a miss, no accepted hit or XP.",
+    "normal_carrier_infection_01": "Axe hit admitted, but unscaled creature could not reach Player; no disease acceptance.",
+    "normal_carrier_infection_02": "Close approach stalled before attack; no disease acceptance.",
+    "normal_carrier_geometry_observe_01": "Hardware breakpoint used wrong unscaled reach condition; timed out and game SIGTRAP. Diagnostic only.",
+    "normal_carrier_geometry_observe_02": "Debugger detached eventually; game exited0 but no usable geometry measurements. Not oracle evidence.",
+    "normal_infected_restart_01": "Effect restore observed, but delayed observer/action sequence left low-health Player in contact and died after save. Entire course failed; no survival acceptance."
+  },
+  "limits": [
+    "Only supported singleton direct LVSP with nonempty recoverable self DRAT attribute effects; no mixed/nested/use-all/multi-child disease support.",
+    "No general cure/disease inventory, NPC recipient, disease statistics or full milestone claim.",
+    "Block was held but actual contacts recorded block_fraction0/victim_action-1; no successful block claim.",
+    "Reuse original selection, transfer and VMOD evidence with declared boundary stubs. No exact RNG or complete native Havok proof.",
+    "Sanitizer engine checks enable leak detection; rendered courses disable it. Full sanitizer inventory runs in disjoint fresh processes to avoid Bullet cumulative worker-counter limit.",
+    "No new original-game launch. Source/game data and cached unknown owners remain unmodified."
+  ],
+  "reused_unchanged_checks": {
+    "receipt": "HANDTOHAND-USE-VERIFICATION.json",
+    "scope": "Original skill-book provenance:3294 normal components,1115 native sanitizer components,616 Python codec checks. Components and codec implementations/tests unchanged; current engine and actual gameplay freshly verified."
+  },
+  "post_gate_changes": "Only verification audit (explicit Alive assertion, rerun on all four courses), editable instrumented restart safety recipe and acceptance documentation changed after frozen gates. Production C++ and C++ tests unchanged.",
+  "captures_reviewed": [
+    {
+      "path": "build/oblivion-compat/swamp-fever-contact/normal-carrier-infection-scaled-01/original-carrier-after-disease-contact.png",
+      "sha256": "f6e1a1609531cb3e35dbecef4ab0231adcbd2ac6c7e8d138ecdf04056f157794",
+      "accepted": true
+    },
+    {
+      "path": "build/oblivion-compat/swamp-fever-contact/normal-infected-retreat-restart-01/original-swamp-fever-cold-reload.png",
+      "sha256": "a3ee6fb57c39ec91b7bec5a52a2018ce054b950034ebd4a6520fcb6a1beccbd7",
+      "accepted": true
+    },
+    {
+      "path": "build/oblivion-compat/swamp-fever-contact/sanitized-carrier-infection-01/original-carrier-after-disease-contact.png",
+      "sha256": "92844446c40ba49d5b9027e107c85e2dd06e04bbc6424cdb58f3ed5057119636",
+      "accepted": true
+    },
+    {
+      "path": "build/oblivion-compat/swamp-fever-contact/sanitized-infected-restart-01/original-swamp-fever-cold-reload.png",
+      "sha256": "8243b2f2f95ca12ffffbd68efae54b82079cdfa172adb28e33e254bd3605160b",
+      "accepted": true
+    },
+    {
+      "path": "build/oblivion-compat/swamp-fever-contact/normal-infected-restart-01/original-swamp-fever-cold-reload.png",
+      "sha256": "7adb4b2bdcfddbec1b8a537a287abae2d25b6dd58271de000d7645a2b563f038",
+      "accepted": false
+    }
+  ],
+  "cold_processes_are_distinct": true
+}

@@ -11,10 +11,13 @@
 #include <apps/openmw/mwbase/environment.hpp>
 #include <apps/openmw/mwmechanics/creaturestats.hpp>
 #include <apps/openmw/mwclass/static.hpp>
+#include <apps/openmw/mwclass/esm4interactive.hpp>
 #include <apps/openmw/mwworld/esmstore.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
 
 #include <components/esm3/loadstat.hpp>
+#include <components/esm4/loadcrea.hpp>
+#include <components/esm4/loadachr.hpp>
 #include <components/resource/bulletshape.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/nativedynamicsworld.hpp>
@@ -305,6 +308,49 @@ namespace
         check(npc, fallback, fallback);
         check(creature, fallback, osg::Vec3f(7, 8, 9));
     }
+    TEST(ActorBoundsTest, NativeCreatureBaseScaleChangesActualCollisionBoundary)
+    {
+        TestingOpenMW::NativeWorldFixture fixture;
+        auto& store = fixture.mWorld.getStore();
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::Creature base{};
+        base.mId = {0x800, 0}; base.mFormKey = ESM::FormKey::content("bounds.esm", 0x800);
+        base.mBaseScale = .5f; base.mAttackReach = 32;
+        base.mBaseConfig.tes4.levelOrOffset = 1; base.mBaseConfig.tes4.fatigue = 50;
+        base.mData.health = 10; base.mData.combat = 25; base.mData.magic = 90;
+        store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+        ESM4::ActorCreature reference{};
+        reference.mId = {0x900, 0}; reference.mFormKey = ESM::FormKey::content("bounds.esm", 0x900);
+        reference.mBaseObj = base.mId; reference.mBaseKey = base.mFormKey;
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(base.mFormKey));
+        MWWorld::Ptr ptr(&live);
+        btDefaultCollisionConfiguration configuration;
+        btCollisionDispatcher dispatcher(&configuration);
+        btDbvtBroadphase broadphase;
+        btCollisionWorld world(&dispatcher, &broadphase, &configuration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        osg::ref_ptr<Resource::BulletShape> source = new Resource::BulletShape;
+        source->mCollisionBox.mExtents = osg::Vec3f(100, 73, 48);
+        source->mCollisionBox.mCenter = osg::Vec3f(0, 0, 48);
+        for (const float placedScale : {1.f, 1.5f})
+        {
+            SCOPED_TRACE(placedScale);
+            ptr.getCellRef().setScale(placedScale);
+            MWPhysics::Actor actor(ptr, source, &scheduler, false,
+                DetourNavigator::CollisionShapeType::RotatingBox, {});
+            const float scale = placedScale * .5f;
+            EXPECT_EQ(actor.getHalfExtents(), osg::Vec3f(100, 73, 48) * scale);
+            EXPECT_EQ(actor.getRenderingHalfExtents(), actor.getHalfExtents());
+            // Check the collision world, not only the scale adapter's output.
+            const btVector3 start(0, 200, 48 * scale), end(0, 0, 48 * scale);
+            btCollisionWorld::ClosestRayResultCallback hit(start, end);
+            world.rayTest(start, end, hit);
+            ASSERT_TRUE(hit.hasHit());
+            EXPECT_EQ(hit.m_collisionObject, actor.getCollisionObject());
+            EXPECT_NEAR(hit.m_hitPointWorld.y(), 73 * scale, .01);
+        }
+    }
+
     TEST(ActorBoundsTest, NativeNpcRoundedHullClearsOverheadCornerButBlocksWallsAndSupportsFloor)
     {
         MWClass::Static::registerSelf();

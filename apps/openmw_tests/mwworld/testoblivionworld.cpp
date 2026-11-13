@@ -6767,8 +6767,10 @@ namespace
         struct Case { unsigned selectionSeed, contactSeed; int resistance; bool selected, infected; };
         const std::array cases{Case{1, 19, 0, false, false}, Case{2, 1, 0, true, false},
             Case{2, 19, 0, true, true}, Case{2, 19, 100, true, true}, Case{2, 1, 100, true, false}};
+        for (const bool swampFever : {false, true})
         for (const auto row : cases)
         {
+            SCOPED_TRACE(swampFever);
             SCOPED_TRACE(row.selectionSeed);
             SCOPED_TRACE(row.contactSeed);
             SCOPED_TRACE(row.resistance);
@@ -6788,15 +6790,18 @@ namespace
             const auto playerKey = ESM::FormKey::dynamic("player", 1);
             const auto spellKey = ESM::FormKey::content("headless.esm", 0x999);
             ESM4::Spell disease{}; disease.mId = {0x999, 0}; disease.mFormKey = spellKey;
-            disease.mFullName = "Witbane"; disease.mData = ESM4::SpellData{1, 0, 0, 0, {}};
-            disease.mEffects = {{ESM::fourCC("DRAT"), 5, 0, 0, 0, 1, {}}};
+            disease.mFullName = swampFever ? "Swamp Fever" : "Witbane"; disease.mData = ESM4::SpellData{1, 0, 0, 0, {}};
+            disease.mEffects = swampFever
+                ? std::vector<ESM4::SpellEffect>{{ESM::fourCC("DRAT"), 10, 0, 0, 0, 0, {}},
+                    {ESM::fourCC("DRAT"), 10, 0, 0, 0, 5, {}}}
+                : std::vector<ESM4::SpellEffect>{{ESM::fourCC("DRAT"), 5, 0, 0, 0, 1, {}}};
             store.getWritable<ESM4::Spell>().insertStatic(disease, spellKey);
             ESM4::EffectSetting effect{}; effect.mId = {0x997, 0}; effect.mEffectCode = ESM::fourCC("DRAT");
             effect.mData = ESM4::EffectSettingData{}; effect.mData->mSchool = 2;
             effect.preparePassiveValueModifierDefinition();
             store.getWritable<ESM4::EffectSetting>().insertStatic(effect, ESM::FormKey::content("headless.esm", 0x997));
             ESM4::LevelledSpell list{}; list.mId = {0x998, 0}; list.mFormKey = ESM::FormKey::content("headless.esm", 0x998);
-            list.mChanceNone = 90; list.mListFlags = 3; list.mEntries = {{1, disease.mId, spellKey, 1}};
+            list.mChanceNone = swampFever ? 85 : 90; list.mListFlags = 3; list.mEntries = {{1, disease.mId, spellKey, 1}};
             store.getWritable<ESM4::LevelledSpell>().insertStatic(list, list.mFormKey);
             ESM4::Creature creature{}; creature.mId = {0x830, 0};
             creature.mFormKey = ESM::FormKey::content("headless.esm", 0x830);
@@ -6848,6 +6853,9 @@ namespace
             service.restore(saved, store);
             const auto before = captureNativeActorState(fixture, actor).serializeBinary();
             const float intelligence = service.getPlayerValue(1), health = service.getPlayerValue(8);
+            const float strength = service.getPlayerValue(0), endurance = service.getPlayerValue(5);
+            const float fatigueBase = service.findActorValues(playerKey)->mValues[10].mBase;
+            const float encumbranceBase = service.findActorValues(playerKey)->mValues[11].mBase;
             MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -2, 0};
             auto contact = world.prepareOblivionPhysicalContact(action, actor, player, deltas);
             ASSERT_TRUE(contact);
@@ -6864,18 +6872,27 @@ namespace
             service.restore(ESM4::RuntimeState::deserializeBinary(before), store); contact.reset();
             contact = world.prepareOblivionPhysicalContact(action, actor, player, deltas); ASSERT_TRUE(contact);
             ASSERT_TRUE(contact->commit()); EXPECT_FALSE(contact->commit());
-            EXPECT_EQ(service.getPlayerValue(1), intelligence - (row.infected ? 5 : 0));
+            EXPECT_EQ(service.getPlayerValue(1), intelligence - (row.infected && !swampFever ? 5 : 0));
             EXPECT_EQ(service.getPlayerBaseValue(1), intelligence);
-            EXPECT_EQ(service.getPlayerValue(8), health - 2);
+            const bool fever = swampFever && row.infected;
+            EXPECT_EQ(service.getPlayerValue(0), strength - (fever ? 10 : 0));
+            EXPECT_EQ(service.getPlayerValue(5), endurance - (fever ? 10 : 0));
+            EXPECT_EQ(service.getPlayerBaseValue(0), strength);
+            EXPECT_EQ(service.getPlayerBaseValue(5), endurance);
+            EXPECT_EQ(service.getPlayerValue(8), health - 2 - (fever ? 20 : 0));
+            EXPECT_EQ(service.findActorValues(playerKey)->mValues[10].mBase, fatigueBase - (fever ? 20 : 0));
+            EXPECT_EQ(service.findActorValues(playerKey)->mValues[11].mBase, encumbranceBase - (fever ? 50 : 0));
             EXPECT_EQ(service.combatRandomState(), advance(row.contactSeed, row.selected ? 1 : 0));
             EXPECT_EQ(messages.size(), unsigned(row.infected));
-            if (row.infected) EXPECT_NE(messages[0].find("Witbane"), std::string::npos);
+            if (row.infected) EXPECT_NE(messages[0].find(swampFever ? "Swamp Fever" : "Witbane"), std::string::npos);
             const auto after = captureNativeActorState(fixture, actor).serializeBinary();
             EXPECT_FALSE(world.prepareOblivionPhysicalContact(action, actor, player, deltas));
             EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), after);
             service.restore(ESM4::RuntimeState::deserializeBinary(after), store);
-            EXPECT_EQ(service.getPlayerValue(1), intelligence - (row.infected ? 5 : 0));
+            EXPECT_EQ(service.getPlayerValue(1), intelligence - (row.infected && !swampFever ? 5 : 0));
             EXPECT_EQ(service.findActorValues(reference.mFormKey)->mLeveledContactSpells, known.mLeveledContactSpells);
+            EXPECT_EQ(service.getPlayerValue(0), strength - (fever ? 10 : 0));
+            EXPECT_EQ(service.getPlayerValue(5), endurance - (fever ? 10 : 0));
         }
     }
 
@@ -25552,7 +25569,7 @@ TEST(OblivionWorldTest, NativeIsLeftUpReadsPhysicalSpineAndScopedHorseFallback)
     EXPECT_EQ(after, before);
 }
 
-TEST(OblivionWorldTest, NativeCreatureRenderedScaleUsesAbsoluteStoredBnamProduct)
+TEST(OblivionWorldTest, NativeCreatureRenderedAndPhysicalScaleUseAbsoluteStoredBnamProduct)
 {
     NativeWorldFixture fixture;
     const auto actor = addEquipmentCreature(fixture);
@@ -25565,14 +25582,14 @@ TEST(OblivionWorldTest, NativeCreatureRenderedScaleUsesAbsoluteStoredBnamProduct
         fixture.mWorld.getStore().getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
         for (const float referenceScale : {-2.f, 2.f, -0.f, 0.f})
         {
-            osg::Vec3f scale(referenceScale, referenceScale, referenceScale);
-            actor.getClass().adjustScale(actor, scale, false);
-            for (unsigned axis = 0; axis < 3; ++axis)
-                EXPECT_EQ(std::bit_cast<std::uint32_t>(scale[axis]), std::bit_cast<std::uint32_t>(referenceScale));
-            actor.getClass().adjustScale(actor, scale, true);
-            const float expected = baseScale == 0 || referenceScale == 0 ? 0.f : .5f;
-            for (unsigned axis = 0; axis < 3; ++axis)
-                EXPECT_EQ(std::bit_cast<std::uint32_t>(scale[axis]), std::bit_cast<std::uint32_t>(expected));
+            for (const bool rendering : {false, true})
+            {
+                osg::Vec3f scale(referenceScale, referenceScale, referenceScale);
+                actor.getClass().adjustScale(actor, scale, rendering);
+                const float expected = baseScale == 0 || referenceScale == 0 ? 0.f : .5f;
+                for (unsigned axis = 0; axis < 3; ++axis)
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(scale[axis]), std::bit_cast<std::uint32_t>(expected));
+            }
         }
     }
     base.mBaseScale = 1;

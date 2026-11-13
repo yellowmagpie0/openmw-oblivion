@@ -44,6 +44,7 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <cstdlib>
 #include <limits>
 #include <set>
 #include <stdexcept>
@@ -321,6 +322,8 @@ namespace MWMechanics
         if (!nativeActor(attacker))
             return std::nullopt;
         const auto source = actorKey(attacker);
+        const char* traceActor = std::getenv("OPENMW_OBLIVION_MELEE_TRACE");
+        const bool trace = traceActor && source.serialize() == traceActor;
         if (actionId && !service->isActionPending(*actionId, source))
             return std::nullopt;
         const auto* life = service->findActorLife(source);
@@ -384,12 +387,25 @@ namespace MWMechanics
                     std::atan2(dx, dy), acquisition.mConeDegrees);
                 candidate.mFacingDegrees = facing.mDegrees;
                 candidate.mInsideCone = facing.mInside;
+                if (trace)
+                    Log(Debug::Verbose) << "M15 melee geometry: actor=" << source.serialize()
+                        << " target=" << actorKey(target).serialize() << " reach=" << reach
+                        << " raw_distance=" << rawDistance << " distance=" << candidate.mDistance
+                        << " eligible=" << candidate.mEligible << " inside_cone=" << candidate.mInsideCone
+                        << " source_scale=" << sourceGeometry.mScale << " target_scale=" << geometry.mScale
+                        << " source_max_y=" << sourceGeometry.mMaximumY << " target_max_y=" << geometry.mMaximumY
+                        << " source_z=" << a[2] << " target_z=" << b[2];
             }
             candidates.push_back(candidate);
         }
         const auto selected = ESM4::selectMeleeContact(candidates, reach,
             selectedTarget.isEmpty() ? std::nullopt : std::optional<std::size_t>{0});
-        if (!selected || !world.getLOS(attacker, actors[*selected]))
+        const bool visible = selected && world.getLOS(attacker, actors[*selected]);
+        if (trace)
+            Log(Debug::Verbose) << "M15 melee acquisition: actor=" << source.serialize()
+                << " selected=" << (selected ? actorKey(actors[*selected]).serialize() : "none")
+                << " visible=" << visible;
+        if (!visible)
             return MWWorld::Ptr{};
         return actors[*selected];
     }

@@ -626,8 +626,10 @@ namespace MWWorld
             const auto& key = list->mEntries[0].mSpellKey;
             const auto* disease = spells.searchStatic(key);
             if (!disease || (disease->mFlags & ESM4::Rec_Deleted) || !disease->mData
-                || disease->mData->mType != 1 || disease->mEffects.size() != 1
-                || disease->mEffects[0].mId != ESM::fourCC("DRAT") || disease->mEffects[0].mActorValue != 1)
+                || disease->mData->mType != 1 || disease->mEffects.empty()
+                || !std::all_of(disease->mEffects.begin(), disease->mEffects.end(), [](const auto& effect) {
+                    return effect.mId == ESM::fourCC("DRAT") && effect.mActorValue < 8;
+                }))
                 return std::nullopt;
             if (const auto* winner = store.getFormKeyIndex().winner(key);
                 winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))

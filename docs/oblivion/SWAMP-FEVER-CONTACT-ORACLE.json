@@ -1,0 +1,72 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "winning_records": {
+    "path": "build/oblivion-compat/swamp-fever-contact/content-audit.json",
+    "sha256": "27d0c323c018bacad9500f61dcb6bbd71b4213e420fbe8f911228dbfeaa6a3e8"
+  },
+  "reused_original_evidence": {
+    "selection": {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-work-01/stock-dog-selection-oracle-01/report.json",
+      "sha256": "bd861f1ed4488d44e01295c7938a835799f896568292060cdf20ee04588261cd",
+      "cases": 18,
+      "scope": "Original4B0920 per-school selection,4B07C0/4B0770 wrapper and4B05E0 selection execute for the stockDog single direct child, flags3, level1,count1. Actor magic skill getter, child MagicItem skill-AV getter22 (Destruction school2) and RTTI casts are boundaries. RNG returns supplied; original draw placement executes. No multi-child/nested/use-all/process-cache/persistence/gameplay proof."
+    },
+    "transfer": {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-work-01/selection-transfer-oracle-02/report.json",
+      "sha256": "5e2458f13ca2b6c510066fcaa18d2d6264d1f3d1c179220ff2319dceb0aad6dd",
+      "cases": 256,
+      "scope": "Original6171F0 transfer, Player identity5E04E0 and5490C0 chance execute. Carrier node and integer AV63 read are inputs; RNG return, matching-item query, RTTI cast and grant are boundaries. Success presentation/statistics tail6172D2 is skipped explicitly. No grant application, caller/hit or gameplay acceptance."
+    },
+    "drat_factory": {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-work-01/drat-factory-oracle-01/report.json",
+      "sha256": "f0c7846c6eb81794ed25bcaac51e1ab6e4920122afe55ea6d692afab7edcaf8c",
+      "cases": 36,
+      "scope": "Full original68EA50 factory selection and actual value-modifier/common constructors for compiled DRAT, Disease1 and Ability4. Custom-registry lookup is a boundary using captured23 compiled keys; allocation and MagicItem type getter are boundaries. Allocation failure included. No application/removal/resistance/persistence/gameplay."
+    },
+    "drat_apply_remove": {
+      "path": "build/oblivion-compat/m15/S4/creature-disease-work-01/drat-apply-remove-oracle-03/report.json",
+      "sha256": "cb6c6670832aba170d8151c9cf619091d19049f7eb94e77c3366a16d7aeaaeda",
+      "cases": 48,
+      "scope": "Original VMOD constructor, full apply6A86F0/remove6A88D0, clamping6A8220, Player identity and writer dispatch execute for DRAT Intelligence, Disease1 and Ability4. Actor current queries, target resolution and base/maximum/damage writer storage/notifications are boundaries; actual Disease1 versus Ability4 writer selection executes; Player attribute notification6A83D0 is an explicit no-op boundary (no UI proof); healthy post-Endurance Health=10, essential predicate false. Removal Damage compensation is observed. No full actor storage, resistance/admission, source ledger/persistence or gameplay proof."
+    },
+    "clamp": {
+      "path": "build/oblivion-compat/m15/S3/authority-draft/value-modifier-clamp-01/report.json",
+      "sha256": "906af975e1b09cf297266ddc18c7ade02814ef7d5c2da7ca41473ddd7120b47c",
+      "cases": 15552,
+      "scope": "Complete original6A8220 with actual VMOD AV virtual getter, all72 AV branches, ABHE bypass, signed zeros and subnormal current. Actor resolution/current queries are boundary fixtures. No field writer/effect scheduling/gameplay."
+    },
+    "endurance_life": {
+      "path": "build/oblivion-compat/m15/S3/authority-draft/passive-endurance-health-reaction-07/report.json",
+      "sha256": "c1184455b3f091feccedad9a54bd585d688af85da24cc8d73208785bc61776ce",
+      "cases": 560,
+      "scope": "Full original FOAT Endurance constructor/application, native clamping/writer dispatch and actual Player MagicCaster699050/5E1860 parent lookup. Post-write current Health, target resolution and base write are boundaries;6005F0 transition is captured with exact source/zero argument. Strict negative applied magnitude and Health<=1 including adjacent binary32 values. Does not execute terminal/essential transition or gameplay."
+    }
+  },
+  "expected": [
+    "Swamp Fever098415 has Disease1, ordered self DRAT Strength10 and Endurance10, duration/area0; Mudcrab000b7f lists singleton181d18, chance-none85, flags3.",
+    "Disease effects use recoverable Maximum ownership once and preserve base attributes; derived Health/Fatigue/encumbrance follow current attributes.",
+    "Negative Endurance application calls terminal entry at post-write Health<=1, using self caster. Contact publishes this state and any event atomically, without a later physical Health reaction replacing the earlier terminal source."
+  ],
+  "limits": [
+    "Endurance original report uses negative FOAT in the common VMOD path; DRAT-specific detrimental sign/Maximum writer comes from separate DRAT reports. These are composed independent facts, not a new compound original probe.",
+    "Original selection/transfer/storage/terminal-entry probes declare boundary stubs. No bit-identical RNG, original process-cache lifetime or full live contagion claim.",
+    "Preserve existing god-mode and essential-recovery policy; original Endurance report does not itself certify full god-mode/lifecycle integration.",
+    "Contact disease retains the existing Player self-grant caster convention. The original transfer oracle stops before the successful grant tail, so precise original contagion kill attribution is not certified."
+  ],
+  "reference_root": "Original REFR06c927 NAME0343af resolves through LVLC to Creature000b7f; Creature SPLO then includes LVSP181d18. The source save predates native actor-value initialization.",
+  "carrier_content": {
+    "path": "build/oblivion-compat/swamp-fever-contact/carrier-content-audit.json",
+    "sha256": "91fb6b87062db5bfcc114230e89c09ffe5894e71b57ae62f6092f46d805d540e"
+  },
+  "scale_dependency": {
+    "authored_rnam": 32,
+    "authored_bnam": 0.5,
+    "reference_scale": 1,
+    "scaled_reach": 16,
+    "observed_before": "Selective real trace: source scale0.5, source maximumY72.9838, Player maximumY29.28, reference separation106.17 -> contact distance41.17 exceeds reach16. ESM4Creature::adjustScale(false) skipped BNAM, leaving its physical body at full size.",
+    "expected": "Use the already admitted native absolute stored reference*BNAM product for collision/navigation as well as rendering, preserving absent-RNAM legacy behavior.",
+    "independent_scale_product": "M15-NATIVE-RULE-PROVENANCE.md: full original4D7AF0/4D7260 and4E43C8..4E43E9,1615 i386 profiles, corpus049139b4d1644f228a15581ac8dd389d29fb164856d98a9c16789acce12ab946; scene/world update boundary. This is scale-product provenance, not a complete original Havok-body proof.",
+    "actual_trace": "build/oblivion-compat/swamp-fever-contact/normal-carrier-geometry-trace-01/process.log"
+  }
+}

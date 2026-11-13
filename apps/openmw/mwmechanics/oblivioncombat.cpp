@@ -3095,9 +3095,10 @@ namespace MWMechanics
         {
             const auto& disease = *deltas.mVictimDisease;
             if (continuation || victim.isEmpty() || !player || victim != player->getPlayer()
-                || disease.mSpellType != 1 || disease.mEffects.size() != 1
-                || disease.mEffects[0].mCode != ESM::fourCC("DRAT")
-                || disease.mEffects[0].mValues.mActorValue != 1)
+                || disease.mSpellType != 1 || disease.mEffects.empty()
+                || !std::all_of(disease.mEffects.begin(), disease.mEffects.end(), [](const auto& effect) {
+                    return effect.mCode == ESM::fourCC("DRAT") && effect.mValues.mActorValue < 8;
+                }))
                 throw std::invalid_argument("unsupported native contact disease grant");
         }
         const auto change = [&](ESM4::RuntimeActorValues& values, const MWWorld::Ptr& ptr,
@@ -3144,20 +3145,22 @@ namespace MWMechanics
                 return nullptr;
             if (deltas.mVictimDisease)
             {
-                // Reuse the established owner on a detached service. The narrow
-                // DRAT Intelligence grant changes no shared base or lifecycle;
-                // only the receiving candidate publishes with the contact.
+                // Disease DRAT effects use Maximum ownership, without shared
+                // base writes. Endurance can also stage a terminal/essential
+                // entry; retain that life candidate and publish its event once
+                // through the contact transaction below.
                 auto diseaseOwner = *this;
                 const std::span disease(deltas.mVictimDisease.get(), std::size_t{1});
                 diseaseOwner.preparePlayerPassiveGrants(*receiving, disease, playerBase,
-                    false, {}, playerGodMode);
+                    victimEssential, recovery, playerGodMode);
+                receivingLife = *diseaseOwner.findActorLife(victimKey);
             }
             spendFatigue(*receiving, victim, deltas.mVictimBlockFatigue);
             change(*receiving, victim, 8, deltas.mVictimHealth);
             change(*receiving, victim, 10, deltas.mVictimFatigue);
             if (receiving->mOwner == ESM4::ActorValueOwner::Player)
                 preparePlayerValues(*receiving, playerBase);
-            if (deltas.mVictimHealth < 0
+            if (receivingLife->mPhase == ESM4::ActorLifePhase::Alive && deltas.mVictimHealth < 0
                 && !(playerGodMode && receiving->mOwner == ESM4::ActorValueOwner::Player))
                 receivingLife = prepareHealthReaction(*receiving, victimEssential, recovery, playerGodMode, attackerKey);
             if (deltas.mVictimDefaultParalysisPower && receiving->mOwner != ESM4::ActorValueOwner::Player

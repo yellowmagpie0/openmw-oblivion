@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "feature": "Original Mudcrab Swamp Fever contact source and compound attribute drain",
+  "milestone": "M15 remains open",
+  "real_content": {
+    "reference": "content:oblivion.esm:06c927",
+    "creature": "content:oblivion.esm:000b7f",
+    "list": "content:oblivion.esm:181d18",
+    "spell": "content:oblivion.esm:098415",
+    "placement_base": "content:oblivion.esm:0343af",
+    "selected_carrier": "content:oblivion.esm:06c92a",
+    "carrier_placement_base": "content:oblivion.esm:0343b0"
+  },
+  "behavior": [
+    "Admit nonempty recoverable self DRAT attribute-only Disease1 effects on supported direct singleton LVSP sources, including Swamp Fever Strength/Endurance10.",
+    "Apply native Creature reference*BNAM scale to collision/navigation bodies as well as rendering; the real Mudcrab has BNAM0.5 and authored natural reach32, yielding reach16. Preserve other-format absent-RNAM behavior.",
+    "Fresh actor owns known-none or selected source once; contact is admitted, old unknown source ownership is not repaired or rerolled.",
+    "Selected disease transfer, ordered effect ownership, derived resources, lifecycle, event and RNG publication remain atomic.",
+    "Saved disease and source survive cold load without duplicate application; ordinary damage/use hooks remain intact. Schema101 unchanged."
+  ],
+  "acceptance": [
+    "Genuine original sewer-exit checkpointcb89fc17 before Mudcrab native initialization; ordinary approach and contact, independently inspect authored source and actual saved authority.",
+    "Actual infected Mudcrab/Player course and cold reload to certify both effects and source ownership; no manufactured plugin, stat setter or saved-owner repair.",
+    "Focused normal/instrumented service tests for low-Health Endurance death/essential recovery, stale transactions and existing single-attribute disease; affected runtime checks and appropriate integration gates."
+  ],
+  "limits": [
+    "Nested/multi-child/use-all or mixed effect diseases remain outside admitted contact domain.",
+    "No general disease inventory/cure, contracted-disease statistics, NPC recipients or complete M15 course claim.",
+    "Reused transfer probability and persisted selection lifetime policy; no original random-sequence claim."
+  ]
+}
