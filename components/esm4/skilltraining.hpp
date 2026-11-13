@@ -61,6 +61,15 @@ namespace ESM4
         return {base, base == 100 ? 0.f : experience};
     }
 
+    // Reading a new skill book preserves earned XP and stops at the skill cap.
+    // History and advancement ownership are committed by the World together.
+    inline ScriptedSkillTraining trainBookSkill(std::int32_t base, float experience)
+    {
+        if (base < 0 || !std::isfinite(experience) || experience < 0.f)
+            throw std::invalid_argument("invalid native skill-book training");
+        return {base < 100 ? base + 1 : base, experience};
+    }
+
     // Positive/zero ModPCSkill levels; no ordinary-use skill-100 cap. The caller
     // owns native publication and per-skill/attribute/specialization/major counts.
     inline ScriptedSkillTraining trainScriptedSkill(std::int32_t base, float experience, std::int32_t count,

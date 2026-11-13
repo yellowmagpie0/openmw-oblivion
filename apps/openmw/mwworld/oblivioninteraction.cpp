@@ -1331,6 +1331,7 @@ namespace MWWorld
             case OblivionInteractionKind::Book:
             {
                 const ESM4::Book* book = ptr.get<ESM4::Book>()->mBase;
+                readOblivionSkillBook(ptr);
                 state.mCustomState["read"] = true;
                 std::string text = plainBookText(book->mText);
                 message(book->mFullName + (text.empty() ? std::string{} : "\n\n" + text));

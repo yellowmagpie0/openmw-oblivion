@@ -12,7 +12,7 @@ from scripts.tests import test_tes4_runtime_state as runtime_tests
 
 
 class PendingGetUpFixtureTests(unittest.TestCase):
-    def source(self, folder, *, with_food=False, with_chameleon=False, with_potion=False, with_power=False, with_damage=False, with_health_drain=False):
+    def source(self, folder, *, with_food=False, with_chameleon=False, with_potion=False, with_power=False, with_damage=False, with_health_drain=False, with_skill_books=False):
         state = runtime_tests.Tes4RuntimeStateTests.getup_pending_state()
         runtime._upgrade_actor_knockback(state); state['schema_version'] = runtime.CURRENT_VERSION
         if with_food:
@@ -27,6 +27,8 @@ class PendingGetUpFixtureTests(unittest.TestCase):
             player['values'][8][1] = -5.
             player['ingredient_restoration'] = [dict(ingredient='content:oblivion.esm:04e940', elapsed=.25,
                                                      magnitude=-5., duration=1., actor_value=8)]
+        if with_skill_books:
+            state['player']['awarded_skill_books'] = ['content:oblivion.esm:0243fc']
         if with_chameleon:
             player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
             player['values'][46][1] = 25.
@@ -86,6 +88,15 @@ class PendingGetUpFixtureTests(unittest.TestCase):
             after = runtime.load_save(target)
             food = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)['ingredient_restoration']
             self.assertEqual(food(before), food(after))
+
+    def test_schema101_staging_preserves_awarded_skill_book_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_skill_books=True)
+            target = Path(directory) / 'staged.omwsave'
+            before = runtime.load_save(source)
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            self.assertEqual(before['player']['awarded_skill_books'], after['player']['awarded_skill_books'])
 
     def test_schema100_staging_preserves_health_drain_owner_and_modifier(self):
         with tempfile.TemporaryDirectory() as directory:

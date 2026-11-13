@@ -1,0 +1,52 @@
+{
+  "status": "Accepted bounded original skill-book progression, repeated reads and cold-load persistence",
+  "milestone": "M16 skill-book progression and persistent ownership",
+  "content": {
+    "reference": "content:oblivion.esm:066cc1",
+    "base": "content:oblivion.esm:0243fc",
+    "title": "Immortal Blood",
+    "authored_skill_index": 5,
+    "actor_value": 17,
+    "location": [
+      53926.62890625,
+      86135.5390625,
+      412.11285400390625
+    ]
+  },
+  "source": {
+    "save": "build/oblivion-compat/skill-book/normal-book-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "d178063a2a6e0be83c36843cf6759c80274408492a4ce62ea11f38af908ed254",
+    "health": 83,
+    "handtohand": 35,
+    "book_unread": true
+  },
+  "requirements": [
+    "Ordinary activation of the original placed book raises Hand-to-Hand35 to36 and preserves earned XP/modifiers",
+    "Native per-skill, governing attribute, specialization and major-skill advancement counters increase once",
+    "Each actual read increments BooksRead17; first successful award increments SkillBooksRead18 and SkillIncreases2",
+    "A repeated read and a fresh-process repeated read do not award again; history belongs to the book base across references/containers",
+    "Reading at base skill100 leaves the book eligible; after lowering the base below the cap a later read may award",
+    "Typed schema101 award history round-trips independently in C++/Python; old schemas adopt empty history without inventing awards",
+    "Retain actual Health83, earned loot and prior progression; no grants, teleports, stat or save edits supply fork acceptance"
+  ],
+  "baseline": {
+    "course": "build/oblivion-compat/skill-book/normal-book-read-baseline-02",
+    "audit": "build/oblivion-compat/skill-book/normal-book-read-baseline-02/baseline-audit.json",
+    "actual_reads": 2,
+    "skill_before": 35,
+    "skill_after": 35
+  },
+  "boundaries": [
+    "Controlled original-game console setup is only independent rule evidence; fork runtime courses use normal inputs and genuine saves.",
+    "General book UI/pagination and OnRead quest-script dispatch remain separate; the placed-book text presentation is unchanged by this chunk.",
+    "Native ordinary-book statistics outside the skill-book path and historical unimplemented skill awards are not reconstructed."
+  ],
+  "retained_attempts": [
+    "First baseline structurally passed but only one actual read event; stale completion marker and Escape did not establish repeat. Corrected baseline02 requires fresh aim, omits Escape, and independently verifies two actual reads.",
+    "Approach crossed original campfire sources066af1/066afb and took actual27 Health damage. Both pre-reading checkpoints are genuine; final unread checkpoint Health83 is the declared source.",
+    "Instrumented first-award01 omitted libasan preload before the SDL shim and exited before loading the save. Owned waiting scenario was terminated; failed attempt retained. Corrected02 adds only LD_PRELOAD in a separate recipe; no gameplay-code or input-save change.",
+    "Instrumented repeat02 lost its outer orchestrator with exit143 during startup, without completion receipts. Cause unproven. No game process remained; standalone repeat03 passed."
+  ],
+  "oracle": "SKILL-BOOK-READ-ORACLE.json",
+  "verification": "SKILL-BOOK-READ-VERIFICATION.json"
+}

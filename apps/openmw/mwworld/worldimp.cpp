@@ -146,6 +146,7 @@
 #include "../mwmechanics/oblivionmagiccaster.hpp"
 #include "oblivioncombatmagic.hpp"
 #include "oblivionactorstats.hpp"
+#include "oblivionskilltraining.hpp"
 #include "../mwmechanics/levelledlist.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/oblivionai.hpp"
@@ -2037,6 +2038,7 @@ namespace MWWorld
         if (mOblivionRuntimeState)
         {
             state.mIgnoreFriendlyHits = mOblivionRuntimeState->mIgnoreFriendlyHits;
+            state.mPlayer.mAwardedSkillBooks = mOblivionRuntimeState->mPlayer.mAwardedSkillBooks;
             state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
             state.mFactionReactions = mOblivionRuntimeState->mFactionReactions;
             state.mNativeBoundAbilities = mOblivionRuntimeState->mNativeBoundAbilities;
@@ -8019,6 +8021,7 @@ namespace MWWorld
         validateOblivionArrowProjectiles(state);
         validateOblivionEnvironmentalFire(state);
         validateOblivionIngredientRestoration(mStore, state);
+        validateOblivionAwardedSkillBooks(mStore, state);
         validateOblivionScrollChameleon(mStore, state);
         validateOblivionPotionAttributes(mStore, state);
         validateOblivionPotionLight(mStore, state);

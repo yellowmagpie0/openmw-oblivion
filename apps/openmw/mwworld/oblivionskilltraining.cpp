@@ -8,6 +8,9 @@
 #include <components/esm4/loadclas.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadskil.hpp>
+#include <components/esm4/loadbook.hpp>
+#include <components/esm4/playermiscstats.hpp>
+#include <components/debug/debuglog.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <components/esm4/skilltraining.hpp>
 #include <components/misc/strings/algorithm.hpp>
@@ -111,7 +114,36 @@ namespace MWWorld
         updateOblivionPlayerSkill(skill, 0, experience);
     }
 
-    void World::updateOblivionPlayerSkill(unsigned skill, std::int32_t count, float experience)
+    bool World::readOblivionSkillBook(const Ptr& book)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || book.isEmpty()
+            || (book.getType() != ESM::REC_BOOK && book.getType() != ESM::REC_BOOK4)) return false;
+        const auto* definition = mStore.get<ESM4::Book>().search(book.getCellRef().getRefId());
+        if (!definition || (definition->mFlags & ESM4::Rec_Deleted)
+            || definition->mData.bookSkill < 0 || definition->mData.bookSkill > 20) return false;
+        const auto key = mStore.get<ESM4::Book>().findFormKey(book.getCellRef().getRefId());
+        if (!key || !key->isContent()) return false;
+        if (const auto* winner = mStore.getFormKeyIndex().winner(*key);
+            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_BOOK)) return false;
+        updateOblivionPlayerSkill(12 + definition->mData.bookSkill, 1, 0.f, *key);
+        return true;
+    }
+
+    void validateOblivionAwardedSkillBooks(const ESMStore& store, const ESM4::RuntimeState& state)
+    {
+        for (const auto& key : state.mPlayer.mAwardedSkillBooks)
+        {
+            const auto* book = store.get<ESM4::Book>().search(key);
+            const auto* winner = store.getFormKeyIndex().winner(key);
+            if (!book || (book->mFlags & ESM4::Rec_Deleted) || book->mData.bookSkill < 0
+                || book->mData.bookSkill > 20
+                || (winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_BOOK)))
+                throw std::invalid_argument("awarded native skill book no longer resolves");
+        }
+    }
+
+    void World::updateOblivionPlayerSkill(unsigned skill, std::int32_t count, float experience,
+        const ESM::FormKey& skillBook)
     {
         auto* combat = getOblivionCombatService();
         const auto player = getPlayerPtr();
@@ -121,12 +153,20 @@ namespace MWWorld
         auto& stats = player.getClass().getNpcStats(player);
         auto& sharedSkill = stats.getSkill(oblivionSkillIds()[skill - 12]);
         const auto base = combat->getPlayerBaseValue(skill);
-        const auto training = count != 0
+        const bool readingBook = !skillBook.isNull();
+        if (readingBook && (!skillBook.isContent() || count != 1 || experience != 0.f))
+            throw std::invalid_argument("invalid native skill-book reward request");
+        const bool exhausted = readingBook && mOblivionRuntimeState
+            && mOblivionRuntimeState->mPlayer.mAwardedSkillBooks.contains(skillBook);
+        const auto training = readingBook
+            ? exhausted ? ESM4::ScriptedSkillTraining{base, sharedSkill.getProgress()}
+                        : ESM4::trainBookSkill(base, sharedSkill.getProgress())
+            : count != 0
             ? ESM4::trainScriptedSkill(base, sharedSkill.getProgress(), count,
                 context.mMajor, context.mSpecialized, context.mSettings)
             : ESM4::trainUsedSkill(base, sharedSkill.getProgress(), experience,
                 context.mMajor, context.mSpecialized, context.mSettings);
-        if (training.mBase == base && training.mExperience == sharedSkill.getProgress()) return;
+        if (!readingBook && training.mBase == base && training.mExperience == sharedSkill.getProgress()) return;
         count = training.mBase - base;
         const std::array attributes{ESM::Attribute::Strength, ESM::Attribute::Intelligence, ESM::Attribute::Willpower,
             ESM::Attribute::Agility, ESM::Attribute::Speed, ESM::Attribute::Endurance,
@@ -145,6 +185,24 @@ namespace MWWorld
         if (!mOblivionRuntimeState)
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
         auto counters = mOblivionRuntimeState->mPlayer.mActorValues;
+        // Prepare all allocations before native skill publication. The history
+        // is by book base, independently of the placed reference or container.
+        std::set<ESM::FormKey> awardedBooks;
+        if (readingBook)
+        {
+            awardedBooks = mOblivionRuntimeState->mPlayer.mAwardedSkillBooks;
+            const auto increment = [&](int index) {
+                auto& value = counters[ESM4::playerMiscStatKey(index)];
+                value = ESM4::addPlayerMiscStat(ESM4::playerMiscStatValue(value), 1);
+            };
+            increment(17); // Every actual read, including repeats and skill100.
+            if (count != 0)
+            {
+                awardedBooks.insert(skillBook);
+                increment(18); // Learned skill books.
+                increment(2);  // Actual skill increases, not scripted ModPCSkill.
+            }
+        }
         auto& advances = counters["skill_advances." + std::to_string(skill)];
         if (!std::isfinite(advances) || advances < 0 || advances > std::numeric_limits<std::uint32_t>::max()
             || std::trunc(advances) != advances)
@@ -158,5 +216,13 @@ namespace MWWorld
         stats.setLevelProgress(majorCount);
         sharedSkill.setProgress(training.mExperience);
         mOblivionRuntimeState->mPlayer.mActorValues.swap(counters);
+        if (readingBook)
+        {
+            mOblivionRuntimeState->mVersion = ESM4::CurrentRuntimeStateVersion;
+            mOblivionRuntimeState->mPlayer.mAwardedSkillBooks.swap(awardedBooks);
+            Log(Debug::Info) << "M16 skill book read: book=" << skillBook.serialize()
+                << " skill=" << skill << " awarded=" << (count ? "true" : "false")
+                << " base=" << training.mBase << " experience=" << training.mExperience;
+        }
     }
 }

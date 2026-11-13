@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 100
+CURRENT_VERSION = 101
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -900,6 +900,15 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if not valid:
             raise RuntimeStateError("Invalid TES4 native actor-value identity")
 
+    books = check_collection(player.get("awarded_skill_books", []), "awarded skill books")
+    if books and version < 101:
+        raise RuntimeStateError("Awarded skill-book history requires schema101")
+    for book in books:
+        native_key(book)
+        if not book.startswith("content:"):
+            raise RuntimeStateError("Invalid awarded skill-book base")
+    if len(books) != len(set(books)):
+        raise RuntimeStateError("Duplicate awarded skill-book base")
     generation = player.get("character_generation")
     if generation is not None:
         if version < 80:
@@ -2893,6 +2902,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             uses = [reader.unpack("<f") for _ in range(21)] if generation_bool() else None
             player["character_generation"] = {"tracking": tracking, "skill_uses": uses,
                                                 "recommended_class": reader.string()}
+    if version >= 101:
+        books = [reader.string() for _ in range(reader.count())]
+        if books:
+            player["awarded_skill_books"] = books
     result["player"] = player
 
     globals_: dict[str, Any] = {}
@@ -3818,6 +3831,11 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 for value in generation["skill_uses"]:
                     writer.pack("<f", float(value))
             writer.string(generation["recommended_class"])
+    if version >= 101:
+        books = player.get("awarded_skill_books", [])
+        writer.pack("<I", len(books))
+        for book in sorted(books):
+            writer.string(book)
     globals_ = state["globals"]
     writer.pack("<I", len(globals_))
     for key in sorted(globals_):

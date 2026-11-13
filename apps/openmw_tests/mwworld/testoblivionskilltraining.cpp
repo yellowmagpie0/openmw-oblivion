@@ -1,6 +1,10 @@
 #include "oblivionworldfixture.hpp"
 
 #include "apps/openmw/mwclass/npc.hpp"
+#include "apps/openmw/mwclass/esm4interactive.hpp"
+#include "apps/openmw/mwworld/livecellref.hpp"
+#include <components/esm4/loadbook.hpp>
+#include <components/esm4/loadrefr.hpp>
 #include "apps/openmw/mwmechanics/npcstats.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
 #include "apps/openmw/mwworld/class.hpp"
@@ -170,4 +174,63 @@ TEST(OblivionSkillTraining, OrdinaryUseRetainsFractionalExperienceAndAwardsOnlyE
     world.useOblivionPlayerSkill(29, 0, 1000);
     EXPECT_EQ(stats.getLevelProgress(), 6);
     EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mActorValues.at("skill_advances.29"), 2);
+}
+
+TEST(OblivionSkillTraining, SkillBooksPreserveExperienceModifiersAndBaseHistoryAcrossCopiesAndCap)
+{
+    for (const bool major : {false, true})
+    {
+        SCOPED_TRACE(major);
+        TrainingFixture fixture(major);
+        MWClass::ESM4Book::registerSelf();
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        auto& combat = *world.getOblivionCombatService();
+        const auto player = world.getPlayerPtr();
+        auto& stats = player.getClass().getNpcStats(player);
+        auto& skill = stats.getSkill(ESM::RefId(ESM::Skill::Mercantile));
+        skill.setProgress(25.f);
+        const auto originalModifiers = combat.findActorValues(ESM::FormKey::dynamic("player", 1))->mValues[29].mModifiers;
+        const auto readBook = [&](unsigned id, unsigned reference) {
+            const auto key = ESM::FormKey::content("headless.esm", id);
+            if (!store.get<ESM4::Book>().search(key))
+            {
+                ESM4::Book book{}; book.mId = {id, 0}; book.mData.bookSkill = 17;
+                store.getWritable<ESM4::Book>().insertStatic(book, key);
+            }
+            ESM4::Reference placed{}; placed.mId = {reference, 0}; placed.mBaseObj = {id, 0};
+            placed.mFormKey = ESM::FormKey::content("headless.esm", reference);
+            placed.mBaseKey = key;
+            MWWorld::LiveCellRef<ESM4::Book> live(placed, store.get<ESM4::Book>().search(key));
+            EXPECT_TRUE(world.readOblivionSkillBook(MWWorld::Ptr(&live, nullptr)));
+        };
+        readBook(0x840, 0x850);
+        EXPECT_EQ(combat.getPlayerBaseValue(29), 99);
+        EXPECT_EQ(skill.getProgress(), 25.f);
+        EXPECT_EQ(stats.getLevelProgress(), major ? 1 : 0);
+        EXPECT_EQ(stats.getSkillIncreasesForAttribute(ESM::Attribute::Personality), 1);
+        EXPECT_EQ(combat.findActorValues(ESM::FormKey::dynamic("player", 1))->mValues[29].mModifiers, originalModifiers);
+        readBook(0x840, 0x851); // A second reference to the same base cannot award again.
+        EXPECT_EQ(combat.getPlayerBaseValue(29), 99);
+        readBook(0x841, 0x852);
+        EXPECT_EQ(combat.getPlayerBaseValue(29), 100);
+        readBook(0x842, 0x853); // Reading at the cap does not exhaust the book.
+        auto saved = world.captureOblivionRuntimeState();
+        EXPECT_EQ(saved.mPlayer.mAwardedSkillBooks.size(), 2u);
+        EXPECT_FALSE(saved.mPlayer.mAwardedSkillBooks.contains(ESM::FormKey::content("headless.esm", 0x842)));
+        EXPECT_EQ(saved.mPlayer.mActorValues.at("pc_misc_stat.17"), 4);
+        EXPECT_EQ(saved.mPlayer.mActorValues.at("pc_misc_stat.18"), 2);
+        EXPECT_EQ(saved.mPlayer.mActorValues.at("pc_misc_stat.2"), 2);
+        EXPECT_EQ(saved.mPlayer.mActorValues.at("skill_advances.29"), 2);
+        EXPECT_NO_THROW(MWWorld::validateOblivionAwardedSkillBooks(store, saved));
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()).mPlayer.mAwardedSkillBooks,
+            saved.mPlayer.mAwardedSkillBooks);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 29, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 99));
+        readBook(0x842, 0x854);
+        EXPECT_EQ(combat.getPlayerBaseValue(29), 100);
+        EXPECT_EQ(skill.getProgress(), 25.f);
+        EXPECT_EQ(stats.getLevelProgress(), major ? 3 : 0);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mAwardedSkillBooks.size(), 3u);
+    }
 }

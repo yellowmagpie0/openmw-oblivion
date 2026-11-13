@@ -6903,3 +6903,22 @@ TEST(ESM4RuntimeState, Ingredient100PersistsSeparateHealthDrainsAndRejectsLegacy
     EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorValues,
         state.mNativeActorValues);
 }
+
+TEST(ESM4RuntimeState, SkillBook101PersistsBaseHistoryAndRejectsLegacyOrDynamicOwners)
+{
+    auto state = makeState();
+    state.mPlayer.mAwardedSkillBooks = {ESM::FormKey::content("oblivion.esm", 0x243fc),
+        ESM::FormKey::content("oblivion.esm", 0x243fd)};
+    const auto wire = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(restored.mPlayer.mAwardedSkillBooks, state.mPlayer.mAwardedSkillBooks);
+    EXPECT_EQ(restored.serializeBinary(), wire);
+    EXPECT_NE(restored.canonicalJson().find("awarded_skill_books"), std::string::npos);
+    state.mVersion = 100;
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mPlayer.mAwardedSkillBooks.clear();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mPlayer.mAwardedSkillBooks.empty());
+    state.mVersion = 101;
+    state.mPlayer.mAwardedSkillBooks.insert(ESM::FormKey::dynamic("book", 1));
+    EXPECT_ANY_THROW(state.serializeBinary());
+}

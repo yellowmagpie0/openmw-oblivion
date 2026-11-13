@@ -594,6 +594,24 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(next(a for a in state_io.decode_payload(state_io.encode_payload(old))["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"],
                          next(a for a in old["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"])
 
+    def test_skill_book101_history_roundtrip_and_legacy_absence(self):
+        state = self.combat_controller_state()
+        state['schema_version'] = 101
+        books = ['content:oblivion.esm:0243fc', 'content:oblivion.esm:0243fd']
+        state['player']['awarded_skill_books'] = books
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(restored['player']['awarded_skill_books'], books)
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for invalid in ([books[0], books[0]], ['dynamic:book:0000000000000001'], ['null']):
+            bad = copy.deepcopy(state)
+            bad['player']['awarded_skill_books'] = invalid
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state['schema_version'] = 100
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state['player']['awarded_skill_books']
+        self.assertNotIn('awarded_skill_books', state_io.decode_payload(state_io.encode_payload(state))['player'])
+
     def test_ingredient100_preserves_separate_health_drains(self):
         state = self.combat_controller_state()
         state["schema_version"] = 100

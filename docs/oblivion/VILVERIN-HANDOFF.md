@@ -4,38 +4,48 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open.
 
-Latest accepted chunk: eat genuinely harvested original Nirnroot04e940 at
-Alchemy5/Luck50/ResistMagic0. One use drains Health5 for1second; two uses stack.
-Health110→105/100→110 survives active saves, separate process loads and a
-completed reload. Consumed singleton script instances retire; the surviving
-item retains Found1, Seeking Your Roots stage10/counters2/miscstat27=2.
-Schema100 retains each ingredient effect's actor value; older Fatigue effects
-migrate as AV10. No general Wortcraft/Alchemy XP or resistance claim.
-[Contract](NIRNROOT-USE-CONTRACT.json), [original-game oracle](NIRNROOT-USE-ORACLE.json),
-[verification](NIRNROOT-USE-VERIFICATION.json).
+Latest accepted chunk: original Immortal Blood066cc1/base0243fc grants
+Hand-to-Hand35→36 once per book base. Schema101 persists successful award
+history; reads at skill100 remain eligible. XP/modifiers survive, governing
+attribute/specialization/major advances increment once, and original misc
+statistics distinguish every read from successful awards.
+[Contract](SKILL-BOOK-READ-CONTRACT.json), [original-game oracle](SKILL-BOOK-READ-ORACLE.json),
+[verification](SKILL-BOOK-READ-VERIFICATION.json).
 
-Five normal and three instrumented Nirnroot courses pass, plus a genuine
-Bonemeal damage regression. Twenty required captures reviewed. Full normal
-3,292 components/2,280 engine, native sanitizer1,113 components, complete
-instrumented2,280 engine inventory and Python614 pass. Instrumented engine
-inventory is audited across two disjoint processes for Bullet's cumulative
-thread-ID limit. Engine gates check leaks; rendered/component sanitizer gates
-disable leak checks. Failed inputs and initial Python schema-ceiling failures
-remain explicit. Subsequent fixture-only edits preserve original C++ evidence
-provenance. Original-game Documents/Plugins inputs restored, game exited.
+Two normal and two instrumented actual read/save courses pass, including fresh
+process repeats. All eight book captures reviewed; separate normal character
+UI shows Hand-to-Hand36/Warrior/level1/Health83. Full normal3,294 components,
+2,281 engine/Python616; native sanitizer1,115 components and audited complete
+2,281 engine inventory pass. Engine sanitizer gates check leaks; rendered and
+component courses disable leak checks. Original process exited, Documents and
+Plugins inputs restored. Failed launch/repeat attempts and unproven outer143
+shutdowns remain explicit in the receipt. Post-gate changes only add acceptance
+docs and the separate sanitizer preload recipe; tested implementation unchanged.
 
-Primary continuation:
+Book continuation (independent branch from the earlier genuine Vilverin exit):
+`build/oblivion-compat/skill-book/normal-book-repeat-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `fb073ae38596c6e476dcaf3aae4dad4fd65b394d6f4ae15e849132dd28b2613b`.
+Hand-to-Hand36/XP0, major progress1, one book-base award, Health83 from the
+actual campfire approach, prior earned loot and dead/looted Skeleton06c2ed
+retained. Genuine fork positive-XP and inventory-copy book courses are not
+claimed; original-game and World tests cover those rules. General book UI,
+pagination, OnRead scripts and ordinary-book statistics remain open.
+
+The accepted Nirnroot branch remains available independently:
 `build/oblivion-compat/nirnroot-use/normal-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
 SHA256 `6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165`.
-Player remains beside the second plant with one earned Nirnroot (owner1),
-Health110/Fatigue170, Blunt35/XP2 and Restoration6/XP1.3062. Earned Bonemeal,
-Steel War Axe and Club remain. Skeleton06c2ed stays dead/empty with17-body
-ownership and one innate grant. The independent two-use branch consumed both
-roots and also recovered Health110; its receipt retains that separate source.
-No grants, teleports, stat edits or save edits supplied runtime acceptance.
+Health110/Fatigue170, one earned Nirnroot owner1/Found1, Seeking Your Roots
+stage10/counters2/misc27=2, Blunt35/XP2, Restoration6/XP1.3062, Bonemeal/Steel
+War Axe/Club retained. Skeleton06c2ed remains dead/empty,17-body ownership and
+one innate grant. Current101 also passes genuine100 active-Nirnroot migration
+and expiry with those owners retained. [Nirnroot receipt](NIRNROOT-USE-VERIFICATION.json).
 
-Next action: select another original content case with an observed unsupported
-behavior; keep the next deliverable bounded by its actual acceptance gap.
+Current chunk / next action: establish missing Destruction use experience with
+original Flare against a genuine placed enemy. Reuse existing cast/flight
+ownership and normal-input encounters, first verify the original hit-use rule,
+then implement only the missing progression/publication and cold-load behavior.
+Do not expand into the adjacent learned-target spell mastery AV20/22 issue
+unless needed by this deliverable. No new implementation or acceptance yet.
 
 Previous accepted chunks:
 

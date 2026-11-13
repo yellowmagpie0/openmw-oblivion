@@ -144,3 +144,17 @@ TEST(ESM4PlayerMechanics, ScriptedTrainingMatchesOriginalLevelAndExperienceLoopW
     EXPECT_THROW(ESM4::trainScriptedSkill(20, std::numeric_limits<float>::quiet_NaN(), 1,
         false, false, settings), std::invalid_argument);
 }
+
+TEST(ESM4PlayerMechanics, SkillBookAwardPreservesPartialExperienceAndDoesNotExhaustAtCap)
+{
+    const auto reward = ESM4::trainBookSkill(37, .6f);
+    EXPECT_EQ(reward.mBase, 38);
+    EXPECT_NEAR(reward.mExperience, .6f, .001f);
+    const auto cap = ESM4::trainBookSkill(100, .6f);
+    EXPECT_EQ(cap.mBase, 100);
+    EXPECT_NEAR(cap.mExperience, .6f, .001f);
+    EXPECT_EQ(ESM4::trainBookSkill(99, .6f).mBase, 100);
+    EXPECT_THROW(ESM4::trainBookSkill(-1, 0.f), std::invalid_argument);
+    EXPECT_THROW(ESM4::trainBookSkill(35, -1.f), std::invalid_argument);
+    EXPECT_THROW(ESM4::trainBookSkill(35, std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+}

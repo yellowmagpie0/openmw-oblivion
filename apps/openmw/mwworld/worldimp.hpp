@@ -631,7 +631,9 @@ namespace MWWorld
 
         // Explicit native Player skill use; fractional XP lives in shared NPC stats.
         void useOblivionPlayerSkill(unsigned skill, unsigned usage, float scale = 1.f);
-        void updateOblivionPlayerSkill(unsigned skill, std::int32_t count, float experience = 0.f);
+        void updateOblivionPlayerSkill(unsigned skill, std::int32_t count, float experience = 0.f,
+            const ESM::FormKey& skillBook = {});
+        bool readOblivionSkillBook(const Ptr& book);
 
         const MWMechanics::OblivionAiService* getOblivionAiService() const { return mOblivionAi.get(); }
         OblivionScriptManager* getOblivionScriptManager() { return mOblivionScriptManager.get(); }

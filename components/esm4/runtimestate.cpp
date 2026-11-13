@@ -2742,6 +2742,12 @@ namespace ESM4
         if (mVersion >= 3
             && (mPlayer.mName.size() > 1024 || mPlayer.mRace.isNull() || mPlayer.mClass.isNull()))
             throw std::runtime_error("Invalid TES4 runtime-state character-generation state");
+        if (mPlayer.mAwardedSkillBooks.size() > sMaximumCollectionSize
+            || (mVersion < 101 && !mPlayer.mAwardedSkillBooks.empty()))
+            throw std::runtime_error("Invalid TES4 awarded skill-book history/version");
+        for (const auto& book : mPlayer.mAwardedSkillBooks)
+            if (!book.isContent() || ESM::FormKey::deserialize(book.serialize()) != book)
+                throw std::runtime_error("Invalid TES4 awarded skill-book base");
         if (mPlayer.mCharacterGeneration)
         {
             if (mVersion < 80)
@@ -3188,6 +3194,11 @@ namespace ESM4
             }
         }
 
+        if (mVersion >= 101)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mPlayer.mAwardedSkillBooks.size()));
+            for (const auto& book : mPlayer.mAwardedSkillBooks) writeKey(writer, book);
+        }
         writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mGlobals.size()));
         for (const auto& [key, value] : mGlobals)
         {
@@ -4347,6 +4358,13 @@ namespace ESM4
             }
         }
 
+        if (result.mVersion >= 101)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+                if (!result.mPlayer.mAwardedSkillBooks.insert(readKey(reader)).second)
+                    throw std::runtime_error("Duplicate TES4 awarded skill-book base");
+        }
         const std::uint32_t globalCount = reader.count();
         for (std::uint32_t i = 0; i < globalCount; ++i)
         {
@@ -5911,6 +5929,18 @@ namespace ESM4
                 stream << ']';
             }
             stream << ",\"recommended_class\":\"" << escapeJson(generation.mRecommendedClass.serialize()) << "\"}";
+        }
+        if (!mPlayer.mAwardedSkillBooks.empty())
+        {
+            stream << ",\"awarded_skill_books\":[";
+            bool first = true;
+            for (const auto& book : mPlayer.mAwardedSkillBooks)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << '"' << escapeJson(book.serialize()) << '"';
+            }
+            stream << ']';
         }
         stream << "},\"globals\":{";
         index = 0;

@@ -13,6 +13,7 @@
 
 #include "class.hpp"
 #include "esmstore.hpp"
+#include "worldimp.hpp"
 
 namespace MWWorld
 {
@@ -45,6 +46,13 @@ namespace MWWorld
             MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_Book, getTarget());
 
         MWMechanics::NpcStats& npcStats = player.getClass().getNpcStats(player);
+
+        if (auto* world = dynamic_cast<World*>(MWBase::Environment::get().getWorldOrNull());
+            world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            if (actor == player) world->readOblivionSkillBook(getTarget());
+            return; // Native history/skill authority, independently of legacy used IDs.
+        }
 
         // Skill gain from books
         const ESM::RefId& skill = ref->mBase->mData.mSkillId;

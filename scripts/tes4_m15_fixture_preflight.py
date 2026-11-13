@@ -156,6 +156,8 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
+    Version101 retains skill-book awards by content base; copies preserve this history
+    without rerunning awards, independently of inventory and placed read flags.
     Version100 retains the ingredient actor value and independent Health-drain lifetimes.
     Current-schema copies preserve the owner and Maximum modifier without reapplication.
     Version99 retains Player potion Light sources and their elapsed durations.
@@ -186,7 +188,7 @@ def is_current_fixture_schema(target, current, minimum):
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 100)
+            and target == current and minimum <= target <= 101)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):
