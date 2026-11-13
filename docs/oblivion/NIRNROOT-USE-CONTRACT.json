@@ -1,0 +1,30 @@
+{
+  "status": "Accepted bounded original-content Nirnroot ingestion: consumption, stacking, script retirement, active save and cold recovery",
+  "scope": "Novice Player ingestion of genuinely harvested original Nirnroot04e940",
+  "milestone": "M16 native ingredient effects and persistent state ownership",
+  "source": {
+    "save": "build/oblivion-compat/nirnroot-pickup/normal-second-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "1408e448b4b04a930fc2e2ccb208d2e549f0f04f9b72be93bc157f1ac7d72335"
+  },
+  "requirements": [
+    "Ordinary inventory gesture consumes exactly one earned Nirnroot",
+    "Recoverable Health drain -5 for1second atAlchemy5/Luck50/ResistMagic0; independent uses stack",
+    "Save active lifetime; fresh load retains remaining lifetime and restores original Health without duplicate recovery",
+    "Consumed item script owner retires; survivor retains Found1; seeking-your-roots stage10/counters2/miscstat27=2 remain",
+    "Earned loot, progression, corpse ownership/death count and innate grant remain intact",
+    "Normal and instrumented genuine courses plus appropriate component/engine/Python gates"
+  ],
+  "limits": [
+    "Only novice original Nirnroot ingestion is enrolled. General Wortcraft, higher skills, resistance, Alchemy XP and all four authored effects remain outside this chunk.",
+    "General inventory transfer/removal event lifetime is deferred. This chunk retires the actually consumed singleton owner at an idle script boundary.",
+    "Schema100 identifies ingredient effect AV; schema92-99 Fatigue effects migrate with AV10. Authored EFIT20/120 is not eating potency."
+  ],
+  "baseline": {
+    "course": "normal-use-baseline-04",
+    "save_sha256": "56dec3ecb6ea95e0068b7a27943d6aa55aef71bf44d923ecba39f4ca1f63cf4e",
+    "result": "Same ordinary inventory gesture leaves two Nirnroots and Health110: missing functionality"
+  },
+  "oracle": "NIRNROOT-USE-ORACLE.json",
+  "verification": "NIRNROOT-USE-VERIFICATION.json",
+  "remaining": []
+}

@@ -1,0 +1,133 @@
+{
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "controls": {
+    "alchemy": 5,
+    "base_alchemy": 5,
+    "luck": 50,
+    "resist_magic": 0,
+    "godmode": false,
+    "baseline_health": 180
+  },
+  "observations": {
+    "first_use": {
+      "stock_before": 2,
+      "stock_after": 1,
+      "active_effect": "Drain Health",
+      "ui_magnitude": 5,
+      "health": 175,
+      "base_health": 180
+    },
+    "second_use": {
+      "stock_after": 0,
+      "ui_magnitude": 10
+    },
+    "repeat": {
+      "health_before": 180,
+      "health_during": 175,
+      "health_after": 180,
+      "duration": 1,
+      "elapsed_at_inspection": 0.1,
+      "memory_magnitude": -5
+    }
+  },
+  "duration_evidence": "native-active-memory.json",
+  "recovery_evidence": "native-repeat-confirmed-expired.png",
+  "correction": "Small console font initially misread Health180 as190; clear final console history confirms180 before/after. Earlier Alchemy setup correction recorded separately; corrected before any consumption.",
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "load_order": [
+      "Oblivion.esm"
+    ],
+    "records": [
+      {
+        "type": "MGEF",
+        "id": "00186d",
+        "payload_sha256": "6a1a3422039971c8937b4dfdf81f500adb10721afd081e3f47c2da6da7191b65",
+        "editor_id": "DRHE",
+        "flags": "01001c77",
+        "base_cost": 0.8999999761581421,
+        "associated": 8,
+        "school": 2,
+        "resistance": 64
+      },
+      {
+        "type": "INGR",
+        "id": "04e940",
+        "payload_sha256": "1d4f5a9e238992e0cf747b6acd06d64bc91b4b3597bcd4fdc869bf7b2e09560b",
+        "editor_id": "MS39Nirnroot",
+        "script": "0eed76",
+        "enit": [
+          0,
+          3
+        ],
+        "effects": [
+          {
+            "code": "DRHE",
+            "magnitude": 20,
+            "area": 0,
+            "duration": 120,
+            "range": 0,
+            "actor_value": 8
+          },
+          {
+            "code": "DRFA",
+            "magnitude": 20,
+            "area": 0,
+            "duration": 120,
+            "range": 0,
+            "actor_value": 10
+          },
+          {
+            "code": "DRAT",
+            "magnitude": 5,
+            "area": 0,
+            "duration": 120,
+            "range": 0,
+            "actor_value": 3
+          },
+          {
+            "code": "DRAT",
+            "magnitude": 5,
+            "area": 0,
+            "duration": 120,
+            "range": 0,
+            "actor_value": 4
+          }
+        ]
+      }
+    ]
+  },
+  "xobse_layout_revision": "f64a8fa0481e24b3e159d276b29b721a548876bf",
+  "layout": {
+    "Actor_MagicTarget": "0x68",
+    "GetEffectList": "0x66b0b0",
+    "list_member": "MagicTarget+0x17c",
+    "ActiveEffect_elapsed": "0x04",
+    "ActiveEffect_magnitude": "0x18",
+    "ActiveEffect_duration": "0x1c"
+  },
+  "boundary": "Read-only original process inspection and actual inventory use in isolated console-controlled original probe. Not a fork runtime acceptance fixture.",
+  "artifacts_root": "build/oblivion-compat/nirnroot-use/original-01",
+  "probe_plan": {
+    "question": "Can the original Player consume scripted Nirnroot, and which effects/magnitudes/durations does eating apply at Alchemy5/Luck50?",
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "ingredient": "04e940",
+    "controls": [
+      "Named copy of pristine save, master only",
+      "Console placement/stats/item setup isolated from fork acceptance",
+      "Alchemy5, Luck50, ResistMagic0; baseline Health restored; combat AI stopped",
+      "Actual inventory use first; pause menus/console for effect inspection"
+    ],
+    "tolerances": {
+      "resource_absolute": 0.1,
+      "UI_remaining_seconds": 1
+    },
+    "boundary": "Controlled original-game mechanic probe, not normal-input fork acceptance. Do not infer eating inputs from authored EFIT. No original save overwritten; Documents tree and Plugins.txt restored exactly."
+  }
+}

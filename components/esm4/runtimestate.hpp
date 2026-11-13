@@ -78,7 +78,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 99;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 100;
 
     struct RuntimeContentIdentity
     {
@@ -370,6 +370,8 @@ namespace ESM4
         float mElapsed = 0;
         float mMagnitude = 5.f;
         float mDuration = 1.f;
+        // v100: Health is a recoverable drain; Fatigue keeps its timed damage/restoration.
+        std::uint8_t mActorValue = 10;
         friend bool operator==(const RuntimeIngredientRestoration&, const RuntimeIngredientRestoration&) = default;
     };
 

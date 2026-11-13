@@ -1204,6 +1204,15 @@ namespace MWWorld
         return execute(program, key, key, event, keyFor(actor));
     }
 
+    void OblivionScriptManager::retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept
+    {
+        // No script frame survives this UI consumption boundary. Erasure has
+        // no allocation/callback; other ingredient instances retain locals.
+        for (auto it = mInstances.begin(); it != mInstances.end(); )
+            if (it->first.mContext == owner) it = mInstances.erase(it);
+            else ++it;
+    }
+
     void OblivionScriptManager::update(double secondsPassed)
     {
         requireMutableRuntime();

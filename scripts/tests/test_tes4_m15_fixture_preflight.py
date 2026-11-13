@@ -938,9 +938,10 @@ class CurrentFixtureSchemaTests(unittest.TestCase):
             self.assertTrue(is_current_fixture_schema(97, 97, minimum))
             self.assertTrue(is_current_fixture_schema(98, 98, minimum))
             self.assertTrue(is_current_fixture_schema(99, 99, minimum))
+            self.assertTrue(is_current_fixture_schema(100, 100, minimum))
             self.assertTrue(is_current_fixture_schema(79, 79, minimum))
             self.assertTrue(is_current_fixture_schema(78, 78, minimum))
             self.assertTrue(is_current_fixture_schema(77, 77, minimum))
-            for target, current in ((77, 78), (78, 77), (100, 100), (minimum - 1, minimum - 1),
+            for target, current in ((77, 78), (78, 77), (101, 101), (minimum - 1, minimum - 1),
                                     (True, 1), (78., 78), (78, 78.)):
                 self.assertFalse(is_current_fixture_schema(target, current, minimum))

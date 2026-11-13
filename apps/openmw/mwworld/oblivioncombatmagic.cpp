@@ -12,6 +12,7 @@
 #include "../mwbase/luamanager.hpp"
 #include "projectilemanager.hpp"
 #include "oblivionprofileservices.hpp"
+#include "oblivionscriptmanager.hpp"
 #include "oblivionactorstats.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
@@ -101,6 +102,29 @@ namespace MWWorld
         return {};
     }
 
+    namespace
+    {
+        // Bounded original Nirnroot food ingestion. Authored 20/120 EFIT is
+        // not Wortcraft potency; original novice use resolves -5 Health/1s.
+        bool supportsNirnrootDrain(const ESMStore& store, const ESM4::Ingredient& ingredient)
+        {
+            const auto key = store.get<ESM4::Ingredient>().findFormKey(ESM::RefId(ingredient.mId));
+            if (!key || *key != ESM::FormKey::content("Oblivion.esm", 0x4e940)
+                || (ingredient.mFlags & ESM4::Rec_Deleted) || ingredient.mEffects.empty()
+                || (ingredient.mEnchantment.flags & 0xff) != 3) return false;
+            if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_INGR)) return false;
+            const auto& effect = ingredient.mEffects.front();
+            const auto* definition = ingredientEffectDefinition(store, effect.mId);
+            return effect.mId == ESM::fourCC("DRHE") && effect.mRange == 0 && !effect.mArea
+                && effect.mMagnitude == 20 && effect.mDuration == 120 && effect.mActorValue == 8
+                && !effect.mScriptEffect && definition && definition->mData
+                && !definition->mData->mAssociatedForm && definition->mData->mAssociatedData == 8
+                && definition->mData->mFlags == 0x01001c77 && definition->mData->mSchool == 2
+                && definition->mData->mResistanceActorValue == 64;
+        }
+    }
+
     std::string describeOblivionIngredient(MWBase::World& world, const ConstPtr& item)
     {
         const auto& store = world.getStore();
@@ -131,8 +155,16 @@ namespace MWWorld
         if (item.getContainerStore() != &inventory) return false;
         const auto& store = world.getStore();
         const auto* ingredient = store.get<ESM4::Ingredient>().search(item.getCellRef().getRefId());
-        const auto profile = ingredient ? resolveOblivionIngredientFatigue(store, *ingredient) : std::nullopt;
+        const bool healthDrain = ingredient && supportsNirnrootDrain(store, *ingredient);
+        const auto profile = healthDrain ? std::optional<ESM4::IngredientFatigueProfile>{{-5.f, 1.f}}
+            : ingredient ? resolveOblivionIngredientFatigue(store, *ingredient) : std::nullopt;
         if (!profile) return false;
+        if (healthDrain && (combat->getPlayerValue(19) != 5.f || combat->getPlayerValue(7) != 50.f
+                || combat->getPlayerValue(64) != 0.f)) return false;
+        const auto scriptOwner = item.getCellRef().getNativeScriptOwner();
+        auto* scripts = native->getOblivionScriptManager();
+        if (!scriptOwner.isNull() && (item.getCellRef().getCount() != 1
+                || !scripts || !scripts->canRetireConsumedInventoryOwner())) return false;
         if (*profile == ESM4::NoviceIngredientFatigueDamage
             && (combat->getPlayerValue(19) != 5.f || combat->getPlayerValue(7) != 50.f
                 || combat->getPlayerValue(64) != 0.f)) return false;
@@ -141,7 +173,11 @@ namespace MWWorld
         const auto* life = combat->findActorLife(ESM::FormKey::dynamic("player", 1));
         if (!key || !before || !life || life->mPhase != ESM4::ActorLifePhase::Alive) return false;
         auto candidate = *before;
-        candidate.mIngredientRestoration.push_back({*key, 0.f, profile->mMagnitude, profile->mDuration});
+        candidate.mIngredientRestoration.push_back(
+            {*key, 0.f, profile->mMagnitude, profile->mDuration, std::uint8_t(healthDrain ? 8 : 10)});
+        if (healthDrain)
+            candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner, 8,
+                ESM4::ActorValueModifier::Maximum, profile->mMagnitude);
         candidate.validate();
         const auto settings = resolveOblivionPlayerDynamicBaseSettings(store);
         auto debit = inventory.prepareItemRemoval(item, 1);
@@ -152,6 +188,7 @@ namespace MWWorld
         MWBase::Environment::get().getWorldModel()->registerPtr(item);
         combat->publishPlayerValues(world.getPlayer(), std::move(candidate), settings);
         if (!debit->commit()) throw std::logic_error("native ingredient debit changed during publication");
+        if (!scriptOwner.isNull()) scripts->retireConsumedInventoryOwner(scriptOwner);
         Log(Debug::Info) << "TES4 ingredient consumed: ingredient=" << key->serialize()
             << " magnitude=" << profile->mMagnitude << " duration=" << profile->mDuration;
         MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
@@ -165,7 +202,10 @@ namespace MWWorld
             for (const auto& effect : actor.mIngredientRestoration)
             {
                 const auto* ingredient = store.get<ESM4::Ingredient>().search(effect.mIngredient);
-                const auto profile = ingredient ? resolveOblivionIngredientFatigue(store, *ingredient) : std::nullopt;
+                const auto profile = ingredient && effect.mActorValue == 8 && supportsNirnrootDrain(store, *ingredient)
+                    ? std::optional<ESM4::IngredientFatigueProfile>{{-5.f, 1.f}}
+                    : ingredient && effect.mActorValue == 10 ? resolveOblivionIngredientFatigue(store, *ingredient)
+                    : std::nullopt;
                 if (!profile || profile->mMagnitude != effect.mMagnitude || profile->mDuration != effect.mDuration)
                     throw std::invalid_argument("saved native ingredient Fatigue profile no longer resolves");
             }

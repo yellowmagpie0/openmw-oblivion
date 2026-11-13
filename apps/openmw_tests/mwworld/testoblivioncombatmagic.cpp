@@ -837,3 +837,30 @@ TEST(OblivionMagicContent, CharmBelongsOnlyToRecipientAndCasterAndRejectsPartial
     EXPECT_FALSE(MWWorld::readOblivionCharm(reference));
     EXPECT_EQ(reference.mCustomState.size(), 1u);
 }
+
+TEST(OblivionMagicContent, NirnrootHealthDrainRechecksWinningIngredientAndEffect)
+{
+    Fixture fixture;
+    const auto definition = [](std::uint32_t flags) {
+        return record(ESM4::REC_MGEF, 0x186d,
+            sub(ESM::fourCC("EDID"), std::string("DRHE\0", 5))
+            + sub(ESM::fourCC("DATA"), bytes(flags) + bytes(.9f) + bytes(8u) + bytes(2u) + bytes(64)
+                + std::string(44, '\0')));
+    };
+    fixture.load("oblivion.esm", {}, {definition(0x01001c77), record(ESM4::REC_INGR, 0x4e940,
+        sub(ESM::fourCC("ENIT"), bytes(0u) + bytes(3u))
+        + sub(ESM::fourCC("SCRI"), bytes(0xeed76u))
+        + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("DRHE")))
+        + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("DRHE")) + bytes(20u)
+            + bytes(0u) + bytes(120u) + bytes(0u) + bytes(8u)))});
+    ESM4::RuntimeState state;
+    ESM4::RuntimeActorValues actor;
+    actor.mIngredientRestoration = {{ESM::FormKey::content("oblivion.esm", 0x4e940), .25f, -5.f, 1.f, 8}};
+    state.mNativeActorValues = {actor};
+    EXPECT_NO_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state));
+    state.mNativeActorValues[0].mIngredientRestoration[0].mActorValue = 10;
+    EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state), std::invalid_argument);
+    state.mNativeActorValues = {actor};
+    fixture.load("patch.esp", {"oblivion.esm"}, {definition(0x01001c76)});
+    EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state), std::invalid_argument);
+}

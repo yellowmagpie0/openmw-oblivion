@@ -594,6 +594,24 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(next(a for a in state_io.decode_payload(state_io.encode_payload(old))["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"],
                          next(a for a in old["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"])
 
+    def test_ingredient100_preserves_separate_health_drains(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 100
+        effect = dict(ingredient="content:oblivion.esm:04e940", elapsed=.25,
+                      magnitude=-5, duration=1, actor_value=8)
+        state["native_actor_values"][0]["ingredient_restoration"] = [effect, dict(effect, elapsed=.5)]
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(next(a for a in restored["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"],
+                         state["native_actor_values"][0]["ingredient_restoration"])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for change in ({"elapsed": 1}, {"actor_value": 3}, {"duration": 120}, {"magnitude": 5}):
+            bad = copy.deepcopy(state)
+            bad["native_actor_values"][0]["ingredient_restoration"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 99
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     def test_scroll_chameleon93_preserves_sources_and_rejects_invented_lifetimes(self):
         state = self.combat_controller_state()
         state["schema_version"] = 93

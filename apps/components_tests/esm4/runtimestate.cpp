@@ -6869,3 +6869,37 @@ TEST(ESM4RuntimeState, InventoryScript97PreservesItemIdentityAndRejectsSharedOrD
     bad.mNextDynamicSerial = 1;
     EXPECT_ANY_THROW(bad.serializeBinary());
 }
+
+TEST(ESM4RuntimeState, Ingredient100PersistsSeparateHealthDrainsAndRejectsLegacyLoss)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mIngredientRestoration = {
+        {ESM::FormKey::content("oblivion.esm", 0x4e940), .25f, -5.f, 1.f, 8},
+        {ESM::FormKey::content("oblivion.esm", 0x4e940), .5f, -5.f, 1.f, 8}};
+    state.mNativeActorValues = {actor};
+    const auto data = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(data);
+    EXPECT_EQ(restored.mNativeActorValues, state.mNativeActorValues);
+    EXPECT_EQ(restored.serializeBinary(), data);
+    EXPECT_NE(restored.canonicalJson().find("\"actor_value\":8"), std::string::npos);
+    state.mVersion = 99;
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mVersion = 100;
+    for (const auto& bad : {
+            ESM4::RuntimeIngredientRestoration{actor.mIngredientRestoration[0].mIngredient, 1.f, -5.f, 1.f, 8},
+            ESM4::RuntimeIngredientRestoration{actor.mIngredientRestoration[0].mIngredient, 0.f, -5.f, 120.f, 8},
+            ESM4::RuntimeIngredientRestoration{actor.mIngredientRestoration[0].mIngredient, 0.f, -5.f, 1.f, 3}})
+    {
+        state.mNativeActorValues[0].mIngredientRestoration = {bad};
+        EXPECT_ANY_THROW(state.serializeBinary());
+    }
+    state.mVersion = 99;
+    state.mNativeActorValues[0].mIngredientRestoration = {
+        {ESM::FormKey::content("oblivion.esm", 0x33681), .25f}};
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorValues,
+        state.mNativeActorValues);
+}

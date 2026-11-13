@@ -67,6 +67,9 @@ namespace MWWorld
         bool dispatchInventoryEquip(const Ptr& actor, const Ptr& item);
         bool hasInventoryAddEvent(const ESM::FormKey& base) const;
         bool dispatchInventoryAdd(const Ptr& actor, const Ptr& item);
+        bool canRetireConsumedInventoryOwner() const { return !mDepth && !mRetainedRuntime; }
+        // Caller validates idle admission before publishing its inventory debit.
+        void retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept;
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 99
+CURRENT_VERSION = 100
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1130,11 +1130,14 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError("TES4 ingredient restoration requires Player ownership and version92")
         for effect in food:
             if not isinstance(effect, dict) or set(effect) not in (
-                    {"ingredient", "elapsed"}, {"ingredient", "elapsed", "magnitude", "duration"}):
+                    {"ingredient", "elapsed"}, {"ingredient", "elapsed", "magnitude", "duration"},
+                    {"ingredient", "elapsed", "magnitude", "duration", "actor_value"}):
                 raise RuntimeStateError("Invalid TES4 ingredient restoration state")
             magnitude = native_float(effect.get("magnitude", 5))
             duration = native_float(effect.get("duration", 1))
-            if ((magnitude, duration) not in ((5, 1), (-1, 3))
+            actor_value = effect.get("actor_value", 10)
+            allowed = ((5, 1), (-1, 3)) if actor_value == 10 else ((-5, 1),) if actor_value == 8 else ()
+            if (("actor_value" in effect and version < 100) or (magnitude, duration) not in allowed
                     or (version < 98 and ("magnitude" in effect or "duration" in effect))):
                 raise RuntimeStateError("Invalid TES4 resolved ingredient potency/version")
             key = effect["ingredient"]
@@ -3146,6 +3149,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         magnitude, duration = reader.unpack("<f"), reader.unpack("<f")
                         if (magnitude, duration) != (5, 1):
                             effect.update(magnitude=magnitude, duration=duration)
+                    if version >= 100:
+                        actor_value = reader.unpack("<B")
+                        if actor_value != 10:
+                            effect["actor_value"] = actor_value
                     food.append(effect)
                 if food:
                     actor["ingredient_restoration"] = food
@@ -4037,6 +4044,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     if version >= 98:
                         writer.pack("<f", effect.get("magnitude", 5))
                         writer.pack("<f", effect.get("duration", 1))
+                    if version >= 100:
+                        writer.pack("<B", effect.get("actor_value", 10))
             if version >= 93:
                 chameleon = actor.get("scroll_chameleon", [])
                 writer.pack("<I", len(chameleon))

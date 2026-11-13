@@ -1144,7 +1144,15 @@ namespace ESM4
             if (!effect.mIngredient.isContent()
                 || ESM::FormKey::deserialize(effect.mIngredient.serialize()) != effect.mIngredient)
                 throw std::runtime_error("Invalid TES4 consumed ingredient identity");
-            advanceIngredientFatigue(effect.mElapsed, 0.f, {effect.mMagnitude, effect.mDuration});
+            if (effect.mActorValue == 8)
+            {
+                if (effect.mMagnitude != -5.f || effect.mDuration != 1.f
+                    || !std::isfinite(effect.mElapsed) || effect.mElapsed < 0 || effect.mElapsed >= 1.f)
+                    throw std::runtime_error("Invalid TES4 ingredient Health drain");
+            }
+            else if (effect.mActorValue == 10)
+                advanceIngredientFatigue(effect.mElapsed, 0.f, {effect.mMagnitude, effect.mDuration});
+            else throw std::runtime_error("Unsupported TES4 ingredient actor value");
         }
         if (mScrollChameleon.size() > sMaximumCollectionSize
             || (!mScrollChameleon.empty() && mOwner != ActorValueOwner::Player))
@@ -2141,6 +2149,10 @@ namespace ESM4
                 throw std::runtime_error("TES4 potion attributes require schema94");
             if (mVersion < 93 && !actor.mScrollChameleon.empty())
                 throw std::runtime_error("TES4 scroll Chameleon requires schema93");
+            if (mVersion < 100)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mActorValue != 10)
+                        throw std::runtime_error("TES4 ingredient Health drain requires schema100");
             if (mVersion < 98)
                 for (const auto& effect : actor.mIngredientRestoration)
                     if (effect.mMagnitude != 5.f || effect.mDuration != 1.f)
@@ -3531,6 +3543,7 @@ namespace ESM4
                             writer.floating(effect.mMagnitude);
                             writer.floating(effect.mDuration);
                         }
+                        if (mVersion >= 100) writer.integer(effect.mActorValue);
                     }
                 }
                 if (mVersion >= 93)
@@ -4796,6 +4809,7 @@ namespace ESM4
                             effect.mMagnitude = reader.float32();
                             effect.mDuration = reader.float32();
                         }
+                        if (result.mVersion >= 100) effect.mActorValue = reader.integer<std::uint8_t>();
                         actor.mIngredientRestoration.push_back(effect);
                     }
                 }
@@ -6258,6 +6272,8 @@ namespace ESM4
                         stream << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed;
                         if (mVersion >= 98 && (effect.mMagnitude != 5.f || effect.mDuration != 1.f))
                             stream << ",\"magnitude\":" << effect.mMagnitude << ",\"duration\":" << effect.mDuration;
+                        if (mVersion >= 100 && effect.mActorValue != 10)
+                            stream << ",\"actor_value\":" << unsigned(effect.mActorValue);
                         stream << '}';
                     }
                     stream << ']';

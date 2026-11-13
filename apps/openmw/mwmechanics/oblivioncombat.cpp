@@ -5788,20 +5788,29 @@ namespace MWMechanics
         // the World supplies external preparation before its publication.
         void prepareIngredientRestoration(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
         {
-            if (dead) { values.mIngredientRestoration.clear(); return; }
-            if (!process || duration == 0) return;
-            for (auto& effect : values.mIngredientRestoration)
+            if (!dead && (!process || duration == 0)) return;
+            for (auto it = values.mIngredientRestoration.begin(); it != values.mIngredientRestoration.end(); )
             {
-                const auto step = ESM4::advanceIngredientFatigue(
-                    effect.mElapsed, duration, {effect.mMagnitude, effect.mDuration});
-                effect.mElapsed = step.mElapsed;
-                values.mValues[10] = ESM4::changeActorValueModifier(values.mValues[10], values.mOwner, 10,
-                    ESM4::ActorValueModifier::Damage, step.mAmount);
-                Log(Debug::Verbose) << "TES4 ingredient restoration: ingredient=" << effect.mIngredient.serialize()
-                    << " amount=" << step.mAmount << " elapsed=" << step.mElapsed;
+                if (it->mActorValue == 8)
+                {
+                    it->mElapsed = std::min(it->mDuration, it->mElapsed + duration);
+                    if (!dead && it->mElapsed < it->mDuration) { ++it; continue; }
+                    values.mValues[8] = ESM4::changeActorValueModifier(values.mValues[8], values.mOwner, 8,
+                        ESM4::ActorValueModifier::Maximum, -it->mMagnitude);
+                }
+                else if (!dead)
+                {
+                    const auto step = ESM4::advanceIngredientFatigue(
+                        it->mElapsed, duration, {it->mMagnitude, it->mDuration});
+                    it->mElapsed = step.mElapsed;
+                    values.mValues[10] = ESM4::changeActorValueModifier(values.mValues[10], values.mOwner, 10,
+                        ESM4::ActorValueModifier::Damage, step.mAmount);
+                    Log(Debug::Verbose) << "TES4 ingredient restoration: ingredient=" << it->mIngredient.serialize()
+                        << " amount=" << step.mAmount << " elapsed=" << step.mElapsed;
+                    if (!step.mFinished) { ++it; continue; }
+                }
+                it = values.mIngredientRestoration.erase(it);
             }
-            std::erase_if(values.mIngredientRestoration,
-                [](const auto& effect) { return effect.mElapsed >= effect.mDuration; });
         }
 
         void prepareScrollChameleon(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
@@ -7668,6 +7677,10 @@ namespace MWMechanics
                 throw std::invalid_argument("native potion attributes require an Oblivion v94+ save");
             if (state.mVersion < 93 && !actor.mScrollChameleon.empty())
                 throw std::invalid_argument("native scroll Chameleon requires an Oblivion v93+ save");
+            if (state.mVersion < 100)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mActorValue != 10)
+                        throw std::invalid_argument("ingredient Health drain requires an Oblivion v100+ save");
             if (state.mVersion < 98)
                 for (const auto& effect : actor.mIngredientRestoration)
                     if (effect.mMagnitude != 5.f || effect.mDuration != 1.f)
