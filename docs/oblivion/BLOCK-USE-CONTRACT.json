@@ -1,0 +1,25 @@
+{
+  "feature": "Ordinary Player Block use against original Mudcrab06c927",
+  "milestone": "M15 remains open",
+  "real_content": {
+    "reference": "content:oblivion.esm:06c927",
+    "creature": "content:oblivion.esm:000b7f",
+    "weapon": "content:oblivion.esm:090613",
+    "skill": "content:oblivion.esm:000040"
+  },
+  "behavior": [
+    "Train receiver native Block15 once after an admitted contact commits and before OnHit callbacks.",
+    "Use captured pre-wear blocking identity; positive absorption or accepted empty-hand blocks train.",
+    "No award for merely holding Block, unblocked hits, misses, stale/rejected contacts or replayed consumed strikes.",
+    "Preserve current native bases, other skills/counters, wear/reactions, disease authority and save format."
+  ],
+  "acceptance": [
+    "Actual sustained weapon block: original Mudcrab alive known-none, Player30/XP0; baseline2 blocked bites at0.15 absorption grant0; fixed uses1.25 each.",
+    "Cold process load without replay, plus genuine no-block contact and no-contact held controls.",
+    "Normal and instrumented gameplay, focused checks and appropriate engine integration."
+  ],
+  "limits": [
+    "No completed level-crossing, projectile, shield, zero-absorption, god-mode or terminal recipient gameplay acceptance from this real course.",
+    "Current melee contact route only; existing projectile route requires separate bounded work."
+  ]
+}

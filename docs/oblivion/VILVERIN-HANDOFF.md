@@ -4,26 +4,36 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open; do not merge independent save branches.
 
-Latest accepted chunk: original Mudcrab Swamp Fever098415, selected naturally
-from LVSP181d18 by carrier06c92a. Compound DRAT Strength10/Endurance10 now
-transfers as one owned disease. Attributes remain base55 and become modified45;
-Health/Fatigue/carrying capacity change110/170/275→90/150/225. Cold process load
-retains both effects once. Endurance life transitions and contact publication
-are atomic, including low-Health and essential cases. The real case also required
-fixing native Creature BNAM physics scale: Mudcrab0.5 previously scaled rendering
-and reach16 but left its collision body full-size, preventing real bites.
-[Contract](SWAMP-FEVER-CONTACT-CONTRACT.json), [original evidence](SWAMP-FEVER-CONTACT-ORACLE.json),
-[verification](SWAMP-FEVER-CONTACT-VERIFICATION.json).
+Latest accepted chunk: ordinary melee Block experience using original Mudcrab
+06c927 and Rusty Iron War Axe090613. Two actual15%-absorbed bites now grant
+2.5XP (1.25 each) instead of0, with identical damage/wear. Native Block30 remains
+base30; other skills, advancement counters and original ability/source ownership
+are unchanged. Held-block cold load retains2.5 without replay; unblocked bites
+and held-only controls grant0. Normal and instrumented four-case courses pass;
+normal2284 and full audited instrumented2284 engine inventories pass. Original
+caller36cases and use-dispatch18cases independently establish the award rule.
+[Contract](BLOCK-USE-CONTRACT.json), [oracle](BLOCK-USE-ORACLE.json),
+[verification](BLOCK-USE-VERIFICATION.json). Projectile Block XP, level crossing,
+shield and zero-absorption gameplay remain outside this bounded acceptance.
 
-Normal/instrumented infection and cold restart pass; fresh normal2284 and complete
-instrumented2284 engine inventories pass. Reused unchanged component/codec checks
-retain original provenance. Engine sanitizer gates enable leak detection;
-rendered courses disable it. Schema101 unchanged. Selection, transfer and VMOD
-original evidence is reused with its declared boundaries; no new original launch
-or exact RNG/Havok parity claim. Failed geometry/input/fixture attempts and the
-interrupted build supervisor remain in the receipt. Scope stays attribute-only
-recoverable self DRAT on supported singleton direct LVSP; general disease cure,
-UI/statistics and NPC recipients remain open.
+Block continuation (earlier disease-free shore branch):
+`build/oblivion-compat/block-use/normal-block-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `c3510f8b3600bd229a3fca2ea6289659ee5e590df0a625ea63bc5f49619b333d`.
+Player alive Health71.319/110, Block30/XP2.5, Mudcrab06c927 still alive8.69796,
+known-none source retained. This is distinct from the infected carrier branch.
+
+Previous accepted chunk: original Mudcrab Swamp Fever098415, selected naturally
+by06c92a from LVSP181d18. One disease owns ordered Strength10/Endurance10 drains:
+base55→modified45; Health/Fatigue/capacity110/170/275→90/150/225. Cold load keeps
+both once. The real case also required applying BNAM0.5 to the physical body,
+which previously remained full-size and prevented bites within scaled reach16.
+[Contract](SWAMP-FEVER-CONTACT-CONTRACT.json), [original evidence](SWAMP-FEVER-CONTACT-ORACLE.json),
+[verification](SWAMP-FEVER-CONTACT-VERIFICATION.json). Attribute-only recoverable
+self DRAT on supported singleton LVSP; general cure/UI/statistics and NPC
+recipients remain open. Schema101 unchanged. Original evidence retains declared
+boundaries; no new original launch or exact RNG/Havok claim. Rendered sanitizer
+courses disable leak detection; engine gates enable it. Unchanged component and
+codec checks retain their original provenance. Retained failures are in receipts.
 
 Real-contact continuation:
 `build/oblivion-compat/swamp-fever-contact/normal-infected-retreat-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
@@ -35,12 +45,11 @@ The healthier precontact checkpointa8519941… lives under
 its native actor source was selected naturally after genuine sewer-exitcb89…
 without native authority for06c927/06c92a. No seed setters or unknown-owner repair.
 
-Next bounded issue to investigate: held Block during actual carrier contacts
-produced victim_action−1 and block_fraction0. Use the original Rusty Iron War Axe
-and real Mudcrab to establish whether ordinary input reaches native block state
-before choosing an implementation. Do not infer a formula bug from zero blocks.
-The current compound-disease chunk is finished; avoid expanding it further.
-Evidence root `build/oblivion-compat/swamp-fever-contact`.
+Next action: audit original worn armor and its skill-use policy, then choose
+an actual hit case from the verified unblocked course. Armor conditions changed
+there while other skill experience remained unchanged. Both current bounded
+chunks are complete; avoid expanding their scope. Evidence roots:
+`build/oblivion-compat/block-use` and `build/oblivion-compat/swamp-fever-contact`.
 
 Independent retained continuations:
 

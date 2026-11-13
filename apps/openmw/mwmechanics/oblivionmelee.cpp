@@ -1321,10 +1321,17 @@ namespace MWMechanics
                 && (deltas.mOrdinaryHitArguments->mUsedSkill == 16
                     || deltas.mOrdinaryHitArguments->mUsedSkill == 17)
             ? deltas.mOrdinaryHitArguments->mUsedSkill : -1;
+        // Original blocking-cost caller trains positive absorption, or an
+        // accepted empty-hand block even at zero absorption. Use the cached
+        // pre-wear equipment identity; item break can change the live slots.
+        const bool trainedBlock = !contact->isEmpty() && *contact == playerContact && blockAccepted
+            && (result.mBlockAbsorbedFraction > 0 || (deltas.mOrdinaryHitArguments
+                && deltas.mOrdinaryHitArguments->mBareHandBlock));
         const auto finishCommittedContact = [&] {
             // Train after the strike is consumed, before an OnHit callback can
             // save or change actors. Rejected contacts and misses grant no use.
             if (trainedSkill >= 0) nativeWorld->useOblivionPlayerSkill(trainedSkill, 0);
+            if (trainedBlock) nativeWorld->useOblivionPlayerSkill(15, 0);
             if (!observeEnchantment) return;
             const bool spent = !deltas.mEnchantmentChargeChanges.empty();
             Log(Debug::Verbose) << "M15 weapon enchantment contact: actor=" << actor.serialize()

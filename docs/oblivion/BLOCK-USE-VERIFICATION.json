@@ -1,0 +1,458 @@
+{
+  "status": "Accepted bounded ordinary melee Block experience chunk",
+  "full_milestone_complete": false,
+  "contract": "BLOCK-USE-CONTRACT.json",
+  "original_oracle": "BLOCK-USE-ORACLE.json",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "normal": {
+    "baseline": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/normal-block-baseline-01/block-use-audit.json",
+        "sha256": "89bd8d9076dade11395c867deb8b83d1db70eaed8ec9e47429efc2bd0ed0dbe4"
+      },
+      "result": {
+        "passed": true,
+        "phase": "baseline",
+        "sanitized": false,
+        "source_sha256": "be7030fba79f90ae7c41f168b45b86e17a12f304b165ab7aa961568ea2da5651",
+        "save_sha256": "3effc1c5d1c59d82dc5414d9f609c5bcc63f83c56ff218c8845db6af9e84dd89",
+        "binary_sha256": "8b04f27f9a0169e611d06efe84f2e7054c0229a4b227117fba8b7d1280dae370",
+        "block_base": 30.0,
+        "experience_before": 0.0,
+        "experience_after": 0.0,
+        "blocked_contacts": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=1"
+        ],
+        "all_contacts": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=1"
+        ],
+        "health": 71.31937789916992
+      }
+    },
+    "hit": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/normal-block-hit-01/block-use-audit.json",
+        "sha256": "6b9847d4c64f3f1c66a005bf6f1f7717de47fbf4a292150bec57c82d49f514c8"
+      },
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": false,
+        "source_sha256": "be7030fba79f90ae7c41f168b45b86e17a12f304b165ab7aa961568ea2da5651",
+        "save_sha256": "7b0d105f60afd2cce9788a880b39616ef6eacc44c7a2d6a6f1999059473a328c",
+        "binary_sha256": "ed4c29aef546374c7333eb9c07cbca6ac52e85162d6e88b320621391f2f98701",
+        "block_base": 30.0,
+        "experience_before": 0.0,
+        "experience_after": 2.5,
+        "blocked_contacts": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=1"
+        ],
+        "all_contacts": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=1"
+        ],
+        "health": 71.31937789916992
+      }
+    },
+    "restart": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/normal-block-restart-01/block-use-audit.json",
+        "sha256": "3e5fb714e9b5a4030ecc48311d9fcbcc288b73ccf3bcb5fa3a305d3fa05e93b7"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "7b0d105f60afd2cce9788a880b39616ef6eacc44c7a2d6a6f1999059473a328c",
+        "save_sha256": "c3510f8b3600bd229a3fca2ea6289659ee5e590df0a625ea63bc5f49619b333d",
+        "binary_sha256": "ed4c29aef546374c7333eb9c07cbca6ac52e85162d6e88b320621391f2f98701",
+        "block_base": 30.0,
+        "experience_before": 2.5,
+        "experience_after": 2.5,
+        "blocked_contacts": [],
+        "all_contacts": [],
+        "health": 71.31937789916992
+      }
+    },
+    "unblocked": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/normal-unblocked-hit-01/block-use-audit.json",
+        "sha256": "f5261b51a25438829dc7e31dd65e9d31fe68e3900c00b491f6098411f46a4560"
+      },
+      "result": {
+        "passed": true,
+        "phase": "unblocked",
+        "sanitized": false,
+        "source_sha256": "be7030fba79f90ae7c41f168b45b86e17a12f304b165ab7aa961568ea2da5651",
+        "save_sha256": "74b853157926aad54048d390ba4bb0770b43228afb15053d379a91c126f9480c",
+        "binary_sha256": "ed4c29aef546374c7333eb9c07cbca6ac52e85162d6e88b320621391f2f98701",
+        "block_base": 30.0,
+        "experience_before": 0.0,
+        "experience_after": 0.0,
+        "blocked_contacts": [],
+        "all_contacts": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+        ],
+        "health": 68.99137878417969
+      }
+    },
+    "hold": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/normal-held-only-02/block-use-audit.json",
+        "sha256": "2319c825cf4fb39660511a9e51d8c876a688738ec350b68713f65112139cf653"
+      },
+      "result": {
+        "passed": true,
+        "phase": "hold",
+        "sanitized": false,
+        "source_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+        "save_sha256": "ded65ed482898719367d6c7346ef15face88930ca1f8e0e9e8b13b5dbc2f2f2f",
+        "binary_sha256": "ed4c29aef546374c7333eb9c07cbca6ac52e85162d6e88b320621391f2f98701",
+        "block_base": 30.0,
+        "experience_before": 0.0,
+        "experience_after": 0.0,
+        "blocked_contacts": [],
+        "all_contacts": [],
+        "health": 84.51137924194336
+      }
+    }
+  },
+  "sanitized": {
+    "hit": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/sanitized-block-hit-01/block-use-audit.json",
+        "sha256": "2ec3f4b6fb900cead25032429a2ee1b6968cc8879c5d64896ac0765f2b915c2b"
+      },
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": true,
+        "source_sha256": "be7030fba79f90ae7c41f168b45b86e17a12f304b165ab7aa961568ea2da5651",
+        "save_sha256": "218a2fceaf8d96e54c962940bb13e92fedb938aa918852d7f294209097fde4b0",
+        "binary_sha256": "ac032917ff172b6ba1e4179bd9b325c60120ab2fa1e8cb180c3c1b97d7ac4d13",
+        "block_base": 30.0,
+        "experience_before": 0.0,
+        "experience_after": 2.5,
+        "blocked_contacts": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=1"
+        ],
+        "all_contacts": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=7 health_damage=6.596 fatigue_damage=0 block_fraction=0.15 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=6 armor_condition_writes=1 combat_random_draws=1"
+        ],
+        "health": 71.31937789916992
+      }
+    },
+    "restart": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/sanitized-block-restart-01/block-use-audit.json",
+        "sha256": "1878528d6feb86c40ba7daad65d1be6373117a27a92ef30ef69d346271a8b43e"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "218a2fceaf8d96e54c962940bb13e92fedb938aa918852d7f294209097fde4b0",
+        "save_sha256": "07df654930c23c2830a44becf32578ca1fc61d1e87ec5e1f13a6a1049d5b072e",
+        "binary_sha256": "ac032917ff172b6ba1e4179bd9b325c60120ab2fa1e8cb180c3c1b97d7ac4d13",
+        "block_base": 30.0,
+        "experience_before": 2.5,
+        "experience_after": 2.5,
+        "blocked_contacts": [],
+        "all_contacts": [],
+        "health": 71.31937789916992
+      }
+    },
+    "unblocked": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/sanitized-unblocked-hit-01/block-use-audit.json",
+        "sha256": "f5e5fabec99f862447f71b1415f9c38ae151eea3568b3ec2736cb764973cd57e"
+      },
+      "result": {
+        "passed": true,
+        "phase": "unblocked",
+        "sanitized": true,
+        "source_sha256": "be7030fba79f90ae7c41f168b45b86e17a12f304b165ab7aa961568ea2da5651",
+        "save_sha256": "378095e99e98d3f8b908c88a0433ae42edcaf54af697e837895cfb764567adb1",
+        "binary_sha256": "ac032917ff172b6ba1e4179bd9b325c60120ab2fa1e8cb180c3c1b97d7ac4d13",
+        "block_base": 30.0,
+        "experience_before": 0.0,
+        "experience_after": 0.0,
+        "blocked_contacts": [],
+        "all_contacts": [
+          "id=719 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=2",
+          "id=720 fatigue_cost=7 before=50 after=43 action=3 health_damage=7.76 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=1"
+        ],
+        "health": 68.99137878417969
+      }
+    },
+    "hold": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/sanitized-held-only-01/block-use-audit.json",
+        "sha256": "9478c85c0b966dd23a8406d3688af8b5dee6e8fac7e8671459da68403d144c16"
+      },
+      "result": {
+        "passed": true,
+        "phase": "hold",
+        "sanitized": true,
+        "source_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+        "save_sha256": "b8f34a3bf5ef6f9fc47edba7cb0a3e81ad9b4c66313739e6c6fe401fc3aae495",
+        "binary_sha256": "ac032917ff172b6ba1e4179bd9b325c60120ab2fa1e8cb180c3c1b97d7ac4d13",
+        "block_base": 30.0,
+        "experience_before": 0.0,
+        "experience_after": 0.0,
+        "blocked_contacts": [],
+        "all_contacts": [],
+        "health": 84.51137924194336
+      }
+    }
+  },
+  "gates": {
+    "normal_focused": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/focused-normal-01/verification.json",
+        "sha256": "c9d76fe39209d6c1255036e8dd4fe4ecf20ef07b529711b3cfd74732ecabc9e7"
+      },
+      "source": {
+        "head": "de75ff8ceb9ae5cb5f595478ea934309c09303f3",
+        "source_fingerprint": "f6904ca56a7d6f025268dad2d9a5f2925f868d45f168f17626f837ade2af8c28"
+      },
+      "result": {
+        "engine": {
+          "executed": 9,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.*Skill*:OblivionWorldTest.*Unarmed*Block*:OblivionWorldTest.CreatureArmedContactConsumesOrdinaryAndPowerWindowsOnceWithNativeFatigueCost:OblivionDialogueTest.*Committed*Hit*",
+          "binary_sha256": "546be09245e723990a1b5a3c24f0ba4ee3e762baa4b71ac9c2c8c70beae36f4b",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6eb9aba5bf38111c072fa80588e84e2d83c424ec5a4a5cb5a355f5abd0cd2e5d",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal_full": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/full-normal-01/verification.json",
+        "sha256": "bc7b36e0dc5a267c499b542b80ad92d258edb1888ff3fa2bb4a3050aaa1ae3e6"
+      },
+      "source": {
+        "head": "de75ff8ceb9ae5cb5f595478ea934309c09303f3",
+        "source_fingerprint": "f895885cf5fb183d0942922e040c4120e9659e63a55c4308b80727cbd2f9eb0a"
+      },
+      "result": {
+        "engine": {
+          "executed": 2284,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "546be09245e723990a1b5a3c24f0ba4ee3e762baa4b71ac9c2c8c70beae36f4b",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "8b9ec1fe93a244fe8c4d5d61f2a4971eb681b84a7a70012c3310afc344512086",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized_focused": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/focused-sanitized-01/verification.json",
+        "sha256": "9886bec415feaf227e68eefccb80d76e1cfd7c90aff59ab204a8b24ecf6e9aba"
+      },
+      "source": {
+        "head": "de75ff8ceb9ae5cb5f595478ea934309c09303f3",
+        "source_fingerprint": "f895885cf5fb183d0942922e040c4120e9659e63a55c4308b80727cbd2f9eb0a"
+      },
+      "result": {
+        "engine": {
+          "executed": 9,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.*Skill*:OblivionWorldTest.*Unarmed*Block*:OblivionWorldTest.CreatureArmedContactConsumesOrdinaryAndPowerWindowsOnceWithNativeFatigueCost:OblivionDialogueTest.*Committed*Hit*",
+          "binary_sha256": "6d595997885293c3d820a005406696a69013525185f4cec974c784e63674056b",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "abfc0cd7133a68fc0eab21f44e923cbeb40dec6c296f54caab9ddd91622ca9c6",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized_full": {
+      "receipt": {
+        "path": "build/oblivion-compat/block-use/sanitized-inventory-union.json",
+        "sha256": "ea806afba81b3c8cadf4abbe7a93225a8043f8070ae865a85c29dc8654e2c27a"
+      },
+      "result": {
+        "passed": true,
+        "executed": 2284,
+        "inventory_union_matches": true,
+        "duplicates": 0,
+        "missing": 0,
+        "failed": 0,
+        "skipped": 0,
+        "source": {
+          "head": "de75ff8ceb9ae5cb5f595478ea934309c09303f3",
+          "source_fingerprint": "f895885cf5fb183d0942922e040c4120e9659e63a55c4308b80727cbd2f9eb0a"
+        },
+        "test_binary_sha256": "6d595997885293c3d820a005406696a69013525185f4cec974c784e63674056b",
+        "parts": [
+          {
+            "path": "build/oblivion-compat/block-use/sanitized-part-worker0-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/0"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/block-use/sanitized-part-worker1-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/1"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/block-use/sanitized-part-worker2-01/verification.json",
+            "result": {
+              "executed": 82,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "WorkerCounts/*/2"
+            }
+          },
+          {
+            "path": "build/oblivion-compat/block-use/sanitized-part-rest-01/verification.json",
+            "result": {
+              "executed": 2038,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "*-WorkerCounts/*"
+            }
+          }
+        ],
+        "sanitizer": {
+          "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+        },
+        "method": "Fresh disjoint parameter groups plus remaining inventory, same binary and frozen source; individually verified XML inventories."
+      }
+    }
+  },
+  "source_chain": {
+    "prior_receipt": "SWAMP-FEVER-CONTACT-VERIFICATION.json",
+    "source_sha256": "be7030fba79f90ae7c41f168b45b86e17a12f304b165ab7aa961568ea2da5651",
+    "source_path": "build/oblivion-compat/swamp-fever-contact/normal-known-none-axe-contact-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "description": "Original sewer-exitcb89 checkpoint, ordinary shore approach and real Rusty Iron War Axe hit on06c927. Native source selected known-none, prior genuine hit left Mudcrab8.69796 Health. Current courses cause no additional damage to it. No teleports, stat setters, plugin, seed changes, cached owner repair or manufactured save.",
+    "held_only_source_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8"
+  },
+  "captures_reviewed": [
+    {
+      "phase": "baseline",
+      "mode": "normal",
+      "path": "build/oblivion-compat/block-use/normal-block-baseline-01/original-mudcrab-block-saved.png",
+      "sha256": "5edecef6655f96e9b762b793b33ce30996a1eb7979ab406a111f6c23c801b972"
+    },
+    {
+      "phase": "hit",
+      "mode": "normal",
+      "path": "build/oblivion-compat/block-use/normal-block-hit-01/original-mudcrab-block-saved.png",
+      "sha256": "63f3820b311981e9680e48dff9c5e72986733dbf0d9a5b4ed55ae4dba089702c"
+    },
+    {
+      "phase": "restart",
+      "mode": "normal",
+      "path": "build/oblivion-compat/block-use/normal-block-restart-01/original-block-use-restart.png",
+      "sha256": "92b97bc2a8c3d0086c96e2a90d8cf7183b66338b82c1dfe9277f51a25c12056d"
+    },
+    {
+      "phase": "unblocked",
+      "mode": "normal",
+      "path": "build/oblivion-compat/block-use/normal-unblocked-hit-01/original-block-use-unblocked.png",
+      "sha256": "2f8380cc3e4641e957ba2e7129248e044be6480b170fc3735dcbf9dc7b742d54"
+    },
+    {
+      "phase": "hold",
+      "mode": "normal",
+      "path": "build/oblivion-compat/block-use/normal-held-only-02/original-block-use-hold.png",
+      "sha256": "161521896f93de759f512bf19cf3bcfb108e3d90c6d97290ab6a6e08c5d73ff7"
+    },
+    {
+      "phase": "hit",
+      "mode": "sanitized",
+      "path": "build/oblivion-compat/block-use/sanitized-block-hit-01/original-mudcrab-block-saved.png",
+      "sha256": "99d787ac950129a7dc07d24486557e1081a4467dfd85a69b78f158c442e1a2d8"
+    },
+    {
+      "phase": "restart",
+      "mode": "sanitized",
+      "path": "build/oblivion-compat/block-use/sanitized-block-restart-01/original-block-use-restart.png",
+      "sha256": "cd3ece997c5d9a2fd4d157c649286e9a7c9ea16449c38264917f5562db044dc4"
+    },
+    {
+      "phase": "unblocked",
+      "mode": "sanitized",
+      "path": "build/oblivion-compat/block-use/sanitized-unblocked-hit-01/original-block-use-unblocked.png",
+      "sha256": "505e883862de0b901b2441a74fb3f1a99b246e4bf1e74040592353e8e78ccf65"
+    },
+    {
+      "phase": "hold",
+      "mode": "sanitized",
+      "path": "build/oblivion-compat/block-use/sanitized-held-only-01/original-block-use-hold.png",
+      "sha256": "a31663f4f3dbda8c97d7629cf00fbd8e4c28651275b6ba9a525e37d5cc565a6a"
+    }
+  ],
+  "cold_processes_distinct": true,
+  "retained_failures": [
+    "Original caller attempt01 used dummy equipped entries that failed actual item validity484E80, so native readers returned null. Fixed only that declared boundary; original prefix then passed36cases.",
+    "Optional Capstone disassembly attempt unavailable in oracle venv; reused existing private disassembly and hash-checked objdump. No dependency installed or native bytes published.",
+    "normal-held-only-01 failed because a reused distant-target observer queried06c927 before it was ready. Narrowed held-only observer to required Player state, then reran; failed source/output remain unchanged."
+  ],
+  "reused_unchanged_checks": {
+    "receipt": "SWAMP-FEVER-CONTACT-VERIFICATION.json",
+    "scope": "Original book provenance3294 normal components,1115 native sanitizer components,616 Python codec checks reused. Components/codec unchanged. Current engine and actual normal/instrumented courses freshly checked."
+  },
+  "limits": [
+    "Ordinary admitted melee receiver only; projectile Block use remains separate work.",
+    "No completed level-crossing, shield, empty-hand zero-absorption, god-mode or terminal recipient gameplay acceptance. Original caller prefix covers equipment/zero-absorption award policy independently, not full native gameplay.",
+    "No blocked-contact formula, armor use, shader or disease behavior changes.",
+    "Engine sanitizer checks enable leak detection; rendered courses disable it. Full sanitizer inventory is a verified disjoint union to avoid Bullet cumulative worker-counter assertion."
+  ],
+  "post_gate_changes": "Only held-only observer recipes and acceptance documentation corrected after frozen gates; production C++ and tests unchanged.",
+  "failed_capture_reviewed": {
+    "path": "build/oblivion-compat/block-use/normal-held-only-01/original-block-use-hold.png",
+    "sha256": "f8090748458997930da4b7b914f02dbb3dfe0d9fd50b9468b19ce91a864b8543"
+  }
+}
