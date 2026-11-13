@@ -4,7 +4,24 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open; do not merge independent save branches.
 
-Latest accepted chunk: native Athletics on the original inlet crossing to
+Latest accepted chunk: native Acrobatics primary use on a real grounded jump
+at original Vilverin entrance066ac8. One jump rises65.918 units, spends30 Fatigue,
+lands alive Health110 and now earns0.3 XP rather than0. Normal/instrumented jump,
+idle and cold-load courses pass; idle/cold add0. Existing Athletics4.066545,
+other26 skills and inventory/script ownership persist. Normal2284/instrumented2284
+engine inventories and focused9 each pass. [Contract](ACROBATICS-USE-CONTRACT.json),
+[oracle](ACROBATICS-USE-ORACLE.json), [verification](ACROBATICS-USE-VERIFICATION.json).
+Physics eligibility uses captured frame movement: a second consuming velocity()
+read rejected actual jumps despite passing focused tests; that failure is retained.
+Damaged falls, rejected-request fatigue, steep slopes and midair saves remain open.
+
+Acrobatics continuation (healthy retained expedition at entrance):
+`build/oblivion-compat/acrobatics-use/normal-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `603acf165c4ce24977990c727a4039b8b06c1e6ee94ed0cf361d96a936f32443`.
+Player Health110, Acrobatics5/XP0.3, Athletics30/XP4.066545; earned Bonemeal1,
+Lettuce1/Rice1, original loot and Nirnroot ownership retained.
+
+Previous accepted chunk: native Athletics on the original inlet crossing to
 Vilverin entrance066ac8. Winning SKIL03e rates0.03 run/0.04 swim now grant frame-
 scaled experience: normal27.121/81.323 seconds→4.066545XP; instrumented42.496/
 73.870→4.229675XP. Both arrive alive Health110, Athletics base30 and all other
@@ -110,11 +127,16 @@ The healthier precontact checkpointa8519941… lives under
 its native actor source was selected naturally after genuine sewer-exitcb89…
 without native authority for06c927/06c92a. No seed setters or unknown-owner repair.
 
-Current chunk: choose the next missing native hook exercised by nearby original
-content. Candidate: an actual jump/landing at the original Vilverin entrance and
-Acrobatics use; inspect current jump admission and winning SKIL before scope/code.
-Cure Disease survey stays deferred: no carried/directly placed Vilverin source
-found; container loot unverified, nearest outdoor Mandrake found70k away.
+Next chunk: native Alchemy secondary use from genuinely looted Bonemeal01ebff,
+using the healthy Acrobatics continuation. Existing successful ingestion consumes
+one item and applies supported Fatigue damage but grants no XP. Original SKIL044
+has primary5/secondary0.5; original ingredient caller passes19/usage1 only for
+successful non-food use. Food bit2 (Lettuce flags3) bypasses XP; use actual carried
+Lettuce as the negative control. Ignored original caller24cases and dispatcher30
+pass with explicit boundaries; no implementation or gameplay acceptance yet.
+Evidence: `build/oblivion-compat/alchemy-use`. Cure Disease remains deferred:
+no carried/directly placed Vilverin source found; container loot unverified,
+nearest outdoor Mandrake found70k away.
 
 Independent retained continuations:
 

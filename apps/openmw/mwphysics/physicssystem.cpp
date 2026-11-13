@@ -45,10 +45,13 @@
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/movement.hpp"
+#include "../mwmechanics/npcstats.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/player.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "../mwrender/bulletdebugdraw.hpp"
 
@@ -69,7 +72,7 @@
 
 namespace
 {
-    void handleJump(const MWWorld::Ptr& ptr)
+    void handleJump(const MWWorld::Ptr& ptr, bool groundedTakeoff)
     {
         if (!ptr.getClass().isActor())
             return;
@@ -115,6 +118,18 @@ namespace
         if (isPlayer
             && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
         {
+            MWBase::World* world = MWBase::Environment::get().getWorld();
+            auto* native = dynamic_cast<MWWorld::World*>(world);
+            const auto* combat = native ? native->getOblivionCombatService() : nullptr;
+            const auto* life = combat ? combat->findActorLife(ESM::FormKey::dynamic("player", 1)) : nullptr;
+            if (groundedTakeoff && life && life->mPhase == ESM4::ActorLifePhase::Alive)
+            {
+                // The physics jump and its native fatigue debit are admitted.
+                // A queued or rejected jump request does not reach this point.
+                native->useOblivionPlayerSkill(26, 0);
+                Log(Debug::Info) << "M16 Acrobatics jump use: experience="
+                    << ptr.getClass().getNpcStats(ptr).getSkill(ESM::Skill::Acrobatics).getProgress();
+            }
             const char* inputSource
                 = MWBase::Environment::get().getInputManager()->joystickLastUsed() ? "gamepad" : "keyboard-mouse";
             Log(Debug::Info) << "M12 player movement: mode=jump input=" << inputSource
@@ -1543,12 +1558,18 @@ namespace MWPhysics
             const bool inert = stats.isDead()
                 || (!godmode && stats.getMagicEffects().getOrDefault(ESM::MagicEffect::Paralyze).getModifier() > 0);
 
-            simulations.emplace_back(ActorSimulation{
-                physicActor, ActorFrameData{ *physicActor, inert, waterCollision, slowFall, waterlevel, isPlayer } });
+            ActorFrameData frame{ *physicActor, inert, waterCollision, slowFall, waterlevel, isPlayer };
+            // ActorFrameData consumes velocity(); use its captured movement.
+            const bool groundedTakeoff = frame.mMovement.z() > 0.f
+                && frame.mIsOnGround && !frame.mIsOnSlope && !frame.mInert
+                && !frame.mSkipCollisionDetection && !world->isSwimming(ptr) && !frame.mFlying;
+            simulations.emplace_back(ActorSimulation{ physicActor, std::move(frame) });
 
             // if the simulation will run, a jump request will be fulfilled. Update mechanics accordingly.
             if (willSimulate)
-                handleJump(ptr);
+            {
+                handleJump(ptr, groundedTakeoff);
+            }
         }
 
         for (const auto& [id, projectile] : mProjectiles)

@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "name": "Original Vilverin entrance completed jump Acrobatics use",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal Actor=types.Actor\nlocal t=0;local age=0;local frames=0;local floor=nil;local peak=nil;local airborne=false\nreturn {{engineHandlers={{onFrame=function(dt)\n age=age+dt;frames=frames+1;t=t+dt;if t<.05 then return end;t=0\n assert(not Actor.isDead(self),'Player died during original entrance jump')\n local ground=Actor.isOnGround(self);local z=self.position.z\n if age>=3 and frames>=30 and ground and not floor then floor=z;peak=z end\n if not floor then return end\n peak=math.max(peak,z)\n if not ground and z>floor+5 then airborne=true;print('AcroProbe airborne') end\n print('AcroProbe sample ground='..tostring(ground)..' z='..z..' floor='..floor..' peak='..peak..' base='..types.NPC.stats.skills.acrobatics(self).base..' progress='..types.NPC.stats.skills.acrobatics(self).progress..' health='..Actor.stats.dynamic.health(self).current)\n if not airborne then print('AcroProbe ready') elseif ground then print('AcroProbe landed') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "AcroProbe ready",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "e"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.05
+    },
+    {
+      "type": "key_up",
+      "value": "e"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "AcroProbe landed",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-vilverin-entrance-jump.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "key_down",
+      "value": "Tab"
+    },
+    {
+      "type": "key_up",
+      "value": "Tab"
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "AcroProbe airborne",
+    "AcroProbe landed",
+    "M12 player movement: mode=jump",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "M16 native cast rejected:",
+    "Oblivion creature inventory item .* was not projected:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-vilverin-acrobatics",
+    "OPENMW_M15_EPOCH": "1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}
