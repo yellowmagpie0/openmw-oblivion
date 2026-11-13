@@ -1145,12 +1145,37 @@ namespace MWWorld
     bool OblivionScriptManager::dispatchInventoryEquip(const Ptr& actor, const Ptr& item)
     {
         requireMutableRuntime();
-        // First admitted course: an exact Player-owned, singleton inventory
-        // instance. Its reference identity must never be the containing actor.
+        if (actor.isEmpty() || actor != mWorld.getPlayerPtr() || item.isEmpty()
+            || !actor.getClass().getInventoryStore(actor).isEquipped(item)) return false;
+        return dispatchInventoryEvent(actor, item, "onequip");
+    }
+
+    bool OblivionScriptManager::hasInventoryAddEvent(const ESM::FormKey& base) const
+    {
+        const auto found = mBaseScripts.find(base);
+        return found != mBaseScripts.end()
+            && std::any_of(found->second->mEntryPoints.begin(), found->second->mEntryPoints.end(),
+                [](const auto& entry) { return Misc::StringUtils::ciEqual(entry.mEvent, "onadd"); });
+    }
+
+    bool OblivionScriptManager::dispatchInventoryAdd(const Ptr& actor, const Ptr& item)
+    {
+        requireMutableRuntime();
+        // The publisher assigns identity before insertion so separately acquired
+        // scripted ingredients cannot merge and share their persistent locals.
+        if (item.isEmpty() || item.getCellRef().getNativeScriptOwner().isNull()) return false;
+        return dispatchInventoryEvent(actor, item, "onadd");
+    }
+
+    bool OblivionScriptManager::dispatchInventoryEvent(const Ptr& actor, const Ptr& item, std::string_view event)
+    {
+        requireMutableRuntime();
+        // An exact Player-owned singleton. Its identity is neither the item
+        // base nor the containing actor, including during nested event calls.
         if (actor != mWorld.getPlayerPtr() || item.isEmpty() || item.getCellRef().getCount() != 1)
             return false;
         auto& inventory = actor.getClass().getInventoryStore(actor);
-        if (item.getContainerStore() != &inventory || !inventory.isEquipped(item)) return false;
+        if (item.getContainerStore() != &inventory) return false;
         const auto native = OblivionProfileServices::nativeItemId(mStore, item.getCellRef().getRefId());
         const auto* id = native.getIf<ESM::FormId>();
         if (!id) return false;
@@ -1158,8 +1183,8 @@ namespace MWWorld
         const auto found = mBaseScripts.find(base);
         if (found == mBaseScripts.end()) return false;
         const auto program = found->second;
-        if (!std::any_of(program->mEntryPoints.begin(), program->mEntryPoints.end(), [](const auto& entry) {
-                return Misc::StringUtils::ciEqual(entry.mEvent, "onequip");
+        if (!std::any_of(program->mEntryPoints.begin(), program->mEntryPoints.end(), [&](const auto& entry) {
+                return Misc::StringUtils::ciEqual(entry.mEvent, event);
             })) return false;
         auto key = item.getCellRef().getNativeScriptOwner();
         if (key.isNull())
@@ -1171,11 +1196,12 @@ namespace MWWorld
             item.getCellRef().setNativeScriptOwner(key);
             ++mWorld.mNextOblivionDynamicSerial;
         }
-        Log(Debug::Info) << "M7 inventory equip event: item=" << base.serialize()
+        Log(Debug::Info) << "M7 inventory " << (event == "onequip" ? "equip" : "add")
+            << " event: item=" << base.serialize()
             << " self=" << key.serialize() << " container=" << keyFor(actor).serialize();
         // execute/instanceFor retain locals by the actual item identity. Script
         // callbacks may unequip the item; no borrowed slot iterator survives.
-        return execute(program, key, key, "onequip", keyFor(actor));
+        return execute(program, key, key, event, keyFor(actor));
     }
 
     void OblivionScriptManager::update(double secondsPassed)

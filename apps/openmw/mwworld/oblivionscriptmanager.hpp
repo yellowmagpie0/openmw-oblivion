@@ -65,6 +65,8 @@ namespace MWWorld
             const ESM::FormKey& actionReference = {});
         bool dispatchActivation(const Ptr& self, const Ptr& actionReference);
         bool dispatchInventoryEquip(const Ptr& actor, const Ptr& item);
+        bool hasInventoryAddEvent(const ESM::FormKey& base) const;
+        bool dispatchInventoryAdd(const Ptr& actor, const Ptr& item);
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
@@ -220,6 +222,7 @@ namespace MWWorld
         std::shared_ptr<const ObScript::Program> scriptFor(const ESM::FormKey& key);
         bool dispatchBaseEvent(const ESM::FormKey& base, std::string_view event,
             const ESM::FormKey& actionReference);
+        bool dispatchInventoryEvent(const Ptr& actor, const Ptr& item, std::string_view event);
         Ptr ptrFor(const ESM::FormKey& key);
         ESM::FormKey keyFor(const Ptr& ptr) const;
         std::optional<ESM::FormKey> keyFromValue(const ObScript::Value& value) const;

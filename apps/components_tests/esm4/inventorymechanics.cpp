@@ -432,3 +432,39 @@ TEST(ESM4InventoryMechanics, InventoryExtraScaleSeparatesAbsentDefaultAndFiniteV
     item.mExtraScale = std::numeric_limits<float>::quiet_NaN();
     EXPECT_FALSE(ESM4::addInventoryItem(items,item));
 }
+
+TEST(ESM4InventoryMechanics, ScriptedSingletonsPreserveIndependentOwnersBesideLegacyPlainStacks)
+{
+    // Actual second Nirnroot acquisition reached two live owners, but capture
+    // merged them into one count-2 item and made the save invalid.
+    ESM4::RuntimeInventoryItem first;
+    first.mBase = ESM::FormKey::content("Oblivion.esm", 0x4e940);
+    first.mCount = 1;
+    first.mScriptOwner = ESM::FormKey::dynamic("inventory-script", 1);
+    auto second = first;
+    second.mScriptOwner = ESM::FormKey::dynamic("inventory-script", 2);
+    auto plain = first;
+    plain.mScriptOwner = {};
+    const std::array acquired{first, second, plain, plain};
+    auto stackedPlain = plain;
+    stackedPlain.mCount = 2;
+    for (bool normalize : {false, true})
+    {
+        SCOPED_TRACE(normalize);
+        std::vector<ESM4::RuntimeInventoryItem> inventory;
+        if (normalize)
+        {
+            inventory.assign(acquired.begin(), acquired.end());
+            ESM4::normalizeInventory(inventory);
+        }
+        else
+        {
+            for (const auto& item : acquired) ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+        }
+        EXPECT_EQ(ESM4::inventoryCount(inventory, first.mBase), 4);
+        ASSERT_EQ(inventory.size(), 3u);
+        EXPECT_EQ(inventory[0], first);
+        EXPECT_EQ(inventory[1], second);
+        EXPECT_EQ(inventory[2], stackedPlain);
+    }
+}

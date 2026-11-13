@@ -305,7 +305,7 @@ namespace MWWorld
     }
 
     int World::oblivionChangePlayerInventory(
-        const ESM::FormKey& key, int delta, const ESM::FormKey& owner)
+        const ESM::FormKey& key, int delta, const ESM::FormKey& owner, bool dispatchAddEvent)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || key.isNull() || delta == 0)
             return 0;
@@ -326,7 +326,7 @@ namespace MWWorld
             item.mCharge = definition->mMaxCharge;
             item.mRemainingUsageTime = definition->mMaxUsageTime;
             item.mOwner = owner;
-            return oblivionAddPlayerInventoryItem(std::move(item));
+            return oblivionAddPlayerInventoryItem(std::move(item), dispatchAddEvent);
         }
         const Ptr player = getPlayerPtr();
         const int requested = delta == std::numeric_limits<int>::min()
@@ -335,7 +335,7 @@ namespace MWWorld
         return oblivionRemoveNativeInventoryItem(player, key, requested);
     }
 
-    int World::oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item)
+    int World::oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item, bool dispatchAddEvent)
     {
         const auto canonical = [](const ESM::FormKey& key) {
             return ESM::FormKey::deserialize(key.serialize()) == key;
@@ -356,6 +356,14 @@ namespace MWWorld
         item.mCondition = static_cast<float>(item.mCondition);
         item.mEquippedSlots = 0;
         item.mHotkey = -1;
+        const bool newScriptOwner = dispatchAddEvent && item.mCount == 1 && item.mScriptOwner.isNull()
+            && mOblivionScriptManager && mOblivionScriptManager->hasInventoryAddEvent(item.mBase);
+        if (newScriptOwner)
+        {
+            if (!mNextOblivionDynamicSerial || mNextOblivionDynamicSerial == std::numeric_limits<std::uint64_t>::max())
+                throw std::runtime_error("Native inventory script identity exhausted");
+            item.mScriptOwner = ESM::FormKey::dynamic("inventory-script", mNextOblivionDynamicSerial);
+        }
         // Resolve every field and allocate the projected item before publishing
         // either inventory counts or registry identity.
         auto sources = OblivionProfileServices::prepareActorInventory(mStore, resolver, {item});
@@ -376,6 +384,7 @@ namespace MWWorld
         const Ptr published = addition->commit();
         if (published.isEmpty()) return 0;
         if (registration) registration->commit();
+        if (newScriptOwner) ++mNextOblivionDynamicSerial;
         std::exception_ptr observerFailure;
         try { addition->notify(); }
         catch (...) { observerFailure = std::current_exception(); }
@@ -403,6 +412,23 @@ namespace MWWorld
         }
         if (mOblivionRuntimeState)
             mOblivionRuntimeState->mPlayer.mInventory = captureOblivionInventory(getPlayerPtr());
+        if (dispatchAddEvent && item.mCount == 1 && !item.mScriptOwner.isNull() && mOblivionScriptManager)
+        {
+            // Notification may have replaced the inventory or removed the item.
+            // Locate the committed owner again; keep no iterator across script.
+            Ptr added;
+            auto& current = player.getClass().getInventoryStore(player);
+            for (auto it = current.begin(); it != current.end(); ++it)
+                if (it->getCellRef().getNativeScriptOwner() == item.mScriptOwner)
+                {
+                    added = *it;
+                    break;
+                }
+            try { if (!added.isEmpty()) mOblivionScriptManager->dispatchInventoryAdd(player, added); }
+            catch (...) { if (!observerFailure) observerFailure = std::current_exception(); }
+            if (!worldIdentity.expired() && getPlayerPtr() == player && mOblivionRuntimeState)
+                mOblivionRuntimeState->mPlayer.mInventory = captureOblivionInventory(getPlayerPtr());
+        }
         if (observerFailure) std::rethrow_exception(observerFailure);
         return item.mCount;
     }
@@ -1338,7 +1364,7 @@ namespace MWWorld
                 state.mCustomState["harvest_chance"] = static_cast<std::int64_t>(chance);
                 if (Misc::Rng::rollDice(100, mPrng) < chance)
                 {
-                    oblivionChangePlayerInventory(ingredient, 1);
+                    oblivionChangePlayerInventory(ingredient, 1, {}, true);
                     message("Harvested: " + getOblivionItemName(mStore, ESM::RefId(flora->mIngredient)));
                     report("harvested");
                 }

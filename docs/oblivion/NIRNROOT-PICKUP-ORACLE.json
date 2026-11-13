@@ -1,0 +1,167 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "load_order": [
+    "Oblivion.esm"
+  ],
+  "duplicate_requested_forms": false,
+  "records": [
+    {
+      "type": "SCPT",
+      "id": "066539",
+      "payload_sha256": "d1ee6448f8576da50e3bd65aa56432f37385f1fda9b23eeb8a88d51345c71691",
+      "EDID": "MS39NirnrootPlantScript",
+      "source_sha256": "748bcb9663649fb898fb37fdd3528f636a3886b07d59ba0c235e997af45e8ff4"
+    },
+    {
+      "type": "SCPT",
+      "id": "0eed76",
+      "payload_sha256": "7a05828369dc71b58768fba5d288bf9dc7483520caa7f011f750b5abd5c4d71f",
+      "EDID": "MS39NirnrootScript",
+      "source_sha256": "519e52cc76a2baacdfa3aacee7dd6837985f36895a948e616fe9af2b1becbb26"
+    },
+    {
+      "type": "SCPT",
+      "id": "04e93b",
+      "payload_sha256": "9caf7cfe8ddb627345ec8271a95a8c27189acf2bb396e22f23e0a63c679a6bca",
+      "EDID": "MS39Script",
+      "source_sha256": "1b93ba01e43b90dc2a690b24d9cafe650729fc4201d7a4249b17d5381b07b1b1"
+    },
+    {
+      "type": "INGR",
+      "id": "04e940",
+      "payload_sha256": "1d4f5a9e238992e0cf747b6acd06d64bc91b4b3597bcd4fdc869bf7b2e09560b",
+      "EDID": "MS39Nirnroot",
+      "FULL": "Nirnroot",
+      "SCRI": "0eed76"
+    },
+    {
+      "type": "FLOR",
+      "id": "066a26",
+      "payload_sha256": "0a6f97b5a43e044113278175c5cfe51d02228f5e259625dabada87bf26dcae13",
+      "EDID": "NirnrootPlantSmall",
+      "FULL": "Nirnroot",
+      "SCRI": "066539",
+      "PFIG": "04e940",
+      "harvest_chances": [
+        100,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "type": "FLOR",
+      "id": "066538",
+      "payload_sha256": "726b347cd5583acd59075d72befe7daf035d4d43c99877d4d3e161102ec64f72",
+      "EDID": "NirnrootPlant",
+      "FULL": "Nirnroot Plant",
+      "SCRI": "066539",
+      "PFIG": "04e940",
+      "harvest_chances": [
+        100,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "type": "REFR",
+      "id": "06f182",
+      "payload_sha256": "a15c66893598317077b7956e861feb2e5672d103f6071b793bbb4341cf3d6b12",
+      "NAME": "066538",
+      "position": [
+        48425.09375,
+        94541.5859375,
+        19.082687377929688,
+        -0.12556928396224976,
+        -0.09375916421413422,
+        -2.8821651935577393
+      ]
+    },
+    {
+      "type": "REFR",
+      "id": "06f184",
+      "payload_sha256": "a04825d1bc0c725e5dd4b00991bf747cdd80f9ecf6678090c839d694e5663aa3",
+      "NAME": "066538",
+      "position": [
+        53306.796875,
+        91007.9765625,
+        82.94180297851562,
+        -0.09080439805984497,
+        0.12771697342395782,
+        -1.2938743829727173
+      ]
+    },
+    {
+      "type": "QUST",
+      "id": "04e936",
+      "payload_sha256": "713b6775714e624c10f3d6504dda331af3651b8d566de80190c7016f78739373",
+      "EDID": "MS39",
+      "FULL": "Seeking Your Roots",
+      "SCRI": "04e93b"
+    }
+  ],
+  "boundary": "Only original master loaded by captured runtime manifest; original scripts read from master. No loose plant record overrides.",
+  "scope": "Original first and second Nirnroot plant/ingredient/quest linkage and authored pickup expectations",
+  "behavior": {
+    "plant": "Default harvest on activation, followed by disabling the plant",
+    "ingredient": "OnAdd Player starts MS39 at10 if earlier; once per Found local, increment both quest counters and misc-stat27, then retain Found1",
+    "fork_identity_contract": "Existing schema97+ inventory-script ownership requires separate count-1 owners. No original internal inventory stack layout is claimed."
+  },
+  "enrollment_audit": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "scripted_ingredient_records": 15,
+    "harvested_ingredients_with_OnAdd": [
+      {
+        "ingredient": "081e9a",
+        "editor_id": "SE38Item12",
+        "script": "04340f",
+        "flora_bases": [
+          "081eae",
+          "081ead"
+        ]
+      },
+      {
+        "ingredient": "043410",
+        "editor_id": "SE38Item2",
+        "script": "04340f",
+        "flora_bases": [
+          "04343b"
+        ]
+      },
+      {
+        "ingredient": "04340e",
+        "editor_id": "SE38Item1",
+        "script": "04340f",
+        "flora_bases": [
+          "04343d",
+          "04343c"
+        ]
+      },
+      {
+        "ingredient": "04e940",
+        "editor_id": "MS39Nirnroot",
+        "script": "0eed76",
+        "flora_bases": [
+          "066a26",
+          "066538"
+        ]
+      }
+    ],
+    "other_scripted_OnAdd_ingredients": [
+      {
+        "ingredient": "177a2a",
+        "editor_id": "SQ01Potato",
+        "script": "1885e2",
+        "flora_bases": []
+      },
+      {
+        "ingredient": "022f1a",
+        "editor_id": "MS37FrostSalts",
+        "script": "0c8526",
+        "flora_bases": []
+      }
+    ]
+  },
+  "runtime_acceptance_boundary": "Only original Nirnroot refs06f184 and06f182 exercised here; the three other harvested OnAdd ingredient records remain unverified courses."
+}

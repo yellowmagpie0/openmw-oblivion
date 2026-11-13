@@ -1,0 +1,666 @@
+{
+  "schema_version": 1,
+  "accepted": true,
+  "scope": "Original Nirnroot first and second harvest OnAdd, per-item Found persistence, MS39 trigger/counters and valid two-owner save/reload",
+  "tested_cpp": [
+    {
+      "path": "apps/openmw/mwworld/oblivioninteraction.cpp",
+      "sha256": "567b25f910627e7de63465023aa0034bc69a04eb2dce800883861e7e3eb74395"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "74628f283c7b06ce2aa103223e1f38191f3e7053a9326a254d210a38861a3dbf"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.hpp",
+      "sha256": "2ba3129c79c570e4554cf9342e2860c640a48fd7fae9488bcbe5d391183f60c7"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "5fd0e96874918dc9b895e40f5275f4ecb4043f0f03b9d21c0808487be9651735"
+    },
+    {
+      "path": "components/esm4/inventorymechanics.cpp",
+      "sha256": "e47c0de14787e06e66b2ac75cb77540033c66a390236d8fe632577096e515301"
+    },
+    {
+      "path": "apps/components_tests/esm4/inventorymechanics.cpp",
+      "sha256": "ceb39c49730b5d923b2ac0acd49b63ead4fcf3bd1d1eb236e303fc9826db2ea7"
+    }
+  ],
+  "courses": [
+    {
+      "course": "build/oblivion-compat/nirnroot-pickup/normal-first-pickup-01",
+      "audit": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-first-pickup-01/nirnroot-audit.json",
+        "sha256": "7feee1433980deb91c47966c0e66f1a77c3a798ee4d951701423c9e3aea1010b"
+      },
+      "result": {
+        "passed": true,
+        "phase": "pickup",
+        "sanitized": false,
+        "count": 1,
+        "source_sha256": "2a9d328c54ebb8c5da559af0461d08fe5ae35b683d2a5dce578bdf76ce8aa393",
+        "save_sha256": "e61aca38d3ba91d35a8548185de0bf37adecaf9ecbad20960f34314516bc1e75",
+        "binary_sha256": "0d75ccd31cfafe1767afcf6f2558ae725bb78fd512f49f0937e4aba9c4fffc6d",
+        "ingredient_owners": [
+          "dynamic:inventory-script:0000000000000001"
+        ],
+        "quest_stage": 10,
+        "found": 1,
+        "NirnCountTotal": 1,
+        "NirnCountCurrent": 1,
+        "misc_stat_27": 1,
+        "health": 110,
+        "inventory_and_progression_preserved": true
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-first-pickup-01/captured-input-manifest.json",
+        "sha256": "424e2e494fe918e65f1d733ea679b0e974164b18208a7989290873b4af69c31e"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-first-pickup-01/process-epoch.json",
+        "sha256": "42f700d233be0e0e3f0d4a1aa540f97bcc20146507e1788738bb5ccfe8aacfd3"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/normal-first-pickup-01/original-Nirnroot-before-pickup.png",
+          "sha256": "9ddb1bf774bb241c65ef8d4abaf34cf60c6132bda4ebbd20bd8172608c61c464"
+        },
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/normal-first-pickup-01/original-Nirnroot-after-pickup.png",
+          "sha256": "cb7adfadcb35cc0b9a33533e94f702b173c527c7c897e91c3816f174ed9007bc"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/nirnroot-pickup/normal-first-restart-01",
+      "audit": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-first-restart-01/nirnroot-audit.json",
+        "sha256": "1b1d01b8c406c9b0b8976e2b97fc5f7e13fb9041131d554e3d6e075206d7afe0"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "count": 1,
+        "source_sha256": "e61aca38d3ba91d35a8548185de0bf37adecaf9ecbad20960f34314516bc1e75",
+        "save_sha256": "ddcc694010f0efd7f3f0d478eb3c35108230e96355095c89ebeed885f39c1d23",
+        "binary_sha256": "0d75ccd31cfafe1767afcf6f2558ae725bb78fd512f49f0937e4aba9c4fffc6d",
+        "ingredient_owners": [
+          "dynamic:inventory-script:0000000000000001"
+        ],
+        "quest_stage": 10,
+        "found": 1,
+        "NirnCountTotal": 1,
+        "NirnCountCurrent": 1,
+        "misc_stat_27": 1,
+        "health": 110,
+        "inventory_and_progression_preserved": true
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-first-restart-01/captured-input-manifest.json",
+        "sha256": "7bce3d802d48bb78b2e00517c3275fb483b1a6192e2fae63545878a3f7ed6872"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-first-restart-01/process-epoch.json",
+        "sha256": "b261c055c12274f93ef41ce34a14f54eb216d234f2976ed925c17ff4214f9d16"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/normal-first-restart-01/original-Nirnroot-after-reload.png",
+          "sha256": "b876b70413c79ef72b22d92070690153a81cbac4faa7cc128a786bb86b1ec41c"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-04",
+      "audit": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-04/nirnroot-audit.json",
+        "sha256": "a96d040b7cc75de2fc91eb86c3efa02208f1b0798b6c992b231ffb54a0af4218"
+      },
+      "result": {
+        "passed": true,
+        "phase": "pickup",
+        "sanitized": false,
+        "count": 2,
+        "source_sha256": "50215d584053ea95107a84ead74d499e96080b1172ad10177139a219eacebb64",
+        "save_sha256": "b512117fa3a6751204c0e0de47e6e6a8c173c822fa5bb4445ab261db56a6fb69",
+        "binary_sha256": "7ba05f311392a48b45c38366cbca8c616114b7b9566be7643307f27f7a1c71bf",
+        "ingredient_owners": [
+          "dynamic:inventory-script:0000000000000001",
+          "dynamic:inventory-script:0000000000000002"
+        ],
+        "quest_stage": 10,
+        "found": 1,
+        "NirnCountTotal": 2,
+        "NirnCountCurrent": 2,
+        "misc_stat_27": 2,
+        "health": 110,
+        "inventory_and_progression_preserved": true
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-04/captured-input-manifest.json",
+        "sha256": "2462a7f1838fa80be5895ce20f0c45b6a4016e97703c0fa2f4ee0be1de476d40"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-04/process-epoch.json",
+        "sha256": "5ea327c5a37f633eed947e5287c638a1f4910e8cbd1374ae80e9b20e697b4f98"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-04/original-Nirnroot-before-pickup.png",
+          "sha256": "a7fd1374150d055c3d8fd39f7c6634b0096b950ea437c034ac0088dd77a6f9eb"
+        },
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-04/original-Nirnroot-after-pickup.png",
+          "sha256": "d4f6a62acd023c23fef8093589e01c40577dbbaac95cb9171b1f81568649b0ea"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/nirnroot-pickup/normal-second-restart-01",
+      "audit": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-second-restart-01/nirnroot-audit.json",
+        "sha256": "4eb5c124ac645910fe0c26c76e3412d774e22461e19db0f749ff111df2093dbe"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "count": 2,
+        "source_sha256": "b512117fa3a6751204c0e0de47e6e6a8c173c822fa5bb4445ab261db56a6fb69",
+        "save_sha256": "1408e448b4b04a930fc2e2ccb208d2e549f0f04f9b72be93bc157f1ac7d72335",
+        "binary_sha256": "7ba05f311392a48b45c38366cbca8c616114b7b9566be7643307f27f7a1c71bf",
+        "ingredient_owners": [
+          "dynamic:inventory-script:0000000000000001",
+          "dynamic:inventory-script:0000000000000002"
+        ],
+        "quest_stage": 10,
+        "found": 1,
+        "NirnCountTotal": 2,
+        "NirnCountCurrent": 2,
+        "misc_stat_27": 2,
+        "health": 110,
+        "inventory_and_progression_preserved": true
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-second-restart-01/captured-input-manifest.json",
+        "sha256": "7bce3d802d48bb78b2e00517c3275fb483b1a6192e2fae63545878a3f7ed6872"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-second-restart-01/process-epoch.json",
+        "sha256": "8e881727ee32217c4050e11722bd112bdf3f4e6d9966d0653d453542c0fb8ba4"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/normal-second-restart-01/original-Nirnroot-after-reload.png",
+          "sha256": "a1289abeb6a767d19b4b5b24d915a086a9a1c029b159a9eb9b722745df49b2b0"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/nirnroot-pickup/sanitized-first-pickup-02",
+      "audit": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-pickup-02/nirnroot-audit.json",
+        "sha256": "fc4eb90da104235a498141d93b6ba649dc6a4633fd592a1cd75efd2b0c4eb7c0"
+      },
+      "result": {
+        "passed": true,
+        "phase": "pickup",
+        "sanitized": true,
+        "count": 1,
+        "source_sha256": "2a9d328c54ebb8c5da559af0461d08fe5ae35b683d2a5dce578bdf76ce8aa393",
+        "save_sha256": "f6bb0aaa5e06f7327879eac9db8a845faa22209b698cd307fb987fa3fb8072b0",
+        "binary_sha256": "00abaf166a4e352a911d63a9450d9f45b14c3c9ec2e8b5bdc1338dedf170eb6a",
+        "ingredient_owners": [
+          "dynamic:inventory-script:0000000000000001"
+        ],
+        "quest_stage": 10,
+        "found": 1,
+        "NirnCountTotal": 1,
+        "NirnCountCurrent": 1,
+        "misc_stat_27": 1,
+        "health": 110,
+        "inventory_and_progression_preserved": true
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-pickup-02/captured-input-manifest.json",
+        "sha256": "8c16213570b7cafd290bd0c5694b179121e7fcb1fced4838c28c66e4b6b3687e"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-pickup-02/process-epoch.json",
+        "sha256": "2c751cd6a61c15baf7487355219ec6e40c7f80b744280accebf1022a7111b5fc"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-pickup-02/original-Nirnroot-before-pickup.png",
+          "sha256": "6b1a07594bb1dd594af7b66b6b89aa2b5d744506656d7f4cd325c14777634f4f"
+        },
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-pickup-02/original-Nirnroot-after-pickup.png",
+          "sha256": "7fbed7275578e504dfba11d2f613b5cbb055c12a1342bda3a7e0c7d33692ef28"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/nirnroot-pickup/sanitized-first-restart-01",
+      "audit": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-restart-01/nirnroot-audit.json",
+        "sha256": "c3415a0543ee1dfb9a6d80c688c443dc3c6e84aebe8fe66cbcb59f2d1e5ebf35"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "count": 1,
+        "source_sha256": "f6bb0aaa5e06f7327879eac9db8a845faa22209b698cd307fb987fa3fb8072b0",
+        "save_sha256": "16bfd10a62e3ddb77fc56482a877dd2ecebca71b8e089032119d0898cc6003cb",
+        "binary_sha256": "00abaf166a4e352a911d63a9450d9f45b14c3c9ec2e8b5bdc1338dedf170eb6a",
+        "ingredient_owners": [
+          "dynamic:inventory-script:0000000000000001"
+        ],
+        "quest_stage": 10,
+        "found": 1,
+        "NirnCountTotal": 1,
+        "NirnCountCurrent": 1,
+        "misc_stat_27": 1,
+        "health": 110,
+        "inventory_and_progression_preserved": true
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-restart-01/captured-input-manifest.json",
+        "sha256": "89d0665049b393df2f8c9eb6978431b2e2ff7b34d5bfb872f247aaa0a25d32ac"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-restart-01/process-epoch.json",
+        "sha256": "ff2600b1c5d56f0a0f73e801583c1fad601d3b5ddfc5de5ea3fe907616bd6d57"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/sanitized-first-restart-01/original-Nirnroot-after-reload.png",
+          "sha256": "e5b665997e3d231e12a499bd9c71843b4bf47724564b3eed56fd71903a54eccd"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/nirnroot-pickup/sanitized-two-owner-restart-01",
+      "audit": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-two-owner-restart-01/nirnroot-audit.json",
+        "sha256": "86fcb5086d01e001432aea9fe9be0e6d1cf3452ee1a08978dea19cd4fff76cce"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "count": 2,
+        "source_sha256": "1408e448b4b04a930fc2e2ccb208d2e549f0f04f9b72be93bc157f1ac7d72335",
+        "save_sha256": "b0f56aa6f43342b9e490533542e6207578f874441021e2667be2b6415d8473c1",
+        "binary_sha256": "00abaf166a4e352a911d63a9450d9f45b14c3c9ec2e8b5bdc1338dedf170eb6a",
+        "ingredient_owners": [
+          "dynamic:inventory-script:0000000000000001",
+          "dynamic:inventory-script:0000000000000002"
+        ],
+        "quest_stage": 10,
+        "found": 1,
+        "NirnCountTotal": 2,
+        "NirnCountCurrent": 2,
+        "misc_stat_27": 2,
+        "health": 110,
+        "inventory_and_progression_preserved": true
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-two-owner-restart-01/captured-input-manifest.json",
+        "sha256": "89d0665049b393df2f8c9eb6978431b2e2ff7b34d5bfb872f247aaa0a25d32ac"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/nirnroot-pickup/sanitized-two-owner-restart-01/process-epoch.json",
+        "sha256": "121ed8744d995e57a6415b1a97a8abfee1257fa881460e0c5a5f4c94248b82a5"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/sanitized-two-owner-restart-01/original-Nirnroot-after-reload.png",
+          "sha256": "c35accdc574e2eb5bfc01b2949d26dfbb404c6131e533ba9090989c6942e0d17"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-pickup/focused-normal-01/verification.json",
+        "sha256": "6dcb1fb881a50543ad0b0aec01b71bf12099a6b62b9d8830a434fa5822212c46"
+      },
+      "results": {
+        "engine": {
+          "executed": 64,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Native*Inventory*:*Native*Addition*:*NativeScript*:*Native*Item*",
+          "binary_sha256": "676879cad1c0493f4d0f427e06c6073a1aecd714a15a8483729766142f760a46",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9c0adbfa7f6c22d1f73cad807ea8ec672507e675863d34f92a7a04d6a6b2c100",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "1cf2e39d69d3af46edbd1ec809ebbf7a691e0820",
+        "source_fingerprint": "da3d5c9d038a852c2717eee3d97fd29fe3f7121c50ca10ebff0c22f05efcf10b"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-pickup/stack-regression-after-01/verification.json",
+        "sha256": "bb10490e3ca53e56238f03f944dbd3fa67706997ce01bbc46542ed175c7672b5"
+      },
+      "results": {
+        "components": {
+          "executed": 17,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4InventoryMechanics.*",
+          "binary_sha256": "8c33bc3146dd0ce63960629c4b92f407b2d3aef2a4075f86359032fc955c3575",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "f99e56b1041e32bf2147b406115293630c4f34cc56adcfa4d9b1f578cf93d90d",
+          "inventory_sha256": "ca27d9b27a6b100712c69c80232b27981274b97f1fd3650e6e128b8c8d18c360",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "1cf2e39d69d3af46edbd1ec809ebbf7a691e0820",
+        "source_fingerprint": "e185b18649dc98bbd651a9ca9bd3d5cf7fb7eb1519c8da86f0089c637e71c559"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-pickup/integration-normal-02/verification.json",
+        "sha256": "9a35c70af944677e248111877b164b61ccca9abc937c539eebf35aa41b6589d5"
+      },
+      "results": {
+        "components": {
+          "executed": 3291,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8c33bc3146dd0ce63960629c4b92f407b2d3aef2a4075f86359032fc955c3575",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "39b12bcc309c1db4cfda3aa318dddc84e355be1e801e02d90f627f43036bd7b0",
+          "inventory_sha256": "fefcbde35bd6d0866f07e2ba1ffb85ff818fbfafa9c6256a27a284b9a63a69c1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2279,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6f0556bf3d42f87ee0caf17f66fe2e5d4d71c292d951efa315c07b7dcb4b9f5d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "1b61eaa631e4c1962fba015d1c115b84ed49de2c46ccf78efd7545eb84839a6b",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "1cf2e39d69d3af46edbd1ec809ebbf7a691e0820",
+        "source_fingerprint": "f9e4c0888b1398a0c84a74a651c4321d8f564426646d3e61c69707cfcbf52748"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-pickup/integration-sanitized-components-02/verification.json",
+        "sha256": "32aab64968852da008a537ef9eab78f7b62c1080856cb86514f951fc33fd169e"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 1112,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "6de6b30d5e36b5fe88ba08febeda72c88e87b4717e0e2d8cee30ea0ee87f11c0",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "645bc6bbae272c99c2a8b8891119f73767a34d80918af1ecd1d95832d3d3787e",
+          "inventory_sha256": "99c8f7bf93160a7bb08baed505b10f4898a26a0805014da347123b3c1fd89d08",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "1cf2e39d69d3af46edbd1ec809ebbf7a691e0820",
+        "source_fingerprint": "f9e4c0888b1398a0c84a74a651c4321d8f564426646d3e61c69707cfcbf52748"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-pickup/integration-sanitized-actorbounds-02/verification.json",
+        "sha256": "a962037cc6b825150c530c5ff9bcfbf197cd06657c9a8a6fc139be88d86df748"
+      },
+      "results": {
+        "engine": {
+          "executed": 11,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*ActorBounds*",
+          "binary_sha256": "02d30f3c7a6538e8a32d492d1f92b437f65316f6e80466b56e66408f630e6532",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "5bcfe334cb55250fc8c3b8fad0151cb3558fd8449157540fd55db4e24abe6481",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "1cf2e39d69d3af46edbd1ec809ebbf7a691e0820",
+        "source_fingerprint": "f9e4c0888b1398a0c84a74a651c4321d8f564426646d3e61c69707cfcbf52748"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-pickup/integration-sanitized-rest-02/verification.json",
+        "sha256": "8b069393fec25969076c53c1ad90af971953e9ab4c40a57ebc65006227b7003d"
+      },
+      "results": {
+        "engine": {
+          "executed": 2268,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-*ActorBounds*",
+          "binary_sha256": "02d30f3c7a6538e8a32d492d1f92b437f65316f6e80466b56e66408f630e6532",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ff58a00dea0f296117c4d270ebf788099c075b7bec3dd2ebaf9ccd2eacdd4f8d",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "1cf2e39d69d3af46edbd1ec809ebbf7a691e0820",
+        "source_fingerprint": "f9e4c0888b1398a0c84a74a651c4321d8f564426646d3e61c69707cfcbf52748"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-pickup/integration-normal-01/verification.json",
+        "sha256": "0722dc540b097e623b25333d241a2f05c9ef229374c4300c0b136b3939d96ef7"
+      },
+      "results": {
+        "python": {
+          "executed": 612,
+          "passed": true,
+          "log_sha256": "9e9a03951c49c4e30e4f01899db6c99250ee8a2d790dd539d74a9a097eb772e4"
+        }
+      },
+      "tested_source": {
+        "head": "1cf2e39d69d3af46edbd1ec809ebbf7a691e0820",
+        "source_fingerprint": "488f14da0fbcab17fa1eec6d1b95fccb3ff4767ea2d9dd91f085385258d69ad1"
+      },
+      "reuse": "Python modules, including final verifier, unchanged by the later C++ stack fix. Later Lua observation-manifest changes are exercised by their actual runtime courses. Earlier engine results are not reused for the stack fix."
+    }
+  ],
+  "sanitized_inventory_union": {
+    "receipt": {
+      "path": "build/oblivion-compat/nirnroot-pickup/sanitized-inventory-union.json",
+      "sha256": "5700abe7e827257238bb18e7543c69174babffa5e9122b9ff0563c828d74d9dd"
+    },
+    "result": {
+      "passed": true,
+      "executed": 2279,
+      "inventory_union_matches": true,
+      "duplicate_tests": 0,
+      "missing_tests": 0,
+      "failed": 0,
+      "skipped": 0,
+      "parts": [
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/integration-sanitized-actorbounds-02/verification.json",
+          "tests": 11,
+          "filter": "*ActorBounds*"
+        },
+        {
+          "path": "build/oblivion-compat/nirnroot-pickup/integration-sanitized-rest-02/verification.json",
+          "tests": 2268,
+          "filter": "*-*ActorBounds*"
+        }
+      ],
+      "source": {
+        "head": "1cf2e39d69d3af46edbd1ec809ebbf7a691e0820",
+        "source_fingerprint": "f9e4c0888b1398a0c84a74a651c4321d8f564426646d3e61c69707cfcbf52748"
+      },
+      "test_binary_sha256": "02d30f3c7a6538e8a32d492d1f92b437f65316f6e80466b56e66408f630e6532",
+      "sanitizer": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "oracle": {
+    "path": "docs/oblivion/NIRNROOT-PICKUP-ORACLE.json",
+    "sha256": "3641417697d0b09de0b8a46904bfa22cdc05742b3207c1bc0f05288f0a922c2b"
+  },
+  "original_missing_event": {
+    "path": "build/oblivion-compat/nirnroot-pickup/normal-near-plant-03/missing-onadd-audit.json",
+    "sha256": "3e42700ec384171815c9e2221ef1de733b858a87afe713494bb3ef0931f45296"
+  },
+  "second_source": {
+    "path": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-03/preactivation-state-audit.json",
+    "sha256": "7b0a6b476c5879a51a11060045e21508c1e4b2f8ede60676a2d0cd92828730ba"
+  },
+  "ordinary_shoreline_recovery": {
+    "path": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-02/recovery-checkpoint-input.json",
+    "sha256": "970e36e23372fec21c0e145baa44849d8b0bfb91fe3ad0f2aa567644f09fb6aa"
+  },
+  "amulet_regression": {
+    "receipt": {
+      "path": "build/oblivion-compat/nirnroot-pickup/normal-amulet-regression-01/amulet-verification.json",
+      "sha256": "22ba149dbeb0a46ee7ebb14df929e8f449404cb503dcc38dcd4088e90e25b1a9"
+    },
+    "result": {
+      "passed": true,
+      "restart": false,
+      "item": "content:oblivion.esm:0250a0",
+      "script_instance": {
+        "unit": "content:oblivion.esm:027589@oblivion.esm/object/unit=0",
+        "context": "dynamic:inventory-script:0000000000000001",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "reference",
+            "value": "dynamic:player:0000000000000001"
+          }
+        ]
+      },
+      "owner": "dynamic:inventory-script:0000000000000001",
+      "input_sha256": "68ff3d3c3d09b9e848e5855e216e9f1db0beea83fc34e1fa8c786f4aa9845b94",
+      "output_sha256": "d4c3e8178ab44242f16f6f721e0c86c72a19f6bb0d4034440ef5faa811ed01aa",
+      "events": 1,
+      "item_retained_unworn": true,
+      "unrelated_inventory_preserved": true,
+      "torch_times": [
+        [
+          996.0,
+          987.0
+        ]
+      ],
+      "binary_roundtrip": true,
+      "observed_load_save_boundaries": true
+    },
+    "verifier": {
+      "path": "build/oblivion-compat/nirnroot-pickup/verify-amulet-regression-schema99.py",
+      "sha256": "2c7446853601b1ef338222e39faa5290024711edd10686cd27efc6cf09fa91c6"
+    },
+    "adaptation": "Existing verifier copied with only final output schema97 assertion updated to99; event/owner/inventory assertions unchanged.",
+    "inspected_images": [
+      {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-amulet-regression-01/original-amulet-equip-inventory.png",
+        "sha256": "d05b9d2dec1dc50b05e8bfe26d1a10c4cbb0ae777f49808a99f961b49c4c72f2"
+      },
+      {
+        "path": "build/oblivion-compat/nirnroot-pickup/normal-amulet-regression-01/original-amulet-equip-world.png",
+        "sha256": "09bd3d71c17a37a7b435e6f3d57950ea0461a9af1a31e49c5027962b4aa9f585"
+      }
+    ]
+  },
+  "limits": [
+    "New event enrollment is limited to harvested Player singleton ingredients. Script-driven/bulk AddItem and general transfer/removal event lifetimes remain separate work.",
+    "Only original Nirnroot refs06f184/06f182 exercised; three other harvested OnAdd ingredient records are identified but unverified.",
+    "This closes a bounded inventory/script/quest-trigger course, not general M18 journal/UI or full milestone acceptance.",
+    "Engine sanitizer gates use detect_leaks=1; native component and rendered sanitizer courses use detect_leaks=0.",
+    "Sanitizer engine inventory is complete across two disjoint processes because Bullet has a cumulative process thread-ID limit.",
+    "Normal first acquisition/reload and Amulet regression predate only the component stack fix; their event-helper C++ is unchanged. Two-owner normal acquisition/reload and sanitizer courses use the final stack fix."
+  ],
+  "retained_attempts": [
+    "normal-first-plant-01: partial nav endpoint, no pickup",
+    "normal-first-plant-02: rock-top activation out of reach; retained pre-pickup source",
+    "normal-second-pickup-01: partial nav endpoint, no second activation",
+    "normal-second-pickup-02: direct swim blocked at rock; separately recorded ordinary X11 F5 saved genuine progress; parent course remains failed",
+    "normal-second-pickup-03: distinct owner2 acquired, then snapshot merge made save invalid; valid pre-activation save retained",
+    "stack-regression-before-01: focused regression proves scripted stacks were merged",
+    "sanitized-first-pickup-01: observer target exceeded camera pitch limit, no activation; retry uses rendering-ray-confirmed visible leaf"
+  ]
+}
