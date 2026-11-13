@@ -1610,7 +1610,8 @@ namespace MWPhysics
             // Weather affects actor movement, not projectiles or owned bodies.
             const bool hasActorMovement = std::any_of(simulations.begin(), simulations.end(),
                 [](const Simulation& sim) { return std::holds_alternative<ActorSimulation>(sim); });
-            const auto worldData = hasActorMovement ? WorldFrameData{} : WorldFrameData(false, osg::Vec3f(0, 1, 0));
+            auto worldData = hasActorMovement ? WorldFrameData{} : WorldFrameData(false, osg::Vec3f(0, 1, 0));
+            worldData.mNativeCharacterPushes = nativeFrame != nullptr;
             if (nativeFrame)
                 mTaskScheduler->applyPreparedNativeFrame(*nativeFrame, remaining, simulations,
                     frameStart, frameNumber, stats, worldData);

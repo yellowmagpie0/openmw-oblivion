@@ -233,6 +233,15 @@ namespace MWPhysics
     };
     bool operator==(const LOSRequest& lhs, const LOSRequest& rhs) noexcept;
 
+    // Borrowed collision targets live only through the current physics substep.
+    // Movement jobs collect intents; the serial barrier validates ownership and
+    // applies them before advancing the dynamic world.
+    struct CharacterBodyPush
+    {
+        const btCollisionObject* mBody;
+        osg::Vec3f mPoint, mNormal, mVelocity;
+    };
+
     struct ActorFrameData
     {
         ActorFrameData(Actor& actor, bool inert, bool waterCollision, float slowFall, float waterlevel, bool isPlayer);
@@ -248,6 +257,7 @@ namespace MWPhysics
         const float mSlowFall;
         osg::Vec2f mRotation;
         osg::Vec3f mMovement;
+        std::vector<CharacterBodyPush> mBodyPushes;
         std::optional<ESM4::TimedKnockbackState> mNativeKnockback;
         std::optional<ESM4::TimedKnockbackState> mInitialNativeKnockback;
         osg::Vec3f mLastStuckPosition;
@@ -279,6 +289,7 @@ namespace MWPhysics
         WorldFrameData(bool isInStorm, const osg::Vec3f& stormDirection);
         bool mIsInStorm;
         osg::Vec3f mStormDirection;
+        bool mNativeCharacterPushes = false;
     };
 
     template <class Ptr, class FrameData>

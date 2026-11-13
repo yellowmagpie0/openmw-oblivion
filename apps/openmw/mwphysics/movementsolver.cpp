@@ -3,6 +3,7 @@
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 #include <BulletCollision/CollisionShapes/btConvexShape.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
 
 #include <components/esm3/loadgmst.hpp>
 #include <components/misc/convert.hpp>
@@ -133,6 +134,7 @@ namespace MWPhysics
     {
         // Reset per-frame data
         actor.mWalkingOnWater = false;
+        actor.mBodyPushes.clear();
         // Anything to collide with?
         if (actor.mSkipCollisionDetection)
         {
@@ -256,6 +258,16 @@ namespace MWPhysics
 
             bool seenGround = !actor.mFlying && !underwater
                 && ((actor.mIsOnGround && !actor.mIsOnSlope) || isWalkableSlope(tracer.mPlaneNormal));
+
+            if (worldData.mNativeCharacterPushes && !actor.mInert
+                && origVelocity * tracer.mPlaneNormal < -0.001f)
+            {
+                const auto* body = btRigidBody::upcast(tracer.mHitObject);
+                if (body && !body->isStaticOrKinematicObject() && body->hasContactResponse()
+                    && std::none_of(actor.mBodyPushes.begin(), actor.mBodyPushes.end(),
+                        [&](const auto& push) { return push.mBody == body; }))
+                    actor.mBodyPushes.push_back({body, tracer.mHitPoint, tracer.mPlaneNormal, origVelocity});
+            }
 
             // We hit something. Check if we can step up.
             float hitHeight = tracer.mHitPoint.z() - tracer.mEndPos.z() + actor.mHalfExtentsZ;

@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <functional>
 #include <limits>
 #include <mutex>
@@ -2698,6 +2699,69 @@ namespace MWPhysics
         {
             --mRemainingSteps;
             updateActorsPositions();
+            if (mWorldFrameData->mNativeCharacterPushes && !mAnimatedReferenceBodies.empty())
+                for (auto& simulation : *mSimulations)
+                {
+                    auto* actorSimulation = std::get_if<ActorSimulation>(&simulation);
+                    if (!actorSimulation) continue;
+                    auto actor = actorSimulation->lock();
+                    if (!actor || actor->second.get().mBodyPushes.empty()) continue;
+                    // Retain the Actor before taking this lock: releasing its
+                    // last shared owner may itself remove collision objects.
+                    MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+                    auto& pushes = actor->second.get().mBodyPushes;
+                    // A reference mass and a short response time approximate
+                    // character contact, rather than claiming the original
+                    // controller's exact force policy. Bound the total impulse
+                    // by one character weight over this substep.
+                    constexpr float characterMass = 80.f;
+                    float budget = characterMass * -NifBullet::RagdollNativeDefaultGravityZ
+                        * NifBullet::RagdollNativeLengthScale * mPhysicsDt;
+                    for (const auto& push : pushes)
+                    {
+                        if (!mCollisionObjects.contains(push.mBody)) continue;
+                        const auto target = std::find_if(mAnimatedReferenceBodies.begin(),
+                            mAnimatedReferenceBodies.end(), [&](const auto& entry) {
+                                const auto bodies = entry.second->mPhysics.collisionObjects();
+                                return std::find(bodies.begin(), bodies.end(), push.mBody) != bodies.end();
+                            });
+                        if (target == mAnimatedReferenceBodies.end()) continue;
+                        auto* body = btRigidBody::upcast(const_cast<btCollisionObject*>(push.mBody));
+                        if (!body || body->isStaticOrKinematicObject() || !body->hasContactResponse()) continue;
+                        auto direction = -Misc::Convert::toBullet(push.mNormal);
+                        if (direction.length2() < SIMD_EPSILON) continue;
+                        direction.normalize();
+                        const auto point = Misc::Convert::toBullet(push.mPoint);
+                        const auto relativePoint = point - body->getCenterOfMassPosition();
+                        const auto pointVelocity = body->getVelocityInLocalPoint(relativePoint);
+                        // Incoming hazards retain their contact/impact response.
+                        // Voluntary pushing handles settled or receding props;
+                        // tolerate only sub-unit settling noise toward the actor.
+                        if (body->getLinearVelocity().dot(direction) < -1 || pointVelocity.dot(direction) < -1)
+                            continue;
+                        const auto closing = (Misc::Convert::toBullet(push.mVelocity) - pointVelocity).dot(direction);
+                        if (closing <= 0) continue;
+                        const auto denominator = body->computeImpulseDenominator(point, direction) + 1.f / characterMass;
+                        const auto impulse = std::min(budget,
+                            float(closing / denominator) * std::min(1.f, 10.f * mPhysicsDt));
+                        if (!(impulse > 0)) continue;
+                        const auto bodies = target->second->mPhysics.collisionObjects();
+                        const auto index = std::find(bodies.begin(), bodies.end(), body) - bodies.begin();
+                        target->second->mPhysics.applyImpulse(index, direction * impulse, point);
+                        budget -= impulse;
+                        if (std::getenv("OPENMW_TRACE_CHARACTER_PUSH"))
+                        {
+                            static std::atomic<unsigned> traced{0};
+                            if (traced.fetch_add(1, std::memory_order_relaxed) < 160)
+                                Log(Debug::Info) << "Native character push: actor="
+                                    << (actor->second.get().mIsPlayer ? ESM::FormKey::dynamic("player", 1)
+                                        : actor->first->getPtr().getCellRef().getFormKey()).serialize()
+                                    << " reference=" << target->second->getPtr().getCellRef().getFormKey().serialize()
+                                    << " impulse=" << impulse;
+                        }
+                    }
+                    pushes.clear();
+                }
             if (!mActorRagdolls.empty() || !mLooseObjects.empty() || !mAnimatedReferenceBodies.empty())
             {
                 // The barrier completion runs once, after every movement job.

@@ -1,0 +1,55 @@
+{
+  "scope": "Independent original-game character contact with the original spent Vilverin mace; original force constants are not certified",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "asset_member_sha256": "76f5d30cdee6fe7d318d2539409c7bd8a5db9d931d5232c14e38b499f0cd5a83",
+  "asset": "meshes/dungeons/caves/traps/ctrapswingmaceshort01.nif",
+  "reference": "000c4986",
+  "base": "00053257",
+  "source_script": "00053259",
+  "recipe": "scripts/data/oblivion_compat/oblivion_settled_mace_native_probe.json",
+  "reader": {
+    "path": "scripts/inspect_oblivion_native_scene.py",
+    "sha256": "5d8a3fe24f9e5678d4734e6d64de3188f1e9d5bc03d1112a3a39b9fc5958973a"
+  },
+  "reader_layout_source": {
+    "repository": "local xOBSE",
+    "revision": "f64a8fa0481e24b3e159d276b29b721a548876bf",
+    "lookup": "Pinned original46B250 calls mapB0613C/55E000; live entry bytes checked against the hash-identified original executable.",
+    "layout_checks": "Source reference placement, collision->scene backlink, eight named collision nodes, fixed anchor and body-node world transforms checked."
+  },
+  "observation": {
+    "path": "build/oblivion-compat/settled-mace-push/original-03/push-observation.json",
+    "sha256": "ae773a9110e280702ba2d4a1a4c8c1e5d1aa296603ccf278e5c5dc0455c5a0dd"
+  },
+  "result": {
+    "max_head_displacement": 19.573333840606903,
+    "player_start": [
+      -4987,
+      -2112.738,
+      -1123.934
+    ],
+    "player_last_sample": [
+      -5008.3799,
+      -2044.5348,
+      -1068.1554
+    ],
+    "combat_ai": "stopped by original console",
+    "physics_memory_writes": false
+  },
+  "restoration": {
+    "path": "build/oblivion-compat/settled-mace-push/original-03/restoration.json",
+    "sha256": "ed7268fa31936f30153d0d5d7c5817131e3270fd51d5c8884b43b1a2fa394f26"
+  },
+  "retained_earlier_probe": {
+    "path": "build/oblivion-compat/settled-mace-push/original-02/observation.json",
+    "sha256": "c4fe5af1361d1f3c43b95eeda199110f3e1e02cd6cbf70f9a44d5d7705cb8344"
+  },
+  "limits": [
+    "The first screenshot comparison suggested a placement difference; direct live scene reads rule it out.",
+    "Native movement pushes the original head; no bit-identical impulse law is inferred.",
+    "Console placement, God Mode and stopped combat AI are isolated-probe boundary controls. The fork continuation uses its genuine retained save and ordinary input.",
+    "Original assets have a fixed root and seven dynamic links/head after release; Unequip contains only identity interpolators and start/sound/end text keys."
+  ],
+  "restoration_scope": "Backed-up Documents/My Games/Oblivion tree and Plugins.txt; not the entire Proton prefix."
+}
