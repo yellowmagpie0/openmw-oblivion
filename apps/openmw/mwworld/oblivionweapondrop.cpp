@@ -669,8 +669,9 @@ namespace MWWorld
                 else return baseDefinition->mScriptId;
             };
             // Inventory drops and combat disarms share the native loose-body owner.
-            // This path debits an unequipped, ordinary singleton; equipment, scripts
-            // and associated bound/enchantment effects retain their own policies.
+            // Ammunition may transfer any positive part of an unequipped stack.
+            // Other records retain singleton admission; equipment, scripts and
+            // associated bound/enchantment effects retain their own policies.
             if (!script().isZeroOrUnset() || !enchantment().isZeroOrUnset()
                 || (baseDefinition->mFlags & ESM4::Rec_Persistent)) return std::nullopt;
             const auto base = mStore.get<Record>().findFormKey(sourceId);
@@ -679,21 +680,24 @@ namespace MWWorld
             if (const auto* winner = mStore.getFormKeyIndex().winner(*base);
                 winner && (winner->mDeleted || winner->mRecordType != nativeType))
                 throw std::invalid_argument("native inventory loose item drop has no winning record");
-            if (actor != getPlayerPtr() || !actor.isInCell() || count != 1
-                || item.getCellRef().getCount() < 1 || (!isAmmunition && item.getCellRef().getCount() != 1)
+            const int sourceCount = item.getCellRef().getCount();
+            if (actor != getPlayerPtr() || !actor.isInCell() || sourceCount <= 0
+                || count == 0 || count > static_cast<size_t>(sourceCount)
+                || (!isAmmunition && (count != 1 || sourceCount != 1))
                 || item.getCellRef().getNativeBoundSource()
                 || !item.getCellRef().getNativeScriptOwner().isNull()
                 || item.getCellRef().getNativeItemScale() || item.getCellRef().getEnchantmentCharge() >= 0)
-                throw std::invalid_argument("native inventory loose item drop requires an ordinary singleton");
+                throw std::invalid_argument("native inventory loose item drop requires an ordinary supported quantity");
             auto& inventory = actor.getClass().getInventoryStore(actor);
             if (item.getContainerStore() != &inventory)
                 throw std::invalid_argument("native inventory loose item drop has a different source owner");
             if constexpr (isAmmunition)
                 if (inventory.isEquipped(item))
                     throw std::invalid_argument("native ammunition drop requires an unequipped stack");
-            auto removal = inventory.prepareItemRemoval(item, 1);
-            if (removal->getCount() != 1 || removal->depletesEquipment())
-                throw std::invalid_argument("native inventory loose item drop requires an unequipped singleton");
+            const int dropCount = static_cast<int>(count); // Bounded by the positive source count above.
+            auto removal = inventory.prepareItemRemoval(item, dropCount);
+            if (removal->getCount() != dropCount || removal->depletesEquipment())
+                throw std::invalid_argument("native inventory loose item drop requires an unequipped source");
             auto keys = prepareOblivionDynamicReferenceKey();
             const std::weak_ptr<const char> identity = mOblivionDynamicReferenceIdentity;
             const CellRef sourceBefore = item.getCellRef();
@@ -769,6 +773,7 @@ namespace MWWorld
             else if (!global.empty()) throw std::invalid_argument("native loose item drop has a nonnative ownership global");
             placed.mFactionRank = sourceBefore.getNativeOwnershipRank();
             LiveCellRef<Record> reference(placed, baseDefinition);
+            reference.mRef.setCount(dropCount);
             const Ptr preview(&reference, cell);
             auto condition = sourceBefore.getNativeItemCondition();
             if (!condition && sourceBefore.getCharge() >= 0)
@@ -838,7 +843,8 @@ namespace MWWorld
                                         : isClothing ? "TES4 inventory clothing dropped: base="
                                         : isAmmunition ? "TES4 inventory ammunition dropped: base="
                                                        : "TES4 inventory misc dropped: base=") << base->serialize()
-                << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f);
+                << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f)
+                << " count=" << dropCount;
             removal->notify();
             if (identity.expired() || getPlayerPtr() != actor) return dropped;
             breakInvisibility(actor);
