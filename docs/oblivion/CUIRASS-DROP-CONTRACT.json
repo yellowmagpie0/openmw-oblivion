@@ -1,0 +1,74 @@
+{
+  "status": "Accepted bounded worn original Rusty Iron Cuirass native drop/cold world/pickup/cold equip/final cold inventory in normal and ASan/UBSan; broader M15/M18 remain open.",
+  "milestones": [
+    "M15 body armor physical drop/cold persistence",
+    "M18 worn armor inventory/world/script ownership"
+  ],
+  "source": {
+    "path": "build/oblivion-compat/torch-drop/normal-torch-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23",
+    "next_dynamic_serial": 8
+  },
+  "content": {
+    "base": "content:oblivion.esm:0661c1",
+    "count": 1,
+    "condition": 19.65767478942871,
+    "maximum_condition": 250,
+    "weight": 30,
+    "script": "0661bf CGHeavyArmorScript"
+  },
+  "acceptance": [
+    "Ordinary inventory drag unequips actual cuirass and drops1->0 as nativeARMO key8/count1/allocator9, retaining original convex ground body and exact earned condition19.6576748.",
+    "Cold world retains body and one stateless CGHeavyArmorScript owner atkey8; do not fire OnAdd/OnEquip during drop/load.",
+    "Space pickup0->1 transfers script owner to inventory-script9/allocator10, retires physicalkey8/body; original OnAdd sets MQ01heavyArmor0->1. Save while unequipped.",
+    "Cold inventory load then ordinary paperdoll equip fires original OnEquip to MQ01heavyArmorEquip1; final fresh-process cold inventory retains slots4/condition and scriptowner9.",
+    "All other inventory/27skills/health/passives/death/quest stages/counters preserved; encumbrance-30 while dropped, +30 on pickup. Earlier retiredkeys1..7 remain exact.",
+    "Normal and instrumented real courses, focused and fullengine checks, appropriatePython and unchangedcomponent evidence with originalprovenance; genuine Torch/Pants/stateful Nirnroot regressions."
+  ],
+  "limits": [
+    "Only singleton unenchanted ordinary armor; other event profiles remain deferred.",
+    "Scripted native armor admission requires a loaded OnAdd program with no locals and only OnAdd/OnEquip entries; use explicit prepared creation only for a missing source owner. Existing owners transfer without replaying events.",
+    "No general scripted/equipped stack, enchanted or broadM15/M18 acceptance claim."
+  ],
+  "tolerances": {
+    "condition_absolute": 1e-05,
+    "loaded_snapshot_absolute": 0.0001,
+    "loaded_snapshot_relative": 1e-06,
+    "reference_near_player_units": 150,
+    "body_near_player_units": 200
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-baseline-01",
+    "result": "Actual legacydrop1->0, encumbrance103.300003->73.300003; no nativebody/allocator8 unchanged, MQ01flags0/0 unchanged."
+  },
+  "oracle": "CUIRASS-DROP-ORACLE.json",
+  "course_phases": [
+    "drop",
+    "world",
+    "pickup",
+    "equip",
+    "inventory"
+  ],
+  "retained_preflight": "normal-cuirass-native-pickup-01 failed before game launch: mixed absolute mouse actions unsupported in SDL replay. Split Space pickup and ordinary X11 paperdoll equip into separate fresh-process cases.",
+  "verification": "CUIRASS-DROP-VERIFICATION.json",
+  "normal_continuation": {
+    "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "56fdd64c3d18190376e0a2d08eb66edbbc27b8f342a00b4de428909ccb516d73",
+    "next_dynamic_serial": 10,
+    "script_owner": "dynamic:inventory-script:0000000000000009",
+    "tutorial_flags": [
+      1,
+      1
+    ]
+  },
+  "sanitized_continuation": {
+    "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "6da34cb6b993f5b4aa0ea1dcd3d01aac85eadd6ffc6da2f50ffd82343d96c91b",
+    "next_dynamic_serial": 10,
+    "script_owner": "dynamic:inventory-script:0000000000000009",
+    "tutorial_flags": [
+      1,
+      1
+    ]
+  }
+}

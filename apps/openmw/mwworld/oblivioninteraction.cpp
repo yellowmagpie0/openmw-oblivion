@@ -953,12 +953,15 @@ namespace MWWorld
         if (!owner.empty()) custom["ownership_checked"] = true;
         const bool transferredNirnroot = item.mBase == ESM::FormKey::content("oblivion.esm", 0x4e940)
             && key.isDynamic() && mOblivionScriptManager;
+        const bool transferredArmor = ptr.getType() == ESM::REC_ARMO4 && key.isDynamic()
+            && sourceRelations.mDropper && !sourceRelations.mDropper->isNull()
+            && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(item.mBase);
         std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer> scriptTransfer;
         const auto scriptSerial = mNextOblivionDynamicSerial;
-        if (transferredNirnroot)
+        if (transferredNirnroot || transferredArmor)
         {
             if (item.mCount != 1 || !scriptSerial || scriptSerial == std::numeric_limits<std::uint64_t>::max())
-                throw std::invalid_argument("native Nirnroot pickup requires a singleton identity");
+                throw std::invalid_argument("scripted native pickup requires a singleton identity");
             item.mScriptOwner = ESM::FormKey::dynamic("inventory-script", scriptSerial);
             scriptTransfer = mOblivionScriptManager->prepareItemScriptTransfer(item.mBase, key, item.mScriptOwner);
         }
@@ -1000,7 +1003,7 @@ namespace MWWorld
         if (scriptTransfer)
         {
             if (!scriptTransfer->commit())
-                throw std::logic_error("validated native Nirnroot script transfer rejected");
+                throw std::logic_error("validated native item script transfer rejected");
             ++mNextOblivionDynamicSerial;
         }
         ptr.getCellRef().setCount(0);

@@ -205,9 +205,6 @@ namespace MWWorld
                         && reference.mRef.getCount(false) != 1)
                     || model.empty())
                     throw std::invalid_argument("loose weapon admission requires an identified native instance and managed native cell");
-                if constexpr (std::is_same_v<Record, ESM4::Armor>)
-                    if (!(reference.mBase->mArmorFlags & ESM4::Armor::TES4_Shield))
-                        throw std::invalid_argument("loose armor admission requires a native shield");
                 const float scale = reference.mRef.getScale();
                 if (ESM4::droppedReferenceScale(scale) != scale)
                     throw std::invalid_argument("loose weapon admission requires a resolved native reference scale");

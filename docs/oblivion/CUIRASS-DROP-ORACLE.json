@@ -1,0 +1,78 @@
+{
+  "type": "ARMO",
+  "id": "0661c1",
+  "strings": {
+    "EDID": "CGIronCuirass",
+    "FULL": "Rusty Iron Cuirass",
+    "MODL": "Armor\\Iron\\M\\Cuirass.NIF",
+    "MOD2": "Armor\\Iron\\M\\Cuirass_gnd.NIF"
+  },
+  "payload_sha256": "68084fbe19121090b8873f9d3f8a70add30765f29e0fdf6df77025e006ed508f",
+  "inventory": {
+    "base": "content:oblivion.esm:0661c1",
+    "count": 1,
+    "condition": 19.65767478942871,
+    "charge": -1.0,
+    "equipped_slots": 4,
+    "hotkey": -1,
+    "owner": "null",
+    "remaining_usage_time": -1.0,
+    "ownership_rank": null,
+    "ownership_global": "null",
+    "extra_scale": null,
+    "bound_source": null,
+    "script_owner": null
+  },
+  "data": {
+    "armor": 900,
+    "value": 40,
+    "health": 250,
+    "weight": 30.0
+  },
+  "script_present": true,
+  "enchantment_present": false,
+  "source": "build/oblivion-compat/torch-drop/normal-torch-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "source_sha256": "641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23",
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "member": "meshes/armor/iron/m/cuirass_gnd.nif",
+  "member_sha256": "60e3c307b98b045d8e7d90c866018120b6f9c42f5aed5f54c9249bdec742da31",
+  "script": {
+    "id": "0661bf",
+    "editor_id": "CGHeavyArmorScript",
+    "payload_sha256": "e069f6e517f320fb19b721f1a77f9b05d89ab84a9f4d70984f2e3d97d7ae994f",
+    "source_sha256": "e7777153daf270da635abe8d6be740744ad95caa0e38cd9954eeabce29ae4204",
+    "handlers": {
+      "OnAdd Player": "MQ01.heavyarmor=1",
+      "OnEquip Player": "MQ01.heavyArmorEquip=1"
+    },
+    "source_flags": [
+      0,
+      0
+    ]
+  },
+  "parser_diagnostic": {
+    "bodies": 1,
+    "joints": 0,
+    "passed": true,
+    "records": 11,
+    "root": 0,
+    "asset_root": -1,
+    "scabbard": -1,
+    "body_target": 0,
+    "shape": 2,
+    "bodyT": 0,
+    "body_graph": [
+      {
+        "record": 4,
+        "node_record": 0,
+        "flags": 1,
+        "mass": 30,
+        "fixed": 0,
+        "shape": 2,
+        "bodyT": 0
+      }
+    ],
+    "joint_graph": []
+  },
+  "scope": "Independent original master/member identity, source-wear metadata and original SCPT handlers. Existing parser diagnostics establish one authored convex bodyT0; no original-executable solver or arithmetic parity claim."
+}

@@ -4,26 +4,33 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [fresh carried Torch](TORCH-DROP-CONTRACT.json),
-original LIGH02cf9f/Torch02. Ordinary Control-click drops one fresh unequipped
-Torch3->2 into typed native key7/count1; cold world, visible Space pickup2->3
-and cold inventory pass in normal and instrumented games. Lifetime1000 and all
-other metadata/progress survive; earlier keys1..6 remain retired and key7 retires
-after pickup. Shared fuel now bypasses weapon-condition conversion. Original
-OffDefault rendering and convex bodyT remain intact; burning/spent/equipped
-fuel behavior is open. [Oracle](TORCH-DROP-ORACLE.json) and
-[receipt](TORCH-DROP-VERIFICATION.json) separate content, structural, compiler,
-semantic and runtime evidence. Fresh2292 engine tests per mode/Python618,
-unchanged3301 component evidence per mode with original provenance, and real
-Iron Key/Lockpick/Pants regressions support this chunk. Broader M18 remains open.
-Historical [Iron Key receipt](IRON-KEY-DROP-VERIFICATION.json) records the
+Latest completed bounded chunk: [worn Rusty Iron Cuirass](CUIRASS-DROP-CONTRACT.json),
+original ARMO0661c1/CGIronCuirass. Ordinary drag unequips and drops1->0 as native
+key8 with its original convex ground body and earned condition19.6576748.
+Cold world, Space pickup, a separate cold paperdoll equip and final cold equipped
+inventory pass in normal and instrumented games. CGHeavyArmorScript ownership
+moves world8->inventory9; its original OnAdd/OnEquip handlers each fire once,
+setting MQ01heavyArmor/heavyArmorEquip0/0->1/0->1/1 without replay on reload.
+Only stateless OnAdd/OnEquip armor programs admit explicit missing-owner
+initialization; existing script owners transfer intact. All other inventory,
+27skills/book progress, health, quest stages/counters and33credits survive.
+[Oracle](CUIRASS-DROP-ORACLE.json) and [receipt](CUIRASS-DROP-VERIFICATION.json)
+separate structural, compiler, semantic and actual runtime evidence. Fresh342
+focused/2292 full engine tests per mode/Python618 pass; unchanged3301 component
+evidence per mode retains original provenance. Real Torch/Pants and stateful
+Nirnroot drop/cold/pickup regressions pass; the latter adapts only historical
+schema101 expectations to the current103 migration. Failed development input
+and compile attempts remain retained. Broader M15/M18 remain open.
+Historical [Torch receipt](TORCH-DROP-VERIFICATION.json) records fresh inactive
+LIGH ownership; [Iron Key receipt](IRON-KEY-DROP-VERIFICATION.json) records the
 10.2.0.0 mutable-root dependency.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/torch-drop/normal-torch-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23`.
-Fresh Torch3/lifetime1000, Iron Key1/Lockpick8/Iron Arrow24, Pants1/Bone1, Club equipped,
-allocator8; dropped keys1..7 retired/count0/no bodies. Health70.480003/110,
+`build/oblivion-compat/cuirass-drop/normal-cuirass-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `56fdd64c3d18190376e0a2d08eb66edbbc27b8f342a00b4de428909ccb516d73`.
+Cuirass equipped/condition19.6576748/scriptowner9, fresh Torch3/lifetime1000,
+Iron Key1/Lockpick8/Iron Arrow24/Pants1/Bone1, Club equipped, MQ01flags1/1,
+allocator10; dropped keys1..8 retired/count0/no bodies. Health70.480003/110,
 Endurance55, all27 skills/book history/33 credited deaths preserved. MS39stage0
 and original absence of Nirnroot/counter27 retained. Instrumented continuation
 is in the receipt.
@@ -35,7 +42,8 @@ Unequipped Rusty Iron War Axe22.494663, Club59.5000458 equipped, Health110,
 Endurance55/no Swamp Fever, Crab0/Rice1, Nirnroot owner4/Found1, MS39stage10/
 counters2,33 credited deaths/all earned skills. Allocator7, dropped key6 retired.
 
-Current gaps: equipped/scripted/bound/enchanted and other stacked item categories; broader
+Current gaps: stateful-scripted loose armor, bound/enchanted and other stacked
+item categories; active/spent Torch fuel and broader
 inventory lifetime/effects/UI; unsupported multi-body MISC, nonconvex triangle proxies
 and general prismatic
 motion; coastal rendering; natural positive Endurance-damage healing gameplay.

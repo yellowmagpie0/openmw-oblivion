@@ -66,12 +66,15 @@ namespace MWWorld
         bool dispatchActivation(const Ptr& self, const Ptr& actionReference);
         bool dispatchInventoryEquip(const Ptr& actor, const Ptr& item);
         bool hasInventoryAddEvent(const ESM::FormKey& base) const;
+        bool hasStatelessInventoryEvents(const ESM::FormKey& base) const;
         bool dispatchInventoryAdd(const Ptr& actor, const Ptr& item);
         bool canRetireConsumedInventoryOwner() const { return !mDepth && !mRetainedRuntime; }
         // Caller validates idle admission before publishing its inventory debit.
         void retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept;
         // Move existing item locals between inventory and native world identity.
         // Preparation allocates; publication neither dispatches nor allocates.
+        // Explicit initialization admits only stateless OnAdd/OnEquip programs
+        // and requires a null source; other transfers require an existing owner.
         class PreparedItemScriptTransfer
         {
             friend class OblivionScriptManager;
@@ -84,7 +87,8 @@ namespace MWWorld
             bool commit() noexcept;
         };
         std::unique_ptr<PreparedItemScriptTransfer> prepareItemScriptTransfer(
-            const ESM::FormKey& base, const ESM::FormKey& from, const ESM::FormKey& to);
+            const ESM::FormKey& base, const ESM::FormKey& from, const ESM::FormKey& to,
+            bool initializeStateless = false);
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
