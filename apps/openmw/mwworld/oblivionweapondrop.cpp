@@ -58,6 +58,7 @@ namespace MWWorld
             if (ptr.getType() == ESM::REC_CLOT4) return ptr.get<ESM4::Clothing>()->mBase;
             if (ptr.getType() == ESM::REC_AMMO4) return ptr.get<ESM4::Ammunition>()->mBase;
             if (ptr.getType() == ESM::REC_KEYM4) return ptr.get<ESM4::Key>()->mBase;
+            if (ptr.getType() == ESM::REC_LIGH4) return ptr.get<ESM4::Light>()->mBase;
             if (ptr.getType() == ESM::REC_ARMO4)
             {
                 const auto* armor = ptr.get<ESM4::Armor>()->mBase;
@@ -99,6 +100,12 @@ namespace MWWorld
                 return store.get<ESM4::Key>().search(base->mId) == base
                     ? store.get<ESM4::Key>().findFormKey(base->mId) : std::nullopt;
             }
+            if (ptr.getType() == ESM::REC_LIGH4)
+            {
+                const auto* base = ptr.get<ESM4::Light>()->mBase;
+                return store.get<ESM4::Light>().search(base->mId) == base
+                    ? store.get<ESM4::Light>().findFormKey(base->mId) : std::nullopt;
+            }
             const auto* base = ptr.get<ESM4::Armor>()->mBase;
             return store.get<ESM4::Armor>().search(base->mId) == base
                 ? store.get<ESM4::Armor>().findFormKey(base->mId) : std::nullopt;
@@ -118,14 +125,17 @@ namespace MWWorld
             const auto* clothing = mStore.get<ESM4::Clothing>().search(snapshot.mBase);
             const auto* ammunition = mStore.get<ESM4::Ammunition>().search(snapshot.mBase);
             const auto* keyItem = mStore.get<ESM4::Key>().search(snapshot.mBase);
+            const auto* light = mStore.get<ESM4::Light>().search(snapshot.mBase);
             if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr)
-                + int(clothing != nullptr) + int(ammunition != nullptr) + int(keyItem != nullptr) > 1)
+                + int(clothing != nullptr) + int(ammunition != nullptr) + int(keyItem != nullptr)
+                + int(light != nullptr) > 1)
                 throw std::runtime_error("loose equipment base has ambiguous native types");
             const ESM::Path* selected = nullptr;
             if (weapon) selected = &weapon->mModel;
             else if (misc) selected = &misc->mModel;
             else if (ammunition) selected = &ammunition->mModel;
             else if (keyItem) selected = &keyItem->mModel;
+            else if (light) selected = &light->mModel;
             else if (clothing || (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield)))
             {
                 const auto found = references.find(key);
@@ -663,11 +673,25 @@ namespace MWWorld
             constexpr bool isClothing = std::is_same_v<Record, ESM4::Clothing>;
             constexpr bool isAmmunition = std::is_same_v<Record, ESM4::Ammunition>;
             constexpr bool isKey = std::is_same_v<Record, ESM4::Key>;
-            constexpr bool isStackable = isAmmunition || std::is_same_v<Record, ESM4::MiscItem>;
+            constexpr bool isLight = std::is_same_v<Record, ESM4::Light>;
+            constexpr bool isStackable = isAmmunition || isLight || std::is_same_v<Record, ESM4::MiscItem>;
             constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP
                 : isClothing ? ESM4::REC_CLOT : isAmmunition ? ESM4::REC_AMMO
-                : isKey ? ESM4::REC_KEYM : ESM4::REC_MISC;
+                : isKey ? ESM4::REC_KEYM : isLight ? ESM4::REC_LIGH : ESM4::REC_MISC;
             if (!baseDefinition) return std::nullopt;
+            const auto lightProfile = [&] {
+                if constexpr (isLight) return std::array{baseDefinition->mData.time, baseDefinition->mData.flags};
+                else return std::array{0, 0};
+            };
+            if constexpr (isLight)
+            {
+                // Inactive fresh lights have no per-instance fuel evolution.
+                // Do not turn a partially used or burning light into a fresh one.
+                constexpr int required = ESM4::Light::Carryable | ESM4::Light::OffDefault;
+                if ((baseDefinition->mData.flags & required) != required || baseDefinition->mData.time <= 0
+                    || count != 1 || item.getClass().getRemainingUsageTime(item) != float(baseDefinition->mData.time))
+                    return std::nullopt;
+            }
             const auto health = [&] {
                 if constexpr (isWeapon) return baseDefinition->mData.health;
                 else return std::uint32_t(0);
@@ -682,7 +706,7 @@ namespace MWWorld
             };
             // Inventory drops and combat disarms share the native loose-body owner.
             // Ammunition and plain miscellaneous items may transfer a positive
-            // part of an unequipped stack.
+            // part of an unequipped stack; fresh inactive lights transfer one.
             // Other records retain singleton admission; equipment, scripts and
             // associated bound/enchantment effects retain their own policies.
             if (!script().isZeroOrUnset() || !enchantment().isZeroOrUnset()
@@ -715,7 +739,7 @@ namespace MWWorld
             const std::weak_ptr<const char> identity = mOblivionDynamicReferenceIdentity;
             const CellRef sourceBefore = item.getCellRef();
             if constexpr (!isWeapon)
-                if (sourceBefore.getNativeItemCondition() || sourceBefore.getCharge() >= 0)
+                if (sourceBefore.getNativeItemCondition() || (!isLight && sourceBefore.getCharge() >= 0))
                     throw std::invalid_argument("native miscellaneous prop cannot have durability");
             const CellRef actorBefore = actor.getCellRef();
             CellRef actorAfter = actorBefore;
@@ -738,6 +762,7 @@ namespace MWWorld
             const auto healthBefore = health();
             const auto scriptBefore = script();
             const auto enchantmentBefore = enchantment();
+            const auto lightBefore = lightProfile();
             const auto current = [&] {
                 // The removal token owns the inventory epoch. Test it before any
                 // borrowed item dereference after a model/resource callback.
@@ -746,7 +771,7 @@ namespace MWWorld
                 const auto& live = item.getCellRef();
                 return modelState() == modelBefore && baseDefinition->mFlags == flagsBefore
                     && health() == healthBefore && script() == scriptBefore
-                    && enchantment() == enchantmentBefore
+                    && enchantment() == enchantmentBefore && lightProfile() == lightBefore
                     && live.getOwner() == sourceBefore.getOwner()
                     && live.getNativeOwnershipRank() == sourceBefore.getNativeOwnershipRank()
                     && live.getNativeOwnershipGlobal() == sourceBefore.getNativeOwnershipGlobal()
@@ -789,7 +814,8 @@ namespace MWWorld
             reference.mRef.setCount(dropCount);
             const Ptr preview(&reference, cell);
             auto condition = sourceBefore.getNativeItemCondition();
-            if (!condition && sourceBefore.getCharge() >= 0)
+            // Shared inventory lights store fuel in the charge field, not durability.
+            if (!isLight && !condition && sourceBefore.getCharge() >= 0)
                 condition = static_cast<float>(double(sourceBefore.getCharge()) + sourceBefore.getChargeIntRemainder());
             if (condition) reference.mRef.setNativeItemCondition(*condition);
             reference.mRef.setEnchantmentCharge(sourceBefore.getEnchantmentCharge());
@@ -856,6 +882,7 @@ namespace MWWorld
                                         : isClothing ? "TES4 inventory clothing dropped: base="
                                         : isAmmunition ? "TES4 inventory ammunition dropped: base="
                                         : isKey ? "TES4 inventory key dropped: base="
+                                        : isLight ? "TES4 inventory light dropped: base="
                                                        : "TES4 inventory misc dropped: base=") << base->serialize()
                 << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f)
                 << " count=" << dropCount;
@@ -886,6 +913,8 @@ namespace MWWorld
         }
         if (item.getType() == ESM::REC_CLOT)
             return admit(mStore.get<ESM4::Clothing>().search(sourceId));
+        if (item.getType() == ESM::REC_LIGH)
+            return admit(mStore.get<ESM4::Light>().search(sourceId));
         return std::nullopt;
     }
 

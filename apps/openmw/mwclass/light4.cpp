@@ -30,6 +30,16 @@ namespace MWClass
         return isItem(ptr) && !getName(ptr).empty();
     }
 
+    float ESM4Light::getRemainingUsageTime(const MWWorld::ConstPtr& ptr) const
+    {
+        const auto& data = ptr.get<ESM4::Light>()->mBase->mData;
+        constexpr int inactiveCarryable = ESM4::Light::Carryable | ESM4::Light::OffDefault;
+        // Native drops currently admit only full, inactive lights. Their
+        // unspent lifetime is base-derived; used/lit instances need their own state.
+        return (data.flags & inactiveCarryable) == inactiveCarryable && data.time > 0
+            ? static_cast<float>(data.time) : -1.f;
+    }
+
     MWGui::ToolTipInfo ESM4Light::getToolTipInfo(const MWWorld::ConstPtr& ptr, int count) const
     {
         return ESM4Impl::getToolTipInfo(getName(ptr), count);

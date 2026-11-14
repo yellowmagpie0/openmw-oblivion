@@ -1,0 +1,51 @@
+{
+  "status": "Accepted bounded fresh inactive original Torch native drop/cold world/pickup/cold inventory, normal and ASan/UBSan. Broader M18 and fuel/ignition acceptance remain open.",
+  "milestones": [
+    "M18 typed LIGH inventory/world ownership and cold persistence"
+  ],
+  "content": {
+    "base": "content:oblivion.esm:02cf9f",
+    "quantity": 3,
+    "drop_quantity": 1,
+    "lifetime": 1000,
+    "flags": 59
+  },
+  "source": {
+    "path": "build/oblivion-compat/iron-key-drop/normal-iron-key-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc",
+    "next_dynamic_serial": 7
+  },
+  "acceptance": [
+    "Ordinary Control-click3->2 + typed native LIGH key7/count1/allocator8, original convex bodyT model, OffDefault rendering preserved.",
+    "Cold world reload -> ordinary Space pickup2->3 -> cold inventory; retire key7 and body, preserve keys1..6.",
+    "Full fresh lifetime1000 and other metadata retained, all other inventory, skills, Health, quests, counters and credited deaths unchanged."
+  ],
+  "baseline": {
+    "path": "build/oblivion-compat/torch-drop/normal-torch-baseline-01",
+    "result": "Legacy drop3->2 passed, fresh lifetime1000 retained, allocator7 unchanged and no native Torch body."
+  },
+  "limits": [
+    "Only fresh1000 unequipped unscripted Carryable+OffDefault single-item transfer.",
+    "No burning, ignition, partially spent fuel, equipped or full Torch stack transfer acceptance."
+  ],
+  "tolerances": {
+    "loaded_snapshot_absolute": 0.0001,
+    "loaded_snapshot_relative": 1e-06,
+    "reference_near_player_units": 150,
+    "body_near_player_units": 200
+  },
+  "oracle": "TORCH-DROP-ORACLE.json",
+  "retained_failure": "normal-torch-native-drop-01 rejected before debit because shared fuel charge was treated as durability; correction excludes Light fuel from the weapon condition fallback. Source remained3; no save.",
+  "verification_plan": "Fresh engine checks in both modes plus Python; reuse unchanged component evidence from Iron Key with exact binary hashes. Real Iron Key/Lockpick/Pants regressions for typed admission and prepared rendering.",
+  "verification": "TORCH-DROP-VERIFICATION.json",
+  "normal_continuation": {
+    "path": "build/oblivion-compat/torch-drop/normal-torch-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23",
+    "next_dynamic_serial": 8
+  },
+  "sanitized_continuation": {
+    "path": "build/oblivion-compat/torch-drop/sanitized-torch-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "511bfa2f7058f588b8a73aac9bc72c2af991b704617ac91e3134dcd359a2c35b",
+    "next_dynamic_serial": 8
+  }
+}

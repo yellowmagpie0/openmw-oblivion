@@ -1,0 +1,590 @@
+{
+  "status": "Accepted bounded fresh inactive original Torch native drop/cold world/pickup/cold inventory, normal and ASan/UBSan. Broader M18 and fuel/ignition acceptance remain open.",
+  "parent_commit": "feb73ea09ac325b050c2dd0c278aa9ab3cb55d0b",
+  "contract": "TORCH-DROP-CONTRACT.json",
+  "oracle": "TORCH-DROP-ORACLE.json",
+  "schema": 103,
+  "behavior": "3->2 + key7/count1/allocator8 -> cold world -> Space pickup2->3 -> cold inventory; all full1000 fuel; old keys1..6 and all other inventory/progress retained.",
+  "layers": {
+    "structural": "Typed LIGH cell/registry/model/body/Lua owner and exact one-item debit; no authoring support change.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/torch-drop/focused-normal-01/verification.json",
+        "sha256": "54a261d9474be28d8853599df83c0263978442bd309178aed0b4f071ccde84d2",
+        "source": {
+          "head": "feb73ea09ac325b050c2dd0c278aa9ab3cb55d0b",
+          "source_fingerprint": "a640711b5f23f390d6c39868ad6fa10cc5bf04b45d9c6ecb83e43b462eea32a7"
+        },
+        "results": {
+          "engine": {
+            "executed": 340,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "34cb598adb533f9a2095e70237cc33e5ea6e895337db5270dc9955c03147d58a",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "4d5e000919207b60f6b569b00faee05614ee1fc7351ec1ac265b0706c34b06e7",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "915f841618815d9f6029a39ec357a8831a71c99e3526929b5f895e220278aa1e"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/focused-sanitized-02/verification.json",
+        "sha256": "8543412a95fdcfebc3ef7652166088146246ce349d072f5520c68c88a1dea171",
+        "source": {
+          "head": "feb73ea09ac325b050c2dd0c278aa9ab3cb55d0b",
+          "source_fingerprint": "a640711b5f23f390d6c39868ad6fa10cc5bf04b45d9c6ecb83e43b462eea32a7"
+        },
+        "results": {
+          "engine": {
+            "executed": 340,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "84c478e2db4c66fa943e28c3fec2f06642cf8f0e9a73fa1d38687a9cb9b9135d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "88d8d38abbe932b77fa73493942cab570793396ad8fcf699c878d54a288566bb",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-normal-01/verification.json",
+        "sha256": "a9e15695a4ab80622566eec1621b34f6ce1f0505ba78242978fd759fd08d7a71",
+        "source": {
+          "head": "feb73ea09ac325b050c2dd0c278aa9ab3cb55d0b",
+          "source_fingerprint": "a640711b5f23f390d6c39868ad6fa10cc5bf04b45d9c6ecb83e43b462eea32a7"
+        },
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "34cb598adb533f9a2095e70237cc33e5ea6e895337db5270dc9955c03147d58a",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "ba8f4e76d962d584e1fdb685bb1123718eecca0e13c21abf0ffc2a04ab34a062",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-sanitized-1/verification.json",
+        "sha256": "6845b76de64d49c85027aca4f021ce3b7ce8e9bb613c2bd05c834f4a763bba96",
+        "source": {
+          "head": "feb73ea09ac325b050c2dd0c278aa9ab3cb55d0b",
+          "source_fingerprint": "a640711b5f23f390d6c39868ad6fa10cc5bf04b45d9c6ecb83e43b462eea32a7"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "84c478e2db4c66fa943e28c3fec2f06642cf8f0e9a73fa1d38687a9cb9b9135d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "63c95dcd0e2bada2e59b06aea4c0a171f9063c0598813f424fbe947ca5ac7304",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-sanitized-2/verification.json",
+        "sha256": "ad50084a9754c53f7924db2ef27e69365382f8ebc1b23e88882ccc693ff74a48",
+        "source": {
+          "head": "feb73ea09ac325b050c2dd0c278aa9ab3cb55d0b",
+          "source_fingerprint": "a640711b5f23f390d6c39868ad6fa10cc5bf04b45d9c6ecb83e43b462eea32a7"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "84c478e2db4c66fa943e28c3fec2f06642cf8f0e9a73fa1d38687a9cb9b9135d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "ed490250e54a0a5ab4d0badd12dd0127484c97a6b5f0cde7a395cc992a223b50",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-sanitized-3/verification.json",
+        "sha256": "6fd93d5efc8af9a53abce0a8d3c5d39e319bc3086a9116fc2f60b3934afca063",
+        "source": {
+          "head": "feb73ea09ac325b050c2dd0c278aa9ab3cb55d0b",
+          "source_fingerprint": "a640711b5f23f390d6c39868ad6fa10cc5bf04b45d9c6ecb83e43b462eea32a7"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "84c478e2db4c66fa943e28c3fec2f06642cf8f0e9a73fa1d38687a9cb9b9135d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "426905568a5e004ee5bd71cdb359b970bd0f87df3f8f30278815777ecd6b5674",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-sanitized-4/verification.json",
+        "sha256": "7705906de32c8919d581e8a40bdbefa616a3ea5a78b0c6a592ab9b054d96a980",
+        "source": {
+          "head": "feb73ea09ac325b050c2dd0c278aa9ab3cb55d0b",
+          "source_fingerprint": "a640711b5f23f390d6c39868ad6fa10cc5bf04b45d9c6ecb83e43b462eea32a7"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "84c478e2db4c66fa943e28c3fec2f06642cf8f0e9a73fa1d38687a9cb9b9135d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "cce8079083625bbbce8392795a21fb16ab33b17d0d03fc48d8923e58f35914fe",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "component_evidence_reused": {
+      "passed": true,
+      "reason": "Only engine, documentation and runtime-auditor changes; shared component source, tests and component binaries remain unchanged.",
+      "evidence": [
+        {
+          "mode": "normal",
+          "path": "build/oblivion-compat/iron-key-drop/integration-normal-01/verification.json",
+          "sha256": "dfe5b69dc8a2cc6c603fd238c3786e28f4589a4d387380ca609b1064dd9a2e72",
+          "original_source": {
+            "head": "e064d1c49b213c19d6ee2750472aed7d7fe96b24",
+            "source_fingerprint": "27577093b4e6d8b2f1854f71c95963a360b4337efb2ac2f9288565d2dba6656c"
+          },
+          "result": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "d789d321a548e4cf80940007a1f39c869368dab5175cc6874c3480f6cbfdde19",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "f09a4da083b4ac37167bb55fa82d309af0a97e59628bcc6cdb469cd862ae6c07",
+            "inventory_sha256": "ae8443738d2869a13b520182a423ecf263b2ed8741518a0fc319e5a1a61b22cd",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "binary": "build/components-tests"
+        },
+        {
+          "mode": "sanitized",
+          "path": "build/oblivion-compat/iron-key-drop/components-sanitized-01/verification.json",
+          "sha256": "32c567400cbcf2ccfd4a99bdb8103c6d72b5024e1b5fcbdac0b2d2c28724814a",
+          "original_source": {
+            "head": "e064d1c49b213c19d6ee2750472aed7d7fe96b24",
+            "source_fingerprint": "27577093b4e6d8b2f1854f71c95963a360b4337efb2ac2f9288565d2dba6656c"
+          },
+          "result": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "4435b48a130591268bef4510de95df0e3881f4ec76fda1ac71466952a68f483f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c663474208e9c82ad43895db77cb1e319a285c2f55c97851cb1ef8b6040c49ac",
+            "inventory_sha256": "60cbbf968a22556ce62f8b924a73a5d5058dc75d4411dc869e0bf279af6b4081",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "binary": "build/m15-sanitize/components-tests"
+        }
+      ]
+    },
+    "exact_sanitized_engine_union": [
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-sanitized-1/engine.xml",
+        "count": 82,
+        "sha256": "63c95dcd0e2bada2e59b06aea4c0a171f9063c0598813f424fbe947ca5ac7304"
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-sanitized-2/engine.xml",
+        "count": 82,
+        "sha256": "ed490250e54a0a5ab4d0badd12dd0127484c97a6b5f0cde7a395cc992a223b50"
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-sanitized-3/engine.xml",
+        "count": 82,
+        "sha256": "426905568a5e004ee5bd71cdb359b970bd0f87df3f8f30278815777ecd6b5674"
+      },
+      {
+        "path": "build/oblivion-compat/torch-drop/integration-sanitized-4/engine.xml",
+        "count": 2046,
+        "sha256": "cce8079083625bbbce8392795a21fb16ab33b17d0d03fc48d8923e58f35914fe"
+      }
+    ],
+    "semantic": "Independent raw original record/member audit and save decoder; full tick-zero physical snapshot compared at1e-4 absolute/1e-6 relative.",
+    "actual_runtime": [
+      {
+        "mode": "normal",
+        "phase": "drop",
+        "path": "build/oblivion-compat/torch-drop/normal-torch-native-drop-02",
+        "manifest": "docs/oblivion/original-torch-drop.json",
+        "manifest_sha256": "857f64ed200b28013890c99c48cc8618aa3086f9d05ac195f23950be7ca7da3e",
+        "audit_sha256": "a5275f402cf01623c48c6f44832080542f1b7ebe73d9068fdd0062ed21d31806",
+        "source_sha256": "691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc",
+        "save_sha256": "611ad176ba0394b048b53c93d904e6fa9d96b43cc359009150398175bbbf2dc1",
+        "process": {
+          "pid": 901864,
+          "start_ticks": 18254028,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-drop-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-key-drop/normal-iron-key-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cd8a507d697cdec8b9952add8c61574b2897e29ab8dbc7b2599bea40b1e511d1"
+        }
+      },
+      {
+        "mode": "normal",
+        "phase": "world",
+        "path": "build/oblivion-compat/torch-drop/normal-torch-native-world-01",
+        "manifest": "docs/oblivion/original-torch-world.json",
+        "manifest_sha256": "6c04a4fd50d26ba63acd94f95511bf5cc93a9a9c1b699be594cfe50534cbcebb",
+        "audit_sha256": "e2c14ce9082de84ca656e5977e2a1f99c54860d38954e090a703d7fdf6e6e85c",
+        "source_sha256": "611ad176ba0394b048b53c93d904e6fa9d96b43cc359009150398175bbbf2dc1",
+        "save_sha256": "eb834e5bd39538bb0ba05bf1884202d5d8dbb09938395c89ea6dead913572715",
+        "process": {
+          "pid": 902258,
+          "start_ticks": 18266851,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-drop-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cd8a507d697cdec8b9952add8c61574b2897e29ab8dbc7b2599bea40b1e511d1"
+        }
+      },
+      {
+        "mode": "normal",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/torch-drop/normal-torch-native-pickup-01",
+        "manifest": "docs/oblivion/original-torch-pickup.json",
+        "manifest_sha256": "970eb8091e3f300460d9f507a303bfc50ba568bb154eafefc3fc90ab64561647",
+        "audit_sha256": "85fd5b72e4c839281a2c36ace143e362530bd7e72cb8d28725b20c13fee84fdd",
+        "source_sha256": "eb834e5bd39538bb0ba05bf1884202d5d8dbb09938395c89ea6dead913572715",
+        "save_sha256": "82b86633058483e0a5533f33f0a94f36e6651384a1974a0f54ed631a38de07bb",
+        "process": {
+          "pid": 902543,
+          "start_ticks": 18275845,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cd8a507d697cdec8b9952add8c61574b2897e29ab8dbc7b2599bea40b1e511d1"
+        }
+      },
+      {
+        "mode": "normal",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/torch-drop/normal-torch-native-inventory-01",
+        "manifest": "docs/oblivion/original-torch-inventory.json",
+        "manifest_sha256": "5abba7843d2d05af5aaf4e9f70f0ba3a0bab7921a162a1100b48766bd3c2b083",
+        "audit_sha256": "3efd7d9c12e05bc606e0670fd52ac63c534194cfb3ff41e6616d72d9ec658caf",
+        "source_sha256": "82b86633058483e0a5533f33f0a94f36e6651384a1974a0f54ed631a38de07bb",
+        "save_sha256": "641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23",
+        "process": {
+          "pid": 902734,
+          "start_ticks": 18284367,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cd8a507d697cdec8b9952add8c61574b2897e29ab8dbc7b2599bea40b1e511d1"
+        }
+      },
+      {
+        "mode": "sanitized",
+        "phase": "drop",
+        "path": "build/oblivion-compat/torch-drop/sanitized-torch-native-drop-02",
+        "manifest": "docs/oblivion/original-torch-drop-sanitized.json",
+        "manifest_sha256": "f7a80f850009de32ec4751a658b68c7cc30a8ef1fce85f6be118202fce31fafe",
+        "audit_sha256": "efb6576dfceba6dd095699c941c324fc1e256ea26c68b468f5ba8a79626a7509",
+        "source_sha256": "691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc",
+        "save_sha256": "de0457cdaf9d97a072747bd63cbc53738e91aadce28e6e35ed551ae4a51bbe99",
+        "process": {
+          "pid": 903486,
+          "start_ticks": 18329246,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/sanitized-torch-native-drop-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-key-drop/normal-iron-key-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "656ab00a5becd99c2f898bf44fb170d3b6a6613df633a12fd895cd89779e7732"
+        }
+      },
+      {
+        "mode": "sanitized",
+        "phase": "world",
+        "path": "build/oblivion-compat/torch-drop/sanitized-torch-native-world-01",
+        "manifest": "docs/oblivion/original-torch-world-sanitized.json",
+        "manifest_sha256": "ee85a736283e243818dcd560d5a541c3d16d781f4c2c4d627ff1a7b99f121cf3",
+        "audit_sha256": "5b095d6d6abea760c8c659ad09a5d259a4a2d1643c1dc861f235e26fe6d54b4c",
+        "source_sha256": "de0457cdaf9d97a072747bd63cbc53738e91aadce28e6e35ed551ae4a51bbe99",
+        "save_sha256": "417b0453c90cab3a538d838c9c49819539abadcf71112c65c20291ba85dc9aba",
+        "process": {
+          "pid": 910703,
+          "start_ticks": 18362094,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/sanitized-torch-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/sanitized-torch-native-drop-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "656ab00a5becd99c2f898bf44fb170d3b6a6613df633a12fd895cd89779e7732"
+        }
+      },
+      {
+        "mode": "sanitized",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/torch-drop/sanitized-torch-native-pickup-01",
+        "manifest": "docs/oblivion/original-torch-pickup-sanitized.json",
+        "manifest_sha256": "bd9f3f51d7408a987d5292aacb16ddc8280b8d3929e6bd8110cca134c9ba9001",
+        "audit_sha256": "eb168190bb2c8cfbeb0d14439e902acbf2dad75f5c6312d17ada4e8a3c11a934",
+        "source_sha256": "417b0453c90cab3a538d838c9c49819539abadcf71112c65c20291ba85dc9aba",
+        "save_sha256": "cf8f869c50b1c133ce38dd7e63004fd007d4717e721139a6787508e2d438a2d6",
+        "process": {
+          "pid": 910952,
+          "start_ticks": 18394188,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/sanitized-torch-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/sanitized-torch-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "656ab00a5becd99c2f898bf44fb170d3b6a6613df633a12fd895cd89779e7732"
+        }
+      },
+      {
+        "mode": "sanitized",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/torch-drop/sanitized-torch-native-inventory-01",
+        "manifest": "docs/oblivion/original-torch-inventory-sanitized.json",
+        "manifest_sha256": "558022e1cfc835eeb69e0cd35e7e9f3e22ba21da21531496d3f97bd8b00143a6",
+        "audit_sha256": "52de1484aaf2a4321493dd65ba5a48b75e870ca1343172ac505cb728a713ce03",
+        "source_sha256": "cf8f869c50b1c133ce38dd7e63004fd007d4717e721139a6787508e2d438a2d6",
+        "save_sha256": "511bfa2f7058f588b8a73aac9bc72c2af991b704617ac91e3134dcd359a2c35b",
+        "process": {
+          "pid": 911948,
+          "start_ticks": 18428345,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/sanitized-torch-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/sanitized-torch-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "656ab00a5becd99c2f898bf44fb170d3b6a6613df633a12fd895cd89779e7732"
+        }
+      }
+    ]
+  },
+  "fresh_content_regressions": [
+    {
+      "path": "build/oblivion-compat/torch-drop/regression-normal-key-drop-01",
+      "audit_sha256": "48f70ab4bd677650a4d2efe586d12fb99f60488df0628afe251677a7c5481c69",
+      "captured_manifest_sha256": "ac38bbaec0edcfc84263f8b3349467c06dedb0fb6ba59c7d6f49764b2124a6af",
+      "source_sha256": "cd8dad6581ce16122b9c2b1ba23e0737a1081483e543062452bdae7f21325f13",
+      "save_sha256": "eb762dec8c3ed928e1b6e25f21ff79e742af49abaed10f0dcec37bbb9eeeb717"
+    },
+    {
+      "path": "build/oblivion-compat/torch-drop/regression-normal-lockpick-drop-01",
+      "audit_sha256": "6f656c872bc58dd4fc74ac6dffae7a04e6779683bd07f5ed3af7a9915f51351e",
+      "captured_manifest_sha256": "94a4434399d9546a89f6db0786769f74ea3359c75073b9ecbee32747dae14d0c",
+      "source_sha256": "6cc32234c8a81a2f12f32e84c3005b818a29e401ce45b3b7c7fb60453d72885f",
+      "save_sha256": "24e36dae7c61a1d0df41fbf5eb76e3ddd9c80d0bceb8f331b2e439aece5fa1fa"
+    },
+    {
+      "path": "build/oblivion-compat/torch-drop/regression-normal-pants-world-01",
+      "audit_sha256": "df10b36874ecec7a1a55df445d7cb7f7ed75c71901ec64f942da0d0dc06f5a92",
+      "captured_manifest_sha256": "cfff585d76e45a80b8c9f1f6ab6b1f4eed7275ca307609ddb0f7a19decce9603",
+      "source_sha256": "2fb9baeca887df239c56c2877d7c361b60bf904fc21c5f9410f281a4f13aa565",
+      "save_sha256": "e9a1c52c02680f64e2f9091291799d9c066464fdd61ff3bc4f277a6140778e66"
+    }
+  ],
+  "baseline": {
+    "passed": true,
+    "source_sha256": "691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc",
+    "next_dynamic_serial": 7,
+    "torch_inventory": [
+      {
+        "base": "content:oblivion.esm:02cf9f",
+        "count": 2,
+        "condition": -1.0,
+        "charge": -1.0,
+        "equipped_slots": 0,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": 1000.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null,
+        "script_owner": null
+      }
+    ],
+    "native_loose_bodies": []
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/torch-drop/normal-torch-native-drop-01",
+      "accepted": false,
+      "reason": "Fuel stored in shared Light charge field reached weapon-condition conversion, causing strict no-durability admission rejection before debit.",
+      "no_save": true,
+      "log_line": "Error in frame: loose miscellaneous prop/clothing cannot have durability"
+    },
+    {
+      "path": "build/oblivion-compat/torch-drop/sanitized-torch-native-drop-01",
+      "accepted": false,
+      "reason": "Harness matched completed library target before final game link; OS denied executable launch. No game process or save. Corrected exact-line completion check. Premature focused-sanitized-01 build terminated before tests to avoid overlapping configuration builds."
+    }
+  ],
+  "limits": [
+    "Only fresh1000 unequipped unscripted Carryable+OffDefault single-item transfer.",
+    "No burning, ignition, partially spent fuel, equipped or full Torch stack transfer acceptance."
+  ],
+  "binary_sha256": {
+    "normal": "cd8a507d697cdec8b9952add8c61574b2897e29ab8dbc7b2599bea40b1e511d1",
+    "sanitized": "656ab00a5becd99c2f898bf44fb170d3b6a6613df633a12fd895cd89779e7732"
+  },
+  "visual": "Normal original Torch inventory tooltip and both builds visible ground model/pickup focus inspected; OffDefault rendering retained. No original-executable burning/fuel oracle claim.",
+  "oracle_sha256": "decb545febc9546a533c5bcb6e74cdb58c93bbb38b67912fb1ca09ad1137f710",
+  "contract_sha256": "90715d3dcfd928d4df73c88745859b3ad4e7ef1f7b24b35e0ce8773199d211f3",
+  "inspected_visual_captures": [
+    {
+      "path": "build/oblivion-compat/torch-drop/normal-torch-native-drop-02/original-torch-dropped-world.png",
+      "sha256": "71e8496b82788feb54b0a3d483a3705cb2302be9355d425688fa50e220fa9da6"
+    },
+    {
+      "path": "build/oblivion-compat/torch-drop/normal-torch-native-pickup-01/original-torch-focused.png",
+      "sha256": "8591db817fc8d3016bd4419a4c861c403ab58641f5142e3cae45f6d927675ce3"
+    },
+    {
+      "path": "build/oblivion-compat/torch-drop/sanitized-torch-native-drop-02/original-torch-dropped-world.png",
+      "sha256": "5f8e90330dd3f3439f4ad6af39da9710c6db059f6318331e8ee153e145674be7"
+    },
+    {
+      "path": "build/oblivion-compat/torch-drop/sanitized-torch-native-pickup-01/original-torch-focused.png",
+      "sha256": "44b23c4de6e1e504321c463509d650321b5d6e2082aa601bbb4e4f216366de59"
+    }
+  ]
+}

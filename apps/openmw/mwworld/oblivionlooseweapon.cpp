@@ -24,7 +24,8 @@ namespace MWWorld
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::MiscItem>>,
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::Clothing>>,
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::Ammunition>>,
-                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Key>>> mCell;
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Key>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Light>>> mCell;
             CellStore* mOwner = nullptr;
             MWRender::Objects* mObjects = nullptr;
             std::unique_ptr<MWRender::Objects::PreparedModel> mModel;
@@ -218,14 +219,16 @@ namespace MWWorld
                 if (const auto condition = reference.mRef.getNativeItemCondition())
                 {
                     if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Clothing>
-                        || std::is_same_v<Record, ESM4::Ammunition> || std::is_same_v<Record, ESM4::Key>)
+                        || std::is_same_v<Record, ESM4::Ammunition> || std::is_same_v<Record, ESM4::Key>
+                        || std::is_same_v<Record, ESM4::Light>)
                         throw std::invalid_argument("loose miscellaneous prop/clothing cannot have durability");
                     else if (!std::isfinite(*condition) || *condition < 0
                         || reference.mBase->mData.health == 0 || *condition > reference.mBase->mData.health)
                         throw std::invalid_argument("loose weapon condition exceeds native base health");
                 }
                 const auto charge = reference.mRef.getEnchantmentCharge();
-                if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Key>)
+                if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Key>
+                    || std::is_same_v<Record, ESM4::Light>)
                 {
                     if (charge != -1.f)
                         throw std::invalid_argument("loose miscellaneous prop cannot have enchantment charge");

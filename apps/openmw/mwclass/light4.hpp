@@ -16,6 +16,7 @@ namespace MWClass
     public:
         std::string_view getName(const MWWorld::ConstPtr& ptr) const override;
         bool isItem(const MWWorld::ConstPtr& ptr) const override;
+        float getRemainingUsageTime(const MWWorld::ConstPtr& ptr) const override;
         bool hasToolTip(const MWWorld::ConstPtr& ptr) const override;
         MWGui::ToolTipInfo getToolTipInfo(const MWWorld::ConstPtr& ptr, int count) const override;
         std::unique_ptr<MWWorld::Action> activate(

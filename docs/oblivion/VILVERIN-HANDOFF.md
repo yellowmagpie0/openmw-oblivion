@@ -4,25 +4,26 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest bounded chunk: [the carried Iron Key](IRON-KEY-DROP-CONTRACT.json),
-original KEYM159826/CGShamanKey. Native key admission/capture/restore now retains
-its typed world owner and original one-box bodyT model through ordinary drop,
-cold world, visible Space pickup and final cold inventory in both builds.
-The real10.2.0.0 model exposed a renderer gap: its physical root was static.
-NifOsg now preserves private physical roots/targets/caches for this observed
-format, keeping strict binding validation and the existing collision/solver rules.
-Legacy drop/save already worked; no disappearance or legacy migration claim.
-[Oracle](IRON-KEY-DROP-ORACLE.json) distinguishes original identities and parser
-diagnostics. [Receipt](IRON-KEY-DROP-VERIFICATION.json) binds eight checkpoints,
-fresh3301 component/2292 engine per mode/Python618 and original Lockpick/Pants/
-worn-axe regressions. Initial root rejection and pre-fix structural checks remain
-retained as partial evidence. Schema103 unchanged; broader M15/M18 remain open.
+Latest completed bounded chunk: [fresh carried Torch](TORCH-DROP-CONTRACT.json),
+original LIGH02cf9f/Torch02. Ordinary Control-click drops one fresh unequipped
+Torch3->2 into typed native key7/count1; cold world, visible Space pickup2->3
+and cold inventory pass in normal and instrumented games. Lifetime1000 and all
+other metadata/progress survive; earlier keys1..6 remain retired and key7 retires
+after pickup. Shared fuel now bypasses weapon-condition conversion. Original
+OffDefault rendering and convex bodyT remain intact; burning/spent/equipped
+fuel behavior is open. [Oracle](TORCH-DROP-ORACLE.json) and
+[receipt](TORCH-DROP-VERIFICATION.json) separate content, structural, compiler,
+semantic and runtime evidence. Fresh2292 engine tests per mode/Python618,
+unchanged3301 component evidence per mode with original provenance, and real
+Iron Key/Lockpick/Pants regressions support this chunk. Broader M18 remains open.
+Historical [Iron Key receipt](IRON-KEY-DROP-VERIFICATION.json) records the
+10.2.0.0 mutable-root dependency.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/iron-key-drop/normal-iron-key-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc`.
-Iron Key1/Lockpick8/Iron Arrow24/unequipped/no extras, Pants1/Bone1, Club equipped,
-allocator7; dropped keys1..6 retired/count0/no bodies. Health70.480003/110,
+`build/oblivion-compat/torch-drop/normal-torch-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23`.
+Fresh Torch3/lifetime1000, Iron Key1/Lockpick8/Iron Arrow24, Pants1/Bone1, Club equipped,
+allocator8; dropped keys1..7 retired/count0/no bodies. Health70.480003/110,
 Endurance55, all27 skills/book history/33 credited deaths preserved. MS39stage0
 and original absence of Nirnroot/counter27 retained. Instrumented continuation
 is in the receipt.
