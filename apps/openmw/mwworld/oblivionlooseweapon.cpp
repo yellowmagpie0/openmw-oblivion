@@ -26,7 +26,8 @@ namespace MWWorld
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::Ammunition>>,
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::Key>>,
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::Light>>,
-                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Ingredient>>> mCell;
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Ingredient>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Apparatus>>> mCell;
             CellStore* mOwner = nullptr;
             MWRender::Objects* mObjects = nullptr;
             std::unique_ptr<MWRender::Objects::PreparedModel> mModel;
@@ -218,7 +219,8 @@ namespace MWWorld
                 {
                     if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Clothing>
                         || std::is_same_v<Record, ESM4::Ammunition> || std::is_same_v<Record, ESM4::Key>
-                        || std::is_same_v<Record, ESM4::Light> || std::is_same_v<Record, ESM4::Ingredient>)
+                        || std::is_same_v<Record, ESM4::Light> || std::is_same_v<Record, ESM4::Ingredient>
+                        || std::is_same_v<Record, ESM4::Apparatus>)
                         throw std::invalid_argument("loose miscellaneous prop/clothing cannot have durability");
                     else if (!std::isfinite(*condition) || *condition < 0
                         || reference.mBase->mData.health == 0 || *condition > reference.mBase->mData.health)
@@ -226,7 +228,8 @@ namespace MWWorld
                 }
                 const auto charge = reference.mRef.getEnchantmentCharge();
                 if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Key>
-                    || std::is_same_v<Record, ESM4::Light> || std::is_same_v<Record, ESM4::Ingredient>)
+                    || std::is_same_v<Record, ESM4::Light> || std::is_same_v<Record, ESM4::Ingredient>
+                    || std::is_same_v<Record, ESM4::Apparatus>)
                 {
                     if (charge != -1.f)
                         throw std::invalid_argument("loose miscellaneous prop cannot have enchantment charge");

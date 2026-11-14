@@ -1,0 +1,28 @@
+{
+  "target": "Original Novice Retort singleton native APPA drop/cold world/pickup/cold inventory",
+  "source": {
+    "path": "build/oblivion-compat/retort-drop/normal-retort-inventory-survey-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "d73a48b657d397de37f152a511a719c0acfe183465fb16732526daedeedfef95",
+    "acquisition": "normal-retort-acquisition-01: ordinary navigation-assisted movement with collision, rendered focus and Space pickup; original06efb7 retired, inventory1, no grants/teleport.",
+    "cold_readback": "normal-retort-inventory-survey-01: actual cold inventory quality10/type3/value50/weight3, exact player/native values/progress/life/quests retained."
+  },
+  "baseline": "normal-retort-drop-baseline-01: legacyWorldApparatus=true and inventory debit; native Retort refs unchanged, no native body, allocator12 unchanged. No disappearance claim.",
+  "acceptance": [
+    "Native APPA key12/count1/next13 and original movable one-hull/body4/root0/bodyT0 physical ownership on ordinary drop1->0.",
+    "Cold world restores identity and full physical state; focused ordinary pickup0->1 retires key12/body; cold inventory retains quantity and original base properties.",
+    "Original content reference06efb7 stays deleted/count0/taken and no duplicate source or reuse of retired native keys.",
+    "Other inventory including spent Torch987+2fresh1000, Cuirasswear/owner9/MQ01flags1/1, health/skills/books/passives/quests/life/33deaths remain intact. Encumbrance changes by original inventoryweight3 only.",
+    "Normal/SAN real courses, focused/integration checks and targeted real regressions pass."
+  ],
+  "profile": "Scriptless content-defined singleton apparatus; no bound/scaled/enchantment/durability extras; finite nonnegative weight/quality and documented apparatus type0..3; one movable finite-positive-mass body and no joints. Source data/profile revalidated before publication.",
+  "fallback": "Unsupported apparatus models retain their prior legacy path, including the nearby Alembic. Ingredient native static/scripted fallback is retained.",
+  "limits": [
+    "No general concave/unsupported apparatus shape support, multi-body or stacked/scripted apparatus acceptance.",
+    "No Alchemy use, potion creation or numerical Alchemy rules implemented.",
+    "No native apparatus Lua type/record binding or TES4 MCP authoring claim. The missing types.ESM4Apparatus entry is recorded separately.",
+    "No old legacy-object migration or broader M15/M18 completion."
+  ],
+  "oracle": "RETORT-DROP-ORACLE.json",
+  "auditor": "scripts/verify_retort_drop.py",
+  "schema": 103
+}

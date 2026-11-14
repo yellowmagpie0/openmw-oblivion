@@ -22,6 +22,7 @@
 #include <components/esm4/loadkeym.hpp>
 #include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadingr.hpp>
+#include <components/esm4/loadappa.hpp>
 #include <components/misc/algorithm.hpp>
 
 #include "cellstore.hpp"
@@ -193,7 +194,8 @@ namespace MWWorld
             std::reference_wrapper<const LiveCellRef<ESM4::Ammunition>>,
             std::reference_wrapper<const LiveCellRef<ESM4::Key>>,
             std::reference_wrapper<const LiveCellRef<ESM4::Light>>,
-            std::reference_wrapper<const LiveCellRef<ESM4::Ingredient>>>;
+            std::reference_wrapper<const LiveCellRef<ESM4::Ingredient>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Apparatus>>>;
         struct LooseWeaponAdmission
         {
             CellStore& mCell;

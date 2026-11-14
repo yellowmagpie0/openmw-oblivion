@@ -4,30 +4,30 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [partially spent Torch fuel](SPENT-TORCH-DROP-CONTRACT.json).
-Original Torch02 ordinary equip/use and unequip produced one987-second inactive
-Torch beside2fresh1000. It now uses native loose LIGH ownership with its original
-bodyT, then retains987 through actual drop/cold world/visible Space pickup/cold
-inventory in normal and ASan/UBSan games. Native key11/next12 retires on pickup;
-the used item stays separate from2fresh. Fresh Torch drop/cold-world regressions
-retain1000 in both modes. Five corruptions of the actual world save are rejected
-before load completion. Fresh221 focused/2292 full engine tests per mode and618
-Python pass. [Receipt](SPENT-TORCH-DROP-VERIFICATION.json) separates original-content,
-structural, compiler, semantic and normal-input evidence. Native dropped lights
-remain inactive; no world ignition/ticking, spent-zero or infinite-light claim.
+Latest completed bounded chunk: [original Novice Retort](RETORT-DROP-CONTRACT.json).
+Ordinary walking, rendered focus and Space pickup acquired original APPA000c4f /
+placed06efb7 in Wellspring Cave. Native singleton apparatus ownership now retains
+its original one-hull body through drop, cold world, visible pickup and cold
+inventory in normal and ASan/UBSan games. Type3/quality10/value50/weight3 remain
+intact; body mass5 remains distinct from inventory weight. Original06efb7 and new
+native key12 remain retired after pickup; allocator13. [Receipt](RETORT-DROP-VERIFICATION.json)
+separates original-content, structural, compiler, semantic and runtime evidence.
+342 focused and2292 full engine cases per mode pass;618 Python cases pass on
+retry after a retained Xvfb startup failure. Spent Torch987 drop/cold-world
+regressions pass in both modes. No Alchemy use/formula, new Lua apparatus namespace,
+legacy-save migration or full milestone acceptance claim.
 
-Prior [native container discovery](NATIVE-CONTAINER-DISCOVERY-VERIFICATION.json)
-exposes original enabled Sack06efcf exactly once across cold loads. No full TES4
-Container inventory bindings or MCP authoring support. Prior
-[Bonemeal receipt](BONEMEAL-DROP-VERIFICATION.json) retains its original movable
-bodyT/drop/cold/pickup evidence. Broader milestone acceptance remains open.
+Prior [spent Torch](SPENT-TORCH-DROP-VERIFICATION.json) preserves987 beside2fresh1000;
+[native container discovery](NATIVE-CONTAINER-DISCOVERY-VERIFICATION.json) exposes
+original Sack06efcf. [Bonemeal](BONEMEAL-DROP-VERIFICATION.json) retains its original
+movable body. No TES4 MCP authoring support.
 
-Next action: survey enabled pickups and reachable dead-actor stock near the
-current Wellspring continuation for an original ALCH or APPA item that exercises
-a missing native loose category. Verify an ordinary acquisition and its winning
-record/model before choosing the implementation. Do not grant items, enable
-disabled Zahrasha or reroll the lost diagnostic sack opening. Keep the next chunk
-bounded by the observed failure and its needed dependency.
+Current next chunk: nearby original **Novice Alembic**, APPA010604 / placed06efb8.
+Its original model fails conversion with an unsupported body shape and contains
+bhkMultiSphereShape. Inspect original shape semantics and ordinary acquisition,
+then implement only the dependency needed for this real item. Retort completion
+is the checkpoint before expanding into this dependency. Do not enable Zahrasha
+or reroll the lost sack opening.
 
 Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
 ordinary approach reached the sack, whose first roll contained an inkwell/no gold.
@@ -36,17 +36,17 @@ The opening harness awaited the wrong kind label and did not retain a save.
 normal input receipts and failure; no looting acceptance or continuation claim.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/spent-torch-drop/normal-spent-torch-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `3f6a73c6fa99603f5980c8bcaee23d4a919ffd60e21a79c734bd456b0602b10c`.
-Instrumented continuation: same root `sanitized-spent-torch-inventory-01`,
-SHA256 `94bd42d5e48da4e55a167219815388c3cb2db1684f85bcec14d15b738e6af72a`.
-Cuirass equipped/condition19.6576748/scriptowner9, Torch1/fuel987 plus2fresh1000
-all unequipped, Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/Bone1, Club
-equipped, MQ01flags1/1, allocator12. Native keys1..8,10,11 retired/count0/no
+`build/oblivion-compat/retort-drop/normal-retort-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `b60483351a2b63708b01d5ff3439bf03b8d4f94e26f21dc4eb55a9d9816a65ec`.
+Instrumented continuation: same root `sanitized-retort-native-inventory-01`,
+SHA256 `a340a1882b86b4db0a31a3a95edcce2f2e46be2e2228e007c370d6b6e0b37604`.
+Retort1, Cuirass equipped/condition19.6576748/scriptowner9, Torch1/fuel987 plus
+2fresh1000 all unequipped, Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/Bone1,
+Club equipped, MQ01flags1/1, allocator13. Native keys1..8,10..12 retired/count0/no
 bodies; inventory-script9 active and no native ref9. Health70.480003/110,
 Endurance55, all27skills/book history/33 credited deaths preserved. MS39stage0
-and original absence of Nirnroot/counter27 retained. Older all-fresh source707eaa...
-remains identified in the Bonemeal receipt; do not merge independent branches.
+and original absence of Nirnroot/counter27 retained. Earlier sources remain in
+the linked receipts; do not merge independent branches.
 
 Healthy shore continuation remains separate:
 `build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
@@ -105,5 +105,5 @@ Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
 Checkpoint: native singleton ingredient/weapon/MISC/KEYM, articulated clothing,
 ammunition quantities and the closed-convex Lockpick stack now have separate
-real-content evidence. Spent-Torch fuel chunk complete; choose the next observed gameplay gap
+real-content evidence. Retort apparatus chunk complete; investigate the reached Alembic shape gap
 without closing broader milestones.
