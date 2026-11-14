@@ -1,0 +1,650 @@
+{
+  "status": "Accepted bounded original Bonemeal dynamic native ING R drop/cold world/pickup/cold inventory in normal and ASan/UBSan games; broader M15/M18 remain open.",
+  "parent_commit": "76d961780d324d541d98896a6c357a1832d18d91",
+  "contract": "BONEMEAL-DROP-CONTRACT.json",
+  "oracle": "BONEMEAL-DROP-ORACLE.json",
+  "schema": 103,
+  "behavior": "Ordinary drop1->0 creates one original convex bodyT under typedINGR key10/count1/next11. Cold world restores full physical history; Space pickup returns1 and retires key10/body; coldinventory stable. Prior retirednativekeys1..8 and inventory-script9 retained; no nativekey9 invented. Cuirasswear19.6576748/slots4/owner9/MQ01flags1/1, otherinventory,27skills/book progress, health/passives/life/deaths/stages/counters unchanged. No ingredient use/timer/Alchemy XP.",
+  "layers": {
+    "structural": "Typed Ingredient added to existing prepared cell/registry/model/body/Lua owner. Eligible simple scriptless singleton tried before existing native static ingredient admission; other script/graph profiles retain that path. No authoring support change.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/focused-normal-01/verification.json",
+        "sha256": "2e01dfb1f2d0fe42c1d67c807bdc7b14b863c3f5abaae69f0f039dcf4e1e5cd5",
+        "source": {
+          "head": "76d961780d324d541d98896a6c357a1832d18d91",
+          "source_fingerprint": "92255527e2585fc1a83f2ee665656c12f22d21de9ef75bc83e1398a85ada8be9"
+        },
+        "results": {
+          "engine": {
+            "executed": 342,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*:*ScriptTransfer*",
+            "binary_sha256": "ca0f915add8dc486fb9327e23ef38448d0a678b6a17b74a6cba6df45432a6698",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "8d9e5680dfafbd6faba2a378285e1a3aa4beed0fd24e2bc8ea29298d820db78b",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "27e64fd07547eabb7069852e104ef38285f9c18d0c09618e6c23723e3b108f74"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/focused-sanitized-01/verification.json",
+        "sha256": "ffcbf11471270872f419f3f816650b9a7e2431969bd4c8e0f80806da719cdc68",
+        "source": {
+          "head": "76d961780d324d541d98896a6c357a1832d18d91",
+          "source_fingerprint": "92255527e2585fc1a83f2ee665656c12f22d21de9ef75bc83e1398a85ada8be9"
+        },
+        "results": {
+          "engine": {
+            "executed": 342,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*:*ScriptTransfer*",
+            "binary_sha256": "73e0f69d73626862a1043797655d66d3a11ed8e95148c3e187b2db43c54af64d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "f746b039ee26d5d9f2f45eaadb5061a68e27b73d7cc9757f1f16397979307135",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-normal-01/verification.json",
+        "sha256": "b70204aa2c362bbee822d9c2834c26b27e2ec72f5f4a74525a1025925751ddc3",
+        "source": {
+          "head": "76d961780d324d541d98896a6c357a1832d18d91",
+          "source_fingerprint": "92255527e2585fc1a83f2ee665656c12f22d21de9ef75bc83e1398a85ada8be9"
+        },
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "ca0f915add8dc486fb9327e23ef38448d0a678b6a17b74a6cba6df45432a6698",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "3cf14daa3430ede874953854b9eb574c19eae740b6ebaecbeea0f172ce539352",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-sanitized-1/verification.json",
+        "sha256": "ca13bd3fb6fa679b50cb0ebdcf054ff2ffe751334aa21a34b08ba44609e316be",
+        "source": {
+          "head": "76d961780d324d541d98896a6c357a1832d18d91",
+          "source_fingerprint": "92255527e2585fc1a83f2ee665656c12f22d21de9ef75bc83e1398a85ada8be9"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "73e0f69d73626862a1043797655d66d3a11ed8e95148c3e187b2db43c54af64d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "fb5728cab19c6397feb5d405a94ea4c0469dad48b7dc3435071c86a5a7779d9f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-sanitized-2/verification.json",
+        "sha256": "4e8ef9e69f85d932cb13eff0a3c97b279fa0b1074731beb0f20dae6731799550",
+        "source": {
+          "head": "76d961780d324d541d98896a6c357a1832d18d91",
+          "source_fingerprint": "92255527e2585fc1a83f2ee665656c12f22d21de9ef75bc83e1398a85ada8be9"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "73e0f69d73626862a1043797655d66d3a11ed8e95148c3e187b2db43c54af64d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "46a799206cf8add926079c543040c7b28019d08f82d7cebe4faff5ecabcfbdbf",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-sanitized-3/verification.json",
+        "sha256": "51b39596616a28869258cadba943b71ca009ff37aa9ad590a78ebfd019d7ddf9",
+        "source": {
+          "head": "76d961780d324d541d98896a6c357a1832d18d91",
+          "source_fingerprint": "92255527e2585fc1a83f2ee665656c12f22d21de9ef75bc83e1398a85ada8be9"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "73e0f69d73626862a1043797655d66d3a11ed8e95148c3e187b2db43c54af64d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "16865f4e7c1432c191d841a828f90c6c782c589b5d5cedff2fd7ef561cae8a24",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-sanitized-4/verification.json",
+        "sha256": "99b5dc7a62a5d307b017dbbee355798a46e46c0cba2d123886d6a60e1232752b",
+        "source": {
+          "head": "76d961780d324d541d98896a6c357a1832d18d91",
+          "source_fingerprint": "92255527e2585fc1a83f2ee665656c12f22d21de9ef75bc83e1398a85ada8be9"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "73e0f69d73626862a1043797655d66d3a11ed8e95148c3e187b2db43c54af64d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "60e8bb487885627e65f42c8702dc616dd7f793c453b1a790061413adf386606f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "component_evidence_reused": {
+      "passed": true,
+      "reason": "Engine-only ingredient variant/dispatch/admission changes. Component source/tests/exact binaries unchanged.",
+      "evidence": [
+        {
+          "mode": "normal",
+          "path": "build/oblivion-compat/iron-key-drop/integration-normal-01/verification.json",
+          "sha256": "dfe5b69dc8a2cc6c603fd238c3786e28f4589a4d387380ca609b1064dd9a2e72",
+          "original_source": {
+            "head": "e064d1c49b213c19d6ee2750472aed7d7fe96b24",
+            "source_fingerprint": "27577093b4e6d8b2f1854f71c95963a360b4337efb2ac2f9288565d2dba6656c"
+          },
+          "result": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "d789d321a548e4cf80940007a1f39c869368dab5175cc6874c3480f6cbfdde19",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "f09a4da083b4ac37167bb55fa82d309af0a97e59628bcc6cdb469cd862ae6c07",
+            "inventory_sha256": "ae8443738d2869a13b520182a423ecf263b2ed8741518a0fc319e5a1a61b22cd",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "binary": "build/components-tests"
+        },
+        {
+          "mode": "sanitized",
+          "path": "build/oblivion-compat/iron-key-drop/components-sanitized-01/verification.json",
+          "sha256": "32c567400cbcf2ccfd4a99bdb8103c6d72b5024e1b5fcbdac0b2d2c28724814a",
+          "original_source": {
+            "head": "e064d1c49b213c19d6ee2750472aed7d7fe96b24",
+            "source_fingerprint": "27577093b4e6d8b2f1854f71c95963a360b4337efb2ac2f9288565d2dba6656c"
+          },
+          "result": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "4435b48a130591268bef4510de95df0e3881f4ec76fda1ac71466952a68f483f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c663474208e9c82ad43895db77cb1e319a285c2f55c97851cb1ef8b6040c49ac",
+            "inventory_sha256": "60cbbf968a22556ce62f8b924a73a5d5058dc75d4411dc869e0bf279af6b4081",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "binary": "build/m15-sanitize/components-tests"
+        }
+      ]
+    },
+    "exact_sanitized_engine_union": [
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-sanitized-1/engine.xml",
+        "count": 82,
+        "sha256": "fb5728cab19c6397feb5d405a94ea4c0469dad48b7dc3435071c86a5a7779d9f"
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-sanitized-2/engine.xml",
+        "count": 82,
+        "sha256": "46a799206cf8add926079c543040c7b28019d08f82d7cebe4faff5ecabcfbdbf"
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-sanitized-3/engine.xml",
+        "count": 82,
+        "sha256": "16865f4e7c1432c191d841a828f90c6c782c589b5d5cedff2fd7ef561cae8a24"
+      },
+      {
+        "path": "build/oblivion-compat/bonemeal-drop/integration-sanitized-4/engine.xml",
+        "count": 2046,
+        "sha256": "60e8bb487885627e65f42c8702dc616dd7f793c453b1a790061413adf386606f"
+      }
+    ],
+    "semantic": "Independent raw original record/member audit and schema103 binary roundtrips. Full tick-zero physical snapshot compared at1e-4 absolute/1e-6 relative. Original authored mass0.1 differs from inventory weight0.2; solver/property conversion unchanged.",
+    "actual_runtime": [
+      {
+        "mode": "normal",
+        "phase": "drop",
+        "path": "build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-drop-01",
+        "manifest": "docs/oblivion/original-bonemeal-physical-drop.json",
+        "manifest_sha256": "1e191c459bece1aa073ff340e7981e69b9000f937b64d78f95f01bcaabc90a2d",
+        "audit_sha256": "41d2e0d8e9e60bd17cd8b7b5e8783e7c570ae3ac3de29df9b1f583e135b650d1",
+        "source_sha256": "56fdd64c3d18190376e0a2d08eb66edbbc27b8f342a00b4de428909ccb516d73",
+        "save_sha256": "6bf2e0a5897b20400ae64e8b4520180a4213353bb8e797e3718afb89658a1cf7",
+        "process": {
+          "pid": 940168,
+          "start_ticks": 18916398,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fead80aa4a736bea4e63a3230d100416d972543ab7fd743951c84714a5880e50"
+        },
+        "next_dynamic_serial": 11
+      },
+      {
+        "mode": "normal",
+        "phase": "world",
+        "path": "build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-world-01",
+        "manifest": "docs/oblivion/original-bonemeal-physical-world.json",
+        "manifest_sha256": "796a1017691df3df882b009808681f9fd1f2ec21776117690a74a76073371e0a",
+        "audit_sha256": "1dffb82abf3ae9657e4ecc36414c347c92e789a8ece56c941bb0338bfc707ec4",
+        "source_sha256": "6bf2e0a5897b20400ae64e8b4520180a4213353bb8e797e3718afb89658a1cf7",
+        "save_sha256": "070523a474e124f4a923118f295cc6e315af2757fea0d561fc246f7607697c98",
+        "process": {
+          "pid": 940618,
+          "start_ticks": 18946185,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fead80aa4a736bea4e63a3230d100416d972543ab7fd743951c84714a5880e50"
+        },
+        "next_dynamic_serial": 11
+      },
+      {
+        "mode": "normal",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-pickup-01",
+        "manifest": "docs/oblivion/original-bonemeal-physical-pickup.json",
+        "manifest_sha256": "99d828c304416d662012601083b492e928ec98f2aabf130fac2d98a1d4ba0d59",
+        "audit_sha256": "365d17ea49598a4c80dadc863467ce11f86f1cf5d4b13472fee7937e39c148a4",
+        "source_sha256": "070523a474e124f4a923118f295cc6e315af2757fea0d561fc246f7607697c98",
+        "save_sha256": "757805cbadfa92d4c900099d1cb7cb408298b3a45cd0c9c0160368bf2940587f",
+        "process": {
+          "pid": 940781,
+          "start_ticks": 18954963,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fead80aa4a736bea4e63a3230d100416d972543ab7fd743951c84714a5880e50"
+        },
+        "next_dynamic_serial": 11
+      },
+      {
+        "mode": "normal",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-inventory-01",
+        "manifest": "docs/oblivion/original-bonemeal-physical-inventory.json",
+        "manifest_sha256": "fd74eb4b58af36686611ad173e6628cd4cf5abe80e243db08936e8f01549e5dc",
+        "audit_sha256": "f723f95cf482a2d3a920cc96130112988efeb878f05cf87808c0470a481d7166",
+        "source_sha256": "757805cbadfa92d4c900099d1cb7cb408298b3a45cd0c9c0160368bf2940587f",
+        "save_sha256": "707eaa440f4303699fcb42ddbd6a5f3e5a64edddaf50674f786efe37d2175f78",
+        "process": {
+          "pid": 940913,
+          "start_ticks": 18963712,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fead80aa4a736bea4e63a3230d100416d972543ab7fd743951c84714a5880e50"
+        },
+        "next_dynamic_serial": 11
+      },
+      {
+        "mode": "sanitized",
+        "phase": "drop",
+        "path": "build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-drop-01",
+        "manifest": "docs/oblivion/original-bonemeal-physical-drop-sanitized.json",
+        "manifest_sha256": "8bd3e12bb235ab2b8ccc81cfdbe04b6a43e0833c83aea3e218adfdedc8f593e7",
+        "audit_sha256": "fdc103e4bb4db775fdaf99c44a5b307395b181b81e018a4ea8c1da9ba9ba9842",
+        "source_sha256": "56fdd64c3d18190376e0a2d08eb66edbbc27b8f342a00b4de428909ccb516d73",
+        "save_sha256": "6270b143438ebce77132d4c161e4c60fa3137122d3ac00f2dbef2392e332d606",
+        "process": {
+          "pid": 941244,
+          "start_ticks": 18991215,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "0228d3a60c7ddab8cfdc5a326b70168aa88fc10a2937408cdd11dfa5b804d82d"
+        },
+        "next_dynamic_serial": 11
+      },
+      {
+        "mode": "sanitized",
+        "phase": "world",
+        "path": "build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-world-01",
+        "manifest": "docs/oblivion/original-bonemeal-physical-world-sanitized.json",
+        "manifest_sha256": "8c7537496c86c29dd596e63dc31c6fe69aeb6ba6236f0bec66b88a86a6f2a839",
+        "audit_sha256": "bfeb553f12218d32c46d6df92a6a449ba37155a7a5431e988a1783ba5bac3671",
+        "source_sha256": "6270b143438ebce77132d4c161e4c60fa3137122d3ac00f2dbef2392e332d606",
+        "save_sha256": "1f73f60e940ff88f6141d4445381cc0b429f4ce03824f170659e48e4313837fa",
+        "process": {
+          "pid": 943319,
+          "start_ticks": 19028358,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "0228d3a60c7ddab8cfdc5a326b70168aa88fc10a2937408cdd11dfa5b804d82d"
+        },
+        "next_dynamic_serial": 11
+      },
+      {
+        "mode": "sanitized",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-pickup-01",
+        "manifest": "docs/oblivion/original-bonemeal-physical-pickup-sanitized.json",
+        "manifest_sha256": "2e57100514f52b3c668f5c425699274ef72c1c03ac58b5389863322c820d040b",
+        "audit_sha256": "54ce48d93c2ba1e851f26859cc870a85b82bfbb68fda33e56a7ed649035e0fab",
+        "source_sha256": "1f73f60e940ff88f6141d4445381cc0b429f4ce03824f170659e48e4313837fa",
+        "save_sha256": "05ccff051231d52cfb867ec9ace263b5dc025bebedce77ec784a724edccd4cee",
+        "process": {
+          "pid": 949360,
+          "start_ticks": 19063476,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "0228d3a60c7ddab8cfdc5a326b70168aa88fc10a2937408cdd11dfa5b804d82d"
+        },
+        "next_dynamic_serial": 11
+      },
+      {
+        "mode": "sanitized",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-inventory-01",
+        "manifest": "docs/oblivion/original-bonemeal-physical-inventory-sanitized.json",
+        "manifest_sha256": "5bc595c4de84364dc7e498577957ba99d4814c140e4605cfe75ce16108702f64",
+        "audit_sha256": "e5762842e91eedcb6a3e89574c781d5f5c9f34ffb65f0c0a8a76a9ee308ee3bd",
+        "source_sha256": "05ccff051231d52cfb867ec9ace263b5dc025bebedce77ec784a724edccd4cee",
+        "save_sha256": "9e37ef1c875f86e8ba70c4f3aa107a9cd6db7e47de1eee13e11f37fe4ecef24a",
+        "process": {
+          "pid": 949735,
+          "start_ticks": 19099524,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "0228d3a60c7ddab8cfdc5a326b70168aa88fc10a2937408cdd11dfa5b804d82d"
+        },
+        "next_dynamic_serial": 11
+      }
+    ]
+  },
+  "fresh_content_regressions": [
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/regression-normal-cuirass-drop-01",
+      "audit_sha256": "47a55745b5c82dd3347c3da2bef350455b4561eb0e293401f2d4e8e96941c99a",
+      "captured_manifest_sha256": "a28f55480843616cf12262e032c50fd78123838d1e4b052f8ad7ce25f0d65e1c",
+      "source_sha256": "641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23",
+      "save_sha256": "c4f01f68beb89b52363027ee0b169c75afa5a92aea0fe3cf0e69bc77b6f62b4e"
+    },
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/regression-normal-torch-drop-01",
+      "audit_sha256": "7d51d52cab86cf51dd5698d62a7f1ec7b7f830cb81f1e42df7a214c05694aa70",
+      "captured_manifest_sha256": "857f64ed200b28013890c99c48cc8618aa3086f9d05ac195f23950be7ca7da3e",
+      "source_sha256": "691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc",
+      "save_sha256": "008d9b30f1afba4186cd44ec8560cc49b2c60441b8a70fb57c48cf170462f173"
+    },
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/regression-normal-pants-world-01",
+      "audit_sha256": "078dc2a1d32613b5b868eb98241ae31782326d63d4cb99f9e3e7d8382dd909f9",
+      "captured_manifest_sha256": "cfff585d76e45a80b8c9f1f6ab6b1f4eed7275ca307609ddb0f7a19decce9603",
+      "source_sha256": "2fb9baeca887df239c56c2877d7c361b60bf904fc21c5f9410f281a4f13aa565",
+      "save_sha256": "baa4f9d1a6920e79f458290ffccba7f4d5e0d931dfac0985e26470b2eec6ed41"
+    },
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/regression-normal-nirnroot-drop-01",
+      "audit_sha256": "a8012f46206b285282d06c22507d8f7dbafd5ed452f88176d5dec32b30c41ff3",
+      "captured_manifest_sha256": "2bcb66796e9bad31b5052c482261def9df18a6d764a05558e9d8271053939a6a",
+      "source_sha256": "10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527",
+      "save_sha256": "b1125f58eebfb42ead0d7c54a2b6ab3d7f1f0e4d4686f633514fb9d1ef4a8dc0"
+    },
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/regression-normal-nirnroot-world-01",
+      "audit_sha256": "6cdb3328748e835ec11ab88bb2a8278e29b96777cce89b3e197074d6485968d4",
+      "captured_manifest_sha256": "9602afbd6d3941759b67aed8b9669dab4ff19325bcd776bd6cb1a21edc4d0ffa",
+      "source_sha256": "b1125f58eebfb42ead0d7c54a2b6ab3d7f1f0e4d4686f633514fb9d1ef4a8dc0",
+      "save_sha256": "ec7f3d9d25b4b1caa2e47bda54c54ab5be07890bdeadcc88140aac9822cfada7"
+    },
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/regression-normal-nirnroot-pickup-01",
+      "audit_sha256": "1e9dfe04bd7fa3d79483007f95165334fbda16b5bb9fecaca3148426892d31d9",
+      "captured_manifest_sha256": "8c8b523769805cd1462e3bc90a67d4016572469436ec1f8c5195f1bb3dc848f4",
+      "source_sha256": "ec7f3d9d25b4b1caa2e47bda54c54ab5be07890bdeadcc88140aac9822cfada7",
+      "save_sha256": "aa169e6c449c408959a82341f9a7b3403e3a79feaee553cca709de3e720dcb6c"
+    }
+  ],
+  "stateful_nirnroot_verifier": {
+    "original": "scripts/verify_nirnroot_drop.py",
+    "original_sha256": "80519c1e772202ab9852d8c64b985b099aa67587ede95b87705917461733a3d1",
+    "adapted_sha256": "e806384b5001739254b69d3400b5c04ba6060b88e187c82e204912a2c8e87243",
+    "change": "Only schema expectation: original101 source migrates to current103;103 source also allowed. All gameplay, ownership, metadata, counters, progression and Found1 assertions retained.",
+    "import_setup": "Add repository scripts directory to sys.path because private copy is under ignored evidence."
+  },
+  "baseline": {
+    "passed": true,
+    "next_dynamic_serial": 11,
+    "inventory": [],
+    "world": [
+      {
+        "key": "dynamic:native-reference:000000000000000a",
+        "base": "content:oblivion.esm:01ebff",
+        "cell": "content:oblivion.esm:0352a9",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          -568.0667114257812,
+          -1914.736083984375,
+          -307.74151611328125,
+          0.0,
+          0.0,
+          0.09735941886901855
+        ],
+        "owner": null,
+        "lock_level": 0,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "locked": false,
+          "record_type": 1388793417,
+          "scale": 1.0
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      }
+    ],
+    "physical": [],
+    "cuirass": [
+      {
+        "base": "content:oblivion.esm:0661c1",
+        "count": 1,
+        "condition": 19.65767478942871,
+        "charge": -1.0,
+        "equipped_slots": 4,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null,
+        "script_owner": "dynamic:inventory-script:0000000000000009"
+      }
+    ]
+  },
+  "retained_attempts": [
+    {
+      "case": "normal-bonemeal-static-baseline-01",
+      "scope": "Tooltip identified Crab Meat at281,519; Bonemeal stock assertion stopped before save. Source unchanged. Corrected Bonemeal pile coordinate281,475 from capture."
+    }
+  ],
+  "limits": [
+    "Only observed original Bonemeal simple-body course; no stacked/scripted ingredient dynamics or general shape/solver acceptance.",
+    "Bonemeal ingestion already accepted separately; this chunk does not change effect potency, skill or consumable rules."
+  ],
+  "binary_sha256": {
+    "normal": "fead80aa4a736bea4e63a3230d100416d972543ab7fd743951c84714a5880e50",
+    "sanitized": "0228d3a60c7ddab8cfdc5a326b70168aa88fc10a2937408cdd11dfa5b804d82d"
+  },
+  "oracle_sha256": "6fdfc6a0cffc2e7fbca217e6f8e0931b6a78faf69a203740dfe2fe781ff1c8e8",
+  "contract_sha256": "8ec971d3b36e982f3b68a8eace3d748540c656b2f574c184586552d0603b10ec",
+  "inspected_visual_captures": [
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-drop-01/original-bonemeal-dropped-world.png",
+      "sha256": "1c6a04d3fdc53985de4c8e7a33cad80143ac8569e0e55a6be98f9fc4a8cc53b0"
+    },
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-pickup-01/original-bonemeal-focused.png",
+      "sha256": "4d247287cade8b1b1d26c02e4efe289211d675cbc93b9cab1b633834537f4fbf"
+    },
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-drop-01/original-bonemeal-dropped-world.png",
+      "sha256": "d8c62d44030228d9155a109331ba7978a2ebf7d7f47944d4cefe004165eb78ba"
+    },
+    {
+      "path": "build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-pickup-01/original-bonemeal-focused.png",
+      "sha256": "31661b8a4cfe61b35c4afc126e7964a2abeab0290c5fec201be6e2407c54e9f3"
+    }
+  ]
+}

@@ -4,34 +4,34 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [worn Rusty Iron Cuirass](CUIRASS-DROP-CONTRACT.json),
-original ARMO0661c1/CGIronCuirass. Ordinary drag unequips and drops1->0 as native
-key8 with its original convex ground body and earned condition19.6576748.
-Cold world, Space pickup, a separate cold paperdoll equip and final cold equipped
-inventory pass in normal and instrumented games. CGHeavyArmorScript ownership
-moves world8->inventory9; its original OnAdd/OnEquip handlers each fire once,
-setting MQ01heavyArmor/heavyArmorEquip0/0->1/0->1/1 without replay on reload.
-Only stateless OnAdd/OnEquip armor programs admit explicit missing-owner
-initialization; existing script owners transfer intact. All other inventory,
-27skills/book progress, health, quest stages/counters and33credits survive.
-[Oracle](CUIRASS-DROP-ORACLE.json) and [receipt](CUIRASS-DROP-VERIFICATION.json)
-separate structural, compiler, semantic and actual runtime evidence. Fresh342
-focused/2292 full engine tests per mode/Python618 pass; unchanged3301 component
-evidence per mode retains original provenance. Real Torch/Pants and stateful
-Nirnroot drop/cold/pickup regressions pass; the latter adapts only historical
-schema101 expectations to the current103 migration. Failed development input
-and compile attempts remain retained. Broader M15/M18 remain open.
-Historical [Torch receipt](TORCH-DROP-VERIFICATION.json) records fresh inactive
-LIGH ownership; [Iron Key receipt](IRON-KEY-DROP-VERIFICATION.json) records the
-10.2.0.0 mutable-root dependency.
+Latest completed bounded chunk: [carried Bonemeal](BONEMEAL-DROP-CONTRACT.json),
+original INGR01ebff. Its existing native static drop/save already retained identity;
+the new path adds the original movable convex bodyT and full cold physical history.
+Ordinary drop1->0, cold world, visible Space pickup0->1 and cold inventory pass in
+normal and instrumented games. Source key10/count1/allocator11 retires after
+pickup. Original body mass0.1 is asset-derived; inventory weight0.2 is conserved.
+No ingredient use, damage timer or Alchemy XP occurs. Eligible scriptless
+singletons try loose admission before existing static ingredient handling;
+scripted Nirnroot keeps its stateful transfer path. Cuirass owner9/condition/
+flags1/1 and all other inventory/progress survive; no native reference9 is invented.
+[Oracle](BONEMEAL-DROP-ORACLE.json) and [receipt](BONEMEAL-DROP-VERIFICATION.json)
+separate original content, structural, compiler, semantic and real runtime layers.
+Fresh342 focused/2292 full engine tests per mode/Python618 pass. Unchanged3301
+component evidence per mode retains original provenance. Real Cuirass/Torch/
+Pants and stateful Nirnroot drop/cold/pickup regressions pass. Schema103 unchanged;
+broader M15/M18 remain open. Prior [Cuirass receipt](CUIRASS-DROP-VERIFICATION.json)
+records original OnAdd/OnEquip ownership; [Torch receipt](TORCH-DROP-VERIFICATION.json)
+records fresh inactive LIGH ownership; [Iron Key receipt](IRON-KEY-DROP-VERIFICATION.json)
+records the10.2.0.0 mutable-root dependency. Bonemeal ingestion remains separately
+accepted in [its earlier course](BONEMEAL-INGREDIENT-VERIFICATION.json).
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/cuirass-drop/normal-cuirass-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `56fdd64c3d18190376e0a2d08eb66edbbc27b8f342a00b4de428909ccb516d73`.
+`build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `707eaa440f4303699fcb42ddbd6a5f3e5a64edddaf50674f786efe37d2175f78`.
 Cuirass equipped/condition19.6576748/scriptowner9, fresh Torch3/lifetime1000,
-Iron Key1/Lockpick8/Iron Arrow24/Pants1/Bone1, Club equipped, MQ01flags1/1,
-allocator10; dropped keys1..8 retired/count0/no bodies. Health70.480003/110,
-Endurance55, all27 skills/book history/33 credited deaths preserved. MS39stage0
+Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/Bone1, Club equipped, MQ01flags1/1,
+allocator11; native keys1..8 and10 retired/count0/no bodies; inventory-script9 active.
+Health70.480003/110, Endurance55, all27 skills/book history/33 credited deaths preserved. MS39stage0
 and original absence of Nirnroot/counter27 retained. Instrumented continuation
 is in the receipt.
 

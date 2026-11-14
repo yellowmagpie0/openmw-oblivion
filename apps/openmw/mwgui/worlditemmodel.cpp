@@ -8,8 +8,8 @@ namespace MWGui
     {
         auto* world = dynamic_cast<MWWorld::World*>(&*MWBase::Environment::get().getWorld());
         if (!world) return std::nullopt;
-        if (auto dropped = world->dropOblivionInventoryIngredient(actor, item.mBase, count, mCursorX, mCursorY))
+        if (auto dropped = world->dropOblivionInventoryLooseItem(actor, item.mBase, count, mCursorX, mCursorY))
             return dropped;
-        return world->dropOblivionInventoryLooseItem(actor, item.mBase, count, mCursorX, mCursorY);
+        return world->dropOblivionInventoryIngredient(actor, item.mBase, count, mCursorX, mCursorY);
     }
 }

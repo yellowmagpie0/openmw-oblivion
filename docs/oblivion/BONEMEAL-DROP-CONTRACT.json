@@ -1,0 +1,56 @@
+{
+  "status": "Accepted bounded original Bonemeal dynamic native ING R drop/cold world/pickup/cold inventory in normal and ASan/UBSan games; broader M15/M18 remain open.",
+  "milestones": [
+    "M15 simple ingredient loose-body motion and cold physical history",
+    "M18 native ingredient physical ownership"
+  ],
+  "source": {
+    "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "56fdd64c3d18190376e0a2d08eb66edbbc27b8f342a00b4de428909ccb516d73",
+    "next_dynamic_serial": 10
+  },
+  "content": {
+    "base": "content:oblivion.esm:01ebff",
+    "count": 1,
+    "weight": 0.20000000298023224,
+    "value": 5,
+    "script": null,
+    "model": "meshes/clutter/bonemeal01.nif",
+    "body_mass": 0.1
+  },
+  "acceptance": [
+    "Ordinary Control-click drops actualBonemeal1->0 as nativeINGR key10/count1/next11, with one original convex bodyT owner and no ingredient use/effect/Alchemy XP.",
+    "Cold world reload/resave -> visible Space pickup0->1 -> final cold inventory, normal and instrumented. Retire physicalkey10/body while keeping allocator11.",
+    "SourceCG Cuirass equipped/condition19.6576748/scriptowner9/flags1/1 and all other inventory/progress preserved; retirednativekeys1..8 exact, no nativekey9 invented.",
+    "Full schema103 physical tick-zero snapshot restored; metadata/no durability/charge/script preserved, encumbrance-0.2/+0.2.",
+    "Fresh focused/full engine/Python checks, applicable unchanged component evidence with provenance, actual Cuirass/othernativebody and statefulNirnroot fallback regressions."
+  ],
+  "baseline": {
+    "path": "build/oblivion-compat/bonemeal-drop/normal-bonemeal-static-baseline-02",
+    "result": "Baseline ordinary drop/save records typed nativeINGR key10/count1/next11 but no loosebody; no disappearance or new ingestion claim. Prior Rice static persistence has separate acceptance."
+  },
+  "eligibility": "Scriptless singleton with one positive-mass movable rigid body and no joints; unsupported parsed graphs retain existing native static ingredient path. Scripted Nirnroot keeps its prior transfer path.",
+  "tolerances": {
+    "loaded_snapshot_absolute": 0.0001,
+    "loaded_snapshot_relative": 1e-06,
+    "encumbrance_absolute": 0.0001,
+    "reference_near_player_units": 150,
+    "body_near_player_units": 200
+  },
+  "limits": [
+    "Only observed original Bonemeal simple-body course; no stacked/scripted ingredient dynamics or general shape/solver acceptance.",
+    "Bonemeal ingestion already accepted separately; this chunk does not change effect potency, skill or consumable rules."
+  ],
+  "oracle": "BONEMEAL-DROP-ORACLE.json",
+  "verification": "BONEMEAL-DROP-VERIFICATION.json",
+  "normal_continuation": {
+    "path": "build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "707eaa440f4303699fcb42ddbd6a5f3e5a64edddaf50674f786efe37d2175f78",
+    "next_dynamic_serial": 11
+  },
+  "sanitized_continuation": {
+    "path": "build/oblivion-compat/bonemeal-drop/sanitized-bonemeal-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "9e37ef1c875f86e8ba70c4f3aa107a9cd6db7e47de1eee13e11f37fe4ecef24a",
+    "next_dynamic_serial": 11
+  }
+}
