@@ -1,0 +1,523 @@
+{
+  "status": "Accepted bounded original Novice Alembic compound-sphere/native apparatus drop/cold world/pickup/cold inventory in normal and ASan/UBSan games; broader milestones remain open.",
+  "parent_commit": "cedf074f75",
+  "contract": "ALEMBIC-DROP-CONTRACT.json",
+  "oracle": "ALEMBIC-DROP-ORACLE.json",
+  "schema": 103,
+  "behavior": "Original acquired Alembic1 drops under native key13/next14 with original single movable compound body10/root0/bodyT0/mass6.5. Two original sphere centers/radii remain separate children. Cold world retains physical state; visible Space pickup returns1 and retires key13/body; cold inventory retains type1/quality10/value50/weight7. Original06efb8 stays retired.",
+  "layers": {
+    "structural": "Existing deeply owned list/transform/sphere types admit native bhkMultiSphereShape with bounded generated hierarchy and finite positive sphere data. Existing apparatus transaction, physics, scaling and save schema are reused.",
+    "original_model_checks": {
+      "normal": {
+        "passed": true,
+        "original_spheres_preserved": 2,
+        "compound_children": 4,
+        "rejected_actual_shape_mutations": 6
+      },
+      "sanitized": {
+        "passed": true,
+        "original_spheres_preserved": 2,
+        "compound_children": 4,
+        "rejected_actual_shape_mutations": 6
+      }
+    },
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/alembic-drop/components-normal-01/verification.json",
+        "sha256": "8de3ca177565fa611d792162c37f29f52ec88b9a4025574bdcad4b29df382489",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "components": {
+            "executed": 445,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Bullet*",
+            "binary_sha256": "b47da1c7585e00db403943bd0d01db9fc899b89612df02eefa0dd4afc6ae217e",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "426af85f205b65ff7a59c3f5840e2cd35d16b9a1970f594f6edb1d303b51ad33",
+            "inventory_sha256": "c49d5bd4cf695a6f3368a0394ac19c7cd0debf50db7db70ce30f9d620e1c95b8",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/components-sanitized-01/verification.json",
+        "sha256": "fe4faec4c00891f938924fd9424d24db607f515d147ae43d322dd0e24ee63317",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "sanitize": {
+            "executed": 445,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Bullet*",
+            "binary_sha256": "268135dadd9651898d110d37f5f0e1e674440fbe8350c4f542eb3e090f9cf06a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "379a0c18857cf3e1b81264d13b837329a7710e15315d5d34e6608eff2acbed87",
+            "inventory_sha256": "7c61eacb28eb43e6680e8f25e9278a509cabe64818f8ba3c357fbac4d4914fda",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/components-full-normal-01/verification.json",
+        "sha256": "bc91e14c7121664017eb68c314f4648c09e63833e3c38f009a0f323159854861",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "components": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b47da1c7585e00db403943bd0d01db9fc899b89612df02eefa0dd4afc6ae217e",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "d9dfdab29008b949b16d3d89caedbd52c3db6657c3a5a933b890a54054dbd70a",
+            "inventory_sha256": "a570bcdfcb6b4132dfb3aeed09a2d636197c42a81f3956f91d38c71d04d3d035",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/components-full-sanitized-01/verification.json",
+        "sha256": "28e3a4ab40f384c9673d65eaa27e4c99cfca6aa09eaa32c945903d73caabff28",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "sanitize": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "268135dadd9651898d110d37f5f0e1e674440fbe8350c4f542eb3e090f9cf06a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "6efd2f500c8686c3f1e4aac87829952bccb2407b1fe544b77be97e70e67064f6",
+            "inventory_sha256": "29a41792680e844b0c79730fbdacce6c481c0aa830375f6bea6d4dcc430ffc13",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/engine-normal-01/verification.json",
+        "sha256": "4a657dc15f9d9030627adf3eab16a5000f6ff15ec530cd3beb14e575d67cae4f",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "71f42d8f1d16ba2427907ba3838f1380095753a715a571f8a6765095a8ff53e9",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "1314265d25159bd8d64501383a5142b7e6bebc164565fcc22437701e4f61067c",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/python-01/verification.json",
+        "sha256": "516b19d7aaf78381971d7e0496d3b4bd392e727555444b7ed29187e70db0b22a",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "53da0dc3b5c88bf4c87a4b78cdc3a62ab25ed79997d7671045a8bf1d9da3153f"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/engine-sanitized-01/verification.json",
+        "sha256": "058ff0105a0f47c0565cd42b6811b16d0053bea7bc3b22b7e9886e359e89d3e4",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "047fd654cc4041b206f0d4ebbe08448a0c7a86d5144c811a324f7dfd8ec0a5e7",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "5b24ea390de674fba036ce96499e7a2ed69187c257895714d54212fa39455364",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/engine-sanitized-02/verification.json",
+        "sha256": "4601de14131c377ceed48e6e53c0c93bb694f45dfeea47d3e8b7044b018ac639",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "047fd654cc4041b206f0d4ebbe08448a0c7a86d5144c811a324f7dfd8ec0a5e7",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "d26e0a34396378b4f249676337cef5c87ac00409b45aa7f093d32abb4005186c",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/engine-sanitized-03/verification.json",
+        "sha256": "027a8a09bcd67d84071458f9f738e3debb6c069b6c08702453bd2a5e6456cebc",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "047fd654cc4041b206f0d4ebbe08448a0c7a86d5144c811a324f7dfd8ec0a5e7",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "1ec5db6389453343d39e97ad4dbf39c390da5a642879c4cda436f6bfb5369afd",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/alembic-drop/engine-sanitized-04/verification.json",
+        "sha256": "f02fcf7347e1f59e3ce8a649906f5fd52973f599b96fcc99602a537343265988",
+        "source": {
+          "head": "cedf074f75beaf94625947738f5f8a549a176899",
+          "source_fingerprint": "5e944b0c24f221f2bb0838ac353c78f2657e2005324cfecda6c5a78e19f075b5"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "047fd654cc4041b206f0d4ebbe08448a0c7a86d5144c811a324f7dfd8ec0a5e7",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "e6010ee21d719212a42b0ab20bbaf312a58fd79168c99d904658dc9bb4a841b1",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "runtime": {
+      "normal-alembic-native-drop-01": {
+        "audit": "build/oblivion-compat/alembic-drop/normal-alembic-native-drop-01/alembic-drop-verification.json",
+        "sha256": "85271c3a012837ca01a83fade32fac73499c3a2015962f6672a4487d96169ff6",
+        "process": {
+          "pid": 1012875,
+          "start_ticks": 20247715,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-inventory-survey-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d876a567d7285692b7e5acc28207b41d8999542368f1c15c4ab6baa64fa00079"
+        },
+        "input_sha256": "f9b685700c2f300e6daa375ac3b279fddf1ed9106e04c0182bfe542447e250df",
+        "save_sha256": "d07ae7828edd5c3ab042313227dfa8ae63b855f3eae7c7fb2b8e871adf33da49",
+        "allocator": 14,
+        "credited_deaths": 33
+      },
+      "normal-alembic-native-world-01": {
+        "audit": "build/oblivion-compat/alembic-drop/normal-alembic-native-world-01/alembic-drop-verification.json",
+        "sha256": "f5c35135ec31b288240df03e2d54432660fc03332928d99a3cb8cef325aa1e64",
+        "process": {
+          "pid": 1019699,
+          "start_ticks": 20260781,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d876a567d7285692b7e5acc28207b41d8999542368f1c15c4ab6baa64fa00079"
+        },
+        "input_sha256": "d07ae7828edd5c3ab042313227dfa8ae63b855f3eae7c7fb2b8e871adf33da49",
+        "save_sha256": "0ce9e8c8e36bd90f288b4e611e0495e4863ccbd43c8e2240f17857db51410ba8",
+        "allocator": 14,
+        "credited_deaths": 33
+      },
+      "normal-alembic-native-pickup-01": {
+        "audit": "build/oblivion-compat/alembic-drop/normal-alembic-native-pickup-01/alembic-drop-verification.json",
+        "sha256": "77c6d86021f4b6618393e240e4423423d2ce9bde4b9961493cbce4e326e8d759",
+        "process": {
+          "pid": 1020345,
+          "start_ticks": 20269331,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d876a567d7285692b7e5acc28207b41d8999542368f1c15c4ab6baa64fa00079"
+        },
+        "input_sha256": "0ce9e8c8e36bd90f288b4e611e0495e4863ccbd43c8e2240f17857db51410ba8",
+        "save_sha256": "9da6f91549f8ba95df6e9e4066455b75f759d0eb4699e06f72b47ad5f12e8cdf",
+        "allocator": 14,
+        "credited_deaths": 33
+      },
+      "normal-alembic-native-inventory-01": {
+        "audit": "build/oblivion-compat/alembic-drop/normal-alembic-native-inventory-01/alembic-drop-verification.json",
+        "sha256": "15a2cd2ad65b52846b628a654c804c6c4bdca1d0eb40e7c0296e44debbfd2852",
+        "process": {
+          "pid": 1020499,
+          "start_ticks": 20278069,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d876a567d7285692b7e5acc28207b41d8999542368f1c15c4ab6baa64fa00079"
+        },
+        "input_sha256": "9da6f91549f8ba95df6e9e4066455b75f759d0eb4699e06f72b47ad5f12e8cdf",
+        "save_sha256": "1717a26d05b898ab62f85724b119512d00f9f01a640fea0cda12ff6a17e9b421",
+        "allocator": 14,
+        "credited_deaths": 33
+      },
+      "sanitized-alembic-native-drop-01": {
+        "audit": "build/oblivion-compat/alembic-drop/sanitized-alembic-native-drop-01/alembic-drop-verification.json",
+        "sha256": "66d6ec5aad12ee1b7e78075bd4857fed5f5077fea7af9e47d330897d1c1497c6",
+        "process": {
+          "pid": 1012882,
+          "start_ticks": 20247718,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/sanitized-alembic-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-inventory-survey-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "a810f2371e2cc5bf2c4e61b4d3891a8fd770f41c1e4334f9d2e450d57e7da03b"
+        },
+        "input_sha256": "f9b685700c2f300e6daa375ac3b279fddf1ed9106e04c0182bfe542447e250df",
+        "save_sha256": "aead7325a0f5d29a89ce48167bee6aaa368f9b6b1b98f06a4a15526cc2d18779",
+        "allocator": 14,
+        "credited_deaths": 33
+      },
+      "sanitized-alembic-native-world-01": {
+        "audit": "build/oblivion-compat/alembic-drop/sanitized-alembic-native-world-01/alembic-drop-verification.json",
+        "sha256": "73a8965901bbb2de205533d92e05f3659f8459b53d0dd971c3ca9db51d3191d2",
+        "process": {
+          "pid": 1020626,
+          "start_ticks": 20286680,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/sanitized-alembic-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/sanitized-alembic-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "a810f2371e2cc5bf2c4e61b4d3891a8fd770f41c1e4334f9d2e450d57e7da03b"
+        },
+        "input_sha256": "aead7325a0f5d29a89ce48167bee6aaa368f9b6b1b98f06a4a15526cc2d18779",
+        "save_sha256": "fc2993d31da4a8e179bb5ea0ee529fe45fb1413fe191a7b1dca8600470603bf3",
+        "allocator": 14,
+        "credited_deaths": 33
+      },
+      "sanitized-alembic-native-pickup-01": {
+        "audit": "build/oblivion-compat/alembic-drop/sanitized-alembic-native-pickup-01/alembic-drop-verification.json",
+        "sha256": "e44457e8b8ab288b0eab3b620ae8e7604690d1e56c4bd01e5dd4639feb116711",
+        "process": {
+          "pid": 1025721,
+          "start_ticks": 20318455,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/sanitized-alembic-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/sanitized-alembic-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "a810f2371e2cc5bf2c4e61b4d3891a8fd770f41c1e4334f9d2e450d57e7da03b"
+        },
+        "input_sha256": "fc2993d31da4a8e179bb5ea0ee529fe45fb1413fe191a7b1dca8600470603bf3",
+        "save_sha256": "190c1fc1c4b53b8d969b36e072150486ba877bf144e16970efeba9542d33b2f4",
+        "allocator": 14,
+        "credited_deaths": 33
+      },
+      "sanitized-alembic-native-inventory-01": {
+        "audit": "build/oblivion-compat/alembic-drop/sanitized-alembic-native-inventory-01/alembic-drop-verification.json",
+        "sha256": "4c4e758291ea09186a0db6346b96e3bea1bf1e6b9fc5d8fe31d0fac94ddffd80",
+        "process": {
+          "pid": 1026021,
+          "start_ticks": 20350524,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/sanitized-alembic-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/sanitized-alembic-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "a810f2371e2cc5bf2c4e61b4d3891a8fd770f41c1e4334f9d2e450d57e7da03b"
+        },
+        "input_sha256": "190c1fc1c4b53b8d969b36e072150486ba877bf144e16970efeba9542d33b2f4",
+        "save_sha256": "acba0b74657f9c332ad4391979920b55e54a97b22280e618c5a7f61c99e9015c",
+        "allocator": 14,
+        "credited_deaths": 33
+      }
+    },
+    "source_acquisition": {
+      "normal-alembic-acquisition-01": {
+        "passed": true,
+        "source_sha256": "b60483351a2b63708b01d5ff3439bf03b8d4f94e26f21dc4eb55a9d9816a65ec",
+        "save_sha256": "ddcb1558a491a18291ada7a771b0f02df40bb93145549bc90718ff68c4552051",
+        "quantity": 1,
+        "original_retired": true,
+        "other_inventory_progress_life_quests_preserved": true,
+        "allocator": 13
+      },
+      "normal-alembic-inventory-survey-01": {
+        "passed": true,
+        "source_sha256": "ddcb1558a491a18291ada7a771b0f02df40bb93145549bc90718ff68c4552051",
+        "save_sha256": "f9b685700c2f300e6daa375ac3b279fddf1ed9106e04c0182bfe542447e250df",
+        "quantity": 1,
+        "original_retired": true,
+        "other_inventory_progress_life_quests_preserved": true,
+        "allocator": 13
+      }
+    },
+    "semantic": "Other inventory including Retort1, spent Torch987+2fresh1000 and Cuirass wear/scriptowner9; health/passives/skills/books/quests/life/33 deaths preserved. Encumbrance changes by weight7; body mass6.5 retained.",
+    "content_hash_audit": "build/oblivion-compat/alembic-drop/original-content-hash-audit.json",
+    "asset_override_audit": "build/oblivion-compat/alembic-drop/asset-override-audit.json"
+  },
+  "source": {
+    "delta_proof": "build/oblivion-compat/alembic-drop/post-check-source-delta-proof.json",
+    "original_record_audit": "build/oblivion-compat/alembic-drop/original-record-audit.json",
+    "cpp_hashes": {
+      "components/nifbullet/actorragdoll.cpp": "53afb46e2b68d8b5afe55975c5a96ae47ca6eca11c0308d61aa44ff4cacba3b4"
+    },
+    "post_checks": "Corrected copied audit log expectation from Retort type3/weight3 to actual Alembic type1/weight7, then re-audited retained runtime saves. C++ and captured manifests unchanged; receipt and handoff added after verification."
+  },
+  "retained_failures": [
+    "Initial drop audit stopped on copied Retort type/weight log expectation after gameplay and structural/state checks passed. Corrected metadata-only assertion re-audits the same saves; no repeated drop required.",
+    "First icon survey hovered Sack Cloth Sandals; four-icon survey confirmed Alembic325,475 before drop.",
+    "Private attempted pre-change binary copy occurred after linking and did not match acquisition binary; explicitly rejected as baseline evidence. Old converter failure on original model is retained separately."
+  ],
+  "limits": [
+    "No Alchemy use, potion creation or numerical Alchemy acceptance.",
+    "Original placed/static loader collision path remains unchanged; this conversion covers native ragdoll/loose ownership.",
+    "No exact original Havok solver fidelity claim.",
+    "No stacked/scripted/bound/multi-body apparatus acceptance, new native Lua apparatus namespace, TES4 MCP support or old legacy migration.",
+    "No broader milestone completion."
+  ]
+}

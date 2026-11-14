@@ -185,6 +185,26 @@ namespace NifBullet
                     require(value, "invalid sphere record"); positive(value->mRadius);
                     result = RagdollSphere{value->mRadius};
                 }
+                else if (const auto* spheres = dynamic_cast<const Nif::bhkMultiSphereShape*>(shape))
+                {
+                    // Native multi-spheres are a compound of individual spheres,
+                    // not the convex envelope produced by Bullet's multi-sphere.
+                    require(!spheres->mSpheres.empty() && depth + 2 <= MaxShapeDepth
+                        && spheres->mSpheres.size() <= (MaxShapeNodes - nodes) / 2,
+                        "invalid multi-sphere children or hierarchy limits");
+                    RagdollList output;
+                    for (const auto& sphere : spheres->mSpheres)
+                    {
+                        const auto& center = sphere.center();
+                        for (unsigned axis = 0; axis < 3; ++axis)
+                            require(std::isfinite(center[axis]), "nonfinite sphere center");
+                        positive(sphere.radius());
+                        output.mChildren.emplace_back(RagdollTransform{
+                            osg::Matrixf::translate(center), 0, {RagdollSphere{sphere.radius()}}});
+                        nodes += 2;
+                    }
+                    result = std::move(output);
+                }
                 else if (const auto* capsule = dynamic_cast<const Nif::bhkCapsuleShape*>(shape))
                 {
                     positive(capsule->mRadius1); positive(capsule->mRadius2);

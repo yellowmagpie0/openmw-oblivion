@@ -1,0 +1,33 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "record": {
+    "record": "APPA010604",
+    "payload_sha256": "62b63ff66d4e6c6adaa00cb0d7e34496c70d185c0f697b0bf6fd739b16a3dc3d",
+    "data": {
+      "type": 1,
+      "value": 50,
+      "weight": 7.0,
+      "quality": 10.0
+    },
+    "script": []
+  },
+  "placed_reference": "content:oblivion.esm:06efb8",
+  "model": "meshes/clutter/magesguild/apparatusalembicnovice.nif",
+  "member_sha256": "05e688aea320c756e260fe5737aa0803deebf9cd7565c5706ff6cb19372d07b3",
+  "scope": "Original record independently decoded as <BIff and original parsed shape/body inspected. Production converter diagnostics separately establish implementation acceptance; no independent original Havok solver or numerical Alchemy claim.",
+  "original_model": {
+    "records": 25,
+    "body": 10,
+    "mass": 6.5,
+    "motion": 4,
+    "sphere_record": 8,
+    "spheres": 2,
+    "old_converter_error": "unsupported body shape"
+  },
+  "shape_semantics": {
+    "source": "https://www.niftools.org/nifxml/bhkMultiSphereShape.html",
+    "accessed": "2026-11-14",
+    "interpretation": "Compound of individual spheres, not their convex envelope; existing list and translated sphere values preserve separate children"
+  }
+}

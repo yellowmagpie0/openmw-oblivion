@@ -1,0 +1,21 @@
+{
+  "target": "Original Novice Alembic native compound-sphere collision and singleton apparatus transfer",
+  "parent_commit": "cedf074f75",
+  "record": "APPA010604",
+  "placed": "content:oblivion.esm:06efb8",
+  "source": "normal-alembic-acquisition-01: visible ordinary Space pickup of the original reached item; no grants or teleport",
+  "implementation": "Convert bhkMultiSphereShape into existing compound list of translated spheres; preserve separated sphere geometry and existing transforms/scaling; reject empty, nonfinite, nonpositive or over-budget data",
+  "acceptance": [
+    "Original model converts to one movable body with all authored box/capsule/sphere children and no joints",
+    "Normal and ASan/UBSan ordinary drop1->0, cold world, visible Space pickup0->1, cold inventory",
+    "Original reference stays retired; new native13 retires, allocator14; no duplicate owner or body",
+    "Type1 quality10 value50 weight7 and all prior inventory/character/progress/life preserved",
+    "Original-file diagnostics, malformed actual-shape checks and affected regression suites pass"
+  ],
+  "limits": [
+    "No Alchemy use or formula changes",
+    "No new Lua type namespace, TES4 MCP support or legacy migration",
+    "No original Havok solver or exact dynamics parity claim"
+  ],
+  "auditor": "scripts/verify_alembic_drop.py"
+}
