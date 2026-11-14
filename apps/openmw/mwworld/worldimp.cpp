@@ -15,6 +15,8 @@
 #include <components/esm4/nativesequencedeactivation.hpp>
 #include <components/resource/niffilemanager.hpp>
 #include "../mwclass/esm4npc.hpp"
+#include "../mwclass/light4.hpp"
+#include "customdata.hpp"
 #include "oblivionweapondrop.hpp"
 #include "oblivionownership.hpp"
 #include "oblivioncharactergen.hpp"
@@ -75,6 +77,7 @@
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadingr.hpp>
 #include <components/esm4/loadkeym.hpp>
+#include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadrace.hpp>
@@ -251,6 +254,23 @@ namespace MWWorld
 
     namespace
     {
+        constexpr std::string_view lightUsageKey = "native.light.remaining_usage_time";
+
+        std::optional<float> savedNativeLightUsageTime(
+            const ESMStore& store, const ESM4::RuntimeReferenceState& reference)
+        {
+            const auto found = reference.mCustomState.find(lightUsageKey);
+            if (found == reference.mCustomState.end()) return std::nullopt;
+            const auto* value = std::get_if<double>(&found->second);
+            const auto* light = store.get<ESM4::Light>().search(reference.mBase);
+            constexpr int required = ESM4::Light::Carryable | ESM4::Light::OffDefault;
+            if (!value || !light || (light->mData.flags & required) != required || light->mData.time <= 0
+                || !std::isfinite(*value) || *value <= 0 || *value > double(light->mData.time)
+                || static_cast<float>(*value) <= 0)
+                throw std::invalid_argument("Native light lifetime disagrees with its winning base");
+            return static_cast<float>(*value);
+        }
+
         std::string getUpResourceHash(std::string_view bytes)
         {
             constexpr char digits[] = "0123456789abcdef";
@@ -2376,6 +2396,17 @@ namespace MWWorld
                     reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
                     reference.mCustomState["record_type"]
                         = static_cast<std::int64_t>(ptr.getClass().getType());
+                    if (type == ESM::REC_LIGH4)
+                    {
+                        reference.mCustomState.erase(std::string(lightUsageKey));
+                        const auto& light = ptr.get<ESM4::Light>()->mBase->mData;
+                        const float remaining = ptr.getClass().getRemainingUsageTime(ptr);
+                        if (remaining >= 0 && remaining != float(light.time))
+                        {
+                            reference.mCustomState[std::string(lightUsageKey)] = double(remaining);
+                            savedNativeLightUsageTime(mStore, reference);
+                        }
+                    }
                     if (!actorReference)
                     {
                         try
@@ -7233,6 +7264,8 @@ namespace MWWorld
             std::optional<float> mScale;
             std::optional<ESM::AnimationState> mAnimation;
             std::optional<CellRef> mItemCellRef;
+            std::unique_ptr<CustomData> mLightUsage;
+            bool mReplaceLightUsage = false;
         };
         std::optional<CellRef> preparedPlayerDropRelations;
         if (state.mVersion >= 47)
@@ -7298,6 +7331,8 @@ namespace MWWorld
             if (reference.mActorDrawState)
                 savedActorDrawState(mStore, found->second, state); // Validate incoming state, not the accepted cache.
             std::optional<CellRef> itemCellRef;
+            const auto lightUsage = savedNativeLightUsageTime(mStore, reference);
+            auto lightData = lightUsage ? MWClass::ESM4Light::prepareRemainingUsageTime(*lightUsage) : nullptr;
             const bool hasItemExtras = reference.mItemCondition || reference.mItemCharge;
             const auto& itemClass = found->second.getClass();
             if (hasItemExtras && !itemClass.isItem(found->second))
@@ -7412,7 +7447,8 @@ namespace MWWorld
             const auto cellId = resolver.toFormId(reference.mCell);
             preparedReferences.push_back({&reference, found->second,
                 &mWorldModel.getCell(ESM::RefId(*cellId)), owner, locked, scale,
-                std::move(animationState), std::move(itemCellRef)});
+                std::move(animationState), std::move(itemCellRef), std::move(lightData),
+                itemClass.getType() == ESM::REC_LIGH4});
         }
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
@@ -7721,6 +7757,8 @@ namespace MWWorld
         {
             const auto& reference = *binding.mState;
             Ptr ptr = binding.mReference;
+            if (binding.mReplaceLightUsage)
+                ptr.getRefData().setCustomData(std::move(binding.mLightUsage));
             if (binding.mItemCellRef)
             {
                 static_assert(std::is_nothrow_swappable_v<CellRef>);
@@ -8265,6 +8303,7 @@ namespace MWWorld
                     || (reference.mItemCharge && item->mMaxCharge < 0.f))
                     throw std::invalid_argument("TES4 loose item extras disagree with the winning item category");
             }
+            savedNativeLightUsageTime(incoming && reference.mBase.isDynamic() ? *incoming : mStore, reference);
             if (reference.mKey.isDynamic())
                 continue; // Dynamic references are reconstructed from shared save records.
             const auto* npc = mStore.get<ESM4::ActorCharacter>().search(reference.mKey);

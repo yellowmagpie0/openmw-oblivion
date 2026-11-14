@@ -5,11 +5,24 @@
 #include "../mwrender/objects.hpp"
 #include "../mwrender/renderinginterface.hpp"
 #include "../mwworld/ptr.hpp"
+#include "../mwworld/customdata.hpp"
+
+#include <cmath>
+#include <stdexcept>
 
 #include <components/esm4/loadligh.hpp>
 
 namespace MWClass
 {
+    namespace
+    {
+        struct LightUsageData final : MWWorld::TypedCustomData<LightUsageData>
+        {
+            explicit LightUsageData(float duration) : mRemaining(duration) {}
+            float mRemaining;
+        };
+    }
+
     ESM4Light::ESM4Light()
         : MWWorld::RegisteredClass<ESM4Light, ESM4Base<ESM4::Light>>(ESM4::Light::sRecordId)
     {
@@ -34,10 +47,26 @@ namespace MWClass
     {
         const auto& data = ptr.get<ESM4::Light>()->mBase->mData;
         constexpr int inactiveCarryable = ESM4::Light::Carryable | ESM4::Light::OffDefault;
-        // Native drops currently admit only full, inactive lights. Their
-        // unspent lifetime is base-derived; used/lit instances need their own state.
+        if (const auto* usage = ptr.getRefData().getCustomData())
+            return dynamic_cast<const LightUsageData&>(*usage).mRemaining;
         return (data.flags & inactiveCarryable) == inactiveCarryable && data.time > 0
             ? static_cast<float>(data.time) : -1.f;
+    }
+
+    std::unique_ptr<MWWorld::CustomData> ESM4Light::prepareRemainingUsageTime(float duration)
+    {
+        if (!std::isfinite(duration) || duration <= 0)
+            throw std::invalid_argument("Native light lifetime must be finite and positive");
+        return std::make_unique<LightUsageData>(duration);
+    }
+
+    void ESM4Light::setRemainingUsageTime(const MWWorld::Ptr& ptr, float duration) const
+    {
+        const auto& data = ptr.get<ESM4::Light>()->mBase->mData;
+        constexpr int required = ESM4::Light::Carryable | ESM4::Light::OffDefault;
+        if ((data.flags & required) != required || data.time <= 0 || duration > float(data.time))
+            throw std::invalid_argument("Native light lifetime disagrees with its winning base");
+        ptr.getRefData().setCustomData(prepareRemainingUsageTime(duration));
     }
 
     MWGui::ToolTipInfo ESM4Light::getToolTipInfo(const MWWorld::ConstPtr& ptr, int count) const

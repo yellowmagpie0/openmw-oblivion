@@ -696,11 +696,12 @@ namespace MWWorld
             };
             if constexpr (isLight)
             {
-                // Inactive fresh lights have no per-instance fuel evolution.
-                // Do not turn a partially used or burning light into a fresh one.
+                // Drop an inactive instance with its own remaining fuel.
                 constexpr int required = ESM4::Light::Carryable | ESM4::Light::OffDefault;
+                const float remaining = item.getClass().getRemainingUsageTime(item);
                 if ((baseDefinition->mData.flags & required) != required || baseDefinition->mData.time <= 0
-                    || count != 1 || item.getClass().getRemainingUsageTime(item) != float(baseDefinition->mData.time))
+                    || count != 1 || !std::isfinite(remaining) || remaining <= 0
+                    || remaining > float(baseDefinition->mData.time))
                     return std::nullopt;
             }
             const auto health = [&] {
@@ -844,6 +845,8 @@ namespace MWWorld
                 condition = static_cast<float>(double(sourceBefore.getCharge()) + sourceBefore.getChargeIntRemainder());
             if (condition) reference.mRef.setNativeItemCondition(*condition);
             reference.mRef.setEnchantmentCharge(sourceBefore.getEnchantmentCharge());
+            if constexpr (isLight)
+                preview.getClass().setRemainingUsageTime(preview, item.getClass().getRemainingUsageTime(item));
             ESM4::DropRelations relations;
             relations.mDropper = ESM::FormKey::dynamic("player", 1);
             reference.mRef.setNativeDropRelations(std::move(relations));

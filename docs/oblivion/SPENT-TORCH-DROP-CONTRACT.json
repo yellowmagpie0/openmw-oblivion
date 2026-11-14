@@ -1,0 +1,65 @@
+{
+  "scope": "Preserve actual partially spent inactive Torch fuel across native loose drop, cold world, pickup and cold inventory.",
+  "original": {
+    "base": "content:oblivion.esm:02cf9f",
+    "editor_id": "Torch02",
+    "maximum_usage_seconds": 1000,
+    "flags": "0x3b",
+    "model": "meshes/lights/torch02.nif",
+    "prior_original_content_oracle": "TORCH-DROP-ORACLE.json"
+  },
+  "source": {
+    "actual_use": "normal-torch-use-02: ordinary equip and eleven observed simulation seconds;989 equipped /2fresh1000.",
+    "actual_unequip": "normal-torch-unequip-06: ordinary inventory unequip and F5;987 inactive /2fresh1000.",
+    "save": "build/oblivion-compat/spent-torch-drop/normal-torch-unequip-06/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "fefb205f9ec88769724e78a242d400ccc4d9604bdbf5fcdae7bc5ae6f0fc1bb3"
+  },
+  "baseline": {
+    "case": "build/oblivion-compat/spent-torch-drop/normal-spent-torch-drop-baseline-01",
+    "observation": "Used Torch bypasses fresh-only native admission and drops as legacy LIGH; nearby observer nativeLight=false, native runtime contains no new Torch reference/body and allocator stays11.",
+    "limit": "No disappearance-after-restart claim; retained diagnostic uses the legacy path."
+  },
+  "acceptance": [
+    "Ordinary drop preserves987 seconds under one native LIGH key11/count1/allocator12 and its original single-bodyT physical ownership. Two fresh1000-second torches remain untouched.",
+    "Cold world preserves987 exactly; normal focused pickup returns a distinct used instance alongside2fresh, retires key11/body and does not refill or merge unlike fuel states.",
+    "Cold inventory preserves both fuel states and all other inventory, Cuirass scriptowner9/MQ01 flags1/1, health, skills/books, life/deaths and allocator.",
+    "Normal and ASan/UBSan real courses, fresh Torch regression, focused/integration checks and malformed lifetime admission checks pass."
+  ],
+  "implementation": [
+    "Native light usage belongs to cloned RefData CustomData; fresh/older native references retain base-derived full lifetime.",
+    "Only partially used fuel is serialized under native.light.remaining_usage_time in existing schema103 custom state. Category/type/range validation precedes native restore publication; prepared data replaces accepted fuel only during commit.",
+    "Native drop accepts finite positive usage no greater than its winning base, and pickup uses that native instance usage."
+  ],
+  "limits": [
+    "Existing shared inventory burning is observed and reused, not newly implemented.",
+    "Native dropped light remains inactive under original OffDefault; no dropped ignition, world fuel ticking, infinite/spent-zero or broader light profiles are claimed.",
+    "No original-executable fuel timing or exact timer parity claim.",
+    "Broader M15/M18 remain open."
+  ],
+  "auditor": "scripts/verify_spent_torch_drop.py",
+  "manifests": [
+    "original-spent-torch-drop.json",
+    "original-spent-torch-drop-sanitized.json",
+    "original-spent-torch-world.json",
+    "original-spent-torch-world-sanitized.json",
+    "original-spent-torch-pickup.json",
+    "original-spent-torch-pickup-sanitized.json",
+    "original-spent-torch-inventory.json",
+    "original-spent-torch-inventory-sanitized.json"
+  ],
+  "malformed_save_checks": {
+    "source": "Accepted original used-Torch native world save; only declared custom-state value is altered. These are corruption probes, not genuine gameplay outcomes.",
+    "field": "native.light.remaining_usage_time",
+    "cases": {
+      "negative": -1.0,
+      "zero": 0.0,
+      "over_max": 1001.0,
+      "wrong_type": "987",
+      "wrong_category": {
+        "reference": "dynamic:native-reference:000000000000000a",
+        "value": 987.0
+      }
+    },
+    "manifest": "original-spent-torch-reject-invalid-fuel.json"
+  }
+}

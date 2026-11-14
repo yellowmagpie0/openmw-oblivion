@@ -4,41 +4,49 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [native container discovery](NATIVE-CONTAINER-DISCOVERY-CONTRACT.json).
-Original enabled Wellspring Sack06efcf / CONT024945 was absent from Lua nearby
-containers because scene grouping recognized only TES3 containers. It now appears
-exactly once with native type/recordId, original position and model bounds across
-actual F5/exit/fresh-process load/resave in normal and ASan/UBSan games. Inventory,
-Cuirass scriptowner9/flags1/1, progress, allocator11 and untouched sack stock survive.
-[Receipt](NATIVE-CONTAINER-DISCOVERY-VERIFICATION.json): fresh2292 engine tests per
-mode,27 focused per mode and618 Python pass. No Container inventory bindings or
-TES4 MCP authoring claim. Prior [Bonemeal receipt](BONEMEAL-DROP-VERIFICATION.json)
-retains its original movable bodyT/drop/cold/pickup evidence; broader milestones
-remain open.
+Latest completed bounded chunk: [partially spent Torch fuel](SPENT-TORCH-DROP-CONTRACT.json).
+Original Torch02 ordinary equip/use and unequip produced one987-second inactive
+Torch beside2fresh1000. It now uses native loose LIGH ownership with its original
+bodyT, then retains987 through actual drop/cold world/visible Space pickup/cold
+inventory in normal and ASan/UBSan games. Native key11/next12 retires on pickup;
+the used item stays separate from2fresh. Fresh Torch drop/cold-world regressions
+retain1000 in both modes. Five corruptions of the actual world save are rejected
+before load completion. Fresh221 focused/2292 full engine tests per mode and618
+Python pass. [Receipt](SPENT-TORCH-DROP-VERIFICATION.json) separates original-content,
+structural, compiler, semantic and normal-input evidence. Native dropped lights
+remain inactive; no world ignition/ticking, spent-zero or infinite-light claim.
 
-Current chunk: investigate ordinary use of one carried Torch, then preserve its
-partially spent lifetime through native loose drop/pickup/restart. The existing
-native path accepts only fresh inactive lights. Baseline equip/use is pending;
-do not assume burning is already implemented or broken. Evidence root:
-`build/oblivion-compat/spent-torch-drop`. Next action: inspect actual equipped/use
-save and confirm the observed gap before changing lifetime ownership.
+Prior [native container discovery](NATIVE-CONTAINER-DISCOVERY-VERIFICATION.json)
+exposes original enabled Sack06efcf exactly once across cold loads. No full TES4
+Container inventory bindings or MCP authoring support. Prior
+[Bonemeal receipt](BONEMEAL-DROP-VERIFICATION.json) retains its original movable
+bodyT/drop/cold/pickup evidence. Broader milestone acceptance remains open.
+
+Next action: survey enabled pickups and reachable dead-actor stock near the
+current Wellspring continuation for an original ALCH or APPA item that exercises
+a missing native loose category. Verify an ordinary acquisition and its winning
+record/model before choosing the implementation. Do not grant items, enable
+disabled Zahrasha or reroll the lost diagnostic sack opening. Keep the next chunk
+bounded by the observed failure and its needed dependency.
 
 Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
 ordinary approach reached the sack, whose first roll contained an inkwell/no gold.
-The opening harness awaited the wrong kind label and did not retain a save. Do not
-claim looting acceptance, grant gold or use that attempt as a continuation.
+The opening harness awaited the wrong kind label and did not retain a save.
 `build/oblivion-compat/gold-drop/normal-sack-first-open-04` retains the capture,
-normal input receipts and failure. Main continuation below remains unchanged.
+normal input receipts and failure; no looting acceptance or continuation claim.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `707eaa440f4303699fcb42ddbd6a5f3e5a64edddaf50674f786efe37d2175f78`.
-Cuirass equipped/condition19.6576748/scriptowner9, fresh Torch3/lifetime1000,
-Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/Bone1, Club equipped, MQ01flags1/1,
-allocator11; native keys1..8 and10 retired/count0/no bodies; inventory-script9 active.
-Health70.480003/110, Endurance55, all27 skills/book history/33 credited deaths preserved. MS39stage0
-and original absence of Nirnroot/counter27 retained. Instrumented continuation
-is in the receipt.
+`build/oblivion-compat/spent-torch-drop/normal-spent-torch-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `3f6a73c6fa99603f5980c8bcaee23d4a919ffd60e21a79c734bd456b0602b10c`.
+Instrumented continuation: same root `sanitized-spent-torch-inventory-01`,
+SHA256 `94bd42d5e48da4e55a167219815388c3cb2db1684f85bcec14d15b738e6af72a`.
+Cuirass equipped/condition19.6576748/scriptowner9, Torch1/fuel987 plus2fresh1000
+all unequipped, Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/Bone1, Club
+equipped, MQ01flags1/1, allocator12. Native keys1..8,10,11 retired/count0/no
+bodies; inventory-script9 active and no native ref9. Health70.480003/110,
+Endurance55, all27skills/book history/33 credited deaths preserved. MS39stage0
+and original absence of Nirnroot/counter27 retained. Older all-fresh source707eaa...
+remains identified in the Bonemeal receipt; do not merge independent branches.
 
 Healthy shore continuation remains separate:
 `build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
@@ -48,7 +56,7 @@ Endurance55/no Swamp Fever, Crab0/Rice1, Nirnroot owner4/Found1, MS39stage10/
 counters2,33 credited deaths/all earned skills. Allocator7, dropped key6 retired.
 
 Current gaps: stateful-scripted loose armor, bound/enchanted and other stacked
-item categories; active/spent Torch fuel and broader
+item categories; world Torch ignition/fuel ticking, spent-zero/infinite lights and broader
 inventory lifetime/effects/UI; unsupported multi-body MISC, nonconvex triangle proxies
 and general prismatic
 motion; coastal rendering; natural positive Endurance-damage healing gameplay.
@@ -97,5 +105,5 @@ Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
 Checkpoint: native singleton ingredient/weapon/MISC/KEYM, articulated clothing,
 ammunition quantities and the closed-convex Lockpick stack now have separate
-real-content evidence. Key chunk complete; choose the next observed gameplay gap
+real-content evidence. Spent-Torch fuel chunk complete; choose the next observed gameplay gap
 without closing broader milestones.
