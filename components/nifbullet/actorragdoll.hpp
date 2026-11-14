@@ -175,7 +175,13 @@ namespace NifBullet
         float mMin, mMax;
         float mFriction;
     };
-    using RagdollJoint = std::variant<RagdollConeJoint, RagdollHingeJoint>;
+    // A zero-travel prismatic joint has no remaining relative degree of freedom.
+    // Keep the authored raw-body A frame expressed in B, in native length units.
+    struct RagdollLockedJoint
+    {
+        osg::Matrixf mFrameB;
+    };
+    using RagdollJoint = std::variant<RagdollConeJoint, RagdollHingeJoint, RagdollLockedJoint>;
     struct RagdollJointDefinition
     {
         std::uint32_t mRecord;

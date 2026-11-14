@@ -24,6 +24,7 @@
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
 #include <BulletCollision/BroadphaseCollision/btOverlappingPairCache.h>
 #include <BulletDynamics/ConstraintSolver/btHingeConstraint.h>
+#include <BulletDynamics/ConstraintSolver/btFixedConstraint.h>
 #include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -1268,6 +1269,18 @@ namespace NifBullet
                 coefficient(cone->mFriction);
                 mImpl->mConstraints.push_back(std::make_unique<NativeConeConstraint>(*a.mBody, *b.mBody,
                     *cone, a.mCenterFrame, b.mCenterFrame, lengthScale, input));
+                continue;
+            }
+            if (const auto* locked = std::get_if<RagdollLockedJoint>(&input.mJoint))
+            {
+                require(!input.mMalleable, "malleable locked joint is unsupported");
+                const auto& matrix = locked->mFrameB;
+                btTransform frameB(btMatrix3x3(matrix(0,0), matrix(1,0), matrix(2,0),
+                    matrix(0,1), matrix(1,1), matrix(2,1), matrix(0,2), matrix(1,2), matrix(2,2)),
+                    vector(matrix.getTrans()) * lengthScale);
+                validatePose(frameB);
+                mImpl->mConstraints.push_back(std::make_unique<btFixedConstraint>(*a.mBody, *b.mBody,
+                    a.mCenterFrame.inverse(), b.mCenterFrame.inverse() * frameB));
                 continue;
             }
             const auto* hinge = std::get_if<RagdollHingeJoint>(&input.mJoint);

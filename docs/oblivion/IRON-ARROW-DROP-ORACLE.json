@@ -1,0 +1,152 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "type": "AMMO",
+  "id": "017829",
+  "payload_sha256": "e7db7715b1b3552f67f4c0009ca9e9541f3b2367399603c9ef4cfdd9341720dd",
+  "strings": {
+    "EDID": "Arrow1Iron",
+    "FULL": "Iron Arrow",
+    "MODL": "Weapons\\Iron\\Arrow.NIF"
+  },
+  "data": {
+    "speed": 1.0,
+    "flags": 0,
+    "value": 1,
+    "weight": 0.10000000149011612,
+    "damage": 8
+  },
+  "script_present": false,
+  "enchantment_present": false,
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "member": "meshes/weapons/iron/arrow.nif",
+  "member_sha256": "35286b4cb6638d8de87d1a25fe1e5a677379172115fe43cd900d3f6330f53a63",
+  "parser_diagnostic": {
+    "records": 47,
+    "bodies": [
+      {
+        "record": 5,
+        "mass": 0.5,
+        "motion": 4,
+        "constraints": 1
+      },
+      {
+        "record": 7,
+        "mass": 5,
+        "motion": 4,
+        "constraints": 0
+      }
+    ],
+    "prismatic": [
+      {
+        "record": 8,
+        "body_a": 5,
+        "body_b": 7,
+        "min": 0,
+        "max": 0,
+        "friction": 100,
+        "a": {
+          "sliding": [
+            -1.08885e-08,
+            1,
+            -1.11162e-07,
+            0
+          ],
+          "rotation": [
+            -1.08885e-08,
+            1,
+            -1.11162e-07,
+            0
+          ],
+          "plane": [
+            1,
+            -5.98709e-09,
+            1.40355e-08,
+            0
+          ],
+          "pivot": [
+            5.54101e-07,
+            -0.11689,
+            0.0349274,
+            0
+          ]
+        },
+        "b": {
+          "sliding": [
+            -1.40355e-08,
+            1.11162e-07,
+            1,
+            0
+          ],
+          "rotation": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "plane": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "pivot": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    ]
+  },
+  "baseline_native_graph": [
+    {
+      "path": "build/oblivion-compat/iron-arrow-drop/assets/meshes/weapons/iron/arrow.nif",
+      "passed": false,
+      "error": "Invalid actor ragdoll: unsupported joint"
+    }
+  ],
+  "scope": "Independent original winning record/archive member; graph values are engine parser diagnostics. Locked prismatic specialization preserves the authored rest relation; no general slider, native solver bit parity or friction arithmetic claim. Original ordinary item transfer observations reused from BONE-DROP-ORACLE only for UI ownership behavior; actual fork source is genuinely carried24, no grants.",
+  "implementation_diagnostic": {
+    "path": "build/oblivion-compat/iron-arrow-drop/assets/meshes/weapons/iron/arrow.nif",
+    "bodies": 2,
+    "joints": 1,
+    "passed": true,
+    "records": 47,
+    "root": 47,
+    "asset_root": 0,
+    "scabbard": -1,
+    "body_target": 47,
+    "shape": 3,
+    "bodyT": 1,
+    "body_graph": [
+      {
+        "record": 5,
+        "node_record": 47,
+        "flags": 1,
+        "mass": 0.5,
+        "fixed": 0,
+        "shape": 3,
+        "bodyT": 1
+      },
+      {
+        "record": 7,
+        "node_record": 10,
+        "flags": 1,
+        "mass": 5,
+        "fixed": 0,
+        "shape": 3,
+        "bodyT": 1
+      }
+    ],
+    "joint_graph": [
+      {
+        "record": 8,
+        "body_a": 0,
+        "body_b": 1,
+        "shape": 2
+      }
+    ],
+    "joint_type": "Locked zero-travel prismatic specialization"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "status": "Bounded one-unit native AMMO split, locked-prismatic physical owner, ordinary pickup and cold persistence accepted in normal and instrumented games; focused/full gates passed. Broader M15/M18 remain open.",
+  "milestones": [
+    "M18 one-unit inventory stack split and native world ownership",
+    "M15 authored locked-prismatic loose-body physics"
+  ],
+  "content": {
+    "base": "content:oblivion.esm:017829",
+    "name": "Iron Arrow",
+    "source_quantity": 24,
+    "dropped_quantity": 1,
+    "remaining_quantity": 23,
+    "weight": 0.10000000149011612,
+    "condition": -1,
+    "charge": -1,
+    "script": null,
+    "enchantment": null
+  },
+  "source": {
+    "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "432ff1ca7e37288558ec27281a2056925e6eaf6d5f7de2198143a6b02850c4fc",
+    "allocator": 3,
+    "branch": "Separate Cairn/Wellspring Cave continuation, HP70.480003/110 End55, all27 skills/33 credits, Bone1/Pants1, MS39stage0/Nirnroot absent."
+  },
+  "acceptance": [
+    "Ordinary Control-click selects one from the genuine unequipped stack24; drop once debits24->23 and creates typed AMMO key3/allocator4 with quantity1.",
+    "Original two dynamic box bodies retain a zero-travel prismatic relation through authored rest locking. Identify model/hash/body nodes; conserve relative pose within justified solver tolerances.",
+    "Cold world load/re-save -> ordinary visible Space pickup23->24 -> cold inventory load in normal and instrumented games. Retire key3/count0 and all physical bodies once.",
+    "Preserve exact source item metadata and all other inventory/equipment, all27 skills/book progress/health/passives/life/death/quests/counters/script owners. Encumbrance changes by original weight0.1 only.",
+    "Tick-zero loaded full physical snapshot retains both bodies and velocities; existing schema103 unchanged. No legacy migration claim.",
+    "Focused physics/lifetime checks, fresh normal/sanitizer component and engine gates, Python gate as appropriate and retained Pants/Bone/weapon regressions."
+  ],
+  "baseline": {
+    "root": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-drop-baseline-01",
+    "observed": "Actual ordinary24->23 drop/save passed. Legacy static path has no native AMMO reference/body/key allocation. Native graph parser rejects original prismatic constraint. No generic disappearance claim."
+  },
+  "limits": [
+    "One unit from an unequipped ordinary unscripted/unenchanted ammunition stack only; no full-stack drop, equipped/bound/scripted/enchantment transfer acceptance.",
+    "Prismatic minimum=maximum=0 specialization only: all relative degrees of freedom locked. Preserve authored body rest relation; friction has no free degree to act on. General sliding/motors/malleable prismatic support remains unimplemented.",
+    "No fired-arrow flight/recovery or all-AMMO asset claim.",
+    "Original solver arithmetic/registration bit parity not required; physical rest and persistence must remain reasonable and correctly owned.",
+    "Separate coastal diagnosis found original rock placement/collision intact; refraction configuration did not resolve the view. This investigation is retained, with no coastal fix claimed."
+  ],
+  "physical_tolerances": {
+    "relative_offset_units": 0.5,
+    "relative_rotation_coefficient": 0.01,
+    "loaded_snapshot_absolute": 0.0001,
+    "loaded_snapshot_relative": 1e-06,
+    "rationale": "Real first drop/cold-world settling measured0.24 game units and0.0032 rotation coefficient change; tick-zero restoration preserved all saved values. Less than one unit of solver settling is reasonable; no exact original Bullet/Havok parity requirement."
+  },
+  "normal_continuation": {
+    "save_sha256": "2e131af56fc955b97d66ebe596e26167470cb37ffa360af78ef2a64aa90fec85",
+    "next_dynamic_serial": 4,
+    "credited_deaths": 33,
+    "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+  },
+  "sanitized_continuation": {
+    "save_sha256": "91a5ad5bf14095f8ea17755d2bdf210b8d865f4a49e7be464a4a34c142962608",
+    "next_dynamic_serial": 4,
+    "credited_deaths": 33,
+    "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+  }
+}

@@ -309,8 +309,13 @@ namespace NifBullet
             require(joint.mBodyA < result.mBodies.size() && joint.mBodyB < result.mBodies.size()
                 && joint.mBodyA != joint.mBodyB, "invalid scaled joint endpoints");
             std::visit([&](auto& value) {
-                value.mA.mPivot = vector(value.mA.mPivot);
-                value.mB.mPivot = vector(value.mB.mPivot);
+                if constexpr (std::is_same_v<std::decay_t<decltype(value)>, RagdollLockedJoint>)
+                    value.mFrameB.setTrans(vector(value.mFrameB.getTrans()));
+                else
+                {
+                    value.mA.mPivot = vector(value.mA.mPivot);
+                    value.mB.mPivot = vector(value.mB.mPivot);
+                }
                 // Native cone/hinge copy preserves directions, angular limits
                 // and friction. Malleable copy dispatches the same nested
                 // operation, retaining its separate tau/damping coefficients.
@@ -712,6 +717,29 @@ namespace NifBullet
                 value.mJoint = cone(ragdoll->mConstraint);
             else if (const auto* limited = dynamic_cast<const Nif::bhkLimitedHingeConstraint*>(joint))
                 value.mJoint = hinge(limited->mConstraint);
+            else if (const auto* prismatic = dynamic_cast<const Nif::bhkPrismaticConstraint*>(joint))
+            {
+                const auto& constraint = prismatic->mConstraint;
+                require(constraint.mMinDistance == 0.f && constraint.mMaxDistance == 0.f,
+                    "nonzero-travel prismatic joint is unsupported");
+                nonnegative(constraint.mFriction);
+                // With translation and all rotations locked, the anchor choice
+                // cannot change the relative pose. Preserve the identified
+                // asset's body bind relation instead of inventing a slider axis
+                // from redundant Oblivion export direction fields.
+                const auto& bodyA = result.mBodies[value.mBodyA];
+                const auto& bodyB = result.mBodies[value.mBodyB];
+                const auto bindA = ragdollBoneWorldFromNativePose(
+                    ragdollNativeSceneBodyTargetPose(bodyA.mBoneBind, bodyA));
+                const auto bindB = ragdollBoneWorldFromNativePose(
+                    ragdollNativeSceneBodyTargetPose(bodyB.mBoneBind, bodyB));
+                osg::Matrixf inverse;
+                require(inverse.invert(bindB), "noninvertible locked joint bind");
+                auto frameB = bindA * inverse;
+                (void)ragdollNativeSceneTargetPose(frameB);
+                frameB.setTrans(frameB.getTrans() / RagdollNativeLengthScale);
+                value.mJoint = RagdollLockedJoint{frameB};
+            }
             else if (const auto* malleable = dynamic_cast<const Nif::bhkMalleableConstraint*>(joint))
             {
                 const auto& wrapped = malleable->mConstraint;

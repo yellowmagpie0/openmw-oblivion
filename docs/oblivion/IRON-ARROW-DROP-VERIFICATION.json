@@ -1,0 +1,765 @@
+{
+  "status": "Bounded genuine one-arrow split, native two-body AMMO drop, ordinary pickup and cold persistence accepted; broader M15/M18 remain open",
+  "parent_commit": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+  "post_gate_changes": "Documentation closure only; C++, semantic verifier and accepted public input recipes unchanged from the common integration source fingerprint.",
+  "contract": {
+    "path": "docs/oblivion/IRON-ARROW-DROP-CONTRACT.json",
+    "sha256": "fc67bf69fc3869a2976447c47a9cd1d17e97e2596c1da387b4d27d0992829fe5"
+  },
+  "oracle": {
+    "path": "docs/oblivion/IRON-ARROW-DROP-ORACLE.json",
+    "sha256": "f7766555256bf0e875fe1170a8f95cb5d4a54d4d3a5df29ab19941725477020c"
+  },
+  "schema": 103,
+  "result": "One ordinary Control-click drop from the genuine unequipped Iron Arrow017829 stack debits24->23, creates typed AMMO key3/count1/allocator4 with original Arrow.NIF (two dynamic boxes and a zero-travel prismatic relation), survives cold world re-save, and is acquired once through visible crosshair/Space to merge23->24. Cold inventory load retains retired key3/count0/no bodies. All other inventory/equipment including Bone1/Pants1, Health70.480003/Endurance55, all27 skills/book history, source quest/counter absence and33 credited deaths preserved. This is the separate Cairn/Wellspring branch, not a healthy shore history merge.",
+  "layers": {
+    "structural": "Prepared typed AMMO cell/registry/model/body/Lua publication shares native ownership with existing items. Projection dispatch distinguishes ammunition before WEAP. Only one unit from an unequipped ordinary positive ammunition stack is admitted; inventory removal token preserves the remainder. No serializer schema change.",
+    "physics": "Original Prismatic8 has min=max0, leaving no relative degree of freedom. RagdollLockedJoint derives the identified asset body bind relation and uses a fixed joint through existing COM adapters. Generic sliding, motors, malleable prismatics and exact native friction/solver arithmetic remain unimplemented. Both body nodes render beneath the retained file root0/generated reference root47.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/iron-arrow-drop/focused-normal-01/verification.json",
+        "sha256": "54cd00d75ac4f36a6c3526b5a4d1e94af68192c972df4a4abdbb8ff9714cba9c",
+        "source": {
+          "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+          "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+        },
+        "results": {
+          "components": {
+            "executed": 415,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "7d110917ad4c7b3630cc599238eabe8a78994efd62d599f7dccaa692aa7e1e1f",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "4586d22b86a630d86f19a15769c4028a52d5a88f48a91ad92610607f47c0d483",
+            "inventory_sha256": "ce21d0cf58136563a5bb700ceb11f774941c8eef19f69e78bed2f8468ca2f149",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 340,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "a9cfe6df026feda75e91361d6ae5ef26648bfba9e9a0b6c59bf9c4db8a7f1255",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "b4624bf0cf80ea3d378bdd91a12954a18e9c7153c4ebafcb86cc3d6d4b4d7595",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/iron-arrow-drop/focused-sanitized-01/verification.json",
+        "sha256": "13e7efb629cb8a956173d77cef7cf114fc7feb8dc92ad6b5e79ca4cee90468ed",
+        "source": {
+          "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+          "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+        },
+        "results": {
+          "sanitize": {
+            "executed": 415,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "c504e815d55916b1020e2f7c19c54140d9a8d1a9cb1e03821a02df614759373a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "f321158e4fbbff30180ddabcc5c416dc012dcce65c92dc83b204e2fbc9eb79f1",
+            "inventory_sha256": "61a6b52af35a69cc39a0e5bb2a9925b1e7e3274da617d60b9671a088d3500aa2",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 340,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "be3c4c94b504b8f4760788fcf0ecf480224eb2a3f8e3e781a157197cc774b695",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c9067cd0ce9cb2b7ef6bdf02ec63d4c106764a3fd4cc32ab5f6b2a0cfc86ef70",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/iron-arrow-drop/integration-normal-01/verification.json",
+        "sha256": "4209b4cfe6d5b51a69cae7ee74942f97252798051f3b2d0fbc8d1b26a2ce32f1",
+        "source": {
+          "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+          "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+        },
+        "results": {
+          "components": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "7d110917ad4c7b3630cc599238eabe8a78994efd62d599f7dccaa692aa7e1e1f",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "90391341a7dd6cc6b92151a7a240e84a549c676e30be62700e5f9f4e8b0550a9",
+            "inventory_sha256": "1c20cfec2bf2405daa100c986297376de1d4b548ad247ee1966297cdfedd3daf",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "a9cfe6df026feda75e91361d6ae5ef26648bfba9e9a0b6c59bf9c4db8a7f1255",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "3e200a6bd9b5ed64b47030aaed6116713c535d7093145f1d31fb458a1dbcc45c",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "d936516f6a47cd33a8e4ae5970fd938215e99aa1ebf935066cdfc18bdd43be15"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/iron-arrow-drop/components-sanitized-01/verification.json",
+        "sha256": "dd89b1265b1e0f81a3afffb297edc2a4b22ba4f53dc36d888c29490b9ec3e931",
+        "source": {
+          "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+          "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+        },
+        "results": {
+          "sanitize": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c504e815d55916b1020e2f7c19c54140d9a8d1a9cb1e03821a02df614759373a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "458c80178debd2b0a96e296bcfbca3f99d01591eb9a9e979d2429e6bb1ce2acf",
+            "inventory_sha256": "ab43f468bfa0c58bb0b63350220126641a46e03bd75058e878ad5df3e21ed393",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/iron-arrow-drop/integration-sanitized-1/verification.json",
+        "sha256": "8cda370543506a1317dd571082838ad11b8590e8720ba705206a04649ebfc2e8",
+        "source": {
+          "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+          "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "be3c4c94b504b8f4760788fcf0ecf480224eb2a3f8e3e781a157197cc774b695",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "351ea78bd869c1c0e79e97a05b875391151d4e51037e65dcfd078fe575585e8f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/iron-arrow-drop/integration-sanitized-2/verification.json",
+        "sha256": "5865d6c16ffc37f4a0b3102500b641eb273a222b2076887890fa0e2a784498da",
+        "source": {
+          "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+          "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "be3c4c94b504b8f4760788fcf0ecf480224eb2a3f8e3e781a157197cc774b695",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "2760aab125462c7607069ed13ed93bc08848b6b156febf91bbe967b921014787",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/iron-arrow-drop/integration-sanitized-3/verification.json",
+        "sha256": "8356ca7a27a20a8130ee359b68661949f4e55552b3d71e364601025f5372d26c",
+        "source": {
+          "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+          "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "be3c4c94b504b8f4760788fcf0ecf480224eb2a3f8e3e781a157197cc774b695",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "d1f787368c64d73e3762ea1580379f29a7acc9d240ff1e88a91eaccbad2cdb98",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/iron-arrow-drop/integration-sanitized-4/verification.json",
+        "sha256": "562167513320439edf8c2c412772cd1306896cdfff9798dafd7e79d7c5613fb2",
+        "source": {
+          "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+          "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "be3c4c94b504b8f4760788fcf0ecf480224eb2a3f8e3e781a157197cc774b695",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "0bdccd8c67f6d143add56032f8d3324642f31fdb153bde38228adf361d1ad46e",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "sanitizer_partition_union": {
+      "disjoint": true,
+      "counts": [
+        82,
+        82,
+        82,
+        2046
+      ],
+      "total": 2292
+    },
+    "independent_oracle": "Independent installed winning AMMO record and archive member identity; raw/new graph reports explicitly parser/implementation diagnostics. Original generic item UI transfer behavior reused from Bone oracle only, not numerical slider dynamics. Actual fork source is genuinely carried24 with no grants.",
+    "runtime": [
+      {
+        "root": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-drop-01",
+        "phase": "drop",
+        "process": {
+          "pid": 825296,
+          "start_ticks": 16786359,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "c74e8201ee74780e1b93d6fd58098eafcdda1272523e5d7799d8014822049955"
+        },
+        "source_sha256": "432ff1ca7e37288558ec27281a2056925e6eaf6d5f7de2198143a6b02850c4fc",
+        "save_sha256": "8331cf7e1fefe06ad40201032077932503c67201af7704beeeaa03c79099535b",
+        "next_dynamic_serial": 4,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-drop-01/iron-arrow-drop-verification.json",
+          "sha256": "3a39decd59f3b3b3dd3e776d76cf07f76ca2a05ece316b517360661e42679515"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-iron-arrow-drop.json",
+          "sha256": "97c8bd356fa7c7f30baeed55224f4b8f4ed1e4de54b7727af8ed2c5b58081821"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-drop-01/original-iron-arrow-after-drop-inventory.png",
+            "sha256": "2330318afb4eb9f74d0f13f322a4977e178cc01523ef3db179b56a4d33ecabca"
+          },
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-drop-01/original-iron-arrow-before-drop.png",
+            "sha256": "74963e3dbd35135da54c4a254340ee8633575d506d56fb3e4fffbb92d536dd4e"
+          },
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-drop-01/original-iron-arrow-dropped-world.png",
+            "sha256": "f026ca0741f209d3015303aa021c18053b96bb140378dc2a95e4271053a1effd"
+          },
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-drop-01/original-iron-arrow-world-drop-cursor.png",
+            "sha256": "7677d26ab3624188824a74c46c7f21cd38754e0d07fb5d3fbc9be7269ede88ee"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-world-01",
+        "phase": "world",
+        "process": {
+          "pid": 825497,
+          "start_ticks": 16795036,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "c74e8201ee74780e1b93d6fd58098eafcdda1272523e5d7799d8014822049955"
+        },
+        "source_sha256": "8331cf7e1fefe06ad40201032077932503c67201af7704beeeaa03c79099535b",
+        "save_sha256": "3c945beea8ba874294d73e4bfb55270eafcd4e965114f10145d219436139c5c5",
+        "next_dynamic_serial": 4,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-world-01/iron-arrow-drop-verification.json",
+          "sha256": "f92e2dea49c2b7f9538ce4aa7c47f16a57f8a1dcb4e5977d6d43269119a3ad79"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-iron-arrow-world.json",
+          "sha256": "8d0b498f499e3665a33d44f3d80890e18802bfc7f4247956a8c05a144e23df58"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-world-01/original-iron-arrow-first-cold-world.png",
+            "sha256": "e6fea194f60c0f631884a12fadc18e46dcdb74a00124973170dd291d02da75ee"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-pickup-02",
+        "phase": "pickup",
+        "process": {
+          "pid": 826250,
+          "start_ticks": 16848806,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-pickup-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "c74e8201ee74780e1b93d6fd58098eafcdda1272523e5d7799d8014822049955"
+        },
+        "source_sha256": "3c945beea8ba874294d73e4bfb55270eafcd4e965114f10145d219436139c5c5",
+        "save_sha256": "e83ec45589c233ac9bd08fcea14eb35cbd9fcbeed8d59c4442169787406ae36a",
+        "next_dynamic_serial": 4,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-pickup-02/iron-arrow-drop-verification.json",
+          "sha256": "326f1358185ed1fdff2b20c0d4ad9ef0a7bcc9962091c7d1988ee701b30bc27a"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-iron-arrow-pickup.json",
+          "sha256": "699473bd1455c94e8e818dffb56378b3e8876581c8439c91163a362e6ac23c59"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-pickup-02/original-arrow-focused.png",
+            "sha256": "a0c3b4ca70451db215d57b0fcacb1920c5e65ce98aa7625b000b83ac9c8d8af5"
+          },
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-pickup-02/original-arrow-picked-up.png",
+            "sha256": "d21a0d407c0a173919160e3de1ca71a96405f4642f471ad565a5c9205293d3d2"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01",
+        "phase": "inventory",
+        "process": {
+          "pid": 826425,
+          "start_ticks": 16857237,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-pickup-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "c74e8201ee74780e1b93d6fd58098eafcdda1272523e5d7799d8014822049955"
+        },
+        "source_sha256": "e83ec45589c233ac9bd08fcea14eb35cbd9fcbeed8d59c4442169787406ae36a",
+        "save_sha256": "2e131af56fc955b97d66ebe596e26167470cb37ffa360af78ef2a64aa90fec85",
+        "next_dynamic_serial": 4,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01/iron-arrow-drop-verification.json",
+          "sha256": "82c66897bc7362ebba93460a0d2d1fda3848c25aa5495e60d0a97f629b5f3640"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-iron-arrow-inventory.json",
+          "sha256": "d60ba09814558d390d03efb0a0d4ff3985af3a9d4cf259fcc6c8f95a1678fc59"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01/original-arrow-cold-inventory.png",
+            "sha256": "d0ba583460abfc5a1c3c36bd8d6db2bf8824b08be1c9a2453abc28de72cd7f26"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-drop-01",
+        "phase": "drop",
+        "process": {
+          "pid": 827966,
+          "start_ticks": 16884328,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d8308f680a90c7f5023e1a1c53c2629a9cac710a9becc9b2b563df8201c13cc8"
+        },
+        "source_sha256": "432ff1ca7e37288558ec27281a2056925e6eaf6d5f7de2198143a6b02850c4fc",
+        "save_sha256": "299eb915ba441915b1a0346319f7d2789385909a0ab4b53498de966e867fd7d2",
+        "next_dynamic_serial": 4,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-drop-01/iron-arrow-drop-verification.json",
+          "sha256": "474268514182f8e5c24d8c54f932bccab6bc971d83dd7dbcecb702764d5dc5a3"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-iron-arrow-drop-sanitized.json",
+          "sha256": "45a8ab4ad6ab3bb56de504ab1c25d47150e22b1845948b97708887d5882dacc0"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-drop-01/original-arrow-after-drop-inventory.png",
+            "sha256": "be0bb9481393ab564fe5cb03d137092a4594bc5cbc20acb74f163e52d697ca1f"
+          },
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-drop-01/original-arrow-before-drop.png",
+            "sha256": "0f7155c040811735f9a6bd8243dbe35138e70776db3ba7d971b603679cf5b6d0"
+          },
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-drop-01/original-arrow-dropped-world.png",
+            "sha256": "a092f1de62b87f99d61bfd6a57b4d4d6f0ae4a41a421c4d6fdc5754d0e7cd29c"
+          },
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-drop-01/original-arrow-world-drop-cursor.png",
+            "sha256": "67fb9392dc9d350f60549c4ea72e13ed5b9e7b674f40f9605d2c4fd569df9c0a"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-world-01",
+        "phase": "world",
+        "process": {
+          "pid": 834700,
+          "start_ticks": 16919336,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d8308f680a90c7f5023e1a1c53c2629a9cac710a9becc9b2b563df8201c13cc8"
+        },
+        "source_sha256": "299eb915ba441915b1a0346319f7d2789385909a0ab4b53498de966e867fd7d2",
+        "save_sha256": "5c49a36b50a52f94672b5d928c6a442304353abbbae85a7f408eeceeab992b4b",
+        "next_dynamic_serial": 4,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-world-01/iron-arrow-drop-verification.json",
+          "sha256": "740212f3544174dd63add472800a8e112c059c772f96bda290bce6e18bdc982e"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-iron-arrow-world-sanitized.json",
+          "sha256": "632af0f1f5e2d10dfe8f2885c35004cb007af2a0f3aef4163e5f055307fa96f8"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-world-01/original-arrow-first-cold-world.png",
+            "sha256": "390ed8e201236136b4cce35504ca372491d54e6de436e77d18f5ec0c43cc1d11"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-pickup-01",
+        "phase": "pickup",
+        "process": {
+          "pid": 834932,
+          "start_ticks": 16950425,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d8308f680a90c7f5023e1a1c53c2629a9cac710a9becc9b2b563df8201c13cc8"
+        },
+        "source_sha256": "5c49a36b50a52f94672b5d928c6a442304353abbbae85a7f408eeceeab992b4b",
+        "save_sha256": "3659923adba34c6868167b5a1bc4a47feb8fd969db9d9dd97b932e142bd5e91d",
+        "next_dynamic_serial": 4,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-pickup-01/iron-arrow-drop-verification.json",
+          "sha256": "01e56811f565f14a939746e215a3f98878549d4c3a9e605d8df1192519985c81"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-iron-arrow-pickup-sanitized.json",
+          "sha256": "9f2f2c29d7e742650f9635e57d4dd283cdeb6ecf488dbe5fcbbb5e3cc7e3559c"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-pickup-01/original-arrow-focused.png",
+            "sha256": "7036c2777105f92936658f36696105870cc18ae6a75aeacdd92bd0998873ea11"
+          },
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-pickup-01/original-arrow-picked-up.png",
+            "sha256": "7045a09a52fef9dc219482b10bcff71394c2597e59a9a060dc2a17e9cdd29cf2"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-inventory-01",
+        "phase": "inventory",
+        "process": {
+          "pid": 835318,
+          "start_ticks": 16983108,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d8308f680a90c7f5023e1a1c53c2629a9cac710a9becc9b2b563df8201c13cc8"
+        },
+        "source_sha256": "3659923adba34c6868167b5a1bc4a47feb8fd969db9d9dd97b932e142bd5e91d",
+        "save_sha256": "91a5ad5bf14095f8ea17755d2bdf210b8d865f4a49e7be464a4a34c142962608",
+        "next_dynamic_serial": 4,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-inventory-01/iron-arrow-drop-verification.json",
+          "sha256": "6bcd8e9021c07e0af87ce9414a7418e8c69611c544bc262589ee098bade3696d"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-iron-arrow-inventory-sanitized.json",
+          "sha256": "696f57e36060582e9ac7d0550ea92f594b49fef0ff9e5956ebe301af0247e260"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/iron-arrow-drop/sanitized-iron-arrow-native-inventory-01/original-arrow-cold-inventory.png",
+            "sha256": "f721ae84fe5e051d7c4c95b7a56398c46c7bfe4cd4379c1d78f63cca6020bb76"
+          }
+        ]
+      }
+    ],
+    "semantic": "verify_iron_arrow_drop.py round-trips103, compares all unrelated inventory/equipment and skills/book progress/AV/passives/life/deaths/quests/globals/script owners, enforces quantity24->23->24 and exact metadata, weight\u00b10.1 with abs1e-4, nearby two-body ownership and retired graph. Tick-zero load observes all body histories hash-bound before physics, abs1e-4/rel1e-6; post-contact relative rest tolerances0.5world units/0.01rotation coefficient."
+  },
+  "verifier": {
+    "path": "scripts/verify_iron_arrow_drop.py",
+    "sha256": "b4b5c2859bf8b4b6c4fec2bf5743d42757988e87cdfd4feb896ca727effadf46"
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-drop-baseline-01/baseline-verification.json",
+    "sha256": "a5c193c9e62f2b1c85423ccc709affb6da35c8cdf4c95615a1f43b2e361dac7e"
+  },
+  "settling_review": {
+    "path": "build/oblivion-compat/iron-arrow-drop/locked-settling-review.json",
+    "sha256": "a013c5ee149710d74145af7dc11a4aab58adda375b78d423e2fd1ef3b5a0a55b",
+    "measurements": {
+      "tick_zero_preserved": true,
+      "max_loaded_float_delta": 9.5367431640625e-07,
+      "settling_offset_delta": 0.23930508357588884,
+      "settling_rotation_coefficient_delta": 0.003117492667426336,
+      "decision": "Initial contact/constraint settling is below one game unit and visually preserves the quiver; replace arbitrary0.1/0.002 thresholds with gameplay tolerances0.5units/0.01rotation coefficient. No C++ tuning or bit-exact solver requirement.",
+      "rejected_audit": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-world-01-complete-audit.log"
+    },
+    "sanitized_measurement": {
+      "path": "build/oblivion-compat/iron-arrow-drop/sanitized-locked-settling-measurement.json",
+      "sha256": "c2e634564d8c6d3a0a5c7c8edbd2e1bcc54627befd35310a1b2069f1dff8e209"
+    }
+  },
+  "fresh_content_regressions": [
+    {
+      "root": "build/oblivion-compat/iron-arrow-drop/normal-pants-arrow-regression-01",
+      "audit": {
+        "path": "build/oblivion-compat/iron-arrow-drop/normal-pants-arrow-regression-01/pants-drop-verification.json",
+        "sha256": "fb232bdcb5a010e801ca18dc1af3dcabf0e51013407f7c016baac173f8608be7"
+      },
+      "verifier": {
+        "path": "scripts/verify_pants_drop.py",
+        "sha256": "3889751750a016f4a4187b3be26b31eeda80a688c4514b5794583125988f95d0"
+      }
+    },
+    {
+      "root": "build/oblivion-compat/iron-arrow-drop/normal-worn-axe-arrow-regression-01",
+      "audit": {
+        "path": "build/oblivion-compat/iron-arrow-drop/normal-worn-axe-arrow-regression-01/worn-axe-verification.json",
+        "sha256": "9ab7523335edc1dcbc316c0ed91a7b62ae3141f2056bdb74118ac031a242c931"
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/articulated-clothing/verify-worn-axe-regression.py",
+        "sha256": "2b007a13afe40a6b1b66737769eaf32e74405708a018a88c1c74609ac18d43d2"
+      }
+    },
+    {
+      "root": "build/oblivion-compat/iron-arrow-drop/normal-bone-arrow-regression-01",
+      "audit": {
+        "path": "build/oblivion-compat/iron-arrow-drop/normal-bone-arrow-regression-01/bone-drop-verification.json",
+        "sha256": "bd6d7e1f3946effe6e47ad981b07c45b662061c2d339c5db8992a5d6d7bc7cc3"
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/articulated-clothing/verify-bone-regression.py",
+        "sha256": "d8343ff5d1b34a27e7e43a4d4df7de481e09aa52b721679be5e994b8f211356d"
+      }
+    }
+  ],
+  "regression_provenance": "Pants public verifier checks unchanged three-body hinge cold persistence. Worn/Bone reuse the exact ignored compatibility verifiers retained in the Pants receipt (103 output acceptance; Bone preserves prior retired reference), with fresh actual actions and their original genuine source saves. Historical public verifiers/receipts unchanged.",
+  "coastal_diagnosis": {
+    "audit": {
+      "path": "build/oblivion-compat/coastal-rock/DIAGNOSTIC-RESULT.json",
+      "sha256": "42170c142126d8e2358b6a7b71a90e82a35f57bc0786f1635a43e6e27f1e88a0"
+    },
+    "result": "Original rock placement/collision supported; camera grounded above water; refraction A/B did not resolve the view. No coastal implementation fix claimed; deferred after bounded investigation."
+  },
+  "sanitizer_environment": {
+    "engine": {
+      "SDL_VIDEODRIVER": "x11",
+      "SDL_AUDIODRIVER": "dummy",
+      "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+      "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+      "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "component_helper_overrides": {
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "gameplay": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "scope": "Per-process preload/libraries/environment captured; gameplay is not leak coverage."
+    }
+  },
+  "integration_runner": {
+    "path": "build/oblivion-compat/iron-arrow-drop/run-sanitized-integration.py",
+    "sha256": "54efdc978636896ac1bb11c47118ecfb6cc8f00cd4851ce74fa9c923505cf7dd"
+  },
+  "retained_attempts": [
+    {
+      "root": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-drop-baseline-01",
+      "result": "Ordinary legacy one-unit drop/save passed24->23 without typed native AMMO/body/key allocation. No disappearance claim."
+    },
+    {
+      "root": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-world-01",
+      "result": "Actual cold load/re-save passed. Initial arbitrary0.1unit/0.002rotation threshold rejected0.24unit/0.0032 initial settling. Full tick-zero source physics preserved(max float difference9.5367e-7), visually intact quiver; justified gameplay limits0.5/0.01 adopted without C++ tuning. Original rejected audit retained."
+    },
+    {
+      "root": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-pickup-01",
+      "result": "Nested wait regex retained old iron-arrow label while observer logged arrow. No pickup/save. Corrected recursive input patterns in public recipe; accepted pickup02 from same immutable world source."
+    },
+    {
+      "root": "build/oblivion-compat/iron-arrow-drop",
+      "result": "Development normal wrapper returned143 after all requested targets logged built/no errors. It is not a passing gate; final revision-linked focused and full integration reports above establish successful build/tests."
+    }
+  ],
+  "limits": [
+    "One unit from an unequipped ordinary unscripted/unenchanted ammunition stack only; no full-stack drop, equipped/bound/scripted/enchantment transfer acceptance.",
+    "Prismatic minimum=maximum=0 specialization only: all relative degrees of freedom locked. Preserve authored body rest relation; friction has no free degree to act on. General sliding/motors/malleable prismatic support remains unimplemented.",
+    "No fired-arrow flight/recovery or all-AMMO asset claim.",
+    "Original solver arithmetic/registration bit parity not required; physical rest and persistence must remain reasonable and correctly owned.",
+    "Separate coastal diagnosis found original rock placement/collision intact; refraction configuration did not resolve the view. This investigation is retained, with no coastal fix claimed.",
+    "No complete M15/M18, all-AMMO, generic stack transfer, fired-arrow recovery or legacy-object migration claim."
+  ]
+}

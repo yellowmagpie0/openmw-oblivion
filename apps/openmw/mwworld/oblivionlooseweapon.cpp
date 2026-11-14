@@ -22,7 +22,8 @@ namespace MWWorld
             std::variant<std::unique_ptr<CellStore::PreparedInsertion<ESM4::Weapon>>,
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::Armor>>,
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::MiscItem>>,
-                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Clothing>>> mCell;
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Clothing>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Ammunition>>> mCell;
             CellStore* mOwner = nullptr;
             MWRender::Objects* mObjects = nullptr;
             std::unique_ptr<MWRender::Objects::PreparedModel> mModel;
@@ -213,7 +214,8 @@ namespace MWWorld
                     throw std::invalid_argument("loose weapon admission requires a live enabled instance");
                 if (const auto condition = reference.mRef.getNativeItemCondition())
                 {
-                    if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Clothing>)
+                    if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Clothing>
+                        || std::is_same_v<Record, ESM4::Ammunition>)
                         throw std::invalid_argument("loose miscellaneous prop/clothing cannot have durability");
                     else if (!std::isfinite(*condition) || *condition < 0
                         || reference.mBase->mData.health == 0 || *condition > reference.mBase->mData.health)

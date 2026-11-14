@@ -4,26 +4,29 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest bounded chunk: [Sack Cloth Pants articulated drop](PANTS-DROP-CONTRACT.json).
-Original027318 now drops as typed CLOT key2 with three authored box bodies and
-two limited hinges. Every physical node renders; the complete graph cold
-re-saves, ordinary visible crosshair/Space pickup restores one item, and cold
-inventory load retains the retired key/no bodies. Legacy drop/save already
-worked; this adds articulated physical ownership without a disappearance claim.
-[Oracle](PANTS-DROP-ORACLE.json) separates original record/member identity from
-engine graph diagnostics. [Receipt](PANTS-DROP-VERIFICATION.json) binds normal
-and instrumented courses, tick-zero pose/velocity continuation, fresh component
-3301/native sanitizer1122, engine2292 in both modes and Python618. Fresh Bone and
-worn-axe drop/cold-world regressions retain singleton metadata and physical state.
-Schema103 reads older single-body states and saves additional body histories.
+Latest bounded chunk: [one Iron Arrow from the carried24 stack](IRON-ARROW-DROP-CONTRACT.json).
+Ordinary Control-click now debits24→23 and admits one typed native AMMO item with
+the original two-body quiver model and its locked zero-travel prismatic relation.
+The full graph cold re-saves, visible crosshair/Space pickup merges23→24, and
+cold inventory load retains the retired key/no bodies. Legacy split/drop/save
+already worked; this adds native physical ownership without a disappearance claim.
+[Oracle](IRON-ARROW-DROP-ORACLE.json) separates original record/member identity
+from implementation graph diagnostics. [Receipt](IRON-ARROW-DROP-VERIFICATION.json)
+binds normal/instrumented courses, tick-zero physical history, quantity/metadata
+conservation, fresh3301 component tests in both modes, engine2292 in both modes,
+Python618 and fresh pants/worn-axe/Bone regressions. Schema103 unchanged.
+Prismatic support is restricted to zero travel; general sliders/motors remain open.
+Post-contact tolerances0.5 world units/0.01 rotation coefficient admit small solver
+settling; loaded poses/velocities retain stricter conversion tolerances.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `432ff1ca7e37288558ec27281a2056925e6eaf6d5f7de2198143a6b02850c4fc`.
-Pants1/Bone1/no extras, Club equipped, allocator3, retired dropped key2/count0.
-Health70.480003/110, Endurance55, Hand36, Athletics31 and all27 skills/33 credited
-deaths preserved. MS39stage0 and original absence of Nirnroot/counter27 retained.
-Instrumented final continuation and process identities are in the receipt.
+`build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `2e131af56fc955b97d66ebe596e26167470cb37ffa360af78ef2a64aa90fec85`.
+Iron Arrow24/unequipped/no extras, Pants1/Bone1, Club equipped, allocator4;
+dropped key3 retired/count0/no bodies. Health70.480003/110, Endurance55, Hand36,
+Athletics31, all27 skills/book history/33 credited deaths preserved. MS39stage0
+and original absence of Nirnroot/counter27 retained. Instrumented final continuation
+and process identities are in the receipt.
 
 Healthy shore continuation remains separate:
 `build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
@@ -32,16 +35,20 @@ Unequipped Rusty Iron War Axe22.494663, Club59.5000458 equipped, Health110,
 Endurance55/no Swamp Fever, Crab0/Rice1, Nirnroot owner4/Found1, MS39stage10/
 counters2,33 credited deaths/all earned skills. Allocator7, dropped key6 retired.
 
-Remaining current gaps: equipped/scripted/bound/enchanted/stacked item drops and
-broader inventory lifetime/effects/UI; unsupported multi-body MISC; coastal
-rendering/rock clipping; natural positive Endurance-damage healing gameplay.
-Shore Bone drop/world passed, but coastal rocks blocked retrieval: partial
-shore evidence, not a completed shore course. Old legacy drops are not migrated.
-No complete M15/M18 or all-clothing claim. Choose the next bounded chunk by an
-observed unsupported behavior in genuinely carried or reached content.
+Current gaps: equipped/scripted/bound/enchanted/full-stack item drops and broader
+inventory lifetime/effects/UI; unsupported multi-body MISC and general prismatic
+motion; coastal rendering; natural positive Endurance-damage healing gameplay.
+Shore Bone drop/world passed, but rock occlusion blocked retrieval: partial evidence.
+Read-only coastal probes found original067530 placement/collision intact and a
+grounded camera above water; enabling refraction did not resolve the view. Details:
+`build/oblivion-compat/coastal-rock/DIAGNOSTIC-RESULT.json`. No coastal fix or old
+legacy-object migration claim. Choose the next bounded chunk by genuinely carried
+or reached content and the acceptance gap it unblocks.
 
 Reusable evidence:
 
+- [Pants](PANTS-DROP-VERIFICATION.json): three-body/two-hinge physical ownership,
+  independent normal/instrumented persistence; earlier cave continuation hashes.
 - [Bone](BONE-DROP-VERIFICATION.json), [worn axe](WORN-AXE-DROP-VERIFICATION.json):
   singleton native transfer and the earlier loose-object/terrain mask correction.
 - [Crab Meat](CRAB-MEAT-VERIFICATION.json): repair5/no disease cure; separate
@@ -60,14 +67,14 @@ Reusable evidence:
   [weapon assets](M15-WEAPON-SCABBARD-VERIFICATION.json).
 
 Broader gaps: Alchemy/resistance/skill progression; spawn roots/children/grouped
-actors/respawn; full S5/M15, arrow recovery and sound/reaction/view/device matrices;
-bow tactics and other death models. Native Dead owns life even at positive
+actors/respawn; full S5/M15, fired-arrow recovery and sound/reaction/view/device
+matrices; bow tactics and other death models. Native Dead owns life even at positive
 Health; retain unknown historical passive ownership. Zombie06c2c6/restoration
 chest04bb8b retain route gaps. Target-SPEL mastery needs a real acquired spell
 case (reads Alteration20 rather than Destruction22). Cure Disease lacks a verified
 reached source; container loot remains unverified and the nearest found outdoor
 Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
-Checkpoint: singleton ingredient, weapon and MISC transfer and articulated
-clothing now have distinct real-content evidence. Pants chunk complete; select
-the next observed gameplay gap while preserving the explicit broader gaps.
+Checkpoint: native singleton ingredient/weapon/MISC, articulated clothing and
+one-unit ammunition splits now have distinct real-content evidence. Arrow chunk
+complete; select the next observed gameplay gap without closing broader milestones.

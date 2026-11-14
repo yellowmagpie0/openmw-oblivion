@@ -56,6 +56,7 @@ namespace MWWorld
             if (ptr.getType() == ESM::REC_WEAP4) return ptr.get<ESM4::Weapon>()->mBase;
             if (ptr.getType() == ESM::REC_MISC4) return ptr.get<ESM4::MiscItem>()->mBase;
             if (ptr.getType() == ESM::REC_CLOT4) return ptr.get<ESM4::Clothing>()->mBase;
+            if (ptr.getType() == ESM::REC_AMMO4) return ptr.get<ESM4::Ammunition>()->mBase;
             if (ptr.getType() == ESM::REC_ARMO4)
             {
                 const auto* armor = ptr.get<ESM4::Armor>()->mBase;
@@ -85,6 +86,12 @@ namespace MWWorld
                 return store.get<ESM4::Clothing>().search(base->mId) == base
                     ? store.get<ESM4::Clothing>().findFormKey(base->mId) : std::nullopt;
             }
+            if (ptr.getType() == ESM::REC_AMMO4)
+            {
+                const auto* base = ptr.get<ESM4::Ammunition>()->mBase;
+                return store.get<ESM4::Ammunition>().search(base->mId) == base
+                    ? store.get<ESM4::Ammunition>().findFormKey(base->mId) : std::nullopt;
+            }
             const auto* base = ptr.get<ESM4::Armor>()->mBase;
             return store.get<ESM4::Armor>().search(base->mId) == base
                 ? store.get<ESM4::Armor>().findFormKey(base->mId) : std::nullopt;
@@ -102,11 +109,14 @@ namespace MWWorld
             const auto* armor = mStore.get<ESM4::Armor>().search(snapshot.mBase);
             const auto* misc = mStore.get<ESM4::MiscItem>().search(snapshot.mBase);
             const auto* clothing = mStore.get<ESM4::Clothing>().search(snapshot.mBase);
-            if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr) + int(clothing != nullptr) > 1)
+            const auto* ammunition = mStore.get<ESM4::Ammunition>().search(snapshot.mBase);
+            if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr)
+                + int(clothing != nullptr) + int(ammunition != nullptr) > 1)
                 throw std::runtime_error("loose equipment base has ambiguous native types");
             const ESM::Path* selected = nullptr;
             if (weapon) selected = &weapon->mModel;
             else if (misc) selected = &misc->mModel;
+            else if (ammunition) selected = &ammunition->mModel;
             else if (clothing || (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield)))
             {
                 const auto found = references.find(key);
@@ -642,20 +652,26 @@ namespace MWWorld
         const auto admit = [&]<class Record>(const Record* baseDefinition) -> std::optional<Ptr> {
             constexpr bool isWeapon = std::is_same_v<Record, ESM4::Weapon>;
             constexpr bool isClothing = std::is_same_v<Record, ESM4::Clothing>;
-            constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP : isClothing ? ESM4::REC_CLOT : ESM4::REC_MISC;
+            constexpr bool isAmmunition = std::is_same_v<Record, ESM4::Ammunition>;
+            constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP
+                : isClothing ? ESM4::REC_CLOT : isAmmunition ? ESM4::REC_AMMO : ESM4::REC_MISC;
             if (!baseDefinition) return std::nullopt;
             const auto health = [&] {
                 if constexpr (isWeapon) return baseDefinition->mData.health;
                 else return std::uint32_t(0);
             };
             const auto enchantment = [&] {
-                if constexpr (isWeapon || isClothing) return baseDefinition->mEnchantment;
+                if constexpr (isWeapon || isClothing || isAmmunition) return baseDefinition->mEnchantment;
                 else return ESM::FormId{};
+            };
+            const auto script = [&] {
+                if constexpr (isAmmunition) return baseDefinition->mScript;
+                else return baseDefinition->mScriptId;
             };
             // Inventory drops and combat disarms share the native loose-body owner.
             // This path debits an unequipped, ordinary singleton; equipment, scripts
             // and associated bound/enchantment effects retain their own policies.
-            if (!baseDefinition->mScriptId.isZeroOrUnset() || !enchantment().isZeroOrUnset()
+            if (!script().isZeroOrUnset() || !enchantment().isZeroOrUnset()
                 || (baseDefinition->mFlags & ESM4::Rec_Persistent)) return std::nullopt;
             const auto base = mStore.get<Record>().findFormKey(sourceId);
             if (!base || !base->isContent() || (baseDefinition->mFlags & ESM4::Rec_Deleted))
@@ -664,13 +680,17 @@ namespace MWWorld
                 winner && (winner->mDeleted || winner->mRecordType != nativeType))
                 throw std::invalid_argument("native inventory loose item drop has no winning record");
             if (actor != getPlayerPtr() || !actor.isInCell() || count != 1
-                || item.getCellRef().getCount() != 1 || item.getCellRef().getNativeBoundSource()
+                || item.getCellRef().getCount() < 1 || (!isAmmunition && item.getCellRef().getCount() != 1)
+                || item.getCellRef().getNativeBoundSource()
                 || !item.getCellRef().getNativeScriptOwner().isNull()
                 || item.getCellRef().getNativeItemScale() || item.getCellRef().getEnchantmentCharge() >= 0)
                 throw std::invalid_argument("native inventory loose item drop requires an ordinary singleton");
             auto& inventory = actor.getClass().getInventoryStore(actor);
             if (item.getContainerStore() != &inventory)
                 throw std::invalid_argument("native inventory loose item drop has a different source owner");
+            if constexpr (isAmmunition)
+                if (inventory.isEquipped(item))
+                    throw std::invalid_argument("native ammunition drop requires an unequipped stack");
             auto removal = inventory.prepareItemRemoval(item, 1);
             if (removal->getCount() != 1 || removal->depletesEquipment())
                 throw std::invalid_argument("native inventory loose item drop requires an unequipped singleton");
@@ -699,7 +719,7 @@ namespace MWWorld
             const auto modelBefore = modelState();
             const auto flagsBefore = baseDefinition->mFlags;
             const auto healthBefore = health();
-            const auto scriptBefore = baseDefinition->mScriptId;
+            const auto scriptBefore = script();
             const auto enchantmentBefore = enchantment();
             const auto current = [&] {
                 // The removal token owns the inventory epoch. Test it before any
@@ -708,7 +728,7 @@ namespace MWWorld
                     || !removal->isValid() || mStore.get<Record>().search(sourceId) != baseDefinition) return false;
                 const auto& live = item.getCellRef();
                 return modelState() == modelBefore && baseDefinition->mFlags == flagsBefore
-                    && health() == healthBefore && baseDefinition->mScriptId == scriptBefore
+                    && health() == healthBefore && script() == scriptBefore
                     && enchantment() == enchantmentBefore
                     && live.getOwner() == sourceBefore.getOwner()
                     && live.getNativeOwnershipRank() == sourceBefore.getNativeOwnershipRank()
@@ -763,7 +783,7 @@ namespace MWWorld
             const auto definition = NifBullet::loadWeaponReferenceRagdollDefinition(*file);
             // Multi-body miscellaneous props retain their existing path; clothing
             // uses its authored articulated ground model and constraints.
-            if constexpr (!isWeapon && !isClothing)
+            if constexpr (std::is_same_v<Record, ESM4::MiscItem>)
                 if (definition.mBodies.size() != 1 || !definition.mJoints.empty()) return std::nullopt;
             if (definition.mBodies.empty() || !definition.mReferenceRoot || definition.mSourceHash != file->mHash)
                 throw std::invalid_argument("native inventory loose item drop has no identified world body");
@@ -816,7 +836,8 @@ namespace MWWorld
             if (dropped.isEmpty()) throw std::logic_error("validated native inventory weapon admission rejected");
             Log(Debug::Info) << (isWeapon ? "TES4 inventory weapon dropped: base="
                                         : isClothing ? "TES4 inventory clothing dropped: base="
-                                                     : "TES4 inventory misc dropped: base=") << base->serialize()
+                                        : isAmmunition ? "TES4 inventory ammunition dropped: base="
+                                                       : "TES4 inventory misc dropped: base=") << base->serialize()
                 << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f);
             removal->notify();
             if (identity.expired() || getPlayerPtr() != actor) return dropped;
@@ -829,7 +850,12 @@ namespace MWWorld
             return dropped;
         };
         if (item.getType() == ESM::REC_WEAP)
+        {
+            // Shared inventory projects native ammunition as legacy arrows.
+            if (const auto* ammunition = mStore.get<ESM4::Ammunition>().search(sourceId))
+                return admit(ammunition);
             return admit(mStore.get<ESM4::Weapon>().search(sourceId));
+        }
         if (item.getType() == ESM::REC_MISC)
             return admit(mStore.get<ESM4::MiscItem>().search(sourceId));
         if (item.getType() == ESM::REC_CLOT)
