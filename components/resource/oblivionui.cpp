@@ -198,7 +198,9 @@ namespace Resource
                          { "prev", Shape::Left }, { "next", Shape::Right }, { "cancel", Shape::Close },
                          { "close", Shape::Close }, { "journal", Shape::List }, { "topics", Shape::List },
                          { "take", Shape::Drop }, { "bookmark", Shape::Bookmark } })
-                    add("textures/tx_menubook_" + std::string(name) + "_idle.dds", { 64, 32, shape });
+                    for (const auto state : { "idle", "over", "pressed" })
+                        add("textures/tx_menubook_" + std::string(name) + "_" + state + ".dds",
+                            { 64, 32, shape, All, std::string_view(state) == "pressed" });
                 add("textures/tx_menubook_bookmark.dds", { 32, 32, Shape::Bookmark });
                 for (const auto& [name, target] : std::initializer_list<std::pair<std::string_view, std::string_view>>{
                          { "icons/k/stealth_handtohand.dds", "textures/menus/icons/weapons/handtohand.dds" },

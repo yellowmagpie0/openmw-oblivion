@@ -25,7 +25,7 @@ namespace
         auto archive = Resource::makeOblivionUiArchive(vfs);
         VFS::FileMap files;
         archive->listResources(files);
-        ASSERT_EQ(files.size(), 109);
+        ASSERT_EQ(files.size(), 125);
         auto* decoder = osgDB::Registry::instance()->getReaderWriterForExtension("dds");
         ASSERT_NE(decoder, nullptr);
         unsigned generated = 0, nativeIcons = 0;
@@ -47,7 +47,7 @@ namespace
             EXPECT_GE(image->t(), 4);
             EXPECT_EQ(image->getPixelFormat(), GL_RGBA);
         }
-        EXPECT_EQ(generated, 106);
+        EXPECT_EQ(generated, 122);
         EXPECT_EQ(nativeIcons, 3);
         EXPECT_FALSE(archive->contains(VFS::Path::NormalizedView("textures/missing-mod.dds")));
         EXPECT_FALSE(archive->contains(VFS::Path::NormalizedView("meshes/missing.nif")));

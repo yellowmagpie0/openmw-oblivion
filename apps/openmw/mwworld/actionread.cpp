@@ -28,8 +28,11 @@ namespace MWWorld
         if (actor != player && getTarget().getContainerStore() != nullptr)
             return;
 
-        // Ensure we're not in combat
-        if (MWMechanics::isPlayerInCombat()
+        auto* world = dynamic_cast<World*>(MWBase::Environment::get().getWorldOrNull());
+        const bool oblivion = world && world->getGameProfile() == ESM::GameProfile::Oblivion;
+        // Oblivion permits inventory reading during combat. Keep the TES3
+        // restriction without changing native combat ownership or targets.
+        if (!oblivion && MWMechanics::isPlayerInCombat()
             // Reading in combat is still allowed if the scroll/book is not in the player inventory yet
             // (since otherwise, there would be no way to pick it up)
             && getTarget().getContainerStore() == &player.getClass().getContainerStore(player))
@@ -47,8 +50,7 @@ namespace MWWorld
 
         MWMechanics::NpcStats& npcStats = player.getClass().getNpcStats(player);
 
-        if (auto* world = dynamic_cast<World*>(MWBase::Environment::get().getWorldOrNull());
-            world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+        if (oblivion)
         {
             if (actor == player) world->readOblivionSkillBook(getTarget());
             return; // Native history/skill authority, independently of legacy used IDs.

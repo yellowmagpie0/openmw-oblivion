@@ -4,19 +4,18 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [ordinary Books Read counting](ORDINARY-BOOK-READ-CONTRACT.json).
-Original **Fundaments of Alchemy**, BOOK024567 / placed06efb3 at the Wellspring
-workbench, now counts ordinary reads without teaching a skill. Actual normal/SAN
-two reads raise BooksRead4->6; fresh-process repeated read raises6->7 and loading
-alone does not replay. All27 skills/XP/progression and awarded-book history stay
-intact. Original book remains enabled/read in place; no taking or inventory grant.
-Independent hash-verified original-game inventory reads give0->1, page change
-stays1, reopening gives2, with no skill reward; prefix inputs restored exactly.
-[Receipt](ORDINARY-BOOK-READ-VERIFICATION.json) separates original, structural,
-compiler, semantic and normal-input evidence.18 focused/2292 full engine cases
-per mode and618 Python cases pass. Normal/SAN already-awarded Immortal Blood
-regressions retain no repeat skill award and count one read. No pagination/OnRead,
-book pickup/drop, ordinary-scroll counting or historical count reconstruction.
+Latest completed bounded chunk: [Mages Guild Charter reader/Take](CHARTER-BOOK-CONTRACT.json).
+Original BOOK026d8b / placed06efb5 now opens the five-page reader and transfers
+through its Take control. Normal/SAN world pages1->3->1 count8->9; Take0->1
+retires only that source. Cold inventory pages1->3->5->3->1 count9->10, hide Take
+and retain full text. Final cold loading retains1/count10 without replay.
+Independent original IsInCombat1 reading proves inventory books remain usable in
+combat; the fork preserves all3 incoming Player engagements. NoTake is guarded
+structurally, without a reached NoTake runtime claim. [Receipt](CHARTER-BOOK-VERIFICATION.json)
+records actual per-phase binaries and unchanged Take-path evidence reuse across
+the later inventory combat-guard fix.101 focused/3301 components/2292 full engine
+per mode and618 Python pass. Prior [ordinary read counting](ORDINARY-BOOK-READ-VERIFICATION.json)
+keeps skills/award history distinct from BooksRead. No full M13/M16/M18 claim.
 
 Prior [Alembic](ALEMBIC-DROP-VERIFICATION.json) retains separate original sphere
 children and native loose ownership. [Retort](RETORT-DROP-VERIFICATION.json)
@@ -25,9 +24,11 @@ preserves987 beside2fresh1000; [container discovery](NATIVE-CONTAINER-DISCOVERY-
 exposes original Sack06efcf. [Bonemeal](BONEMEAL-DROP-VERIFICATION.json) retains
 its original movable body. No full M16/M18 or TES4 MCP authoring claim.
 
-Next action: select another reached original content item exercising an open
-acceptance gap after committing this bounded chunk. Keep the old skill-book
-regression branch separate; do not enable Zahrasha or reroll the lost sack opening.
+Next bounded candidate: original **A Less Rude Song**, BOOK024569 / placed06efb2
+on the same reached workbench. Inspect its original NIF and exercise the missing
+native loose BOOK drop, cold persistence and retrieval after ordinary reader Take.
+Do not expand into unrelated scroll/scripted-book events or unsupported physics.
+Keep independent branches separate; do not enable Zahrasha or reroll the sack.
 
 Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
 ordinary approach reached the sack, whose first roll contained an inkwell/no gold.
@@ -36,11 +37,13 @@ The opening harness awaited the wrong kind label and did not retain a save.
 normal input receipts and failure; no looting acceptance or continuation claim.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/ordinary-book-read/normal-ordinary-book-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `c62bd34c947271990449e6a7f86ce8dee5d9b24d6c6399a6ee1f4256f00bcc67`.
-Instrumented continuation: same root `sanitized-ordinary-book-cold-01`,
-SHA256 `d0dd0d792b02e61c130f82e34c453b6704cc9ce10cf501c47dea5a031db56732`.
-BooksRead7; original06efb3 enabled/read/in place, no taught-book history entry.
+`build/oblivion-compat/charter-book/normal-charter-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `ff3c998d145f2477a5ee41325bd647672ba6e31a6b7266080d3e355eabc1bbc7`.
+Instrumented continuation: same root `sanitized-charter-cold-01`,
+SHA256 `9cd3057cdda8851f54dd14081b5dcb6c1e2919b12490c59a31e7d7a266ee4be3`.
+BooksRead10; Charter1 carried, original06efb5 retired/count0/taken/read; other
+Charters06efb6/06efd0 remain unchanged. Original06efb3 enabled/read/in place;
+no ordinary-book taught history entry. All3 incoming Player combat edges retained.
 Alembic1/Retort1, Cuirass equipped/condition19.6576748/scriptowner9, Torch1/fuel987
 plus2fresh1000 all unequipped, Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/
 Bone1, Club equipped, MQ01flags1/1, allocator14. Native keys1..8,10..13 retired/
@@ -107,5 +110,5 @@ Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
 Checkpoint: native singleton ingredient/weapon/MISC/KEYM, articulated clothing,
 ammunition quantities and the closed-convex Lockpick stack now have separate
-real-content evidence. Ordinary-book count chunk complete; choose the next reached gameplay gap
+real-content evidence. Charter reader/Take chunk complete; choose the next reached gameplay gap
 without closing broader milestones.

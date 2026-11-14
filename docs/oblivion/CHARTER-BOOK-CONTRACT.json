@@ -1,0 +1,41 @@
+{
+  "target": "M13 original native ordinary book reader, paging, Take and cold inventory use",
+  "parent_commit": "d5e382817b4d41374d8f453ef7bdcd4ddadaf329",
+  "source": {
+    "path": "build/oblivion-compat/charter-book/normal-charter-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "0072dbb8006d06abdd00781aa9fe6f4aadfe455123ed1000a775786109ef7a38",
+    "books_read": 8,
+    "acquisition": "Genuine accepted ordinary-book continuation: original Charter06efb5 activated once under previous short-text reader; no grant or teleport, original remains readable in place and inventory0."
+  },
+  "record": {
+    "base": "BOOK026d8b",
+    "reference": "content:oblivion.esm:06efb5",
+    "title": "Mages Guild Charter",
+    "flags": 0,
+    "book_skill": -1,
+    "value": 1,
+    "weight": 1.0,
+    "text_bytes": 2347
+  },
+  "acceptance": [
+    "Original native Charter opens existing paginated reader with5pages; normal keyboard forward/back gives1,3,1 and counts one open8->9",
+    "Visible Take control retires original source/count0 and transfers0->1 through native inventory transaction; no extra read or new serial, other original Charter references unchanged",
+    "Cold inventory reopening retains1, hides Take, preserves all5pages and counts one open9->10; clicking hidden Take area cannot duplicate item",
+    "Final cold inventory load retains1 and count10 without replay",
+    "Normal/SAN actual courses, shared UI fallback image checks and appropriate component/engine/Python gates pass",
+    "Existing3 incoming Player combat engagements remain present during permitted inventory reading; no combat clearing"
+  ],
+  "implementation": [
+    "Wire native non-scroll activation to TES4-capable BookWindow, counting only successful open",
+    "Native reader Take uses distinct post-activation interaction and existing prepared inventory/scene removal; NoTake guarded in UI/backend",
+    "Keep complete TES4 text for shared inventory facade; supply existing generated glyph idle/over/pressed states",
+    "Original executable permits inventory book reading with IsInCombat1; native profile bypasses shared TES3 read restriction while preserving combat engagements"
+  ],
+  "limits": [
+    "No native loose BOOK drop or scroll UI acceptance",
+    "No scripted-book OnRead/OnAdd/event acceptance or theft/crime course",
+    "No original UI art equivalence, full M13/M16 or TES4 MCP authoring support",
+    "No reached NoTake-book runtime claim; flag guard is structural"
+  ],
+  "auditor": "scripts/verify_charter_book.py"
+}

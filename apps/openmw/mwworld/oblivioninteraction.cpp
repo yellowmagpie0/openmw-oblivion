@@ -241,6 +241,7 @@ namespace MWWorld
                 case OblivionInteractionKind::Flora:
                     return "harvest";
                 case OblivionInteractionKind::Take:
+                case OblivionInteractionKind::TakeBook:
                     return "take";
             }
             return "unknown";
@@ -874,6 +875,9 @@ namespace MWWorld
         if (ptr.isEmpty() || !ptr.isInCell() || ptr.getContainerStore() || ptr.getClass().isActor()
             || !ptr.getClass().isItem(ptr) || ptr.getClass().useAnim() || ptr.getCellRef().getCount() <= 0)
             return;
+        if (ptr.getType() == ESM::REC_BOOK4
+            && (ptr.get<ESM4::Book>()->mBase->mData.flags & ESM4::Book::Flag_NoTake))
+            return;
         const auto canonical = [](const ESM::FormKey& value) {
             return ESM::FormKey::deserialize(value.serialize()) == value;
         };
@@ -1148,6 +1152,15 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion || ptr.isEmpty())
             return;
 
+        // The reader has already activated the book. Taking it must not
+        // dispatch its activation script a second time.
+        if (kind == OblivionInteractionKind::TakeBook)
+        {
+            if (ptr.getType() == ESM::REC_BOOK4)
+                takeOblivionReference(ptr);
+            return;
+        }
+
         if (kind == OblivionInteractionKind::Take && ptr.getCellRef().getCount() <= 0)
             return;
 
@@ -1300,6 +1313,7 @@ namespace MWWorld
         switch (kind)
         {
             case OblivionInteractionKind::Take:
+            case OblivionInteractionKind::TakeBook:
                 break; // Handled before any borrowed cached reference state.
             case OblivionInteractionKind::Container:
             {
@@ -1363,10 +1377,21 @@ namespace MWWorld
             case OblivionInteractionKind::Book:
             {
                 const ESM4::Book* book = ptr.get<ESM4::Book>()->mBase;
+                const bool scroll = (book->mData.flags & ESM4::Book::Flag_Scroll) != 0;
+                if (!scroll)
+                {
+                    auto windows = MWBase::Environment::get().getWindowManager();
+                    windows->pushGuiMode(MWGui::GM_Book, ptr);
+                    if (windows->getMode() != MWGui::GM_Book)
+                        break;
+                }
                 readOblivionSkillBook(ptr);
                 state.mCustomState["read"] = true;
-                std::string text = plainBookText(book->mText);
-                message(book->mFullName + (text.empty() ? std::string{} : "\n\n" + text));
+                if (scroll)
+                {
+                    std::string text = plainBookText(book->mText);
+                    message(book->mFullName + (text.empty() ? std::string{} : "\n\n" + text));
+                }
                 report("read");
                 break;
             }
