@@ -1,0 +1,581 @@
+{
+  "status": "Bounded genuine singleton Bone drop, authored physics, ordinary pickup and cold persistence accepted; broader M15/M18 remain open",
+  "parent_commit": "82e8f89e9c715b155cdcadaea0707a57626ea270",
+  "post_gate_changes": "Documentation closure and sanitizer input timing fixture correction only; C++ and semantic verifier unchanged from integration fingerprint.",
+  "contract": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/BONE-DROP-CONTRACT.json",
+    "sha256": "5d4489d18663e71a10e0c798ceebe4ed6a97c7e86924b49b373596982032a875"
+  },
+  "oracle": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/BONE-DROP-ORACLE.json",
+    "sha256": "f4ac31373c7dca8af136476261fd43653734823e2523a14c3124cf35bb56e130"
+  },
+  "schema": 102,
+  "result": "Genuinely carried MISC Bone0223a8 drops once as typed native key1 with original convex-hull body, cold re-saves, is picked up once through ordinary visible crosshair/Space activation, and survives cold inventory load in both normal and instrumented games. Key1 remains retired/count0, allocator2. No durability/charge/script extras. All27 skills, Health70.480003/Endurance55, source inventory, quest stages/counter absence, and33 credited deaths preserved. Separate Wellspring Cave branch; healthy shore history is not merged.",
+  "layers": {
+    "structural": "Shared prepared inventory debit/key/cell/registry/model/body/Lua admission extends ordinary Weapon to single-body MISC. Explicit MISC condition/charge rejection; typed restore/model validation. No wire schema change or legacy migration.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/bone-drop/integration-normal-01/verification.json",
+        "sha256": "07f6e8a7bdf334b160b8d02f7c4c29b675c4219986d3a62f0be4de67298aa019",
+        "source": {
+          "head": "82e8f89e9c715b155cdcadaea0707a57626ea270",
+          "source_fingerprint": "83c79bf2459b88bb43b2719201e3a0935d06a488e7643379a7da5a5022af1c89"
+        },
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "aeadadd0a11c5e4b39e28c019843aec77ac638fb4b1883b1424525c74e124975",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "69b335223977072e89871a64e48a15209abbbcfc95ecec3817cd4992e5df4880",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "f4a15705e677dba7cf7c1f874610d89dbf37d9221104c72eff308d2c7b654932"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bone-drop/integration-sanitized-1/verification.json",
+        "sha256": "35272d7382fedcd665349e23eeec26e4810c66d1be6d1e1c32cd2b9365f99678",
+        "source": {
+          "head": "82e8f89e9c715b155cdcadaea0707a57626ea270",
+          "source_fingerprint": "83c79bf2459b88bb43b2719201e3a0935d06a488e7643379a7da5a5022af1c89"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "74e5a04e65bf6e023f783371e6ccd7610ac507068a62d35a04b617724e7062c3",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "181a5d504d5a904f4532fa957cdf51f52fe6168b8e4701d4736c170b134626b0",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bone-drop/integration-sanitized-2/verification.json",
+        "sha256": "614d8f8584b4b6a6369f7fe566c791048262b2d66a50c0d98fc7e12d1e6c93e8",
+        "source": {
+          "head": "82e8f89e9c715b155cdcadaea0707a57626ea270",
+          "source_fingerprint": "83c79bf2459b88bb43b2719201e3a0935d06a488e7643379a7da5a5022af1c89"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "74e5a04e65bf6e023f783371e6ccd7610ac507068a62d35a04b617724e7062c3",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "49cc5a1c1c7b0ab3b923c517ea09df8d720de1f691c405bf55ebdbd0b663b83c",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bone-drop/integration-sanitized-3/verification.json",
+        "sha256": "0cef97e40709199c02e8d1022431f39d4dfadd75963a7fdecbaa5e9fa4279fc5",
+        "source": {
+          "head": "82e8f89e9c715b155cdcadaea0707a57626ea270",
+          "source_fingerprint": "83c79bf2459b88bb43b2719201e3a0935d06a488e7643379a7da5a5022af1c89"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "74e5a04e65bf6e023f783371e6ccd7610ac507068a62d35a04b617724e7062c3",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "da8622d8e533b61785a910069001debb2ee1c5cd1d2db4568be6d0b4dd306f40",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bone-drop/integration-sanitized-4/verification.json",
+        "sha256": "878c46072c1c1fc561394b0310efd68296e1c4ee2b0e17c9e33dcdddede0c583",
+        "source": {
+          "head": "82e8f89e9c715b155cdcadaea0707a57626ea270",
+          "source_fingerprint": "83c79bf2459b88bb43b2719201e3a0935d06a488e7643379a7da5a5022af1c89"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "74e5a04e65bf6e023f783371e6ccd7610ac507068a62d35a04b617724e7062c3",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "8b255c1bf6e0be8bdca4062664635953568c730f951248ccad667d7a7ae5b91a",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "sanitizer_partition_union": {
+      "disjoint": true,
+      "counts": [
+        82,
+        82,
+        82,
+        2046
+      ],
+      "total": 2292
+    },
+    "focused": [
+      {
+        "path": "build/oblivion-compat/bone-drop/focused-normal-02/verification.json",
+        "sha256": "0971fe2b0832b8e3892ef7ca037a829d6dc0733760537ad1956dcfd49d1ae6a3"
+      },
+      {
+        "path": "build/oblivion-compat/bone-drop/focused-sanitized-02/verification.json",
+        "sha256": "93f4e95a1dca48a48ded50a56f2563ef524102a816064c6870181ec63b540a55"
+      }
+    ],
+    "reused_components": {
+      "receipt": "docs/oblivion/CRAB-MEAT-VERIFICATION.json",
+      "scope": "Unchanged components; original3301 normal/1122 ESM4 sanitizer evidence retains original source/binary/cache provenance; no fresh component claim."
+    },
+    "independent_oracle": "Hash-identified winning master/archive member and isolated original executable ordinary UI drop/pickup. Parser graph/mass is implementation diagnostic, not independent numeric oracle. Inputs restored and owned original process exited.",
+    "runtime": [
+      {
+        "root": "build/oblivion-compat/bone-drop/normal-bone-cave-drop-01",
+        "phase": "drop",
+        "process": {
+          "pid": 787762,
+          "start_ticks": 16040853,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cairn-bolete/normal-original-cairn-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "dd48dcb17b0fa95238b5a21a366243943cc5c585b79903ba88dccdcf693179ed"
+        },
+        "source_sha256": "0330a7448527955ca09680cb90ab3d785f8c091573a11d51004bea8cdd40fa6d",
+        "save_sha256": "68ac2f903cec55d92bd3b88fe0733945f7b76b6b8ec235bee1b9db0b2df2e7b6",
+        "next_dynamic_serial": 2,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/bone-drop/normal-bone-cave-drop-01/bone-drop-verification.json",
+          "sha256": "1b96829ecf27dc734862878881ac96205033c46bc22e88844abc8af4d2c555b2"
+        },
+        "manifest": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/original-bone-drop.json",
+          "sha256": "80b3c06e72dce0b5ed19cd9901218a4be4b4ab59f3d1d6e32ae9241fa2472517"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/bone-drop/normal-bone-cave-drop-01/original-bone-after-drop-inventory.png",
+            "sha256": "5236c7196551ccc09cd5c51d23e76596daed4e35a858dfc49dd8008280b503af"
+          },
+          {
+            "path": "build/oblivion-compat/bone-drop/normal-bone-cave-drop-01/original-bone-before-drop.png",
+            "sha256": "04f974677badd58bccc7fb39e5705612070adaeb09b66414c94091984b350e69"
+          },
+          {
+            "path": "build/oblivion-compat/bone-drop/normal-bone-cave-drop-01/original-bone-dropped-world.png",
+            "sha256": "eb91a5959ac57db4a1158e5feb970e28023914ca62e963ee50a24ca741775381"
+          },
+          {
+            "path": "build/oblivion-compat/bone-drop/normal-bone-cave-drop-01/original-bone-world-drop-cursor.png",
+            "sha256": "ff7cedb377c6c8a81a9a2e85ac7972ce12e647a73cccfd8c3638f5c2d7dba0c4"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/bone-drop/normal-bone-cave-world-01",
+        "phase": "world",
+        "process": {
+          "pid": 788198,
+          "start_ticks": 16077141,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "dd48dcb17b0fa95238b5a21a366243943cc5c585b79903ba88dccdcf693179ed"
+        },
+        "source_sha256": "68ac2f903cec55d92bd3b88fe0733945f7b76b6b8ec235bee1b9db0b2df2e7b6",
+        "save_sha256": "3263069e9c7f86483fa7ba9d2339ec08a497044221ccfab2ea837b9b2488e231",
+        "next_dynamic_serial": 2,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/bone-drop/normal-bone-cave-world-01/bone-drop-verification.json",
+          "sha256": "8a13d002b39c74e9d44784c1c766201ce91072569c9a04ac36c867c93c3f8857"
+        },
+        "manifest": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/original-bone-world.json",
+          "sha256": "333f4763a6bd8a6802be45547ade9184ed5a97841d546942653e3524c0653bf6"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/bone-drop/normal-bone-cave-world-01/original-bone-first-cold-world.png",
+            "sha256": "f42ad537bdd43ca8408229e8956c4606f6599405d0c0dc966964db3dae7611fe"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/bone-drop/normal-bone-cave-pickup-03",
+        "phase": "pickup",
+        "process": {
+          "pid": 788761,
+          "start_ticks": 16135156,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-pickup-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "dd48dcb17b0fa95238b5a21a366243943cc5c585b79903ba88dccdcf693179ed"
+        },
+        "source_sha256": "3263069e9c7f86483fa7ba9d2339ec08a497044221ccfab2ea837b9b2488e231",
+        "save_sha256": "255a34c613b613f0ccd4a5a2d6a663188d25da9abe0c6b1008c6759878a45bfa",
+        "next_dynamic_serial": 2,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/bone-drop/normal-bone-cave-pickup-03/bone-drop-verification.json",
+          "sha256": "1dedb82bcb6a9461abe38d1cf59aa72f3fe82553dbaba655d9d682aa4ddc3e9d"
+        },
+        "manifest": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/original-bone-pickup.json",
+          "sha256": "6d5c4f733123418c4d62ea2b1ae55d6006d9bd618ee7e6577493e8c982be851f"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/bone-drop/normal-bone-cave-pickup-03/original-bone-focused.png",
+            "sha256": "e4b561c4938338e7f2ea6ed036fa62f5807872febc7c2ce8b2e09e1fac2714c7"
+          },
+          {
+            "path": "build/oblivion-compat/bone-drop/normal-bone-cave-pickup-03/original-bone-picked-up.png",
+            "sha256": "2da5ce81d071bfe564f02e9b4de5b6c79f0d2c8f9a2a7af1e29689a2da4eac54"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/bone-drop/normal-bone-cave-inventory-02",
+        "phase": "inventory",
+        "process": {
+          "pid": 789030,
+          "start_ticks": 16162759,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-inventory-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-pickup-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "dd48dcb17b0fa95238b5a21a366243943cc5c585b79903ba88dccdcf693179ed"
+        },
+        "source_sha256": "255a34c613b613f0ccd4a5a2d6a663188d25da9abe0c6b1008c6759878a45bfa",
+        "save_sha256": "8e052c5e1644c654d4160da34b822db364152560eb9cb1698e55903dfe6210f7",
+        "next_dynamic_serial": 2,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/bone-drop/normal-bone-cave-inventory-02/bone-drop-verification.json",
+          "sha256": "98989b4c49246328aa2b49cc100f99a8c9be44cb504136102267170044e72d61"
+        },
+        "manifest": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/original-bone-inventory.json",
+          "sha256": "0d27dcd4e9082c7ef576e164b1a629a124fbded5c43b1b6d3ef4a08c4b1a4baa"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/bone-drop/normal-bone-cave-inventory-02/original-bone-cold-inventory.png",
+            "sha256": "7f50595ecfd025723de64c962103f5672ae2000bc21920949ab9f8eb6a931c98"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/bone-drop/sanitized-bone-cave-drop-01",
+        "phase": "drop",
+        "process": {
+          "pid": 787763,
+          "start_ticks": 16040856,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/sanitized-bone-cave-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cairn-bolete/normal-original-cairn-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "efe9edb7ecc24cd7ac36cdf5cadfe1c22c2145050722defa13ae7327560e9cec"
+        },
+        "source_sha256": "0330a7448527955ca09680cb90ab3d785f8c091573a11d51004bea8cdd40fa6d",
+        "save_sha256": "ca8a184c52ff5e1fb4b512580667f496a092fd31531c34d4c4c24c0f819a3f29",
+        "next_dynamic_serial": 2,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-drop-01/bone-drop-verification.json",
+          "sha256": "f81e38e676d54254281d6f64b253464a600af419eaca9b9165c6531d14a46195"
+        },
+        "manifest": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/original-bone-drop-sanitized.json",
+          "sha256": "c018738aa0551892e86b43e8df4fc8769a95373b3d15553ff215c8d9f31f1654"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-drop-01/original-bone-after-drop-inventory.png",
+            "sha256": "b52c17efd3dbf14e82adb4cff843bb0208a87b0950faa37c5547ad4fb57873fd"
+          },
+          {
+            "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-drop-01/original-bone-before-drop.png",
+            "sha256": "897b6d4f6bfcc6e10a33d5c27466018d29f43bc511878a7f99542fb93636b41b"
+          },
+          {
+            "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-drop-01/original-bone-dropped-world.png",
+            "sha256": "6532fc0e50f92aa6f839d2bc1d71d0dbb5d17fbfe76f76986f6337e5a02ad866"
+          },
+          {
+            "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-drop-01/original-bone-world-drop-cursor.png",
+            "sha256": "9851d12bbea99a64cd1b1ebd321585b04aef264651ce2988c32cd11eb717d53a"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/bone-drop/sanitized-bone-cave-world-01",
+        "phase": "world",
+        "process": {
+          "pid": 788107,
+          "start_ticks": 16071913,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/sanitized-bone-cave-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/sanitized-bone-cave-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "efe9edb7ecc24cd7ac36cdf5cadfe1c22c2145050722defa13ae7327560e9cec"
+        },
+        "source_sha256": "ca8a184c52ff5e1fb4b512580667f496a092fd31531c34d4c4c24c0f819a3f29",
+        "save_sha256": "a3b78018041689246370fbd66405e46ce04e44f66e80068e5ca7a3f2c3c9df2b",
+        "next_dynamic_serial": 2,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-world-01/bone-drop-verification.json",
+          "sha256": "d95309e38dd641505b3d9de6eb5a4fc1d3a1a1403be850fe9d5c648081c3338d"
+        },
+        "manifest": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/original-bone-world-sanitized.json",
+          "sha256": "44ac0619647c0ee4c035c953d98f4ce7f569f6ec6d7522f5a1fd0767f4cb9f8b"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-world-01/original-bone-first-cold-world.png",
+            "sha256": "be08405d55b2a4ba01a35f31f39ea73d2f4349e35fb25688e73889726d151270"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/bone-drop/sanitized-bone-cave-pickup-03",
+        "phase": "pickup",
+        "process": {
+          "pid": 796906,
+          "start_ticks": 16206077,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/sanitized-bone-cave-pickup-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/sanitized-bone-cave-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "efe9edb7ecc24cd7ac36cdf5cadfe1c22c2145050722defa13ae7327560e9cec"
+        },
+        "source_sha256": "a3b78018041689246370fbd66405e46ce04e44f66e80068e5ca7a3f2c3c9df2b",
+        "save_sha256": "5cbef7b17f389d2ee341314ca29be1e96ef51afa24c13b730154998c92666ab2",
+        "next_dynamic_serial": 2,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-pickup-03/bone-drop-verification.json",
+          "sha256": "298232317e475ffbfe763ff1848b9df3d3cc8996be5f3a8082a9a26d4b0c9a45"
+        },
+        "manifest": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/original-bone-pickup-sanitized.json",
+          "sha256": "f9164cf456284bde7d07270da216924832a17e10ac53b7702d8d95b66d7ce7f7"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-pickup-03/original-bone-focused.png",
+            "sha256": "5845a1cbe8e91a4815afa30154969d97dced71252bbb221e0246d49d05db52d1"
+          },
+          {
+            "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-pickup-03/original-bone-picked-up.png",
+            "sha256": "22542270e6859ec936337cb1935b6369391b91a95bed2bf0061c2e7c44d61ebb"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/bone-drop/sanitized-bone-cave-inventory-01",
+        "phase": "inventory",
+        "process": {
+          "pid": 801806,
+          "start_ticks": 16239474,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/sanitized-bone-cave-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/sanitized-bone-cave-pickup-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "efe9edb7ecc24cd7ac36cdf5cadfe1c22c2145050722defa13ae7327560e9cec"
+        },
+        "source_sha256": "5cbef7b17f389d2ee341314ca29be1e96ef51afa24c13b730154998c92666ab2",
+        "save_sha256": "5890293605aee18eec2121bfa24d97789df1026ddfd0984b79a5287da5e690a0",
+        "next_dynamic_serial": 2,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-inventory-01/bone-drop-verification.json",
+          "sha256": "aa78b93ae11716c8b0842ad8acda82636fbf6e42194138e667ab4dc64fa20907"
+        },
+        "manifest": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/docs/oblivion/original-bone-inventory-sanitized.json",
+          "sha256": "177ec4d084e06157e01b3351d8670421e0d3756f03c4cfa2eb0f6d7a866cfdad"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/bone-drop/sanitized-bone-cave-inventory-01/original-bone-cold-inventory.png",
+            "sha256": "bdec9e218c2aed35a15370a26a4a74bc5b80716ccd2c8528a0b19382c8f409ff"
+          }
+        ]
+      }
+    ],
+    "semantic": "Public verify_bone_drop.py round-trips schema102 and compares source inventory/metadata, all27 skills/book progress/actor values/passives/life/deaths/quests/globals/script owners. World phases require nearby live physical identity; pickup phases retired ref/count0. Fresh process/load/save/library epochs bound per case."
+  },
+  "verifier": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/verify_bone_drop.py",
+    "sha256": "ae49db01ce1c1f278ef95a2689a5239f7aec18dcd7aaf7dd6a7b424c2da2880c"
+  },
+  "original_restoration": {
+    "path": "build/oblivion-compat/bone-drop/original-native-01/restoration.json",
+    "sha256": "f98e24ef4fb87e14f9b751f72d7247bb8e4dbd431d26891e4b00ec6cd4152260"
+  },
+  "weapon_regression": {
+    "path": "build/oblivion-compat/bone-drop/normal-worn-axe-dispatch-regression-01/worn-axe-verification.json",
+    "sha256": "faab4468f6b9c0a9d779eb55fa381f6b7d453bd026a9ed62b8d50755c69f250e"
+  },
+  "retained_attempts": [
+    {
+      "root": "build/oblivion-compat/clothing-drop",
+      "result": "Genuine Sack Cloth Pants legacy drop/two cold world saves/walk-save passed. Three-body/two-joint physical support deferred; no clothing failure claim."
+    },
+    {
+      "root": "build/oblivion-compat/bone-drop/normal-bone-drop-baseline-01",
+      "result": "Wrong inventory icon selected IronKey; no accepted Bone save."
+    },
+    {
+      "root": "build/oblivion-compat/bone-drop/normal-bone-drop-baseline-02",
+      "result": "Xvfb startup timeout."
+    },
+    {
+      "root": "build/oblivion-compat/bone-drop/normal-bone-drop-baseline-03",
+      "result": "Correct legacy Bone drop/save; no native reference/body/key allocation. No generic static disappearance claim."
+    },
+    {
+      "root": "build/oblivion-compat/bone-drop",
+      "result": "Shore native drop/world accepted in both modes, but normal pickup01..06/SAN01 blocked by coastal rock occlusion. Platform walk01 stuck without staging save. Partial shore evidence only."
+    },
+    {
+      "root": "build/oblivion-compat/bone-drop",
+      "result": "Focused01 compile failed leftover weapon identifier, peer sanitizer build identity-guarded stopped; corrected baseDefinition and focused02 passed138 each."
+    },
+    {
+      "root": "build/oblivion-compat/bone-drop",
+      "result": "Cave initial audit incorrectly assumed healthy-shore counter27; corrected to compare actual source maps. Normal pickup01 fixture failed; diagnostic02 correctly rejected camera hit159 outside native150. Normal03 ordinary .35 walk accepted. SAN01 range fixture and02 too-short wall walk failed; SAN03 observation-gated ordinary held walk accepted. No range override."
+    },
+    {
+      "root": "build/oblivion-compat/bone-drop/normal-bone-cave-inventory-01",
+      "result": "Initial pre-drop inspection, not final inventory; label collision safely prevented overwrite. Accepted final normal inventory02."
+    },
+    {
+      "root": "build/oblivion-compat/bone-drop/original-native-01",
+      "result": "Wrong-target console identity and first unfocused Space attempts retained; correct curved brown Bone ordinary drop/pickup completed."
+    }
+  ],
+  "limits": [
+    "Ordinary nonquest/nonscript singleton single-body MISC prop only; no multi-body/scripted/quest/stack or all-MISC acceptance.",
+    "Original clothing exploration at build/oblivion-compat/clothing-drop passed drop/two cold saves/walk-save; no clothing fix or disappearance claim. Three-body/two-constraint pants remain deferred.",
+    "Actual mass/inertia/shape from authored graph; no exact original velocity/contact/trajectory requirement.",
+    "Coastal rendering/rock clipping remains separate. Old legacy objects are not migrated.",
+    "New inventory-drop MISC admission only; not a claim that all originally placed MISC props now simulate.",
+    "Healthy shore native drop/world saves passed, but retrieval remained blocked by existing coastal rock geometry. Those attempts are retained partial evidence; the complete main course uses the separate genuine cave save.",
+    "Cave pickup uses an ordinary short walking step to bring a visible Bone hit from159 units inside the native150 activation range. Actual activation/count/save is required. No engine range override or state setter.",
+    "Sanitizer gameplay leak checking disabled; integration environments recorded separately. No complete M15/M18 or all-MISC claim."
+  ]
+}

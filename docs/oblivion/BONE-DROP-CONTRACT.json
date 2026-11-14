@@ -1,0 +1,62 @@
+{
+  "status": "Bounded singleton Bone course complete in normal and instrumented games; integration passed. Broader M15/M18 remain open.",
+  "milestones": [
+    "M15 ordinary single-body MISC physical owner and restart",
+    "M18 original inventory/world item transfer"
+  ],
+  "content": {
+    "base": "content:oblivion.esm:0223a8",
+    "name": "Bone",
+    "quantity": 1,
+    "condition": -1,
+    "charge": -1,
+    "script": null,
+    "enchantment": null,
+    "inventory_weight": 2
+  },
+  "baseline": {
+    "root": "build/oblivion-compat/bone-drop/normal-bone-drop-baseline-03",
+    "save_sha256": "c48dcc39c070e69c6ec8c502e6a977a41ae4ac1b9d83ece16139417c417c99ac",
+    "observed": "Correct Bone tooltip, one ordinary drop/debit/save. Legacy nearby object remains at fixed pose; no native Bone reference or physical snapshot and serial7 unchanged. Generic static save disappearance is NOT claimed."
+  },
+  "acceptance": [
+    "Admit the actual ordinary nonscript/unenchanted singleton MISC Bone as the next reserved key/typedMISC with an authored dynamic convex hull body; preserve model/asset identity and legitimate motion.",
+    "Preserve exact source Bone metadata, all other inventory/equipment, all27 skills, source health/actor values, quest stages and counters (including original absence), script owners and death state. Encumbrance changes by authored inventory weight2 only.",
+    "Actual ordinary drop/save -> cold world re-save with nearby grounded/settling body -> second cold ordinary pickup/save -> cold inventory load in normal and instrumented games.",
+    "Prepared source debit/key/cell/registry/model/body/Lua publication; no source loss or serial advancement on rejected admission.",
+    "Reject durability/enchantment extras for MISC; existing weapon branch condition/charge protections and old world snapshots remain compatible.",
+    "Run focused shared-lifetime checks then integration gates and actual worn-axe dispatch regression."
+  ],
+  "save_schema": 102,
+  "limits": [
+    "Ordinary nonquest/nonscript singleton single-body MISC prop only; no multi-body/scripted/quest/stack or all-MISC acceptance.",
+    "Original clothing exploration at build/oblivion-compat/clothing-drop passed drop/two cold saves/walk-save; no clothing fix or disappearance claim. Three-body/two-constraint pants remain deferred.",
+    "Actual mass/inertia/shape from authored graph; no exact original velocity/contact/trajectory requirement.",
+    "Coastal rendering/rock clipping remains separate. Old legacy objects are not migrated.",
+    "New inventory-drop MISC admission only; not a claim that all originally placed MISC props now simulate.",
+    "Healthy shore native drop/world saves passed, but retrieval remained blocked by existing coastal rock geometry. Those attempts are retained partial evidence; the complete main course uses the separate genuine cave save.",
+    "Cave pickup uses an ordinary short walking step to bring a visible Bone hit from159 units inside the native150 activation range. Actual activation/count/save is required. No engine range override or state setter."
+  ],
+  "oracle": "BONE-DROP-ORACLE.json",
+  "main_course_source": {
+    "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "0330a7448527955ca09680cb90ab3d785f8c091573a11d51004bea8cdd40fa6d",
+    "branch": "Separate genuine Cairn continuation; do not merge healthy shore progress.",
+    "cell": "content:oblivion.esm:0352a9 Wellspring Cave",
+    "health": 70.4800033569336,
+    "endurance": 55,
+    "credited_deaths": 33,
+    "allocator": 1,
+    "nirnroot_count": 0,
+    "ms39_stage": 0,
+    "pc_misc_stat_27": "absent in original source; preserve absence"
+  },
+  "shore_source": {
+    "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "e38b5b86444feac911d7516fc4b00b4907f273fcf30b197ac39010a4629bb305",
+    "health": 110,
+    "endurance": 55,
+    "credited_deaths": 33,
+    "allocator": 7
+  }
+}

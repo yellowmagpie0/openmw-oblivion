@@ -42,6 +42,8 @@
 #include <set>
 #include <functional>
 #include <stdexcept>
+#include <type_traits>
+#include <array>
 
 namespace MWWorld
 {
@@ -51,6 +53,7 @@ namespace MWWorld
         {
             if (ptr.isEmpty()) return nullptr;
             if (ptr.getType() == ESM::REC_WEAP4) return ptr.get<ESM4::Weapon>()->mBase;
+            if (ptr.getType() == ESM::REC_MISC4) return ptr.get<ESM4::MiscItem>()->mBase;
             if (ptr.getType() == ESM::REC_ARMO4)
             {
                 const auto* armor = ptr.get<ESM4::Armor>()->mBase;
@@ -68,6 +71,12 @@ namespace MWWorld
                 return store.get<ESM4::Weapon>().search(base->mId) == base
                     ? store.get<ESM4::Weapon>().findFormKey(base->mId) : std::nullopt;
             }
+            if (ptr.getType() == ESM::REC_MISC4)
+            {
+                const auto* base = ptr.get<ESM4::MiscItem>()->mBase;
+                return store.get<ESM4::MiscItem>().search(base->mId) == base
+                    ? store.get<ESM4::MiscItem>().findFormKey(base->mId) : std::nullopt;
+            }
             const auto* base = ptr.get<ESM4::Armor>()->mBase;
             return store.get<ESM4::Armor>().search(base->mId) == base
                 ? store.get<ESM4::Armor>().findFormKey(base->mId) : std::nullopt;
@@ -83,9 +92,12 @@ namespace MWWorld
         {
             const auto* weapon = mStore.get<ESM4::Weapon>().search(snapshot.mBase);
             const auto* armor = mStore.get<ESM4::Armor>().search(snapshot.mBase);
-            if (weapon && armor) throw std::runtime_error("loose equipment base has ambiguous native types");
+            const auto* misc = mStore.get<ESM4::MiscItem>().search(snapshot.mBase);
+            if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr) > 1)
+                throw std::runtime_error("loose equipment base has ambiguous native types");
             const ESM::Path* selected = nullptr;
             if (weapon) selected = &weapon->mModel;
+            else if (misc) selected = &misc->mModel;
             else if (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield))
             {
                 const auto found = references.find(key);
@@ -603,168 +615,194 @@ namespace MWWorld
         return result;
     }
 
-    std::optional<Ptr> World::dropOblivionInventoryWeapon(
+    std::optional<Ptr> World::dropOblivionInventoryLooseItem(
         const Ptr& actor, const Ptr& item, size_t count, float cursorX, float cursorY)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || item.isEmpty()) return std::nullopt;
         const ESM::RefId sourceId = item.getCellRef().getRefId();
-        const auto* weapon = mStore.get<ESM4::Weapon>().search(sourceId);
-        if (!weapon || item.getType() != ESM::REC_WEAP) return std::nullopt;
-        // Inventory drops and combat disarms share the native loose-body owner.
-        // This path debits an unequipped, ordinary singleton; equipment, scripts
-        // and associated bound/enchantment effects retain their own policies.
-        if (!weapon->mScriptId.isZeroOrUnset() || !weapon->mEnchantment.isZeroOrUnset()
-            || (weapon->mFlags & ESM4::Rec_Persistent)) return std::nullopt;
-        const auto base = mStore.get<ESM4::Weapon>().findFormKey(sourceId);
-        if (!base || !base->isContent() || (weapon->mFlags & ESM4::Rec_Deleted))
-            throw std::invalid_argument("native inventory weapon drop has no winning base");
-        if (const auto* winner = mStore.getFormKeyIndex().winner(*base);
-            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_WEAP))
-            throw std::invalid_argument("native inventory weapon drop has no winning weapon record");
-        if (actor != getPlayerPtr() || !actor.isInCell() || count != 1
-            || item.getCellRef().getCount() != 1 || item.getCellRef().getNativeBoundSource()
-            || !item.getCellRef().getNativeScriptOwner().isNull()
-            || item.getCellRef().getNativeItemScale() || item.getCellRef().getEnchantmentCharge() >= 0)
-            throw std::invalid_argument("native inventory weapon drop requires an ordinary singleton");
-        auto& inventory = actor.getClass().getInventoryStore(actor);
-        if (item.getContainerStore() != &inventory)
-            throw std::invalid_argument("native inventory weapon drop has a different source owner");
-        auto removal = inventory.prepareItemRemoval(item, 1);
-        if (removal->getCount() != 1 || removal->depletesEquipment())
-            throw std::invalid_argument("native inventory weapon drop requires an unequipped singleton");
-        auto keys = prepareOblivionDynamicReferenceKey();
-        const std::weak_ptr<const char> identity = mOblivionDynamicReferenceIdentity;
-        const CellRef sourceBefore = item.getCellRef();
-        const CellRef actorBefore = actor.getCellRef();
-        CellRef actorAfter = actorBefore;
-        auto droppedItems = actorAfter.getNativeDropRelations();
-        if (!droppedItems.mItems) droppedItems.mItems.emplace();
-        droppedItems.mItems->insert(droppedItems.mItems->begin(), keys->key());
-        actorAfter.setNativeDropRelations(std::move(droppedItems));
-        CellStore* actorCell = actor.getCell();
-        const auto modelBefore = weapon->mModel.getOriginal();
-        const auto flagsBefore = weapon->mFlags;
-        const auto healthBefore = weapon->mData.health;
-        const auto scriptBefore = weapon->mScriptId;
-        const auto enchantmentBefore = weapon->mEnchantment;
-        const auto current = [&] {
-            // The removal token owns the inventory epoch. Test it before any
-            // borrowed item dereference after a model/resource callback.
-            if (!keys->isValid() || getPlayerPtr() != actor || actor.getCell() != actorCell
-                || !removal->isValid() || mStore.get<ESM4::Weapon>().search(sourceId) != weapon) return false;
-            const auto& live = item.getCellRef();
-            return weapon->mModel.getOriginal() == modelBefore && weapon->mFlags == flagsBefore
-                && weapon->mData.health == healthBefore && weapon->mScriptId == scriptBefore
-                && weapon->mEnchantment == enchantmentBefore
-                && live.getOwner() == sourceBefore.getOwner()
-                && live.getNativeOwnershipRank() == sourceBefore.getNativeOwnershipRank()
-                && live.getNativeOwnershipGlobal() == sourceBefore.getNativeOwnershipGlobal()
-                && live.getNativeItemCondition() == sourceBefore.getNativeItemCondition()
-                && live.getCharge() == sourceBefore.getCharge()
-                && live.getChargeIntRemainder() == sourceBefore.getChargeIntRemainder()
-                && live.getEnchantmentCharge() == sourceBefore.getEnchantmentCharge()
-                && live.hasNativeItemScale(sourceBefore.getNativeItemScale())
-                && !live.getNativeBoundSource() && live.getNativeScriptOwner().isNull()
-                && actor.getCellRef().getNativeDropRelations() == actorBefore.getNativeDropRelations();
-        };
-        auto position = actor.getRefData().getPosition();
-        const auto hit = mRendering->castCameraToViewportRay(cursorX, cursorY, 200.f, true, true, false);
-        if (!hit.mHit) throw std::invalid_argument("native weapon drop requires a visible placement surface");
-        osg::Vec3f normal = hit.mHitNormalWorld;
-        if (!std::isfinite(normal.length2()) || normal.normalize() == 0)
-            throw std::invalid_argument("native weapon drop has no finite surface normal");
-        for (unsigned axis = 0; axis < 3; ++axis) position.pos[axis] = hit.mHitPointWorld[axis];
-        position.rot[0] = position.rot[1] = 0;
-        CellStore* cell = actorCell;
-        if (cell->isExterior())
-            cell = &mWorldModel.getExterior(ESM::positionToExteriorCellLocation(
-                position.pos[0], position.pos[1], cell->getCell()->getWorldSpace()));
-        if (!current()) throw std::invalid_argument("native weapon source changed during cell preparation");
-        const auto* cellDefinition = mStore.get<ESM4::Cell>().search(cell->getCell()->getId());
-        const auto cellKey = mStore.get<ESM4::Cell>().findFormKey(cell->getCell()->getId());
-        if (!cellDefinition || !cellKey || !cellKey->isContent())
-            throw std::invalid_argument("native weapon drop has no content cell owner");
-        ESM4::Reference placed{};
-        placed.mFormKey = keys->key(); placed.mBaseKey = *base; placed.mBaseObj = weapon->mId;
-        placed.mParentKey = *cellKey; placed.mParent = cellDefinition->mId; placed.mPos = position;
-        const ESM::RefId owner = sourceBefore.getOwner();
-        if (const auto* id = owner.getIf<ESM::FormId>()) placed.mOwner = *id;
-        else if (!owner.empty()) throw std::invalid_argument("native weapon drop has a nonnative owner");
-        const ESM::RefId global = sourceBefore.getNativeOwnershipGlobal();
-        if (const auto* id = global.getIf<ESM::FormId>()) placed.mGlobal = *id;
-        else if (!global.empty()) throw std::invalid_argument("native weapon drop has a nonnative ownership global");
-        placed.mFactionRank = sourceBefore.getNativeOwnershipRank();
-        LiveCellRef<ESM4::Weapon> reference(placed, weapon);
-        const Ptr preview(&reference, cell);
-        auto condition = sourceBefore.getNativeItemCondition();
-        if (!condition && sourceBefore.getCharge() >= 0)
-            condition = static_cast<float>(double(sourceBefore.getCharge()) + sourceBefore.getChargeIntRemainder());
-        if (condition) reference.mRef.setNativeItemCondition(*condition);
-        reference.mRef.setEnchantmentCharge(sourceBefore.getEnchantmentCharge());
-        ESM4::DropRelations relations;
-        relations.mDropper = ESM::FormKey::dynamic("player", 1);
-        reference.mRef.setNativeDropRelations(std::move(relations));
-        const auto model = preview.getClass().getCorrectedModel(preview);
-        const auto file = mResourceSystem->getNifFileManager()->get(VFS::Path::Normalized(model));
-        const auto definition = NifBullet::loadWeaponReferenceRagdollDefinition(*file);
-        if (definition.mBodies.empty() || !definition.mReferenceRoot || definition.mSourceHash != file->mHash)
-            throw std::invalid_argument("native inventory weapon drop has no identified world body");
-        if (!current()) throw std::invalid_argument("native weapon source changed during asset preparation");
-        auto& objects = mRendering->getObjects();
-        const auto rotation = Misc::Convert::makeOsgQuat(position);
-        {
-            auto view = objects.prepareModel(preview, model, rotation, MWRender::Mask_Object, &definition, current);
-            if (!current()) throw std::invalid_argument("native weapon source changed during model preparation");
-            const auto center = view->worldBoundCenter();
-            const float radius = view->worldBoundRadius();
-            if (!std::isfinite(radius) || radius <= 0)
-                throw std::invalid_argument("native weapon drop has no finite model extent");
-            // Clear the placement surface using the actual world-model bound,
-            // then let the authored rigid body fall and settle normally.
-            for (unsigned axis = 0; axis < 3; ++axis)
+        const auto admit = [&]<class Record>(const Record* baseDefinition) -> std::optional<Ptr> {
+            constexpr bool isWeapon = std::is_same_v<Record, ESM4::Weapon>;
+            constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP : ESM4::REC_MISC;
+            if (!baseDefinition) return std::nullopt;
+            const auto health = [&] {
+                if constexpr (isWeapon) return baseDefinition->mData.health;
+                else return std::uint32_t(0);
+            };
+            const auto enchantment = [&] {
+                if constexpr (isWeapon) return baseDefinition->mEnchantment;
+                else return ESM::FormId{};
+            };
+            // Inventory drops and combat disarms share the native loose-body owner.
+            // This path debits an unequipped, ordinary singleton; equipment, scripts
+            // and associated bound/enchantment effects retain their own policies.
+            if (!baseDefinition->mScriptId.isZeroOrUnset() || !enchantment().isZeroOrUnset()
+                || (baseDefinition->mFlags & ESM4::Rec_Persistent)) return std::nullopt;
+            const auto base = mStore.get<Record>().findFormKey(sourceId);
+            if (!base || !base->isContent() || (baseDefinition->mFlags & ESM4::Rec_Deleted))
+                throw std::invalid_argument("native inventory loose item drop has no winning base");
+            if (const auto* winner = mStore.getFormKeyIndex().winner(*base);
+                winner && (winner->mDeleted || winner->mRecordType != nativeType))
+                throw std::invalid_argument("native inventory loose item drop has no winning record");
+            if (actor != getPlayerPtr() || !actor.isInCell() || count != 1
+                || item.getCellRef().getCount() != 1 || item.getCellRef().getNativeBoundSource()
+                || !item.getCellRef().getNativeScriptOwner().isNull()
+                || item.getCellRef().getNativeItemScale() || item.getCellRef().getEnchantmentCharge() >= 0)
+                throw std::invalid_argument("native inventory loose item drop requires an ordinary singleton");
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            if (item.getContainerStore() != &inventory)
+                throw std::invalid_argument("native inventory loose item drop has a different source owner");
+            auto removal = inventory.prepareItemRemoval(item, 1);
+            if (removal->getCount() != 1 || removal->depletesEquipment())
+                throw std::invalid_argument("native inventory loose item drop requires an unequipped singleton");
+            auto keys = prepareOblivionDynamicReferenceKey();
+            const std::weak_ptr<const char> identity = mOblivionDynamicReferenceIdentity;
+            const CellRef sourceBefore = item.getCellRef();
+            if constexpr (!isWeapon)
+                if (sourceBefore.getNativeItemCondition() || sourceBefore.getCharge() >= 0)
+                    throw std::invalid_argument("native miscellaneous prop cannot have durability");
+            const CellRef actorBefore = actor.getCellRef();
+            CellRef actorAfter = actorBefore;
+            auto droppedItems = actorAfter.getNativeDropRelations();
+            if (!droppedItems.mItems) droppedItems.mItems.emplace();
+            droppedItems.mItems->insert(droppedItems.mItems->begin(), keys->key());
+            actorAfter.setNativeDropRelations(std::move(droppedItems));
+            CellStore* actorCell = actor.getCell();
+            const auto modelBefore = baseDefinition->mModel.getOriginal();
+            const auto flagsBefore = baseDefinition->mFlags;
+            const auto healthBefore = health();
+            const auto scriptBefore = baseDefinition->mScriptId;
+            const auto enchantmentBefore = enchantment();
+            const auto current = [&] {
+                // The removal token owns the inventory epoch. Test it before any
+                // borrowed item dereference after a model/resource callback.
+                if (!keys->isValid() || getPlayerPtr() != actor || actor.getCell() != actorCell
+                    || !removal->isValid() || mStore.get<Record>().search(sourceId) != baseDefinition) return false;
+                const auto& live = item.getCellRef();
+                return baseDefinition->mModel.getOriginal() == modelBefore && baseDefinition->mFlags == flagsBefore
+                    && health() == healthBefore && baseDefinition->mScriptId == scriptBefore
+                    && enchantment() == enchantmentBefore
+                    && live.getOwner() == sourceBefore.getOwner()
+                    && live.getNativeOwnershipRank() == sourceBefore.getNativeOwnershipRank()
+                    && live.getNativeOwnershipGlobal() == sourceBefore.getNativeOwnershipGlobal()
+                    && live.getNativeItemCondition() == sourceBefore.getNativeItemCondition()
+                    && live.getCharge() == sourceBefore.getCharge()
+                    && live.getChargeIntRemainder() == sourceBefore.getChargeIntRemainder()
+                    && live.getEnchantmentCharge() == sourceBefore.getEnchantmentCharge()
+                    && live.hasNativeItemScale(sourceBefore.getNativeItemScale())
+                    && !live.getNativeBoundSource() && live.getNativeScriptOwner().isNull()
+                    && actor.getCellRef().getNativeDropRelations() == actorBefore.getNativeDropRelations();
+            };
+            auto position = actor.getRefData().getPosition();
+            const auto hit = mRendering->castCameraToViewportRay(cursorX, cursorY, 200.f, true, true, false);
+            if (!hit.mHit) throw std::invalid_argument("native loose item drop requires a visible placement surface");
+            osg::Vec3f normal = hit.mHitNormalWorld;
+            if (!std::isfinite(normal.length2()) || normal.normalize() == 0)
+                throw std::invalid_argument("native loose item drop has no finite surface normal");
+            for (unsigned axis = 0; axis < 3; ++axis) position.pos[axis] = hit.mHitPointWorld[axis];
+            position.rot[0] = position.rot[1] = 0;
+            CellStore* cell = actorCell;
+            if (cell->isExterior())
+                cell = &mWorldModel.getExterior(ESM::positionToExteriorCellLocation(
+                    position.pos[0], position.pos[1], cell->getCell()->getWorldSpace()));
+            if (!current()) throw std::invalid_argument("native loose item source changed during cell preparation");
+            const auto* cellDefinition = mStore.get<ESM4::Cell>().search(cell->getCell()->getId());
+            const auto cellKey = mStore.get<ESM4::Cell>().findFormKey(cell->getCell()->getId());
+            if (!cellDefinition || !cellKey || !cellKey->isContent())
+                throw std::invalid_argument("native loose item drop has no content cell owner");
+            ESM4::Reference placed{};
+            placed.mFormKey = keys->key(); placed.mBaseKey = *base; placed.mBaseObj = baseDefinition->mId;
+            placed.mParentKey = *cellKey; placed.mParent = cellDefinition->mId; placed.mPos = position;
+            const ESM::RefId owner = sourceBefore.getOwner();
+            if (const auto* id = owner.getIf<ESM::FormId>()) placed.mOwner = *id;
+            else if (!owner.empty()) throw std::invalid_argument("native loose item drop has a nonnative owner");
+            const ESM::RefId global = sourceBefore.getNativeOwnershipGlobal();
+            if (const auto* id = global.getIf<ESM::FormId>()) placed.mGlobal = *id;
+            else if (!global.empty()) throw std::invalid_argument("native loose item drop has a nonnative ownership global");
+            placed.mFactionRank = sourceBefore.getNativeOwnershipRank();
+            LiveCellRef<Record> reference(placed, baseDefinition);
+            const Ptr preview(&reference, cell);
+            auto condition = sourceBefore.getNativeItemCondition();
+            if (!condition && sourceBefore.getCharge() >= 0)
+                condition = static_cast<float>(double(sourceBefore.getCharge()) + sourceBefore.getChargeIntRemainder());
+            if (condition) reference.mRef.setNativeItemCondition(*condition);
+            reference.mRef.setEnchantmentCharge(sourceBefore.getEnchantmentCharge());
+            ESM4::DropRelations relations;
+            relations.mDropper = ESM::FormKey::dynamic("player", 1);
+            reference.mRef.setNativeDropRelations(std::move(relations));
+            const auto model = preview.getClass().getCorrectedModel(preview);
+            const auto file = mResourceSystem->getNifFileManager()->get(VFS::Path::Normalized(model));
+            const auto definition = NifBullet::loadWeaponReferenceRagdollDefinition(*file);
+            // Multi-body miscellaneous props keep their existing path until they
+            // have their own articulated scene/save acceptance.
+            if constexpr (!isWeapon)
+                if (definition.mBodies.size() != 1 || !definition.mJoints.empty()) return std::nullopt;
+            if (definition.mBodies.empty() || !definition.mReferenceRoot || definition.mSourceHash != file->mHash)
+                throw std::invalid_argument("native inventory loose item drop has no identified world body");
+            if (!current()) throw std::invalid_argument("native loose item source changed during asset preparation");
+            auto& objects = mRendering->getObjects();
+            const auto rotation = Misc::Convert::makeOsgQuat(position);
             {
-                position.pos[axis] += position.pos[axis] - center[axis] + normal[axis] * (radius + 1.f);
-                if (!std::isfinite(position.pos[axis])) throw std::invalid_argument("nonfinite native weapon placement");
+                auto view = objects.prepareModel(preview, model, rotation, MWRender::Mask_Object, &definition, current);
+                if (!current()) throw std::invalid_argument("native loose item source changed during model preparation");
+                const auto center = view->worldBoundCenter();
+                const float radius = view->worldBoundRadius();
+                if (!std::isfinite(radius) || radius <= 0)
+                    throw std::invalid_argument("native loose item drop has no finite model extent");
+                // Clear the placement surface using the actual world-model bound,
+                // then let the authored rigid body fall and settle normally.
+                for (unsigned axis = 0; axis < 3; ++axis)
+                {
+                    position.pos[axis] += position.pos[axis] - center[axis] + normal[axis] * (radius + 1.f);
+                    if (!std::isfinite(position.pos[axis])) throw std::invalid_argument("nonfinite native weapon placement");
+                }
             }
-        }
-        reference.mRef.setPosition(position);
-        preview.getRefData().setPosition(position);
-        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(definition, placed.mScale);
-        const osg::Matrixf root = osg::Matrixf::rotate(rotation) * osg::Matrixf::translate(position.asVec3());
-        std::vector<NifBullet::RagdollBoneWorldPose> bones;
-        for (const auto& body : scaled.mBodies)
-        {
-            auto bind = body.mBoneBind;
-            bind.setTrans(bind.getTrans() * placed.mScale);
-            bones.push_back({body.mNodeRecord, bind * root});
-        }
-        const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, bones);
-        auto admission = mWorldModel.prepareLooseWeaponAdmission(*cell, reference, objects, *mPhysics,
-            model, rotation, MWRender::Mask_Object, definition, NifBullet::RagdollNativeLengthScale,
-            poses, MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
-            MWPhysics::CollisionType_AnyPhysical);
-        auto lua = MWBase::Environment::get().getLuaManager()->prepareSceneAdditions(admission->references());
-        struct Hooks { std::function<bool()> mCurrent; std::function<void()> mPublish; } hooks;
-        hooks.mCurrent = [&] { return current() && lua->isValid(); };
-        hooks.mPublish = [&] {
-            if (!removal->commit() || !actor.getCellRef().swapNativeDropRelations(actorAfter)
-                || !lua->commit() || !keys->commit()) std::terminate();
+            reference.mRef.setPosition(position);
+            preview.getRefData().setPosition(position);
+            const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(definition, placed.mScale);
+            const osg::Matrixf root = osg::Matrixf::rotate(rotation) * osg::Matrixf::translate(position.asVec3());
+            std::vector<NifBullet::RagdollBoneWorldPose> bones;
+            for (const auto& body : scaled.mBodies)
+            {
+                auto bind = body.mBoneBind;
+                bind.setTrans(bind.getTrans() * placed.mScale);
+                bones.push_back({body.mNodeRecord, bind * root});
+            }
+            const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, bones);
+            const std::array admissions{ WorldModel::LooseWeaponAdmission{
+                *cell, std::cref(reference), objects, *mPhysics, model, rotation, MWRender::Mask_Object,
+                definition, NifBullet::RagdollNativeLengthScale, poses,
+                MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
+                MWPhysics::CollisionType_AnyPhysical } };
+            auto admission = mWorldModel.prepareLooseWeaponAdmissions(admissions);
+            auto lua = MWBase::Environment::get().getLuaManager()->prepareSceneAdditions(admission->references());
+            struct Hooks { std::function<bool()> mCurrent; std::function<void()> mPublish; } hooks;
+            hooks.mCurrent = [&] { return current() && lua->isValid(); };
+            hooks.mPublish = [&] {
+                if (!removal->commit() || !actor.getCellRef().swapNativeDropRelations(actorAfter)
+                    || !lua->commit() || !keys->commit()) std::terminate();
+            };
+            const Ptr dropped = admission->commit({&hooks,
+                [](void* context) noexcept { return static_cast<Hooks*>(context)->mCurrent(); },
+                [](void* context) noexcept { static_cast<Hooks*>(context)->mPublish(); }});
+            if (dropped.isEmpty()) throw std::logic_error("validated native inventory weapon admission rejected");
+            Log(Debug::Info) << (isWeapon ? "TES4 inventory weapon dropped: base="
+                                        : "TES4 inventory misc dropped: base=") << base->serialize()
+                << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f);
+            removal->notify();
+            if (identity.expired() || getPlayerPtr() != actor) return dropped;
+            breakInvisibility(actor);
+            if (identity.expired() || getPlayerPtr() != actor) return dropped;
+            if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull()) windows->inventoryUpdated(actor);
+            if (identity.expired() || getPlayerPtr() != actor) return dropped;
+            if (mOblivionRuntimeState) mOblivionRuntimeState->mPlayer.mInventory = captureOblivionInventory(actor);
+            MWBase::Environment::get().getLuaManager()->objectPlaced(dropped, actor, position.asVec3(), rotation);
+            return dropped;
         };
-        const Ptr dropped = admission->commit({&hooks,
-            [](void* context) noexcept { return static_cast<Hooks*>(context)->mCurrent(); },
-            [](void* context) noexcept { static_cast<Hooks*>(context)->mPublish(); }});
-        if (dropped.isEmpty()) throw std::logic_error("validated native inventory weapon admission rejected");
-        Log(Debug::Info) << "TES4 inventory weapon dropped: base=" << base->serialize()
-            << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f);
-        removal->notify();
-        if (identity.expired() || getPlayerPtr() != actor) return dropped;
-        breakInvisibility(actor);
-        if (identity.expired() || getPlayerPtr() != actor) return dropped;
-        if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull()) windows->inventoryUpdated(actor);
-        if (identity.expired() || getPlayerPtr() != actor) return dropped;
-        if (mOblivionRuntimeState) mOblivionRuntimeState->mPlayer.mInventory = captureOblivionInventory(actor);
-        MWBase::Environment::get().getLuaManager()->objectPlaced(dropped, actor, position.asVec3(), rotation);
-        return dropped;
+        if (item.getType() == ESM::REC_WEAP)
+            return admit(mStore.get<ESM4::Weapon>().search(sourceId));
+        if (item.getType() == ESM::REC_MISC)
+            return admit(mStore.get<ESM4::MiscItem>().search(sourceId));
+        return std::nullopt;
     }
 
     std::unique_ptr<PreparedEquippedWeaponDrops> prepareEquippedWeaponDrops(

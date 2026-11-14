@@ -4,18 +4,32 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest bounded chunk: [worn Rusty Iron War Axe drop](WORN-AXE-DROP-CONTRACT.json).
-The genuine carried axe090613 previously became a legacy world object: a cold
-re-save failed because its standing contact had no native identity. Native
-ordinary inventory weapon singleton admission now preserves the reference,
-exact worn condition22.494663, ownership and authored loose-body state. Actual
-outdoor testing also exposed missing loose-object/terrain collision; heightfields
-now admit loose objects. No suppression of standing-contact validation.
-[Oracle](WORN-AXE-DROP-ORACLE.json) separates original full-condition ordinary
-pickup/drop behavior from genuine fork worn-item preservation.
-[Receipt](WORN-AXE-DROP-VERIFICATION.json) records baseline failures, normal and
-instrumented drop → cold world re-save → ordinary pickup/save → cold inventory
-courses, regression gates and independent asset provenance.
+Latest bounded chunk: [genuine Bone drop](BONE-DROP-CONTRACT.json), extending
+ordinary singleton inventory drops to single-body MISC. Bone0223a8 now has a
+typed native reference and original convex-hull physical owner, survives a cold
+world re-save, is picked up through ordinary visible crosshair/Space input, and
+survives another cold inventory load. [Oracle](BONE-DROP-ORACLE.json) records
+independent original record/asset identity and isolated original-game behavior;
+parser mass/graph diagnostics are explicitly separate.
+[Receipt](BONE-DROP-VERIFICATION.json) binds normal/instrumented courses, semantic
+state comparisons, engine2292 in both modes, Python618 and a fresh worn-axe
+regression. Unchanged components reuse the Crab receipt with original provenance.
+
+Bone uses the **separate Cairn continuation** in Wellspring Cave, preserving
+Health70.480003/110, Endurance55, Hand36, Athletics31 and all27 skills,33 credited
+deaths, MS39stage0 and original absence of Nirnroot/counter27. Final normal save:
+`build/oblivion-compat/bone-drop/normal-bone-cave-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `8e052c5e1644c654d4160da34b822db364152560eb9cb1698e55903dfe6210f7`.
+Bone1/no extras, allocator2; dropped key1 retired/count0, no active body.
+The receipt retains the separate instrumented save and process identities.
+
+Shore Bone drop/world phases passed but retrieval remained blocked by coastal
+rocks; those are partial evidence, not a completed shore course. Genuine Sack
+Cloth Pants legacy drop/two cold saves/walk-save passed; their three-body/two-joint
+physics remain deferred. No clothing disappearance claim.
+
+Prior [worn axe receipt](WORN-AXE-DROP-VERIFICATION.json) preserves the native
+weapon transfer and loose-object/terrain collision correction. Schema102 unchanged.
 
 Healthy continuation, separate from Cairn and infected branches:
 `build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
@@ -26,11 +40,9 @@ counters2,33 credited deaths and all earned skills retained. Allocator7;
 retired dropped key6 remains deleted/count0. Schema102 unchanged.
 Instrumented final inventory SHA256:
 `b590bc49fcb92548c3bfdd4d7bf612710a483f5e523830ed6a11ad7366faedb4`.
-Normal2292/full disjoint instrumented2292 engine, focused138 each and Python618
-pass. Unchanged components reuse the Crab receipt with original provenance.
 
-Remaining current acceptance gaps: equipped/scripted/bound/enchanted/stacked
-weapon inventory drops; broader inventory lifetime/effects/UI; coastal rendering/
+Remaining current acceptance gaps: articulated clothing, equipped/scripted/bound/
+enchanted/stacked inventory drops; broader inventory lifetime/effects/UI; coastal rendering/
 rock clipping (terrain collision correction does not fix rendering); natural
 positive Endurance-damage healing gameplay. Choose the next bounded chunk by
 observed unsupported behavior in genuinely carried or reached content.
@@ -69,6 +81,6 @@ without a verified reached source; container loot is unverified and nearest foun
 outdoor Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
 Checkpoint: original ingredient use, scripted/plain identity round trips, and
-ordinary worn weapon transfer now have distinct real-content evidence. Broad
+ordinary worn weapon and singleton MISC transfer have distinct real-content evidence. Broad
 milestones remain open. Current chunk complete; next action is select another
 observed real-content failure, preserving the explicit gaps above.

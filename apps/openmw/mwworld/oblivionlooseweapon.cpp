@@ -20,7 +20,8 @@ namespace MWWorld
         {
             // Destroy borrowed resource preparations before their private node.
             std::variant<std::unique_ptr<CellStore::PreparedInsertion<ESM4::Weapon>>,
-                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Armor>>> mCell;
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Armor>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::MiscItem>>> mCell;
             CellStore* mOwner = nullptr;
             MWRender::Objects* mObjects = nullptr;
             std::unique_ptr<MWRender::Objects::PreparedModel> mModel;
@@ -209,12 +210,21 @@ namespace MWWorld
                 ESM::FormKey::dynamic(placed->mFormKey.mNamespace, placed->mFormKey.mValue);
                 if (reference.isDeleted() || !reference.mData.isEnabled())
                     throw std::invalid_argument("loose weapon admission requires a live enabled instance");
-                if (const auto condition = reference.mRef.getNativeItemCondition();
-                    condition && (!std::isfinite(*condition) || *condition < 0
-                        || reference.mBase->mData.health == 0 || *condition > reference.mBase->mData.health))
-                    throw std::invalid_argument("loose weapon condition exceeds native base health");
+                if (const auto condition = reference.mRef.getNativeItemCondition())
+                {
+                    if constexpr (std::is_same_v<Record, ESM4::MiscItem>)
+                        throw std::invalid_argument("loose miscellaneous prop cannot have durability");
+                    else if (!std::isfinite(*condition) || *condition < 0
+                        || reference.mBase->mData.health == 0 || *condition > reference.mBase->mData.health)
+                        throw std::invalid_argument("loose weapon condition exceeds native base health");
+                }
                 const auto charge = reference.mRef.getEnchantmentCharge();
-                if (!std::isfinite(charge) || (charge != -1.f && (charge < 0
+                if constexpr (std::is_same_v<Record, ESM4::MiscItem>)
+                {
+                    if (charge != -1.f)
+                        throw std::invalid_argument("loose miscellaneous prop cannot have enchantment charge");
+                }
+                else if (!std::isfinite(charge) || (charge != -1.f && (charge < 0
                     || reference.mBase->mEnchantment.isZeroOrUnset()
                     || charge > reference.mBase->mEnchantmentPoints)))
                     throw std::invalid_argument("loose weapon charge exceeds native enchantment capacity");

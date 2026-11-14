@@ -10,6 +10,6 @@ namespace MWGui
         if (!world) return std::nullopt;
         if (auto dropped = world->dropOblivionInventoryIngredient(actor, item.mBase, count, mCursorX, mCursorY))
             return dropped;
-        return world->dropOblivionInventoryWeapon(actor, item.mBase, count, mCursorX, mCursorY);
+        return world->dropOblivionInventoryLooseItem(actor, item.mBase, count, mCursorX, mCursorY);
     }
 }
