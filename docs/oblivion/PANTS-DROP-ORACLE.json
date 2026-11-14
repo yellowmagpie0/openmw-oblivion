@@ -1,0 +1,80 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "type": "CLOT",
+  "id": "027318",
+  "payload_sha256": "fca7b9de35ac063a5882229661d6f446cac1984f6be25e04854b3cc0ffb6135e",
+  "strings": {
+    "EDID": "LowerPants05",
+    "FULL": "Sack Cloth Pants",
+    "MODL": "Clothes\\LowerClass\\05\\M\\Pants.NIF",
+    "MOD2": "Clothes\\LowerClass\\05\\M\\Pants_gnd.NIF",
+    "MOD3": "Clothes\\LowerClass\\05\\F\\Pants.NIF",
+    "MOD4": "Clothes\\LowerClass\\05\\F\\Pants_gnd.NIF"
+  },
+  "value": 1,
+  "weight": 1.0,
+  "script_present": false,
+  "enchantment_present": false,
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "member": "meshes/clothes/lowerclass/05/m/pants_gnd.nif",
+  "member_sha256": "910af3589a1e385824df9c3e44f4cd061573055755bb2cd27649f50411cb9379",
+  "parser_diagnostic": {
+    "path": "build/oblivion-compat/articulated-clothing/asset-recheck/meshes/clothes/lowerclass/05/m/pants_gnd.nif",
+    "bodies": 3,
+    "joints": 2,
+    "passed": true,
+    "records": 29,
+    "root": 0,
+    "asset_root": -1,
+    "scabbard": -1,
+    "body_target": 0,
+    "shape": 3,
+    "bodyT": 1,
+    "body_graph": [
+      {
+        "record": 15,
+        "node_record": 0,
+        "flags": 1,
+        "mass": 1,
+        "fixed": 0,
+        "shape": 3,
+        "bodyT": 1
+      },
+      {
+        "record": 20,
+        "node_record": 17,
+        "flags": 1,
+        "mass": 1,
+        "fixed": 0,
+        "shape": 3,
+        "bodyT": 1
+      },
+      {
+        "record": 26,
+        "node_record": 23,
+        "flags": 1,
+        "mass": 1,
+        "fixed": 0,
+        "shape": 3,
+        "bodyT": 1
+      }
+    ],
+    "joint_graph": [
+      {
+        "record": 21,
+        "body_a": 1,
+        "body_b": 0,
+        "shape": 1
+      },
+      {
+        "record": 27,
+        "body_a": 2,
+        "body_b": 1,
+        "shape": 1
+      }
+    ],
+    "shape_name": "Box for each body",
+    "joint_type": "Two limited hinges"
+  },
+  "scope": "Independent original master and archive member identity. Current parser reports three bodies/two joints; no exact original numerical clothing trajectory claim. Generic original inventory transfer observations reused from BONE-DROP-ORACLE.json for UI ownership behavior only, not articulated physics."
+}

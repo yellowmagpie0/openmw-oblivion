@@ -8,6 +8,8 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
+#include <vector>
 
 namespace osg { class Group; }
 namespace NifBullet { struct ActorRagdollDefinition; }
@@ -44,8 +46,7 @@ namespace MWRender
         std::weak_ptr<const char> mOwner;
         const Objects* mObjects;
         std::string mSourceHash;
-        std::uint32_t mBodyRecord, mNodeRecord;
-        std::uint16_t mCollisionFlags;
+        std::vector<std::tuple<std::uint32_t, std::uint32_t, std::uint16_t>> mBodies;
         std::optional<std::uint32_t> mReferenceRoot;
         std::optional<std::uint32_t> mReferenceAssetRoot;
         std::optional<std::uint32_t> mReferenceScabbard;

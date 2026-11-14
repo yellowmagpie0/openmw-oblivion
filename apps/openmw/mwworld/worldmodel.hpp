@@ -17,6 +17,7 @@
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadmisc.hpp>
+#include <components/esm4/loadclot.hpp>
 #include <components/misc/algorithm.hpp>
 
 #include "cellstore.hpp"
@@ -183,7 +184,8 @@ namespace MWWorld
         // Native weapons, shields and ordinary miscellaneous props share admission.
         using LooseEquipmentReference = std::variant<std::reference_wrapper<const LiveCellRef<ESM4::Weapon>>,
             std::reference_wrapper<const LiveCellRef<ESM4::Armor>>,
-            std::reference_wrapper<const LiveCellRef<ESM4::MiscItem>>>;
+            std::reference_wrapper<const LiveCellRef<ESM4::MiscItem>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Clothing>>>;
         struct LooseWeaponAdmission
         {
             CellStore& mCell;

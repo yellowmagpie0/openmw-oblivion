@@ -21,7 +21,8 @@ namespace MWWorld
             // Destroy borrowed resource preparations before their private node.
             std::variant<std::unique_ptr<CellStore::PreparedInsertion<ESM4::Weapon>>,
                 std::unique_ptr<CellStore::PreparedInsertion<ESM4::Armor>>,
-                std::unique_ptr<CellStore::PreparedInsertion<ESM4::MiscItem>>> mCell;
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::MiscItem>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Clothing>>> mCell;
             CellStore* mOwner = nullptr;
             MWRender::Objects* mObjects = nullptr;
             std::unique_ptr<MWRender::Objects::PreparedModel> mModel;
@@ -212,8 +213,8 @@ namespace MWWorld
                     throw std::invalid_argument("loose weapon admission requires a live enabled instance");
                 if (const auto condition = reference.mRef.getNativeItemCondition())
                 {
-                    if constexpr (std::is_same_v<Record, ESM4::MiscItem>)
-                        throw std::invalid_argument("loose miscellaneous prop cannot have durability");
+                    if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Clothing>)
+                        throw std::invalid_argument("loose miscellaneous prop/clothing cannot have durability");
                     else if (!std::isfinite(*condition) || *condition < 0
                         || reference.mBase->mData.health == 0 || *condition > reference.mBase->mData.health)
                         throw std::invalid_argument("loose weapon condition exceeds native base health");

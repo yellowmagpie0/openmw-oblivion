@@ -1344,10 +1344,14 @@ namespace ESM4
 
     void RuntimeLooseWeapon::validate() const
     {
-        validatePhysicalBodies(mBase, mModel, mAssetHash, {mBody});
-        if (!mBody.mNativePackedVelocity || mBody.mNativeMotion != RuntimeRagdollMotion::Dynamic
-            || !std::isfinite(mPhysicalScale) || mPhysicalScale <= 0)
-            throw std::runtime_error("Incomplete or invalid TES4 loose weapon physics");
+        std::vector<RuntimeRagdollBody> bodies{mBody};
+        bodies.insert(bodies.end(), mAdditionalBodies.begin(), mAdditionalBodies.end());
+        validatePhysicalBodies(mBase, mModel, mAssetHash, bodies);
+        for (const auto& body : bodies)
+            if (!body.mNativePackedVelocity || body.mNativeMotion != RuntimeRagdollMotion::Dynamic)
+                throw std::runtime_error("Incomplete or invalid TES4 loose item body physics");
+        if (!std::isfinite(mPhysicalScale) || mPhysicalScale <= 0)
+            throw std::runtime_error("Invalid TES4 loose item physical scale");
         if (mRootLocal)
         {
             RuntimeRagdollBody root;
@@ -2395,6 +2399,8 @@ namespace ESM4
         for (const auto& [reference, weapon] : mNativeLooseWeapons)
         {
             weapon.validate();
+            if (mVersion < 103 && !weapon.mAdditionalBodies.empty())
+                throw std::runtime_error("Articulated loose item physics requires runtime-state version103");
             const auto owner = actorBases.find(reference);
             if (reference.isNull() || owner == actorBases.end() || owner->second != weapon.mBase
                 || nativeActors.contains(reference) || reference == mPlayer.mReference)
@@ -4088,21 +4094,28 @@ namespace ESM4
                 writer.string(weapon.mAssetHash);
                 writer.floating(weapon.mPhysicalScale);
                 writer.integer(weapon.mSceneCollisionFlags);
-                const auto& body = weapon.mBody;
-                writer.integer(body.mRecord);
-                writer.integer(body.mNodeRecord);
-                for (float value : body.mRotation) writer.floating(value);
-                for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
-                    for (float value : vector) writer.floating(value);
-                for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
-                    for (float value : vector) writer.floating(value);
-                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*body.mNativeMotion));
+                const auto writeBody = [&](const RuntimeRagdollBody& body) {
+                    writer.integer(body.mRecord);
+                    writer.integer(body.mNodeRecord);
+                    for (float value : body.mRotation) writer.floating(value);
+                    for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
+                        for (float value : vector) writer.floating(value);
+                    for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
+                        for (float value : vector) writer.floating(value);
+                    writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*body.mNativeMotion));
+                };
+                writeBody(weapon.mBody);
                 writer.integer<std::uint8_t>(weapon.mRootLocal.has_value());
                 if (weapon.mRootLocal)
                 {
                     for (float value : weapon.mRootLocal->mRotation) writer.floating(value);
                     for (float value : weapon.mRootLocal->mPosition) writer.floating(value);
                     writer.floating(weapon.mRootLocal->mScale);
+                }
+                if (mVersion >= 103)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(weapon.mAdditionalBodies.size()));
+                    for (const auto& body : weapon.mAdditionalBodies) writeBody(body);
                 }
             }
         }
@@ -5508,16 +5521,18 @@ namespace ESM4
                 weapon.mAssetHash = reader.string();
                 weapon.mPhysicalScale = reader.float32();
                 weapon.mSceneCollisionFlags = reader.integer<std::uint16_t>();
-                auto& body = weapon.mBody;
-                body.mRecord = reader.integer<std::uint32_t>();
-                body.mNodeRecord = reader.integer<std::uint32_t>();
-                for (float& value : body.mRotation) value = reader.float32();
-                for (auto* vector : {&body.mPosition, &body.mLinearVelocity, &body.mAngularVelocity})
-                    for (float& value : *vector) value = reader.float32();
-                body.mNativePackedVelocity.emplace();
-                for (auto* vector : {&body.mNativePackedVelocity->mLinear, &body.mNativePackedVelocity->mAngular})
-                    for (float& value : *vector) value = reader.float32();
-                body.mNativeMotion = static_cast<RuntimeRagdollMotion>(reader.integer<std::uint8_t>());
+                const auto readBody = [&](RuntimeRagdollBody& body) {
+                    body.mRecord = reader.integer<std::uint32_t>();
+                    body.mNodeRecord = reader.integer<std::uint32_t>();
+                    for (float& value : body.mRotation) value = reader.float32();
+                    for (auto* vector : {&body.mPosition, &body.mLinearVelocity, &body.mAngularVelocity})
+                        for (float& value : *vector) value = reader.float32();
+                    body.mNativePackedVelocity.emplace();
+                    for (auto* vector : {&body.mNativePackedVelocity->mLinear, &body.mNativePackedVelocity->mAngular})
+                        for (float& value : *vector) value = reader.float32();
+                    body.mNativeMotion = static_cast<RuntimeRagdollMotion>(reader.integer<std::uint8_t>());
+                };
+                readBody(weapon.mBody);
                 const auto root = reader.integer<std::uint8_t>();
                 if (root > 1) throw std::runtime_error("Invalid TES4 loose weapon root marker");
                 if (root)
@@ -5526,6 +5541,12 @@ namespace ESM4
                     for (float& value : weapon.mRootLocal->mRotation) value = reader.float32();
                     for (float& value : weapon.mRootLocal->mPosition) value = reader.float32();
                     weapon.mRootLocal->mScale = reader.float32();
+                }
+                if (result.mVersion >= 103)
+                {
+                    const auto extraCount = reader.count();
+                    weapon.mAdditionalBodies.resize(extraCount);
+                    for (auto& body : weapon.mAdditionalBodies) readBody(body);
                 }
                 if (!result.mNativeLooseWeapons.emplace(std::move(reference), std::move(weapon)).second)
                     throw std::runtime_error("Duplicate TES4 loose weapon reference");
@@ -7279,15 +7300,25 @@ namespace ESM4
                     << "\",\"asset_hash\":\"" << weapon.mAssetHash << "\",\"physical_scale\":";
                 scalar(weapon.mPhysicalScale);
                 stream << ",\"scene_collision_flags\":" << weapon.mSceneCollisionFlags;
-                const auto& body = weapon.mBody;
-                stream << ",\"body\":{\"record\":" << body.mRecord << ",\"node_record\":" << body.mNodeRecord
-                    << ",\"rotation\":"; vector(body.mRotation);
-                stream << ",\"position\":"; vector(body.mPosition);
-                stream << ",\"linear_velocity\":"; vector(body.mLinearVelocity);
-                stream << ",\"angular_velocity\":"; vector(body.mAngularVelocity);
-                stream << ",\"native_packed_velocity\":{\"linear\":"; vector(body.mNativePackedVelocity->mLinear);
-                stream << ",\"angular\":"; vector(body.mNativePackedVelocity->mAngular);
-                stream << "},\"native_motion\":" << static_cast<unsigned>(*body.mNativeMotion) << '}';
+                const auto writeBody = [&](const RuntimeRagdollBody& body) {
+                    stream << "{\"record\":" << body.mRecord << ",\"node_record\":" << body.mNodeRecord
+                        << ",\"rotation\":"; vector(body.mRotation);
+                    stream << ",\"position\":"; vector(body.mPosition);
+                    stream << ",\"linear_velocity\":"; vector(body.mLinearVelocity);
+                    stream << ",\"angular_velocity\":"; vector(body.mAngularVelocity);
+                    stream << ",\"native_packed_velocity\":{\"linear\":"; vector(body.mNativePackedVelocity->mLinear);
+                    stream << ",\"angular\":"; vector(body.mNativePackedVelocity->mAngular);
+                    stream << "},\"native_motion\":" << static_cast<unsigned>(*body.mNativeMotion) << '}';
+                };
+                stream << ",\"body\":"; writeBody(weapon.mBody);
+                if (mVersion >= 103 && !weapon.mAdditionalBodies.empty())
+                {
+                    stream << ",\"additional_bodies\":[";
+                    bool firstBody = true;
+                    for (const auto& body : weapon.mAdditionalBodies)
+                    { if (!firstBody) stream << ','; firstBody = false; writeBody(body); }
+                    stream << ']';
+                }
                 if (weapon.mRootLocal)
                 {
                     stream << ",\"root_local\":{\"rotation\":"; vector(weapon.mRootLocal->mRotation);

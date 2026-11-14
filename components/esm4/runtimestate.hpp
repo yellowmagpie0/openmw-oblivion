@@ -78,7 +78,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 102;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 103;
 
     struct RuntimeContentIdentity
     {
@@ -607,6 +607,8 @@ namespace ESM4
         std::string mModel;
         std::string mAssetHash; // Same opaque NIF hash encoding as RuntimeActorRagdoll.
         RuntimeRagdollBody mBody;
+        // v103: additional authored loose-item bodies; constraints reload from the identified asset.
+        std::vector<RuntimeRagdollBody> mAdditionalBodies;
         // Shape/mass admission scale can differ from the current visible scale.
         float mPhysicalScale = 1;
         std::uint16_t mSceneCollisionFlags = 0;

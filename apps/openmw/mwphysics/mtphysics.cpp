@@ -790,12 +790,12 @@ namespace MWPhysics
             return result;
         }
 
-        Nif::NiTransform targetPose() const
+        Nif::NiTransform targetPose(std::size_t index = 0) const
         {
             if (mLengthScale != NifBullet::RagdollNativeLengthScale)
                 throw std::invalid_argument("loose native scene target requires the native length scale");
-            const auto& body = mDefinition.mBodies.front();
-            const auto pose = mPhysics.capture().front().mPose;
+            const auto& body = mDefinition.mBodies.at(index);
+            const auto pose = mPhysics.capture().at(index).mPose;
             const auto& origin = pose.getOrigin();
             const auto rotation = pose.getRotation();
             NifBullet::RagdollNativeTargetPose physical{
@@ -856,11 +856,12 @@ namespace MWPhysics
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
         if (!world || ptr.isEmpty() || ptr.getClass().isActor() || ptr.getContainerStore()
-            || ptr.getCellRef().getCount() <= 0 || definition.mBodies.size() != 1
-            || !definition.mJoints.empty() || definition.mBodies[0].mBlend
-            || definition.mBodies[0].mBlendController
+            || ptr.getCellRef().getCount() <= 0 || definition.mBodies.empty()
+            || std::any_of(definition.mBodies.begin(), definition.mBodies.end(), [](const auto& body) {
+                return body.mBlend || body.mBlendController || body.mFixed;
+            })
             || mLooseObjects.contains(ptr.mRef) || mActorRagdolls.contains(ptr.mRef) || mAnimatedReferenceBodies.contains(ptr.mRef))
-            throw std::invalid_argument("loose physics requires one live non-actor body in a native World");
+            throw std::invalid_argument("loose physics requires a live dynamic non-actor graph in a native World");
         if (sceneInitialization != LooseObjectSceneInitialization::SuppliedPhysicalPose
             && sceneInitialization != LooseObjectSceneInitialization::PendingReference)
             throw std::invalid_argument("unknown loose scene initialization");
@@ -904,6 +905,7 @@ namespace MWPhysics
             result.mModel = snapshot.mModel;
             result.mAssetHash = snapshot.mAssetHash;
             result.mBodies = {snapshot.mBody};
+            result.mBodies.insert(result.mBodies.end(), snapshot.mAdditionalBodies.begin(), snapshot.mAdditionalBodies.end());
             return result;
         }
     }
@@ -914,7 +916,7 @@ namespace MWPhysics
         int group, int mask, std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding)
     {
         snapshot.validate();
-        if (definition.mBodies.size() != 1
+        if (definition.mBodies.size() != 1 + snapshot.mAdditionalBodies.size()
             || (snapshot.mRootLocal && definition.mReferenceRoot != definition.mBodies.front().mNodeRecord)
             || ((snapshot.mSceneCollisionFlags ^ definition.mBodies.front().mCollisionFlags) & ~0x4cu))
             throw std::invalid_argument("loose snapshot scene flags do not match the native asset");
@@ -967,6 +969,7 @@ namespace MWPhysics
         result.mModel = physical.mModel;
         result.mAssetHash = physical.mAssetHash;
         result.mBody = physical.mBodies.front();
+        result.mAdditionalBodies.assign(physical.mBodies.begin() + 1, physical.mBodies.end());
         result.mPhysicalScale = object.mReferenceScale;
         result.mSceneCollisionFlags = object.mSceneCollisionFlags;
         if (object.mRootLocal)
@@ -1014,19 +1017,25 @@ namespace MWPhysics
         // Preparation may precede its scene dependency. Physical publication
         // requires that exact model to have been published successfully.
         if (!owned.validSceneBinding(true)) return false;
-        auto* body = owned.mPhysics.collisionObjects()[0];
-        // Complete routing allocation before the final fallible physics write.
-        const auto [entry, inserted] = mCollisionObjects.insert(body);
-        if (!inserted) return false;
+        // Register every child for collision routing before publishing any of
+        // the graph. Allocation or World admission failure retires the prefix.
+        std::vector<btCollisionObject*> inserted;
+        inserted.reserve(owned.mPhysics.collisionObjects().size());
         try
         {
+            for (auto* body : owned.mPhysics.collisionObjects())
+            {
+                if (!mCollisionObjects.insert(body).second)
+                    throw std::invalid_argument("loose physics collision identity already registered");
+                inserted.push_back(body);
+            }
             auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
             if (!world || !owned.mPhysics.publish(*world))
                 throw std::invalid_argument("loose physics graph publication rejected");
         }
         catch (...)
         {
-            mCollisionObjects.erase(entry);
+            for (auto* body : inserted) mCollisionObjects.erase(body);
             throw;
         }
         // Prepared map node insertion allocates nothing; all duplicate/owner
@@ -1152,6 +1161,25 @@ namespace MWPhysics
         if (found == mLooseObjects.end())
             throw std::invalid_argument("reference has no loose physics");
         return found->second->rootPose(ptr.getCellRef().getScale());
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> PhysicsTaskScheduler::captureLooseObjectWorldBones(
+        const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
+        const auto& object = *found->second;
+        if (!object.validSceneBinding(true))
+            throw std::invalid_argument("loose physics scene binding is retired or replaced");
+        std::vector<NifBullet::RagdollBoneWorldPose> result;
+        // Single-body references retain their existing root publication path.
+        if (object.mDefinition.mBodies.size() == 1) return result;
+        result.reserve(object.mDefinition.mBodies.size());
+        for (std::size_t i = 0; i < object.mDefinition.mBodies.size(); ++i)
+            result.push_back({object.mDefinition.mBodies[i].mNodeRecord, object.targetPose(i).toMatrix()});
+        return result;
     }
 
     NifBullet::RagdollBonePoseWriteback PhysicsTaskScheduler::captureLooseObjectRootFrame(

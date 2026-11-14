@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 102
+CURRENT_VERSION = 103
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1614,7 +1614,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     for entry in loose_weapons:
         fields = {"reference", "base", "model", "asset_hash", "physical_scale", "scene_collision_flags", "body"}
         if (not isinstance(entry, dict) or not fields <= set(entry)
-                or not set(entry) <= fields | {"root_local"}):
+                or not set(entry) <= fields | {"root_local", "additional_bodies"}):
             raise RuntimeStateError("Invalid TES4 loose weapon snapshot")
         key, base = entry["reference"], entry["base"]
         native_key(key)
@@ -1623,8 +1623,12 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or key in native_keys or key == player["reference"]):
             raise RuntimeStateError("Duplicate, dangling, actor or mismatched TES4 loose weapon owner")
         loose_keys.add(key)
-        validate_physical_bodies({**entry, "bodies": [entry["body"]]})
-        if ("native_packed_velocity" not in entry["body"] or entry["body"].get("native_motion") != 1
+        extra = check_collection(entry.get("additional_bodies", []), "additional loose bodies")
+        if version < 103 and extra:
+            raise RuntimeStateError("Articulated loose item physics requires version103")
+        bodies = [entry["body"], *extra]
+        validate_physical_bodies({**entry, "bodies": bodies})
+        if (any("native_packed_velocity" not in body or body.get("native_motion") != 1 for body in bodies)
                 or native_float(entry["physical_scale"]) <= 0):
             raise RuntimeStateError("Incomplete or invalid TES4 loose weapon physics")
         flags = entry["scene_collision_flags"]
@@ -3600,13 +3604,15 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             entry = {field: reader.string() for field in ("reference", "base", "model", "asset_hash")}
             entry["physical_scale"] = reader.unpack("<f")
             entry["scene_collision_flags"] = reader.unpack("<H")
-            body = {"record": reader.unpack("<I"), "node_record": reader.unpack("<I")}
-            for field, size in (("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)):
-                body[field] = [reader.unpack("<f") for _ in range(size)]
-            body["native_packed_velocity"] = {field: [reader.unpack("<f") for _ in range(4)]
-                                              for field in ("linear", "angular")}
-            body["native_motion"] = reader.unpack("<B")
-            entry["body"] = body
+            def read_loose_body():
+                body = {"record": reader.unpack("<I"), "node_record": reader.unpack("<I")}
+                for field, size in (("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)):
+                    body[field] = [reader.unpack("<f") for _ in range(size)]
+                body["native_packed_velocity"] = {field: [reader.unpack("<f") for _ in range(4)]
+                                                  for field in ("linear", "angular")}
+                body["native_motion"] = reader.unpack("<B")
+                return body
+            entry["body"] = read_loose_body()
             root = reader.unpack("<B")
             if root > 1:
                 raise RuntimeStateError("Invalid TES4 loose weapon root marker")
@@ -3614,6 +3620,9 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 entry["root_local"] = {"rotation": [reader.unpack("<f") for _ in range(9)],
                                        "position": [reader.unpack("<f") for _ in range(3)],
                                        "scale": reader.unpack("<f")}
+            if version >= 103:
+                extra = [read_loose_body() for _ in range(reader.count())]
+                if extra: entry["additional_bodies"] = extra
             result["native_loose_weapons"].append(entry)
     if version >= 62:
         def movement_boolean():
@@ -4538,20 +4547,25 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.string(entry[field])
             writer.pack("<f", entry["physical_scale"])
             writer.pack("<H", entry["scene_collision_flags"])
-            body = entry["body"]
-            writer.pack("<I", body["record"])
-            writer.pack("<I", body["node_record"])
-            for field in ("rotation", "position", "linear_velocity", "angular_velocity"):
-                for value in body[field]: writer.pack("<f", value)
-            for field in ("linear", "angular"):
-                for value in body["native_packed_velocity"][field]: writer.pack("<f", value)
-            writer.pack("<B", body["native_motion"])
+            def write_loose_body(body):
+                writer.pack("<I", body["record"])
+                writer.pack("<I", body["node_record"])
+                for field in ("rotation", "position", "linear_velocity", "angular_velocity"):
+                    for value in body[field]: writer.pack("<f", value)
+                for field in ("linear", "angular"):
+                    for value in body["native_packed_velocity"][field]: writer.pack("<f", value)
+                writer.pack("<B", body["native_motion"])
+            write_loose_body(entry["body"])
             writer.pack("<B", int("root_local" in entry))
             if "root_local" in entry:
                 root = entry["root_local"]
                 for field in ("rotation", "position"):
                     for value in root[field]: writer.pack("<f", value)
                 writer.pack("<f", root["scale"])
+            if version >= 103:
+                extra = entry.get("additional_bodies", [])
+                writer.pack("<I", len(extra))
+                for body in extra: write_loose_body(body)
     if version >= 62:
         movement = state.get("native_movement")
         writer.pack("<B", int(movement is not None))

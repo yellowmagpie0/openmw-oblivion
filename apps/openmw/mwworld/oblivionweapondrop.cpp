@@ -37,6 +37,7 @@
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollbonepose.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
+#include <components/sceneutil/actorragdollpose.hpp>
 #include <bit>
 #include <cmath>
 #include <set>
@@ -54,6 +55,7 @@ namespace MWWorld
             if (ptr.isEmpty()) return nullptr;
             if (ptr.getType() == ESM::REC_WEAP4) return ptr.get<ESM4::Weapon>()->mBase;
             if (ptr.getType() == ESM::REC_MISC4) return ptr.get<ESM4::MiscItem>()->mBase;
+            if (ptr.getType() == ESM::REC_CLOT4) return ptr.get<ESM4::Clothing>()->mBase;
             if (ptr.getType() == ESM::REC_ARMO4)
             {
                 const auto* armor = ptr.get<ESM4::Armor>()->mBase;
@@ -77,6 +79,12 @@ namespace MWWorld
                 return store.get<ESM4::MiscItem>().search(base->mId) == base
                     ? store.get<ESM4::MiscItem>().findFormKey(base->mId) : std::nullopt;
             }
+            if (ptr.getType() == ESM::REC_CLOT4)
+            {
+                const auto* base = ptr.get<ESM4::Clothing>()->mBase;
+                return store.get<ESM4::Clothing>().search(base->mId) == base
+                    ? store.get<ESM4::Clothing>().findFormKey(base->mId) : std::nullopt;
+            }
             const auto* base = ptr.get<ESM4::Armor>()->mBase;
             return store.get<ESM4::Armor>().search(base->mId) == base
                 ? store.get<ESM4::Armor>().findFormKey(base->mId) : std::nullopt;
@@ -93,12 +101,13 @@ namespace MWWorld
             const auto* weapon = mStore.get<ESM4::Weapon>().search(snapshot.mBase);
             const auto* armor = mStore.get<ESM4::Armor>().search(snapshot.mBase);
             const auto* misc = mStore.get<ESM4::MiscItem>().search(snapshot.mBase);
-            if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr) > 1)
+            const auto* clothing = mStore.get<ESM4::Clothing>().search(snapshot.mBase);
+            if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr) + int(clothing != nullptr) > 1)
                 throw std::runtime_error("loose equipment base has ambiguous native types");
             const ESM::Path* selected = nullptr;
             if (weapon) selected = &weapon->mModel;
             else if (misc) selected = &misc->mModel;
-            else if (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield))
+            else if (clothing || (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield)))
             {
                 const auto found = references.find(key);
                 if (found == references.end() || found->second->mBase != snapshot.mBase)
@@ -129,7 +138,9 @@ namespace MWWorld
                         throw std::runtime_error("loose shield owner is unresolved");
                 }
                 const auto* npc = mStore.get<ESM4::Npc>().search(owner);
-                selected = &ESM4::bipedModelForSex(armor->mModelMaleWorld,armor->mModelFemaleWorld,
+                selected = &ESM4::bipedModelForSex(
+                    clothing ? clothing->mModelMaleWorld : armor->mModelMaleWorld,
+                    clothing ? clothing->mModelFemaleWorld : armor->mModelFemaleWorld,
                     npc && (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female));
             }
             if (!selected || selected->empty()
@@ -279,6 +290,7 @@ namespace MWWorld
             ESM::Position mPosition;
             std::shared_ptr<const MWRender::LooseObjectSceneBinding> mBinding;
             osg::ref_ptr<MWRender::ObjectAnimation> mAnimation;
+            std::vector<NifBullet::RagdollBoneWorldPose> mBones;
         };
         std::vector<Pose> poses;
         const auto owners = physics.looseObjectOwners();
@@ -316,7 +328,8 @@ namespace MWWorld
                 if (frame.mWorldChangeMask & 1) position.pos[axis] = placement.mPosition.pos[axis];
                 if (frame.mWorldChangeMask & 2) position.rot[axis] = placement.mPosition.rot[axis];
             }
-            poses.push_back({ptr,frame,root,position,binding,std::move(animation)});
+            poses.push_back({ptr,frame,root,position,binding,std::move(animation),
+                physics.captureLooseObjectWorldBones(ptr)});
         }
         // Advance retained locals only after every reference/frame is valid,
         // before cell migration can dispatch any external observers.
@@ -343,6 +356,12 @@ namespace MWWorld
                 // Euler projection. Reference scale remains on this node.
                 node->setPosition(pose.mFrame.mWorld.mTranslation);
                 node->setAttitude(pose.mRoot.getRotate());
+            }
+            if (!pose.mBones.empty())
+            {
+                if (!pose.mAnimation || !pose.mAnimation->getLoosePhysicalPose())
+                    throw std::logic_error("articulated loose graph has no current renderer binding");
+                pose.mAnimation->getLoosePhysicalPose()->applyWorldBones(pose.mBones, pose.mFrame.mWorld);
             }
         }
     }
@@ -622,14 +641,15 @@ namespace MWWorld
         const ESM::RefId sourceId = item.getCellRef().getRefId();
         const auto admit = [&]<class Record>(const Record* baseDefinition) -> std::optional<Ptr> {
             constexpr bool isWeapon = std::is_same_v<Record, ESM4::Weapon>;
-            constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP : ESM4::REC_MISC;
+            constexpr bool isClothing = std::is_same_v<Record, ESM4::Clothing>;
+            constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP : isClothing ? ESM4::REC_CLOT : ESM4::REC_MISC;
             if (!baseDefinition) return std::nullopt;
             const auto health = [&] {
                 if constexpr (isWeapon) return baseDefinition->mData.health;
                 else return std::uint32_t(0);
             };
             const auto enchantment = [&] {
-                if constexpr (isWeapon) return baseDefinition->mEnchantment;
+                if constexpr (isWeapon || isClothing) return baseDefinition->mEnchantment;
                 else return ESM::FormId{};
             };
             // Inventory drops and combat disarms share the native loose-body owner.
@@ -667,7 +687,16 @@ namespace MWWorld
             droppedItems.mItems->insert(droppedItems.mItems->begin(), keys->key());
             actorAfter.setNativeDropRelations(std::move(droppedItems));
             CellStore* actorCell = actor.getCell();
-            const auto modelBefore = baseDefinition->mModel.getOriginal();
+            const auto modelState = [&] {
+                std::array<std::string, 3> paths{baseDefinition->mModel.getOriginal(), {}, {}};
+                if constexpr (isClothing)
+                {
+                    paths[1] = baseDefinition->mModelMaleWorld.getOriginal();
+                    paths[2] = baseDefinition->mModelFemaleWorld.getOriginal();
+                }
+                return paths;
+            };
+            const auto modelBefore = modelState();
             const auto flagsBefore = baseDefinition->mFlags;
             const auto healthBefore = health();
             const auto scriptBefore = baseDefinition->mScriptId;
@@ -678,7 +707,7 @@ namespace MWWorld
                 if (!keys->isValid() || getPlayerPtr() != actor || actor.getCell() != actorCell
                     || !removal->isValid() || mStore.get<Record>().search(sourceId) != baseDefinition) return false;
                 const auto& live = item.getCellRef();
-                return baseDefinition->mModel.getOriginal() == modelBefore && baseDefinition->mFlags == flagsBefore
+                return modelState() == modelBefore && baseDefinition->mFlags == flagsBefore
                     && health() == healthBefore && baseDefinition->mScriptId == scriptBefore
                     && enchantment() == enchantmentBefore
                     && live.getOwner() == sourceBefore.getOwner()
@@ -732,9 +761,9 @@ namespace MWWorld
             const auto model = preview.getClass().getCorrectedModel(preview);
             const auto file = mResourceSystem->getNifFileManager()->get(VFS::Path::Normalized(model));
             const auto definition = NifBullet::loadWeaponReferenceRagdollDefinition(*file);
-            // Multi-body miscellaneous props keep their existing path until they
-            // have their own articulated scene/save acceptance.
-            if constexpr (!isWeapon)
+            // Multi-body miscellaneous props retain their existing path; clothing
+            // uses its authored articulated ground model and constraints.
+            if constexpr (!isWeapon && !isClothing)
                 if (definition.mBodies.size() != 1 || !definition.mJoints.empty()) return std::nullopt;
             if (definition.mBodies.empty() || !definition.mReferenceRoot || definition.mSourceHash != file->mHash)
                 throw std::invalid_argument("native inventory loose item drop has no identified world body");
@@ -786,7 +815,8 @@ namespace MWWorld
                 [](void* context) noexcept { static_cast<Hooks*>(context)->mPublish(); }});
             if (dropped.isEmpty()) throw std::logic_error("validated native inventory weapon admission rejected");
             Log(Debug::Info) << (isWeapon ? "TES4 inventory weapon dropped: base="
-                                        : "TES4 inventory misc dropped: base=") << base->serialize()
+                                        : isClothing ? "TES4 inventory clothing dropped: base="
+                                                     : "TES4 inventory misc dropped: base=") << base->serialize()
                 << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f);
             removal->notify();
             if (identity.expired() || getPlayerPtr() != actor) return dropped;
@@ -802,6 +832,8 @@ namespace MWWorld
             return admit(mStore.get<ESM4::Weapon>().search(sourceId));
         if (item.getType() == ESM::REC_MISC)
             return admit(mStore.get<ESM4::MiscItem>().search(sourceId));
+        if (item.getType() == ESM::REC_CLOT)
+            return admit(mStore.get<ESM4::Clothing>().search(sourceId));
         return std::nullopt;
     }
 

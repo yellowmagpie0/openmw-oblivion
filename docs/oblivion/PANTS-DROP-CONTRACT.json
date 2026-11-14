@@ -1,0 +1,52 @@
+{
+  "status": "Bounded genuine three-body clothing course complete in normal and instrumented games; all focused/component/engine/Python gates passed. Broader M15/M18 remain open.",
+  "milestones": [
+    "M15 articulated ordinary ground-item physics and persistence",
+    "M18 inventory/world transfer"
+  ],
+  "content": {
+    "base": "content:oblivion.esm:027318",
+    "name": "Sack Cloth Pants",
+    "quantity": 1,
+    "weight": 1,
+    "condition": -1,
+    "charge": -1,
+    "script": null,
+    "enchantment": null
+  },
+  "source": {
+    "path": "build/oblivion-compat/bone-drop/normal-bone-cave-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "8e052c5e1644c654d4160da34b822db364152560eb9cb1698e55903dfe6210f7",
+    "branch": "Separate Cairn/Wellspring Cave continuation; preserve Health70.480003, Endurance55, all27 skills/33 credits, MS39stage0 and Nirnroot absence",
+    "allocator": 2
+  },
+  "acceptance": [
+    "Actual ordinary drop/debit of carried unequipped singleton pants; typed clothing key2 with male ground model, three original dynamic bodies and two original constraints.",
+    "Render each physical clothing node, preserve complete body poses/velocities through cold world re-save, ordinary visible pickup and cold inventory load in normal and instrumented games.",
+    "Preserve all unrelated inventory/equipment/health/skills/quests/owners/death state; encumbrance changes by original weight1 only.",
+    "Schema103 reads older single-body states without extras and writes additional bodies explicitly; identify model/hash/body graph before restoration, reject mismatched/corrupt state without publication.",
+    "Prepared registration/debit/scene publication and complete child collision routing/removal; existing Bone/weapon identity and metadata still work."
+  ],
+  "baseline": {
+    "root": "build/oblivion-compat/clothing-drop",
+    "observed": "Legacy pants drop/two cold world saves/walk-save passed. No native articulated physical owner; no disappearance/save failure claim."
+  },
+  "limits": [
+    "Ordinary unequipped unscripted unenchanted singleton clothing, dynamic bodies without blend controllers; not all clothing or equipped transfer.",
+    "Constraints reconstruct from hash-identified authored asset; no mutable controller or runtime constraint editing support.",
+    "Reasonable physical behavior and state ownership; no exact original trajectory arithmetic requirement.",
+    "Existing coastal geometry and old legacy object migration remain separate."
+  ],
+  "normal_continuation": {
+    "save_sha256": "432ff1ca7e37288558ec27281a2056925e6eaf6d5f7de2198143a6b02850c4fc",
+    "next_dynamic_serial": 3,
+    "credited_deaths": 33,
+    "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+  },
+  "sanitized_continuation": {
+    "save_sha256": "fdc7ed1042dd05fbccc6a25b4d0060fe42419e809cd55645370e4b69364226eb",
+    "next_dynamic_serial": 3,
+    "credited_deaths": 33,
+    "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+  }
+}
