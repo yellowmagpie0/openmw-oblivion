@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "name": "Original Wellspring Sack native nearby-container discovery",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\nat 0 command content:oblivion.esm:04e936 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal t=0\nreturn {{engineHandlers={{onFrame=function(dt)\n t=t+dt;if t<1 then return end;t=0\n local found=0\n for _,obj in ipairs(nearby.containers) do\n  if obj.recordId==core.getFormId('Oblivion.esm',0x24945) then\n   found=found+1\n   assert(types.ESM4Container.objectIsInstance(obj),'wrong native container type')\n   assert((obj.position-util.vector3(-111.7272797,-1847.4641113,-305.2616272)):length()<.01,'wrong original sack position')\n   local box=obj:getBoundingBox()\n   assert(box.halfSize.x>0 and box.halfSize.y>0 and box.halfSize.z>0,'missing original sack bounds')\n  end\n end\n assert(found==1,'original enabled sack missing or duplicated: '..found)\n print('NativeContainerDiscovery count=1 position=true bounds=true type=ESM4Container')\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "NativeContainerDiscovery count=1",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "NativeContainerDiscovery count=1 position=true bounds=true type=ESM4Container",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "fWortChanceValue",
+    "Water Breathing",
+    "Dangling inventory script instance",
+    "Failed to save game"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "native-container-discovery",
+    "OPENMW_M15_EPOCH": "1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

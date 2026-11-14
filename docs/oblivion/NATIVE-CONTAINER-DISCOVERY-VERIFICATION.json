@@ -1,0 +1,336 @@
+{
+  "status": "Accepted bounded native CONT discovery through real original Wellspring Sack in normal and ASan/UBSan games.",
+  "parent_commit": "7cb92ac56a91b7fdd05f14f38552667dfa3145f0",
+  "contract": "NATIVE-CONTAINER-DISCOVERY-CONTRACT.json",
+  "implementation": "ObjectLists::chooseGroup includes REC_CONT4 alongside the existing TES3 container classification; both scene addition and removal use this choice.",
+  "validation_layers": {
+    "structural": "No plugin or authoring changes; original CONT024945 / placed06efcf remains enabled, unlocked and untouched.",
+    "compiler": [
+      {
+        "path": "build/oblivion-compat/native-container-discovery/focused-normal-01/verification.json",
+        "sha256": "1f27a0d71e62415a16cbbd764908e0ac4dcb8b15abdddde3b5e50e09c1454506",
+        "source": {
+          "head": "7cb92ac56a91b7fdd05f14f38552667dfa3145f0",
+          "source_fingerprint": "80775117e979e143af6c338c9fc31f3d985027fe5f5a248f8f588191b24e5d52"
+        },
+        "results": {
+          "engine": {
+            "executed": 27,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Lua*Scene*:*Lua*Admission*:*Retained*:*Autostart*",
+            "binary_sha256": "da34d854298708a59840b28d262dc99670ced23235bdee7faa2971db5bde396b",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "dcf264809a9abf7471161eb6e230c12325eebd74f349cead1cf5917ea03dbc87",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "a190d3f96e821245c589ce0b2b296534cac576d8125f856271d6d7e5549431d7"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/native-container-discovery/focused-sanitized-01/verification.json",
+        "sha256": "c933d06084f09a89a97df07ca8afac07fefd6d3d75a4767b39c69522608f46d0",
+        "source": {
+          "head": "7cb92ac56a91b7fdd05f14f38552667dfa3145f0",
+          "source_fingerprint": "80775117e979e143af6c338c9fc31f3d985027fe5f5a248f8f588191b24e5d52"
+        },
+        "results": {
+          "engine": {
+            "executed": 27,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Lua*Scene*:*Lua*Admission*:*Retained*:*Autostart*",
+            "binary_sha256": "bdcaf2c9dffd7db5d709f6f14dce7ed1a37f3e3ff4cc2bd267ef7f496eb8c046",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c3b5adb94d2a7cbb54def6b1b1be52ead08178abe52ba5f848d96832b7f05a81",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/native-container-discovery/integration-normal-01/verification.json",
+        "sha256": "d1dc37fb31db68a12d37542ee2eef884c1b50430e00b87016826e85be99bca12",
+        "source": {
+          "head": "7cb92ac56a91b7fdd05f14f38552667dfa3145f0",
+          "source_fingerprint": "240d98f70c78f79da23f12d2194b7b0baa9fbd15ca37611610b7fbc0aee44177"
+        },
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "da34d854298708a59840b28d262dc99670ced23235bdee7faa2971db5bde396b",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "de7b51f4cfb3f377363aea3c1478de043f84458d6cb4d50e6190b82c8993053f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/native-container-discovery/integration-sanitized-1/verification.json",
+        "sha256": "22027f5356a9b070ebe57365bb54e32babef71a2b1a519ff76d71167c01ae662",
+        "source": {
+          "head": "7cb92ac56a91b7fdd05f14f38552667dfa3145f0",
+          "source_fingerprint": "240d98f70c78f79da23f12d2194b7b0baa9fbd15ca37611610b7fbc0aee44177"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "bdcaf2c9dffd7db5d709f6f14dce7ed1a37f3e3ff4cc2bd267ef7f496eb8c046",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "bcec3e341b035b3e8d391087ddd7179e8970638a32bf7cfb38d88088a1a58ba4",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/native-container-discovery/integration-sanitized-2/verification.json",
+        "sha256": "c95f26d3eef75d6dfe4768892867ff3666cfd0f64598b31ef8d066ee2dfb3e96",
+        "source": {
+          "head": "7cb92ac56a91b7fdd05f14f38552667dfa3145f0",
+          "source_fingerprint": "240d98f70c78f79da23f12d2194b7b0baa9fbd15ca37611610b7fbc0aee44177"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "bdcaf2c9dffd7db5d709f6f14dce7ed1a37f3e3ff4cc2bd267ef7f496eb8c046",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "44921b59c7749a48777409c4bb5ee674625a4a12e99b3a9c211ca1271f9c4c61",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/native-container-discovery/integration-sanitized-3/verification.json",
+        "sha256": "1827a217398c6f1092fa9d063080f5bd81d16b717f4fa71e2ed19ec0e517bfe8",
+        "source": {
+          "head": "7cb92ac56a91b7fdd05f14f38552667dfa3145f0",
+          "source_fingerprint": "240d98f70c78f79da23f12d2194b7b0baa9fbd15ca37611610b7fbc0aee44177"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "bdcaf2c9dffd7db5d709f6f14dce7ed1a37f3e3ff4cc2bd267ef7f496eb8c046",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "f64980719d1bf050f79579f34929301f4f29fa9fd18c10ea48909fb09e24e92f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/native-container-discovery/integration-sanitized-4/verification.json",
+        "sha256": "80f0531e64bfc4bdcef143f27d3a238b86f1af781b042e55c8b68b2151703a68",
+        "source": {
+          "head": "7cb92ac56a91b7fdd05f14f38552667dfa3145f0",
+          "source_fingerprint": "240d98f70c78f79da23f12d2194b7b0baa9fbd15ca37611610b7fbc0aee44177"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "bdcaf2c9dffd7db5d709f6f14dce7ed1a37f3e3ff4cc2bd267ef7f496eb8c046",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "a9a48c3cd3989c97a641f40613caf12ab211fa87e02ee395035f06ec45e9cb61",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "semantic": "Exactly one native ESM4Container with original recordId/position and nonempty model bounds. Save audits preserve the complete carried inventory, equipment/script owners, player values/position, progress, quests, life/deaths, allocator and Sack stock.",
+    "runtime": {
+      "normal-discovery-01": {
+        "audit": "build/oblivion-compat/native-container-discovery/normal-discovery-01/native-container-verification.json",
+        "sha256": "ec1021805d3b2d138c480b6d3bc1ba98cd0a71afe42ca9356bce82706d1aa001",
+        "process": {
+          "pid": 959047,
+          "start_ticks": 19310888,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/native-container-discovery/normal-discovery-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "a1cef56f4f09242277cbf1e989352ff84bbceb380ebe49ecdd5bbbb8ffccbddb"
+        },
+        "input_sha256": "707eaa440f4303699fcb42ddbd6a5f3e5a64edddaf50674f786efe37d2175f78",
+        "save_sha256": "7f68ee5104ac3fd05818a7db59e02b3972df214e07853521f22485926ce973ba"
+      },
+      "normal-discovery-cold-01": {
+        "audit": "build/oblivion-compat/native-container-discovery/normal-discovery-cold-01/native-container-verification.json",
+        "sha256": "d335ca5b855f91c92a1ac9094e46605a568a8a52c60448109b7bf60e7a103b59",
+        "process": {
+          "pid": 959397,
+          "start_ticks": 19319397,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/native-container-discovery/normal-discovery-cold-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/native-container-discovery/normal-discovery-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "a1cef56f4f09242277cbf1e989352ff84bbceb380ebe49ecdd5bbbb8ffccbddb"
+        },
+        "input_sha256": "7f68ee5104ac3fd05818a7db59e02b3972df214e07853521f22485926ce973ba",
+        "save_sha256": "99e782711686f2f8d90f8b2c585e7989e8d1898923a204ed15f86691c187967b"
+      },
+      "sanitized-discovery-03": {
+        "audit": "build/oblivion-compat/native-container-discovery/sanitized-discovery-03/native-container-verification.json",
+        "sha256": "2e7e4d0000975ef48ac5d1cc73a76ee34c7a0e162778291d98c4319ab4c28cd0",
+        "process": {
+          "pid": 969463,
+          "start_ticks": 19365522,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/native-container-discovery/sanitized-discovery-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5e5ea99670b6e09aa4f87a7b2c02a0703792d04a9f7ffbc8b67936a830be9270"
+        },
+        "input_sha256": "707eaa440f4303699fcb42ddbd6a5f3e5a64edddaf50674f786efe37d2175f78",
+        "save_sha256": "f1f1a10b2083bc27f381a7b4d39c17c2d9c8788efa63416a035b2bfbd8ed2a25"
+      },
+      "sanitized-discovery-cold-01": {
+        "audit": "build/oblivion-compat/native-container-discovery/sanitized-discovery-cold-01/native-container-verification.json",
+        "sha256": "7a4c5ae7c7b88e7c4f22b1566fe0974291856a63f8f8c74e1984f27692ed0611",
+        "process": {
+          "pid": 972729,
+          "start_ticks": 19402580,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/native-container-discovery/sanitized-discovery-cold-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/native-container-discovery/sanitized-discovery-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5e5ea99670b6e09aa4f87a7b2c02a0703792d04a9f7ffbc8b67936a830be9270"
+        },
+        "input_sha256": "f1f1a10b2083bc27f381a7b4d39c17c2d9c8788efa63416a035b2bfbd8ed2a25",
+        "save_sha256": "e87d4480ab8037708053a2c1243f1eaee15a0d65616fbfc0c2a46f9d4d3bae02"
+      }
+    }
+  },
+  "sanitized_union": {
+    "path": "build/oblivion-compat/native-container-discovery/sanitized-full-union.json",
+    "executed": 2292,
+    "disjoint": [
+      82,
+      82,
+      82,
+      2046
+    ]
+  },
+  "source_provenance": {
+    "gates_before": "build/oblivion-compat/native-container-discovery/source-runtime-final-before.json",
+    "gates_after": "build/oblivion-compat/native-container-discovery/source-gates-after.json",
+    "runtime_before": "build/oblivion-compat/native-container-discovery/source-final-runtime-before.json",
+    "runtime_after": "build/oblivion-compat/native-container-discovery/source-final-runtime-after.json",
+    "post_gate_change": "Only sanitizer recipe timeout300->1200. The accepted private extended recipe bytes exactly match the final public recipe; C++ and auditor unchanged. This receipt and handoff are written after checks."
+  },
+  "retained_failures": [
+    {
+      "case": "sanitized-discovery-01",
+      "reason": "SDL input preload preceded ASan; process stopped before gameplay. Added explicit known ASan preload."
+    },
+    {
+      "case": "sanitized-discovery-02",
+      "reason": "All actions completed but total300s timeout killed shutdown; rejected. Extended to1200s;03 and cold01 cleanly exit."
+    }
+  ],
+  "scope_limits": [
+    "No full TES4 Container inventory Lua bindings or MCP authoring support.",
+    "No container activation, looting, spawning, enable/disable or cell-transition acceptance in this course.",
+    "Broader M13/M15/M18 acceptance remains open."
+  ],
+  "manifests": [
+    "runtime/original-native-container-discovery.json",
+    "runtime/original-native-container-discovery-sanitized.json"
+  ],
+  "auditor": "../../scripts/verify_native_container_discovery.py"
+}

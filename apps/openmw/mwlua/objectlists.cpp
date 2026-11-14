@@ -143,7 +143,7 @@ namespace MWLua
             return &mActorsInScene;
         if (ptr.mRef->getType() == ESM::REC_DOOR || ptr.mRef->getType() == ESM::REC_DOOR4)
             return &mDoorsInScene;
-        if (typeid(cls) == typeid(MWClass::Container))
+        if (typeid(cls) == typeid(MWClass::Container) || ptr.mRef->getType() == ESM::REC_CONT4)
             return &mContainersInScene;
         if (cls.isItem(ptr) || ptr.mRef->getType() == ESM::REC_LIGH)
             return &mItemsInScene;

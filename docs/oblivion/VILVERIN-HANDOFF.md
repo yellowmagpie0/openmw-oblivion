@@ -4,26 +4,31 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [carried Bonemeal](BONEMEAL-DROP-CONTRACT.json),
-original INGR01ebff. Its existing native static drop/save already retained identity;
-the new path adds the original movable convex bodyT and full cold physical history.
-Ordinary drop1->0, cold world, visible Space pickup0->1 and cold inventory pass in
-normal and instrumented games. Source key10/count1/allocator11 retires after
-pickup. Original body mass0.1 is asset-derived; inventory weight0.2 is conserved.
-No ingredient use, damage timer or Alchemy XP occurs. Eligible scriptless
-singletons try loose admission before existing static ingredient handling;
-scripted Nirnroot keeps its stateful transfer path. Cuirass owner9/condition/
-flags1/1 and all other inventory/progress survive; no native reference9 is invented.
-[Oracle](BONEMEAL-DROP-ORACLE.json) and [receipt](BONEMEAL-DROP-VERIFICATION.json)
-separate original content, structural, compiler, semantic and real runtime layers.
-Fresh342 focused/2292 full engine tests per mode/Python618 pass. Unchanged3301
-component evidence per mode retains original provenance. Real Cuirass/Torch/
-Pants and stateful Nirnroot drop/cold/pickup regressions pass. Schema103 unchanged;
-broader M15/M18 remain open. Prior [Cuirass receipt](CUIRASS-DROP-VERIFICATION.json)
-records original OnAdd/OnEquip ownership; [Torch receipt](TORCH-DROP-VERIFICATION.json)
-records fresh inactive LIGH ownership; [Iron Key receipt](IRON-KEY-DROP-VERIFICATION.json)
-records the10.2.0.0 mutable-root dependency. Bonemeal ingestion remains separately
-accepted in [its earlier course](BONEMEAL-INGREDIENT-VERIFICATION.json).
+Latest completed bounded chunk: [native container discovery](NATIVE-CONTAINER-DISCOVERY-CONTRACT.json).
+Original enabled Wellspring Sack06efcf / CONT024945 was absent from Lua nearby
+containers because scene grouping recognized only TES3 containers. It now appears
+exactly once with native type/recordId, original position and model bounds across
+actual F5/exit/fresh-process load/resave in normal and ASan/UBSan games. Inventory,
+Cuirass scriptowner9/flags1/1, progress, allocator11 and untouched sack stock survive.
+[Receipt](NATIVE-CONTAINER-DISCOVERY-VERIFICATION.json): fresh2292 engine tests per
+mode,27 focused per mode and618 Python pass. No Container inventory bindings or
+TES4 MCP authoring claim. Prior [Bonemeal receipt](BONEMEAL-DROP-VERIFICATION.json)
+retains its original movable bodyT/drop/cold/pickup evidence; broader milestones
+remain open.
+
+Current chunk: investigate ordinary use of one carried Torch, then preserve its
+partially spent lifetime through native loose drop/pickup/restart. The existing
+native path accepts only fresh inactive lights. Baseline equip/use is pending;
+do not assume burning is already implemented or broken. Evidence root:
+`build/oblivion-compat/spent-torch-drop`. Next action: inspect actual equipped/use
+save and confirm the observed gap before changing lifetime ownership.
+
+Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
+ordinary approach reached the sack, whose first roll contained an inkwell/no gold.
+The opening harness awaited the wrong kind label and did not retain a save. Do not
+claim looting acceptance, grant gold or use that attempt as a continuation.
+`build/oblivion-compat/gold-drop/normal-sack-first-open-04` retains the capture,
+normal input receipts and failure. Main continuation below remains unchanged.
 
 Current **separate Cairn/Wellspring Cave continuation**:
 `build/oblivion-compat/bonemeal-drop/normal-bonemeal-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
