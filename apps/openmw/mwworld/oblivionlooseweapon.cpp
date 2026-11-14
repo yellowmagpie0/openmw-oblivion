@@ -199,7 +199,8 @@ namespace MWWorld
                     || placed->mParent != cell.getCell()->getId() || placed->mParentKey != *cellKey
                     || !placed->mId.isZeroOrUnset() || !placed->mFormKey.isDynamic()
                     || placed->mFormKey.mValue == 0 || reference.mRef.getCount(false) <= 0
-                    || (!std::is_same_v<Record, ESM4::Ammunition> && reference.mRef.getCount(false) != 1)
+                    || (!std::is_same_v<Record, ESM4::Ammunition> && !std::is_same_v<Record, ESM4::MiscItem>
+                        && reference.mRef.getCount(false) != 1)
                     || model.empty())
                     throw std::invalid_argument("loose weapon admission requires an identified native instance and managed native cell");
                 if constexpr (std::is_same_v<Record, ESM4::Armor>)

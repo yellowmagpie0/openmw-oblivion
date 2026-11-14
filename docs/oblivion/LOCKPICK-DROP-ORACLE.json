@@ -1,0 +1,52 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "type": "MISC",
+  "id": "00000a",
+  "payload_sha256": "8a718c1ea923e1398cd698c07577d509b0e830912c225547811f46e4b95df017",
+  "strings": {
+    "EDID": "Lockpick",
+    "FULL": "Lockpick",
+    "MODL": "Clutter\\Key\\Lockpick.NIF"
+  },
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "member": "meshes/clutter/key/lockpick.nif",
+  "member_sha256": "88833dc8234da91f372e89afb560f252d3a545c50bf7d1f7578c0780f0462b18",
+  "data": {
+    "value": 3,
+    "weight": 0
+  },
+  "script_present": false,
+  "nif_diagnostic": {
+    "records": 13,
+    "bodies": [
+      {
+        "record": 5,
+        "mass": 0.2,
+        "motion": 4,
+        "constraints": 0,
+        "center": [
+          0.000429259,
+          0.788955,
+          0.0698102
+        ]
+      }
+    ],
+    "shape_record": 4,
+    "shape_type": "bhkNiTriStripsShape",
+    "radius": 0.1,
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "filter_count": 1,
+    "raw_vertices": 26,
+    "unique_vertices": 8,
+    "declared_strip_triangles": 38,
+    "nondegenerate_triangles": 12,
+    "closed_edges": 18,
+    "all_edge_uses": 2,
+    "convex": true
+  },
+  "scope": "Original record/member identities independently audited. NIF topology/graph diagnostics use the existing parser and are not an independent original-executable solver oracle. Convex shape, authored margin/mass and body COM retained; no bit-identical solver claim."
+}

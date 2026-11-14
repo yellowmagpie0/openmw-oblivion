@@ -653,6 +653,7 @@ namespace MWWorld
             constexpr bool isWeapon = std::is_same_v<Record, ESM4::Weapon>;
             constexpr bool isClothing = std::is_same_v<Record, ESM4::Clothing>;
             constexpr bool isAmmunition = std::is_same_v<Record, ESM4::Ammunition>;
+            constexpr bool isStackable = isAmmunition || std::is_same_v<Record, ESM4::MiscItem>;
             constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP
                 : isClothing ? ESM4::REC_CLOT : isAmmunition ? ESM4::REC_AMMO : ESM4::REC_MISC;
             if (!baseDefinition) return std::nullopt;
@@ -669,7 +670,8 @@ namespace MWWorld
                 else return baseDefinition->mScriptId;
             };
             // Inventory drops and combat disarms share the native loose-body owner.
-            // Ammunition may transfer any positive part of an unequipped stack.
+            // Ammunition and plain miscellaneous items may transfer a positive
+            // part of an unequipped stack.
             // Other records retain singleton admission; equipment, scripts and
             // associated bound/enchantment effects retain their own policies.
             if (!script().isZeroOrUnset() || !enchantment().isZeroOrUnset()
@@ -683,7 +685,7 @@ namespace MWWorld
             const int sourceCount = item.getCellRef().getCount();
             if (actor != getPlayerPtr() || !actor.isInCell() || sourceCount <= 0
                 || count == 0 || count > static_cast<size_t>(sourceCount)
-                || (!isAmmunition && (count != 1 || sourceCount != 1))
+                || (!isStackable && (count != 1 || sourceCount != 1))
                 || item.getCellRef().getNativeBoundSource()
                 || !item.getCellRef().getNativeScriptOwner().isNull()
                 || item.getCellRef().getNativeItemScale() || item.getCellRef().getEnchantmentCharge() >= 0)
@@ -691,9 +693,9 @@ namespace MWWorld
             auto& inventory = actor.getClass().getInventoryStore(actor);
             if (item.getContainerStore() != &inventory)
                 throw std::invalid_argument("native inventory loose item drop has a different source owner");
-            if constexpr (isAmmunition)
+            if constexpr (isStackable)
                 if (inventory.isEquipped(item))
-                    throw std::invalid_argument("native ammunition drop requires an unequipped stack");
+                    throw std::invalid_argument("native stack drop requires an unequipped source");
             const int dropCount = static_cast<int>(count); // Bounded by the positive source count above.
             auto removal = inventory.prepareItemRemoval(item, dropCount);
             if (removal->getCount() != dropCount || removal->depletesEquipment())
@@ -862,7 +864,8 @@ namespace MWWorld
                 return admit(ammunition);
             return admit(mStore.get<ESM4::Weapon>().search(sourceId));
         }
-        if (item.getType() == ESM::REC_MISC)
+        // The original Lockpick is native MISC, projected as a shared tool.
+        if (item.getType() == ESM::REC_MISC || item.getType() == ESM::REC_LOCK)
             return admit(mStore.get<ESM4::MiscItem>().search(sourceId));
         if (item.getType() == ESM::REC_CLOT)
             return admit(mStore.get<ESM4::Clothing>().search(sourceId));

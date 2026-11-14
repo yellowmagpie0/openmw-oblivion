@@ -1,0 +1,791 @@
+{
+  "status": "Accepted bounded original8 Lockpick native MISC stack course and closed convex strip proxy in normal/instrumented games. Broader M15/M18 remain open.",
+  "parent_commit": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+  "contract": "docs/oblivion/LOCKPICK-DROP-CONTRACT.json",
+  "oracle": "docs/oblivion/LOCKPICK-DROP-ORACLE.json",
+  "schema": 103,
+  "behavior": {
+    "quantity": "Inventory8->0 plus native key5/count8 ->inventory8 plus key5/count0/no body. Allocator6, old retired keys3/4 unchanged. Separate fresh ordinary Control-click regression preserves7 plus one world item.",
+    "shape": "Original one-body13-record Lockpick proxy has26 source vertices/eight exact unique points and12 nondegenerate triangles. Validate closed opposite-wound edges, supporting planes and finite volume before using existing native hull/list shapes. Unit-scale one-geometry small convex strips only; connectors skipped; original mass0.2/radius0.1/body COM/filter metadata retained.",
+    "dispatch": "Native original MISC Lockpick projects as shared REC_LOCK. Native dispatch recognizes that projection; prepared removal/admission publish the requested positive MISC quantity with one world owner. Unequipped ordinary MISC/AMMO only; other types retain singleton restriction."
+  },
+  "layers": {
+    "structural": "Prepared typed MISC cell/registry/model/body/Lua admission with positive count; no schema or content-authoring changes.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/lockpick-drop/focused-normal-01/verification.json",
+        "sha256": "1607e45c7afaeebf73e66581ee0f452adcc3ccfd6b50a6d55da66fe56ab8317e",
+        "source": {
+          "head": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+          "source_fingerprint": "09c1c1314627290cfed721a58c532c23f73dbb1b240b2d83f52f5b86826f78d5"
+        },
+        "results": {
+          "components": {
+            "executed": 415,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "d14a3de0f2be03445d7333aff9f50f8cc5d7f897564746ee54e86ee2f7880672",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "013ecb2fb504f70223d06e84ef7dbcf29255ec3ef8db379f8f39992727875442",
+            "inventory_sha256": "453f1124d5d3da8bba9bd57f28918d90fabfa02ad0f48fa2f3aa310a5b65f868",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 340,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "8790b0505f1b3ba237e1b52bcbe4ee9c5c1df6f9a8a88c0c428dfc222aaf0e32",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "a5bfbaa5fd4410e12762207481c326cc98b92621c16c6d2963725d5d0425303a",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/lockpick-drop/focused-sanitized-01/verification.json",
+        "sha256": "5935dd71f20f37b0e109309551c25a548e436941171519dd0419fb35fc62aace",
+        "source": {
+          "head": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+          "source_fingerprint": "09c1c1314627290cfed721a58c532c23f73dbb1b240b2d83f52f5b86826f78d5"
+        },
+        "results": {
+          "sanitize": {
+            "executed": 415,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "05dba72361369a0489be2c9ed9acfbfa9a242a933e83aa9453ec7614c1cfc23a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "985972603957b61edb40b40703689fa27a64641c784e2014c5dae742f99b264d",
+            "inventory_sha256": "a00e7968779d975f8666fbc76c9e6c9a8eb3ecb0ceb202613167cd4898d4b4f9",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 340,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*",
+            "binary_sha256": "9eb94bf5dc9487082b9626c624bae82b5e409c85154ca286b2837644b9cbc33a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "fd4910727f17f703a298a5c696a1b9dfc825194b78f8f6fe06ee7a3960b51c90",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/lockpick-drop/integration-normal-01/verification.json",
+        "sha256": "a1f2199fdac77e618fcb4bd12da9df5b2548439872d0201e8437e76c8e0cf0f0",
+        "source": {
+          "head": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+          "source_fingerprint": "09c1c1314627290cfed721a58c532c23f73dbb1b240b2d83f52f5b86826f78d5"
+        },
+        "results": {
+          "components": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "d14a3de0f2be03445d7333aff9f50f8cc5d7f897564746ee54e86ee2f7880672",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "423861895529caca6d0f0298708598e94fdaaaf5d2e2b9c06d3836f4ffb5c4f3",
+            "inventory_sha256": "c691ae50f0e73bf98e811d101b1d5992a89b6b8155bf9153b3ff6ee766494bb3",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "8790b0505f1b3ba237e1b52bcbe4ee9c5c1df6f9a8a88c0c428dfc222aaf0e32",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "5628e34542bc3b41beef49c8026735caf5733c66cd7dfc37a290d6714226a237",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "f1d78be9b94fadea6bb2766e70a06d56c33618e8ee939eaf476a6d8099d993f0"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/lockpick-drop/components-sanitized-01/verification.json",
+        "sha256": "d4185f3c744c725f33a550a5fc18f0a61a7c94ecfefc7b75493bc7db604d829c",
+        "source": {
+          "head": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+          "source_fingerprint": "09c1c1314627290cfed721a58c532c23f73dbb1b240b2d83f52f5b86826f78d5"
+        },
+        "results": {
+          "sanitize": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "05dba72361369a0489be2c9ed9acfbfa9a242a933e83aa9453ec7614c1cfc23a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "0f635b4444a02ffd2d179a101e0245c87c9924b88d6c45a0dd5ffa5284ce1586",
+            "inventory_sha256": "2dc7c05e24099391a03377fb46613f6fc5b39a32597f33774af3a2ec55734c1a",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/lockpick-drop/integration-sanitized-1/verification.json",
+        "sha256": "709f82a0618e9ce41e53739e6018c90918d1313dca3f583ebd0717bc319e1301",
+        "source": {
+          "head": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+          "source_fingerprint": "09c1c1314627290cfed721a58c532c23f73dbb1b240b2d83f52f5b86826f78d5"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "9eb94bf5dc9487082b9626c624bae82b5e409c85154ca286b2837644b9cbc33a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "37ff6d9ee1e11f97825e46cf8f7efecc9dbaa48e9edec4574eea43597dbd4b18",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/lockpick-drop/integration-sanitized-2/verification.json",
+        "sha256": "0bff97223f88dda0b92656faa49f7874c5e357730597df6e92d5ffeebc5da597",
+        "source": {
+          "head": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+          "source_fingerprint": "09c1c1314627290cfed721a58c532c23f73dbb1b240b2d83f52f5b86826f78d5"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "9eb94bf5dc9487082b9626c624bae82b5e409c85154ca286b2837644b9cbc33a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "91487313de2b7fd7191a6f57168ba3c9b321e34a1df7b5225f358e6abb062908",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/lockpick-drop/integration-sanitized-3/verification.json",
+        "sha256": "405e85e0fbbedc18c2978569a1d98032869f3904af06115a7a1128a8cc4ef7a6",
+        "source": {
+          "head": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+          "source_fingerprint": "09c1c1314627290cfed721a58c532c23f73dbb1b240b2d83f52f5b86826f78d5"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "9eb94bf5dc9487082b9626c624bae82b5e409c85154ca286b2837644b9cbc33a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "0f9e8569ad50bdcdb4ede316f3563324d79c630ab53161de1a79d67e36aee395",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/lockpick-drop/integration-sanitized-4/verification.json",
+        "sha256": "818ae6d90d9ae4f01a57c31b48886429d37a42e5000afbd17924e22a5f3c308b",
+        "source": {
+          "head": "3d28ee92a41d4aa562c8b8a2732330157b83990a",
+          "source_fingerprint": "09c1c1314627290cfed721a58c532c23f73dbb1b240b2d83f52f5b86826f78d5"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "9eb94bf5dc9487082b9626c624bae82b5e409c85154ca286b2837644b9cbc33a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "e345535da35d5fd659727781a8e62ab833bbe19d2f3376ea3cff18fd51234c1f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "sanitizer_partition_union": {
+      "passed": true,
+      "total": 2292,
+      "parts": [
+        {
+          "path": "build/oblivion-compat/lockpick-drop/integration-sanitized-1/engine.xml",
+          "count": 82,
+          "sha256": "37ff6d9ee1e11f97825e46cf8f7efecc9dbaa48e9edec4574eea43597dbd4b18"
+        },
+        {
+          "path": "build/oblivion-compat/lockpick-drop/integration-sanitized-2/engine.xml",
+          "count": 82,
+          "sha256": "91487313de2b7fd7191a6f57168ba3c9b321e34a1df7b5225f358e6abb062908"
+        },
+        {
+          "path": "build/oblivion-compat/lockpick-drop/integration-sanitized-3/engine.xml",
+          "count": 82,
+          "sha256": "0f9e8569ad50bdcdb4ede316f3563324d79c630ab53161de1a79d67e36aee395"
+        },
+        {
+          "path": "build/oblivion-compat/lockpick-drop/integration-sanitized-4/engine.xml",
+          "count": 2046,
+          "sha256": "e345535da35d5fd659727781a8e62ab833bbe19d2f3376ea3cff18fd51234c1f"
+        }
+      ],
+      "equals_normal_unfiltered_inventory": true
+    },
+    "independent_content": "Original master/record/archive/member hashes and plain zero-weight inventory metadata audited; NIF/parser graphs are diagnostics, not an independent original-solver oracle.",
+    "derived_original_asset_guards": [
+      {
+        "mode": "normal",
+        "path": "build/oblivion-compat/lockpick-drop/original-lockpick-derived-guards-normal.json",
+        "sha256": "412c4d0321e4745289d9703bc15946a535107cf5500f68f9ce32b0c4faa0418b",
+        "result": [
+          {
+            "case": "original",
+            "admitted": true,
+            "passed": true,
+            "error": ""
+          },
+          {
+            "case": "open face",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: open or inconsistently wound convex strip proxy"
+          },
+          {
+            "case": "index out of range",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: convex strip index outside geometry"
+          },
+          {
+            "case": "nonfinite vertex",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: nonfinite vector"
+          },
+          {
+            "case": "concave corner",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: nonconvex triangle strip proxy"
+          },
+          {
+            "case": "flat volume",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: open or inconsistently wound convex strip proxy"
+          },
+          {
+            "case": "unverified scale",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: unsupported convex strip scale"
+          }
+        ],
+        "binary_sha256": "59b3ea6f29db5474c2c22d344f979275fc0ad23061a97fc344754aa8d019a008",
+        "source_sha256": "c55edc0338c3e38a8a46b26a083ef5e9354ed27f4956e5fe330837390f0c0b51",
+        "build_command_sha256": "36b6736a6f64a98183899d973dc894c8912c5dae651aef47d915a3016045658c"
+      },
+      {
+        "mode": "sanitized",
+        "path": "build/oblivion-compat/lockpick-drop/original-lockpick-derived-guards-sanitized.json",
+        "sha256": "412c4d0321e4745289d9703bc15946a535107cf5500f68f9ce32b0c4faa0418b",
+        "result": [
+          {
+            "case": "original",
+            "admitted": true,
+            "passed": true,
+            "error": ""
+          },
+          {
+            "case": "open face",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: open or inconsistently wound convex strip proxy"
+          },
+          {
+            "case": "index out of range",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: convex strip index outside geometry"
+          },
+          {
+            "case": "nonfinite vertex",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: nonfinite vector"
+          },
+          {
+            "case": "concave corner",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: nonconvex triangle strip proxy"
+          },
+          {
+            "case": "flat volume",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: open or inconsistently wound convex strip proxy"
+          },
+          {
+            "case": "unverified scale",
+            "admitted": false,
+            "passed": true,
+            "error": "Invalid actor ragdoll: unsupported convex strip scale"
+          }
+        ],
+        "binary_sha256": "b29b931f4fc37d35a7918fb7d5858f46924403aa716b267ad1d80a3d15e7c595",
+        "source_sha256": "c55edc0338c3e38a8a46b26a083ef5e9354ed27f4956e5fe330837390f0c0b51",
+        "build_command_sha256": "54502231f1e3049fc3ba5447a0d81a548dbb045e783d6ae1f6b1bb436abd28bc"
+      }
+    ],
+    "runtime": [
+      {
+        "mode": "normal",
+        "phase": "drop",
+        "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-native-drop-01",
+        "manifest": "docs/oblivion/original-lockpick-drop.json",
+        "manifest_sha256": "94a4434399d9546a89f6db0786769f74ea3359c75073b9ecbee32747dae14d0c",
+        "verification_sha256": "b610df6759a40581894d99fe0d95618cbaec5f287b3f0faa7356ecd4eca89e8b",
+        "scenario_sha256": "c96c95361eeae7760c43253077b58da7369db3413e4c7c0da040a98113bf00ed",
+        "source_sha256": "6cc32234c8a81a2f12f32e84c3005b818a29e401ce45b3b7c7fb60453d72885f",
+        "save_sha256": "7105ce938532c575a260a9404ee735ab6e2c2d4a3729339cb3fbd01b2b153f25",
+        "process": {
+          "pid": 860732,
+          "start_ticks": 17408761,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/normal-lockpick-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d6a28bc539405494df1b84613e7dbe4baa2582cf9f14caee1173360138044962"
+        },
+        "next_dynamic_serial": 6,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "normal",
+        "phase": "world",
+        "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-native-world-01",
+        "manifest": "docs/oblivion/original-lockpick-world.json",
+        "manifest_sha256": "cdad2df37ffe5868e4517644ca6830d1b7bbbc4e1fc1cacee8ea12e0b44c12b1",
+        "verification_sha256": "d76c640364c3dfffda0c7d6a508f8fb6093f9e8f909fbe959a99f00cc6f5564e",
+        "scenario_sha256": "d95b2b24b18efe9c02ec13d897e7eb9e0b39bb71f0dd69e9b1db759dba71ad11",
+        "source_sha256": "7105ce938532c575a260a9404ee735ab6e2c2d4a3729339cb3fbd01b2b153f25",
+        "save_sha256": "f2103373944e152ef7cb601012e3b04d244baa26f77e8e6feef9cb47de72f6f4",
+        "process": {
+          "pid": 861184,
+          "start_ticks": 17422417,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/normal-lockpick-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/normal-lockpick-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d6a28bc539405494df1b84613e7dbe4baa2582cf9f14caee1173360138044962"
+        },
+        "next_dynamic_serial": 6,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "normal",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-native-pickup-01",
+        "manifest": "docs/oblivion/original-lockpick-pickup.json",
+        "manifest_sha256": "e613afb9b54d97a398afecd1e5f7abe8a2aa6cd083f58908bbbe7433df958611",
+        "verification_sha256": "68f32d605af617a574c5ec09786d7943bf4dee9a981f3623db381d300eb342ce",
+        "scenario_sha256": "c513238237b629fed3bd103825e1a4f38f5c5e487dc6c232492362df350cb3cf",
+        "source_sha256": "f2103373944e152ef7cb601012e3b04d244baa26f77e8e6feef9cb47de72f6f4",
+        "save_sha256": "20fd0a07093979906fc4524dfa61cc0943b36d54694e3cf1b4897c87e2796e85",
+        "process": {
+          "pid": 862471,
+          "start_ticks": 17430865,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/normal-lockpick-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/normal-lockpick-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d6a28bc539405494df1b84613e7dbe4baa2582cf9f14caee1173360138044962"
+        },
+        "next_dynamic_serial": 6,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "normal",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-native-inventory-01",
+        "manifest": "docs/oblivion/original-lockpick-inventory.json",
+        "manifest_sha256": "2d139f9d16fdfcd9f5d984cc607606e15981a0e2499edd10bb5b79bae75de8b0",
+        "verification_sha256": "0a46510647093cc7495556c78f3a05c7743f808805aa84e987fa84a3dfc5698e",
+        "scenario_sha256": "40a0ebc779a49ea5449e0e2270e3ce3175d9767ea4d8b63af550d5429c08d171",
+        "source_sha256": "20fd0a07093979906fc4524dfa61cc0943b36d54694e3cf1b4897c87e2796e85",
+        "save_sha256": "cd8dad6581ce16122b9c2b1ba23e0737a1081483e543062452bdae7f21325f13",
+        "process": {
+          "pid": 869083,
+          "start_ticks": 17440026,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/normal-lockpick-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/normal-lockpick-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d6a28bc539405494df1b84613e7dbe4baa2582cf9f14caee1173360138044962"
+        },
+        "next_dynamic_serial": 6,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "sanitized",
+        "phase": "drop",
+        "path": "build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-drop-01",
+        "manifest": "docs/oblivion/original-lockpick-drop-sanitized.json",
+        "manifest_sha256": "f865c6497c9ca22625f167fb600e0d5471f4904dd1b636c8bc41b9b236bacf96",
+        "verification_sha256": "633f9d7405f591e8611b6c8576b2c2791287f1a183039d46e8b5a5feb2796672",
+        "scenario_sha256": "13b50b8d4e87f83523842efe48e3e61f9e898b50738c892549e65c075c2d4432",
+        "source_sha256": "6cc32234c8a81a2f12f32e84c3005b818a29e401ce45b3b7c7fb60453d72885f",
+        "save_sha256": "6a2f68c23dd5a7dca122acfde258f0fe6c5751b43bb101bf285a7435417ac3d0",
+        "process": {
+          "pid": 861235,
+          "start_ticks": 17423016,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e781cbabac6b0665954380ee231185cfa79c493df292e4aa690e29644610bddd"
+        },
+        "next_dynamic_serial": 6,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "sanitized",
+        "phase": "world",
+        "path": "build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-world-01",
+        "manifest": "docs/oblivion/original-lockpick-world-sanitized.json",
+        "manifest_sha256": "37fedf7f68821016ac5db03b0abce13f7eadbe276b02341fcae5f7a040ddb1a2",
+        "verification_sha256": "f6a85d0f098d3809764e6950b52e5bbb5950b4147efe24ee3e719e84d7cc9ba1",
+        "scenario_sha256": "99cc5c6bfea9898a35d1e0ebdcb270a4d297fb974a513babee00bc3c0d70d22c",
+        "source_sha256": "6a2f68c23dd5a7dca122acfde258f0fe6c5751b43bb101bf285a7435417ac3d0",
+        "save_sha256": "39d7b13b5028665501c97be2b5a103c849b4124c3eda22a9090d5ecb0e4aa55d",
+        "process": {
+          "pid": 871931,
+          "start_ticks": 17458336,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e781cbabac6b0665954380ee231185cfa79c493df292e4aa690e29644610bddd"
+        },
+        "next_dynamic_serial": 6,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "sanitized",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-pickup-02",
+        "manifest": "docs/oblivion/original-lockpick-pickup-sanitized.json",
+        "manifest_sha256": "9118e6417ea0f9813e689576d2df6997edc453ecdd964f0dbf8c42b7d288a861",
+        "verification_sha256": "42862f84d3b128f3a3199a66d2f9370a3d797b7e7b2f62f129b42978e68e0746",
+        "scenario_sha256": "8266b4c807154c7b3d0ac89b9b4531e38e1a7b87cc53668f7410d731cfc57045",
+        "source_sha256": "39d7b13b5028665501c97be2b5a103c849b4124c3eda22a9090d5ecb0e4aa55d",
+        "save_sha256": "2374920cac7365c9689632c10f4f5d1293fb06c58472abc7e983d0cf611b36ca",
+        "process": {
+          "pid": 877839,
+          "start_ticks": 17540812,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-pickup-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e781cbabac6b0665954380ee231185cfa79c493df292e4aa690e29644610bddd"
+        },
+        "next_dynamic_serial": 6,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "sanitized",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-inventory-01",
+        "manifest": "docs/oblivion/original-lockpick-inventory-sanitized.json",
+        "manifest_sha256": "a174cb80ca6a1fa2769c12fd9c1e586d15390e40b064d995ecded52c80133dce",
+        "verification_sha256": "4fe1b02ddc65bd5cf8dc414f706ea393ca0208d7edfc7cb1e8f65b8c5638d1a7",
+        "scenario_sha256": "6d07c67809355ef7c87815067ae51e54d76be9d3d324a3790a64ee80944829c1",
+        "source_sha256": "2374920cac7365c9689632c10f4f5d1293fb06c58472abc7e983d0cf611b36ca",
+        "save_sha256": "613d960e416292a922dcaf5055bf44ef09f18145c2fb3697318eb4a864b48c14",
+        "process": {
+          "pid": 878084,
+          "start_ticks": 17573633,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-pickup-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e781cbabac6b0665954380ee231185cfa79c493df292e4aa690e29644610bddd"
+        },
+        "next_dynamic_serial": 6,
+        "credited_deaths": 33
+      }
+    ],
+    "semantic": "All8 phase auditors preserve quantity, zero-weight encumbrance, source metadata/all other equipment/inventory,27 skills/book history, Health/passives, quests/counters/script owners and33 credited deaths. Tick-zero full saved physical history retained; retired owner and all bodies absent after pickup/cold inventory."
+  },
+  "fresh_content_regressions": [
+    {
+      "path": "build/oblivion-compat/lockpick-drop/regression-normal-one-lockpick-drop-01",
+      "audit": "build/oblivion-compat/lockpick-drop/regression-normal-one-lockpick-drop-01/one-lockpick-drop-verification.json",
+      "audit_sha256": "bba26ffff75a0ba9d6af960d59beab38edc791e4b499930935ebe90dcb3bb7e1",
+      "verifier": "build/oblivion-compat/lockpick-drop/verify-one-lockpick-drop.py",
+      "verifier_sha256": "84086a1d884587f285a2a80297a88600604c26bd9dad67bfcd8010c75b2ed95e",
+      "source_sha256": "6cc32234c8a81a2f12f32e84c3005b818a29e401ce45b3b7c7fb60453d72885f",
+      "save_sha256": "41ebd32c528269ad8364d508a147117824a3b51e666b4d842865482387d8a270",
+      "captured_manifest_sha256": "958196bbe82baaae6efa09c2fcb854d40be880f43316b858bc36bfe392a5ffa8"
+    },
+    {
+      "path": "build/oblivion-compat/lockpick-drop/regression-normal-pants-world-01",
+      "audit": "build/oblivion-compat/lockpick-drop/regression-normal-pants-world-01/pants-drop-verification.json",
+      "audit_sha256": "e4769f62dd08f0bf3fae9bbbc8f3b90f117b8537e1e3edadb57470b392df5d47",
+      "verifier": "scripts/verify_pants_drop.py",
+      "verifier_sha256": "3889751750a016f4a4187b3be26b31eeda80a688c4514b5794583125988f95d0",
+      "source_sha256": "2fb9baeca887df239c56c2877d7c361b60bf904fc21c5f9410f281a4f13aa565",
+      "save_sha256": "c1fa775a4ecd6a8eb45bdc6bc44a3d56f815cdda61261a3db6bee68f7d81310b",
+      "captured_manifest_sha256": "cfff585d76e45a80b8c9f1f6ab6b1f4eed7275ca307609ddb0f7a19decce9603"
+    },
+    {
+      "path": "build/oblivion-compat/lockpick-drop/regression-normal-bone-drop-01",
+      "audit": "build/oblivion-compat/lockpick-drop/regression-normal-bone-drop-01/bone-drop-verification.json",
+      "audit_sha256": "0ae2797b522595ff738105ae16cb96f595f6e1696652a06f4fef6b1b80956977",
+      "verifier": "build/oblivion-compat/articulated-clothing/verify-bone-regression.py",
+      "verifier_sha256": "d8343ff5d1b34a27e7e43a4d4df7de481e09aa52b721679be5e994b8f211356d",
+      "source_sha256": "8e052c5e1644c654d4160da34b822db364152560eb9cb1698e55903dfe6210f7",
+      "save_sha256": "5b07de1248f4e4cd818e991e196acdebee45bc0153434594fa702b9a361390a6",
+      "captured_manifest_sha256": "80b3c06e72dce0b5ed19cd9901218a4be4b4ab59f3d1d6e32ae9241fa2472517"
+    },
+    {
+      "path": "build/oblivion-compat/lockpick-drop/regression-normal-ammo-world-03",
+      "audit": "build/oblivion-compat/lockpick-drop/regression-normal-ammo-world-03/ammo-stack-drop-verification.json",
+      "audit_sha256": "a255c2a3ab7fa4bbf29b15c476c11ba7adb863168b44256c2dc09b3eb50dc0b2",
+      "verifier": "scripts/verify_ammo_stack_drop.py",
+      "verifier_sha256": "0d619be3a254f76f6eb546910ad60fdf8b212c71730c9e23177922777d0d92fb",
+      "source_sha256": "c6b28381783e0e939c1c8cc1ffbfebb246927586bea72beade51d7726c7bbff9",
+      "save_sha256": "81311e80333dfbf4e91fed54a418892f5472e254dac2fdd2a3eed64e057da1c8",
+      "captured_manifest_sha256": "06b4c9b4847f8b826bdc242bad800b51c220fdac2669b25e7d6b5a9fa58e6eda"
+    }
+  ],
+  "regression_provenance": "Pants and ammunition use current unchanged public verifiers. Bone uses the previously accepted historical adapter identified by SHA; one-Lockpick regression adapts the current auditor for8->7 plus count1. Sources and manifests retain their original identities; all run with the current normal binary.",
+  "baseline": {
+    "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-stack-baseline-01",
+    "scenario_sha256": "2ca652d3f465965699201e97986c50aa7920f98f7e25e321d5734cbeb225b199",
+    "result": "Ordinary legacy drop/save8->0 passed, allocator5 and no native Lockpick/body owner. No disappearance claim. New native path adds native ownership/physics; no legacy migration acceptance."
+  },
+  "retained_regression_attempt": {
+    "path": "build/oblivion-compat/lockpick-drop/regression-normal-ammo-world-01",
+    "result": "Two actual cold-world load/resaves retained quantity24, but residual joint strain relaxed0.0135707 and0.0132683 against0.01 post-simulation limit. Second output reached relative identity within0.00001; final regression uses that actual relaxed world save. First tick-zero snapshot restoration passed; no physics/tolerance change.",
+    "review": {
+      "relative_offset_change": 0.12355171830795783,
+      "relative_rotation_coefficient_change": 0.013570690631013349,
+      "initial_velocities": [
+        [
+          -12.781673431396484,
+          2.2706668376922607,
+          -2.737384557723999
+        ],
+        [
+          -12.177325248718262,
+          2.40128493309021,
+          -2.6192057132720947
+        ]
+      ],
+      "final_velocities": [
+        [
+          -0.11284589022397995,
+          0.37559616565704346,
+          0.07891181856393814
+        ],
+        [
+          -0.059657178819179535,
+          0.3398676812648773,
+          -0.24876169860363007
+        ]
+      ],
+      "decision": "Retain moving-source failed post-simulation orientation audit; use its actual settled count24 world save for a new cold-world regression. No C++ or tolerance changes.",
+      "tick_zero_full_snapshot_max_float_delta": 2.384185791015625e-07,
+      "second_attempt": {
+        "path": "build/oblivion-compat/lockpick-drop/regression-normal-ammo-world-02",
+        "relative_offset_change": 0.042909783771643666,
+        "relative_rotation_coefficient_change": 0.013268347665493785,
+        "source_relative_rotation_coefficient": 0.013278272234560351,
+        "final_relative_rotation_coefficient": 9.948464754216957e-06,
+        "result": "Low translational velocity did not imply relaxed joint strain. This actual second save relaxed the relation close to identity; retain second failed angle comparison. Third cold-world test uses this actual relaxed state, with original tolerances."
+      }
+    },
+    "review_sha256": "2aa20eaa482b81e6cb93ef9e8d6c9b09824f4da7918254f61155476ae964234d"
+  },
+  "post_gate_recipe_correction": {
+    "path": "docs/oblivion/original-lockpick-pickup-sanitized.json",
+    "before_sha256": "db4537d9331954508841ab0b474d95d33b480ba1e77d68df5446e4a1acad4ae6",
+    "after_sha256": "9118e6417ea0f9813e689576d2df6997edc453ecdd964f0dbf8c42b7d288a861",
+    "reason": "Copied ammunition routine forced a forward15-unit step after the tiny Lockpick already had visible focus at eyeDistance126.68686676025 inside iMaxActivateDist150. Native-range reacquisition then failed before Space or save. Remove only the unnecessary ordinary step; C++/auditor/tolerances unchanged."
+  },
+  "retained_pickup_attempt": {
+    "path": "build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-pickup-01",
+    "result": "Visible original Lockpick already in native range; copied routine walked forward unnecessarily, then failed to reacquire aim. No Space or save reached. Unchanged original world source retained; accepted retry removes the extra step."
+  },
+  "retained_inspections": [
+    {
+      "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-inventory-inspection-01",
+      "result": "Read-only initial hover identified Iron Key, no selection or save."
+    },
+    {
+      "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-inventory-inspection-02",
+      "result": "Read-only corrected hover at325,608 confirmed actual Lockpick8; alternate282,608 identified Rice."
+    }
+  ],
+  "source_sha256": {
+    "components/nifbullet/actorragdoll.cpp": "c68e357d19662a365fafe90e7c9ad858f12faedfeabf5323fab1bf7579e63c58",
+    "apps/openmw/mwworld/oblivionlooseweapon.cpp": "537d47d4df660c3d6c2fb11af8904bbff0c218c728b668df9ea70882d5fa2b87",
+    "apps/openmw/mwworld/oblivionweapondrop.cpp": "c9570cb6ea9c9ed17ce1e756ec3b7ada40acd3ce6a5e5724fa4ff12a360a32c2",
+    "scripts/verify_lockpick_drop.py": "e9bc43b1e06c33427cefb02355eb7da40df196d87eb67ccd20e1ef5b9a2d7581",
+    "docs/oblivion/original-lockpick-drop.json": "94a4434399d9546a89f6db0786769f74ea3359c75073b9ecbee32747dae14d0c",
+    "docs/oblivion/original-lockpick-world.json": "cdad2df37ffe5868e4517644ca6830d1b7bbbc4e1fc1cacee8ea12e0b44c12b1",
+    "docs/oblivion/original-lockpick-pickup.json": "e613afb9b54d97a398afecd1e5f7abe8a2aa6cd083f58908bbbe7433df958611",
+    "docs/oblivion/original-lockpick-inventory.json": "2d139f9d16fdfcd9f5d984cc607606e15981a0e2499edd10bb5b79bae75de8b0",
+    "docs/oblivion/original-lockpick-drop-sanitized.json": "f865c6497c9ca22625f167fb600e0d5471f4904dd1b636c8bc41b9b236bacf96",
+    "docs/oblivion/original-lockpick-world-sanitized.json": "37fedf7f68821016ac5db03b0abce13f7eadbe276b02341fcae5f7a040ddb1a2",
+    "docs/oblivion/original-lockpick-pickup-sanitized.json": "9118e6417ea0f9813e689576d2df6997edc453ecdd964f0dbf8c42b7d288a861",
+    "docs/oblivion/original-lockpick-inventory-sanitized.json": "a174cb80ca6a1fa2769c12fd9c1e586d15390e40b064d995ecded52c80133dce"
+  },
+  "limits": [
+    "This original ordinary8 Lockpick stack plus separate1-from8 regression only; no all-MISC asset/quantity, equipped/scripted/bound or lockpicking-mechanic acceptance.",
+    "Closed convex one-geometry unit-scale strip proxies only. Concave/open meshes and other shape scales remain unsupported; derived malformed originals are parser diagnostics, not gameplay cases.",
+    "No broader M15/M18, coastal rendering or legacy-world migration closure claim."
+  ]
+}
