@@ -99,6 +99,7 @@ namespace MWRender
             bool hasLiveOwner() const noexcept;
             // Bound after native world-model preparation, including scabbard removal.
             osg::Vec3f worldBoundCenter() const;
+            float worldBoundRadius() const;
             std::shared_ptr<const LooseObjectSceneBinding> looseSceneBinding() const noexcept;
             PreparedModel(const PreparedModel&) = delete;
             PreparedModel& operator=(const PreparedModel&) = delete;

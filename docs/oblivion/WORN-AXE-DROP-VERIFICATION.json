@@ -1,0 +1,552 @@
+{
+  "status": "Bounded real worn weapon drop, outdoor collision, pickup and cold persistence accepted; broader M15/M18 remain open",
+  "parent_commit": "e1bccdf4ad03bbfae14fb25ef8d7f538198c325c",
+  "post_gate_changes": "Documentation closure only; C++ and verifier unchanged from the integration source fingerprint.",
+  "contract": {
+    "path": "docs/oblivion/WORN-AXE-DROP-CONTRACT.json",
+    "sha256": "a9954cdb6b9615124ddffeb20d9808944e18b9d2edb1c232d947e6d87f85a308"
+  },
+  "oracle": {
+    "path": "docs/oblivion/WORN-AXE-DROP-ORACLE.json",
+    "sha256": "205c5a0897b633700e653e54754052293399dac90dae4eead62e72a21ec6de69"
+  },
+  "schema": 102,
+  "result": "Genuine carried unequipped Rusty Iron War Axe090613 condition22.49466323852539 drops once as typed native WEAP key6, retains original world asset/body and Dropper ownership, rests on outdoor terrain, cold re-saves, is acquired once with ordinary crosshair/Space input, and survives cold inventory load. Exact item metadata, equipped Club59.5000458, Health110/Endurance55, all skills, Nirnroot owner4/Found1, MS39stage10/counters2 and33 credited deaths retained; allocator7.",
+  "layers": {
+    "structural": "Prepared selected-instance removal, key/cell/registry/model/body/Lua admission; stale source/metadata/record guards before callback-free publication. Heightfield mask now admits loose objects. Existing standing-reference validation remains active.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/weapon-drop/integration-normal-01/verification.json",
+        "sha256": "445d0316f30a47b8fb23654c52e8ed067e8090c4f12d39bf93fa5e454bb39ae7",
+        "source": {
+          "head": "e1bccdf4ad03bbfae14fb25ef8d7f538198c325c",
+          "source_fingerprint": "e08d2b97f0b1e864f92525d92a062b64c50da5979a116967f52ec93675c4322b"
+        },
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "e8981df84f71fa33098406f8a36062744462f45d37ad6df8ff9ff502771584b4",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "33e3a62ea5a7844354095c4026e842fe95eb7d07a44717f232e5bf5df2851ff0",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "612705e62f9c946f74d475b078d7661980736c1caf69e737b4a6817a4f95fdc5"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/weapon-drop/integration-sanitized-1/verification.json",
+        "sha256": "877e52b1409c39ac1aa2521d9b2b588897869f6ae5f9342b3d85d668c62f7f07",
+        "source": {
+          "head": "e1bccdf4ad03bbfae14fb25ef8d7f538198c325c",
+          "source_fingerprint": "e08d2b97f0b1e864f92525d92a062b64c50da5979a116967f52ec93675c4322b"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "5ee924b293ba1fa144087b5f958bf2d868849e54a169d5b57fe84c8f8f15f612",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "80e127b251cc859fc490734e8183cf563a98611216b47435c6dd5317053ea76b",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/weapon-drop/integration-sanitized-2/verification.json",
+        "sha256": "4aee41aea6cdaa2a53943e4015bb341e2fb4d295117b448d44599833ea3c2a67",
+        "source": {
+          "head": "e1bccdf4ad03bbfae14fb25ef8d7f538198c325c",
+          "source_fingerprint": "e08d2b97f0b1e864f92525d92a062b64c50da5979a116967f52ec93675c4322b"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "5ee924b293ba1fa144087b5f958bf2d868849e54a169d5b57fe84c8f8f15f612",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "43f0398b6794488cc9371002cc905e8a7459eaf6398e6ea578852979c6181ff5",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/weapon-drop/integration-sanitized-3/verification.json",
+        "sha256": "8878046afd55cec18777db0140ef15171aaa925606871b3c1f2be2ac532e7784",
+        "source": {
+          "head": "e1bccdf4ad03bbfae14fb25ef8d7f538198c325c",
+          "source_fingerprint": "e08d2b97f0b1e864f92525d92a062b64c50da5979a116967f52ec93675c4322b"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "5ee924b293ba1fa144087b5f958bf2d868849e54a169d5b57fe84c8f8f15f612",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "1f25e830fcd057cbb4bb116c38f66f9aefa5318f2519cf956062ecc5c6d772b7",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/weapon-drop/integration-sanitized-4/verification.json",
+        "sha256": "bcc7363dda7c036df611c6758021746cb1a02c9738921679a13c88eba8c3d1a1",
+        "source": {
+          "head": "e1bccdf4ad03bbfae14fb25ef8d7f538198c325c",
+          "source_fingerprint": "e08d2b97f0b1e864f92525d92a062b64c50da5979a116967f52ec93675c4322b"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "5ee924b293ba1fa144087b5f958bf2d868849e54a169d5b57fe84c8f8f15f612",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "568c055079e4ecdada36173115f0439b4ff16607aedff5ba0079744dab8aa9d1",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "sanitizer_partition_union": {
+      "disjoint": true,
+      "counts": [
+        82,
+        82,
+        82,
+        2046
+      ],
+      "total": 2292
+    },
+    "reused_components": {
+      "receipt": "docs/oblivion/CRAB-MEAT-VERIFICATION.json",
+      "scope": "Unchanged components; reused original 3301 normal/1122 ESM4 sanitizer component evidence with original source/binary/cache provenance. No fresh component claim."
+    },
+    "independent_oracle": "Original installed winning record plus prior independently hashed archive member/parser evidence; isolated original executable probe adds full-condition axe then uses actual inventory shift-click drop/Space pickup. It does not establish exact worn float arithmetic. See oracle for executable/master/save hashes, actions and restored inputs.",
+    "runtime": [
+      {
+        "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-drop-02",
+        "phase": "drop",
+        "process": {
+          "pid": 746766,
+          "start_ticks": 15338903,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/normal-worn-axe-native-drop-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2a5e34b16c4ea9a207a9dcb5dc10d33e2540a6ecd665d4cd7ac55249bf957f6f"
+        },
+        "source_sha256": "9b498081a3dc4603e494897f4bb5931beda86d6e3d012cb5fe669ef498a77a98",
+        "save_sha256": "5944ea8ae4dbcb0ace9fda49d80e65152f1114755b1360fb734576066f0c6790",
+        "next_dynamic_serial": 7,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-drop-02/worn-axe-verification.json",
+          "sha256": "09cebb9c964b96c45a78d26b9741986f0fc427f4defab8b3de131a7786dc4a64"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-drop-02/original-rusty-axe-after-drop-inventory.png",
+            "sha256": "5e701e79df1dd71fa52d8d95138134aea8a39cc54da79db1e227ca40053fa94a"
+          },
+          {
+            "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-drop-02/original-rusty-axe-before-drop.png",
+            "sha256": "0f8a96bdc2c102c54eb934b557479ab7a3f28cd942a07c22a27355828b9b07fc"
+          },
+          {
+            "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-drop-02/original-rusty-axe-dropped-world.png",
+            "sha256": "d21bbd3d17eb4198fa29c0197ef44b3636ae4e53952d3800c1ad367effbb2ad6"
+          },
+          {
+            "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-drop-02/original-rusty-axe-world-drop-cursor.png",
+            "sha256": "5e701e79df1dd71fa52d8d95138134aea8a39cc54da79db1e227ca40053fa94a"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-world-02",
+        "phase": "world",
+        "process": {
+          "pid": 747558,
+          "start_ticks": 15347423,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/normal-worn-axe-native-world-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/normal-worn-axe-native-drop-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2a5e34b16c4ea9a207a9dcb5dc10d33e2540a6ecd665d4cd7ac55249bf957f6f"
+        },
+        "source_sha256": "5944ea8ae4dbcb0ace9fda49d80e65152f1114755b1360fb734576066f0c6790",
+        "save_sha256": "896ed03bf2201ca0a83b35594a92b68d5b0f51873666d373a3bf5acdc3d9ed69",
+        "next_dynamic_serial": 7,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-world-02/worn-axe-verification.json",
+          "sha256": "f9f9de2f662bb0817fbc45917bc5d59caab0f9bb28a5b3cba4b28caea3b1b5fb"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-world-02/original-worn-axe-first-cold-world.png",
+            "sha256": "22a5d80641a17a98ef28930fc2c69cc5e9a4e01cf702bd749bea1bebde6c41b3"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-pickup-02",
+        "phase": "pickup",
+        "process": {
+          "pid": 747750,
+          "start_ticks": 15356231,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/normal-worn-axe-native-pickup-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/normal-worn-axe-native-world-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2a5e34b16c4ea9a207a9dcb5dc10d33e2540a6ecd665d4cd7ac55249bf957f6f"
+        },
+        "source_sha256": "896ed03bf2201ca0a83b35594a92b68d5b0f51873666d373a3bf5acdc3d9ed69",
+        "save_sha256": "1a10c0537432b59fa5fa61ecf2f0bebe6fcbff9644a5ea5b84e8ea8b83f7c7d4",
+        "next_dynamic_serial": 7,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-pickup-02/worn-axe-verification.json",
+          "sha256": "e2c460ab6d72d74d92319d595462f4634c642a5b5b9734794fa4807f29a183fd"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-pickup-02/original-worn-axe-focused.png",
+            "sha256": "e65afd67710d0ea1df4c8e0e8b0fdb1ab3b3320a5f3dd319e1cb92465940b914"
+          },
+          {
+            "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-pickup-02/original-worn-axe-picked-up.png",
+            "sha256": "a09c7c9b6320d256528201b30db71f96b2e3706a90e311ba0d1ded737fcc9a9d"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02",
+        "phase": "inventory",
+        "process": {
+          "pid": 747872,
+          "start_ticks": 15365919,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/normal-worn-axe-native-pickup-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2a5e34b16c4ea9a207a9dcb5dc10d33e2540a6ecd665d4cd7ac55249bf957f6f"
+        },
+        "source_sha256": "1a10c0537432b59fa5fa61ecf2f0bebe6fcbff9644a5ea5b84e8ea8b83f7c7d4",
+        "save_sha256": "e38b5b86444feac911d7516fc4b00b4907f273fcf30b197ac39010a4629bb305",
+        "next_dynamic_serial": 7,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/worn-axe-verification.json",
+          "sha256": "c734d0e8680050503d3da396e12e1cd0874fea5e140e14c442eaa46d4e2f28e6"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/original-worn-axe-cold-inventory.png",
+            "sha256": "83a6ed5ef01dc22b1ac424b27e6102ca8f0f87a8e40915dd162957840475c6eb"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-drop-02",
+        "phase": "drop",
+        "process": {
+          "pid": 747493,
+          "start_ticks": 15345902,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-drop-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "c16a04cb22be500150df8adba14e0a6b918d689d9d1ef17b0f301fcab1d3cac8"
+        },
+        "source_sha256": "9b498081a3dc4603e494897f4bb5931beda86d6e3d012cb5fe669ef498a77a98",
+        "save_sha256": "eeb768bb0dc667fdedbd243778ab139b014049e6919ece674be6ab4c68d5c375",
+        "next_dynamic_serial": 7,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-drop-02/worn-axe-verification.json",
+          "sha256": "b9f2b5625b6776e3231c34c5eb5e3e1f406b9351586675e09eb6e0f7defa013e"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-drop-02/original-rusty-axe-after-drop-inventory.png",
+            "sha256": "9b6b44d4cb3e0893b223e58a8fdf9de3841b71daa49659777aab1fc0b74aa0d4"
+          },
+          {
+            "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-drop-02/original-rusty-axe-before-drop.png",
+            "sha256": "9c161911ab612ec7eb35b527702994c3d886e94a57ab31ab370fe7def1040e3c"
+          },
+          {
+            "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-drop-02/original-rusty-axe-dropped-world.png",
+            "sha256": "4ebe3e896a087f69dcc6463d8d177913cc39da1d2623aaebe067e4068bcb436b"
+          },
+          {
+            "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-drop-02/original-rusty-axe-world-drop-cursor.png",
+            "sha256": "9b6b44d4cb3e0893b223e58a8fdf9de3841b71daa49659777aab1fc0b74aa0d4"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-world-02",
+        "phase": "world",
+        "process": {
+          "pid": 755784,
+          "start_ticks": 15388457,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-world-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-drop-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "c16a04cb22be500150df8adba14e0a6b918d689d9d1ef17b0f301fcab1d3cac8"
+        },
+        "source_sha256": "eeb768bb0dc667fdedbd243778ab139b014049e6919ece674be6ab4c68d5c375",
+        "save_sha256": "51fe6f0e7ff3a5006fbb3805c553708a334fc5bdc73b9bcb2cab100cec462e4a",
+        "next_dynamic_serial": 7,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-world-02/worn-axe-verification.json",
+          "sha256": "f1b5b21ca4f2c0c8926f87e3211100e6961b24e0b9d5ed6791126e02f0f225ae"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-world-02/original-worn-axe-first-cold-world.png",
+            "sha256": "7cc26be234d833454c7343ee2adba8f24ccd4885583c0dcc37cc2c806b07ad31"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-pickup-02",
+        "phase": "pickup",
+        "process": {
+          "pid": 760755,
+          "start_ticks": 15427735,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-pickup-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-world-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "c16a04cb22be500150df8adba14e0a6b918d689d9d1ef17b0f301fcab1d3cac8"
+        },
+        "source_sha256": "51fe6f0e7ff3a5006fbb3805c553708a334fc5bdc73b9bcb2cab100cec462e4a",
+        "save_sha256": "7292da5e7376f53e9820664fd5c440d80c35afa87896940f191880c7e126efbd",
+        "next_dynamic_serial": 7,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-pickup-02/worn-axe-verification.json",
+          "sha256": "c1ef387bde310fdbb13c1d83c0be87a252a6605b1ea8830cb067686e8418b78e"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-pickup-02/original-worn-axe-focused.png",
+            "sha256": "08419aa81cc66aed9a792087c7742517008cc319e201d09ef8be94596a531002"
+          },
+          {
+            "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-pickup-02/original-worn-axe-picked-up.png",
+            "sha256": "007a31e9583c1baea6411661e49f9a9d60b6663488a419867a0d7424521310ce"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-inventory-02",
+        "phase": "inventory",
+        "process": {
+          "pid": 761055,
+          "start_ticks": 15470658,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-inventory-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-pickup-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "c16a04cb22be500150df8adba14e0a6b918d689d9d1ef17b0f301fcab1d3cac8"
+        },
+        "source_sha256": "7292da5e7376f53e9820664fd5c440d80c35afa87896940f191880c7e126efbd",
+        "save_sha256": "b590bc49fcb92548c3bfdd4d7bf612710a483f5e523830ed6a11ad7366faedb4",
+        "next_dynamic_serial": 7,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-inventory-02/worn-axe-verification.json",
+          "sha256": "d1ea46280d056c7aaf337f30f5f7d0a776f9a37290f1b6995964546561d4ed33"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/weapon-drop/sanitized-worn-axe-native-inventory-02/original-worn-axe-cold-inventory.png",
+            "sha256": "484985646a78b552e77fa9a9667a90b7c7dab798636961b048b4ec1f5bd8d329"
+          }
+        ]
+      }
+    ],
+    "semantic": "scripts/verify_worn_axe_drop.py reads full native saves, compares shared skills/book progress and inventory/actor/quest/death/global/script owners, round-trips schema102, requires reachable live physical axe for world phases and retired count0 for pickup phases; fresh-process epoch/library/save-complete evidence bound per run."
+  },
+  "verifier": {
+    "path": "scripts/verify_worn_axe_drop.py",
+    "sha256": "9b97a711b03638171c4bf9fb83be245e46ee28fee77468b3dadb9e195b23fc40"
+  },
+  "asset_sha_recheck": {
+    "path": "build/oblivion-compat/weapon-drop/asset-sha-recheck.json",
+    "sha256": "4ffcd0cfc66a23170b6632982163c0baeedf7860c98cbab9316ba2fced6904a6"
+  },
+  "ingredient_regression": {
+    "root": "build/oblivion-compat/weapon-drop/normal-rice-dispatch-regression-01",
+    "audit": {
+      "path": "build/oblivion-compat/weapon-drop/normal-rice-dispatch-regression-01/plain-ingredient-drop-verification.json",
+      "sha256": "63ecfebd814ccae8a7d1faa0e18b5b10636e01b0d3357abfd911de790b8d1441"
+    },
+    "scope": "Fresh ordinary Rice drop/save on retained original source c05743..., using earlier editable recipe and semantic verifier with only source101/output102 schema migration acceptance adjusted."
+  },
+  "retained_attempts": [
+    {
+      "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-drop-baseline-01",
+      "result": "Wrong inventory coordinate selected Steel War Axe; desired Rusty stock unchanged, no accepted save."
+    },
+    {
+      "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-drop-baseline-02",
+      "result": "Correct legacy Rusty drop removed item once, no native WEAP reference/serial allocation."
+    },
+    {
+      "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-cold-baseline-01",
+      "result": "Axe visible after cold load, re-save failed unidentified standing reference."
+    },
+    {
+      "root": "build/oblivion-compat/weapon-drop/normal-legacy-axe-standing-diagnostic-01",
+      "result": "Expected retained legacy failure names FormId:0x1090613; no legacy migration."
+    },
+    {
+      "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-world-01",
+      "result": "Metadata and cold save passed, but actual physical axe fell thousands of units through terrain. This is NOT an accepted physical/pickup course."
+    },
+    {
+      "root": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-pickup-01",
+      "result": "Ordinary aim could not reach falling axe; failure exposed missing terrain/loose-object collision."
+    },
+    {
+      "roots": [
+        "build/oblivion-compat/weapon-drop/focused-normal-01",
+        "build/oblivion-compat/weapon-drop/focused-normal-02",
+        "build/oblivion-compat/weapon-drop/focused-sanitized-01",
+        "build/oblivion-compat/weapon-drop/focused-sanitized-02"
+      ],
+      "result": "Initial compile corrections: RefId.toDebugString and WindowManager complete include. Obsolete peer CMake groups stopped; retained failure reports."
+    },
+    {
+      "roots": [
+        "build/oblivion-compat/weapon-drop/focused-normal-03",
+        "build/oblivion-compat/weapon-drop/focused-sanitized-03"
+      ],
+      "result": "47 focused checks each passed before terrain correction; not final physical acceptance."
+    },
+    {
+      "roots": [
+        "build/oblivion-compat/weapon-drop/focused-normal-04",
+        "build/oblivion-compat/weapon-drop/focused-sanitized-04"
+      ],
+      "result": "138 focused checks each passed including existing loose-body coverage; full integration receipt above is final source provenance."
+    }
+  ],
+  "limits": [
+    "Unequipped ordinary singleton admission; no equipped/scripted/bound/enchanted/stack/general container transfer acceptance.",
+    "Conservative actual mesh-bound clearance plus authored physical continuation; no exact original cursor or velocity arithmetic claim.",
+    "Coastal rendering/rock clipping remains visible; the physical terrain mask correction does not fix rendering.",
+    "Old legacy dropped objects are retained failing inputs and are not migrated.",
+    "Original full-condition probe is separate from genuine fork worn metadata proof; no new native instruction arithmetic claim.",
+    "Sanitizer gameplay leak checking disabled; instrumented engine gates use their declared environment. No full M15/M18 claim."
+  ]
+}

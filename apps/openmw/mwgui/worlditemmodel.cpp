@@ -3,11 +3,13 @@
 
 namespace MWGui
 {
-    std::optional<MWWorld::Ptr> WorldItemModel::tryMoveNativeIngredient(
+    std::optional<MWWorld::Ptr> WorldItemModel::tryMoveNativeInventoryItem(
         const MWWorld::Ptr& actor, const ItemStack& item, size_t count)
     {
         auto* world = dynamic_cast<MWWorld::World*>(&*MWBase::Environment::get().getWorld());
-        return world ? world->dropOblivionInventoryIngredient(actor, item.mBase, count, mCursorX, mCursorY)
-                     : std::nullopt;
+        if (!world) return std::nullopt;
+        if (auto dropped = world->dropOblivionInventoryIngredient(actor, item.mBase, count, mCursorX, mCursorY))
+            return dropped;
+        return world->dropOblivionInventoryWeapon(actor, item.mBase, count, mCursorX, mCursorY);
     }
 }

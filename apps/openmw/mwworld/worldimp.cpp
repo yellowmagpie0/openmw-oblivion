@@ -1972,7 +1972,9 @@ namespace MWWorld
                 snapshot.mState.mStandingOn = snapshot.mStandingOn == player ? ESM::FormKey::dynamic("player", 1)
                     : snapshot.mStandingOn.getCellRef().getFormKey();
                 if (snapshot.mState.mStandingOn.isNull())
-                    throw std::runtime_error("native movement capture has an unidentified standing reference");
+                    throw std::runtime_error("native movement capture has an unidentified standing reference: base="
+                        + snapshot.mStandingOn.getCellRef().getRefId().toDebugString()
+                        + " type=" + std::to_string(snapshot.mStandingOn.getType()));
             }
             if (!movement.mActors.emplace(key, std::move(snapshot.mState)).second)
                 throw std::runtime_error("native movement capture has duplicate actor ownership");

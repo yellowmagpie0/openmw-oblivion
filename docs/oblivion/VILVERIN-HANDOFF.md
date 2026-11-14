@@ -4,131 +4,71 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Previous accepted chunk: [plain Rice repeated-save persistence](PLAIN-INGREDIENT-DROP-CONTRACT.json).
-Real Rice survived the old legacy drop/save and first cold load, then vanished
-when that world was re-saved and cold loaded again. Native scriptless ingredient
-singleton admission now passes drop/save → first cold world re-save → second
-cold world pickup/save → cold inventory load in normal and instrumented games.
-The [record oracle](PLAIN-INGREDIENT-DROP-ORACLE.json) and
-[receipt](PLAIN-INGREDIENT-DROP-VERIFICATION.json) retain the baseline, corrected
-ID-lifetime/verifier attempts, all process/save hashes and reviewed captures.
-One Rice/no script owner, exact metadata, Nirnroot owner4/Found1, MS39 stage10/
-counters2, Health110, all skills/passives and33 credited deaths survive.
-Normal2291/full instrumented2291 engine, focused12/Python617 and a fresh real
-Nirnroot drop regression pass. Existing schema101 is unchanged. No general
-stack/container/scripted-event, dynamic bounce or full M16/M18 claim.
+Latest bounded chunk: [worn Rusty Iron War Axe drop](WORN-AXE-DROP-CONTRACT.json).
+The genuine carried axe090613 previously became a legacy world object: a cold
+re-save failed because its standing contact had no native identity. Native
+ordinary inventory weapon singleton admission now preserves the reference,
+exact worn condition22.494663, ownership and authored loose-body state. Actual
+outdoor testing also exposed missing loose-object/terrain collision; heightfields
+now admit loose objects. No suppression of standing-contact validation.
+[Oracle](WORN-AXE-DROP-ORACLE.json) separates original full-condition ordinary
+pickup/drop behavior from genuine fork worn-item preservation.
+[Receipt](WORN-AXE-DROP-VERIFICATION.json) records baseline failures, normal and
+instrumented drop → cold world re-save → ordinary pickup/save → cold inventory
+courses, regression gates and independent asset provenance.
 
-Retained full-Health continuation, separate from the Cairn branch:
-`build/oblivion-compat/ingredient-drop/normal-rice-inventory-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `08ab80e2a581f493f7b9eed78d2ce219daa41fc8d451b33297873980802054b8`.
-Rice1/no script owner, Nirnroot owner4/Found1, allocator6, MS39 counters2,
-Health110, Alchemy5/XP0.5, Athletics30/XP17.009033, Acrobatics5/XP0.6, Hand35
-and33 credited deaths. Instrumented final inventory save SHA256:
-`272aad0c823e796806770d0836ad40a6bf03e585fc22671f8613643a1ef27698`.
-Coastal terrain/rock clipping and expensive instrumented cold loads are adjacent
-gaps, not claimed fixed.
+Healthy continuation, separate from Cairn and infected branches:
+`build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `e38b5b86444feac911d7516fc4b00b4907f273fcf30b197ac39010a4629bb305`.
+One unequipped worn Rusty Iron War Axe, equipped Club59.5000458, Health110,
+Endurance55, no Swamp Fever, Crab0/Rice1, Nirnroot owner4/Found1, MS39stage10/
+counters2,33 credited deaths and all earned skills retained. Allocator7;
+retired dropped key6 remains deleted/count0. Schema102 unchanged.
+Instrumented final inventory SHA256:
+`b590bc49fcb92548c3bfdd4d7bf612710a483f5e523830ed6a11ad7366faedb4`.
+Normal2292/full disjoint instrumented2292 engine, focused138 each and Python618
+pass. Unchanged components reuse the Crab receipt with original provenance.
 
-Previous [Nirnroot round trip](NIRNROOT-DROP-VERIFICATION.json) preserves original
-UI Found1 and discovery counters; command-drop resetting Found0 is separate.
-Its retained normal save is
-`build/oblivion-compat/nirnroot-drop/normal-inventory-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `c05743f6dcbc781de8c6d8802fb61631d962c28276a0ce0a001e43593979fa07`.
-Scripted transfer and plain-item identity now have separate real-content proof.
+Remaining current acceptance gaps: equipped/scripted/bound/enchanted/stacked
+weapon inventory drops; broader inventory lifetime/effects/UI; coastal rendering/
+rock clipping (terrain collision correction does not fix rendering); natural
+positive Endurance-damage healing gameplay. Choose the next bounded chunk by
+observed unsupported behavior in genuinely carried or reached content.
 
-Latest accepted chunk: [original Crab Meat consumption](CRAB-MEAT-CONTRACT.json).
-[Original probes](CRAB-MEAT-ORACLE.json) establish repair5 and no Swamp Fever cure;
-[receipt](CRAB-MEAT-VERIFICATION.json) records twelve normal/instrumented ordinary-
-input checkpoints. Healthy Endurance55 and infected Endurance45 survive pending
-save → cold completion → completed cold load, one debit/no Alchemy XP or repeat.
-Schema102 retains the AV5 owner. Normal3301 components/2292 engine/618 Python and
-instrumented1122 native components/full disjoint2292 engine pass. Original input
-restoration, the idle bandit death, fixture-version/preload setup failures and
-reviewed captures remain linked in the receipt. No full M16 claim.
+Reusable evidence and independent continuations:
 
-Current chunk complete. Remaining gap: naturally acquired positive Endurance-
-damage healing gameplay; controlled original repair and authority/save tests
-are separate evidence. Choose the next real-content chunk by its observed
-unsupported behavior, while preserving this explicit gap.
+- [Crab Meat](CRAB-MEAT-VERIFICATION.json): original repair5/no disease cure,
+  healthy and genuine Swamp Fever pending/completed cold-load courses; accepted
+  component3301/native sanitizer1122, engine2292 both modes, Python618 provenance.
+  Its receipt retains separate healthy and infected save hashes. Infected normal
+  branch has Health25.83499/90 and a nearby bandit; respond promptly. Never merge
+  that branch with the healthy continuation.
+- [Plain Rice](PLAIN-INGREDIENT-DROP-VERIFICATION.json),
+  [Nirnroot drop](NIRNROOT-DROP-VERIFICATION.json) and
+  [Nirnroot pickup](NIRNROOT-PICKUP-VERIFICATION.json): scriptless identity and
+  scripted owner-transfer round trips with retained original failures. Their
+  recipes, earlier source saves and component/Python gates retain their original
+  provenance; new weapon receipt includes a fresh Rice dispatch regression.
+- [Cairn healing](CAIRN-BOLETE-VERIFICATION.json),
+  [Wine](CHEAP-WINE-VERIFICATION.json), [Repair](REPAIR-HAMMER-VERIFICATION.json):
+  separate continuation hashes and exact retained progression are in each receipt.
+- [Vilverin containers](VILVERIN-CONTAINER-LOOT-VERIFICATION.json),
+  [Skeleton](SKELETON-DEATH-POSE-VERIFICATION.json),
+  [loose mace push](SETTLED-MACE-PUSH-VERIFICATION.json),
+  [skills](HANDTOHAND-USE-VERIFICATION.json),
+  [Swamp Fever](SWAMP-FEVER-CONTACT-VERIFICATION.json) and
+  [weapon assets](M15-WEAPON-SCABBARD-VERIFICATION.json).
 
-Healthy continuation (no Swamp Fever), Crab0/End55/Health110/33 credited deaths:
-`build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `9b498081a3dc4603e494897f4bb5931beda86d6e3d012cb5fe669ef498a77a98`.
-Rice1, Nirnroot owner4/Found1, MS39 stage10/counters2, allocator6 and all earned
-skills retained. Instrumented healthy final SHA256:
-`9841041518a9973262b5f60aa8fc2c6e814381db3de6bedf72de280a315e410e`.
+Broader gaps: Alchemy/resistance/skill progression; spawn roots/children/grouped
+actors/respawn; full S5/M15, arrow recovery and sound/reaction/view/device matrices;
+bow tactics and other death models. Native Dead state owns life even at positive
+Health; retain unknown historical passive ownership. Zombie06c2c6 and restoration
+chest04bb8b retain route gaps. Learned target-SPEL mastery needs a real acquired
+spell case (reads Alteration20 rather than Destruction22). Cure Disease remains
+without a verified reached source; container loot is unverified and nearest found
+outdoor Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
-Separate infected continuation, Crab0/End[55,-10,0,0]/25 credited deaths:
-`build/oblivion-compat/crab-meat/normal-infected-crab-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `d75e151450f0fbea3943b5aeb5fb464b6adf87910ac5d8735b1937bfc1f173ad`.
-Health25.83499/90, Heavy Armor XP5 and worn Cuirass107.75572 retain real bandit
-hits. Bandit06c2aa is still nearby; react promptly if continuing this branch.
-The independent instrumented route retained Health32.19137/90, no incoming hit;
-final SHA256 `779680f4175d9134d79e27038055f3afdd1e5cc64e9f6e6d93d7a1a04798b60c`.
-Never merge these branches or their different retained combat consequences.
-
-
-Separate Cairn continuation:
-`build/oblivion-compat/cairn-bolete/normal-original-cairn-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `0330a7448527955ca09680cb90ab3d785f8c091573a11d51004bea8cdd40fa6d`.
-Wellspring Cave, Health70.48/110, cap0, Alchemy5/XP0.5, Athletics31/XP8.661195,
-Acrobatics5/XP0, Hand36/book major progress2 and33 credited deaths. Original cap
-heals1 Health/s for3s; normal/instrumented partial and completed cold loads pass.
-[Contract](CAIRN-BOLETE-CONTRACT.json), [oracle](CAIRN-BOLETE-ORACLE.json),
-[receipt](CAIRN-BOLETE-VERIFICATION.json) retain acquisition, genuine damage,
-failed plants/staging and original3300 component/2289 engine/Python617 provenance.
-
-Separate full-Health Wine continuation:
-`build/oblivion-compat/cheap-wine/normal-complete-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527`.
-Health110, Wine0/no pending owner, Athletics30/XP17.009033, Acrobatics5/XP0.6,
-Alchemy5/XP0.5, one scripted Nirnroot/Found1, MS39stage10/counters2.
-[Wine receipt](CHEAP-WINE-VERIFICATION.json) covers original mixed attributes,
-Magicka/Fatigue derivation, instant Fatigue10, natural120s expiry/cold reloads and
-real Mead regression. Its normal/instrumented2286 engine/Python616 evidence has
-its own original provenance; component evidence was reused from Repair.
-
-Separate Repair continuation:
-`build/oblivion-compat/repair-hammer/normal-restart-06/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `3e0a7cecdfc70acbd758527f8e4f2f43ac35147c71369d853502599ad87dc258`.
-Health80, Armorer5/XP1.5, Rusty Cuirass52/250, Hammer1, source chest04931b Hammer0.
-Instrumented branch naturally broke its hammer; do not merge. Normal3298
-components/2284 engine/616 Python and instrumented1119 native components/2284
-engine pass. [Repair receipt](REPAIR-HAMMER-VERIFICATION.json) retains the original
-rules, quest-flag checks, branch saves and tool-roll evidence. Expert125%,
-enchanted/stacked/runtime-script-owner repair remain open.
-
-Accepted historical evidence, with original sources and independent branch saves:
-
-- [Alchemy](ALCHEMY-USE-VERIFICATION.json), [Acrobatics](ACROBATICS-USE-VERIFICATION.json),
-  [Athletics](ATHLETICS-USE-VERIFICATION.json), [Blade](BLADE-USE-VERIFICATION.json),
-  [taken Claymore focus](TAKEN-CLAYMORE-FOCUS-VERIFICATION.json).
-- [Armor](ARMOR-USE-VERIFICATION.json), [Block](BLOCK-USE-VERIFICATION.json),
-  [Swamp Fever](SWAMP-FEVER-CONTACT-VERIFICATION.json),
-  [Hand-to-Hand](HANDTOHAND-USE-VERIFICATION.json),
-  [Destruction](DESTRUCTION-USE-VERIFICATION.json).
-- [Nirnroot use](NIRNROOT-USE-VERIFICATION.json), [pickup](NIRNROOT-PICKUP-VERIFICATION.json),
-  [Immortal Blood](SKILL-BOOK-READ-VERIFICATION.json),
-  [settled mace push](SETTLED-MACE-PUSH-VERIFICATION.json),
-  [Skeleton death](SKELETON-DEATH-POSE-VERIFICATION.json),
-  [corpse loot](SKELETON-CORPSE-LOOT-VERIFICATION.json),
-  [retaliation](SKELETON-RETALIATION-VERIFICATION.json),
-  [axe](CRYPT-SKELETON-WEAPON-VERIFICATION.json), [resistances](BONE-RESISTANCES-VERIFICATION.json).
-- [Blunt](BLUNT-USE-VERIFICATION.json), [Marksman](MARKSMAN-USE-VERIFICATION.json),
-  [Restoration](RESTORATION-USE-VERIFICATION.json),
-  [bedroll](BEDROLL-REST-VERIFICATION.json), [Amulet](AMULET-KINGS-EQUIP-VERIFICATION.json).
-
-Remaining acceptance gaps: general inventory transfer/removal lifetime and
-effects/UI; broader Alchemy, resistance and skill progression; spawn roots/children,
-grouped actors, respawn/all levels; full S5/M15, arrow recovery,
-sound/reaction/view/device matrices, bow tactics and other death models. Native
-death state is authoritative; positive Health on a Dead actor is valid. Preserve
-unknown/null historical passive ownership. Zombie06c2c6 and restoration chest04bb8b
-retain route gaps. Learned target-SPEL mastery still reads Alteration20 rather
-than Destruction22 and needs an actual acquired spell case. Chameleon alpha0.75
-is approximate. Cure Disease remains deferred: no carried/directly placed Vilverin
-source found, container loot unverified, nearest found outdoor Mandrake70k away.
-
-Checkpoint: bounded progression, potion ownership and first-effect ingredient
-healing gaps are shrinking; broader milestone gates remain open. The Cairn healing, Nirnroot and
-plain Rice round trips are complete. Choose the next behavior from already carried/
-reached content and record adjacent rendering/navigation issues for later.
+Checkpoint: original ingredient use, scripted/plain identity round trips, and
+ordinary worn weapon transfer now have distinct real-content evidence. Broad
+milestones remain open. Current chunk complete; next action is select another
+observed real-content failure, preserving the explicit gaps above.

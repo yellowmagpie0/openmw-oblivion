@@ -1,0 +1,46 @@
+{
+  "status": "Accepted bounded genuine worn ordinary weapon drop, outdoor physical collision, pickup and cold persistence in normal and sanitizer builds",
+  "milestones": [
+    "M18 native inventory/world identity and metadata",
+    "M15 physical reference save/restart"
+  ],
+  "content": {
+    "base": "content:oblivion.esm:090613",
+    "name": "Rusty Iron War Axe",
+    "source_condition": 22.49466323852539,
+    "quantity": 1,
+    "equipped": false,
+    "script": null,
+    "enchantment": null
+  },
+  "source": {
+    "save": "build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "9b498081a3dc4603e494897f4bb5931beda86d6e3d012cb5fe669ef498a77a98",
+    "health": 110,
+    "endurance": 55,
+    "credited_deaths": 33,
+    "active_weapon": "159829 Club, condition59.50004577636719"
+  },
+  "baseline": {
+    "drop": "build/oblivion-compat/weapon-drop/normal-worn-axe-drop-baseline-02",
+    "save_sha256": "1e9c916bd54fe69758845f9936d922ad437638e21c299c27014159a558689a05",
+    "first_cold": "build/oblivion-compat/weapon-drop/normal-worn-axe-cold-baseline-01",
+    "observed": "The axe is removed once, visible as a legacy world item, absent from native references and allocator remains6. Cold reload retains the visible legacy object but re-save fails: native movement capture has an unidentified standing reference. The enriched diagnostic identifies FormId:0x1090613, the Rusty Iron War Axe."
+  },
+  "acceptance": [
+    "Retain genuine worn-axe baseline and failed incorrect Steel War Axe UI attempt; no edited saves or grants.",
+    "Admit original unequipped ordinary weapon singleton as a stable native WEAP reference and authored physical body; prepare all resources before exactly one selected-instance debit.",
+    "Preserve condition/charge/ownership, equipped Club and all other inventory, skills, quest/ability/death state; no weapon-use wear caused by transfer.",
+    "Save dropped physical owner; cold load and re-save; second cold load and ordinary pickup/save; cold inventory load. Preserve source asset/body identity and legitimate physics continuation without requiring bit-identical poses.",
+    "Do not weaken movement standing-reference validation; bind the dropped object so valid physical contacts can be saved.",
+    "Run meaningful normal/sanitizer focused checks, required integration gates and real ordinary-input normal/instrumented courses; verify unchanged ingredient dispatch.",
+    "Actual outdoor dropped axe must stop on terrain and remain reachable through ordinary pickup; metadata-only save success is insufficient."
+  ],
+  "save_schema": 102,
+  "limits": [
+    "Current new admission is for unequipped nonquest, nonscripted, unbound, unenchanted singletons with an identified original world body. Equipped/scripted/bound/enchantment/stack cases require their own acceptance.",
+    "Placement uses a conservative actual model-bound clearance and authored falling/settling, not an exact original cursor-placement arithmetic claim.",
+    "Old legacy drops are retained failure inputs, not silently migrated. Existing coastal terrain clipping remains adjacent."
+  ],
+  "oracle": "WORN-AXE-DROP-ORACLE.json"
+}

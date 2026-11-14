@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "name": "Original worn Rusty Iron War Axe: prepared native inventory drop and save",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\nat 0 command content:oblivion.esm:04e936 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function()\n frames=frames+1;if frames<1 or frames%1~=0 then return end\n assert(not Actor.isDead(self),'Player died testing genuine Rusty Iron War Axe drop')\n print('WeaponDrop stock='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x90613))..' health='..Actor.stats.dynamic.health(self).current..' nirnroot='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x4e940))..' paused='..tostring(core.isWorldPaused()))\n for _,o in ipairs(nearby.items) do\n  if tostring(o.recordId)==tostring(core.getFormId('Oblivion.esm',0x90613)) then print('WeaponDrop nearby id='..o.id..' base='..tostring(o.recordId)..' position='..tostring(o.position)) end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "WeaponDrop stock=1 health=110",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_hold",
+      "value": "Tab",
+      "seconds": 0.12
+    },
+    {
+      "type": "sleep",
+      "seconds": 6
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 199,
+      "y": 605
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "screenshot",
+      "name": "original-rusty-axe-before-drop.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_down",
+      "value": "Control_L"
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "key_up",
+      "value": "Control_L"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.4
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 700,
+      "y": 550
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.4
+    },
+    {
+      "type": "screenshot",
+      "name": "original-rusty-axe-world-drop-cursor.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "WeaponDrop stock=0",
+      "timeout_seconds": 30,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-rusty-axe-after-drop-inventory.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "original-rusty-axe-dropped-world.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "WeaponDrop stock=1 health=110",
+    "WeaponDrop stock=0",
+    "Writing saved game",
+    "TES4 inventory weapon dropped: base=content:oblivion.esm:090613"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "fWortChanceValue",
+    "Water Breathing",
+    "Dangling inventory script instance",
+    "Failed to save game"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-rusty-axe-drop-baseline",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}

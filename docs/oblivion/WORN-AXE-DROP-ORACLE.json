@@ -1,0 +1,227 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "type": "WEAP",
+  "id": "090613",
+  "payload_sha256": "641518d721feb07c4e8ef6fb727c529ab4b7cc16b7ffc835c52258e597579702",
+  "strings": {
+    "EDID": "WeapIronWarAxeRusty",
+    "FULL": "Rusty Iron War Axe",
+    "MODL": "Weapons\\Iron\\WarAxe.NIF"
+  },
+  "script_present": false,
+  "enchantment_present": false,
+  "weapon_data": {
+    "type": 2,
+    "speed": 1.100000023841858,
+    "reach": 0.800000011920929,
+    "flags": 0,
+    "value": 4,
+    "health": 56,
+    "weight": 12.0,
+    "damage": 5
+  },
+  "scope": "Independent original installed master audit; no production engine used to compute expected transfer metadata.",
+  "original_game_probe": {
+    "root": "build/oblivion-compat/weapon-drop/original-native-01",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "setup": "Isolated original-game console additem0906131; fork gameplay uses genuinely carried worn item without grants.",
+    "actions": {
+      "actions-05-axe-setup.json": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 00090613"
+        },
+        {
+          "type": "line",
+          "value": "player.additem 00090613 1"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 00090613"
+        },
+        {
+          "type": "shot",
+          "name": "original-axe-setup-count.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "F2"
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        },
+        {
+          "type": "shot",
+          "name": "original-axe-inventory.png"
+        }
+      ],
+      "actions-06-ui-drop.json": [
+        {
+          "type": "down",
+          "value": "Shift_L"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.3
+        },
+        {
+          "type": "hold_click",
+          "x": 205,
+          "y": 212,
+          "seconds": 0.8
+        },
+        {
+          "type": "up",
+          "value": "Shift_L"
+        },
+        {
+          "type": "shot",
+          "name": "original-axe-dropped-inventory.png"
+        },
+        {
+          "type": "key",
+          "value": "Tab"
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 00090613"
+        },
+        {
+          "type": "shot",
+          "name": "original-axe-dropped-count.png"
+        }
+      ],
+      "actions-07-look-down.json": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "motion",
+          "x": 0,
+          "y": 300
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        },
+        {
+          "type": "shot",
+          "name": "original-dropped-axe-ground.png"
+        }
+      ],
+      "actions-08-pickup-aim.json": [
+        {
+          "type": "motion",
+          "x": 80,
+          "y": 150
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.7
+        },
+        {
+          "type": "shot",
+          "name": "original-axe-pickup-aim.png"
+        }
+      ],
+      "actions-09-pickup.json": [
+        {
+          "type": "key",
+          "value": "space"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 00090613"
+        },
+        {
+          "type": "shot",
+          "name": "original-axe-recovered-count.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "F2"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        },
+        {
+          "type": "shot",
+          "name": "original-axe-recovered-health.png"
+        }
+      ]
+    },
+    "observed": {
+      "before_count": 1,
+      "after_shift_click_drop_count": 0,
+      "after_ordinary_space_pickup_count": 1,
+      "inventory_condition_percent_before_and_after": 100,
+      "physical_body": "Axe falls and settles on original stone floor before ordinary pickup."
+    },
+    "limits": "Original full-condition probe establishes transfer behavior, not independent worn float proof. Fork exact source condition retention is audited separately.",
+    "restoration": {
+      "game_process_exited": true,
+      "wrapper_exit": 0,
+      "inputs": [
+        {
+          "path": "pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Oblivion.ini",
+          "restored_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+          "source_unchanged": true
+        },
+        {
+          "path": "pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/quicksave.ess",
+          "restored_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+          "source_unchanged": true
+        },
+        {
+          "path": "pfx/drive_c/users/steamuser/AppData/Local/Oblivion/Plugins.txt",
+          "restored_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+          "source_unchanged": true
+        }
+      ],
+      "owned_xserver_terminated": {
+        "pid": 734212,
+        "start_ticks": 15167526,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842"
+      }
+    }
+  },
+  "asset_provenance": {
+    "source": "M15-WEAPON-SCABBARD-VERIFICATION.json",
+    "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+    "member": "meshes/weapons/iron/waraxe.nif",
+    "member_sha256": "8dec9eff05858bce46b799d3dbe28aae13801efec8c0036b94d19285acb5da95",
+    "scope": "Existing original asset parser evidence reused with original provenance; actual runtime physical binding audited separately."
+  }
+}

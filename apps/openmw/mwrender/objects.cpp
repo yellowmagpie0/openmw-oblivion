@@ -92,6 +92,12 @@ namespace MWRender
             throw std::invalid_argument("prepared native model has no valid world bound");
         return mData->mInsert->getBound().center();
     }
+    float Objects::PreparedModel::worldBoundRadius() const
+    {
+        if (!hasLiveOwner() || !mData->mInsert->getBound().valid())
+            throw std::invalid_argument("prepared native model has no valid world bound");
+        return mData->mInsert->getBound().radius();
+    }
     std::shared_ptr<const LooseObjectSceneBinding> Objects::PreparedModel::looseSceneBinding() const noexcept
     { return mData ? mData->mSceneBinding : nullptr; }
 
