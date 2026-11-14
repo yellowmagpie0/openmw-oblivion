@@ -951,6 +951,17 @@ namespace MWWorld
         auto custom = cached->mCustomState;
         custom["taken"] = true;
         if (!owner.empty()) custom["ownership_checked"] = true;
+        const bool transferredNirnroot = item.mBase == ESM::FormKey::content("oblivion.esm", 0x4e940)
+            && key.isDynamic() && mOblivionScriptManager;
+        std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer> scriptTransfer;
+        const auto scriptSerial = mNextOblivionDynamicSerial;
+        if (transferredNirnroot)
+        {
+            if (item.mCount != 1 || !scriptSerial || scriptSerial == std::numeric_limits<std::uint64_t>::max())
+                throw std::invalid_argument("native Nirnroot pickup requires a singleton identity");
+            item.mScriptOwner = ESM::FormKey::dynamic("inventory-script", scriptSerial);
+            scriptTransfer = mOblivionScriptManager->prepareItemScriptTransfer(item.mBase, key, item.mScriptOwner);
+        }
         auto sources = OblivionProfileServices::prepareActorInventory(mStore, resolver, {item});
         const Ptr player = getPlayerPtr();
         auto& inventory = player.getClass().getInventoryStore(player);
@@ -979,12 +990,19 @@ namespace MWWorld
             || ptr.getCellRef().getNativeDropRelations() != sourceRelations
             || cached->mDropRelations != cachedRelations || !dropper.isValid()
             || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr
+            || (scriptTransfer && (mNextOblivionDynamicSerial != scriptSerial || !scriptTransfer->isValid()))
             || !addition->isValid() || (registration && !registration->isValid())
             || (scene && !scene->isValid()))
             throw std::invalid_argument("native pickup preparation became stale");
         // No allocation or external observer in this publication interval.
         if (scene && !scene->commitResources())
             throw std::logic_error("validated pickup scene removal was rejected");
+        if (scriptTransfer)
+        {
+            if (!scriptTransfer->commit())
+                throw std::logic_error("validated native Nirnroot script transfer rejected");
+            ++mNextOblivionDynamicSerial;
+        }
         ptr.getCellRef().setCount(0);
         const Ptr published = addition->commit();
         if (published.isEmpty())
@@ -1025,6 +1043,17 @@ namespace MWWorld
                 if (mOblivionRuntimeState)
                     mOblivionRuntimeState->mPlayer.mInventory = captureOblivionInventory(getPlayerPtr());
             }
+            catch (...) { if (!failure) failure = std::current_exception(); }
+        }
+        if (scriptTransfer && !worldIdentity.expired() && getPlayerPtr() == player)
+        {
+            // Re-find the owner after inventory observers before firing OnAdd.
+            Ptr added;
+            auto& current = player.getClass().getInventoryStore(player);
+            for (auto it = current.begin(); it != current.end(); ++it)
+                if (it->getCellRef().getNativeScriptOwner() == item.mScriptOwner)
+                { added = *it; break; }
+            try { if (!added.isEmpty()) mOblivionScriptManager->dispatchInventoryAdd(player, added); }
             catch (...) { if (!failure) failure = std::current_exception(); }
         }
         if (failure) std::rethrow_exception(failure);

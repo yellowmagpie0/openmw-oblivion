@@ -70,6 +70,21 @@ namespace MWWorld
         bool canRetireConsumedInventoryOwner() const { return !mDepth && !mRetainedRuntime; }
         // Caller validates idle admission before publishing its inventory debit.
         void retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept;
+        // Move existing item locals between inventory and native world identity.
+        // Preparation allocates; publication neither dispatches nor allocates.
+        class PreparedItemScriptTransfer
+        {
+            friend class OblivionScriptManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedItemScriptTransfer(std::unique_ptr<Data> data);
+        public:
+            ~PreparedItemScriptTransfer();
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        std::unique_ptr<PreparedItemScriptTransfer> prepareItemScriptTransfer(
+            const ESM::FormKey& base, const ESM::FormKey& from, const ESM::FormKey& to);
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
@@ -192,6 +207,7 @@ namespace MWWorld
         std::map<ESM::FormKey, std::vector<std::shared_ptr<const ObScript::Program>>> mQuestResults;
         std::map<ESM::FormKey, ESM::FormKey> mQuestScripts;
         std::map<InstanceKey, Instance> mInstances;
+        std::shared_ptr<const char> mItemTransferIdentity;
         std::map<ESM::FormKey, ESM4::RuntimeQuestState> mQuests;
         // Interactive UI is not saveable; retain its polling identity across
         // temporary runtime detachment and clear it on game restore/reset.

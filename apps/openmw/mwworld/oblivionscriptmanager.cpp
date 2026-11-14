@@ -675,6 +675,7 @@ namespace MWWorld
         }
         void swap(OblivionScriptManager& owner) noexcept
         {
+            owner.mItemTransferIdentity.reset();
             using std::swap;
             swap(mNativeSpeech, owner.mNativeSpeech);
             swap(mMessageBoxOwner, owner.mMessageBoxOwner);
@@ -784,6 +785,7 @@ namespace MWWorld
     void OblivionScriptManager::clear()
     {
         requireMutableRuntime();
+        mItemTransferIdentity.reset();
         mNativeSpeech.clear();
         mMessageBoxOwner = {};
         mDiagnosedVoiceTopics.clear();
@@ -1211,6 +1213,75 @@ namespace MWWorld
         for (auto it = mInstances.begin(); it != mInstances.end(); )
             if (it->first.mContext == owner) it = mInstances.erase(it);
             else ++it;
+    }
+
+    struct OblivionScriptManager::PreparedItemScriptTransfer::Data
+    {
+        OblivionScriptManager* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        InstanceKey mSource, mTarget;
+        Instance mExpected;
+        std::map<InstanceKey, Instance> mPrepared;
+        bool mConsumed = false;
+    };
+
+    OblivionScriptManager::PreparedItemScriptTransfer::PreparedItemScriptTransfer(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    OblivionScriptManager::PreparedItemScriptTransfer::~PreparedItemScriptTransfer() = default;
+
+    bool OblivionScriptManager::PreparedItemScriptTransfer::isValid() const noexcept
+    {
+        if (!mData || mData->mConsumed || mData->mIdentity.expired()) return false;
+        const auto& d = *mData;
+        if (d.mOwner->mDepth || d.mOwner->mRetainedRuntime || d.mPrepared.size() != 1
+            || d.mOwner->mInstances.contains(d.mTarget)) return false;
+        for (const auto& [key, instance] : d.mOwner->mInstances)
+            if (key.mContext == d.mTarget.mContext
+                || (key.mContext == d.mSource.mContext && key.mUnit != d.mSource.mUnit)) return false;
+        const auto found = d.mOwner->mInstances.find(d.mSource);
+        return found != d.mOwner->mInstances.end()
+            && found->second.mLocals == d.mExpected.mLocals
+            && found->second.mOnLoadFired == d.mExpected.mOnLoadFired;
+    }
+
+    bool OblivionScriptManager::PreparedItemScriptTransfer::commit() noexcept
+    {
+        if (!isValid()) return false;
+        auto& d = *mData;
+        // Compatible map allocators transfer the already allocated node.
+        d.mOwner->mInstances.merge(d.mPrepared);
+        d.mOwner->mInstances.erase(d.mSource);
+        d.mConsumed = true;
+        return true;
+    }
+
+    std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer>
+    OblivionScriptManager::prepareItemScriptTransfer(
+        const ESM::FormKey& base, const ESM::FormKey& from, const ESM::FormKey& to)
+    {
+        requireMutableRuntime();
+        if (mDepth || mRetainedRuntime || from.isNull() || to.isNull() || from == to
+            || ESM::FormKey::deserialize(from.serialize()) != from
+            || ESM::FormKey::deserialize(to.serialize()) != to)
+            throw std::invalid_argument("item script transfer requires distinct idle owners");
+        const auto program = mBaseScripts.find(base);
+        if (program == mBaseScripts.end() || !hasInventoryAddEvent(base))
+            throw std::invalid_argument("item script transfer requires a loaded OnAdd program");
+        auto data = std::make_unique<PreparedItemScriptTransfer::Data>();
+        data->mOwner = this;
+        data->mSource = {program->second->mUnit.serialize(), from};
+        data->mTarget = {program->second->mUnit.serialize(), to};
+        const auto source = mInstances.find(data->mSource);
+        if (source == mInstances.end())
+            throw std::invalid_argument("item script transfer source instance is missing");
+        for (const auto& [key, instance] : mInstances)
+            if (key.mContext == to || (key.mContext == from && key.mUnit != data->mSource.mUnit))
+                throw std::invalid_argument("item script transfer has another owner/unit");
+        data->mExpected = source->second;
+        data->mPrepared.emplace(data->mTarget, data->mExpected);
+        if (!mItemTransferIdentity) mItemTransferIdentity = std::make_shared<const char>();
+        data->mIdentity = mItemTransferIdentity;
+        return std::unique_ptr<PreparedItemScriptTransfer>(new PreparedItemScriptTransfer(std::move(data)));
     }
 
     void OblivionScriptManager::update(double secondsPassed)
@@ -3567,6 +3638,7 @@ namespace MWWorld
         auto& target = *mImpl->mTarget;
         if (target.mRetainedRuntime && !target.mRetainedRuntime->mDetached)
             return false;
+        target.mItemTransferIdentity.reset();
         target.mInstances.swap(mImpl->mInstances);
         target.mQuests.swap(mImpl->mQuests);
         target.mSpokenDialogueInfos.swap(mImpl->mSpokenDialogueInfos);

@@ -1,0 +1,40 @@
+{
+  "status": "Bounded original Nirnroot UI drop/reacquisition course complete in normal and instrumented fresh processes. Full milestone acceptance remains open.",
+  "milestone": "M16 bounded scripted singleton inventory/world ownership",
+  "source": {
+    "path": "build/oblivion-compat/cheap-wine/normal-complete-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527",
+    "boundary": "Independent retained Wine branch; do not merge Cairn branch progression."
+  },
+  "content": {
+    "ingredient": "04e940 Nirnroot",
+    "script": "0eed76 MS39NirnrootScript",
+    "record_flags": 0,
+    "inventory_owner": "dynamic:inventory-script:0000000000000001",
+    "found": 1,
+    "quest": "04e936 MS39",
+    "stage": 10,
+    "total": 2,
+    "current": 2,
+    "misc_stat_27": 2
+  },
+  "original_audit": {
+    "path": "build/oblivion-compat/nirnroot-drop/winning-original-script.json",
+    "sha256": "ba1315d2c8d44d5888ebbb610e4df3ca17b277e8f0597460c8c2055e7acf3567",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "acceptance": [
+    "Ordinary visible-surface drop of the actual singleton preserves Found1 and exact item metadata under one native world owner.",
+    "Real save and cold world reload retain one dropped item and one valid script owner, without dangling or duplicated inventory identity.",
+    "Ordinary reacquisition returns exactly one item, preserves Found1 and fires OnAdd without changing MS39 stage10, total/current2 or misc stat27=2.",
+    "Post-pickup cold load remains stable; preserve Health110, all earned skills, unrelated complete items, passives and33 credited deaths.",
+    "Independent original behavior/content evidence, focused checks and required normal/instrumented integration/runtime courses."
+  ],
+  "limits": [
+    "No general stack transfers, other scripted events/items, arbitrary spawn roots or full M16/M18 claim.",
+    "No fork grants, stat/time/position/seed setters or edited save sources. Original oracle console setup is isolated and declared separately.",
+    "Bounded UI surface placement of the actual unbound singleton with no condition, charge, rank/global or explicit extra-scale metadata.",
+    "Uses static ingredient model/collision admission; dynamic tumbling and bounce are not acceptance claims."
+  ],
+  "expected": "Ordinary UI drop preserves Found1 on the world reference. Ordinary pickup preserves Found1 and total/current/misc27=2 without new discovery credit. Original command-drop resets Found0; command semantics are outside this UI chunk."
+}

@@ -1,0 +1,337 @@
+{
+  "status": "Bounded original-content course complete; no full milestone claim",
+  "parent_commit": "fc84e6ef545659fc2bfec0efca874bbed5a3f18b",
+  "contract": "docs/oblivion/NIRNROOT-DROP-CONTRACT.json",
+  "oracle": {
+    "path": "docs/oblivion/NIRNROOT-DROP-ORACLE.json",
+    "sha256": "66bda0176f3591c9bec0473b604ff91fba6c57d06eb9f1eeb766f12be61e28b9"
+  },
+  "source": {
+    "path": "build/oblivion-compat/cheap-wine/normal-complete-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527",
+    "boundary": "Independent retained Wine branch; do not merge Cairn branch progression."
+  },
+  "result": "Ordinary UI drop transfers original Nirnroot Found1 to a typed native world reference, survives cold world load, transfers locals to a fresh inventory owner on Space pickup, dispatches OnAdd without repeating discovery credit, and survives cold inventory load. Schema101 unchanged.",
+  "layers": {
+    "structural": "Typed ESM4 ingredient, cell/registry, renderer, physics and Lua scene admission prepared before source debit; one-shot script transfer carries locals/OnLoad. Pickup uses existing prepared native inventory/scene removal.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/nirnroot-drop/focused-normal-01/verification.json",
+        "sha256": "e2bb7b22afe5a2ca31d3605b3a3150067e0abc5e0af0249e54d57bc104a9a8d9",
+        "results": {
+          "engine": {
+            "executed": 10,
+            "filter": "OblivionItemScriptTransfer.*:OblivionOwnership.*"
+          }
+        },
+        "source": {
+          "head": "fc84e6ef545659fc2bfec0efca874bbed5a3f18b",
+          "source_fingerprint": "5394d559f8c5d84014b05b16ba2e743f18626c4cec353485af2a81fef111f152"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/nirnroot-drop/full-normal-01/verification.json",
+        "sha256": "56dc4e1e2a0af040a07d8e6c386b2d63c6740d3b2f31118f0e8a486f13ea8555",
+        "results": {
+          "engine": {
+            "executed": 2291,
+            "filter": "*"
+          },
+          "python": {
+            "executed": 617
+          }
+        },
+        "source": {
+          "head": "fc84e6ef545659fc2bfec0efca874bbed5a3f18b",
+          "source_fingerprint": "972bf365bb811662479663b205f3160a580571e1c105f42a05f9d295cfa94658"
+        }
+      }
+    ],
+    "semantic": "All eight fresh-process saved states independently decoded and binary-roundtripped. One item/Found1, exact item metadata, counters2, Health110, all earned skills/book progress/passives and33 credited deaths preserved.",
+    "runtime": {
+      "normal": [
+        {
+          "label": "normal-drop-02",
+          "phase": "drop",
+          "audit": {
+            "path": "build/oblivion-compat/nirnroot-drop/normal-drop-02/nirnroot-drop-verification.json",
+            "sha256": "af8697ab56b76dc6bfa61706f79f6a6af89a256a85bfbef091f17cd7d21b46dd"
+          },
+          "source_sha256": "10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527",
+          "save_sha256": "b1d4de1e0c009f51a1dfcc2681a9c2a390dbf404f76b313fada914b29300a8b4",
+          "game_sha256": "5af07478c22b3d71b30361ca4fca6efb4a5b71f8aaba6a24721fa9cf6a187de9",
+          "script_owner": "dynamic:native-reference:0000000000000003",
+          "found": 1,
+          "next_dynamic_serial": 4
+        },
+        {
+          "label": "normal-world-cold-01",
+          "phase": "world",
+          "audit": {
+            "path": "build/oblivion-compat/nirnroot-drop/normal-world-cold-01/nirnroot-drop-verification.json",
+            "sha256": "6912aa18819bb0e50a6f462f9e0f06db078ad62df9f9cb7d19c1466bba47bb64"
+          },
+          "source_sha256": "b1d4de1e0c009f51a1dfcc2681a9c2a390dbf404f76b313fada914b29300a8b4",
+          "save_sha256": "c7d76e6cb4bc2b20ffba8c1e8f5957fb8f263a27f8ab5a534da23e3ec9d4433f",
+          "game_sha256": "5af07478c22b3d71b30361ca4fca6efb4a5b71f8aaba6a24721fa9cf6a187de9",
+          "script_owner": "dynamic:native-reference:0000000000000003",
+          "found": 1,
+          "next_dynamic_serial": 4
+        },
+        {
+          "label": "normal-reacquire-01",
+          "phase": "pickup",
+          "audit": {
+            "path": "build/oblivion-compat/nirnroot-drop/normal-reacquire-01/nirnroot-drop-verification.json",
+            "sha256": "b174c5c3da00cdc7201d4a02e97bad99baf107205c03d7b45f145c47b6c74589"
+          },
+          "source_sha256": "c7d76e6cb4bc2b20ffba8c1e8f5957fb8f263a27f8ab5a534da23e3ec9d4433f",
+          "save_sha256": "e3d92760a4d25d048ade955a337271f73c380368bf12ab1f610290ceebff1de3",
+          "game_sha256": "5af07478c22b3d71b30361ca4fca6efb4a5b71f8aaba6a24721fa9cf6a187de9",
+          "script_owner": "dynamic:inventory-script:0000000000000004",
+          "found": 1,
+          "next_dynamic_serial": 5
+        },
+        {
+          "label": "normal-inventory-cold-01",
+          "phase": "inventory",
+          "audit": {
+            "path": "build/oblivion-compat/nirnroot-drop/normal-inventory-cold-01/nirnroot-drop-verification.json",
+            "sha256": "15b2efa9a35f84593dabdb175ba34e9b8f6bd0d04f976f5d5f250b75cb4b1ebb"
+          },
+          "source_sha256": "e3d92760a4d25d048ade955a337271f73c380368bf12ab1f610290ceebff1de3",
+          "save_sha256": "c05743f6dcbc781de8c6d8802fb61631d962c28276a0ce0a001e43593979fa07",
+          "game_sha256": "5af07478c22b3d71b30361ca4fca6efb4a5b71f8aaba6a24721fa9cf6a187de9",
+          "script_owner": "dynamic:inventory-script:0000000000000004",
+          "found": 1,
+          "next_dynamic_serial": 5
+        }
+      ],
+      "instrumented": [
+        {
+          "label": "sanitized-drop-01",
+          "phase": "drop",
+          "audit": {
+            "path": "build/oblivion-compat/nirnroot-drop/sanitized-drop-01/nirnroot-drop-verification.json",
+            "sha256": "4cdfcd1e2073d9dc78a80176cf83fb54ca8f0c014da5a20da01472b45b7a16e8"
+          },
+          "source_sha256": "10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527",
+          "save_sha256": "3554934c30de6ab164d090d172d8069a722df5d4b8b900ed04398e0366172343",
+          "game_sha256": "859adee2044e088dd2a3294c4751ddf2eef9773d532853704f54724ee0d066fa",
+          "script_owner": "dynamic:native-reference:0000000000000003",
+          "found": 1,
+          "next_dynamic_serial": 4
+        },
+        {
+          "label": "sanitized-world-cold-01",
+          "phase": "world",
+          "audit": {
+            "path": "build/oblivion-compat/nirnroot-drop/sanitized-world-cold-01/nirnroot-drop-verification.json",
+            "sha256": "3356a2f1801860f1ea447cdb93323652264ec391c907290988eed4e44c44ef73"
+          },
+          "source_sha256": "3554934c30de6ab164d090d172d8069a722df5d4b8b900ed04398e0366172343",
+          "save_sha256": "92eddd7d117596f5cbc22d5da0df8fd69470d753fcdb98d99b135752704f3f84",
+          "game_sha256": "859adee2044e088dd2a3294c4751ddf2eef9773d532853704f54724ee0d066fa",
+          "script_owner": "dynamic:native-reference:0000000000000003",
+          "found": 1,
+          "next_dynamic_serial": 4
+        },
+        {
+          "label": "sanitized-reacquire-01",
+          "phase": "pickup",
+          "audit": {
+            "path": "build/oblivion-compat/nirnroot-drop/sanitized-reacquire-01/nirnroot-drop-verification.json",
+            "sha256": "c18a8c3c43f537b8b2b3194e925396ab27ce401cdfa5112963ea24a66a76f80e"
+          },
+          "source_sha256": "92eddd7d117596f5cbc22d5da0df8fd69470d753fcdb98d99b135752704f3f84",
+          "save_sha256": "b4050b23ab284045fb8d22956ff7ae68160f229d8ea24b0289abee07206c7e54",
+          "game_sha256": "859adee2044e088dd2a3294c4751ddf2eef9773d532853704f54724ee0d066fa",
+          "script_owner": "dynamic:inventory-script:0000000000000004",
+          "found": 1,
+          "next_dynamic_serial": 5
+        },
+        {
+          "label": "sanitized-inventory-cold-01",
+          "phase": "inventory",
+          "audit": {
+            "path": "build/oblivion-compat/nirnroot-drop/sanitized-inventory-cold-01/nirnroot-drop-verification.json",
+            "sha256": "7f19b3b0878095b72cbda18badf13915cd58b73bec7502d29640c2d71de2cfd3"
+          },
+          "source_sha256": "b4050b23ab284045fb8d22956ff7ae68160f229d8ea24b0289abee07206c7e54",
+          "save_sha256": "32aed4e7b0fc7c3588eb6b381ef49e20fd2c9ff1fbde71df95c1678ace53e1e8",
+          "game_sha256": "859adee2044e088dd2a3294c4751ddf2eef9773d532853704f54724ee0d066fa",
+          "script_owner": "dynamic:inventory-script:0000000000000004",
+          "found": 1,
+          "next_dynamic_serial": 5
+        }
+      ]
+    }
+  },
+  "instrumented_engine": {
+    "path": "build/oblivion-compat/nirnroot-drop/sanitized-inventory-union.json",
+    "sha256": "5c2283c37a098e36e5ef6d7a6c6accae7ad8e98cad6929999c199f661bf36c21"
+  },
+  "instrumented_engine_count": 2291,
+  "instrumentation": {
+    "runtime": "ASan/UBSan, halt on error, leak detection disabled; actual environment and mapped-library hashes captured per process.",
+    "engine": "ASan/UBSan with leak detection enabled. Four disjoint processes avoid known Bullet global worker-index exhaustion; exact union has2291 cases, no duplicates/missing/skips/failures."
+  },
+  "reused_components": {
+    "normal": "build/oblivion-compat/cairn-bolete/integration-normal-01/verification.json",
+    "normal_count": 3300,
+    "instrumented": "build/oblivion-compat/cairn-bolete/integration-sanitized-01/verification.json",
+    "instrumented_count": 1121,
+    "scope": "All ESM4* instrumented components, not all legacy components. Original provenance retained; no component or wire implementation changed in this chunk.",
+    "normal_provenance": {
+      "path": "build/oblivion-compat/cairn-bolete/integration-normal-01/verification.json",
+      "sha256": "54c3634bf26fb690c1b1de9c5ab94a63f722bd298dc1ed3e70fc3427bf72055e",
+      "source": {
+        "head": "a7dc00feba4c60517deccedc7a73efb72964a92d",
+        "source_fingerprint": "261787609c1dcbfded7ce4c4ad0b79b0dbf4e94e83f4f22be5b0679612b91616"
+      }
+    },
+    "instrumented_provenance": {
+      "path": "build/oblivion-compat/cairn-bolete/integration-sanitized-01/verification.json",
+      "sha256": "873d1fd3d04223f9b2e703909efec736a051c72d80f18410469082d8da5c5056",
+      "source": {
+        "head": "a7dc00feba4c60517deccedc7a73efb72964a92d",
+        "source_fingerprint": "261787609c1dcbfded7ce4c4ad0b79b0dbf4e94e83f4f22be5b0679612b91616"
+      }
+    }
+  },
+  "retained_failures": [
+    "baseline01 invalid gamepad button name; baseline02 controller selection did not verify Nirnroot drop; baseline03 fullscreen panels intercepted intended world click. No accepted drops from these input attempts.",
+    "baseline04 correct Nirnroot UI drop created legacy reference and failed native save: Dangling inventory script instance. Source unchanged.",
+    "normal-drop-01 new native transfer was bypassed by GUI trade wrapper; same save failure. Interception moved to shared ItemModel before wrapper debit; normal-drop-02 passed.",
+    "Verifier development failures: optional awarded-books field absent in Wine branch; quest result unit initially selected instead of MS39 script; event snapshot paths needed course-root resolution. Final verifier replayed every accepted case. A final-cold audit attempted before driver completion was rerun after process exit."
+  ],
+  "visual_review": [
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/normal-drop-02/original-nirnroot-dropped-world.png",
+      "sha256": "c03d577a631f869689427050ccba9b0c3f380fc3d8d7f434996852fa368e99d2"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/normal-world-cold-01/original-nirnroot-cold-world.png",
+      "sha256": "6523b0dc14e1eb58728f0a6dc225d3ccfb832f549b4e8e323964519ab6b67331"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/normal-reacquire-01/original-nirnroot-after-reacquisition.png",
+      "sha256": "f5930cf29dcb0040798f7db75a6346298c9468c51818b0dcd8c653e363c81b49"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/normal-inventory-cold-01/original-nirnroot-cold-inventory.png",
+      "sha256": "43f520a3bcd9eb696017ccf473b5f44dd789166ec525306459115996d365967a"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/sanitized-drop-01/original-nirnroot-dropped-world.png",
+      "sha256": "057673752d7a26332e0f84d0b4d3f381a58c2c04bdd2e88af2b00d6c475af3a8"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/sanitized-world-cold-01/original-nirnroot-cold-world.png",
+      "sha256": "d2997e95eb819a60f230f4a222fb18a24c3e33a43d4b1d98b2b4b7997b87559f"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/sanitized-reacquire-01/original-nirnroot-after-reacquisition.png",
+      "sha256": "f84df20be05facf007a26c5e317faf5fd2846ea4b1b95ce6e879527c1a26d4e7"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/sanitized-inventory-cold-01/original-nirnroot-cold-inventory.png",
+      "sha256": "0e6e398f88d8714d6aa24eb2c42bf6e29e6776a8d425065bcd8f2be10c8618c0"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/normal-lifetime-drop-01/original-nirnroot-dropped-world.png",
+      "sha256": "da64aa1e6064cda4b17a1b782ada48a3599ad31308345f9ecc497f99b8ce458a"
+    },
+    {
+      "path": "build/oblivion-compat/nirnroot-drop/sanitized-lifetime-drop-01/original-nirnroot-dropped-world.png",
+      "sha256": "7f0e38cfff46a808842a846126f7cf0eb7f0191be08cb439bb00f5d9b65714de"
+    }
+  ],
+  "limits": [
+    "No general stack transfers, other scripted events/items, arbitrary spawn roots or full M16/M18 claim.",
+    "No fork grants, stat/time/position/seed setters or edited save sources. Original oracle console setup is isolated and declared separately.",
+    "Bounded UI surface placement of the actual unbound singleton with no condition, charge, rank/global or explicit extra-scale metadata.",
+    "Uses static ingredient model/collision admission; dynamic tumbling and bounce are not acceptance claims.",
+    "Coastal staging source has existing terrain/rock clipping; terrain rendering not claimed fixed.",
+    "No arbitrary stack/container transfer, general scripted-item/event, command-drop, dynamic bounce or full M16/M18 acceptance claim."
+  ],
+  "implementation": {
+    "apps/openmw/CMakeLists.txt": "3426aa2a41667f0de7e130c0e99d8c18595056f6d3ecbdd43fb087d440edc1f4",
+    "apps/openmw/mwgui/itemmodel.cpp": "c3613bb565a7e0c849d6b5d143b25ba77177bae12b69590a662e06c67c5e8731",
+    "apps/openmw/mwgui/worlditemmodel.cpp": "1770adc7e92589d6d50445160bd43aa664753ea2b6647b0b67f4df9a895653c8",
+    "apps/openmw/mwgui/worlditemmodel.hpp": "43f83571c7ec9c2eac9e6ca895e42a83f8b5579e34fdfcc28e19d1919f411f08",
+    "apps/openmw/mwworld/oblivioningredientdrop.cpp": "0d044cdec07da9d79c7c5b13e50d03b67f94489e1a221e8888d5ed85dd05af1d",
+    "apps/openmw/mwworld/oblivioninteraction.cpp": "dded66c71764f418c262446e87a6eba07212cd8b716100697fb2f45aa0c6aa8f",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "170fb7c177a514657b6350f67f9c18e8e240ded7d276605e3638399a7a3da100",
+    "apps/openmw/mwworld/oblivionscriptmanager.hpp": "2854756c1720fd601f1f5bff75c9565501781317ed10430b27aa82b21ef1b154",
+    "apps/openmw/mwworld/worldimp.hpp": "3d93cbd07d6149a6c8f299df561057d264c27090c4276c856a2e7677ab5baf22",
+    "apps/openmw_tests/mwworld/testoblivionownership.cpp": "7ecb350a87f732a2d4083ea64e5470ba42e04c541e535320f2b5fa2862f4e27c",
+    "scripts/verify_nirnroot_drop.py": "80519c1e772202ab9852d8c64b985b099aa67587ede95b87705917461733a3d1"
+  },
+  "post_course_guard_order_correction": {
+    "change": "The prepared inventory removal now validates its owner before dereferencing the borrowed item. No codec, pickup, script-transfer publication or successful-drop behavior changed.",
+    "evidence_reuse": "Complete normal and instrumented cold-load chains above retain their original pre-correction game hashes. Fresh lifetime gates and fresh real drops below verify the corrected build.",
+    "checks": [
+      {
+        "path": "build/oblivion-compat/nirnroot-drop/lifetime-normal-01/verification.json",
+        "executed": 12,
+        "source": {
+          "head": "fc84e6ef545659fc2bfec0efca874bbed5a3f18b",
+          "source_fingerprint": "cf8eb56c4fa3ae9cda8557cf72b49afe5ded0945e9a51f81d8651ad3c6734067"
+        },
+        "binary_sha256": "b8e52c51b8aeeef619e038760ed9773586dc23ceb83e0bd6024f0b9e186f377c"
+      },
+      {
+        "path": "build/oblivion-compat/nirnroot-drop/lifetime-sanitized-01/verification.json",
+        "executed": 12,
+        "source": {
+          "head": "fc84e6ef545659fc2bfec0efca874bbed5a3f18b",
+          "source_fingerprint": "cf8eb56c4fa3ae9cda8557cf72b49afe5ded0945e9a51f81d8651ad3c6734067"
+        },
+        "binary_sha256": "f1de5cedb0aafda005833c73b13470b4676f4810949052b48c4b124dc28c309f"
+      },
+      {
+        "path": "build/oblivion-compat/nirnroot-drop/lifetime-sanitized-02/verification.json",
+        "executed": 12,
+        "source": {
+          "head": "fc84e6ef545659fc2bfec0efca874bbed5a3f18b",
+          "source_fingerprint": "cf8eb56c4fa3ae9cda8557cf72b49afe5ded0945e9a51f81d8651ad3c6734067"
+        },
+        "binary_sha256": "f1de5cedb0aafda005833c73b13470b4676f4810949052b48c4b124dc28c309f"
+      }
+    ],
+    "drops": [
+      {
+        "label": "normal-lifetime-drop-01",
+        "audit": {
+          "path": "build/oblivion-compat/nirnroot-drop/normal-lifetime-drop-01/nirnroot-drop-verification.json",
+          "sha256": "6c68726380c638ca06491b4c278f2a49b2a5cb1f7ff84f10d9afd7f1dd154228"
+        },
+        "source_sha256": "c05743f6dcbc781de8c6d8802fb61631d962c28276a0ce0a001e43593979fa07",
+        "save_sha256": "8fcb49a082274a0152efaa41ae905627ec279b6049fb910b6138cc8f4f298305",
+        "game_sha256": "52adcf8f5784c4a218847ab93a221e324b944490f5493e6cab5863e38537584b",
+        "world_owner": "dynamic:native-reference:0000000000000005",
+        "found": 1
+      },
+      {
+        "label": "sanitized-lifetime-drop-01",
+        "audit": {
+          "path": "build/oblivion-compat/nirnroot-drop/sanitized-lifetime-drop-01/nirnroot-drop-verification.json",
+          "sha256": "d3a345d10b44407e7c2500e6b367d7de7039fd4f501f6a8df9c815724e801f64"
+        },
+        "source_sha256": "b4050b23ab284045fb8d22956ff7ae68160f229d8ea24b0289abee07206c7e54",
+        "save_sha256": "16149ab720f422c08bf653fbd5fdddff1a3c16cf4c055ace6844df702077afb9",
+        "game_sha256": "4ef781e71649d4936be77642a0d2cbd804d8f3584297737814a0d3eac92369ea",
+        "world_owner": "dynamic:native-reference:0000000000000005",
+        "found": 1
+      }
+    ],
+    "retained_wrapper_signal": "lifetime-sanitized-01 outer command returned143 after verification.json passed and all three recorded commands returned0. Clean rerun lifetime-sanitized-02 exited0 and passed all12 selected tests."
+  },
+  "editable_manifests": {
+    "docs/oblivion/original-nirnroot-drop-cold.json": "9602afbd6d3941759b67aed8b9669dab4ff19325bcd776bd6cb1a21edc4d0ffa",
+    "docs/oblivion/original-nirnroot-drop.json": "2bcb66796e9bad31b5052c482261def9df18a6d764a05558e9d8271053939a6a",
+    "docs/oblivion/original-nirnroot-reacquire-cold.json": "bc19568dc7fbe753d5520e73698d3e361fafdba540026eb6224580b26ae2ad12",
+    "docs/oblivion/original-nirnroot-reacquire.json": "8c8b523769805cd1462e3bc90a67d4016572469436ec1f8c5195f1bb3dc848f4"
+  }
+}

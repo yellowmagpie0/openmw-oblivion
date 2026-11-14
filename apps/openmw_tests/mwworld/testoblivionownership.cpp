@@ -538,3 +538,88 @@ TEST(OblivionOwnership, InterruptibleAmbushReevaluatesChangedConditionsAndReleas
         EXPECT_EQ(door.getCellRef().isLocked(), !mustComplete);
     }
 }
+
+namespace
+{
+    // Lifecycle guards supplement the original-content UI course. They do not
+    // establish original game semantics or normal-input acceptance.
+    std::string transferableIngredientRecords()
+    {
+        const std::array<std::uint32_t, 6> local{1, 0, 0, 0, 1, 0};
+        return record(ESM4::REC_SCPT, 0xe01,
+            sub(ESM::fourCC("EDID"), std::string("TransferScript\0", 15))
+            + sub(ESM::fourCC("SLSD"), bytes(local))
+            + sub(ESM::fourCC("SCVR"), std::string("found\0", 6))
+            + sub(ESM::fourCC("SCTX"), "scn TransferScript\nshort found\nbegin OnAdd player\nset found to 1\nend\n"))
+            + record(ESM4::REC_INGR, 0xe00, sub(ESM::fourCC("EDID"), std::string("TransferIngredient\0", 19))
+                + sub(ESM::fourCC("SCRI"), bytes(0xe01u)));
+    }
+
+    ESM4::RuntimeState transferableIngredientState()
+    {
+        ESM4::RuntimeState state;
+        const auto owner = ESM::FormKey::dynamic("inventory-script", 1);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = key(0xe00); item.mCount = 1; item.mScriptOwner = owner;
+        state.mPlayer.mInventory.push_back(item);
+        ObScript::ScriptUnitId unit{key(0xe01), "headless.esm"};
+        state.mScriptInstances.push_back({unit.serialize(), owner, {std::int64_t{1}}, true});
+        return state;
+    }
+}
+
+TEST(OblivionItemScriptTransfer, CancellationAndRoundTripPreserveLocalsAndOnLoad)
+{
+    TestingOpenMW::NativeWorldFixture fixture(false, false, false, {}, {}, transferableIngredientRecords(), 2);
+    auto& host = *fixture.mWorld.getOblivionScriptManager();
+    const auto saved = transferableIngredientState();
+    host.restore(saved);
+    const auto inventory = saved.mScriptInstances.front().mContext;
+    const auto world = ESM::FormKey::dynamic("native-reference", 2);
+    {
+        auto canceled = host.prepareItemScriptTransfer(key(0xe00), inventory, world);
+        ASSERT_TRUE(canceled->isValid());
+    }
+    ESM4::RuntimeState actual;
+    host.capture(actual);
+    EXPECT_EQ(actual.mScriptInstances, saved.mScriptInstances);
+    auto transfer = host.prepareItemScriptTransfer(key(0xe00), inventory, world);
+    auto competing = host.prepareItemScriptTransfer(key(0xe00), inventory, world);
+    ASSERT_TRUE(transfer->commit());
+    EXPECT_FALSE(transfer->commit());
+    EXPECT_FALSE(competing->isValid());
+    EXPECT_FALSE(competing->commit());
+    host.capture(actual);
+    auto expected = saved.mScriptInstances;
+    expected.front().mContext = world;
+    EXPECT_EQ(actual.mScriptInstances, expected);
+    auto back = host.prepareItemScriptTransfer(key(0xe00), world, inventory);
+    ASSERT_TRUE(back->commit());
+    host.capture(actual);
+    EXPECT_EQ(actual.mScriptInstances, saved.mScriptInstances);
+}
+
+TEST(OblivionItemScriptTransfer, RestoreClearAndMissingSourceRejectStalePublication)
+{
+    TestingOpenMW::NativeWorldFixture fixture(false, false, false, {}, {}, transferableIngredientRecords(), 2);
+    auto& host = *fixture.mWorld.getOblivionScriptManager();
+    const auto saved = transferableIngredientState();
+    host.restore(saved);
+    const auto from = saved.mScriptInstances.front().mContext;
+    const auto to = ESM::FormKey::dynamic("native-reference", 2);
+    EXPECT_THROW(host.prepareItemScriptTransfer(key(0xe00), to, from), std::invalid_argument);
+    EXPECT_THROW(host.prepareItemScriptTransfer(key(0xe00), from, from), std::invalid_argument);
+    auto beforeRestore = host.prepareItemScriptTransfer(key(0xe00), from, to);
+    host.restore(saved);
+    EXPECT_FALSE(beforeRestore->commit());
+    auto occupied = saved;
+    occupied.mScriptInstances.push_back(saved.mScriptInstances.front());
+    occupied.mScriptInstances.back().mContext = to;
+    host.restore(occupied);
+    EXPECT_THROW(host.prepareItemScriptTransfer(key(0xe00), from, to), std::invalid_argument);
+    host.restore(saved);
+    auto beforeClear = host.prepareItemScriptTransfer(key(0xe00), from, to);
+    host.clear();
+    EXPECT_FALSE(beforeClear->isValid());
+    EXPECT_FALSE(beforeClear->commit());
+}

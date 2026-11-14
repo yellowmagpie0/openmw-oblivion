@@ -1,4 +1,5 @@
 #include "itemmodel.hpp"
+#include "worlditemmodel.hpp"
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
@@ -57,6 +58,12 @@ namespace MWGui
 
     MWWorld::Ptr ItemModel::moveItem(const ItemStack& item, size_t count, ItemModel* otherModel, bool allowAutoEquip)
     {
+        // Inventory GUI wrappers also enter here directly. Prepare native
+        // ownership before any wrapper can debit the selected source stack.
+        if (auto* world = dynamic_cast<WorldItemModel*>(otherModel))
+            if (auto moved = world->tryMoveNativeScriptedItem(
+                    MWBase::Environment::get().getWorld()->getPlayerPtr(), item, count))
+                return *moved;
         removeItem(item, count);
         // If we removed the entire stack we can transfer it instead of creating a copy with a different RefNum
         if (item.mBase.getCellRef().getCount() == 0)

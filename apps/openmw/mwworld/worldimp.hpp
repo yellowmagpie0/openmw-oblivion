@@ -642,6 +642,8 @@ namespace MWWorld
         int oblivionPlayerItemCount(const ESM::FormKey& key);
         int oblivionChangePlayerInventory(
             const ESM::FormKey& key, int delta, const ESM::FormKey& owner = {}, bool dispatchAddEvent = false);
+        std::optional<Ptr> dropOblivionInventoryIngredient(
+            const Ptr& actor, const Ptr& item, size_t count, float cursorX, float cursorY);
         int oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item, bool dispatchAddEvent = false);
         bool oblivionEquipPlayerItem(const ESM::FormKey& key, bool equip);
         void notifyOblivionItemEquipped(const Ptr& actor, const Ptr& item);
