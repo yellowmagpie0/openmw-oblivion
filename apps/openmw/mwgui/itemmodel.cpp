@@ -61,7 +61,7 @@ namespace MWGui
         // Inventory GUI wrappers also enter here directly. Prepare native
         // ownership before any wrapper can debit the selected source stack.
         if (auto* world = dynamic_cast<WorldItemModel*>(otherModel))
-            if (auto moved = world->tryMoveNativeScriptedItem(
+            if (auto moved = world->tryMoveNativeIngredient(
                     MWBase::Environment::get().getWorld()->getPlayerPtr(), item, count))
                 return *moved;
         removeItem(item, count);

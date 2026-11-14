@@ -4,34 +4,43 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest accepted chunk: [original scripted Nirnroot drop/reacquisition](NIRNROOT-DROP-CONTRACT.json).
-Normal and instrumented UI drop → cold world load → Space pickup → cold inventory
-load pass. One item/Found1, exact metadata, MS39 stage10/counters2, Health110,
-all earned skills/passives and33 credited deaths survive. Existing schema101
-carries the typed world reference and transferred locals. Original UI preserves
-Found1; command-drop resets it and is outside this scope. The
-[oracle](NIRNROOT-DROP-ORACLE.json) and [receipt](NIRNROOT-DROP-VERIFICATION.json)
-retain the failed legacy save, GUI-wrapper wiring failure, input attempts and
-verifier corrections. Normal2291 engine/Python617 and full instrumented2291
-engine pass; final lifetime guards have12 focused cases in both builds plus
-fresh real drops. The final change checks inventory ownership before borrowing
-item data; earlier cold-chain evidence retains its original binary provenance.
-No generic stack/container/scripted-item, dynamic bounce or full M16/M18 claim.
+Latest accepted chunk: [plain Rice repeated-save persistence](PLAIN-INGREDIENT-DROP-CONTRACT.json).
+Real Rice survived the old legacy drop/save and first cold load, then vanished
+when that world was re-saved and cold loaded again. Native scriptless ingredient
+singleton admission now passes drop/save → first cold world re-save → second
+cold world pickup/save → cold inventory load in normal and instrumented games.
+The [record oracle](PLAIN-INGREDIENT-DROP-ORACLE.json) and
+[receipt](PLAIN-INGREDIENT-DROP-VERIFICATION.json) retain the baseline, corrected
+ID-lifetime/verifier attempts, all process/save hashes and reviewed captures.
+One Rice/no script owner, exact metadata, Nirnroot owner4/Found1, MS39 stage10/
+counters2, Health110, all skills/passives and33 credited deaths survive.
+Normal2291/full instrumented2291 engine, focused12/Python617 and a fresh real
+Nirnroot drop regression pass. Existing schema101 is unchanged. No general
+stack/container/scripted-event, dynamic bounce or full M16/M18 claim.
 
 Retained full-Health continuation, separate from the Cairn branch:
+`build/oblivion-compat/ingredient-drop/normal-rice-inventory-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `08ab80e2a581f493f7b9eed78d2ce219daa41fc8d451b33297873980802054b8`.
+Rice1/no script owner, Nirnroot owner4/Found1, allocator6, MS39 counters2,
+Health110, Alchemy5/XP0.5, Athletics30/XP17.009033, Acrobatics5/XP0.6, Hand35
+and33 credited deaths. Instrumented final inventory save SHA256:
+`272aad0c823e796806770d0836ad40a6bf03e585fc22671f8613643a1ef27698`.
+Coastal terrain/rock clipping and expensive instrumented cold loads are adjacent
+gaps, not claimed fixed.
+
+Previous [Nirnroot round trip](NIRNROOT-DROP-VERIFICATION.json) preserves original
+UI Found1 and discovery counters; command-drop resetting Found0 is separate.
+Its retained normal save is
 `build/oblivion-compat/nirnroot-drop/normal-inventory-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
 SHA256 `c05743f6dcbc781de8c6d8802fb61631d962c28276a0ce0a001e43593979fa07`.
-One Nirnroot/owner4/Found1, MS39 counters2, Health110, Alchemy5/XP0.5,
-Athletics30/XP17.009033, Acrobatics5/XP0.6, Hand35 and33 credited deaths.
-Instrumented final inventory save has SHA256
-`32aed4e7b0fc7c3588eb6b381ef49e20fd2c9ff1fbde71df95c1678ace53e1e8`.
-Final guard-check drops are separate offshoots, not replacement continuations.
-Coastal staging shows existing terrain/rock clipping; native cold loads are
-expensive under instrumentation. Record these adjacent gaps for later.
+Scripted transfer and plain-item identity now have separate real-content proof.
 
-Current chunk complete. Next action: choose another already carried/reached
-original item that exposes a missing acceptance behavior, establish its baseline,
-then implement that bounded behavior without merging independent save branches.
+Current chunk complete. Next action: inspect carried Crab Meat03366c, whose
+first original effect is Restore Endurance and is currently rejected by the
+native ingredient consumer. Establish an independent original rule and actual
+fork baseline; preserve the existing disease drain rather than infer it is
+restorable damage. Choose the final bounded acceptance after that evidence.
+
 
 Separate Cairn continuation:
 `build/oblivion-compat/cairn-bolete/normal-original-cairn-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
@@ -95,6 +104,6 @@ is approximate. Cure Disease remains deferred: no carried/directly placed Vilver
 source found, container loot unverified, nearest found outdoor Mandrake70k away.
 
 Checkpoint: bounded progression, potion ownership and first-effect ingredient
-healing gaps are shrinking; broader milestone gates remain open. The Cairn healing and
-Nirnroot round trips are complete. Choose the next behavior from already carried/
+healing gaps are shrinking; broader milestone gates remain open. The Cairn healing, Nirnroot and
+plain Rice round trips are complete. Choose the next behavior from already carried/
 reached content and record adjacent rendering/navigation issues for later.

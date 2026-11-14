@@ -3,7 +3,7 @@
 
 namespace MWGui
 {
-    std::optional<MWWorld::Ptr> WorldItemModel::tryMoveNativeScriptedItem(
+    std::optional<MWWorld::Ptr> WorldItemModel::tryMoveNativeIngredient(
         const MWWorld::Ptr& actor, const ItemStack& item, size_t count)
     {
         auto* world = dynamic_cast<MWWorld::World*>(&*MWBase::Environment::get().getWorld());

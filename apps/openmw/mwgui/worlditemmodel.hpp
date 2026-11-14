@@ -43,7 +43,7 @@ namespace MWGui
         {
         }
 
-        std::optional<MWWorld::Ptr> tryMoveNativeScriptedItem(
+        std::optional<MWWorld::Ptr> tryMoveNativeIngredient(
             const MWWorld::Ptr& actor, const ItemStack& item, size_t count);
 
         ModelIndex getIndex(const ItemStack& /*item*/) override
