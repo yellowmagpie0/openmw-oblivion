@@ -5794,7 +5794,7 @@ namespace MWMechanics
             if (!dead && (!process || duration == 0)) return;
             for (auto it = values.mIngredientRestoration.begin(); it != values.mIngredientRestoration.end(); )
             {
-                if (it->mActorValue == 8)
+                if (it->mActorValue == 8 && it->mMagnitude < 0)
                 {
                     it->mElapsed = std::min(it->mDuration, it->mElapsed + duration);
                     if (!dead && it->mElapsed < it->mDuration) { ++it; continue; }
@@ -5803,13 +5803,16 @@ namespace MWMechanics
                 }
                 else if (!dead)
                 {
-                    const auto step = ESM4::advanceIngredientFatigue(
-                        it->mElapsed, duration, {it->mMagnitude, it->mDuration});
+                    const auto step = it->mActorValue == 8
+                        ? ESM4::advanceIngredientHealthRestoration(it->mElapsed, duration)
+                        : ESM4::advanceIngredientFatigue(it->mElapsed, duration, {it->mMagnitude, it->mDuration});
                     it->mElapsed = step.mElapsed;
-                    values.mValues[10] = ESM4::changeActorValueModifier(values.mValues[10], values.mOwner, 10,
+                    values.mValues[it->mActorValue] = ESM4::changeActorValueModifier(
+                        values.mValues[it->mActorValue], values.mOwner, it->mActorValue,
                         ESM4::ActorValueModifier::Damage, step.mAmount);
                     Log(Debug::Verbose) << "TES4 ingredient restoration: ingredient=" << it->mIngredient.serialize()
-                        << " amount=" << step.mAmount << " elapsed=" << step.mElapsed;
+                        << " amount=" << step.mAmount << " elapsed=" << step.mElapsed
+                        << " actor_value=" << unsigned(it->mActorValue);
                     if (!step.mFinished) { ++it; continue; }
                 }
                 it = values.mIngredientRestoration.erase(it);

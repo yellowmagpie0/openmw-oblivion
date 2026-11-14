@@ -6904,6 +6904,34 @@ TEST(ESM4RuntimeState, Ingredient100PersistsSeparateHealthDrainsAndRejectsLegacy
         state.mNativeActorValues);
 }
 
+TEST(ESM4RuntimeState, HealthIngredientRestorationKeepsItsResourceAndRemainingTimeBesideDrainOwners)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mIngredientRestoration = {
+        {ESM::FormKey::content("oblivion.esm", 0x6251e), .5f, 1.f, 3.f, 8},
+        {ESM::FormKey::content("oblivion.esm", 0x4e940), .25f, -5.f, 1.f, 8}};
+    state.mNativeActorValues = {actor};
+    const auto wire = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(restored.mNativeActorValues, state.mNativeActorValues);
+    EXPECT_EQ(restored.serializeBinary(), wire);
+    for (const auto& bad : {
+            ESM4::RuntimeIngredientRestoration{actor.mIngredientRestoration[0].mIngredient, 3.f, 1.f, 3.f, 8},
+            ESM4::RuntimeIngredientRestoration{actor.mIngredientRestoration[0].mIngredient, 0.f, 1.f, 1.f, 8},
+            ESM4::RuntimeIngredientRestoration{actor.mIngredientRestoration[0].mIngredient, 0.f, 1.f, 3.f, 10}})
+    {
+        state.mNativeActorValues[0].mIngredientRestoration = {bad};
+        EXPECT_ANY_THROW(state.serializeBinary());
+    }
+    state.mNativeActorValues = {actor};
+    state.mVersion = 99;
+    EXPECT_ANY_THROW(state.serializeBinary());
+}
+
 TEST(ESM4RuntimeState, SkillBook101PersistsBaseHistoryAndRejectsLegacyOrDynamicOwners)
 {
     auto state = makeState();

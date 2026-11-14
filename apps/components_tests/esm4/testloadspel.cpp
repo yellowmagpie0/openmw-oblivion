@@ -543,3 +543,21 @@ TEST(ESM4Ingredient, NoviceDamageResumesOnlyRemainingThreeSeconds)
     EXPECT_THROW(ESM4::advanceIngredientFatigue(3.f, 0.f, profile), std::invalid_argument);
     EXPECT_THROW(ESM4::advanceIngredientFatigue(0.f, 1.f, {-5.f, 1.f}), std::invalid_argument);
 }
+
+TEST(ESM4Ingredient, OriginalNoviceHealthRestorationResumesRemainingThreeSecondsOnly)
+{
+    const auto first = ESM4::advanceIngredientHealthRestoration(0, .5f);
+    const auto rest = ESM4::advanceIngredientHealthRestoration(first.mElapsed, 20.f);
+    EXPECT_FLOAT_EQ(first.mAmount, .5f);
+    EXPECT_FALSE(first.mFinished);
+    EXPECT_FLOAT_EQ(rest.mAmount, 2.5f);
+    EXPECT_TRUE(rest.mFinished);
+    EXPECT_FLOAT_EQ(first.mAmount + rest.mAmount, 3.f);
+    EXPECT_FLOAT_EQ(ESM4::advanceIngredientHealthRestoration(.5f, 0).mAmount, 0.f);
+    EXPECT_THROW(ESM4::advanceIngredientHealthRestoration(3.f, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceIngredientHealthRestoration(0, -1.f), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceIngredientHealthRestoration(
+        std::numeric_limits<float>::quiet_NaN(), 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceIngredientFatigue(0, 1, ESM4::NoviceIngredientHealthRestoration),
+        std::invalid_argument); // Do not widen Fatigue admission to this Health profile.
+}

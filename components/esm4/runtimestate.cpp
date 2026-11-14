@@ -1146,7 +1146,10 @@ namespace ESM4
                 throw std::runtime_error("Invalid TES4 consumed ingredient identity");
             if (effect.mActorValue == 8)
             {
-                if (effect.mMagnitude != -5.f || effect.mDuration != 1.f
+                if (effect.mMagnitude == NoviceIngredientHealthRestoration.mMagnitude
+                    && effect.mDuration == NoviceIngredientHealthRestoration.mDuration)
+                    advanceIngredientHealthRestoration(effect.mElapsed, 0.f);
+                else if (effect.mMagnitude != -5.f || effect.mDuration != 1.f
                     || !std::isfinite(effect.mElapsed) || effect.mElapsed < 0 || effect.mElapsed >= 1.f)
                     throw std::runtime_error("Invalid TES4 ingredient Health drain");
             }

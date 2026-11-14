@@ -1145,7 +1145,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             magnitude = native_float(effect.get("magnitude", 5))
             duration = native_float(effect.get("duration", 1))
             actor_value = effect.get("actor_value", 10)
-            allowed = ((5, 1), (-1, 3)) if actor_value == 10 else ((-5, 1),) if actor_value == 8 else ()
+            allowed = ((5, 1), (-1, 3)) if actor_value == 10 else ((-5, 1), (1, 3)) if actor_value == 8 else ()
             if (("actor_value" in effect and version < 100) or (magnitude, duration) not in allowed
                     or (version < 98 and ("magnitude" in effect or "duration" in effect))):
                 raise RuntimeStateError("Invalid TES4 resolved ingredient potency/version")

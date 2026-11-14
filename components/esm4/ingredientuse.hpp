@@ -24,6 +24,10 @@ namespace ESM4
     // completed total3. Higher skill uses a different, unimplemented profile.
     inline constexpr IngredientFatigueProfile NoviceIngredientFatigueDamage{-1.f, 3.f};
 
+    // Original novice Cairn Bolete: Active Effects magnitude1, completed
+    // Health restoration3. Authored REHE15/0 is not eating potency.
+    inline constexpr IngredientFatigueProfile NoviceIngredientHealthRestoration{1.f, 3.f};
+
     struct IngredientRestorationStep
     {
         float mElapsed;
@@ -45,6 +49,16 @@ namespace ESM4
     inline IngredientRestorationStep advanceIngredientRestoration(float elapsed, float duration)
     {
         return advanceIngredientFatigue(elapsed, duration, {});
+    }
+
+    inline IngredientRestorationStep advanceIngredientHealthRestoration(float elapsed, float duration)
+    {
+        constexpr auto profile = NoviceIngredientHealthRestoration;
+        if (!std::isfinite(elapsed) || elapsed < 0 || elapsed >= profile.mDuration
+            || !std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native ingredient Health restoration time");
+        const float next = std::min(profile.mDuration, elapsed + duration);
+        return {next, next - elapsed, next >= profile.mDuration};
     }
 }
 #endif

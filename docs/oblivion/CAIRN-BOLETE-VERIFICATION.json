@@ -1,0 +1,1094 @@
+{
+  "status": "Complete bounded original novice Cairn Bolete healing course; broader M16 remains open",
+  "tested_parent_head": "a7dc00feba4c60517deccedc7a73efb72964a92d",
+  "tested_implementation_sha256": {
+    "apps/components_tests/esm4/runtimestate.cpp": "edaa817c902deefad265f022726997be279c73fc63475cc2d9311ba15b76cc9f",
+    "apps/components_tests/esm4/testloadspel.cpp": "e8d8ff4f6411ee722b775ba9b549db1c4102f0b95dbadab7ea6c8b66532a5dc2",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "8750d15aeaeb590bc61a093b1c9853094d037560bf1434d3d4af57625007e595",
+    "apps/openmw/mwworld/oblivioncombatmagic.cpp": "4b678edf03d975a4ad1829f6d86c98d1df007112d725adcf2ec8d0dd265c9490",
+    "apps/openmw/mwworld/oblivioncombatmagic.hpp": "15aa824f466b5acf0316533ae937315d135a6be8e5bbf8a4f3a0d8e22f80038e",
+    "apps/openmw_tests/mwworld/testoblivionactorstats.cpp": "2dc1f3bcc855fd4b0f2558bb41c804415535e2db922c0c604734786dd31d77dc",
+    "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "386af5e7009839111ed94d10b23ae6e0ec8d981980da016b4fa099fa0d0db6c4",
+    "components/esm4/ingredientuse.hpp": "eac2b4fa6672c432abf3f9d8abe54a00bf69af187c56d1ff39a220bc57ec5fff",
+    "components/esm4/runtimestate.cpp": "fa3ebab202858cc81b23c0da147dd1326d6c848ad647647216249367090d90a3",
+    "scripts/tes4_runtime_state.py": "1d260177d20140c66827474d80f3deab99a1dcc9b08fd21d691a0e7b39fcbca7",
+    "scripts/tests/test_tes4_runtime_state.py": "56f8dc4d70bae0f4ee97538a587e5a1eb7385a0b2bcff0a0dca89b215606067e"
+  },
+  "contract": "CAIRN-BOLETE-CONTRACT.json",
+  "independent_oracle": {
+    "path": "docs/oblivion/CAIRN-BOLETE-ORACLE.json",
+    "sha256": "7e7fc8bd59e5f9efca08247a434ca3981019c17255be76567d116d073a464ad3"
+  },
+  "implementation": [
+    "Admit canonical original first REHE15/0 nonfood profile at Alchemy5/Luck50/MagicResistance0, independently observed eating potency1 Health/s for3s. Later authored effects remain inactive.",
+    "Debit once and award existing nonfood Alchemy secondary XP0.5 once.",
+    "Heal Health Damage modifier, with existing maximum clamp; never treat positive healing as negative Nirnroot Maximum drain.",
+    "Persist actor value8, magnitude1, duration3 and remaining elapsed time in existing schema101 owner wire. Validate winning content again on load.",
+    "Remove positive owner from a dead actor without healing. Keep existing food/Fatigue and negative Nirnroot profiles unchanged."
+  ],
+  "checks": [
+    {
+      "path": "build/oblivion-compat/cairn-bolete/focused-normal-01/verification.json",
+      "sha256": "25814b50dd7da963bad5be28f83621dda32831080ae9cfacfc81b894e143187a",
+      "source": {
+        "head": "a7dc00feba4c60517deccedc7a73efb72964a92d",
+        "source_fingerprint": "25e399f77f6fe694373fc9148f8d474bc8679fe56bcf3399406bc3f331953522"
+      },
+      "results": {
+        "components": {
+          "executed": 8,
+          "filter": "ESM4Ingredient.*:ESM4RuntimeState.*Ingredient*:OblivionMagicContent.*:OblivionActorStatsTest.cairnHealthRestoration*",
+          "binary_sha256": "15defc9cdd28df0c97119d0ef54cc5e7747aeaf32c5bf6b4c7657aecd35cb10e"
+        },
+        "engine": {
+          "executed": 8,
+          "filter": "ESM4Ingredient.*:ESM4RuntimeState.*Ingredient*:OblivionMagicContent.*:OblivionActorStatsTest.cairnHealthRestoration*",
+          "binary_sha256": "2e40ef912601e221f476a5d31fe52db537c1faf2455f637a6f7b231b52543b81"
+        },
+        "python": {
+          "executed": 617
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/integration-normal-01/verification.json",
+      "sha256": "54c3634bf26fb690c1b1de9c5ab94a63f722bd298dc1ed3e70fc3427bf72055e",
+      "source": {
+        "head": "a7dc00feba4c60517deccedc7a73efb72964a92d",
+        "source_fingerprint": "261787609c1dcbfded7ce4c4ad0b79b0dbf4e94e83f4f22be5b0679612b91616"
+      },
+      "results": {
+        "components": {
+          "executed": 3300,
+          "filter": "*",
+          "binary_sha256": "15defc9cdd28df0c97119d0ef54cc5e7747aeaf32c5bf6b4c7657aecd35cb10e"
+        },
+        "engine": {
+          "executed": 2289,
+          "filter": "*",
+          "binary_sha256": "2e40ef912601e221f476a5d31fe52db537c1faf2455f637a6f7b231b52543b81"
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/runtime-normal-01/verification.json",
+      "sha256": "6018a0038378efbd736cd3601bc617ac2e381d72693dd4edff07b3ab42655b17",
+      "source": {
+        "head": "a7dc00feba4c60517deccedc7a73efb72964a92d",
+        "source_fingerprint": "d5249386fdb6583eb483af4b06a17816fe1988935f31a4ac3601899c8b8484e4"
+      },
+      "results": {
+        "engine": {
+          "executed": 8,
+          "filter": "OblivionMagicContent.*:OblivionActorStatsTest.cairnHealthRestoration*",
+          "binary_sha256": "2e40ef912601e221f476a5d31fe52db537c1faf2455f637a6f7b231b52543b81"
+        },
+        "python": {
+          "executed": 617
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/final-python-01/verification.json",
+      "sha256": "9a2019a6c4e28faa409aaaf93ca65db94ef956f3b38203f37a771b37621f8106",
+      "source": {
+        "head": "a7dc00feba4c60517deccedc7a73efb72964a92d",
+        "source_fingerprint": "26769394b10b804120a6fd2163f7a79de02b335e86352060e7206b42c17e1154"
+      },
+      "results": {
+        "python": {
+          "executed": 617
+        }
+      }
+    }
+  ],
+  "instrumented_native_components": {
+    "path": "build/oblivion-compat/cairn-bolete/integration-sanitized-01/verification.json",
+    "sha256": "873d1fd3d04223f9b2e703909efec736a051c72d80f18410469082d8da5c5056",
+    "executed": 1121,
+    "scope": "All ESM4* component suites; not all legacy components",
+    "retained_engine_failure": "Bullet global thread counter exceeded in unpartitioned WorkerCounts ragdoll scheduler tests"
+  },
+  "instrumented_engine": {
+    "path": "build/oblivion-compat/cairn-bolete/sanitized-inventory-union.json",
+    "sha256": "be71d7d4bc3390d3bcb55be6902b64746d31c3bc7f7d7c047cffa5bdda659d97",
+    "result": {
+      "passed": true,
+      "executed": 2289,
+      "inventory_union_matches": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0,
+      "skipped": 0,
+      "source": {
+        "head": "a7dc00feba4c60517deccedc7a73efb72964a92d",
+        "source_fingerprint": "1a0f5251fe4723a5390faff9d926a0a66af405fd91058a162c9871f62c713399"
+      },
+      "test_binary_sha256": "9fb81346a71221988ceaaf318b04b0bb73adf9fba509ef59a5a3948b7eaf1306",
+      "parts": [
+        {
+          "path": "build/oblivion-compat/cairn-bolete/sanitized-part-worker0-01/verification.json",
+          "result": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0"
+          }
+        },
+        {
+          "path": "build/oblivion-compat/cairn-bolete/sanitized-part-worker1-01/verification.json",
+          "result": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1"
+          }
+        },
+        {
+          "path": "build/oblivion-compat/cairn-bolete/sanitized-part-worker2-01/verification.json",
+          "result": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2"
+          }
+        },
+        {
+          "path": "build/oblivion-compat/cairn-bolete/sanitized-part-rest-01/verification.json",
+          "result": {
+            "executed": 2043,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*"
+          }
+        }
+      ],
+      "sanitizer": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "method": "Fresh disjoint parameter groups plus remaining inventory, same binary and frozen source; individually verified XML inventories."
+    }
+  },
+  "acquisition": [
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-approach-02/travel-audit.json",
+      "sha256": "5184e9fc403fb5b7a400901fa8be63af4af5f668f1ed9158ea35dc779539aaa2",
+      "result": {
+        "phase": "approach",
+        "source_sha256": "fb073ae38596c6e476dcaf3aae4dad4fd65b394d6f4ae15e849132dd28b2613b",
+        "save_sha256": "6327151a6daceb6515f3f77640d8ec7721d34b0505c9570b4900c0e77060e5dc",
+        "health": 83,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.59609317779541
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-harvest-01/travel-audit.json",
+      "sha256": "15622386cb4c8a7ffa8e6ab65783bcae277db6ee002d2305deefb453f3031fb4",
+      "result": {
+        "phase": "harvest",
+        "source_sha256": "6327151a6daceb6515f3f77640d8ec7721d34b0505c9570b4900c0e77060e5dc",
+        "save_sha256": "1b21bd768dde1cf1b12eb80ecfe8ab3973d90056297ab67685ae4421ed26ba93",
+        "health": 83,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.59609317779541
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-harvest-03/travel-audit.json",
+      "sha256": "c3c2c9c4c60e4db9ac52e9fa65d62b40dae20fa9b9cb6e301ce9147f607e089f",
+      "result": {
+        "phase": "harvest-second",
+        "source_sha256": "1b21bd768dde1cf1b12eb80ecfe8ab3973d90056297ab67685ae4421ed26ba93",
+        "save_sha256": "0d0efcb2674c1b2259819da0da177fe2bfeb7c52848e694714239e167d878312",
+        "health": 83,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 4.59609317779541
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-approach-01/travel-audit.json",
+      "sha256": "9c8cd279f815e401d5ffa81e8ac790e151fb95db42bcaa6e9f937ebbf20a510a",
+      "result": {
+        "accepted_gameplay": false,
+        "phase": "wellspring-staging",
+        "source_sha256": "0d0efcb2674c1b2259819da0da177fe2bfeb7c52848e694714239e167d878312",
+        "save_sha256": "79c78552779b9e351f58eea605c9064d96f3bd847bed8e5f53cc6a996f4e96cc",
+        "health": 83,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 8.662394523620605
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-approach-02/travel-audit.json",
+      "sha256": "e05f832eebf23eef987e2088d9bb3bbb67564ed1a8bb731e0cf0475f443b0f5b",
+      "result": {
+        "accepted_gameplay": true,
+        "phase": "wellspring-approach",
+        "source_sha256": "79c78552779b9e351f58eea605c9064d96f3bd847bed8e5f53cc6a996f4e96cc",
+        "save_sha256": "4e17c7642c2f1d6f470d1b3eb3291c3b802efa5cdcb2db8b8bb883268af5d492",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 16.452741622924805
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-04/travel-audit.json",
+      "sha256": "9142274db1a1052fa843b56b37f3c685471304509ba55cf22cf7530269686644",
+      "result": {
+        "accepted_gameplay": true,
+        "phase": "wellspring-harvest",
+        "source_sha256": "4e17c7642c2f1d6f470d1b3eb3291c3b802efa5cdcb2db8b8bb883268af5d492",
+        "save_sha256": "8b6e9d2012e56069e3cb93e8b57051b9a6fa2e8cbd926fc5ca18897f8d524d4d",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 16.452741622924805
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-fourth-approach-01/travel-audit.json",
+      "sha256": "5091c8ec15f8859da9eeb2505545b67dd7374cca137139c0a9333d6ce96d39da",
+      "result": {
+        "accepted_gameplay": false,
+        "phase": "fourth-staging",
+        "source_sha256": "8b6e9d2012e56069e3cb93e8b57051b9a6fa2e8cbd926fc5ca18897f8d524d4d",
+        "save_sha256": "90de2b6ba0b90643ffa45cdb4af9e3c86a54774fe11ea2d3bf7bf60ce58dcfcc",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 16.722957611083984
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-06/travel-audit.json",
+      "sha256": "2d60586a9b34416248b8c06a631a06d5f967130f995b55ab0646a5b95a2a065c",
+      "result": {
+        "accepted_gameplay": true,
+        "phase": "wellspring-harvest",
+        "source_sha256": "90de2b6ba0b90643ffa45cdb4af9e3c86a54774fe11ea2d3bf7bf60ce58dcfcc",
+        "save_sha256": "8a6babf386efe63c0bc033288044dc560ce3cb33fb86e0cead5f9bf0630ead1d",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 16.722957611083984
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-south-cairn-harvest-02/travel-audit.json",
+      "sha256": "3071d1ac7ec6cb931f6f8b3499de5bee5572b097bd203978178d716fccb8c2fc",
+      "result": {
+        "accepted_gameplay": false,
+        "phase": "fourth-staging",
+        "source_sha256": "8a6babf386efe63c0bc033288044dc560ce3cb33fb86e0cead5f9bf0630ead1d",
+        "save_sha256": "4af4c08648856427b61cc77d206de87ce7e0cec332a58022baef3a4183376927",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 31.0,
+          "experience": 3.0844287872314453
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-south-cairn-harvest-03/travel-audit.json",
+      "sha256": "618c0c1c99daad66161e603bb5a16b75d201524622e09d050ff00fa314d75740",
+      "result": {
+        "accepted_gameplay": true,
+        "phase": "wellspring-harvest",
+        "source_sha256": "4af4c08648856427b61cc77d206de87ce7e0cec332a58022baef3a4183376927",
+        "save_sha256": "ea378dacc1082991eeaf5fac4ad1d4f1e080c8aba701fb8189f67bd90ca92fdc",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 31.0,
+          "experience": 3.0844287872314453
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-door-approach-01/travel-audit.json",
+      "sha256": "7c952ed6a2db10f7a35b3f0a058d8bf168b2eafd22edd7862172ab0c5068ae4f",
+      "result": {
+        "accepted_gameplay": true,
+        "phase": "wellspring-door-approach",
+        "source_sha256": "ea378dacc1082991eeaf5fac4ad1d4f1e080c8aba701fb8189f67bd90ca92fdc",
+        "save_sha256": "3d91cd173164601951f13b3b2bb1a2cefc32a63108fb280544b53362d0a14224",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 31.0,
+          "experience": 8.118581771850586
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-enter-01/travel-audit.json",
+      "sha256": "42da6d43d697985f97081c542e5e6bdc834aee3f116c337e6f6ef8bba369951f",
+      "result": {
+        "accepted_gameplay": true,
+        "phase": "wellspring-enter",
+        "source_sha256": "3d91cd173164601951f13b3b2bb1a2cefc32a63108fb280544b53362d0a14224",
+        "save_sha256": "c1d8dcaf1ebea4445c9ea54d149b4054897ab6f83e710d0cb9e4619110bde2cc",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 31.0,
+          "experience": 8.118581771850586
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-interior-harvest-01/travel-audit.json",
+      "sha256": "86382d3617cc53a7283feb4cdb31315a41927bc23abe058f694cfc09a16069b7",
+      "result": {
+        "accepted_gameplay": true,
+        "phase": "wellspring-harvest",
+        "source_sha256": "c1d8dcaf1ebea4445c9ea54d149b4054897ab6f83e710d0cb9e4619110bde2cc",
+        "save_sha256": "e57429774184d3d70ad4631fdd957f87085e134c0bf532fa2a073748b87928af",
+        "health": 67.4800033569336,
+        "cairn_after": 0,
+        "athletics_after": {
+          "base": 31.0,
+          "experience": 8.512663841247559
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-interior-harvest-02/travel-audit.json",
+      "sha256": "da69de4d211593d76516677ef38749fe316895673083b14351ab1ce7379f29f8",
+      "result": {
+        "accepted_gameplay": true,
+        "phase": "wellspring-harvest",
+        "source_sha256": "e57429774184d3d70ad4631fdd957f87085e134c0bf532fa2a073748b87928af",
+        "save_sha256": "68b5b5a14815fc943db2a2f2b87b9de70ced0d03a271bd7f3df6833598c86498",
+        "health": 67.4800033569336,
+        "cairn_after": 1,
+        "athletics_after": {
+          "base": 31.0,
+          "experience": 8.661194801330566
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "player_credited_deaths_retained": 33
+      }
+    }
+  ],
+  "unsupported_baseline": {
+    "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-baseline-03/health-use-audit.json",
+    "sha256": "eb02a533ca2c86e090aed10f30705e6a6ebec33b9d9304b07e9f2dd718bca007",
+    "result": {
+      "passed": true,
+      "phase": "baseline",
+      "sanitized": false,
+      "source_sha256": "68b5b5a14815fc943db2a2f2b87b9de70ced0d03a271bd7f3df6833598c86498",
+      "save_sha256": "26b854f7364b165e18d231a29cf06e40256aa988696717c3591e00a06f83a426",
+      "binary_sha256": "aa7c08c9dd441298e7b3ac361c91b455cfa107386618c7c8d24e7d6f7129a2c4",
+      "health_before": 67.4800033569336,
+      "health_after": 67.4800033569336,
+      "elapsed_before": 0,
+      "elapsed_after": 0,
+      "contribution": 0,
+      "pending": [],
+      "alchemy_before": {
+        "base": 5.0,
+        "experience": 0.0
+      },
+      "alchemy_after": {
+        "base": 5.0,
+        "experience": 0.0
+      },
+      "credited_deaths_retained": 33,
+      "full_other_item_metadata_retained": true,
+      "all_unrelated_skills_retained": true,
+      "book_progress_retained": true
+    }
+  },
+  "runtime": {
+    "normal": {
+      "path": "build/oblivion-compat/cairn-bolete/normal-healing-chain.json",
+      "sha256": "6d3893368f214bbcd5ed0f9cce19386342b8e40a6910c26adc76143aa97ba139",
+      "phases": [
+        {
+          "label": "normal-original-cairn-use-01",
+          "audit": {
+            "passed": true,
+            "phase": "use",
+            "sanitized": false,
+            "source_sha256": "68b5b5a14815fc943db2a2f2b87b9de70ced0d03a271bd7f3df6833598c86498",
+            "save_sha256": "5d2bb5d752830eaa8bbdf21874936e415a92eec50906f07523ba36d03517f084",
+            "binary_sha256": "d502dfb1a68e2987d9c9ce2d115ad12e9605363a657d08c1747bef882570e3ce",
+            "health_before": 67.4800033569336,
+            "health_after": 67.7514877319336,
+            "elapsed_before": 0,
+            "elapsed_after": 0.271484375,
+            "contribution": 0.2714836,
+            "pending": [
+              {
+                "ingredient": "content:oblivion.esm:06251e",
+                "elapsed": 0.271484375,
+                "magnitude": 1.0,
+                "duration": 3.0,
+                "actor_value": 8
+              }
+            ],
+            "alchemy_before": {
+              "base": 5.0,
+              "experience": 0.0
+            },
+            "alchemy_after": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "credited_deaths_retained": 33,
+            "full_other_item_metadata_retained": true,
+            "all_unrelated_skills_retained": true,
+            "book_progress_retained": true
+          }
+        },
+        {
+          "label": "normal-original-cairn-pending-01",
+          "audit": {
+            "passed": true,
+            "phase": "pending",
+            "sanitized": false,
+            "source_sha256": "5d2bb5d752830eaa8bbdf21874936e415a92eec50906f07523ba36d03517f084",
+            "save_sha256": "b9eca3d98dea29a2cd52f4590cf1b515a6a4eb74a992d8275727861aca6f9a78",
+            "binary_sha256": "d502dfb1a68e2987d9c9ce2d115ad12e9605363a657d08c1747bef882570e3ce",
+            "health_before": 67.7514877319336,
+            "health_after": 70.4800033569336,
+            "elapsed_before": 0.271484375,
+            "elapsed_after": 3,
+            "contribution": 2.7285174,
+            "pending": [],
+            "alchemy_before": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "alchemy_after": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "credited_deaths_retained": 33,
+            "full_other_item_metadata_retained": true,
+            "all_unrelated_skills_retained": true,
+            "book_progress_retained": true
+          }
+        },
+        {
+          "label": "normal-original-cairn-complete-01",
+          "audit": {
+            "passed": true,
+            "phase": "complete",
+            "sanitized": false,
+            "source_sha256": "b9eca3d98dea29a2cd52f4590cf1b515a6a4eb74a992d8275727861aca6f9a78",
+            "save_sha256": "0330a7448527955ca09680cb90ab3d785f8c091573a11d51004bea8cdd40fa6d",
+            "binary_sha256": "d502dfb1a68e2987d9c9ce2d115ad12e9605363a657d08c1747bef882570e3ce",
+            "health_before": 70.4800033569336,
+            "health_after": 70.4800033569336,
+            "elapsed_before": 0,
+            "elapsed_after": 0,
+            "contribution": 0,
+            "pending": [],
+            "alchemy_before": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "alchemy_after": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "credited_deaths_retained": 33,
+            "full_other_item_metadata_retained": true,
+            "all_unrelated_skills_retained": true,
+            "book_progress_retained": true
+          }
+        }
+      ],
+      "verifier_sha256": "c83e9f90baa83b895b463863b7849780466696b8f030f16bf15a5630afda13d7"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/cairn-bolete/sanitized-healing-chain.json",
+      "sha256": "c409e651f18e07d80eb23d90eb133abfcc81340e0279eb2ed7e04b1fdbc6d652",
+      "phases": [
+        {
+          "label": "sanitized-original-cairn-use-01",
+          "audit": {
+            "passed": true,
+            "phase": "use",
+            "sanitized": true,
+            "source_sha256": "68b5b5a14815fc943db2a2f2b87b9de70ced0d03a271bd7f3df6833598c86498",
+            "save_sha256": "e8343e324b6e4f5e55ecce6278b368f525619e0815803933c8b5465feb7012fa",
+            "binary_sha256": "cc729057054a886fb220c5a30336f131fbe4756a9b8bf8fcf1fc08d782c1c89b",
+            "health_before": 67.4800033569336,
+            "health_after": 67.6274642944336,
+            "elapsed_before": 0,
+            "elapsed_after": 0.1474609375,
+            "contribution": 0.147461,
+            "pending": [
+              {
+                "ingredient": "content:oblivion.esm:06251e",
+                "elapsed": 0.1474609375,
+                "magnitude": 1.0,
+                "duration": 3.0,
+                "actor_value": 8
+              }
+            ],
+            "alchemy_before": {
+              "base": 5.0,
+              "experience": 0.0
+            },
+            "alchemy_after": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "credited_deaths_retained": 33,
+            "full_other_item_metadata_retained": true,
+            "all_unrelated_skills_retained": true,
+            "book_progress_retained": true
+          }
+        },
+        {
+          "label": "sanitized-original-cairn-pending-01",
+          "audit": {
+            "passed": true,
+            "phase": "pending",
+            "sanitized": true,
+            "source_sha256": "e8343e324b6e4f5e55ecce6278b368f525619e0815803933c8b5465feb7012fa",
+            "save_sha256": "23f5be415786c7fd7c4a65693d2378eec162999c4193d35cf42c8a150e35d4ea",
+            "binary_sha256": "cc729057054a886fb220c5a30336f131fbe4756a9b8bf8fcf1fc08d782c1c89b",
+            "health_before": 67.6274642944336,
+            "health_after": 70.4800033569336,
+            "elapsed_before": 0.1474609375,
+            "elapsed_after": 3,
+            "contribution": 2.8525454,
+            "pending": [],
+            "alchemy_before": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "alchemy_after": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "credited_deaths_retained": 33,
+            "full_other_item_metadata_retained": true,
+            "all_unrelated_skills_retained": true,
+            "book_progress_retained": true
+          }
+        },
+        {
+          "label": "sanitized-original-cairn-complete-01",
+          "audit": {
+            "passed": true,
+            "phase": "complete",
+            "sanitized": true,
+            "source_sha256": "23f5be415786c7fd7c4a65693d2378eec162999c4193d35cf42c8a150e35d4ea",
+            "save_sha256": "5e5b867047fced4221b5700c301d404b8d0946f2353e708abdf12f40be1afbcd",
+            "binary_sha256": "cc729057054a886fb220c5a30336f131fbe4756a9b8bf8fcf1fc08d782c1c89b",
+            "health_before": 70.4800033569336,
+            "health_after": 70.4800033569336,
+            "elapsed_before": 0,
+            "elapsed_after": 0,
+            "contribution": 0,
+            "pending": [],
+            "alchemy_before": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "alchemy_after": {
+              "base": 5.0,
+              "experience": 0.5
+            },
+            "credited_deaths_retained": 33,
+            "full_other_item_metadata_retained": true,
+            "all_unrelated_skills_retained": true,
+            "book_progress_retained": true
+          }
+        }
+      ],
+      "verifier_sha256": "c83e9f90baa83b895b463863b7849780466696b8f030f16bf15a5630afda13d7"
+    }
+  },
+  "retained_failures": [
+    {
+      "label": "normal-original-cairn-approach-01",
+      "reason": "Terrain-only direct route hit an original rock. Owned game stopped; stale replay loop interrupted. No harvest or save.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-approach-01/driver-process.json",
+        "sha256": "8d91a1e9e1d88aef2ed5fa65ba9fc72dab5a75aaf0b6d72d2e916e4d5e13733d"
+      },
+      "exit_code": -2
+    },
+    {
+      "label": "normal-original-cairn-baseline-01",
+      "reason": "Wrong GUI icon consumed original Rice; stale expected starting Health83 also failed. Not a Cairn baseline; source cap save unchanged.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-baseline-01/driver-process.json",
+        "sha256": "060a596d9ec2878be1a22fc295d568eb1578978b1191d31bed909348bedb5638"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-baseline-01/scenario.json",
+        "sha256": "03e620912db5df838777e673c7416f7c7a22850dd679940ba58e6f9b99b42cd6"
+      }
+    },
+    {
+      "label": "normal-original-cairn-baseline-02",
+      "reason": "Wrong GUI icon consumed original Lettuce; stale expected starting Health83 also failed. Not a Cairn baseline; source cap save unchanged.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-baseline-02/driver-process.json",
+        "sha256": "95fb1ee9735cf5b63311d17241df01ad8dae81f6a118954558bea22be808e25e"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-baseline-02/scenario.json",
+        "sha256": "215da45f0985f130690bc9b72e5232f4683f84a22ab317545ef2618b5535f5a5"
+      }
+    },
+    {
+      "label": "normal-original-cairn-harvest-02",
+      "reason": "Camera distance171 exceeded original150 range. No interaction or harvest roll. Corrected ordinary approach03 reached126.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-harvest-02/driver-process.json",
+        "sha256": "ccfcb12744cb9ecb3d5fbb3151af351a7d80964367ec9a1bc3a76c9adef569db"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cairn-harvest-02/scenario.json",
+        "sha256": "0285c2b5f51f70093348f2f0f0d5a1098e3eec5de8efa9d063972475be4560eb"
+      }
+    },
+    {
+      "label": "normal-original-cleared-rooms-01",
+      "reason": "Reached portal but strict origin proximity failed; ordinary Space teleported to Sanctum, then F5 staging. Failed replay remains failed.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-01/driver-process.json",
+        "sha256": "2fe3ec3ea64eba80d7b7bc79c00e7a95d96b080a49b20373115aece1cd4ac705"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-01/scenario.json",
+        "sha256": "4b5b1ab76bc9fe6975f345a25e3022242a960509809065807ba35260cd187a77"
+      },
+      "manual-staging-save.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-01/manual-staging-save.json",
+        "sha256": "6e91601bf558e22037b651ec9525b6093e88603a2ee03b085a17ab337f195f6a"
+      }
+    },
+    {
+      "label": "normal-original-cleared-rooms-02",
+      "reason": "Ordinary movement stopped at marked-side original gate. Staging retained actual Athletics/Acrobatics level gains and their progression counters.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-02/driver-process.json",
+        "sha256": "69723be1612da25f0eec5fabd3019a47a3deeb51ac3d3ee21112a252abe77886"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-02/scenario.json",
+        "sha256": "bdb1918aabc5e7d2dbd59c5907259ec7e7b110db01e0e09c59777bf47c39e46e"
+      },
+      "manual-staging-save.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-02/manual-staging-save.json",
+        "sha256": "56ccd09ab9428b92314c4060bd8561a830e97bfa51ed6ef0997f291d8af6917f"
+      }
+    },
+    {
+      "label": "normal-original-cleared-rooms-03",
+      "reason": "Next original closed gate blocked movement. No save.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-03/driver-process.json",
+        "sha256": "442d12062cfd63b163762a0b2d359f59712d67c4378664040ad8bea1d41ebcf7"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-03/scenario.json",
+        "sha256": "2ed58887c0ad59d64625d887df2146a98e8b76a211b34e0daaf483efec0bc88d"
+      }
+    },
+    {
+      "label": "normal-original-cleared-rooms-04",
+      "reason": "Ray aimed through original gate gap; jump did not establish passage. No save.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-04/driver-process.json",
+        "sha256": "5f1a6a97d959e1e47b48545c200d4d73b060d79f3ab11405c9914722a209eae0"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-04/scenario.json",
+        "sha256": "8bd61e718f502a3993b42d7e96af41b6a782baa30b0d6df8d51aa8a974845417"
+      }
+    },
+    {
+      "label": "normal-original-cleared-rooms-05",
+      "reason": "Original back gate01760f dispatched script067190 with empty OnActivate. Correct authored barrier, no engine fix claimed.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-05/driver-process.json",
+        "sha256": "8799867a4fa0683df15ced0e813628b95d807087a4d3774c5fa680e89c69053b"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-cleared-rooms-05/scenario.json",
+        "sha256": "5127ceee17e5c082eb133c78a5cc73ba417130b7886d13c58a9b25856c3ba626"
+      }
+    },
+    {
+      "label": "normal-original-marked-gate-open-01",
+      "reason": "Aim through barred gap had empty activation focus. No interaction.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-marked-gate-open-01/driver-process.json",
+        "sha256": "112bc676ee174291afc91d6c9aba544693c7b05ceaf29841e1d6932502afeefb"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-marked-gate-open-01/scenario.json",
+        "sha256": "bfa3497b7d5a9f4f1de9a354192435786f1345ca32d02ca588dffe307f9443b1"
+      }
+    },
+    {
+      "label": "normal-original-marked-gate-open-02",
+      "reason": "Original marked-side gate opened correctly; fixed wall-time movement did not establish passage. Corrected measured-waypoint03 passed.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-marked-gate-open-02/driver-process.json",
+        "sha256": "53148f6116d4ea0fe30492e6dfc681b5ea344dbe414bf83332fd71060757d25a"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-marked-gate-open-02/scenario.json",
+        "sha256": "0c5f1de5b8902e0baaeef32dab8ddfbdef0a194e4acb7d76cf2431ade2e0afdf"
+      }
+    },
+    {
+      "label": "normal-original-sewer-return-01",
+      "reason": "Underwater intermediate native path ended short; ordinary-F5 staging retained, accepted_gameplay=false.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-sewer-return-01/driver-process.json",
+        "sha256": "8ee2ba4314ebfc96c4aec16a8cdfb83c1be2161cea08abc61f0d08ff614516fe"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-sewer-return-01/scenario.json",
+        "sha256": "f9ff15afc6c419a29f6d98dc52789b3712d9109b8d7d5f113ef5111e22d2d7e3"
+      },
+      "manual-staging-save.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-sewer-return-01/manual-staging-save.json",
+        "sha256": "a1c234e9a9715bccc59a02be757a96bcefbc0edc104ea322364ef109edf2c246"
+      }
+    },
+    {
+      "label": "normal-original-sewer-return-02",
+      "reason": "Reached sewer steps but overly strict arrival predicate failed; ordinary-F5 staging only.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-sewer-return-02/driver-process.json",
+        "sha256": "216124f5119307fdfad7fccd7bce468c5488721f344e9095b6f3d464c14ec1b3"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-sewer-return-02/scenario.json",
+        "sha256": "9879f947a271e7ee6f6c46f9b0f9ad798cb1d299bbbed653880bbd41552a0a39"
+      },
+      "manual-staging-save.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-sewer-return-02/manual-staging-save.json",
+        "sha256": "f046282f0988e8912d67b1c11207df8dcdc81b11870c39bd3031895c3cc74126"
+      }
+    },
+    {
+      "label": "normal-original-south-cairn-harvest-01",
+      "reason": "Reached06cae9 but camera-origin range slightly exceeded150. Empty focus, no harvest or save.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-south-cairn-harvest-01/driver-process.json",
+        "sha256": "698abe6d28778b4ac307181560521e312dc150e70954b2d97563f0408ad1ed12"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-south-cairn-harvest-01/scenario.json",
+        "sha256": "0bc8bd08c9dd5466babd6fb2ec9d0a0f8dc2e7a5dd0a11a11306cc22cbf5ae20"
+      }
+    },
+    {
+      "label": "normal-original-south-cairn-harvest-02",
+      "reason": "Close steering emitted conflicting wait/zero-aim and steering samples. No harvest. Ordinary-F5 staging retained; dedicated target/range observer03 completed the actual failed harvest.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-south-cairn-harvest-02/driver-process.json",
+        "sha256": "63cdfba76c350d2eeb7407293887c69aa8c2541def3fe5e2155bca4b2c565cb1"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-south-cairn-harvest-02/scenario.json",
+        "sha256": "e51f656cfb5e420cc97df295e2efc15cb4c54a15333fd324db9dd370a206356a"
+      },
+      "manual-staging-save.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-south-cairn-harvest-02/manual-staging-save.json",
+        "sha256": "1d9e0f54f8e15a61945f98d4d9e8ad93a2eaae5f7e0139e4b64a097cdd066808"
+      }
+    },
+    {
+      "label": "normal-original-wellspring-approach-01",
+      "reason": "Intermediate native path ended short; ordinary-F5 staging retained. Remaining route02 skips unreachable intermediate waypoints only and requires actual final plant.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-approach-01/driver-process.json",
+        "sha256": "164a64093030aeb01d206d8d7e985ecc70538706fcc07fd48ec68f200d865a9b"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-approach-01/scenario.json",
+        "sha256": "859d35a5800acdbcfb5bf70b557cb083d9cdf7a59690bcbf97b5e7405e55eef1"
+      },
+      "manual-staging-save.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-approach-01/manual-staging-save.json",
+        "sha256": "ccc8eafe034866fa861499787463032448405f519981225da09ef741b576e658"
+      }
+    },
+    {
+      "label": "normal-original-wellspring-fourth-approach-01",
+      "reason": "Native path reached06a535 but copied arrival predicate still named06a500. Ordinary-F5 staging retained; actual harvest06 continued that exact save.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-fourth-approach-01/driver-process.json",
+        "sha256": "9582c59a036ac92932a966d52fef462393b9581e4bc5ea489027784ecad64bbb"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-fourth-approach-01/scenario.json",
+        "sha256": "06902424017fb09b0e758cf977259b415f28f517ef25955c16fa66748aab435f"
+      },
+      "manual-staging-save.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-fourth-approach-01/manual-staging-save.json",
+        "sha256": "0468fc81fa8273400759ba55976fa250db7eeed6d6cf4c89d92f1ca9de0d8272"
+      }
+    },
+    {
+      "label": "normal-original-wellspring-harvest-01",
+      "reason": "Actual06a500 harvest succeeded, but one-shot event branch started after event and never saved. Plant not retried.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-01/driver-process.json",
+        "sha256": "8f92285733e389023693de1a638d93a59835a0db39ed45482724738ea0fdfe9e"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-01/scenario.json",
+        "sha256": "81db67850984f130dbc45bf62382fdecc1cf11556046391bd2cdb6abda14d244"
+      }
+    },
+    {
+      "label": "normal-original-wellspring-harvest-02",
+      "reason": "Actual06a501 harvest succeeded, but branch action ignored attempted after_start option. No save; plant not retried. Subsequent recipes save unconditionally.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-02/driver-process.json",
+        "sha256": "e3e206ce3603592bb8f0be8dddee99bcf8f7565c2b35ba31a346e8ad9fb7d9ac"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-02/scenario.json",
+        "sha256": "ce39169d6aa8b4e2707255ccf713f167551ba12588ff74a1ed74eac7f59a706e"
+      }
+    },
+    {
+      "label": "normal-original-wellspring-harvest-03",
+      "reason": "Short movement timeout expired before reaching untouched third plant06a51a. No harvest.04 used longer allowance.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-03/driver-process.json",
+        "sha256": "292d5a03be7c0abcae36c1d5cb6ccfd40ed525fe0505d8166a16b5361afad856"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-03/scenario.json",
+        "sha256": "5202b93d782c712ee6f13c06ece9a78ddc117ecad1cb48fb8f6e22b2cfc71346"
+      }
+    },
+    {
+      "label": "normal-original-wellspring-harvest-05",
+      "reason": "Direct walk to fourth plant hit original stone structure. No harvest. Native path used subsequently.",
+      "driver": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-05/driver-process.json",
+        "sha256": "4015ba5b1135f9b6e1bf5af0bc7e9b770e98651fac331f0b732001397297ad19"
+      },
+      "exit_code": 1,
+      "scenario.json": {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-harvest-05/scenario.json",
+        "sha256": "bcb762f9f651db2d0624ab8f75c9f5708ee8ca791d7ddce9eed4fc2380680f49"
+      }
+    }
+  ],
+  "content_audits": [
+    {
+      "path": "build/oblivion-compat/cairn-bolete/original-wellspring-plants-audit.json",
+      "sha256": "f49c35f9fb432c19b79d76c2538bf2476e3ed1d70fc9698a0193605dd5c603c2"
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/original-south-cairn-audit.json",
+      "sha256": "0fbe18d0377d672a83bd5fdd35daba91a55c6712fde79b86e49d98c34f0a14ba"
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/original-interior-plants-audit.json",
+      "sha256": "d0812b0d3902c926602bca34b37277678549d03d8ef626e0809df5dd148ecb90"
+    },
+    {
+      "path": "build/oblivion-compat/cairn-bolete/original-wellspring-door-script.json",
+      "sha256": "22d89a1808a0c1efee3a3e5167a1e9922129e3ae5d0db633405655168f24975d"
+    }
+  ],
+  "separate_sewer_detour": {
+    "scope": "Retained independently; its extra Athletics/Acrobatics progression is not merged into the cap branch. Original marked-side gate opened normally; next empty-OnActivate gate blocked this route. Initial wrong-side diagnosis was corrected: actual marker distance112 permits activation within150.",
+    "audits": [
+      {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-sewer-enter-01/travel-audit.json",
+        "sha256": "006db4deff7f6909f9246a9314c68f577b37cdc1bcdc3cb9e53cc0313720415a",
+        "result": {
+          "accepted_gameplay": true,
+          "phase": "sewer-enter",
+          "source_sha256": "799b81bb34b30606897d20e315c777666a07e144fbbf7c6504b535e456cbce5f",
+          "save_sha256": "f3ece1f54a60b532a25a19882d0d8e885aaa00156f54cf903be090efafbb3a04",
+          "health": 83,
+          "cairn_after": 0,
+          "athletics_after": {
+            "base": 30.0,
+            "experience": 12.785978317260742
+          },
+          "acrobatics_after": {
+            "base": 5.0,
+            "experience": 0.0
+          },
+          "player_credited_deaths_retained": 33
+        }
+      },
+      {
+        "path": "build/oblivion-compat/cairn-bolete/normal-original-marked-gate-open-03/travel-audit.json",
+        "sha256": "9a8c1e70f167aea32ce0ef374bfe674c12d6504583cd48d7f2bebca5b5da8a83",
+        "result": {
+          "accepted_gameplay": true,
+          "phase": "gate-open",
+          "source_sha256": "dbdf5f80e5515d5f5198d82abef91491504862a8fe051f2e4bdac09a2f1d98d7",
+          "save_sha256": "5e9e93f7a14611d729d500cce7493f7e3895af4463d79b8cc3dca9eaf289f026",
+          "health": 83,
+          "cairn_after": 0,
+          "athletics_after": {
+            "base": 31.0,
+            "experience": 3.987365245819092
+          },
+          "acrobatics_after": {
+            "base": 11.0,
+            "experience": 1.678792953491211
+          },
+          "player_credited_deaths_retained": 33
+        }
+      }
+    ]
+  },
+  "acceptance_layers": {
+    "structural": "Native owner wire schema101 byte roundtrips and original-content audits pass; no authoring plugin changes.",
+    "compiler_and_unit": "Normal3300 components/2289 engine, instrumented1121 native components/complete disjoint2289 engine, focused8+8 and Python617.",
+    "semantic": "Each source immutable; captured process/actual executable and loaded library hashes, exact raw/live load/save agreement, full unrelated item metadata, all other earned skills, book progression, passives and33 credited deaths retained.",
+    "runtime": "Genuine cap from original099b6e, actual deficit67.48, correct UI tooltip and normal item use. Both normal/instrumented: one debit/Alchemy0.5, partial save, cold remaining healing to70.48, completed cold load with no duplicate heal/debit/XP."
+  },
+  "limits": [
+    "No grants, player-stat/time/position/seed setters, edited save sources or independent branch merging in fork acceptance. Original oracle console isolation remains distinct.",
+    "Six failed original plants remain saved; two unsaved successful harvests from failed harness runs were never retried. Navigation staging is explicitly not a passed replay.",
+    "No general Alchemy skills/Luck, resistance, later effects, crafting, other MGEF profiles, general inventory lifetime or full M16 claim.",
+    "Full-health clamp and dead-owner boundaries have focused service/serialization evidence and original full-health control, not a manufactured real-game death/full-health course.",
+    "Instrumented rendered sessions use detect_leaks=0/halt_on_error=1; engine groups use detect_leaks=1. No rendered leak-free claim.",
+    "Original outdoor terrain/rock/water artifacts remain visible and uncertified. No broad graphics, platform, performance or Morrowind runtime acceptance claim."
+  ],
+  "editable_manifest_validation": {
+    "path": "build/oblivion-compat/cairn-bolete/final-manifest-validation.json",
+    "sha256": "0e536ee494ba7d037366c2c0ade874213cd40095bbfe640fffba72366be9112e",
+    "count": 15,
+    "passed": true
+  },
+  "runtime_supervisor": {
+    "build/oblivion-compat/cairn-bolete/run-course.py": "213d8de9232e5651cce7bc1d5274a32153f7b3549150488694a2f89bc608e728",
+    "build/oblivion-compat/cairn-bolete/run-healing-chain.py": "435bba71c5280e04d1508b24a7a00320b60b55a196d88d990b1d6d811defe98b"
+  }
+}

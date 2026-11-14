@@ -102,6 +102,26 @@ namespace MWWorld
         return {};
     }
 
+    std::optional<ESM4::IngredientFatigueProfile> resolveOblivionIngredientHealthRestoration(
+        const ESMStore& store, const ESM4::Ingredient& ingredient)
+    {
+        if ((ingredient.mFlags & ESM4::Rec_Deleted) || !ingredient.mScriptId.isZeroOrUnset()
+            || ingredient.mEffects.empty() || (ingredient.mEnchantment.flags & 0xff) != 1) return {};
+        const auto key = store.get<ESM4::Ingredient>().findFormKey(ESM::RefId(ingredient.mId));
+        if (!key) return {};
+        if (const auto* winner = store.getFormKeyIndex().winner(*key);
+            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_INGR)) return {};
+        const auto& effect = ingredient.mEffects.front();
+        if (effect.mId != ESM::fourCC("REHE") || effect.mMagnitude != 15 || effect.mDuration
+            || effect.mRange || effect.mArea || effect.mActorValue != 8 || effect.mScriptEffect) return {};
+        const auto* definition = ingredientEffectDefinition(store, effect.mId);
+        if (!definition || !definition->mData) return {};
+        const auto& data = *definition->mData;
+        if (data.mFlags != 0x01000870 || data.mBaseCost != 10.f || data.mAssociatedForm
+            || data.mAssociatedData != 8 || data.mSchool != 5 || data.mResistanceActorValue != -1) return {};
+        return ESM4::NoviceIngredientHealthRestoration;
+    }
+
     namespace
     {
         // Bounded original Nirnroot food ingestion. Authored 20/120 EFIT is
@@ -156,10 +176,13 @@ namespace MWWorld
         const auto& store = world.getStore();
         const auto* ingredient = store.get<ESM4::Ingredient>().search(item.getCellRef().getRefId());
         const bool healthDrain = ingredient && supportsNirnrootDrain(store, *ingredient);
+        const auto healthRestoration = ingredient
+            ? resolveOblivionIngredientHealthRestoration(store, *ingredient) : std::nullopt;
         const auto profile = healthDrain ? std::optional<ESM4::IngredientFatigueProfile>{{-5.f, 1.f}}
+            : healthRestoration ? healthRestoration
             : ingredient ? resolveOblivionIngredientFatigue(store, *ingredient) : std::nullopt;
         if (!profile) return false;
-        if (healthDrain && (combat->getPlayerValue(19) != 5.f || combat->getPlayerValue(7) != 50.f
+        if ((healthDrain || healthRestoration) && (combat->getPlayerValue(19) != 5.f || combat->getPlayerValue(7) != 50.f
                 || combat->getPlayerValue(64) != 0.f)) return false;
         const auto scriptOwner = item.getCellRef().getNativeScriptOwner();
         auto* scripts = native->getOblivionScriptManager();
@@ -174,7 +197,8 @@ namespace MWWorld
         if (!key || !before || !life || life->mPhase != ESM4::ActorLifePhase::Alive) return false;
         auto candidate = *before;
         candidate.mIngredientRestoration.push_back(
-            {*key, 0.f, profile->mMagnitude, profile->mDuration, std::uint8_t(healthDrain ? 8 : 10)});
+            {*key, 0.f, profile->mMagnitude, profile->mDuration,
+                std::uint8_t(healthDrain || healthRestoration ? 8 : 10)});
         if (healthDrain)
             candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner, 8,
                 ESM4::ActorValueModifier::Maximum, profile->mMagnitude);
@@ -209,10 +233,12 @@ namespace MWWorld
                 const auto* ingredient = store.get<ESM4::Ingredient>().search(effect.mIngredient);
                 const auto profile = ingredient && effect.mActorValue == 8 && supportsNirnrootDrain(store, *ingredient)
                     ? std::optional<ESM4::IngredientFatigueProfile>{{-5.f, 1.f}}
+                    : ingredient && effect.mActorValue == 8
+                        ? resolveOblivionIngredientHealthRestoration(store, *ingredient)
                     : ingredient && effect.mActorValue == 10 ? resolveOblivionIngredientFatigue(store, *ingredient)
                     : std::nullopt;
                 if (!profile || profile->mMagnitude != effect.mMagnitude || profile->mDuration != effect.mDuration)
-                    throw std::invalid_argument("saved native ingredient Fatigue profile no longer resolves");
+                    throw std::invalid_argument("saved native ingredient profile no longer resolves");
             }
     }
 

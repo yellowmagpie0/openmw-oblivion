@@ -910,3 +910,72 @@ TEST(OblivionMagicContent, NirnrootHealthDrainRechecksWinningIngredientAndEffect
     fixture.load("patch.esp", {"oblivion.esm"}, {definition(0x01001c76)});
     EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state), std::invalid_argument);
 }
+
+namespace
+{
+    std::string cairnBoleteIngredient()
+    {
+        return record(ESM4::REC_INGR, 0x6251e,
+            sub(ESM::fourCC("DATA"), bytes(.1f))
+            + sub(ESM::fourCC("ENIT"), bytes(1u) + bytes(1u))
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("REHE")))
+            + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("REHE")) + bytes(15u)
+                + bytes(0u) + bytes(0u) + bytes(0u) + bytes(8u))
+            + sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("DGAT")))
+            + sub(ESM::fourCC("EFIT"), bytes(ESM::fourCC("DGAT")) + bytes(30u)
+                + bytes(0u) + bytes(0u) + bytes(0u) + bytes(1u)));
+    }
+
+    std::string cairnHealthDefinition(float cost = 10.f)
+    {
+        return record(ESM4::REC_MGEF, 0x188c,
+            sub(ESM::fourCC("EDID"), std::string("REHE\0", 5))
+            + sub(ESM::fourCC("DATA"), bytes(0x01000870u) + bytes(cost) + bytes(8u)
+                + bytes(5u) + bytes(-1) + std::string(44, '\0')));
+    }
+}
+
+TEST(OblivionMagicContent, OriginalCairnFirstHealthEffectResolvesAndRechecksSavedProfile)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {cairnBoleteIngredient(), cairnHealthDefinition()});
+    const auto key = ESM::FormKey::content("oblivion.esm", 0x6251e);
+    const auto* ingredient = fixture.mStore.search<ESM4::Ingredient>(key);
+    ASSERT_NE(ingredient, nullptr);
+    EXPECT_EQ(MWWorld::resolveOblivionIngredientHealthRestoration(fixture.mStore, *ingredient),
+        ESM4::NoviceIngredientHealthRestoration);
+    EXPECT_FALSE(MWWorld::resolveOblivionIngredientFatigue(fixture.mStore, *ingredient));
+    for (unsigned change = 0; change < 8; ++change)
+    {
+        auto bad = *ingredient;
+        if (change == 0) bad.mScriptId = ESM::FormId{0x900, 1};
+        if (change == 1) bad.mEnchantment.flags = 3;
+        if (change == 2) bad.mEffects.front().mMagnitude = 14;
+        if (change == 3) bad.mEffects.front().mDuration = 1;
+        if (change == 4) bad.mEffects.front().mActorValue = 9;
+        if (change == 5) bad.mEffects.front().mArea = 1;
+        if (change == 6) bad.mEffects.front().mRange = 1;
+        if (change == 7) bad.mEffects.front().mId = ESM::fourCC("DGHE");
+        EXPECT_FALSE(MWWorld::resolveOblivionIngredientHealthRestoration(fixture.mStore, bad));
+    }
+    ESM4::RuntimeState state;
+    ESM4::RuntimeActorValues actor;
+    actor.mIngredientRestoration = {{key, .5f, 1.f, 3.f, 8}};
+    state.mNativeActorValues = {actor};
+    EXPECT_NO_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state));
+    state.mNativeActorValues[0].mIngredientRestoration[0].mActorValue = 10;
+    EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state), std::invalid_argument);
+    state.mNativeActorValues = {actor};
+    fixture.load("patch.esp", {"oblivion.esm"}, {cairnHealthDefinition(11.f)});
+    EXPECT_THROW(MWWorld::validateOblivionIngredientRestoration(fixture.mStore, state), std::invalid_argument);
+}
+
+TEST(OblivionMagicContent, CairnDeletedWinningIngredientCannotAdmitOrRestoreHealthOwner)
+{
+    Fixture fixture;
+    fixture.load("oblivion.esm", {}, {cairnBoleteIngredient(), cairnHealthDefinition()});
+    const auto key = ESM::FormKey::content("oblivion.esm", 0x6251e);
+    const auto previous = *fixture.mStore.search<ESM4::Ingredient>(key);
+    fixture.load("patch.esp", {"oblivion.esm"}, {record(ESM4::REC_INGR, 0x6251e, {}, true)});
+    EXPECT_FALSE(MWWorld::resolveOblivionIngredientHealthRestoration(fixture.mStore, previous));
+}

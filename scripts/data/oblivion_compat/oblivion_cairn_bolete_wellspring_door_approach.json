@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "name": "Original Wellspring Cave entry approach, save before activation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal waypoints={{util.vector3(68480,47872,800.0),util.vector3(67968,48512,800.0),util.vector3(67840,49280,816.0),util.vector3(67456,50048,824.0),util.vector3(67200,50816,840.0),util.vector3(67072,51584,840.0),util.vector3(66944,52480,912.0),util.vector3(66688,53248,952.0),util.vector3(66432,54016,968.0),util.vector3(66048,54784,1008.0),util.vector3(65536,55552,1024.0),util.vector3(64896,56192,952.0),util.vector3(64256,56832,952.0),util.vector3(64000,57600,928.0),util.vector3(64000,58496,776.0),util.vector3(64000,59392,720.0),util.vector3(64256,60032,496.0),util.vector3(64485.90625,60088.42578125,562.1966552734375)}}\nlocal stage=1;local path=nil;local index=1;local timer=0;local age=0\nlocal arrived=false;local attempts=0;local stuck=0;local best=math.huge;local cooldown=0\nlocal function distance(a,b) local v=a-b;return math.sqrt(v.x*v.x+v.y*v.y) end\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;age=age+dt;if timer<.1 then return end\n local elapsed=timer;timer=0\n assert(not Actor.isDead(self),'Player died during genuine Cairn Bolete approach')\n if core.isWorldPaused() or age<3 then return end\n local target=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x53fe0))\n local destination=waypoints[stage]\n while stage<#waypoints and distance(destination,self.position)<180 do\n  stage=stage+1;destination=waypoints[stage];path=nil;attempts=0;stuck=0;best=math.huge\n  print('CairnRoute stage='..stage)\n end\n if arrived or (stage==#waypoints and target and target:isValid() and (target.position-camera.getPosition()):length()<147) then\n  arrived=true;print('CairnRoute aim x=0 y=0');print('CairnRoute input=turn')\n  assert(target and target:isValid(),'Original Cairn Bolete missing at arrival')\n  print('CairnRoute arrived original=053fe0 pos='..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current..' stock='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x6251e)))\n  local v=camera.getViewTransform():apply(target.position)\n  local yaw=math.atan2(v.x,-v.z);local pitch=-math.atan2(v.y,math.sqrt(v.x*v.x+v.z*v.z))\n  if math.abs(yaw)<.025 and math.abs(pitch)<.025 then print('CairnRoute facing destination') end\n  print(string.format('CairnRoute look x=%d y=%d',math.max(-150,math.min(150,math.floor(yaw*256+.5))),math.max(-100,math.min(100,math.floor(pitch*256+.5)))))\n  return\n end\n  if stage==#waypoints and target and target:isValid() and distance(destination,self.position)<110 then\n  local eye=camera.getPosition();local v=camera.getViewTransform():apply(util.vector3(target.position.x,target.position.y,eye.z));local angle=math.atan2(v.x,-v.z)\n  print(string.format('CairnRoute aim x=%d y=%d',math.max(-150,math.min(150,math.floor(angle*256+.5))),math.max(-100,math.min(100,math.floor(-camera.getPitch()*256+.5)))))\n  if math.abs(angle)<.04 then print('CairnRoute facing') end\n  print('CairnRoute input='..(math.abs(angle)>.2 and 'turn' or 'continue'));return\n end\n if not path and (self.position.z<0 or destination.z<0) then path={{destination}};index=1;stuck=0;best=math.huge;print('CairnRoute ordinary swim stage='..stage) end\n if not path then\n  print('CairnRoute aim x=0 y=0');print('CairnRoute input=wait')\n cooldown=cooldown-elapsed;if cooldown>0 then return end;cooldown=1\n  local status,p=nearby.findPath(self.position,destination,{{agentBounds=Actor.getPathfindingAgentBounds(self),destinationTolerance=60}})\n  attempts=attempts+1;\n  if attempts>=4 and stage<#waypoints then print('CairnRoute skip unreachable intermediate stage='..stage);stage=stage+1;attempts=0;path=nil;best=math.huge;stuck=0;return end\n  assert(attempts<15,'Runtime navigation repeatedly failed at original Cairn stage='..stage)\n  print('CairnRoute query stage='..stage..' status='..tostring(status)..' points='..#p..' end='..tostring(p[#p]))\n  if #p>1 and distance(p[#p],self.position)>60 then path=p;index=1;stuck=0;best=math.huge end\n  return\n end\n while index<=#path and distance(path[index],self.position)<55 do index=index+1;best=math.huge;stuck=0 end\n if index>#path then path=nil;return end\n local remaining=distance(path[index],self.position)\n if remaining<best-3 then best=remaining;stuck=0 elseif self.controls.movement>0 then stuck=stuck+elapsed else stuck=0 end\n if stuck>10 then path=nil;return end\n local eye=camera.getPosition();local v=camera.getViewTransform():apply(util.vector3(path[index].x,path[index].y,eye.z));local angle=math.atan2(v.x,-v.z)\n print(string.format('CairnRoute aim x=%d y=%d stage=%d point=%d pos=%.2f,%.2f,%.2f distance=%.2f',math.max(-150,math.min(150,math.floor(angle*256+.5))),math.max(-100,math.min(100,math.floor(-camera.getPitch()*256+.5))),stage,index,self.position.x,self.position.y,self.position.z,distance(destination,self.position)))\n if math.abs(angle)<.04 then print('CairnRoute facing') end\n print('CairnRoute input='..(math.abs(angle)>.2 and 'turn' or (stuck>2 and 'jump' or 'continue')))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "CairnRoute aim",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "CairnRoute facing",
+      "maximum_iterations": 100,
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "CairnRoute aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "CairnRoute aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w",
+      "timeout_seconds": 900,
+      "maximum_iterations": 5000
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "CairnRoute arrived original=053fe0",
+      "maximum_iterations": 20000,
+      "timeout_seconds": 3000,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "CairnRoute aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "CairnRoute aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        },
+        {
+          "type": "branch_on_log",
+          "pattern": "CairnRoute input=(?P<choice>jump|continue|wait|turn)",
+          "timeout_seconds": 15,
+          "cases": {
+            "jump": [
+              {
+                "type": "key_hold",
+                "value": "e",
+                "seconds": 0.25
+              },
+              {
+                "type": "sleep",
+                "seconds": 0.7
+              }
+            ],
+            "continue": [
+              {
+                "type": "key_down",
+                "value": "w"
+              }
+            ],
+            "wait": [
+              {
+                "type": "key_up",
+                "value": "w"
+              },
+              {
+                "type": "sleep",
+                "seconds": 0.2
+              }
+            ],
+            "turn": [
+              {
+                "type": "key_up",
+                "value": "w"
+              }
+            ]
+          }
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "CairnRoute facing destination",
+      "maximum_iterations": 150,
+      "timeout_seconds": 30,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "CairnRoute look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "CairnRoute look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.1
+        }
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "original-wellspring-cairn-approach.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "Tab"
+    },
+    {
+      "type": "key_up",
+      "value": "Tab"
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1800,
+  "expected_exit": 0,
+  "expected_log": [
+    "CairnRoute arrived original=053fe0",
+    "CairnRoute facing destination",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "M16 native cast rejected:",
+    "Oblivion creature inventory item .* was not projected:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-wellspring-door-approach",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

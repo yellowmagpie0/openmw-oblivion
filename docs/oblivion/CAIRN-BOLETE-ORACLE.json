@@ -1,0 +1,125 @@
+{
+  "status": "Independent original-game bounded novice Restore Health ingestion observed",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "winning_records": {
+    "path": "build/oblivion-compat/cairn-bolete/candidate-cairn-original-records.json",
+    "sha256": "b3a3b5e20ee65c7149535e063b769d8fab9f54225c5af80229f636f663714683"
+  },
+  "original_content": {
+    "ingredient": "06251e Cairn Bolete Cap",
+    "first_effect": "REHE15/0 Self area0 AV8; nonfood ENIT low flags1; no script",
+    "other_authored_effects": [
+      "DGAT Intelligence",
+      "RSPA",
+      "SHDG"
+    ],
+    "canonical_MGEF": "00188c REHE, flags0x01000870, basecost10, associated AV8, school5, resistance\u22121",
+    "harvest": "Original FLOR062513/062517 produce06251e at33% each season. REFR06a060/06a05f enabled, no ownership/enable parent."
+  },
+  "fixture": {
+    "alchemy": 5,
+    "luck": 50,
+    "health_base": 80,
+    "console_isolation": [
+      "player.modav health -30",
+      "player.additem 0006251e 3",
+      "player.equipitem 0006251e"
+    ],
+    "scope": "Console controls in isolated copied original-game prefix only; distinct from genuine ordinary-input fork acceptance."
+  },
+  "observations": [
+    {
+      "case": "Pristine values",
+      "result": "Alchemy5/Luck50 and Health80/base80",
+      "image": "native-pristine-health-skills.png"
+    },
+    {
+      "case": "No-regeneration control",
+      "result": "Health50 remains50 after5 unpaused seconds; cap count3",
+      "image": "native-no-regen-control.png"
+    },
+    {
+      "case": "First completed ingestion",
+      "result": "Health50\u219253 and stock3\u21922 after8 unpaused seconds",
+      "image": "native-first-use-completed.png"
+    },
+    {
+      "case": "Second active effect",
+      "result": "Restore Health magnitude1; Wortcraft: Cairn Bolete Cap(1), no other active ingredient effect",
+      "image": "native-cairn-active-details.png"
+    },
+    {
+      "case": "Second completed ingestion",
+      "result": "Health53\u219256 and stock2\u21921 after8 unpaused seconds",
+      "image": "native-second-use-completed.png"
+    },
+    {
+      "case": "Full-health control",
+      "result": "Isolated modav health24 returns80; one cap consumed1\u21920; Health80 remains80 after8 unpaused seconds, Alchemy base5 retained",
+      "image": "native-full-health-completed.png"
+    }
+  ],
+  "decision": {
+    "magnitude_per_second": 1,
+    "duration_seconds": 3,
+    "total_health_restored": 3,
+    "numeric_tolerance": 0.5,
+    "duration_basis": "Completed3 divided by original Active Effects magnitude1. No exact frame-timing or bit-parity claim.",
+    "admission": "Bounded original nonfood first REHE15/0 Self AV8 at Alchemy5/Luck50/zero Magic Resistance; do not derive eating potency from authored15.",
+    "ownership": "Resolved per-application positive Health Damage-channel restoration; persist remaining elapsed time and debit/XP only on original consumption. Clamp to current maximum; do not remove temporary Maximum drains."
+  },
+  "provenance": {
+    "root": "build/oblivion-compat/cairn-bolete/original-native-01",
+    "process": {
+      "path": "build/oblivion-compat/cairn-bolete/original-native-01/game-process-epoch.json",
+      "sha256": "e2afc8fa088eb7b9a3f07349c97a7abc84268c967628608806ab302027634d61"
+    },
+    "input_log": {
+      "path": "build/oblivion-compat/cairn-bolete/original-native-01/input-log.jsonl",
+      "sha256": "a6ede1e64596ff1cc7a18daa90542c38a5358da8b3ff6a333d1bbb2c6ae8635e"
+    },
+    "pre_launch_inputs": {
+      "path": "build/oblivion-compat/cairn-bolete/original-native-01/pre-launch-inputs.json",
+      "sha256": "983fc2e682292990b3420544d678a493393b8c98e6763bcbd8dedbc5307d5e7c"
+    },
+    "exit": {
+      "path": "build/oblivion-compat/cairn-bolete/original-native-01/exit-verification.json",
+      "sha256": "b10f019ec6a85ced7f429fad75580db589599ac26e3e991c604827eedb939af5"
+    },
+    "actions": [
+      {
+        "path": "build/oblivion-compat/cairn-bolete/original-native-01/setup-actions.json",
+        "sha256": "5ed4a29456bd9cc302f1e1f863f71d268206e134ed9b874bbe0b8d188cdccc98"
+      },
+      {
+        "path": "build/oblivion-compat/cairn-bolete/original-native-01/first-use-actions.json",
+        "sha256": "2f1444e654387823f335a508022e715632c729f4de24ba314890097067ce0ebc"
+      },
+      {
+        "path": "build/oblivion-compat/cairn-bolete/original-native-01/active-use-actions.json",
+        "sha256": "903f3a5140234dd6926908d7fde974de5e86cd69aae7152d13eae436ede0bbf6"
+      },
+      {
+        "path": "build/oblivion-compat/cairn-bolete/original-native-01/second-and-full-control-actions.json",
+        "sha256": "ad448c5982f0b134527ecc8710aa7696ae5c646d408f8a8a9ee72196d284a76c"
+      }
+    ]
+  },
+  "reused_skill_rule": {
+    "source": "ALCHEMY-USE-ORACLE.json",
+    "scope": "Existing independently verified nonfood secondary skill use and original rate; no fresh original XP measurement claimed."
+  },
+  "boundaries": [
+    "No general skill/Luck potency, later known effects, brewing, poison/resistance scaling, overlapping-Cairn stacking certification or full M16 claim.",
+    "First use begins from pristine novice values with declared deficit and no-regeneration control. Second use and full-health control are sequential within the same isolated process, not fresh pristine runs.",
+    "Exact original executable/master/pristine hashes checked. Game exited via qqq/wrapper0; exact copied config/plugin/save inputs verified/restored. Owned isolated display and Steam client remain for later goal probes.",
+    "The original UI and console establish rule expectations. Actual fork acquisition, unsupported-use baseline, healing and save/restart must still pass."
+  ],
+  "additional_sewer_plant_records": {
+    "path": "build/oblivion-compat/cairn-bolete/original-sewer-plants.json",
+    "sha256": "3c77c793f631fafe451699fe3338a16d25b502b50a592ad546613a551d4a9cf5",
+    "scope": "Same original06251e ingredient; six independent original plants in previously cleared ImperialDungeon05. Raw reference/FLOR audit, not additional original live potency observations."
+  }
+}
