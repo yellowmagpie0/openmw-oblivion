@@ -78,7 +78,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 101;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 102;
 
     struct RuntimeContentIdentity
     {
@@ -181,6 +181,7 @@ namespace ESM4
         std::uint8_t mCharacterGenerationFlags = 0;
         // v80: absent older saves begin tracking at adoption, without inferred history.
         std::optional<CharacterGenerationState> mCharacterGeneration;
+        // v102: food Restore Endurance ingredient ownership.
         // v101: only awarded skill books are exhausted, globally by base form.
         // Reading at skill100 leaves the book eligible for a later award.
         std::set<ESM::FormKey> mAwardedSkillBooks;

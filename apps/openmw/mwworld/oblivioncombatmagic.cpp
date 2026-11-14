@@ -122,6 +122,26 @@ namespace MWWorld
         return ESM4::NoviceIngredientHealthRestoration;
     }
 
+    // Original food Crab Meat at Alchemy5/Luck50 restores five Endurance
+    // damage points. The disease Maximum modifier is a separate owner.
+    static bool supportsCrabMeatRestoration(const ESMStore& store, const ESM4::Ingredient& ingredient)
+    {
+        const auto key = store.get<ESM4::Ingredient>().findFormKey(ESM::RefId(ingredient.mId));
+        if (!key || *key != ESM::FormKey::content("Oblivion.esm", 0x3366c)
+            || (ingredient.mFlags & ESM4::Rec_Deleted) || !ingredient.mScriptId.isZeroOrUnset()
+            || ingredient.mEffects.empty() || (ingredient.mEnchantment.flags & 0xff) != 3) return false;
+        if (const auto* winner = store.getFormKeyIndex().winner(*key);
+            winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_INGR)) return false;
+        const auto& effect = ingredient.mEffects.front();
+        const auto* definition = ingredientEffectDefinition(store, effect.mId);
+        if (effect.mId != ESM::fourCC("REAT") || effect.mMagnitude != 15 || effect.mDuration != 1
+            || effect.mRange || effect.mArea || effect.mActorValue != 5 || effect.mScriptEffect
+            || !definition || !definition->mData) return false;
+        const auto& data = *definition->mData;
+        return data.mFlags == 0x00100870 && data.mBaseCost == 38.f && !data.mAssociatedForm
+            && data.mAssociatedData == 0 && data.mSchool == 5 && data.mResistanceActorValue == -1;
+    }
+
     namespace
     {
         // Bounded original Nirnroot food ingestion. Authored 20/120 EFIT is
@@ -175,14 +195,16 @@ namespace MWWorld
         if (item.getContainerStore() != &inventory) return false;
         const auto& store = world.getStore();
         const auto* ingredient = store.get<ESM4::Ingredient>().search(item.getCellRef().getRefId());
+        const bool attributeRestoration = ingredient && supportsCrabMeatRestoration(store, *ingredient);
         const bool healthDrain = ingredient && supportsNirnrootDrain(store, *ingredient);
         const auto healthRestoration = ingredient
             ? resolveOblivionIngredientHealthRestoration(store, *ingredient) : std::nullopt;
-        const auto profile = healthDrain ? std::optional<ESM4::IngredientFatigueProfile>{{-5.f, 1.f}}
+        const auto profile = attributeRestoration ? std::optional<ESM4::IngredientFatigueProfile>{{5.f, 1.f}}
+            : healthDrain ? std::optional<ESM4::IngredientFatigueProfile>{{-5.f, 1.f}}
             : healthRestoration ? healthRestoration
             : ingredient ? resolveOblivionIngredientFatigue(store, *ingredient) : std::nullopt;
         if (!profile) return false;
-        if ((healthDrain || healthRestoration) && (combat->getPlayerValue(19) != 5.f || combat->getPlayerValue(7) != 50.f
+        if ((attributeRestoration || healthDrain || healthRestoration) && (combat->getPlayerValue(19) != 5.f || combat->getPlayerValue(7) != 50.f
                 || combat->getPlayerValue(64) != 0.f)) return false;
         const auto scriptOwner = item.getCellRef().getNativeScriptOwner();
         auto* scripts = native->getOblivionScriptManager();
@@ -198,7 +220,7 @@ namespace MWWorld
         auto candidate = *before;
         candidate.mIngredientRestoration.push_back(
             {*key, 0.f, profile->mMagnitude, profile->mDuration,
-                std::uint8_t(healthDrain || healthRestoration ? 8 : 10)});
+                std::uint8_t(attributeRestoration ? 5 : healthDrain || healthRestoration ? 8 : 10)});
         if (healthDrain)
             candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner, 8,
                 ESM4::ActorValueModifier::Maximum, profile->mMagnitude);
@@ -235,6 +257,8 @@ namespace MWWorld
                     ? std::optional<ESM4::IngredientFatigueProfile>{{-5.f, 1.f}}
                     : ingredient && effect.mActorValue == 8
                         ? resolveOblivionIngredientHealthRestoration(store, *ingredient)
+                    : ingredient && effect.mActorValue == 5 && supportsCrabMeatRestoration(store, *ingredient)
+                        ? std::optional<ESM4::IngredientFatigueProfile>{{5.f, 1.f}}
                     : ingredient && effect.mActorValue == 10 ? resolveOblivionIngredientFatigue(store, *ingredient)
                     : std::nullopt;
                 if (!profile || profile->mMagnitude != effect.mMagnitude || profile->mDuration != effect.mDuration)

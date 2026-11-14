@@ -5935,6 +5935,75 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, crabEnduranceRestorationResumesWithoutCuringDiseaseOrFortifying)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        ESM::NpcState initial{};
+        initial.blank();
+        const auto ptr = player.getPlayer();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        auto settings = MWWorld::resolveOblivionFrameSettings(mStore);
+        settings.mMagicka = {0, 0};
+        settings.mFatigue.mRegeneration = {0, 0};
+        settings.mFatigue.mPlayerBase = {};
+        for (unsigned scenario = 0; scenario < 3; ++scenario)
+        {
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues values;
+            values.mActor = ESM::FormKey::dynamic("player", 1);
+            values.mBase = ESM::FormKey::dynamic("player-base", 1);
+            values.mOwner = ESM4::ActorValueOwner::Player;
+            values.mPlayerFormValues = {{110, 80, 170, 0}};
+            values.mValues[5] = {55, {-10.f, std::nullopt, scenario == 1 ? -.25f : -10.f}};
+            values.mIngredientRestoration = {{ESM::FormKey::content("oblivion.esm", 0x3366c), 0, 5, 1, 5}};
+            service.publishPlayerValues(player, values, {});
+            service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            const auto tick = [&] {
+                service.updatePlayerFrameResourcesFromClock(player, {0, false, false}, false, settings);
+            };
+            const auto current = [&]() -> const ESM4::RuntimeActorValues& {
+                return *service.findActorValues(values.mActor);
+            };
+            service.advanceFrameClock(.125f); tick();
+            service.advanceFrameClock(.375f); tick();
+            ASSERT_EQ(current().mIngredientRestoration.size(), 1u);
+            EXPECT_FLOAT_EQ(current().mIngredientRestoration[0].mElapsed, .5f);
+            EXPECT_FLOAT_EQ(current().mValues[5].mModifiers[2].value_or(0), scenario == 1 ? 0 : -7.5f);
+            const auto partial = current();
+            tick();
+            EXPECT_EQ(current(), partial); // A second writer in one clock tick cannot heal twice.
+            if (scenario == 2)
+                service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Dead, 0, {}});
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = values.mActor;
+            saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            service.capture(saved);
+            service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+            service.advanceFrameClock(.5f); tick();
+            EXPECT_TRUE(current().mIngredientRestoration.empty());
+            EXPECT_FLOAT_EQ(current().mValues[5].mBase, 55.f);
+            EXPECT_FLOAT_EQ(current().mValues[5].mModifiers[0].value_or(0), -10.f);
+            EXPECT_FLOAT_EQ(current().mValues[5].mModifiers[2].value_or(0),
+                scenario == 1 ? 0 : scenario == 2 ? -7.5f : -5.f);
+            const auto completed = current();
+            service.advanceFrameClock(1.f); tick();
+            EXPECT_EQ(current().mValues[5], completed.mValues[5]);
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, terminalHealthCommitRemovesCombatMembershipBeforeCallbackCapture)
     {
         sharedStats();

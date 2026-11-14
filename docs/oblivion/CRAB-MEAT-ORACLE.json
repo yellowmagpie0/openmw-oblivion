@@ -1,0 +1,269 @@
+{
+  "status": "Independent original total5 repair and disease non-cure observed; bounded fork clamp/disease courses accepted separately",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "content_audit": "build/oblivion-compat/crab-meat/winning-original-content.json",
+  "original_live_probe": "build/oblivion-compat/crab-meat/original-native-01",
+  "domain": {
+    "ingredient": "03366c Crab Meat",
+    "alchemy": 5,
+    "luck": 50,
+    "route": "Original console player.equipitem triggers ingestion; isolated oracle setup only, not fork acceptance"
+  },
+  "observations": [
+    {
+      "actions": "actions-13-equipitem.json",
+      "capture": "original-crab-equipitem-result03.png",
+      "before": {
+        "endurance": 40,
+        "base_endurance": 50,
+        "health": 80,
+        "stock": 1
+      },
+      "after": {
+        "endurance": 45,
+        "base_endurance": 50,
+        "health": 90,
+        "stock": 0
+      }
+    },
+    {
+      "actions": "actions-14-disease.json",
+      "capture": "original-crab-disease-result04.png",
+      "setup": "Repair remaining5 damage, add original Swamp Fever098415 and one original Crab Meat",
+      "before": {
+        "endurance": 40,
+        "base_endurance": 50,
+        "stock": 1
+      },
+      "after": {
+        "endurance": 40,
+        "stock": 0
+      },
+      "conclusion": "Restore Endurance does not cure disease Maximum drain"
+    }
+  ],
+  "retained_failed_preparations": [
+    "Spell casting attempts did not produce attribute damage; damageav command unrecognized",
+    "Long UI click and Return did not consume; no mechanics inference from those attempts"
+  ],
+  "restoration": "original-native-01/restoration.json",
+  "limits": [
+    "No original midpoint/duration measurement yet; total5 and channel distinction established",
+    "No high-skill, additional food, later effects or disease cure acceptance"
+  ],
+  "winning_records": [
+    {
+      "type": "MGEF",
+      "id": "001889",
+      "code": "REAT",
+      "name": "Restore Attribute",
+      "data": [
+        1050736,
+        38.0,
+        0,
+        5,
+        -1
+      ],
+      "payload_sha256": "669177e376e63d274e65bfb6b7e40a1792d3f7d27259190439ff1ffefc968941"
+    },
+    {
+      "type": "INGR",
+      "id": "03366c",
+      "name": "Crab Meat",
+      "script": "",
+      "flags": [
+        1,
+        3
+      ],
+      "effects": [
+        [
+          1413563730,
+          15,
+          0,
+          1,
+          0,
+          5
+        ],
+        [
+          1213420370,
+          30,
+          0,
+          1,
+          0,
+          68
+        ],
+        [
+          1095124804,
+          45,
+          0,
+          1,
+          0,
+          10
+        ],
+        [
+          1213417798,
+          60,
+          0,
+          1,
+          0,
+          61
+        ]
+      ],
+      "payload_sha256": "d9001b6514aa197e764b41076288d6e2b20010ba7c8585fcc49f8df5675bcc63"
+    },
+    {
+      "type": "CREA",
+      "id": "000b7f",
+      "name": "Mud Crab",
+      "inventory": [
+        [
+          260846,
+          1
+        ],
+        [
+          210540,
+          1
+        ]
+      ]
+    }
+  ],
+  "executed_probe_actions": {
+    "repair": [
+      {
+        "type": "line",
+        "value": "player.equipitem 0003366c"
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "sleep",
+        "seconds": 3
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.getitemcount 0003366c"
+      },
+      {
+        "type": "line",
+        "value": "player.getav endurance"
+      },
+      {
+        "type": "line",
+        "value": "player.getbaseav endurance"
+      },
+      {
+        "type": "line",
+        "value": "player.getav health"
+      },
+      {
+        "type": "shot",
+        "name": "original-crab-equipitem-result03.png"
+      }
+    ],
+    "disease": [
+      {
+        "type": "line",
+        "value": "player.modav endurance 5"
+      },
+      {
+        "type": "line",
+        "value": "player.addspell 00098415"
+      },
+      {
+        "type": "line",
+        "value": "player.additem 0003366c 1"
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "sleep",
+        "seconds": 1
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.getav endurance"
+      },
+      {
+        "type": "line",
+        "value": "player.equipitem 0003366c"
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "sleep",
+        "seconds": 2
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.getav endurance"
+      },
+      {
+        "type": "line",
+        "value": "player.getitemcount 0003366c"
+      },
+      {
+        "type": "shot",
+        "name": "original-crab-disease-result04.png"
+      }
+    ]
+  },
+  "probe_preconditions": {
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "setup_commands": [
+      "player.setav alchemy 5",
+      "player.setav luck 50",
+      "player.setav endurance 50",
+      "player.additem 0003366c 1",
+      "player.modav endurance -10"
+    ],
+    "repair_before": "Verified Endurance40/base50, Health80, CrabMeat1. Earlier temporary spawned caster ff000800 was disabled; unsuccessful casting preparations are retained separately, not rule evidence.",
+    "replay_scope": "Action arrays are the actual successful endpoint probes after the declared setup, not standalone fork scenario manifests. Run only in an isolated original-game prefix with identity/input safeguards from the native-oracle skill."
+  },
+  "original_exit": {
+    "wrapper_exit": 0,
+    "pristine_input_unchanged": true,
+    "original_installed_exe_unchanged": true,
+    "display": ":2",
+    "owned_xserver_pid": 670202,
+    "steam_launcher_pid": null
+  },
+  "original_restoration": {
+    "game_process_exited": true,
+    "inputs": [
+      {
+        "path": "pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Oblivion.ini",
+        "restored_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+        "source_unchanged": true
+      },
+      {
+        "path": "pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/quicksave.ess",
+        "restored_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+        "source_unchanged": true
+      },
+      {
+        "path": "pfx/drive_c/users/steamuser/AppData/Local/Oblivion/Plugins.txt",
+        "restored_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+        "source_unchanged": true
+      }
+    ],
+    "owned_xserver_terminated": 670202
+  }
+}

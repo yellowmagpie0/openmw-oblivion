@@ -1,0 +1,891 @@
+{
+  "status": "Accepted bounded original Crab Meat consumption/clamp, disease ownership and save/resume; natural positive Endurance damage gameplay remains open",
+  "schema": 102,
+  "scope": "M16 first original Crab Meat effect at Alchemy5/Luck50/MR0, living Player, Food ingestion",
+  "checks": [
+    {
+      "report": "build/oblivion-compat/crab-meat/cpp-integration-normal-02/verification.json",
+      "sha256": "fb8fdeb1ea908cbddc0864f74378f7962bdb66354bd71968c8bb1f08255dc351",
+      "source": {
+        "head": "00c8d91c55ec64df2cf9e8369ba80e6e4bf94b39",
+        "source_fingerprint": "cb4898f99c948743fb81d7e0dcdf364f4b10d6552fc907786dd4da2fa5c9a934"
+      },
+      "results": {
+        "components": {
+          "executed": 3301,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4a54c53aa9ce5cb45c209181ae44b83125d75c590b2f7bceb1f395d9b1b62b69",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "53f44d8ba4777232641ee52e53aaa58ede9997d92e6c19abbe40e90dd509c540",
+          "inventory_sha256": "a0165e6a15be2d74b41381a3bfe777ce433b1e3219c539498769627020422474",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2292,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "5b0210d646a07907208b20622fc725281ac21509653165f7f9dc993f51213a43",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "246ab22a87b6d046d431f516e440a1b6df7a328105ace84bbeb13a1e01c9f2f1",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "report": "build/oblivion-compat/crab-meat/python-integration-02/verification.json",
+      "sha256": "6ee879eded04507aeb9cefe84a989663cfc0b0c0333fd15e6c1e846ccb0474cc",
+      "source": {
+        "head": "00c8d91c55ec64df2cf9e8369ba80e6e4bf94b39",
+        "source_fingerprint": "cb4898f99c948743fb81d7e0dcdf364f4b10d6552fc907786dd4da2fa5c9a934"
+      },
+      "results": {
+        "python": {
+          "executed": 618,
+          "passed": true,
+          "log_sha256": "1fa37f652ba6b1efa1740b833eb845f96d1492615c09e0219b2f5f5e2402bf04"
+        }
+      }
+    },
+    {
+      "report": "build/oblivion-compat/crab-meat/focused-sanitized-02/verification.json",
+      "sha256": "14cc15cab3d4136ae94ddb238a806c88562e7867f0d3bd882256ef062238b131",
+      "source": {
+        "head": "00c8d91c55ec64df2cf9e8369ba80e6e4bf94b39",
+        "source_fingerprint": "cb4898f99c948743fb81d7e0dcdf364f4b10d6552fc907786dd4da2fa5c9a934"
+      },
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionActorStatsTest.crabEnduranceRestorationResumesWithoutCuringDiseaseOrFortifying",
+          "binary_sha256": "e9c65610692b38c119e8bc019994c4fc608561b9da570edb8bccfcfed41d0f55",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "7ed97c083cea3d792642349527face40a6ca5f894913746c3681b3dfee9f1c37",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "report": "build/oblivion-compat/crab-meat/components-sanitized-01/verification.json",
+      "sha256": "c8da7084a725e612b1d5664d13d755cba0291dbdd13776649e6ed7c42d073860",
+      "source": {
+        "head": "00c8d91c55ec64df2cf9e8369ba80e6e4bf94b39",
+        "source_fingerprint": "cb4898f99c948743fb81d7e0dcdf364f4b10d6552fc907786dd4da2fa5c9a934"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 1122,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "d1a7d5ab9579015d44c1d3224e857c1700ce95d901fdb40e8d1f0c61aba9fce7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "0950f5dafb5bbf822f03a480f864ce6abc7b9ae2f6d148cfb89ffe24c08d9bf6",
+          "inventory_sha256": "905554692ff0c34e401f86b865e90264e14646568425747be394d8b67d51024e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "sanitized_engine_inventory": {
+    "passed": true,
+    "executed": 2292,
+    "inventory_union_matches": true,
+    "duplicates": 0,
+    "missing": 0,
+    "failed": 0,
+    "skipped": 0,
+    "source": {
+      "head": "00c8d91c55ec64df2cf9e8369ba80e6e4bf94b39",
+      "source_fingerprint": "cb4898f99c948743fb81d7e0dcdf364f4b10d6552fc907786dd4da2fa5c9a934"
+    },
+    "test_binary_sha256": "e9c65610692b38c119e8bc019994c4fc608561b9da570edb8bccfcfed41d0f55",
+    "parts": [
+      {
+        "path": "build/oblivion-compat/crab-meat/sanitized-part-worker0-01/verification.json",
+        "result": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/crab-meat/sanitized-part-worker1-01/verification.json",
+        "result": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/crab-meat/sanitized-part-worker2-01/verification.json",
+        "result": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/crab-meat/sanitized-part-rest-01/verification.json",
+        "result": {
+          "executed": 2046,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*"
+        }
+      }
+    ],
+    "sanitizer": {
+      "SDL_VIDEODRIVER": "x11",
+      "SDL_AUDIODRIVER": "dummy",
+      "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+      "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+      "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "method": "Fresh disjoint worker parameter groups plus remaining inventory, same binary and frozen source; every XML inventory verified."
+  },
+  "courses": [
+    {
+      "course": "build/oblivion-compat/crab-meat/normal-healthy-crab-use-02",
+      "audit": "build/oblivion-compat/crab-meat/normal-healthy-crab-use-02/crab-meat-verification.json",
+      "passed": true,
+      "phase": "pending",
+      "source_sha256": "08ab80e2a581f493f7b9eed78d2ce219daa41fc8d451b33297873980802054b8",
+      "save_sha256": "946dbc2f53f24f0e45d9b8841f76554043d8fb0bb5218bcdcf4918af53213a8f",
+      "process": {
+        "pid": 709699,
+        "start_ticks": 14616374,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-use-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-drop/normal-rice-inventory-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "7a6611c451ac9ecff2738aa78fc2f1425808db5a5fff4bfd9431934ce2efcb3a"
+      },
+      "endurance": [
+        55.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pending": [
+        {
+          "ingredient": "content:oblivion.esm:03366c",
+          "elapsed": 0.3173828125,
+          "actor_value": 5
+        }
+      ],
+      "health": 110.0,
+      "stock": 0,
+      "credited_deaths": 33
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/normal-healthy-crab-complete-01",
+      "audit": "build/oblivion-compat/crab-meat/normal-healthy-crab-complete-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "complete",
+      "source_sha256": "946dbc2f53f24f0e45d9b8841f76554043d8fb0bb5218bcdcf4918af53213a8f",
+      "save_sha256": "d530bfa8f24d3fb7ba56e5442d527efeaac065ec0c71b4e5d453ed653f5fa872",
+      "process": {
+        "pid": 715723,
+        "start_ticks": 14628642,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-complete-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-use-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "7a6611c451ac9ecff2738aa78fc2f1425808db5a5fff4bfd9431934ce2efcb3a"
+      },
+      "endurance": [
+        55.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pending": [],
+      "health": 110.0,
+      "stock": 0,
+      "credited_deaths": 33
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01",
+      "audit": "build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "cold",
+      "source_sha256": "d530bfa8f24d3fb7ba56e5442d527efeaac065ec0c71b4e5d453ed653f5fa872",
+      "save_sha256": "9b498081a3dc4603e494897f4bb5931beda86d6e3d012cb5fe669ef498a77a98",
+      "process": {
+        "pid": 716335,
+        "start_ticks": 14648155,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "7a6611c451ac9ecff2738aa78fc2f1425808db5a5fff4bfd9431934ce2efcb3a"
+      },
+      "endurance": [
+        55.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pending": [],
+      "health": 110.0,
+      "stock": 0,
+      "credited_deaths": 33
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/normal-infected-crab-use-01",
+      "audit": "build/oblivion-compat/crab-meat/normal-infected-crab-use-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "pending",
+      "source_sha256": "d3ce51c64e586ca85c6fb7a3b57242395245b91e88d14e28f168288dddc79c61",
+      "save_sha256": "23b63cde2b37ea9086dacfeba7a70fb47470959aa3e27a1fba21363074433b7c",
+      "process": {
+        "pid": 717696,
+        "start_ticks": 14656967,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-crab-use-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-carrier-loot-05/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "7a6611c451ac9ecff2738aa78fc2f1425808db5a5fff4bfd9431934ce2efcb3a"
+      },
+      "endurance": [
+        55.0,
+        -10.0,
+        0.0,
+        0.0
+      ],
+      "pending": [
+        {
+          "ingredient": "content:oblivion.esm:03366c",
+          "elapsed": 0.259765625,
+          "actor_value": 5
+        }
+      ],
+      "health": 32.191368103027344,
+      "stock": 0,
+      "credited_deaths": 25
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/normal-infected-crab-complete-02",
+      "audit": "build/oblivion-compat/crab-meat/normal-infected-crab-complete-02/crab-meat-verification.json",
+      "passed": true,
+      "phase": "complete",
+      "source_sha256": "23b63cde2b37ea9086dacfeba7a70fb47470959aa3e27a1fba21363074433b7c",
+      "save_sha256": "1cdaef8f5d65090ff692e688908d4d9008914625a0d2f5fc6ed4103d82f7e470",
+      "process": {
+        "pid": 723134,
+        "start_ticks": 14687464,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-crab-complete-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-crab-use-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "7a6611c451ac9ecff2738aa78fc2f1425808db5a5fff4bfd9431934ce2efcb3a"
+      },
+      "endurance": [
+        55.0,
+        -10.0,
+        0.0,
+        0.0
+      ],
+      "pending": [],
+      "incoming_hits": [
+        "actor=content:oblivion.esm:06c2aa id=741 fatigue_cost=8.2 before=180 after=171.8 action=3 health_damage=3.1816 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=111.52 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3"
+      ],
+      "armor_wear": [
+        {
+          "base": "content:oblivion.esm:0661c3",
+          "before": 109.5250244140625,
+          "after": 108.6394271850586
+        }
+      ],
+      "health": 29.009769439697266,
+      "stock": 0,
+      "credited_deaths": 25
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/normal-infected-crab-cold-01",
+      "audit": "build/oblivion-compat/crab-meat/normal-infected-crab-cold-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "cold",
+      "source_sha256": "1cdaef8f5d65090ff692e688908d4d9008914625a0d2f5fc6ed4103d82f7e470",
+      "save_sha256": "d75e151450f0fbea3943b5aeb5fb464b6adf87910ac5d8735b1937bfc1f173ad",
+      "process": {
+        "pid": 723332,
+        "start_ticks": 14708302,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-crab-cold-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-crab-complete-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "7a6611c451ac9ecff2738aa78fc2f1425808db5a5fff4bfd9431934ce2efcb3a"
+      },
+      "endurance": [
+        55.0,
+        -10.0,
+        0.0,
+        0.0
+      ],
+      "pending": [],
+      "incoming_hits": [
+        "actor=content:oblivion.esm:06c2aa id=743 fatigue_cost=8.2 before=180 after=171.8 action=3 health_damage=3.17478 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=111.04 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3"
+      ],
+      "armor_wear": [
+        {
+          "base": "content:oblivion.esm:0661c3",
+          "before": 108.6394271850586,
+          "after": 107.75572204589844
+        }
+      ],
+      "health": 25.834991455078125,
+      "stock": 0,
+      "credited_deaths": 25
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/sanitized-healthy-crab-use-01",
+      "audit": "build/oblivion-compat/crab-meat/sanitized-healthy-crab-use-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "pending",
+      "source_sha256": "08ab80e2a581f493f7b9eed78d2ce219daa41fc8d451b33297873980802054b8",
+      "save_sha256": "d61d3254af66dcc2264b5130c7ed80e395d071060d664dbcb605c4f4dd220e39",
+      "process": {
+        "pid": 723997,
+        "start_ticks": 14726385,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-healthy-crab-use-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-drop/normal-rice-inventory-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "decb4ce7e8c61c9c1512ece9e054b05b78ea0a2feab70550c9a5d3f84e7e4ac7"
+      },
+      "endurance": [
+        55.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pending": [
+        {
+          "ingredient": "content:oblivion.esm:03366c",
+          "elapsed": 0.166015625,
+          "actor_value": 5
+        }
+      ],
+      "incoming_hits": [],
+      "armor_wear": [],
+      "health": 110.0,
+      "stock": 0,
+      "credited_deaths": 33
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/sanitized-healthy-crab-complete-01",
+      "audit": "build/oblivion-compat/crab-meat/sanitized-healthy-crab-complete-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "complete",
+      "source_sha256": "d61d3254af66dcc2264b5130c7ed80e395d071060d664dbcb605c4f4dd220e39",
+      "save_sha256": "3fc808ed0fcc284620b13a147b27bb5b181742858b99e896dda259d6a78ecb90",
+      "process": {
+        "pid": 725589,
+        "start_ticks": 14766992,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-healthy-crab-complete-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-healthy-crab-use-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "decb4ce7e8c61c9c1512ece9e054b05b78ea0a2feab70550c9a5d3f84e7e4ac7"
+      },
+      "endurance": [
+        55.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pending": [],
+      "incoming_hits": [],
+      "armor_wear": [],
+      "health": 110.0,
+      "stock": 0,
+      "credited_deaths": 33
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/sanitized-healthy-crab-cold-01",
+      "audit": "build/oblivion-compat/crab-meat/sanitized-healthy-crab-cold-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "cold",
+      "source_sha256": "3fc808ed0fcc284620b13a147b27bb5b181742858b99e896dda259d6a78ecb90",
+      "save_sha256": "9841041518a9973262b5f60aa8fc2c6e814381db3de6bedf72de280a315e410e",
+      "process": {
+        "pid": 730532,
+        "start_ticks": 14807728,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-healthy-crab-cold-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-healthy-crab-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "decb4ce7e8c61c9c1512ece9e054b05b78ea0a2feab70550c9a5d3f84e7e4ac7"
+      },
+      "endurance": [
+        55.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "pending": [],
+      "incoming_hits": [],
+      "armor_wear": [],
+      "health": 110.0,
+      "stock": 0,
+      "credited_deaths": 33
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/sanitized-infected-crab-use-01",
+      "audit": "build/oblivion-compat/crab-meat/sanitized-infected-crab-use-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "pending",
+      "source_sha256": "d3ce51c64e586ca85c6fb7a3b57242395245b91e88d14e28f168288dddc79c61",
+      "save_sha256": "542b2a799436d5ec5c16aff788faad3078775c1eb4e69c280d5fe18168ba9efe",
+      "process": {
+        "pid": 730826,
+        "start_ticks": 14846083,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-infected-crab-use-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-carrier-loot-05/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "decb4ce7e8c61c9c1512ece9e054b05b78ea0a2feab70550c9a5d3f84e7e4ac7"
+      },
+      "endurance": [
+        55.0,
+        -10.0,
+        0.0,
+        0.0
+      ],
+      "pending": [
+        {
+          "ingredient": "content:oblivion.esm:03366c",
+          "elapsed": 0.12890625,
+          "actor_value": 5
+        }
+      ],
+      "incoming_hits": [],
+      "armor_wear": [],
+      "health": 32.191368103027344,
+      "stock": 0,
+      "credited_deaths": 25
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/sanitized-infected-crab-complete-03",
+      "audit": "build/oblivion-compat/crab-meat/sanitized-infected-crab-complete-03/crab-meat-verification.json",
+      "passed": true,
+      "phase": "complete",
+      "source_sha256": "542b2a799436d5ec5c16aff788faad3078775c1eb4e69c280d5fe18168ba9efe",
+      "save_sha256": "58cba4394a6d9aeb1f256a206a7c2cf44693dee98e738b89294b710566e47d60",
+      "process": {
+        "pid": 731189,
+        "start_ticks": 14886206,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-infected-crab-complete-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-infected-crab-use-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "decb4ce7e8c61c9c1512ece9e054b05b78ea0a2feab70550c9a5d3f84e7e4ac7"
+      },
+      "endurance": [
+        55.0,
+        -10.0,
+        0.0,
+        0.0
+      ],
+      "pending": [],
+      "incoming_hits": [],
+      "armor_wear": [],
+      "health": 32.191368103027344,
+      "stock": 0,
+      "credited_deaths": 25
+    },
+    {
+      "course": "build/oblivion-compat/crab-meat/sanitized-infected-crab-cold-01",
+      "audit": "build/oblivion-compat/crab-meat/sanitized-infected-crab-cold-01/crab-meat-verification.json",
+      "passed": true,
+      "phase": "cold",
+      "source_sha256": "58cba4394a6d9aeb1f256a206a7c2cf44693dee98e738b89294b710566e47d60",
+      "save_sha256": "779680f4175d9134d79e27038055f3afdd1e5cc64e9f6e6d93d7a1a04798b60c",
+      "process": {
+        "pid": 731514,
+        "start_ticks": 14911641,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-infected-crab-cold-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-infected-crab-complete-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "decb4ce7e8c61c9c1512ece9e054b05b78ea0a2feab70550c9a5d3f84e7e4ac7"
+      },
+      "endurance": [
+        55.0,
+        -10.0,
+        0.0,
+        0.0
+      ],
+      "pending": [],
+      "incoming_hits": [],
+      "armor_wear": [],
+      "health": 32.191368103027344,
+      "stock": 0,
+      "credited_deaths": 25
+    }
+  ],
+  "normal_healthy_final": {
+    "course": "build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01",
+    "audit": "build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/crab-meat-verification.json",
+    "passed": true,
+    "phase": "cold",
+    "source_sha256": "d530bfa8f24d3fb7ba56e5442d527efeaac065ec0c71b4e5d453ed653f5fa872",
+    "save_sha256": "9b498081a3dc4603e494897f4bb5931beda86d6e3d012cb5fe669ef498a77a98",
+    "process": {
+      "pid": 716335,
+      "start_ticks": 14648155,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-healthy-crab-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "7a6611c451ac9ecff2738aa78fc2f1425808db5a5fff4bfd9431934ce2efcb3a"
+    },
+    "endurance": [
+      55.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "pending": [],
+    "health": 110.0,
+    "stock": 0,
+    "credited_deaths": 33
+  },
+  "normal_infected_final": {
+    "course": "build/oblivion-compat/crab-meat/normal-infected-crab-cold-01",
+    "audit": "build/oblivion-compat/crab-meat/normal-infected-crab-cold-01/crab-meat-verification.json",
+    "passed": true,
+    "phase": "cold",
+    "source_sha256": "1cdaef8f5d65090ff692e688908d4d9008914625a0d2f5fc6ed4103d82f7e470",
+    "save_sha256": "d75e151450f0fbea3943b5aeb5fb464b6adf87910ac5d8735b1937bfc1f173ad",
+    "process": {
+      "pid": 723332,
+      "start_ticks": 14708302,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-crab-cold-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/normal-infected-crab-complete-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "7a6611c451ac9ecff2738aa78fc2f1425808db5a5fff4bfd9431934ce2efcb3a"
+    },
+    "endurance": [
+      55.0,
+      -10.0,
+      0.0,
+      0.0
+    ],
+    "pending": [],
+    "incoming_hits": [
+      "actor=content:oblivion.esm:06c2aa id=743 fatigue_cost=8.2 before=180 after=171.8 action=3 health_damage=3.17478 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=111.04 victim=dynamic:player:0000000000000001 victim_action=-1 armor_condition_writes=1 combat_random_draws=3"
+    ],
+    "armor_wear": [
+      {
+        "base": "content:oblivion.esm:0661c3",
+        "before": 108.6394271850586,
+        "after": 107.75572204589844
+      }
+    ],
+    "health": 25.834991455078125,
+    "stock": 0,
+    "credited_deaths": 25
+  },
+  "sanitized_healthy_final": {
+    "course": "build/oblivion-compat/crab-meat/sanitized-healthy-crab-cold-01",
+    "audit": "build/oblivion-compat/crab-meat/sanitized-healthy-crab-cold-01/crab-meat-verification.json",
+    "passed": true,
+    "phase": "cold",
+    "source_sha256": "3fc808ed0fcc284620b13a147b27bb5b181742858b99e896dda259d6a78ecb90",
+    "save_sha256": "9841041518a9973262b5f60aa8fc2c6e814381db3de6bedf72de280a315e410e",
+    "process": {
+      "pid": 730532,
+      "start_ticks": 14807728,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-healthy-crab-cold-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-healthy-crab-complete-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "decb4ce7e8c61c9c1512ece9e054b05b78ea0a2feab70550c9a5d3f84e7e4ac7"
+    },
+    "endurance": [
+      55.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "pending": [],
+    "incoming_hits": [],
+    "armor_wear": [],
+    "health": 110.0,
+    "stock": 0,
+    "credited_deaths": 33
+  },
+  "sanitized_infected_final": {
+    "course": "build/oblivion-compat/crab-meat/sanitized-infected-crab-cold-01",
+    "audit": "build/oblivion-compat/crab-meat/sanitized-infected-crab-cold-01/crab-meat-verification.json",
+    "passed": true,
+    "phase": "cold",
+    "source_sha256": "58cba4394a6d9aeb1f256a206a7c2cf44693dee98e738b89294b710566e47d60",
+    "save_sha256": "779680f4175d9134d79e27038055f3afdd1e5cc64e9f6e6d93d7a1a04798b60c",
+    "process": {
+      "pid": 731514,
+      "start_ticks": 14911641,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-infected-crab-cold-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crab-meat/sanitized-infected-crab-complete-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "decb4ce7e8c61c9c1512ece9e054b05b78ea0a2feab70550c9a5d3f84e7e4ac7"
+    },
+    "endurance": [
+      55.0,
+      -10.0,
+      0.0,
+      0.0
+    ],
+    "pending": [],
+    "incoming_hits": [],
+    "armor_wear": [],
+    "health": 32.191368103027344,
+    "stock": 0,
+    "credited_deaths": 25
+  },
+  "baseline": {
+    "course": "build/oblivion-compat/crab-meat/normal-healthy-crab-baseline-01",
+    "main_sha256": "a3e1e45a6e22c5b537fdedbc3cf67a88c5899722bc02737d86a8a30a48344434",
+    "save_sha256": "61c869c01aa46c78b53265d766640b3ec43deccfb1ee4627cea476fa12992856",
+    "result": "Original Crab Meat remains1 after real paperdoll-use attempt; Endurance55, no XP or effect"
+  },
+  "acquisition": {
+    "source": "Original genuine Swamp Fever branch, four earned Heal Minor Wounds casts, two retained axe-attack courses reach the dead owner, one later preparation swings at the already dead corpse, physical activation and Take All",
+    "course": "build/oblivion-compat/crab-meat/normal-infected-carrier-loot-05",
+    "save_sha256": "d3ce51c64e586ca85c6fb7a3b57242395245b91e88d14e28f168288dddc79c61",
+    "corpse": "content:oblivion.esm:06c92a",
+    "base": "content:oblivion.esm:000b7f",
+    "loot": "content:oblivion.esm:03366c",
+    "quantity": 1,
+    "source_corpse_empty": true,
+    "credited_deaths": 25
+  },
+  "original_oracle": {
+    "root": "build/oblivion-compat/crab-meat/original-native-01",
+    "restoration": {
+      "game_process_exited": true,
+      "inputs": [
+        {
+          "path": "pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Oblivion.ini",
+          "restored_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+          "source_unchanged": true
+        },
+        {
+          "path": "pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/quicksave.ess",
+          "restored_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+          "source_unchanged": true
+        },
+        {
+          "path": "pfx/drive_c/users/steamuser/AppData/Local/Oblivion/Plugins.txt",
+          "restored_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+          "source_unchanged": true
+        }
+      ],
+      "owned_xserver_terminated": 670202
+    },
+    "route": "Console equipitem in isolated original probe; fork acceptance exclusively ordinary input"
+  },
+  "retained_failures": [
+    "Initial original damage-spell/caster/UI attempts produced no relevant effect or consumption; preserved without mechanics inference.",
+    "Corpse previews: too far/aim and stale observer-facing message; precise current-center-ray and range checks resolved input setup, no gameplay picking code change.",
+    "Copied prechange binary missing local defaults/config and one mismatched resource-version attempt; retained, corrected config and old resource identity.",
+    "Loot01/02/03 input backend prevalidation, loot04 Xvfb readiness, loot05 accepted; no failed prevalidation altered game state.",
+    "Healthy use01 waited before the paperdoll click; use02 corrected input sequencing.",
+    "Instrumented infected complete01 rejected startup because SDL preloading preceded ASan. The engine never loaded gameplay; that idle failed-startup scenario wrapper was stopped. Complete02 additionally exposed a compiler libasan.so linker script rather than ELF; its startup failure was retained too. Complete03/cold01 preload the compiler-matched ASan library first, with normal halt settings retained.",
+    "Initial direct tool check wrappers ended143 with orphan build children; build-only logs retained. Detached verification drivers subsequently completed clean checks.",
+    "First full Python run618 had20 schema-fixture guard/recipe errors; reviewed schema102 forwarding and three editable current-schema recipes corrected; focused74/full618 pass.",
+    "Healthy cold verifier initially rejected normal GameHour7->8. Original GLOB000038 is a short; clock7.9665->8.04149 independently explains transition. Verifier checks floor(clockhour), every other global and all quests unchanged.",
+    "Normal infected cold complete01 idled12seconds and died to real Bandit06c2aa. Retained failure/source unchanged. Complete02/cold01 use prompt pause and real backward movement, retain logged incoming damage, Heavy Armor XP and equipped armor wear. Post-save combat is separate from the accepted checkpoint."
+  ],
+  "limits": [
+    "No natural positive damaged-Endurance gameplay healing course yet. Original controlled damage restored5; focused authority check covers repair, clamp, dead owners and saved remaining progress. Real content acceptance exercises debit, no fortification and disease preservation.",
+    "Original total5 established independently; one-second fork timing follows existing food restoration execution, no original midpoint timing claim.",
+    "No high-skill, arbitrary ingredient, later-known effects, disease cure, brewing, TES4 MCP authoring or full M16 milestone claim.",
+    "Healthy existing terrain/rock clipping remains visible; no rendering/collision repair claim.",
+    "Healthy and infected saves are independent branches,33 versus25 credited deaths. No branch merge, grants, stat/position/time/seed setters or edited save sources."
+  ],
+  "evidence_layers": {
+    "structural_write": "Both native schemas and independent Python codec round-trip pending Endurance ownership; older schemas reject silent loss.",
+    "compiler_world": "Fresh normal and sanitizer builds plus exact nonempty component/engine inventories.",
+    "semantic_reinspection": "Independent saved-state debit/metadata/progress/quest/global/passive/life audits, process epochs and original winning records.",
+    "runtime_acceptance": "Fresh normal and instrumented ordinary-input inventory use and cold resumes on real carried/looted content; checkpoints retain live enemy consequences."
+  },
+  "editable_recipes": {
+    "original-crab-meat-healthy-use.json": "genuine-healthy-crab-use-02.json",
+    "original-crab-meat-healthy-complete.json": "genuine-healthy-crab-complete.json",
+    "original-crab-meat-healthy-complete-sanitized.json": "genuine-healthy-crab-complete-sanitized.json",
+    "original-crab-meat-infected-use.json": "genuine-infected-crab-use.json",
+    "original-crab-meat-infected-complete.json": "genuine-infected-crab-complete-02.json",
+    "original-crab-meat-infected-complete-sanitized.json": "genuine-infected-crab-complete-sanitized-03.json",
+    "original-crab-meat-infected-cold.json": "genuine-infected-crab-cold.json",
+    "original-crab-meat-infected-cold-sanitized.json": "genuine-infected-crab-cold-sanitized.json",
+    "original-crab-meat-corpse-loot.json": "genuine-infected-carrier-loot-04.json",
+    "original-crab-meat-baseline.json": "genuine-healthy-crab-baseline.json"
+  },
+  "reviewed_captures": {
+    "normal": [
+      "normal-healthy-crab-use-02/healthy-crab-after-use.png",
+      "normal-healthy-crab-complete-01/crab-after-cold-completion.png",
+      "normal-healthy-crab-cold-01/crab-after-cold-completion.png",
+      "normal-infected-crab-use-01/healthy-crab-after-use.png",
+      "normal-infected-crab-complete-02/infected-crab-cold-completed.png",
+      "normal-infected-crab-cold-01/infected-crab-cold-completed.png"
+    ],
+    "sanitized": [
+      "sanitized-healthy-crab-use-01/healthy-crab-after-use.png",
+      "sanitized-healthy-crab-complete-01/crab-after-cold-completion.png",
+      "sanitized-healthy-crab-cold-01/crab-after-cold-completion.png",
+      "sanitized-infected-crab-use-01/healthy-crab-after-use.png",
+      "sanitized-infected-crab-complete-03/infected-crab-cold-completed.png",
+      "sanitized-infected-crab-cold-01/infected-crab-cold-completed.png"
+    ],
+    "root": "build/oblivion-compat/crab-meat",
+    "notes": "All twelve after-use/completion/cold captures reviewed. One instrumented healthy completion capture shows world/HUD rather than inventory; saved-state audit supplies the exact attributes. Existing healthy-branch terrain clipping remains visible. Normal infected cold captures retain the bandit and earned injury; instrumented checkpoints take no incoming hit."
+  }
+}

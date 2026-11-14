@@ -6932,6 +6932,28 @@ TEST(ESM4RuntimeState, HealthIngredientRestorationKeepsItsResourceAndRemainingTi
     EXPECT_ANY_THROW(state.serializeBinary());
 }
 
+TEST(ESM4RuntimeState, EnduranceIngredient102RetainsProgressAndRejectsLegacyLoss)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mIngredientRestoration = {
+        {ESM::FormKey::content("oblivion.esm", 0x3366c), .25f, 5.f, 1.f, 5}};
+    state.mNativeActorValues = {actor};
+    const auto wire = state.serializeBinary();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(wire).mNativeActorValues, state.mNativeActorValues);
+    state.mVersion = 101;
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mVersion = ESM4::CurrentRuntimeStateVersion;
+    state.mNativeActorValues[0].mIngredientRestoration[0].mActorValue = 4;
+    EXPECT_ANY_THROW(state.serializeBinary());
+    state.mNativeActorValues[0].mIngredientRestoration[0].mActorValue = 5;
+    state.mNativeActorValues[0].mIngredientRestoration[0].mMagnitude = -5;
+    EXPECT_ANY_THROW(state.serializeBinary());
+}
+
 TEST(ESM4RuntimeState, SkillBook101PersistsBaseHistoryAndRejectsLegacyOrDynamicOwners)
 {
     auto state = makeState();

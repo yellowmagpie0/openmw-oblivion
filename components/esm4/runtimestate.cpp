@@ -1153,7 +1153,8 @@ namespace ESM4
                     || !std::isfinite(effect.mElapsed) || effect.mElapsed < 0 || effect.mElapsed >= 1.f)
                     throw std::runtime_error("Invalid TES4 ingredient Health drain");
             }
-            else if (effect.mActorValue == 10)
+            else if (effect.mActorValue == 10 || (effect.mActorValue == 5
+                && effect.mMagnitude == 5.f && effect.mDuration == 1.f))
                 advanceIngredientFatigue(effect.mElapsed, 0.f, {effect.mMagnitude, effect.mDuration});
             else throw std::runtime_error("Unsupported TES4 ingredient actor value");
         }
@@ -2152,6 +2153,10 @@ namespace ESM4
                 throw std::runtime_error("TES4 potion attributes require schema94");
             if (mVersion < 93 && !actor.mScrollChameleon.empty())
                 throw std::runtime_error("TES4 scroll Chameleon requires schema93");
+            if (mVersion < 102)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mActorValue == 5)
+                        throw std::runtime_error("TES4 ingredient Endurance restoration requires schema102");
             if (mVersion < 100)
                 for (const auto& effect : actor.mIngredientRestoration)
                     if (effect.mActorValue != 10)

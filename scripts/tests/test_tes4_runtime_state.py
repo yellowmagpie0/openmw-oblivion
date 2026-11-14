@@ -594,6 +594,23 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(next(a for a in state_io.decode_payload(state_io.encode_payload(old))["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"],
                          next(a for a in old["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"])
 
+    def test_endurance_ingredient102_roundtrip_and_legacy_rejection(self):
+        state = self.combat_controller_state()
+        state['schema_version'] = 102
+        effect = dict(ingredient='content:oblivion.esm:03366c', elapsed=.25, actor_value=5)
+        state['native_actor_values'][0]['ingredient_restoration'] = [effect]
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(next(a for a in restored['native_actor_values'] if a['owner'] == 0)
+                         ['ingredient_restoration'], [effect])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for change in ({'actor_value': 4}, {'elapsed': 1}, {'magnitude': -5, 'duration': 1}):
+            bad = copy.deepcopy(state)
+            bad['native_actor_values'][0]['ingredient_restoration'][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state['schema_version'] = 101
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     def test_skill_book101_history_roundtrip_and_legacy_absence(self):
         state = self.combat_controller_state()
         state['schema_version'] = 101

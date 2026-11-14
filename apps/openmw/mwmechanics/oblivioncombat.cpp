@@ -7683,6 +7683,10 @@ namespace MWMechanics
                 throw std::invalid_argument("native potion attributes require an Oblivion v94+ save");
             if (state.mVersion < 93 && !actor.mScrollChameleon.empty())
                 throw std::invalid_argument("native scroll Chameleon requires an Oblivion v93+ save");
+            if (state.mVersion < 102)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mActorValue == 5)
+                        throw std::invalid_argument("ingredient Endurance restoration requires an Oblivion v102+ save");
             if (state.mVersion < 100)
                 for (const auto& effect : actor.mIngredientRestoration)
                     if (effect.mActorValue != 10)

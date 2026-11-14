@@ -4,7 +4,7 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest accepted chunk: [plain Rice repeated-save persistence](PLAIN-INGREDIENT-DROP-CONTRACT.json).
+Previous accepted chunk: [plain Rice repeated-save persistence](PLAIN-INGREDIENT-DROP-CONTRACT.json).
 Real Rice survived the old legacy drop/save and first cold load, then vanished
 when that world was re-saved and cold loaded again. Native scriptless ingredient
 singleton admission now passes drop/save → first cold world re-save → second
@@ -35,11 +35,36 @@ Its retained normal save is
 SHA256 `c05743f6dcbc781de8c6d8802fb61631d962c28276a0ce0a001e43593979fa07`.
 Scripted transfer and plain-item identity now have separate real-content proof.
 
-Current chunk complete. Next action: inspect carried Crab Meat03366c, whose
-first original effect is Restore Endurance and is currently rejected by the
-native ingredient consumer. Establish an independent original rule and actual
-fork baseline; preserve the existing disease drain rather than infer it is
-restorable damage. Choose the final bounded acceptance after that evidence.
+Latest accepted chunk: [original Crab Meat consumption](CRAB-MEAT-CONTRACT.json).
+[Original probes](CRAB-MEAT-ORACLE.json) establish repair5 and no Swamp Fever cure;
+[receipt](CRAB-MEAT-VERIFICATION.json) records twelve normal/instrumented ordinary-
+input checkpoints. Healthy Endurance55 and infected Endurance45 survive pending
+save → cold completion → completed cold load, one debit/no Alchemy XP or repeat.
+Schema102 retains the AV5 owner. Normal3301 components/2292 engine/618 Python and
+instrumented1122 native components/full disjoint2292 engine pass. Original input
+restoration, the idle bandit death, fixture-version/preload setup failures and
+reviewed captures remain linked in the receipt. No full M16 claim.
+
+Current chunk complete. Remaining gap: naturally acquired positive Endurance-
+damage healing gameplay; controlled original repair and authority/save tests
+are separate evidence. Choose the next real-content chunk by its observed
+unsupported behavior, while preserving this explicit gap.
+
+Healthy continuation (no Swamp Fever), Crab0/End55/Health110/33 credited deaths:
+`build/oblivion-compat/crab-meat/normal-healthy-crab-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `9b498081a3dc4603e494897f4bb5931beda86d6e3d012cb5fe669ef498a77a98`.
+Rice1, Nirnroot owner4/Found1, MS39 stage10/counters2, allocator6 and all earned
+skills retained. Instrumented healthy final SHA256:
+`9841041518a9973262b5f60aa8fc2c6e814381db3de6bedf72de280a315e410e`.
+
+Separate infected continuation, Crab0/End[55,-10,0,0]/25 credited deaths:
+`build/oblivion-compat/crab-meat/normal-infected-crab-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `d75e151450f0fbea3943b5aeb5fb464b6adf87910ac5d8735b1937bfc1f173ad`.
+Health25.83499/90, Heavy Armor XP5 and worn Cuirass107.75572 retain real bandit
+hits. Bandit06c2aa is still nearby; react promptly if continuing this branch.
+The independent instrumented route retained Health32.19137/90, no incoming hit;
+final SHA256 `779680f4175d9134d79e27038055f3afdd1e5cc64e9f6e6d93d7a1a04798b60c`.
+Never merge these branches or their different retained combat consequences.
 
 
 Separate Cairn continuation:
