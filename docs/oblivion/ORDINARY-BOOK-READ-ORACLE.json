@@ -1,0 +1,46 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "record": {
+    "base": "024567",
+    "payload_sha256": "a803e1f7855ae4e0019ed63652d3be039142849733abd681d51147188ad72a91",
+    "flags": 0,
+    "book_skill": -1,
+    "value": 5,
+    "weight": 1.0
+  },
+  "observations": {
+    "passed": true,
+    "ordinary_book": "024567",
+    "books_read": [
+      0,
+      1,
+      1,
+      2
+    ],
+    "skill_advances_unchanged": true,
+    "no_skill_book_reward": true,
+    "page_change_adds_no_read": true,
+    "repeat_reopen_adds_one": true
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "original_probe": {
+    "path": "build/oblivion-compat/ordinary-book-read/original-01",
+    "setup": "Controlled original console coc testinghall + player.additem00024567 1; ordinary inventory clicks open/page/reopen. Read-only process inspection of original Player misc slots2/17/18 and advancement arrays; no process writes, F5 or pristine save overwrite.",
+    "process": {
+      "pid": 1027006,
+      "start_ticks": 20408312,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "window_id": 37748739,
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "mapped_original_exe": [
+        "00400000-00401000 r-xp 00000000 00:25 2071952                            /home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe"
+      ]
+    },
+    "wrapper_exit": 0
+  },
+  "scope": "Original normal-input ordinary book observations independently establish count-per-open and no skill award. Original controlled setup is separate from fork acceptance using actual original placed06efb3 and the genuine retained character; no grants or teleport in fork courses."
+}

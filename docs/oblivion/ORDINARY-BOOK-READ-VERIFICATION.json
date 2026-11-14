@@ -1,0 +1,444 @@
+{
+  "status": "Accepted bounded M16 ordinary non-scroll book read counting in normal and ASan/UBSan games; broader milestone remains open.",
+  "parent_commit": "102015e20caf23b7ed932a04e186c74d7474fa5c",
+  "contract": "ORDINARY-BOOK-READ-CONTRACT.json",
+  "oracle": "ORDINARY-BOOK-READ-ORACLE.json",
+  "schema": 103,
+  "behavior": "Original placed Fundaments of Alchemy06efb3 remains in Wellspring Cave and readable. Actual two reads increase BooksRead4->6; cold repeated read6->7. Loading alone does not replay. No ordinary book enters skill-book award history or changes skills/XP/advances.",
+  "layers": {
+    "original": "Hash-verified original executable: ordinary inventory open0->1, page change stays1, reopening1->2; skill-related counters unchanged; original inputs restored exactly. Controlled original setup is separate from genuine fork placed-book input.",
+    "structural": "Existing native world and shared inventory read entry point admits valid non-scroll BOOK with bookSkill=-1, copies/validates and publishes native BooksRead17; skill-book reward path unchanged. No parser/schema change.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/ordinary-book-read/focused-normal-01/verification.json",
+        "sha256": "e979b125a50238a0c1b76f3ca3534237273fae6aac53ab55b60af563af1fe55c",
+        "results": {
+          "engine": {
+            "executed": 18,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Skill*:*Book*:*MiscStat*:*ScriptTransfer*",
+            "binary_sha256": "680e82a9b420c243089ca40ffeeb47340abe2b0eef9b1c2ea2fe71359f90536e",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "38d9fbde32427741156b76cb704646f70481a204763c0b3ab9ec4300e1c9efd9",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "102015e20caf23b7ed932a04e186c74d7474fa5c",
+          "source_fingerprint": "c4a109464208e186ffcf16fcab068833c2d0761adfd128c345487a752f12b56c"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ordinary-book-read/focused-sanitized-01/verification.json",
+        "sha256": "332c5482fd50b79f64e71edabce7f7f575a8f8e4c35a24d0cfbd358a7be8d456",
+        "results": {
+          "engine": {
+            "executed": 18,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Skill*:*Book*:*MiscStat*:*ScriptTransfer*",
+            "binary_sha256": "034599c1a60fccb06c893b4a57cfd3d5695554dbf4fbf3c9edde9b9b26a532c6",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "6057c0c8dfe615784d316d94a77f7ab482dc00ba3a53ddee9a72419dd69529ba",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "102015e20caf23b7ed932a04e186c74d7474fa5c",
+          "source_fingerprint": "c4a109464208e186ffcf16fcab068833c2d0761adfd128c345487a752f12b56c"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ordinary-book-read/integration-normal-01/verification.json",
+        "sha256": "cf05d1ee5e9d54233bde75ce0258ef197833167c5ccd58e3d44f56e61ed24530",
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "680e82a9b420c243089ca40ffeeb47340abe2b0eef9b1c2ea2fe71359f90536e",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "1b7945c62b31a2d53850482194637f67f405d97f8e0b14bdaf765d809724b726",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "9086831942ab6b5bdf0327b749fc54dce818849979961e083c878ab2f8e6b5e8"
+          }
+        },
+        "source": {
+          "head": "102015e20caf23b7ed932a04e186c74d7474fa5c",
+          "source_fingerprint": "c4a109464208e186ffcf16fcab068833c2d0761adfd128c345487a752f12b56c"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ordinary-book-read/engine-sanitized-01/verification.json",
+        "sha256": "2826eb1e44bc069611051243e03c34d1efed643dad1f250dab4a4751f66207c6",
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "034599c1a60fccb06c893b4a57cfd3d5695554dbf4fbf3c9edde9b9b26a532c6",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "105e7c73733a635fd708e12b0a2e3036852d0cd052fe7b9d73e25e4a9d0408f3",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "102015e20caf23b7ed932a04e186c74d7474fa5c",
+          "source_fingerprint": "c4a109464208e186ffcf16fcab068833c2d0761adfd128c345487a752f12b56c"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ordinary-book-read/engine-sanitized-02/verification.json",
+        "sha256": "6886648e6cae612c04d4fb5561e88c2b9f1c3b9aa56dd24d8d330cdcb53dd6c6",
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "034599c1a60fccb06c893b4a57cfd3d5695554dbf4fbf3c9edde9b9b26a532c6",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "834f1430f923a3166a7919ed6429ec4fa596a99110036411f7ce9a771daeb08a",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "102015e20caf23b7ed932a04e186c74d7474fa5c",
+          "source_fingerprint": "c4a109464208e186ffcf16fcab068833c2d0761adfd128c345487a752f12b56c"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ordinary-book-read/engine-sanitized-03/verification.json",
+        "sha256": "6d03fe0c4e05642e272dd373d6dbc6da3bb057a1fc496c87aef4541d61de3b34",
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "034599c1a60fccb06c893b4a57cfd3d5695554dbf4fbf3c9edde9b9b26a532c6",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "9d841ba3fb2d75c19f462c38c4c647b06aafa58c80744a9d74201982a017e059",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "102015e20caf23b7ed932a04e186c74d7474fa5c",
+          "source_fingerprint": "c4a109464208e186ffcf16fcab068833c2d0761adfd128c345487a752f12b56c"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ordinary-book-read/engine-sanitized-04/verification.json",
+        "sha256": "d9d5e404b0a0b9d6bb092de2e348629b1ad7d3819a8813ac27ee93583d589352",
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "034599c1a60fccb06c893b4a57cfd3d5695554dbf4fbf3c9edde9b9b26a532c6",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "1f3329a0101ffa65832dc2a8305f1b14b5b972336ca91c3cfea1965165cdde7e",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "102015e20caf23b7ed932a04e186c74d7474fa5c",
+          "source_fingerprint": "c4a109464208e186ffcf16fcab068833c2d0761adfd128c345487a752f12b56c"
+        }
+      }
+    ],
+    "baseline": {
+      "passed": true,
+      "phase": "baseline",
+      "reads": 1,
+      "books_read_before": 4.0,
+      "books_read_after": 4.0,
+      "source_sha256": "1717a26d05b898ab62f85724b119512d00f9f01a640fea0cda12ff6a17e9b421",
+      "save_sha256": "d8725e022cb689bb450cfc9d91012c3489d5811c97f74b46a8a2be848e988335",
+      "process": {
+        "pid": 1027897,
+        "start_ticks": 20421448,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/normal-ordinary-book-baseline-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "d876a567d7285692b7e5acc28207b41d8999542368f1c15c4ab6baa64fa00079"
+      },
+      "allocator": 14,
+      "skills_and_history_preserved": true
+    },
+    "runtime": {
+      "normal-ordinary-book-reads-01": {
+        "audit": "build/oblivion-compat/ordinary-book-read/normal-ordinary-book-reads-01/ordinary-book-verification.json",
+        "sha256": "3e6a76b1f9e5d2d8637175c6e66682ee8579e6b1c4f44f9665f21ba95ad665a3",
+        "result": {
+          "passed": true,
+          "phase": "reads",
+          "reads": 2,
+          "books_read_before": 4.0,
+          "books_read_after": 6.0,
+          "source_sha256": "1717a26d05b898ab62f85724b119512d00f9f01a640fea0cda12ff6a17e9b421",
+          "save_sha256": "44c3ea07e4dd9feb1199e07d620012d0912f6038d7cb76d521649085fe974fa4",
+          "process": {
+            "pid": 1032188,
+            "start_ticks": 20463943,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/normal-ordinary-book-reads-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "e3f447427159fdab1ff2b02034c797b0ba1e865457a9531d216e2957cae2ce2f"
+          },
+          "allocator": 14,
+          "skills_and_history_preserved": true
+        }
+      },
+      "normal-ordinary-book-cold-01": {
+        "audit": "build/oblivion-compat/ordinary-book-read/normal-ordinary-book-cold-01/ordinary-book-verification.json",
+        "sha256": "50ee054e04c664dd348fbae7040bea43a899db6d49f553e044599574830bc506",
+        "result": {
+          "passed": true,
+          "phase": "cold",
+          "reads": 1,
+          "books_read_before": 6.0,
+          "books_read_after": 7.0,
+          "source_sha256": "44c3ea07e4dd9feb1199e07d620012d0912f6038d7cb76d521649085fe974fa4",
+          "save_sha256": "c62bd34c947271990449e6a7f86ce8dee5d9b24d6c6399a6ee1f4256f00bcc67",
+          "process": {
+            "pid": 1038187,
+            "start_ticks": 20472206,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/normal-ordinary-book-cold-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/normal-ordinary-book-reads-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "e3f447427159fdab1ff2b02034c797b0ba1e865457a9531d216e2957cae2ce2f"
+          },
+          "allocator": 14,
+          "skills_and_history_preserved": true
+        }
+      },
+      "sanitized-ordinary-book-reads-01": {
+        "audit": "build/oblivion-compat/ordinary-book-read/sanitized-ordinary-book-reads-01/ordinary-book-verification.json",
+        "sha256": "42d2ab6a10415b407a929b5d3792ca970c58ec8c783e86dfb9352e4e74522e17",
+        "result": {
+          "passed": true,
+          "phase": "reads",
+          "reads": 2,
+          "books_read_before": 4.0,
+          "books_read_after": 6.0,
+          "source_sha256": "1717a26d05b898ab62f85724b119512d00f9f01a640fea0cda12ff6a17e9b421",
+          "save_sha256": "4ffc1dfc4ba8fc2d0286cc7d9f1ec74a1c3025667f429314a0e6f9f0759a59a1",
+          "process": {
+            "pid": 1032186,
+            "start_ticks": 20463937,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/sanitized-ordinary-book-reads-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/alembic-drop/normal-alembic-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "d29b6dde46e6bb09b54f9164a291a5787f6147939ea6a1aee6b30ca79872e253"
+          },
+          "allocator": 14,
+          "skills_and_history_preserved": true
+        }
+      },
+      "sanitized-ordinary-book-cold-01": {
+        "audit": "build/oblivion-compat/ordinary-book-read/sanitized-ordinary-book-cold-01/ordinary-book-verification.json",
+        "sha256": "a1eb0a37ee2a08f21505ba35632a42121e1af374a1e18aba841e4b593864738f",
+        "result": {
+          "passed": true,
+          "phase": "cold",
+          "reads": 1,
+          "books_read_before": 6.0,
+          "books_read_after": 7.0,
+          "source_sha256": "4ffc1dfc4ba8fc2d0286cc7d9f1ec74a1c3025667f429314a0e6f9f0759a59a1",
+          "save_sha256": "d0dd0d792b02e61c130f82e34c453b6704cc9ce10cf501c47dea5a031db56732",
+          "process": {
+            "pid": 1040590,
+            "start_ticks": 20499959,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/sanitized-ordinary-book-cold-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/sanitized-ordinary-book-reads-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "d29b6dde46e6bb09b54f9164a291a5787f6147939ea6a1aee6b30ca79872e253"
+          },
+          "allocator": 14,
+          "skills_and_history_preserved": true
+        }
+      }
+    },
+    "skill_book_regressions": {
+      "normal-skill-book-regression-01": {
+        "audit": "build/oblivion-compat/ordinary-book-read/normal-skill-book-regression-01/skill-book-regression-verification.json",
+        "sha256": "2c1160e7c01270f58d8e82b32f057a7c19a742bc99e71dab6b675894eadf3836",
+        "result": {
+          "passed": true,
+          "source_sha256": "ed9358235f78e7502cbbb77c370c5fd0ff106620022552d395be4e7b7d8b9b00",
+          "save_sha256": "441adb9057d3468edd89fe10357498bac52c9759fe465e59c218851c2206286b",
+          "source_schema": 101,
+          "target_schema": 103,
+          "books_read_before": 2.0,
+          "books_read_after": 3.0,
+          "no_repeat_skill_award": true,
+          "skills_and_history_retained": true,
+          "process": {
+            "pid": 1039828,
+            "start_ticks": 20480484,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/normal-skill-book-regression-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skill-book/normal-book-first-award-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "e3f447427159fdab1ff2b02034c797b0ba1e865457a9531d216e2957cae2ce2f"
+          }
+        }
+      },
+      "sanitized-skill-book-regression-01": {
+        "audit": "build/oblivion-compat/ordinary-book-read/sanitized-skill-book-regression-01/skill-book-regression-verification.json",
+        "sha256": "0901462e86cae2a4f850e31f322f2daba004f5a9ee2e8b999b2ea406a0e70916",
+        "result": {
+          "passed": true,
+          "source_sha256": "ed9358235f78e7502cbbb77c370c5fd0ff106620022552d395be4e7b7d8b9b00",
+          "save_sha256": "815def163c3c13c56b0be600756bc7e0befc0b36023b9bdb628374da6cde7b73",
+          "source_schema": 101,
+          "target_schema": 103,
+          "books_read_before": 2.0,
+          "books_read_after": 3.0,
+          "no_repeat_skill_award": true,
+          "skills_and_history_retained": true,
+          "process": {
+            "pid": 1044915,
+            "start_ticks": 20531853,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/sanitized-skill-book-regression-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skill-book/normal-book-first-award-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "d29b6dde46e6bb09b54f9164a291a5787f6147939ea6a1aee6b30ca79872e253"
+          }
+        }
+      }
+    },
+    "script_ownership": "build/oblivion-compat/ordinary-book-read/script-ownership-verification.json",
+    "semantic": "All27 shared skills/XP, progression and awarded-book history, prior inventory including Alembic/Retort/spent Torch/Cuirass scripts, native Player values, life/deaths/quests/globals and allocator14 retained. Native13 stays retired; book remains enabled in place."
+  },
+  "source": {
+    "before": "build/oblivion-compat/ordinary-book-read/source-runtime-before.json",
+    "after": "build/oblivion-compat/ordinary-book-read/source-runtime-after.json",
+    "tested_cpp": {
+      "apps/openmw/mwworld/oblivionskilltraining.cpp": "febf6ebb48dc527066cadd65e04172a3b5742344d6d22adf5174d1c4252b5f95"
+    },
+    "post_checks": "Receipt and final handoff only; tested C++/manifests/auditor unchanged."
+  },
+  "retained_failures": [
+    "Baseline01 actual read happened, but its one-shot log preceded the following after_start wait. No save accepted. Corrected02 reads the same original from the pristine accepted character and audits a saved unchanged counter4."
+  ],
+  "limits": [
+    "No new book UI/pagination, OnRead script dispatch, native book taking/dropping or ordinary-scroll count acceptance.",
+    "No reconstruction of previous missed ordinary reads; current counter4 is retained and advanced.",
+    "No full M16, M18 or TES4 MCP authoring acceptance.",
+    "Component implementation unchanged; previous Alembic full3301-per-mode evidence remains separate, not a fresh component run for this world-only change."
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "target": "M16 Books Read statistic on original ordinary non-scroll books",
+  "source": {
+    "path": "build/oblivion-compat/alembic-drop/normal-alembic-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "1717a26d05b898ab62f85724b119512d00f9f01a640fea0cda12ff6a17e9b421",
+    "books_read": 4,
+    "allocator": 14
+  },
+  "content": {
+    "base": "BOOK024567",
+    "title": "Fundaments of Alchemy",
+    "reference": "content:oblivion.esm:06efb3",
+    "cell": "Wellspring Cave0352a9",
+    "flags": 0,
+    "book_skill": -1,
+    "value": 5,
+    "weight": 1
+  },
+  "baseline": "normal-ordinary-book-baseline-02: actual rendered-focus Space activation marks original read but BooksRead4 stays4; no skill/progress or inventory change. Initial01 missed one-shot log after key action and is retained.",
+  "acceptance": [
+    "Two actual reads raise BooksRead4->6 without skill awards/history/progression changes",
+    "Fresh-process repeated read raises6->7; load alone replays no read",
+    "Normal and ASan/UBSan actual original placed book cases pass; preserve original reference, other loot including Retort/Alembic/spentTorch/Cuirass scripts, health/life/quests/allocator14",
+    "Existing skill-book once-per-base reward behavior remains intact"
+  ],
+  "limits": [
+    "No new book UI/pagination, OnRead dispatch, pickup/drop or ordinary scroll counting",
+    "No historical ordinary-read count reconstruction or full M16 acceptance"
+  ],
+  "oracle": "ORDINARY-BOOK-READ-ORACLE.json",
+  "auditor": "scripts/verify_ordinary_book_read.py"
+}

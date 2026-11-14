@@ -120,11 +120,30 @@ namespace MWWorld
             || (book.getType() != ESM::REC_BOOK && book.getType() != ESM::REC_BOOK4)) return false;
         const auto* definition = mStore.get<ESM4::Book>().search(book.getCellRef().getRefId());
         if (!definition || (definition->mFlags & ESM4::Rec_Deleted)
-            || definition->mData.bookSkill < 0 || definition->mData.bookSkill > 20) return false;
+            || definition->mData.bookSkill < -1 || definition->mData.bookSkill > 20) return false;
         const auto key = mStore.get<ESM4::Book>().findFormKey(book.getCellRef().getRefId());
         if (!key || !key->isContent()) return false;
         if (const auto* winner = mStore.getFormKeyIndex().winner(*key);
             winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_BOOK)) return false;
+        if (definition->mData.bookSkill == -1)
+        {
+            if (definition->mData.flags & ESM4::Book::Flag_Scroll) return false;
+            auto* combat = getOblivionCombatService();
+            if (!combat || getPlayerPtr().isEmpty()
+                || !combat->findActorValues(ESM::FormKey::dynamic("player", 1)))
+                throw std::invalid_argument("native book reading requires Player actor values");
+            if (!mOblivionRuntimeState)
+                mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+            auto counters = mOblivionRuntimeState->mPlayer.mActorValues;
+            auto& reads = counters[ESM4::playerMiscStatKey(17)];
+            reads = ESM4::addPlayerMiscStat(ESM4::playerMiscStatValue(reads), 1);
+            const auto total = reads;
+            // Ordinary books count each actual read without teaching a skill
+            // or entering the once-per-base skill-book award history.
+            mOblivionRuntimeState->mPlayer.mActorValues.swap(counters);
+            Log(Debug::Info) << "M16 ordinary book read: book=" << key->serialize() << " total=" << total;
+            return true;
+        }
         updateOblivionPlayerSkill(12 + definition->mData.bookSkill, 1, 0.f, *key);
         return true;
     }
