@@ -1,0 +1,60 @@
+{
+  "status": "Accepted bounded original Iron Key native KEYM drop/cold world/pickup/cold inventory in normal and instrumented games; broader M15/M18 remain open.",
+  "milestones": [
+    "M18 typed KEYM inventory/world ownership and cold persistence",
+    "M15 private movable Havok render roots for the observed10.2.0.0 export"
+  ],
+  "content": {
+    "base": "content:oblivion.esm:159826",
+    "editor_id": "CGShamanKey",
+    "name": "Iron Key",
+    "quantity": 1,
+    "value": 0,
+    "weight": 0,
+    "script": null
+  },
+  "source": {
+    "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "cd8dad6581ce16122b9c2b1ba23e0737a1081483e543062452bdae7f21325f13",
+    "next_dynamic_serial": 6,
+    "branch": "Separate Cairn/Wellspring Cave continuation, Lockpick8/Arrow24, Pants1/Bone1, Club equipped, HP70.480003/110 End55,33 credits, stage0/noNirnroot; keys1..5 retired."
+  },
+  "acceptance": [
+    "Ordinary Control-click drops actual Iron Key1->0 into one typed native KEYM owner/key6/count1/allocator7, retaining the original one-box bodyT model.",
+    "Cold world load/resave -> visible ordinary Space pickup0->1 -> final cold inventory in normal/instrumented games. Retire key6/count0 and body; preserve all earlier retired keys1..5.",
+    "Full source metadata and all other equipment/inventory, all27 skills/book progress, Health/passives/life/death/quests/counters/script owners retained; zero inventory weight means unchanged encumbrance.",
+    "Tick-zero complete physical pose/velocity/root history restored; schema103 unchanged. No new collision shape or solver rule.",
+    "Fresh focused/full component and engine checks in normal/sanitizer builds, appropriate Python checks and actual original-content regressions. Renderer format support changes shared NifOsg code; no component-evidence reuse claim."
+  ],
+  "baseline": {
+    "path": "build/oblivion-compat/iron-key-drop/normal-iron-key-baseline-01",
+    "result": "Ordinary legacy drop/save1->0 passed. Independent save audit found no native Key reference or loose body and allocator6 unchanged. No disappearance claim."
+  },
+  "oracle": "IRON-KEY-DROP-ORACLE.json",
+  "tolerances": {
+    "loaded_snapshot_absolute": 0.0001,
+    "loaded_snapshot_relative": 1e-06,
+    "reference_near_player_units": 150,
+    "body_near_player_units": 200,
+    "encumbrance_absolute": 0.0001
+  },
+  "limits": [
+    "Ordinary unequipped unscripted/unenchanted singleton KEYM only; no stacked/equipped/bound/scripted key-transfer acceptance.",
+    "No new collision-shape, broad M18/M15, unlocking-mechanic or legacy-world migration claim."
+  ],
+  "render_dependency": "Preserve private mutable transform/record caches for10.2.0.0 physical NIF hierarchies, retaining the existing strict binding checks. First native attempt rejected a static root before inventory debit; retain that attempt.",
+  "verification": "IRON-KEY-DROP-VERIFICATION.json",
+  "regressions": [
+    "Fresh original Lockpick stack8 drop, articulated Pants3-body cold world and worn Rusty Iron War Axe bodyT drop with retained condition22.494663 passed on the current normal binary."
+  ],
+  "normal_continuation": {
+    "path": "build/oblivion-compat/iron-key-drop/normal-iron-key-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc",
+    "next_dynamic_serial": 7
+  },
+  "sanitized_continuation": {
+    "path": "build/oblivion-compat/iron-key-drop/sanitized-iron-key-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7aaa6850b5033c4486f98914a34cfa0760d762bd11d0e8541b6db3f907e3756f",
+    "next_dynamic_serial": 7
+  }
+}

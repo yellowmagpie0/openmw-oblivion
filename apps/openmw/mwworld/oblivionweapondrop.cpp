@@ -57,6 +57,7 @@ namespace MWWorld
             if (ptr.getType() == ESM::REC_MISC4) return ptr.get<ESM4::MiscItem>()->mBase;
             if (ptr.getType() == ESM::REC_CLOT4) return ptr.get<ESM4::Clothing>()->mBase;
             if (ptr.getType() == ESM::REC_AMMO4) return ptr.get<ESM4::Ammunition>()->mBase;
+            if (ptr.getType() == ESM::REC_KEYM4) return ptr.get<ESM4::Key>()->mBase;
             if (ptr.getType() == ESM::REC_ARMO4)
             {
                 const auto* armor = ptr.get<ESM4::Armor>()->mBase;
@@ -92,6 +93,12 @@ namespace MWWorld
                 return store.get<ESM4::Ammunition>().search(base->mId) == base
                     ? store.get<ESM4::Ammunition>().findFormKey(base->mId) : std::nullopt;
             }
+            if (ptr.getType() == ESM::REC_KEYM4)
+            {
+                const auto* base = ptr.get<ESM4::Key>()->mBase;
+                return store.get<ESM4::Key>().search(base->mId) == base
+                    ? store.get<ESM4::Key>().findFormKey(base->mId) : std::nullopt;
+            }
             const auto* base = ptr.get<ESM4::Armor>()->mBase;
             return store.get<ESM4::Armor>().search(base->mId) == base
                 ? store.get<ESM4::Armor>().findFormKey(base->mId) : std::nullopt;
@@ -110,13 +117,15 @@ namespace MWWorld
             const auto* misc = mStore.get<ESM4::MiscItem>().search(snapshot.mBase);
             const auto* clothing = mStore.get<ESM4::Clothing>().search(snapshot.mBase);
             const auto* ammunition = mStore.get<ESM4::Ammunition>().search(snapshot.mBase);
+            const auto* keyItem = mStore.get<ESM4::Key>().search(snapshot.mBase);
             if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr)
-                + int(clothing != nullptr) + int(ammunition != nullptr) > 1)
+                + int(clothing != nullptr) + int(ammunition != nullptr) + int(keyItem != nullptr) > 1)
                 throw std::runtime_error("loose equipment base has ambiguous native types");
             const ESM::Path* selected = nullptr;
             if (weapon) selected = &weapon->mModel;
             else if (misc) selected = &misc->mModel;
             else if (ammunition) selected = &ammunition->mModel;
+            else if (keyItem) selected = &keyItem->mModel;
             else if (clothing || (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield)))
             {
                 const auto found = references.find(key);
@@ -653,9 +662,11 @@ namespace MWWorld
             constexpr bool isWeapon = std::is_same_v<Record, ESM4::Weapon>;
             constexpr bool isClothing = std::is_same_v<Record, ESM4::Clothing>;
             constexpr bool isAmmunition = std::is_same_v<Record, ESM4::Ammunition>;
+            constexpr bool isKey = std::is_same_v<Record, ESM4::Key>;
             constexpr bool isStackable = isAmmunition || std::is_same_v<Record, ESM4::MiscItem>;
             constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP
-                : isClothing ? ESM4::REC_CLOT : isAmmunition ? ESM4::REC_AMMO : ESM4::REC_MISC;
+                : isClothing ? ESM4::REC_CLOT : isAmmunition ? ESM4::REC_AMMO
+                : isKey ? ESM4::REC_KEYM : ESM4::REC_MISC;
             if (!baseDefinition) return std::nullopt;
             const auto health = [&] {
                 if constexpr (isWeapon) return baseDefinition->mData.health;
@@ -844,6 +855,7 @@ namespace MWWorld
             Log(Debug::Info) << (isWeapon ? "TES4 inventory weapon dropped: base="
                                         : isClothing ? "TES4 inventory clothing dropped: base="
                                         : isAmmunition ? "TES4 inventory ammunition dropped: base="
+                                        : isKey ? "TES4 inventory key dropped: base="
                                                        : "TES4 inventory misc dropped: base=") << base->serialize()
                 << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f)
                 << " count=" << dropCount;
@@ -866,7 +878,12 @@ namespace MWWorld
         }
         // The original Lockpick is native MISC, projected as a shared tool.
         if (item.getType() == ESM::REC_MISC || item.getType() == ESM::REC_LOCK)
-            return admit(mStore.get<ESM4::MiscItem>().search(sourceId));
+        {
+            if (const auto* miscellaneous = mStore.get<ESM4::MiscItem>().search(sourceId))
+                return admit(miscellaneous);
+            // Shared inventory projects native KEYM as miscellaneous keys.
+            return admit(mStore.get<ESM4::Key>().search(sourceId));
+        }
         if (item.getType() == ESM::REC_CLOT)
             return admit(mStore.get<ESM4::Clothing>().search(sourceId));
         return std::nullopt;

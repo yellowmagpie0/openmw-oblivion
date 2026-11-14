@@ -4,27 +4,25 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest bounded chunk: [eight carried Lockpicks](LOCKPICK-DROP-CONTRACT.json).
-Native MISC dispatch now recognizes the shared Lockpick tool projection and
-transfers a positive ordinary stack quantity. The original one-body collision
-proxy is a small closed convex triangle-strip mesh; validate its topology and
-volume before using the existing hull/list solver, with native length conversion,
-authored margin/mass/COM and retained filter metadata. Concave/open proxies and
-other shape scales remain unsupported. Legacy drop/save already worked; this is
-native ownership/physics, with no disappearance or legacy migration claim.
-[Oracle](LOCKPICK-DROP-ORACLE.json) separates original identities from parser
-diagnostics. [Receipt](LOCKPICK-DROP-VERIFICATION.json) binds normal/instrumented
-8→0/world/cold load/visible Space pickup0→8/final cold inventory,14 derived original-
-asset geometry checks, fresh3301 component/2292 engine per mode/Python618 and
-one-Lockpick/Pants/Bone/settled-ammunition regressions. Schema103 unchanged.
-Retained receipt attempts explain the copied instrumented pickup step correction
-and transient ammunition joint-strain comparisons; no physics/tolerance tuning.
+Latest bounded chunk: [the carried Iron Key](IRON-KEY-DROP-CONTRACT.json),
+original KEYM159826/CGShamanKey. Native key admission/capture/restore now retains
+its typed world owner and original one-box bodyT model through ordinary drop,
+cold world, visible Space pickup and final cold inventory in both builds.
+The real10.2.0.0 model exposed a renderer gap: its physical root was static.
+NifOsg now preserves private physical roots/targets/caches for this observed
+format, keeping strict binding validation and the existing collision/solver rules.
+Legacy drop/save already worked; no disappearance or legacy migration claim.
+[Oracle](IRON-KEY-DROP-ORACLE.json) distinguishes original identities and parser
+diagnostics. [Receipt](IRON-KEY-DROP-VERIFICATION.json) binds eight checkpoints,
+fresh3301 component/2292 engine per mode/Python618 and original Lockpick/Pants/
+worn-axe regressions. Initial root rejection and pre-fix structural checks remain
+retained as partial evidence. Schema103 unchanged; broader M15/M18 remain open.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/lockpick-drop/normal-lockpick-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `cd8dad6581ce16122b9c2b1ba23e0737a1081483e543062452bdae7f21325f13`.
-Lockpick8/Iron Arrow24/unequipped/no extras, Pants1/Bone1, Club equipped,
-allocator6; dropped keys3/4/5 retired/count0/no bodies. Health70.480003/110,
+`build/oblivion-compat/iron-key-drop/normal-iron-key-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc`.
+Iron Key1/Lockpick8/Iron Arrow24/unequipped/no extras, Pants1/Bone1, Club equipped,
+allocator7; dropped keys1..6 retired/count0/no bodies. Health70.480003/110,
 Endurance55, all27 skills/book history/33 credited deaths preserved. MS39stage0
 and original absence of Nirnroot/counter27 retained. Instrumented continuation
 is in the receipt.
@@ -49,6 +47,8 @@ or reached content and the acceptance gap it unblocks.
 
 Reusable evidence:
 
+- [Lockpick stack/convex strip proxies](LOCKPICK-DROP-VERIFICATION.json):
+  original8→0→8 and separate1-from8, closed convex one-geometry unit-scale only.
 - [Whole-stack ammunition](AMMO-STACK-DROP-VERIFICATION.json),
   [one-arrow split/locked prismatic](IRON-ARROW-DROP-VERIFICATION.json).
 - [Original static-surface fired-arrow recovery](IRON-ARROW-RECOVERY-VERIFICATION.json):
@@ -81,7 +81,7 @@ case (reads Alteration20 rather than Destruction22). Cure Disease lacks a verifi
 reached source; container loot remains unverified and the nearest found outdoor
 Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
-Checkpoint: native singleton ingredient/weapon/MISC, articulated clothing,
-ammunition quantity transfers and the closed-convex Lockpick stack now have
-separate real-content evidence. Lockpick chunk complete; select the next observed
-gameplay gap without closing broader milestones.
+Checkpoint: native singleton ingredient/weapon/MISC/KEYM, articulated clothing,
+ammunition quantities and the closed-convex Lockpick stack now have separate
+real-content evidence. Key chunk complete; choose the next observed gameplay gap
+without closing broader milestones.

@@ -1,0 +1,45 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "type": "KEYM",
+  "id": "159826",
+  "payload_sha256": "afced369cd114f0c11b86f14e20a171b67def702081dc5d3a2f5768a25dd7a40",
+  "strings": {
+    "EDID": "CGShamanKey",
+    "FULL": "Iron Key",
+    "MODL": "Clutter\\Key\\Key.NIF"
+  },
+  "data": {
+    "value": 0,
+    "weight": 0.0
+  },
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "member": "meshes/clutter/key/key.nif",
+  "member_sha256": "67dfdff82c9fad7c3dc92320780030fc882fa148a4cedfd966aeb69153388536",
+  "script_present": false,
+  "parser_diagnostic": {
+    "bodies": 1,
+    "joints": 0,
+    "records": 14,
+    "root": 0,
+    "asset_root": -1,
+    "scabbard": -1,
+    "body_target": 0,
+    "shape": 3,
+    "bodyT": 1,
+    "body_graph": [
+      {
+        "record": 4,
+        "node_record": 0,
+        "flags": 1,
+        "mass": 1,
+        "fixed": 0,
+        "shape": 3,
+        "bodyT": 1
+      }
+    ],
+    "joint_graph": []
+  },
+  "scope": "Original record/member identity and plain singleton extras audited independently of native admission. Existing NIF graph diagnostics identify one authored box bodyT and are not an independent original-executable solver oracle.",
+  "nif_version": "10.2.0.0",
+  "render_requirement": "The Havok hierarchy must keep a private mutable root/caches for physical pose binding; source box/bodyT data is unchanged."
+}
