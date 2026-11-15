@@ -23,7 +23,8 @@ namespace SceneUtil
     // OSG placement ancestors are rendering scaffolding, not native parents.
     // Retains native global caches separately from controller locals and OSG
     // relative drawing matrices. Requires invertible transforms and an unchanged
-    // hierarchy. Placement may change only inside mReferenceUpdate. Admission, physical first synchronization,
+    // hierarchy (excluding independently marked actor equipment attachments).
+    // Placement may change only inside mReferenceUpdate. Admission, physical first synchronization,
     // controller clocks, physics stepping and reference callbacks have owners.
     // Publishing a pass leaves its projection handles on the model. Retire or
     // explicitly reinitialize the model when changing update ownership. Exceptions

@@ -1177,6 +1177,41 @@ namespace
         EXPECT_EQ(frames, 1u);
     }
 
+    TEST_F(PhysicalPoseAnimationTest, NativeSceneSurvivesLootedAndReplacedEquipmentBetweenPhysicsPasses)
+    {
+        osg::ref_ptr<osg::Group> armor = new osg::Group, weapon = new osg::Group;
+        armor->setUserValue("openmwNativeActorAttachment", true);
+        weapon->setUserValue("openmwNativeActorAttachment", true);
+        mRoot->addChild(armor); mBone->addChild(weapon);
+        unsigned frames = 0;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [&](const auto&, const auto&, unsigned) {
+                ++frames;
+                return MWRender::Animation::NativeSceneFrame{};
+            });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        ASSERT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 1));
+        // Take All removes worn parts; subsequent equipment changes attach new ones.
+        mRoot->removeChild(armor); mBone->removeChild(weapon);
+        armor = nullptr; weapon = nullptr;
+        SceneUtil::PostPhysicsUpdateVisitor post;
+        post.setFrameStamp(mFrameStamp);
+        EXPECT_NO_THROW(mRoot->accept(post));
+        osg::ref_ptr<osg::Group> replacement = new osg::Group;
+        replacement->setUserValue("openmwNativeActorAttachment", true);
+        osg::ref_ptr<SceneCounter> updates = new SceneCounter;
+        replacement->setUpdateCallback(updates);
+        mBone->addChild(replacement);
+        mFrameStamp->setFrameNumber(2);
+        EXPECT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 2));
+        EXPECT_NO_THROW(mRoot->accept(post));
+        EXPECT_EQ(frames, 2u); EXPECT_EQ(updates->mVisits, 1u);
+        EXPECT_TRUE(mAnimation->hasNativeScene());
+        EXPECT_TRUE(mBone->getTraversalMatrix().getMatrix());
+        EXPECT_NO_THROW(mAnimation->endNativeScene());
+        EXPECT_FALSE(mBone->getTraversalMatrix().getMatrix());
+    }
+
     TEST_F(PhysicalPoseAnimationTest, NativeScenePreparationCommitsLiveCallbacksAndRetiresWithoutRebuilding)
     {
         osg::ref_ptr<SceneCounter> rootCallback = new SceneCounter;
