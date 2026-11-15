@@ -14,6 +14,7 @@ namespace ESM4
         {
             return !left.mBoundSource && !right.mBoundSource
                 && left.mScriptOwner.isNull() && right.mScriptOwner.isNull()
+                && left.mWeaponPoison.isNull() && right.mWeaponPoison.isNull()
                 && left.mBase == right.mBase && left.mCondition == right.mCondition
                 && left.mCharge == right.mCharge && left.mRemainingUsageTime == right.mRemainingUsageTime
                 && left.mEquippedSlots == right.mEquippedSlots
@@ -98,6 +99,9 @@ namespace ESM4
         if (item.mBase.isNull() || item.mCount <= 0 || (item.mExtraScale && !std::isfinite(*item.mExtraScale))
             || !std::isfinite(item.mCharge)
             || !std::isfinite(item.mRemainingUsageTime))
+            return false;
+        if (!item.mWeaponPoison.isNull() && (!item.mWeaponPoison.isContent() || item.mCount != 1
+            || item.mBoundSource || ESM::FormKey::deserialize(item.mWeaponPoison.serialize()) != item.mWeaponPoison))
             return false;
         item.mEquippedSlots &= InventorySlotMask;
         if (item.mHotkey < -1 || item.mHotkey > 7)

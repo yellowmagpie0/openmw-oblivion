@@ -857,6 +857,7 @@ namespace MWWorld
                     && live.hasNativeItemScale(sourceBefore.getNativeItemScale())
                     && !live.getNativeBoundSource()
                     && live.getNativeScriptOwner() == sourceBefore.getNativeScriptOwner()
+                    && live.getNativeWeaponPoison() == sourceBefore.getNativeWeaponPoison()
                     && actor.getCellRef().getNativeDropRelations() == actorBefore.getNativeDropRelations();
             };
             auto position = actor.getRefData().getPosition();
@@ -895,6 +896,7 @@ namespace MWWorld
                 condition = static_cast<float>(double(sourceBefore.getCharge()) + sourceBefore.getChargeIntRemainder());
             if (condition) reference.mRef.setNativeItemCondition(*condition);
             reference.mRef.setEnchantmentCharge(sourceBefore.getEnchantmentCharge());
+            reference.mRef.setNativeWeaponPoison(sourceBefore.getNativeWeaponPoison());
             if constexpr (isLight)
                 preview.getClass().setRemainingUsageTime(preview, item.getClass().getRemainingUsageTime(item));
             ESM4::DropRelations relations;
@@ -1160,6 +1162,7 @@ namespace MWWorld
                 && (!std::isfinite(*request.mEnchantmentChargeAfter) || *request.mEnchantmentChargeAfter < 0))
                 throw std::invalid_argument("invalid dropped weapon enchantment charge");
             reference.setEnchantmentCharge(request.mEnchantmentChargeAfter.value_or(source.getEnchantmentCharge()));
+            reference.setNativeWeaponPoison(source.getNativeWeaponPoison());
             ESM::FormId worldOwner;
             const ESM4::Npc* worldNpcOwner = nullptr;
             std::string worldModel, rawWorldModel;

@@ -250,6 +250,8 @@ namespace MWClass
             info.extra += MWGui::ToolTips::getMiscString(ref->mBase->mScript.getRefIdString(), "Script");
         }
 
+        if (!ptr.getCellRef().getNativeWeaponPoison().isNull())
+            text += "\nPoisoned";
         info.text = std::move(text);
 
         return info;

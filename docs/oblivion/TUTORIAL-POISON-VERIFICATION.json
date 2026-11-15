@@ -1,0 +1,683 @@
+{
+  "status": "Bounded real-content acceptance; no full M16/sewer course claim",
+  "parent_commit": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+  "contract": "TUTORIAL-POISON-CONTRACT.json",
+  "oracle": "TUTORIAL-POISON-ORACLE.json",
+  "source": {
+    "tested_final_dirty": {
+      "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+      "source_fingerprint": "21436bba0592cfe76cff2a9d68dc8bb9fa422846c1e7dcf5846c8de1a5305bbf"
+    },
+    "cpp_sha256": {
+      "apps/components_tests/esm4/runtimestate.cpp": "1947f7b0aa74cfcba37d785dc0a045368d5d9d4a1f0c68f44fc76d3ae9f56dec",
+      "apps/openmw/mwclass/weapon.cpp": "fd6c76972434fe62a97a76a16a61fa039700e4518d6101482cc366dabf47e73a",
+      "apps/openmw/mwmechanics/oblivioncombat.cpp": "a2ee523fb59a144f7e1ec992a30f2958e78be88c054b1c5bec2d638e83354bda",
+      "apps/openmw/mwmechanics/oblivioncombat.hpp": "e6cee62316d159f968b6c44ce4285faffbf2d4aa4544abb9b1f8544e96e6bfd4",
+      "apps/openmw/mwmechanics/oblivionmelee.cpp": "c5e790f733be16ca5378ab10a971db305b818381ee923c1e46117427cd7fc76b",
+      "apps/openmw/mwmechanics/oblivionmelee.hpp": "85de17f3ca4e98586ee55f355186d22c7ebfb35557877c65494f5dc0f00e5d3f",
+      "apps/openmw/mwworld/cellref.hpp": "f2a352b5864078db1e47479aaac09af0ca4821c0e355bce63975d5eba7fdc0bc",
+      "apps/openmw/mwworld/containerstore.cpp": "0d1d730c4d4deb921e72c2fa3bd3d6432665fffb86d5b598f1495ba111ab49cc",
+      "apps/openmw/mwworld/oblivioninteraction.cpp": "c02c26f55be980873948bb1a0247f4e1b620eec2b7f0e4ab8727c578aa8a1267",
+      "apps/openmw/mwworld/oblivionprofileservices.cpp": "07bd4ca22fde1fd959b43d8d118a240c2b19fd785e386fe718c7bec6dd9c0d0b",
+      "apps/openmw/mwworld/oblivionprofileservices.hpp": "391972488a22106ec800cc48c40c9818b01cbd7e452b5595089aa21a1f79e597",
+      "apps/openmw/mwworld/oblivionweapondrop.cpp": "ec124e9aaa2ce63f30cfbb3b840777607dc626190a2ece2625a2931e71545e82",
+      "apps/openmw/mwworld/worldimp.cpp": "8b83ffb8dee4557a72cba52794c382c850a1f5f5c6a099bc80025f31688e4bfe",
+      "components/esm4/inventorymechanics.cpp": "c2be7dcff13f6c48b1d7a9c3d6dfc53315dabbd06c60eefed40a7889c8a646d2",
+      "components/esm4/runtimestate.cpp": "9a5f1577f36e02a290753bdde8511d341aced9a13e1acfcfde3b424001415e5e",
+      "components/esm4/runtimestate.hpp": "ee4b1f29328e5556ee4f8eb871f510d360f440ffde20ed79aba9507c9ca02d6d",
+      "components/esm4/weaponpoison.hpp": "b65aa24d2dba4a73db575a5c7a8df2fecb0169705ae1546a89ef6ac76717bfc9"
+    },
+    "post_gate_changes": "Evidence documents, editable manifests, proven auditor copy and handoff links only; production C++ remains as hashed."
+  },
+  "layers": {
+    "structural": "Save104 exact per-instance weapon coating; canonical content identity, singleton/non-bound validation, stacking exclusion, old-save defaults and lossy old-envelope rejection. Native transfer adapters carry the field.",
+    "semantic": "Independent Python inspection re-encodes actual saved DATA bytes and checks bottle count, exact weapon metadata, retained generated poison, coating ownership and Player death once.",
+    "runtime": {
+      "normal": {
+        "receipt": "build/oblivion-compat/tutorial-poison/normal-final-composite-01.json",
+        "receipt_sha256": "4f5b11b9dad233e3b83713997844e618ea6f2d98c1610cbd0032709c32637a41",
+        "course_kind": "composite eight-phase genuine-save chain",
+        "phases": [
+          {
+            "label": "normal-final-decline-01",
+            "phase": "decline",
+            "sanitized": false,
+            "audit_sha256": "77e743cfde62990ec5dbd35306fcdebe6a4b152121d483c155d4db03ccc2a84a",
+            "input_sha256": "9c30150280c24ed0bc213cecbd0816b6f52fc56043a7f959bf5458b1be4d7b4c",
+            "save_sha256": "97b75e568e75f121d120d7dc30bb6f048912a9b81fd8b9bcad326eebcd073c78",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1254347,
+            "stock": 1,
+            "coating": null,
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "normal-final-decline-reload-01",
+            "phase": "reload-declined",
+            "sanitized": false,
+            "audit_sha256": "2b9f61557bcd07869b43200e99f5cc72310e3b949a4f487fd5edada04cd2a0d5",
+            "input_sha256": "97b75e568e75f121d120d7dc30bb6f048912a9b81fd8b9bcad326eebcd073c78",
+            "save_sha256": "bc89d7c2366c55828e6b407bfa913d1e5a91e67420c12e751ba3a93759a76808",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1258280,
+            "stock": 1,
+            "coating": null,
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "normal-final-apply-01",
+            "phase": "apply",
+            "sanitized": false,
+            "audit_sha256": "ad80027870a16c82bd00e19089506a27cea63e84ae2b4e63da024e1b9e3008c9",
+            "input_sha256": "bc89d7c2366c55828e6b407bfa913d1e5a91e67420c12e751ba3a93759a76808",
+            "save_sha256": "439a3deaebe4d011c141771a83e2afae1a001ed3895663b4c7a07e4b1067fe89",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1260031,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "normal-final-coated-reload-01",
+            "phase": "reload-coated",
+            "sanitized": false,
+            "audit_sha256": "9817776a2a6dd09c4f802db2ac375bd42941fc11d5a9cb8f257367411bbbcc70",
+            "input_sha256": "439a3deaebe4d011c141771a83e2afae1a001ed3895663b4c7a07e4b1067fe89",
+            "save_sha256": "beb6425f4f11c6558c16afe688b4d02911f1dcfe4c3ee23b144eb9da54163814",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1260249,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "normal-final-miss-01",
+            "phase": "miss",
+            "sanitized": false,
+            "audit_sha256": "884c4089759a13cf92fdbcd8031b2305692f57c321cd89e5cb5889be6adf6535",
+            "input_sha256": "beb6425f4f11c6558c16afe688b4d02911f1dcfe4c3ee23b144eb9da54163814",
+            "save_sha256": "e294f0333641ee9af4068f91b3c027486cb2730f31ae380356e301c3fb4cb916",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1260362,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "normal-final-miss-reload-01",
+            "phase": "reload-coated",
+            "sanitized": false,
+            "audit_sha256": "7f38ddc0501537ff7c7f06b1aa7574548745a5faf2da640aeebc1b2eab2f5328",
+            "input_sha256": "e294f0333641ee9af4068f91b3c027486cb2730f31ae380356e301c3fb4cb916",
+            "save_sha256": "da733ad67575f461073cbeac18f00d29f1446f6af0cf3dadf17d9f935ab6ee52",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1260465,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "normal-final-contact-02",
+            "phase": "contact",
+            "sanitized": false,
+            "audit_sha256": "37cb82b01ba4a11fa6eede1cb492829347cffe37c5d98b3b623c360602f2cfe4",
+            "input_sha256": "da733ad67575f461073cbeac18f00d29f1446f6af0cf3dadf17d9f935ab6ee52",
+            "save_sha256": "692240716ecb76a04892927216a0e0c7f6cae46c7ba3f0ef69d16f7790c80fb1",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1260900,
+            "stock": 0,
+            "coating": null,
+            "weapon_condition": 43.70003128051758,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 1,
+              "recovery_remaining": 0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          },
+          {
+            "label": "normal-final-spent-reload-01",
+            "phase": "reload-spent",
+            "sanitized": false,
+            "audit_sha256": "986550ce02c26ca6f22ce8076d3cf63ca904d21fa2a3f6faa0b0eb756ee0cd4e",
+            "input_sha256": "692240716ecb76a04892927216a0e0c7f6cae46c7ba3f0ef69d16f7790c80fb1",
+            "save_sha256": "e4721a3e8cd482c0c3a98683002b7e3a9b8df1191b995f38a874649f2643ac04",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1261100,
+            "stock": 0,
+            "coating": null,
+            "weapon_condition": 43.70003128051758,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 1,
+              "recovery_remaining": 0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          }
+        ]
+      },
+      "sanitized": {
+        "receipt": "build/oblivion-compat/tutorial-poison/sanitized-final-composite-01.json",
+        "receipt_sha256": "7c1d7d07c6165bb72741808dc7b3b5ba2ed109955ad4bae59ebf1318d3cae909",
+        "course_kind": "eight ASAN/UBSAN ownership phases with one genuine normal-input approach checkpoint from same save branch",
+        "phases": [
+          {
+            "label": "sanitized-final-decline-01",
+            "phase": "decline",
+            "sanitized": true,
+            "audit_sha256": "e105c7bb1ef51a8cd05d0976488d687e38262385f721de2e8e8296c9ff29b7f9",
+            "input_sha256": "9c30150280c24ed0bc213cecbd0816b6f52fc56043a7f959bf5458b1be4d7b4c",
+            "save_sha256": "e3a0d5a28365a2bd4e1717daad755509f5e815e98798daf3d633295e2973318f",
+            "binary_sha256": "cad028f759f574db092c65f173139ad9539215a77d402cdae170dcc56bce0f73",
+            "pid": 1263501,
+            "stock": 1,
+            "coating": null,
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "sanitized-final-decline-reload-01",
+            "phase": "reload-declined",
+            "sanitized": true,
+            "audit_sha256": "2e43f058802500ae3c84746df1af01e884d5ee22c9ff8a281d8e6006cb1d04ee",
+            "input_sha256": "e3a0d5a28365a2bd4e1717daad755509f5e815e98798daf3d633295e2973318f",
+            "save_sha256": "358b530137bed34fc1f8b498f88aba1ce2c33ffe3224a130d84f3dfd02b6c6fe",
+            "binary_sha256": "cad028f759f574db092c65f173139ad9539215a77d402cdae170dcc56bce0f73",
+            "pid": 1263697,
+            "stock": 1,
+            "coating": null,
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "sanitized-final-apply-01",
+            "phase": "apply",
+            "sanitized": true,
+            "audit_sha256": "06eb01bf8bc6d8da7652432a5ef62f64ca5ce93856cf7aa0ce17533cef4768eb",
+            "input_sha256": "358b530137bed34fc1f8b498f88aba1ce2c33ffe3224a130d84f3dfd02b6c6fe",
+            "save_sha256": "a03656c0b6be98cfb5eb36e37f2fdd112f8828f4c76d82597ab5e39488268531",
+            "binary_sha256": "cad028f759f574db092c65f173139ad9539215a77d402cdae170dcc56bce0f73",
+            "pid": 1263883,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "sanitized-final-coated-reload-01",
+            "phase": "reload-coated",
+            "sanitized": true,
+            "audit_sha256": "fd29b2b5fb3938135e2b3172d8f51e11d786656146efec36cda5129f0b1159e9",
+            "input_sha256": "a03656c0b6be98cfb5eb36e37f2fdd112f8828f4c76d82597ab5e39488268531",
+            "save_sha256": "e85396affa8f6de7c56e1ddbdb4c3805c84875eb8bf8d1a22d01c383c56828db",
+            "binary_sha256": "cad028f759f574db092c65f173139ad9539215a77d402cdae170dcc56bce0f73",
+            "pid": 1264060,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "sanitized-final-miss-02",
+            "phase": "miss",
+            "sanitized": true,
+            "audit_sha256": "df086605de2e34cc7d6a84040689ecba73866d73df326626989ebca67e5dd2f9",
+            "input_sha256": "e85396affa8f6de7c56e1ddbdb4c3805c84875eb8bf8d1a22d01c383c56828db",
+            "save_sha256": "f9d2afef26dbcd0b2a8a614ce8fd545dcad9667279d5cc85494680b799adbe3c",
+            "binary_sha256": "cad028f759f574db092c65f173139ad9539215a77d402cdae170dcc56bce0f73",
+            "pid": 1266946,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "sanitized-final-miss-reload-02",
+            "phase": "reload-coated",
+            "sanitized": true,
+            "audit_sha256": "1e3190b7ee8713198bd218b7b763da28b2132e9b6518ec66186491a2e672602d",
+            "input_sha256": "f9d2afef26dbcd0b2a8a614ce8fd545dcad9667279d5cc85494680b799adbe3c",
+            "save_sha256": "c7e2c8463acadbedb3853d88ec92896ef678902ade83b787be5de95337634ecf",
+            "binary_sha256": "cad028f759f574db092c65f173139ad9539215a77d402cdae170dcc56bce0f73",
+            "pid": 1271675,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "normal-sanitizer-pre-contact-01",
+            "phase": "approach",
+            "sanitized": false,
+            "audit_sha256": "318314e84a9e798d7a5fcce16b77710d4d7ce11a6db7555ee30c5cc24db9c1af",
+            "input_sha256": "c7e2c8463acadbedb3853d88ec92896ef678902ade83b787be5de95337634ecf",
+            "save_sha256": "1f949900c491a81a1e7c55aff5a86775da50b9461e49e3837a5dc4312eca601d",
+            "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+            "pid": 1272970,
+            "stock": 0,
+            "coating": "content:oblivion.esm:08dc73",
+            "weapon_condition": 44.000030517578125,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 0,
+              "recovery_remaining": 0,
+              "killer": "null"
+            }
+          },
+          {
+            "label": "sanitized-final-contact-05",
+            "phase": "contact",
+            "sanitized": true,
+            "audit_sha256": "fdf198e410d8f58d9c813bcb1f25fd242895b1f45fdec009eabd17c914a7611d",
+            "input_sha256": "1f949900c491a81a1e7c55aff5a86775da50b9461e49e3837a5dc4312eca601d",
+            "save_sha256": "dcac1111cea686eb3b89b7a5a25809eba0006d696aa36353486010656c6f9c00",
+            "binary_sha256": "cad028f759f574db092c65f173139ad9539215a77d402cdae170dcc56bce0f73",
+            "pid": 1273776,
+            "stock": 0,
+            "coating": null,
+            "weapon_condition": 43.70003128051758,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 1,
+              "recovery_remaining": 0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          },
+          {
+            "label": "sanitized-final-spent-reload-05",
+            "phase": "reload-spent",
+            "sanitized": true,
+            "audit_sha256": "a64db48269996bc23ec13d25c81e6320775d8ad05ffa38d692544fdca30bf33a",
+            "input_sha256": "dcac1111cea686eb3b89b7a5a25809eba0006d696aa36353486010656c6f9c00",
+            "save_sha256": "1130b8d6728f2f00ae9b0f0c1c20e9fed2bae6f54f75960b2ac5f5ab54c07ef7",
+            "binary_sha256": "cad028f759f574db092c65f173139ad9539215a77d402cdae170dcc56bce0f73",
+            "pid": 1274157,
+            "stock": 0,
+            "coating": null,
+            "weapon_condition": 43.70003128051758,
+            "goblin_life": {
+              "actor": "content:oblivion.esm:03b513",
+              "base": "content:oblivion.esm:03b512",
+              "phase": 1,
+              "recovery_remaining": 0,
+              "killer": "dynamic:player:0000000000000001"
+            }
+          }
+        ],
+        "approach_checkpoint": {
+          "passed": true,
+          "health_values": [
+            10.0,
+            null,
+            null,
+            null
+          ],
+          "player_health": 80.0,
+          "player_position": [
+            211.2823944091797,
+            1784.927001953125,
+            -286.4313659667969,
+            0.03359377384185791,
+            0.0,
+            1.519514560699463
+          ],
+          "goblin_position": [
+            305.9832458496094,
+            1789.67138671875,
+            -240.94970703125,
+            0.0,
+            0.0,
+            -1.6178398132324219
+          ],
+          "distance": 105.16340499373364,
+          "source": "actual normal-input route from sanitized-final-miss-reload-02; original absent modifier presence retained; no actor/stat edits"
+        },
+        "scope": "Eight ASAN/UBSAN ownership phases plus one normal-input navigation checkpoint; nine linked actual saves and distinct process epochs.",
+        "incoming_combat": {
+          "player_health_before": 80,
+          "player_health_after": 77.1500015258789,
+          "armour_condition_changes": [
+            {
+              "base": "content:oblivion.esm:0661c1",
+              "before": 155.76995849609375,
+              "after": 153.74496459960938
+            }
+          ]
+        }
+      }
+    },
+    "compiler_and_regression": [
+      {
+        "receipt": "build/oblivion-compat/tutorial-poison/normal-integration-02/verification.json",
+        "receipt_sha256": "fc53d05a7c26f1e8957a4650ba72c2959be011d7cb8f7af1a8927c82b0057327",
+        "source": {
+          "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+          "source_fingerprint": "5d2845d65193700b9aa6e7d23402c05655fd00dbfea587a8344aa2cb25d9be9d"
+        },
+        "mode": "components",
+        "executed": 3302,
+        "filter": "*",
+        "binary_sha256": "20d26fe700d9c8eeb91a2b5066a69e8969f740a01b8bd9e5657b1db5323e5452",
+        "xml_sha256": "896a819da1cb0b1c21faadf0f955b2115a9069dc943acd71bfaa94d9322419f1",
+        "inventory_sha256": "bad1ad23e6409f2d047ed6aadac3eea0a41e73e10069a653125e91e5bb38c094"
+      },
+      {
+        "receipt": "build/oblivion-compat/tutorial-poison/normal-engine-final-01/verification.json",
+        "receipt_sha256": "0e68897c8a14d3d0dadd1826ac3c8ea53ba10f4e8b6802c280e78559360644b5",
+        "source": {
+          "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+          "source_fingerprint": "21436bba0592cfe76cff2a9d68dc8bb9fa422846c1e7dcf5846c8de1a5305bbf"
+        },
+        "mode": "engine",
+        "executed": 2292,
+        "filter": "*",
+        "binary_sha256": "e248479fb551474b6d2536bbf53d8d00e743776469658f6d7144cd45482aef1d",
+        "xml_sha256": "356571a9db3fe72ce56ed08e86e581e2eeb65ac592938b01afc7f0b0a9d3d6da",
+        "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99"
+      },
+      {
+        "receipt": "build/oblivion-compat/tutorial-poison/python-final-03/verification.json",
+        "receipt_sha256": "b5e358f226ae0069568baf91e11e5dff38236459474fabae85f72611b01aced5",
+        "mode": "python",
+        "executed": 618,
+        "source": {
+          "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+          "source_fingerprint": "7f345e1ee531b23a2af379bb61473653c0cb1df26c3ab74fc18aa852ce035dba"
+        },
+        "scope_note": "Final Python suite includes the installed actual-save auditor; later receipt and handoff completion edits only."
+      },
+      {
+        "receipt": "build/oblivion-compat/tutorial-poison/sanitized-components-01/verification.json",
+        "receipt_sha256": "9b6137035eeb3e73986429ae632d491dec16cd92b7875c555869ba381a76a37e",
+        "source": {
+          "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+          "source_fingerprint": "21436bba0592cfe76cff2a9d68dc8bb9fa422846c1e7dcf5846c8de1a5305bbf"
+        },
+        "mode": "sanitize",
+        "executed": 3302,
+        "filter": "*",
+        "binary_sha256": "0eceae951ac11a9185ec28be3662bd1a28d1b27230f96d86b238f881d6494fa5",
+        "xml_sha256": "1b94afd77fda9b8012bc544503d6b1cbc45238ac982a67b051f8a293d97962e7",
+        "inventory_sha256": "287f2bc9c5baf63a4292d622f3d9db452869b371241949a10684f02f0b860109"
+      },
+      {
+        "receipt": "build/oblivion-compat/tutorial-poison/sanitized-engine-01/verification.json",
+        "receipt_sha256": "0d167c1f1b68036c400d135074f8f97f7330d83164c2f32e7b0adc287007e767",
+        "source": {
+          "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+          "source_fingerprint": "21436bba0592cfe76cff2a9d68dc8bb9fa422846c1e7dcf5846c8de1a5305bbf"
+        },
+        "mode": "engine",
+        "executed": 82,
+        "filter": "WorkerCounts/*/0",
+        "binary_sha256": "801aa0a04d7b670fb9809fff3a7daf8ddc42c07b2b5efd1d4949fe24c79fe001",
+        "xml_sha256": "308fb68bf9672583623348085ac3a720b75113544de1e5367135e40e80d71b48",
+        "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99"
+      },
+      {
+        "receipt": "build/oblivion-compat/tutorial-poison/sanitized-engine-02/verification.json",
+        "receipt_sha256": "8685a0fe7b90ceef9d66842c5ee14570cd2189569a15fded4721f8c3a14a26e0",
+        "source": {
+          "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+          "source_fingerprint": "21436bba0592cfe76cff2a9d68dc8bb9fa422846c1e7dcf5846c8de1a5305bbf"
+        },
+        "mode": "engine",
+        "executed": 82,
+        "filter": "WorkerCounts/*/1",
+        "binary_sha256": "801aa0a04d7b670fb9809fff3a7daf8ddc42c07b2b5efd1d4949fe24c79fe001",
+        "xml_sha256": "87b19d49a2c316dc9b033e1c62e26b6bb223417747fddd234a9b2d2af016b97b",
+        "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99"
+      },
+      {
+        "receipt": "build/oblivion-compat/tutorial-poison/sanitized-engine-03/verification.json",
+        "receipt_sha256": "efce5070e3cf8a0396e0052aa3d774c368963e12ef4a206c026ff37eded2b484",
+        "source": {
+          "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+          "source_fingerprint": "21436bba0592cfe76cff2a9d68dc8bb9fa422846c1e7dcf5846c8de1a5305bbf"
+        },
+        "mode": "engine",
+        "executed": 82,
+        "filter": "WorkerCounts/*/2",
+        "binary_sha256": "801aa0a04d7b670fb9809fff3a7daf8ddc42c07b2b5efd1d4949fe24c79fe001",
+        "xml_sha256": "85f5d5b4af53177ef5897e4f3cc5b3a9d63b2150369d83cc349aef87fe9f16c7",
+        "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99"
+      },
+      {
+        "receipt": "build/oblivion-compat/tutorial-poison/sanitized-engine-04/verification.json",
+        "receipt_sha256": "bfafdba540ce2a1bb414a42669e35d577829775159759fbc29bffffea0e9b1b0",
+        "source": {
+          "head": "fc3a0905c6298627b98f6dba9234c4d0191bfaed",
+          "source_fingerprint": "21436bba0592cfe76cff2a9d68dc8bb9fa422846c1e7dcf5846c8de1a5305bbf"
+        },
+        "mode": "engine",
+        "executed": 2046,
+        "filter": "*-WorkerCounts/*",
+        "binary_sha256": "801aa0a04d7b670fb9809fff3a7daf8ddc42c07b2b5efd1d4949fe24c79fe001",
+        "xml_sha256": "cd46ce8408ab3c35930e43f8f085a235f287d8a311aca49322eac0604fddde3a",
+        "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99"
+      }
+    ],
+    "inventory_combat_rule": "Exact non-weapon inventory equality except condition-only decreases on singleton worn biped armour witnessed by committed hits from the original goblin; matching Player Health debit within0.01, and exact counts/base/slots/owners/charge/script/bound/scale metadata. Weapon coating and ordinary contact wear are checked separately.",
+    "semantic_auditor": {
+      "path": "scripts/verify_tutorial_poison.py",
+      "sha256": "5a9698d40e3bad7f6368da1cd090fb26f4fd328e85bd76275abda04ab77e4256",
+      "public_manifests_validation": {
+        "passed": true,
+        "count": 11,
+        "manifests": [
+          {
+            "file": "docs/oblivion/original-tutorial-poison-acquire.json",
+            "sha256": "6f87ada74711407853919d608e9a3d28453a08d63a397b7d70129fc47b4ff3ce"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-apply.json",
+            "sha256": "6c48bb8103fa14192f6730a37404ca0e72dddb35d8dad24e3bb23d7a64183abc"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-approach.json",
+            "sha256": "bcd6af71365b102ea1b757a0dd0ec3d983539d4d42c05acd2ca337953bc23d5d"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-contact.json",
+            "sha256": "ed90d66aca0b7d5acf4b3cd36c5787419dd71f8488aa7ac0c11d12214f54ca14"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-decline.json",
+            "sha256": "837848dfd8a09aa08dd4f8eaea1157f3c8911daee30d6a9d693c42a7246f9912"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-hit-from-checkpoint.json",
+            "sha256": "e2ad1ae0fe24fc97ad86bd4b03df7abff3bf2a705f4f6729d9fd4b57b18d5eea"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-miss.json",
+            "sha256": "0cf7db50812a2a957777e0b2fd063e31268c67c6983bf84d9e79d4b8a0f11a18"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-pre-contact.json",
+            "sha256": "8a0b9925eb8abe5d7fd627eea2fe16da7b43688eb90d544de345225ef16e15b8"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-reload-coated.json",
+            "sha256": "339bb67c0caa1acfec15cdf89b4d87b21a3051110c78b4be1ad363122286c529"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-reload-declined.json",
+            "sha256": "51cee47fa73ca8fa05359d84738964691e27310c0a8d3239664fa7de05dcfe22"
+          },
+          {
+            "file": "docs/oblivion/original-tutorial-poison-reload-spent.json",
+            "sha256": "e2be90672e7a5e237cf59216dec039fbe8adbee4b98661d49d9b08b2d7ed30ff"
+          }
+        ]
+      },
+      "input_acknowledgement_normal_check": "build/oblivion-compat/tutorial-poison/normal-synchronized-miss-02/poison-audit.json"
+    }
+  },
+  "baseline_provenance": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "genuine_western_source_sha256": "9c30150280c24ed0bc213cecbd0816b6f52fc56043a7f959bf5458b1be4d7b4c",
+    "acquisition": "normal-poison-acquire-01",
+    "navigation": [
+      "normal-explore-western-03",
+      "normal-explore-trigger-01"
+    ],
+    "frozen_baseline_binary_sha256": "52a8d4735e1e88b62b5bd0ea70b781b6d51946025616e2d16e1266acf54d6082",
+    "branch": "Genuine accepted tutorial-kit save3daa7c\u2026; original bottle acquired by input and Player walked around original crate/pathgrid. No fork grants, teleports, actor disables or invented Health."
+  },
+  "limits": [
+    "Original profile only: instant DGHE10 against zero poison resistance without accepted block. Timed generated poison and other families remain open.",
+    "Cold-process acceptance belongs to fork; original named-save probe is same-process.",
+    "Separate coated-weapon transfer gameplay and corpse-animation continuity are not newly certified.",
+    "Normal final composite retains six accepted phases, then a corrected normal walking approach/restart tail. Failed initial chain remains failed.",
+    "Normal component evidence retains its original dirty-source provenance; its component implementation/tests and binary are unchanged after the World-only unresolved-base guard. Final engine and Python receipts retain their own source fingerprints.",
+    "Sanitizer contact and cold-spent checks use a genuine normal-input pre-combat checkpoint from the same sanitized save branch. The complete approach under instrumentation is not accepted; original actor state was never edited or disabled."
+  ],
+  "retained_failures": {
+    "normal-focused-01": "Tool session exited143 without receipt; owned compiler children finished before orphan schedulers stopped.",
+    "normal-focused-02/03": "Safely stopped for editable schema targets and explicit empty reference defaults; no passing claim.",
+    "normal-focused-04/05": "Stale future-schema assertion, then pointer-wrapper compile mismatch; corrected before final gates.",
+    "normal-integration-01": "Three stale JSON/wire expectations; updated explicit new null bytes/offsets without weakening old checks.",
+    "sanitized-focused-01": "Safely stopped for review-found optional unresolved-base guard; final focused02 passes.",
+    "normal-poison-decline-01": "No retained drag; initial Escape cancelled dragging instead of exiting inventory; corrected ordinary input.",
+    "normal-poison-contact-01/02": "Authored goblin stop required closer Player walk; negative overkill Health invalidated a zero-only observer assumption.",
+    "normal-final-contact-01": "Actual miss at148.47 units; closer normal walk accepted in freshcontact02; original partial chain remains failed.",
+    "sanitized-final-miss-01": "Both mouse edges in same frame: zero strikes. Auditor rejected; acknowledged-input freshmiss02 passes.",
+    "sanitized-final-contact-02/03": "Short walking deadline, then distant goblin destination under instrumentation. No full instrumented approach claim.",
+    "sanitized-final-contact-04": "Actual scenario/hit/save succeeded; strict initial inventory audit rejected legitimate incoming armour wear. Failed wrapper retained; fresh05 passes corrected precise combat audit.",
+    "original-01/02": "Invalid vanilla getweaponhealthperc query and initial wrong UI tab retained; no mechanic inference from those failures."
+  },
+  "sanitizer_options": {
+    "engine": {
+      "SDL_VIDEODRIVER": "x11",
+      "SDL_AUDIODRIVER": "dummy",
+      "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+      "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+      "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "components": {
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "rendered_runtime": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "actual_loaded_libraries_and_environment": "Audited per accepted runtime case; no rendered-game leak coverage claim."
+    }
+  },
+  "partition_audit": {
+    "passed": true,
+    "executed": 2292,
+    "disjoint": true,
+    "exact_union": true,
+    "partitions": [
+      {
+        "label": "sanitized-engine-01",
+        "executed": 82,
+        "filter": "WorkerCounts/*/0"
+      },
+      {
+        "label": "sanitized-engine-02",
+        "executed": 82,
+        "filter": "WorkerCounts/*/1"
+      },
+      {
+        "label": "sanitized-engine-03",
+        "executed": 82,
+        "filter": "WorkerCounts/*/2"
+      },
+      {
+        "label": "sanitized-engine-04",
+        "executed": 2046,
+        "filter": "*-WorkerCounts/*"
+      }
+    ],
+    "binary_sha256": "801aa0a04d7b670fb9809fff3a7daf8ddc42c07b2b5efd1d4949fe24c79fe001"
+  }
+}

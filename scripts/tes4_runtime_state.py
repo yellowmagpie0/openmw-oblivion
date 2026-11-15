@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 103
+CURRENT_VERSION = 104
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -362,6 +362,9 @@ def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
                 present = reader.unpack("<B")
                 if present > 1: raise RuntimeStateError("Invalid inventory script identity presence")
                 item["script_owner"] = reader.string() if present else None
+            if version >= 104:
+                poison = reader.string()
+                item["weapon_poison"] = None if poison == "null" else poison
         result.append(item)
     return result
 
@@ -396,6 +399,8 @@ def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int)
                 owner = item.get("script_owner")
                 writer.pack("<B", int(owner is not None))
                 if owner is not None: writer.string(owner)
+            if version >= 104:
+                writer.string(item.get("weapon_poison") or "null")
 
 
 def _finite_float(reader: _Reader, label: str) -> float:
@@ -834,6 +839,9 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
 
         _validate_ownership_extras(reference, version)
         _validate_drop_relations(reference, version)
+        poison = reference.get("weapon_poison")
+        if poison is not None and (version < 104 or not _canonical_content_key(poison)):
+            raise RuntimeStateError("Invalid loose weapon coating")
         for name in ("item_condition", "item_charge"):
             extra = reference.get(name)
             if extra is not None:
@@ -1434,7 +1442,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("TES4 native actor life conflicts with legacy obscript.dead")
 
     for reference in references:
-        if (any(reference.get(name) is not None for name in ("item_condition", "item_charge"))
+        if ((any(reference.get(name) is not None for name in ("item_condition", "item_charge"))
+                or reference.get("weapon_poison") is not None)
                 and (reference.get("actor_draw_state") is not None or reference["key"] in native_keys
                      or reference["key"] in life_keys or reference["key"] == player["reference"])):
             raise RuntimeStateError("TES4 actor reference cannot own loose item extras")
@@ -2786,6 +2795,10 @@ def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) 
     }
     for item in value:
         _validate_ownership_extras(item, version)
+        poison = item.get("weapon_poison")
+        if poison is not None and (version < 104 or not _canonical_content_key(poison)
+                or item.get("count") != 1 or item.get("bound_source") is not None):
+            raise RuntimeStateError("Invalid native weapon coating")
         owner = item.get("script_owner")
         if owner is not None:
             parts = owner.split(":") if isinstance(owner, str) else []
@@ -2963,6 +2976,9 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if present > 1:
                     raise RuntimeStateError("Invalid TES4 loose item extra flag")
                 reference[name] = reader.unpack("<f") if present else None
+        if version >= 104:
+            poison = reader.string()
+            reference["weapon_poison"] = None if poison == "null" else poison
         if version >= 41:
             _read_ownership_extras(reader, reference)
         if version >= 47:
@@ -3886,6 +3902,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<B", int(extra is not None))
                 if extra is not None:
                     writer.pack("<f", extra)
+        if version >= 104:
+            writer.string(reference.get("weapon_poison") or "null")
         if version >= 41:
             _write_ownership_extras(writer, reference)
         if version >= 47:
@@ -4796,6 +4814,10 @@ def _upgrade_drop_relations(state: dict[str, Any]) -> None:
 
 def _upgrade_reference_item_extras(state: dict[str, Any]) -> None:
     for reference in state.get("references", []):
+        poison = reference.get("weapon_poison")
+        if poison is not None and (state.get("schema_version", 1) < 104 or not _canonical_content_key(poison)):
+            raise RuntimeStateError("Invalid loose weapon coating")
+        reference.setdefault("weapon_poison", None)
         for name in ("item_condition", "item_charge"):
             if state.get("schema_version", 1) < 40 and reference.get(name) is not None:
                 raise RuntimeStateError("Legacy TES4 save cannot carry loose item extras")
@@ -5043,6 +5065,9 @@ def _upgrade_inventory_scripts(state: dict[str, Any]) -> None:
             if state.get("schema_version", 1) < 97 and item.get("script_owner") is not None:
                 raise RuntimeStateError("Legacy runtime cannot contain inventory script identity")
             item.setdefault("script_owner", None)
+            if state.get("schema_version", 1) < 104 and item.get("weapon_poison") is not None:
+                raise RuntimeStateError("Legacy runtime cannot contain weapon coating")
+            item.setdefault("weapon_poison", None)
 
 
 def _upgrade_base_essential(state: dict[str, Any]) -> None:

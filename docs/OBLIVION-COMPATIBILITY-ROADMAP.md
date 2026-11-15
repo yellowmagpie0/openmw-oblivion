@@ -463,8 +463,12 @@ match intended outcomes.
 
 Bounded real-content acceptance: the [original tutorial alchemy kit](oblivion/TUTORIAL-ALCHEMY-VERIFICATION.json)
 now supports a novice Damage Health poison with original mortar pickup event,
-native skill use and normal/SAN cold persistence. Higher skill/tool recipes and
-weapon poison application remain open; this does not close M16.
+native skill use and normal/SAN cold persistence. The separate
+[original Poison of Illness course](oblivion/TUTORIAL-POISON-VERIFICATION.json)
+adds equipped-melee coating, miss retention, instant10-damage contact and cold
+spent/death ownership. The sanitizer hit/cold tail uses a genuine normal-input
+pre-combat checkpoint. Higher skill/tool recipes, timed crafted poisons and
+other poison branches remain open; this does not close M16.
 
 #### M17 - Dialogue, voice, persuasion, and services
 

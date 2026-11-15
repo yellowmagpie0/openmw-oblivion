@@ -1,0 +1,83 @@
+{
+  "status": "Independent original executable and installed winning-content observations",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "content": {
+    "potion": "content:oblivion.esm:08dc73",
+    "editor_id": "PotionDamageHealth",
+    "name": "Poison of Illness",
+    "placed": "content:oblivion.esm:159854",
+    "cell": "content:oblivion.esm:0380bd",
+    "effect": {
+      "code": "DGHE",
+      "magnitude": 10,
+      "duration": 0,
+      "area": 0,
+      "range": 0,
+      "actor_value": 8
+    },
+    "weight": 0.5,
+    "authored_value": 37,
+    "original_ui_value": 22,
+    "flags_caution": "Unknown upper bytes of raw ENIT word0x00e7ce00 have no assigned poison semantics. Low flags byte0. Classification/execution is bounded to the independently observed effect profile."
+  },
+  "application": {
+    "evidence": "build/oblivion-compat/tutorial-poison/original-01",
+    "observations": "original-01/observations.json",
+    "setup": "Isolated original-game prefix and pristine-derived save; grant/equip090613 and grant one08dc73 only in original oracle. Fork acceptance grants nothing.",
+    "rules": [
+      "Yes/No prompt names equipped axe.",
+      "No retains1 bottle; Yes consumes it and displays green weapon droplet.",
+      "Player Health80 and Alchemy5 unchanged; UI weapon condition100 unchanged.",
+      "Named same-process original save/load retains coating and bottle count0."
+    ],
+    "restoration": "Original wrapper exited0; exact prefix inputs restored.",
+    "limitation": "Vanilla getweaponhealthperc command was invalid; weapon condition observation is UI-derived, not that command."
+  },
+  "contact": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "controls": "Original engine only: TestingHall, AI off, target 03b513 health1000/resistpoison0, axe090613 full condition, player Blunt15 Strength40 Luck50 Fatigue140; named saves reset paired contacts. No fork actor controls authorized.",
+    "uncoated_health": [
+      1000,
+      998.99
+    ],
+    "coated_health": [
+      1000,
+      988.99,
+      987.98
+    ],
+    "poison_increment": 10,
+    "tolerance_hp": 1,
+    "miss_retains_coating": true,
+    "first_contact_clears_coating": true,
+    "second_contact_repeats_poison": false,
+    "restoration": {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    },
+    "saves": {
+      "OpenMWContactStart.ess": "6c05b2fa4b5a0c591d343bd4021383cca87b933d9f47aff50e52510409b3e85d",
+      "OpenMWContactPlain.ess": "db531acaf20feeacdee06b5fc1cc0bdd9e2b16d01e3529691281a1ce287dfb54",
+      "OpenMWContactCoated.ess": "ac2b49d3d1506493cc2eb42dd1fe97687696ea8606da78958c29ffb2496a7fb2",
+      "OpenMWContactSpent.ess": "b1661e387fc5e2583dfcc33ea19e339a7867a4ebcb8ffd71dc436113b336d7d8"
+    },
+    "captures": [
+      "plain-first-hit.png",
+      "contact-poison-confirm.png",
+      "coating-after-miss.png",
+      "coated-first-hit.png",
+      "weapon-after-contact.png",
+      "coated-second-hit.png"
+    ],
+    "retained_failure": "contact-apply-prompt.png captured Factions due to saved UI tab, corrected by selecting inventory; no mechanic inference."
+  },
+  "application_receipt_sha256": "6e8a332d1e1bee958d61ddec3a16efe43334e4d0a99df340c82d735cec2ba3f6",
+  "contact_receipt_sha256": "32a4de958422e1b9ab5489133e6570217f2a773a379d8227fe97fef573868d50",
+  "limits": [
+    "Original controlled target has1000 Health/0 poison resistance so paired contacts survive; all such controls are oracle-only. Real fork goblin remains authored10HP and active.",
+    "Paired original physical hit1.01 and coated11.01 differ by10. Declared poison increment tolerance1HP. No bit-identical ordinary weapon arithmetic requirement.",
+    "Original named save/load is same-process; independent fork acceptance includes actual fresh processes.",
+    "No general resistance/block/immunity, additional poison families, timed player-crafted poison or economy certification."
+  ]
+}

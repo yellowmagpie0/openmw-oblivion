@@ -131,6 +131,21 @@ namespace MWWorld
         }
         void setScale(float scale);
 
+        const ESM::FormKey& getNativeWeaponPoison() const noexcept { return mNativeWeaponPoison; }
+        void setNativeWeaponPoison(ESM::FormKey poison)
+        {
+            if (!poison.isNull() && (!poison.isContent()
+                || ESM::FormKey::deserialize(poison.serialize()) != poison))
+                throw std::invalid_argument("Invalid native weapon coating");
+            mNativeWeaponPoison = std::move(poison);
+            mChanged = true;
+        }
+        void swapNativeWeaponPoison(ESM::FormKey& poison) noexcept
+        {
+            std::swap(mNativeWeaponPoison, poison);
+            mChanged = true;
+        }
+
         const ESM::FormKey& getNativeScriptOwner() const noexcept { return mNativeScriptOwner; }
         void setNativeScriptOwner(ESM::FormKey owner)
         {
@@ -391,6 +406,7 @@ namespace MWWorld
         ESM4::DropRelations mNativeDropRelations;
         std::optional<ESM4::BoundItemSource> mNativeBoundSource;
         ESM::FormKey mNativeScriptOwner;
+        ESM::FormKey mNativeWeaponPoison;
     };
 
 }

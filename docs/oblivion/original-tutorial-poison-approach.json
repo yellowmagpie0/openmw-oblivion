@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "name": "Original Natural Caverns poison: approach along original western pathgrid",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal points={{util.vector3(-400,1050,-292),util.vector3(-376,1144,-292),util.vector3(-536,1379,-292),util.vector3(-490,1584,-292),util.vector3(-303,1676,-292)}}\nlocal step=1;local elapsed=0\nreturn {{engineHandlers={{onFrame=function(dt)\n elapsed=elapsed+dt;if elapsed<.1 then return end;elapsed=0\n assert(not Actor.isDead(self),'Player died on actual western path')\n print('PoisonApproach Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n local goblin=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x3b513))\n if goblin and goblin:isValid() then print('PoisonApproach goblin '..tostring(goblin.position)..' dead='..tostring(Actor.isDead(goblin))..' health='..Actor.stats.dynamic.health(goblin).current) end\n if step>#points then return end\n local delta=points[step]-self.position\n if math.sqrt(delta.x*delta.x+delta.y*delta.y)<40 then print('PoisonApproach waypoint '..step..' reached');step=step+1;return end\n local view=camera.viewportToWorldVector(util.vector2(.5,.5));local yaw=math.atan2(view.y*delta.x-view.x*delta.y,view.x*delta.x+view.y*delta.y)\n print(string.format('PoisonApproach waypoint %d aim x=%d y=%d',step,math.max(-100,math.min(100,math.floor(yaw*256+.5))),0))\n if math.abs(yaw)<.025 then print('PoisonApproach waypoint '..step..' facing') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "PoisonApproach Player",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "PoisonApproach waypoint 1 facing",
+      "after_start": true,
+      "maximum_iterations": 90,
+      "timeout_seconds": 90,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "PoisonApproach waypoint 1 aim",
+          "after_start": true,
+          "timeout_seconds": 20,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "PoisonApproach waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "PoisonApproach waypoint 1 reached",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "PoisonApproach waypoint 2 facing",
+      "after_start": true,
+      "maximum_iterations": 90,
+      "timeout_seconds": 90,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "PoisonApproach waypoint 2 aim",
+          "after_start": true,
+          "timeout_seconds": 20,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "PoisonApproach waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "PoisonApproach waypoint 2 reached",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "PoisonApproach waypoint 3 facing",
+      "after_start": true,
+      "maximum_iterations": 90,
+      "timeout_seconds": 90,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "PoisonApproach waypoint 3 aim",
+          "after_start": true,
+          "timeout_seconds": 20,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "PoisonApproach waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "PoisonApproach waypoint 3 reached",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "PoisonApproach waypoint 4 facing",
+      "after_start": true,
+      "maximum_iterations": 90,
+      "timeout_seconds": 90,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "PoisonApproach waypoint 4 aim",
+          "after_start": true,
+          "timeout_seconds": 20,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "PoisonApproach waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "PoisonApproach waypoint 4 reached",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "PoisonApproach waypoint 5 facing",
+      "after_start": true,
+      "maximum_iterations": 90,
+      "timeout_seconds": 90,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "PoisonApproach waypoint 5 aim",
+          "after_start": true,
+          "timeout_seconds": 20,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "PoisonApproach waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "PoisonApproach waypoint 5 reached",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "screenshot",
+      "name": "western-path-stop.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "PoisonApproach waypoint 5 reached",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "Dangling inventory script instance"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-tutorial-poison",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

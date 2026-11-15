@@ -34,6 +34,7 @@
 #include <components/esm4/loadlvsp.hpp>
 #include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/weaponenchantment.hpp>
+#include <components/esm4/weaponpoison.hpp>
 #include "../mwworld/worldimp.hpp"
 #include "../mwrender/animation.hpp"
 #include <components/sceneutil/keyframe.hpp>
@@ -1173,7 +1174,8 @@ namespace MWMechanics
                 if (!damage)
                     return std::nullopt;
                 result.mImmune = damage->mImmune;
-                result.mDamage = {damage->mHealth + damage->mEnchantmentHealth, 0};
+                result.mDamage = {damage->mHealth + damage->mEnchantmentHealth + damage->mPoisonHealth, 0};
+                deltas.mPoisonUse = damage->mPoisonUse;
                 observeEnchantment = !weapon->mEnchantment.isZeroOrUnset();
                 physicalHealth = damage->mHealth; enchantmentHealth = damage->mEnchantmentHealth;
                 if (damage->mEnchantmentChargeChange)
@@ -1340,6 +1342,13 @@ namespace MWMechanics
             if (trainedSkill >= 0) nativeWorld->useOblivionPlayerSkill(trainedSkill, 0);
             if (trainedBlock) nativeWorld->useOblivionPlayerSkill(15, 0);
             if (trainedArmor >= 0) nativeWorld->useOblivionPlayerSkill(trainedArmor, 0);
+            if (deltas.mPoisonUse)
+                Log(Debug::Info) << "TES4 weapon poison contact committed: poison="
+                    << deltas.mPoisonUse->mExpectedPoison.serialize()
+                    << " actor=" << actor.serialize() << " id=" << std::dec << actionId
+                    << " physical_health_damage=" << physicalHealth
+                    << " poison_health_damage=" << result.mDamage.mHealth - physicalHealth - enchantmentHealth
+                    << " total_health_damage=" << result.mDamage.mHealth;
             if (!observeEnchantment) return;
             const bool spent = !deltas.mEnchantmentChargeChanges.empty();
             Log(Debug::Verbose) << "M15 weapon enchantment contact: actor=" << actor.serialize()
@@ -2231,6 +2240,21 @@ namespace MWMechanics
             {block->mRemaining, 0, incoming, block->mFraction,
                 static_cast<std::uint8_t>(weapon->mData.type < 2 ? 14 : 16),
                 block->mRemaining > 0, block->mActiveBlock, block->mBareHandBlock, true}};
+        const auto& coating = item.getCellRef().getNativeWeaponPoison();
+        if (!coating.isNull())
+        {
+            const auto* poison = world.getStore().get<ESM4::Potion>().search(coating);
+            const auto* winner = world.getStore().getFormKeyIndex().winner(coating);
+            const auto poisonDamage = poison ? ESM4::instantWeaponPoisonDamage(*poison) : std::nullopt;
+            const float resistancePoison = victim == player ? service->getPlayerValue(67)
+                : service->getNonPlayerValue(victim, 67);
+            // The real tutorial course has no poison resistance or accepted block.
+            // Keep unresolved poison branches explicit instead of silently dropping the coating.
+            if (!poisonDamage || (winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
+                || resistancePoison != 0.f || block->mAccepted) return std::nullopt;
+            result.mPoisonHealth = *poisonDamage;
+            result.mPoisonUse = OblivionPhysicalPoisonUse{attacker, item, coating};
+        }
         result.mEnchantmentHealth = enchantment->mHealth;
         result.mEnchantmentChargeChange = enchantment->mCharge;
         result.mEnchantedSound = enchantment->mActive;

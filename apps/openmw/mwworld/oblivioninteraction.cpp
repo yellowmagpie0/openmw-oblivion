@@ -900,6 +900,8 @@ namespace MWWorld
             throw std::invalid_argument("pickup extras are unsupported by the native item definition");
         item.mCondition = condition.value_or(-1.f);
         item.mCharge = charge;
+        item.mWeaponPoison = ptr.getCellRef().getNativeWeaponPoison();
+        OblivionProfileServices::validateWeaponPoison(mStore, sourceId, item.mWeaponPoison);
         item.mRemainingUsageTime = definition->mMaxUsageTime < 0 ? -1
             : ptr.getClass().getRemainingUsageTime(ptr);
         const ESM::RefId owner = ptr.getCellRef().getOwner();

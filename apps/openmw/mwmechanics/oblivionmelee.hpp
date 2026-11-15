@@ -194,6 +194,8 @@ namespace MWMechanics
         OblivionOrdinaryHitArguments mHitArguments{};
         // Instant narrow weapon effect, owned by the same contact publication.
         float mEnchantmentHealth = 0;
+        float mPoisonHealth = 0;
+        std::optional<OblivionPhysicalPoisonUse> mPoisonUse{};
         std::optional<OblivionPhysicalEnchantmentChargeChange> mEnchantmentChargeChange{};
         bool mEnchantedSound = false;
         bool mImmune = false;

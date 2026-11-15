@@ -4,13 +4,19 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [original tutorial alchemy kit](TUTORIAL-ALCHEMY-HANDOFF.md).
-A separate genuine Natural Caverns first-goblin checkpoint now supports actual
-kit acquisition, original mortar OnAdd, one novice Damage Health poison and
-cold save/reload. Normal/SAN real courses and2292 engine tests per mode, plus618
-Python checks pass; [receipt](TUTORIAL-ALCHEMY-VERIFICATION.json) records scope.
-Higher skill/tools/recipes and weapon poison application remain open. The main
-cave continuation below is unchanged; do not merge independent inventories.
+Latest completed bounded chunk: [original Poison of Illness coating](TUTORIAL-POISON-HANDOFF.md).
+The separate Natural Caverns branch now supports the original crate bottle,
+Yes/No equipped-axe application, saved coating, air miss retention, original
+Goblin Skirmisher hit and cold spent/death ownership. Normal/SAN ownership
+courses,3302 component and2292 engine tests per mode, plus618 Python, pass;
+[receipt](TUTORIAL-POISON-VERIFICATION.json) records exact scope. The SAN hit/cold
+tail uses a genuine normal-input pre-combat checkpoint from that same branch;
+complete instrumented approach acceptance remains open.
+
+The prior [tutorial kit](TUTORIAL-ALCHEMY-HANDOFF.md) remains accepted. Its earned
+1pt/5s generated poison is retained separately and still needs timed application.
+Higher skill/tools/recipes and broader poison branches remain open. Preserve
+the independent inventories; the main cave continuation below is unchanged.
 
 Previous [scripted Club transfers](SCRIPTED-CLUB-DROP-VERIFICATION.json) remain
 accepted with their original ownership, native body and event/restart evidence.

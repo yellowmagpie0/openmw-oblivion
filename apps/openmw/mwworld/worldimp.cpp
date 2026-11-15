@@ -9,6 +9,7 @@
 #include <components/esm4/loadlvsp.hpp>
 #include <components/misc/strings/format.hpp>
 #include "worldimp.hpp"
+#include <components/esm4/weaponpoison.hpp>
 #include "oblivionnativeidle.hpp"
 #include <components/esm4/loadidle.hpp>
 #include <components/esm4/nativeclampframe.hpp>
@@ -1781,6 +1782,7 @@ namespace MWWorld
                 item.mExtraScale = itemPtr.getCellRef().getNativeItemScale();
                 item.mBoundSource = itemPtr.getCellRef().getNativeBoundSource();
                 item.mScriptOwner = itemPtr.getCellRef().getNativeScriptOwner();
+                item.mWeaponPoison = itemPtr.getCellRef().getNativeWeaponPoison();
                 item.mOwnershipRank = itemPtr.getCellRef().getNativeOwnershipRank();
                 item.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
                     mStore, inventoryResolver, itemPtr.getCellRef());
@@ -2243,6 +2245,7 @@ namespace MWWorld
                     const bool actorReference = type == ESM::REC_NPC_4 || type == ESM::REC_CREA4;
                     if (!actorReference)
                     {
+                        reference.mWeaponPoison = ptr.getCellRef().getNativeWeaponPoison();
                         reference.mItemCondition = ptr.getCellRef().getNativeItemCondition();
                         const float charge = ptr.getCellRef().getEnchantmentCharge();
                         if (charge >= 0.f) reference.mItemCharge = charge;
@@ -6726,6 +6729,53 @@ namespace MWWorld
             if (const auto* winner = mStore.getFormKeyIndex().winner(*identity);
                 winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
                 return false;
+        if (ESM4::instantWeaponPoisonDamage(*potion))
+        {
+            if (actor != getPlayerPtr() || !potion->mScriptId.isZeroOrUnset()
+                || !item.getCellRef().getNativeScriptOwner().isNull()) return false;
+            const auto poison = mStore.get<ESM4::Potion>().findFormKey(item.getCellRef().getRefId());
+            if (!poison || !poison->isContent()) return false;
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            const auto equipped = inventory.getSlot(InventoryStore::Slot_CarriedRight);
+            if (equipped == inventory.end()) return false;
+            const Ptr weapon = *equipped;
+            const auto nativeId = OblivionProfileServices::nativeItemId(mStore, weapon.getCellRef().getRefId());
+            const auto* form = nativeId.getIf<ESM::FormId>();
+            const auto* definition = form ? mStore.get<ESM4::Weapon>().search(*form) : nullptr;
+            if (!definition || definition->mData.type > 3 || weapon.getCellRef().getCount() != 1
+                || weapon.getCellRef().getNativeBoundSource()
+                || !weapon.getCellRef().getNativeWeaponPoison().isNull()) return false;
+            auto debit = inventory.prepareItemRemoval(item, 1);
+            auto weaponLease = inventory.prepareItemRemoval(weapon, 1);
+            if (debit->getCount() != 1 || !debit->isValid() || !weaponLease->isValid()) return false;
+            auto coating = *poison;
+            // Validate and allocate before the modal callback boundary and final publication.
+            auto staged = weapon.getCellRef();
+            staged.setNativeWeaponPoison(coating);
+            if (!mOblivionDynamicReferenceIdentity)
+                mOblivionDynamicReferenceIdentity = std::make_shared<const char>(0);
+            const std::weak_ptr<const char> identity = mOblivionDynamicReferenceIdentity;
+            const auto* stateOwner = mOblivionRuntimeState.get();
+            auto windows = MWBase::Environment::get().getWindowManager();
+            windows->interactiveMessageBox("Apply poison to " + std::string(weapon.getClass().getName(weapon)) + "?",
+                {"Yes", "No"}, true, 1);
+            const int choice = windows->readPressedButton();
+            if (identity.expired() || getPlayerPtr() != actor || mOblivionRuntimeState.get() != stateOwner)
+                return true;
+            if (choice != 0) return true;
+            const auto current = inventory.getSlot(InventoryStore::Slot_CarriedRight);
+            if (current == inventory.end() || *current != weapon
+                || !weaponLease->isValid() || !debit->isValid()) return true;
+            mWorldModel.registerPtr(item);
+            // Both changes precede observers, without allocation or callbacks.
+            weapon.getCellRef().swapNativeWeaponPoison(coating);
+            if (!debit->commit()) std::terminate();
+            Log(Debug::Info) << "TES4 weapon poison applied: poison=" << poison->serialize()
+                << " weapon=" << weapon.getCellRef().getRefId().toDebugString() << " count=1";
+            MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
+            debit->notify();
+            return true;
+        }
         if (consumeOblivionPotionAttributes(*this, item, actor)) return true;
         if (consumeOblivionPotionLight(*this, item, actor, *potion)) return true;
         const auto amounts = resolveOblivionPotionRestoration(mStore, *potion);
@@ -7333,7 +7383,8 @@ namespace MWWorld
             std::optional<CellRef> itemCellRef;
             const auto lightUsage = savedNativeLightUsageTime(mStore, reference);
             auto lightData = lightUsage ? MWClass::ESM4Light::prepareRemainingUsageTime(*lightUsage) : nullptr;
-            const bool hasItemExtras = reference.mItemCondition || reference.mItemCharge;
+            const bool hasItemExtras = reference.mItemCondition || reference.mItemCharge
+                || !reference.mWeaponPoison.isNull();
             const auto& itemClass = found->second.getClass();
             if (hasItemExtras && !itemClass.isItem(found->second))
                 throw std::invalid_argument("TES4 loose item extras require a native takeable reference");
@@ -7348,6 +7399,8 @@ namespace MWWorld
                 if (reference.mItemCondition)
                     itemCellRef->setNativeItemCondition(*reference.mItemCondition);
                 itemCellRef->setEnchantmentCharge(reference.mItemCharge.value_or(-1.f));
+                OblivionProfileServices::validateWeaponPoison(mStore, actualBaseId, reference.mWeaponPoison);
+                itemCellRef->setNativeWeaponPoison(reference.mWeaponPoison);
             }
 
             if (state.mVersion >= 41)
@@ -8294,6 +8347,12 @@ namespace MWWorld
                 if (!name || name->empty())
                     throw std::runtime_error("TES4 runtime-state animation group has the wrong type: "
                         + reference.mKey.serialize());
+            }
+            if (!reference.mWeaponPoison.isNull())
+            {
+                if (!baseId)
+                    throw std::invalid_argument("native coating weapon base cannot be resolved");
+                OblivionProfileServices::validateWeaponPoison(mStore, ESM::RefId(*baseId), reference.mWeaponPoison);
             }
             if (reference.mItemCondition || reference.mItemCharge)
             {

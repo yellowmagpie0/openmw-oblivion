@@ -570,7 +570,7 @@ namespace
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"
                                  "\"condition\":125,\"charge\":80,\"equipped_slots\":4,\"hotkey\":2,"
                                  "\"owner\":\"content:oblivion.esm:000007\","
-                                 "\"remaining_usage_time\":812.5,\"ownership_rank\":null,\"ownership_global\":\"null\",\"extra_scale\":null,\"bound_source\":null,\"script_owner\":null}]"),
+                                 "\"remaining_usage_time\":812.5,\"ownership_rank\":null,\"ownership_global\":\"null\",\"extra_scale\":null,\"bound_source\":null,\"script_owner\":null,\"weapon_poison\":null}]"),
             std::string::npos);
         EXPECT_NE(json.find("\"script_event_sequence\":91"), std::string::npos);
         EXPECT_NE(json.find("\"stage\":19"), std::string::npos);
@@ -3463,9 +3463,13 @@ TEST(ESM4RuntimeState, OwnershipExtras41HaveIndependentWireAndNullableSignedRank
         const auto bytes = state.serializeBinary();
         const auto found = std::search(bytes.begin(), bytes.end(), marker.begin(), marker.end());
         ASSERT_NE(found, bytes.end());
-        // Public wire: the custom string is followed by absent draw, condition
-        // and charge flags, then v41 rank flag/int32 and length-prefixed key.
-        const auto boundary = std::distance(bytes.begin(), found) + marker.size() + 3;
+        // Public wire: absent draw, condition and charge flags, then the
+        // v104 null coating key, followed by v41 rank/int32 and ownership key.
+        const auto coatingBoundary = std::distance(bytes.begin(), found) + marker.size() + 3;
+        const std::array<std::uint8_t, 8> nullCoating{4, 0, 0, 0, 'n', 'u', 'l', 'l'};
+        ASSERT_LE(coatingBoundary + nullCoating.size(), bytes.size());
+        EXPECT_TRUE(std::equal(nullCoating.begin(), nullCoating.end(), bytes.begin() + coatingBoundary));
+        const auto boundary = coatingBoundary + nullCoating.size();
         std::vector<std::uint8_t> expected{static_cast<std::uint8_t>(rank.has_value())};
         const auto put32 = [&](std::uint32_t value) {
             for (unsigned i = 0; i < 4; ++i)
@@ -6374,6 +6378,7 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     // Independent public wire recipe, also checked by the Python inspector.
     std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
     if (state.mVersion >= 97) ownerTail.insert(ownerTail.end(), {0, 0}); // Absent bound source and inventory script identity.
+    if (state.mVersion >= 104) ownerTail.insert(ownerTail.end(), {4, 0, 0, 0, 'n', 'u', 'l', 'l'}); // Absent weapon coating.
     const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0) + (state.mVersion >= 91 ? 4 : 0) + (state.mVersion >= 96 ? 12 : 0);
     ASSERT_GE(wire.size(),ownerTail.size() + contactSuffix);
     EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin() + contactSuffix));
@@ -6971,4 +6976,32 @@ TEST(ESM4RuntimeState, SkillBook101PersistsBaseHistoryAndRejectsLegacyOrDynamicO
     state.mVersion = 101;
     state.mPlayer.mAwardedSkillBooks.insert(ESM::FormKey::dynamic("book", 1));
     EXPECT_ANY_THROW(state.serializeBinary());
+}
+
+TEST(ESM4RuntimeState, WeaponPoison104PersistsInstanceAndRejectsLegacyOrStackLoss)
+{
+    auto state = makeState();
+    const auto poison = ESM::FormKey::content("oblivion.esm", 0x8dc73);
+    state.mPlayer.mInventory.front().mWeaponPoison = poison;
+    state.mReferences.front().mWeaponPoison = poison;
+    const auto wire = state.serializeBinary();
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(loaded.mPlayer.mInventory.front().mWeaponPoison, poison);
+    EXPECT_EQ(loaded.mReferences.front().mWeaponPoison, poison);
+    EXPECT_EQ(loaded.serializeBinary(), wire);
+    auto bad = state;
+    bad.mVersion = 103;
+    EXPECT_ANY_THROW(bad.serializeBinary());
+    bad = state;
+    bad.mPlayer.mInventory.front().mCount = 2;
+    EXPECT_ANY_THROW(bad.serializeBinary());
+    bad = state;
+    bad.mPlayer.mInventory.front().mWeaponPoison = ESM::FormKey::dynamic("invalid-poison", 1);
+    EXPECT_ANY_THROW(bad.serializeBinary());
+    state.mPlayer.mInventory.front().mWeaponPoison = {};
+    state.mReferences.front().mWeaponPoison = {};
+    state.mVersion = 103;
+    const auto legacy = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(legacy.mPlayer.mInventory.front().mWeaponPoison.isNull());
+    EXPECT_TRUE(legacy.mReferences.front().mWeaponPoison.isNull());
 }

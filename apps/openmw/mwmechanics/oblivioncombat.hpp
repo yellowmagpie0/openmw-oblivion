@@ -301,6 +301,13 @@ namespace MWMechanics
 
     // Separate from durability: -1 means the instance uses its WEAP maximum.
     // Prepared charge writes share contact consumption and equipment leases.
+    struct OblivionPhysicalPoisonUse
+    {
+        MWWorld::Ptr mOwner;
+        MWWorld::Ptr mItem;
+        ESM::FormKey mExpectedPoison;
+    };
+
     struct OblivionPhysicalEnchantmentChargeChange
     {
         MWWorld::Ptr mOwner;
@@ -402,6 +409,7 @@ namespace MWMechanics
         // Only the committed Backward prefix may originate this saved request.
         std::optional<ESM4::RuntimePhysicalHit> mVictimPhysicalHit{};
         std::vector<OblivionPhysicalEnchantmentChargeChange> mEnchantmentChargeChanges{};
+        std::optional<OblivionPhysicalPoisonUse> mPoisonUse{};
         // A selected carrier's Disease1 grant joins the same once-only contact.
         // This is constructor input; the receiving actor saves applied ownership.
         std::shared_ptr<const ESM4::PassiveAbilityInput> mVictimDisease{};

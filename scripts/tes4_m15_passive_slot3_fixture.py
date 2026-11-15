@@ -67,6 +67,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     runtime._upgrade_process_alerts(state)
     runtime._upgrade_bound_ownership(state)
     runtime._upgrade_inventory_scripts(state)
+    runtime._upgrade_reference_item_extras(state)
     runtime._upgrade_friend_hit_counters(state)
     runtime._upgrade_combat_controllers(state)
     runtime._upgrade_actor_knockback(state)

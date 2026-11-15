@@ -841,6 +841,7 @@ namespace ESM4
                         writer.integer<std::uint8_t>(!item.mScriptOwner.isNull());
                         if (!item.mScriptOwner.isNull()) writeKey(writer, item.mScriptOwner);
                     }
+                    if (version >= 104) writeKey(writer, item.mWeaponPoison);
                 }
             }
         }
@@ -883,6 +884,7 @@ namespace ESM4
                         if (present > 1) throw std::runtime_error("Invalid inventory script identity presence");
                         if (present) item.mScriptOwner = readKey(reader);
                     }
+                    if (version >= 104) item.mWeaponPoison = readKey(reader);
                 }
                 result.push_back(std::move(item));
             }
@@ -932,6 +934,12 @@ namespace ESM4
                         stream << ",\"script_owner\":";
                         if (item.mScriptOwner.isNull()) stream << "null";
                         else stream << '"' << escapeJson(item.mScriptOwner.serialize()) << '"';
+                    }
+                    if (version >= 104)
+                    {
+                        stream << ",\"weapon_poison\":";
+                        if (item.mWeaponPoison.isNull()) stream << "null";
+                        else stream << '"' << escapeJson(item.mWeaponPoison.serialize()) << '"';
                     }
                 }
                 stream << '}';
@@ -2798,6 +2806,10 @@ namespace ESM4
             for (const RuntimeInventoryItem& item : inventory)
             {
                 validateOwnershipExtras(item.mOwnershipRank, item.mOwnershipGlobal, mVersion);
+                if (!item.mWeaponPoison.isNull() && (mVersion < 104 || !item.mWeaponPoison.isContent()
+                    || ESM::FormKey::deserialize(item.mWeaponPoison.serialize()) != item.mWeaponPoison
+                    || item.mCount != 1 || item.mBoundSource))
+                    throw std::runtime_error("Invalid native weapon coating");
                 if (!item.mScriptOwner.isNull())
                 {
                     const auto& key = item.mScriptOwner;
@@ -2912,10 +2924,13 @@ namespace ESM4
                 throw std::runtime_error("Duplicate TES4 runtime-state reference: " + reference.mKey.serialize());
             if (reference.mOwner && reference.mOwner->isNull())
                 throw std::runtime_error("TES4 runtime-state reference has a null owner");
+            if (!reference.mWeaponPoison.isNull() && (mVersion < 104 || !reference.mWeaponPoison.isContent()
+                || ESM::FormKey::deserialize(reference.mWeaponPoison.serialize()) != reference.mWeaponPoison))
+                throw std::runtime_error("Invalid loose weapon coating");
             for (const auto extra : {reference.mItemCondition, reference.mItemCharge})
                 if (extra && (mVersion < 40 || !std::isfinite(*extra) || *extra < 0))
                     throw std::runtime_error("Invalid TES4 loose item extra or runtime-state version");
-            if ((reference.mItemCondition || reference.mItemCharge)
+            if ((reference.mItemCondition || reference.mItemCharge || !reference.mWeaponPoison.isNull())
                 && (reference.mActorDrawState || nativeActors.contains(reference.mKey)
                     || lives.contains(reference.mKey) || reference.mKey == mPlayer.mReference))
                 throw std::runtime_error("TES4 actor reference cannot own loose item extras");
@@ -3252,6 +3267,7 @@ namespace ESM4
                     writer.integer<std::uint8_t>(extra.has_value() ? 1 : 0);
                     if (extra) writer.floating(*extra);
                 }
+            if (mVersion >= 104) writeKey(writer, reference.mWeaponPoison);
             if (mVersion >= 41)
                 writeOwnershipExtras(writer, reference.mOwnershipRank, reference.mOwnershipGlobal);
             if (mVersion >= 47)
@@ -4440,6 +4456,7 @@ namespace ESM4
                         throw std::runtime_error("Invalid TES4 loose item extra flag");
                     if (present) *extra = reader.float32();
                 }
+            if (result.mVersion >= 104) reference.mWeaponPoison = readKey(reader);
             if (result.mVersion >= 41)
                 readOwnershipExtras(reader, reference.mOwnershipRank, reference.mOwnershipGlobal);
             if (result.mVersion >= 47)
@@ -6030,6 +6047,12 @@ namespace ESM4
                     else stream << std::setprecision(17) << *reference.mItemCharge;
                 }
                 else stream << "null";
+            }
+            if (mVersion >= 104)
+            {
+                stream << ",\"weapon_poison\":";
+                if (reference.mWeaponPoison.isNull()) stream << "null";
+                else stream << '"' << escapeJson(reference.mWeaponPoison.serialize()) << '"';
             }
             if (mVersion >= 41)
                 writeJsonOwnershipExtras(stream, reference.mOwnershipRank, reference.mOwnershipGlobal);

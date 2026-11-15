@@ -1,0 +1,37 @@
+{
+  "content": {
+    "potion": "content:oblivion.esm:08dc73",
+    "placed": "content:oblivion.esm:159854",
+    "cell": "content:oblivion.esm:0380bd",
+    "weapon": "content:oblivion.esm:090613",
+    "victim": "content:oblivion.esm:03b513"
+  },
+  "independent_oracles": [
+    "original-01/observations.json",
+    "original-02/observations.json"
+  ],
+  "bounded_profile": "One unscripted instant DGHE10 effect, range/area/duration0 actor8; ordinary melee against zero poison resistance without accepted block; no broad poison/economy/timed-crafted acceptance.",
+  "acceptance": [
+    "Genuine bottle pickup from original crate preserves tutorial kit/generated poison/quest state.",
+    "Normal UI prompt names equipped axe. No preserves bottle and weapon and survives cold reload.",
+    "Yes debits exactly1 original bottle and adds exact per-instance coating; preserves condition, charge, scale, ownership and script identity.",
+    "Cold process restores coating and inventory, with no second debit.",
+    "Actual normal-input air miss retains coating and this survives save/restart.",
+    "Actual first contact adds10 poison damage in same publication as physical damage, clears coating, and records any death once with Player ownership.",
+    "Cold process retains spent coating and death ownership with no repeated damage/debit.",
+    "Focused then integration normal/ASAN+UBSAN checks and codec compatibility; no full sewer-course completion claim."
+  ],
+  "adjacent": [
+    "Original potion UI value22 vs fork37 is an economy/autocalculation discrepancy outside application chunk.",
+    "Generated DamageHealth1pt5s remains an unsupported timed application profile.",
+    "Resistance/block/immunity and additional poison families remain open.",
+    "No separate normal-input coated-weapon drop/pickup course is claimed by this application/contact chunk."
+  ],
+  "status": "Bounded acceptance contract; verification receipt records completed layers.",
+  "state": {
+    "version": 104,
+    "inventory_field": "weapon_poison: canonical content FormKey or null; count1; independent of condition, charge, crime owner, script owner and bound source",
+    "loose_reference_field": "weapon_poison: same canonical identity. Existing native transfer adapters carry it; this chunk directly exercises inventory save/restart, with component wire coverage of loose-reference persistence.",
+    "legacy": "Versions<=103 default to no coating; old-envelope writes reject nonempty coating instead of silently dropping it."
+  }
+}

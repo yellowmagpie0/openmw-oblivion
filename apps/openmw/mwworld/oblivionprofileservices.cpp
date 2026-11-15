@@ -1,4 +1,6 @@
 #include "oblivionprofileservices.hpp"
+#include <components/esm4/weaponpoison.hpp>
+#include <components/esm4/loadweap.hpp>
 
 #include <algorithm>
 #include <array>
@@ -766,6 +768,21 @@ namespace MWWorld
         return key;
     }
 
+    void OblivionProfileServices::validateWeaponPoison(const ESMStore& store,
+        const ESM::RefId& item, const ESM::FormKey& poison)
+    {
+        if (poison.isNull()) return;
+        const auto nativeId = nativeItemId(store, item);
+        const auto* form = nativeId.getIf<ESM::FormId>();
+        const auto* weapon = form ? store.get<ESM4::Weapon>().search(*form) : nullptr;
+        const auto* potion = store.get<ESM4::Potion>().search(poison);
+        const auto* winner = store.getFormKeyIndex().winner(poison);
+        if (!weapon || weapon->mData.type > 3 || (weapon->mFlags & ESM4::Rec_Deleted)
+            || !potion || !ESM4::instantWeaponPoisonDamage(*potion)
+            || (winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH)))
+            throw std::invalid_argument("native coating requires a supported winning weapon and poison");
+    }
+
     std::vector<PreparedOblivionInventoryItem> OblivionProfileServices::prepareActorInventory(
         const ESMStore& store, const ESM::FormKeyResolver& resolver,
         const std::vector<ESM4::RuntimeInventoryItem>& items, const ESMStore* incoming)
@@ -808,6 +825,8 @@ namespace MWWorld
             ptr.getCellRef().setNativeItemScale(item.mExtraScale);
             ptr.getCellRef().setNativeBoundSource(item.mBoundSource);
             ptr.getCellRef().setNativeScriptOwner(item.mScriptOwner);
+            validateWeaponPoison(store, ptr.getCellRef().getRefId(), item.mWeaponPoison);
+            ptr.getCellRef().setNativeWeaponPoison(item.mWeaponPoison);
             std::optional<int> slot;
             if (item.mEquippedSlots != 0)
             {

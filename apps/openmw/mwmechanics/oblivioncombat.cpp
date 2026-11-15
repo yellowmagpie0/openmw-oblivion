@@ -2682,6 +2682,7 @@ namespace MWMechanics
             float mRemainder;
             std::uint32_t mEnchantment;
             std::optional<float> mExtraScale;
+            ESM::FormKey mPoison{};
         };
         struct Participant
         {
@@ -2725,7 +2726,8 @@ namespace MWMechanics
                                 throw std::invalid_argument("Invalid equipped ExtraScale snapshot");
                             mSlots[slot] = Gear{*item, item->getRefData().prepareRuntimeIdentity(), ref.getRefId(),
                                 ref.getNativeItemCondition(), ref.getCount(), ref.getCharge(), ref.getChargeIntRemainder(),
-                                std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()), ref.getNativeItemScale()};
+                                std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()), ref.getNativeItemScale(),
+                                ref.getNativeWeaponPoison()};
                         }
                 }
                 mPosition = actor.getRefData().getPosition();
@@ -2785,7 +2787,8 @@ namespace MWMechanics
                         if (!expected) continue;
                         if (expected->mIdentity.expired() || *item != expected->mItem) return false;
                         const auto& ref = item->getCellRef();
-                        if (ref.getRefId() != expected->mBase || ref.getCount() != expected->mCount
+                        if (ref.getNativeWeaponPoison() != expected->mPoison
+                            || ref.getRefId() != expected->mBase || ref.getCount() != expected->mCount
                             || ref.getNativeItemCondition() != expected->mCondition || ref.getCharge() != expected->mCharge
                             || !ref.hasNativeItemScale(expected->mExtraScale)
                             || ref.getChargeIntRemainder() != expected->mRemainder
@@ -2802,6 +2805,8 @@ namespace MWMechanics
             bool mApply;
             OblivionWeaponBreakDisposition mBreakDisposition;
             bool mApplyEnchantmentCharge = false;
+            bool mApplyPoison = false;
+            ESM::FormKey mPoison{};
         };
         OblivionCombatService* mOwner = nullptr;
         std::weak_ptr<const char> mIdentity;
@@ -2929,7 +2934,7 @@ namespace MWMechanics
         if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0
             || deltas.mVictimBlockFatigue != 0 || !deltas.mConditionChanges.empty()
             || deltas.mVictimDisease
-            || !deltas.mEnchantmentChargeChanges.empty()
+            || deltas.mPoisonUse || !deltas.mEnchantmentChargeChanges.empty()
             || (deltas.mKnockback && mImpl->mKnockback) || deltas.mOrdinaryHitArguments
             || deltas.mVictimPhysicalHit)
             throw std::invalid_argument("native contact continuation cannot repeat damage, wear or knockback");
@@ -3059,7 +3064,7 @@ namespace MWMechanics
             if (!isMeleeContactPending(id, attackerKey) || getProcessAction(attackerKey) != 2
                 || deltas.mAttackerFatigue != 0
                 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0
-                || !deltas.mConditionChanges.empty() || !deltas.mEnchantmentChargeChanges.empty()
+                || !deltas.mConditionChanges.empty() || deltas.mPoisonUse || !deltas.mEnchantmentChargeChanges.empty()
                 || deltas.mKnockback || deltas.mAttackerReaction
                 || deltas.mVictimCounterRequested || deltas.mVictimCounter
                 || std::any_of(deltas.mDisarms.begin(), deltas.mDisarms.end(),
@@ -3379,6 +3384,31 @@ namespace MWMechanics
             }
             found->mReference.setEnchantmentCharge(request.mCharge);
             found->mApplyEnchantmentCharge = true;
+        }
+        if (deltas.mPoisonUse)
+        {
+            const auto& request = *deltas.mPoisonUse;
+            if (victim.isEmpty() || request.mOwner != attacker || request.mItem.isEmpty()
+                || request.mItem.getType() != ESM::REC_WEAP
+                || !request.mItem.getCellRef().getRefId().getIf<ESM::FormId>()
+                || request.mExpectedPoison.isNull()
+                || !request.mExpectedPoison.isContent())
+                throw std::invalid_argument("invalid native poison contact request");
+            auto& inventory = attacker.getClass().getInventoryStore(attacker);
+            const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            if (equipped == inventory.end() || *equipped != request.mItem
+                || request.mItem.getContainerStore() != &inventory || request.mItem.getCellRef().getCount() != 1
+                || request.mItem.getCellRef().getNativeWeaponPoison() != request.mExpectedPoison)
+                throw std::invalid_argument("stale native poison contact request");
+            auto found = std::find_if(conditions.begin(), conditions.end(),
+                [&](const auto& prepared) { return prepared.mItem == request.mItem; });
+            if (found == conditions.end())
+            {
+                conditions.push_back({request.mItem, request.mItem.getCellRef(), false,
+                    OblivionWeaponBreakDisposition::None});
+                found = std::prev(conditions.end());
+            }
+            found->mApplyPoison = true;
         }
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> reactionStates;
         std::map<ESM::FormKey, float> reactionClocks;
@@ -4134,6 +4164,8 @@ namespace MWMechanics
         }
         for (auto& condition : data.mConditions)
         {
+            if (condition.mApplyPoison)
+                condition.mItem.getCellRef().swapNativeWeaponPoison(condition.mPoison);
             if (condition.mApply) condition.mItem.getCellRef().swapNativeItemCondition(condition.mReference);
             if (condition.mApplyEnchantmentCharge)
                 condition.mItem.getCellRef().swapNativeEnchantmentCharge(condition.mReference);

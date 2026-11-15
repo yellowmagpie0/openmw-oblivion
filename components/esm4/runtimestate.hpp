@@ -78,7 +78,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 103;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 104;
 
     struct RuntimeContentIdentity
     {
@@ -120,6 +120,8 @@ namespace ESM4
         // v97: reference identity of this scripted inventory instance. It is
         // independent of the item base, crime owner and containing actor.
         ESM::FormKey mScriptOwner;
+        // v104: single-use coating, separate from enchantment charge and crime owner.
+        ESM::FormKey mWeaponPoison;
 
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };
@@ -146,6 +148,7 @@ namespace ESM4
         // select the winning base defaults; zero remains broken/discharged.
         std::optional<float> mItemCondition;
         std::optional<float> mItemCharge;
+        ESM::FormKey mWeaponPoison; // v104: loose weapon coating.
         // v41: absent rank is distinct from every signed explicit rank.
         std::optional<std::int32_t> mOwnershipRank = std::nullopt;
         ESM::FormKey mOwnershipGlobal = {};

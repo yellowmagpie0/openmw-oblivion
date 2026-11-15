@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "name": "Original tutorial crate Poison of Illness: genuine acquisition baseline",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal Actor=types.Actor\nlocal nearby=require('openmw.nearby')\nlocal camera=require('openmw.camera')\nlocal util=require('openmw.util')\nlocal elapsed=-1\nreturn {{engineHandlers={{onFrame=function(dt)\n elapsed=elapsed+dt;if elapsed<.2 then return end;elapsed=0\n assert(not Actor.isDead(self),'Player died at original crate poison')\n local stock=Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x8dc73))\n print('TutorialPoison stock='..stock..' health='..Actor.stats.dynamic.health(self).current)\n for _,o in pairs(Actor.getEquipment(self)) do if o.recordId==core.getFormId('Oblivion.esm',0x90613) then print('TutorialPoison Rusty Axe equipped') end end\n if stock>0 then return end\n local o=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x159854));assert(o and o:isValid(),'Original crate poison missing')\n local box=o:getBoundingBox();local origin=camera.getPosition();local aim=nil\n for _,x in ipairs({{0,-.6,.6}}) do for _,y in ipairs({{0,-.6,.6}}) do for _,z in ipairs({{0,-.6,.6}}) do\n local p=box.center+util.vector3(x*math.max(16,box.halfSize.x),y*math.max(16,box.halfSize.y),z*math.max(16,box.halfSize.z))\n local hit=nearby.castRenderingRay(origin,p,{{ignore=self}})\n if hit.hitObject==o then aim=hit.hitPos;break end\n end;if aim then break end end;if aim then break end end\n local p=camera.getViewTransform():apply(aim or box.center)\n local ax=math.atan2(p.x,-p.z);local ay=-math.atan2(p.y,math.sqrt(p.x*p.x+p.z*p.z))\n local function units(v) return math.max(-100,math.min(100,math.floor(v*256+.5))) end\n print(string.format('TutorialPoison aim x=%d y=%d',units(ax),units(ay)))\n local v=camera.viewportToWorldVector(util.vector2(.5,.5));local hit=nearby.castRenderingRay(origin,origin+v*2000,{{ignore=self}})\n if hit.hitObject==o and (hit.hitPos-origin):length()<140 then print('TutorialPoison focused') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "TutorialPoison stock=0 health=80",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TutorialPoison focused",
+      "after_start": true,
+      "maximum_iterations": 60,
+      "timeout_seconds": 90,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "TutorialPoison aim",
+          "after_start": true,
+          "timeout_seconds": 20,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TutorialPoison aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "original-poison-focused.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "space",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "TutorialPoison stock=1 health=80",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "Tab",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "original-poison-inventory.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "TutorialPoison stock=1 health=80",
+    "TutorialPoison Rusty Axe equipped",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "Dangling inventory script instance"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-tutorial-poison",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}
