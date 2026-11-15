@@ -705,14 +705,14 @@ namespace MWWorld
             constexpr bool isIngredient = std::is_same_v<Record, ESM4::Ingredient>;
             constexpr bool isApparatus = std::is_same_v<Record, ESM4::Apparatus>;
             constexpr bool isBook = std::is_same_v<Record, ESM4::Book>;
-            constexpr bool isStackable = isAmmunition || isLight || std::is_same_v<Record, ESM4::MiscItem>;
+            constexpr bool isStackable = isAmmunition || isLight || isBook || std::is_same_v<Record, ESM4::MiscItem>;
             constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP
                 : isClothing ? ESM4::REC_CLOT : isAmmunition ? ESM4::REC_AMMO
                 : isKey ? ESM4::REC_KEYM : isLight ? ESM4::REC_LIGH
                 : isArmor ? ESM4::REC_ARMO : isIngredient ? ESM4::REC_INGR
                 : isApparatus ? ESM4::REC_APPA : isBook ? ESM4::REC_BOOK : ESM4::REC_MISC;
             if (!baseDefinition) return std::nullopt;
-            if constexpr (isIngredient || isApparatus || isBook)
+            if constexpr (isIngredient || isApparatus)
                 if (count != 1 || item.getCellRef().getCount() != 1) return std::nullopt;
             if constexpr (isApparatus)
                 if (baseDefinition->mData.type > 3 || !std::isfinite(baseDefinition->mData.quality)
@@ -720,8 +720,9 @@ namespace MWWorld
                     || baseDefinition->mData.weight < 0) return std::nullopt;
             // Start with ordinary takeable books; scrolls and skill/scripted
             // books retain their existing path until their own real courses.
+            // Transfer one physical book while retaining any sibling copies.
             if constexpr (isBook)
-                if (baseDefinition->mData.flags != 0 || baseDefinition->mData.bookSkill != -1
+                if (count != 1 || baseDefinition->mData.flags != 0 || baseDefinition->mData.bookSkill != -1
                     || !std::isfinite(baseDefinition->mData.weight) || baseDefinition->mData.weight < 0)
                     return std::nullopt;
             const auto lightProfile = [&] {

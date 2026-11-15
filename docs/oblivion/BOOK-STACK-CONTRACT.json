@@ -1,0 +1,33 @@
+{
+  "target": "M13 one plain native book split from a genuine count2 inventory",
+  "parent_commit": "c8cd395f9e",
+  "source": {
+    "path": "build/oblivion-compat/book-stack/normal-second-fundaments-acquisition-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "11c52e64e38f0ebe7a79cffe0e9ad7e98b8764ed09449edbcfaf08d7067da7ca",
+    "books_read": 14,
+    "allocator": 15
+  },
+  "content": {
+    "base": "BOOK024567",
+    "second_original": "content:oblivion.esm:06efb4",
+    "first_original": "content:oblivion.esm:06efb3",
+    "title": "Fundaments of Alchemy",
+    "flags": 0,
+    "book_skill": -1,
+    "value": 5,
+    "weight": 1,
+    "model": "meshes/clutter/books/quarto03.nif"
+  },
+  "acceptance": [
+    "Genuine second-copy read/Take raises count1->2 and BooksRead13->14, retiring06efb4 and preserving previously retired06efb3; no grant or teleport.",
+    "Ordinary one-unit drop2->1 publishes native key15/count1/next16 with original body4/root18; sibling metadata retained.",
+    "Cold world restores exact saved physical ownership and inventory1; ordinary read/Take returns total2, counts14->15 and retires key15/body.",
+    "Cold inventory keeps2/count15 without replay. All other inventory including Song1/Charter1, skills/XP/award history, scripts/life/deaths/quests/combat and old retired keys remain intact.",
+    "Normal/SAN actual courses and focused/full engine/Python gates with exact prior2292 inventory."
+  ],
+  "profile": "One ordinary takeable unenchanted/scriptless BOOK from positive source count; existing one-body singleton physical admission. Whole-stack request remains prior fallback. No geometry/parser/schema change.",
+  "limits": [
+    "No whole-stack, skill/scroll/scripted/enchanted book drop acceptance.",
+    "No full M13/M16/M18 or TES4 MCP authoring support."
+  ]
+}
