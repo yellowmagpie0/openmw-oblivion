@@ -4,10 +4,10 @@
 
 Target: responsive tutorial play using the player's existing saved game, with
 working armor UI and native skill progression. The bounded routing/reference
-lookup performance chunk is verified. The saved game remains slow; this is not
-a completed performance course. Next: repair the recurring armor-interface and
-legacy skill-award errors, then address the remaining saved-world effect scans
-and measured CPU work. Broader tutorial gates remain in
+lookup performance chunk and armor UI repair are verified. The saved game
+remains slow; this is not a completed performance course. Next: finish the
+native skill-award repair, then address remaining saved-world effect scans and
+measured CPU work. Broader tutorial gates remain in
 [the tutorial handoff](TUTORIAL-PLAYABLE-CHUNK-HANDOFF.md).
 
 ## Performance chunk
@@ -78,3 +78,25 @@ binding refresh. No normal-input UI or screenshot acceptance is claimed.
 No Windows sanitizer configuration was available for this run. This document
 was written after the listed tests; the verified C++ sources are unchanged.
 Earlier Windows provenance is linked in [the performance handoff](../WINDOWS-PERFORMANCE.md).
+
+## Armor UI repair
+
+Native TES4 armor classification and item armor-rating UI queries now use the
+winning native record before consulting Morrowind Lua interfaces. The legacy
+Lua customization path remains available to ordinary Morrowind armor.
+
+The regression attaches a real Lua Combat interface that misclassifies the
+native item, checks native heavy classification/condition-aware rating and the
+actual tooltip text, and verifies that a legacy item still uses the override.
+It covers shifted content indices and explicit incoming-store queries.
+`live-fix-errors-before.log` reproduces the wrong classification before repair.
+
+Both error fixes together pass **19 focused tests**, then the complete engine
+inventory **2,299/2,299**, exact inventories with no failures/skips:
+`checks-2c5c231eeeba4d169f4b3627ab7c1e90` / `live-fix-errors-after-focused-02.log`
+and `checks-1d7b8e0921be4d23addad7916c9b8f46` / `live-fix-errors-full.log`.
+Combined tested fingerprint at HEAD `b9d69469098f3cd5d16c8c7eecb4410396dc622e`:
+`242fda4e09bc0ef4a11b8ffee36658c966e1b809349aa20eba4fde010668e5c7`.
+Component evidence above is reused; those component sources are unchanged.
+The armor and skill changes are committed separately after this verification.
+This section was added afterward; the verified C++ sources are unchanged.

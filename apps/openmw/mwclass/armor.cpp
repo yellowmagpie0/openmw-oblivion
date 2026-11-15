@@ -121,6 +121,10 @@ namespace MWClass
 
     ESM::RefId Armor::getEquipmentSkill(const MWWorld::ConstPtr& ptr, bool useLuaInterfaceIfAvailable) const
     {
+        const auto& store = *MWBase::Environment::get().getESMStore();
+        if (const auto* native = store.get<ESM4::Armor>().search(ptr.get<ESM::Armor>()->mBase->mId);
+            native && (native->mGeneralFlags & 0xf000) == ESM4::Armor::TYPE_TES4)
+            return getEquipmentSkill(ptr, &store);
         // We don't actually need an actor as such. We just need an object that has
         // lua scripts and the Combat interface.
         if (useLuaInterfaceIfAvailable)
@@ -370,6 +374,10 @@ namespace MWClass
     float Armor::getSkillAdjustedArmorRating(
         const MWWorld::ConstPtr& ptr, const MWWorld::Ptr& actor, bool useLuaInterfaceIfAvailable) const
     {
+        const auto& store = *MWBase::Environment::get().getESMStore();
+        if (const auto* native = store.get<ESM4::Armor>().search(ptr.get<ESM::Armor>()->mBase->mId);
+            native && (native->mGeneralFlags & 0xf000) == ESM4::Armor::TYPE_TES4)
+            return getSkillAdjustedArmorRating(ptr, actor, &store);
         if (useLuaInterfaceIfAvailable && actor == MWMechanics::getPlayer())
         {
             // In this interface call, both objects are effectively const, so stripping Const from the ConstPtr is fine.

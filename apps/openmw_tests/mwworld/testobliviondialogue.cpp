@@ -1,3 +1,5 @@
+#include "apps/openmw/mwlua/localscripts.hpp"
+#include "apps/openmw/mwgui/tooltips.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
 #include "apps/openmw/mwmechanics/oblivionplayerhostility.hpp"
 #include <components/esm4/loadbsgn.hpp>
@@ -3745,9 +3747,15 @@ TEST(OblivionTutorialAction, PotionUseRestoresNativeDamageAndConsumesExactlyOne)
 
 TEST(OblivionTutorialAction, ArmorFacadeUsesNativeClassAndConditionWithoutMorrowindSettings)
 {
+    struct TooltipWindows : TestingOpenMW::InventoryWindowManager
+    {
+        bool getFullHelp() const override { return false; }
+    };
     for (bool shifted : {false, true})
     {
+        TooltipWindows windows;
         SwitchFixture f(shifted);
+        f.mFixture.mEnvironment.setWindowManager(windows);
         auto& store = f.mFixture.mWorld.getStore();
         ASSERT_EQ(store.get<ESM::GameSetting>().search("iCuirassWeight"), nullptr);
         ASSERT_EQ(store.get<ESM::GameSetting>().search("iBaseArmorSkill"), nullptr);
@@ -3785,6 +3793,44 @@ TEST(OblivionTutorialAction, ArmorFacadeUsesNativeClassAndConditionWithoutMorrow
         incoming.getWritable<ESM4::Armor>().insertStatic(native, key(0xc10));
         EXPECT_EQ(cls.getEquipmentSkill(item, &incoming), ESM::Skill::LightArmor);
         EXPECT_EQ(cls.getEquipmentSkill(item, &store), ESM::Skill::HeavyArmor);
+
+        // A real player Combat interface models the Morrowind override that
+        // was being called by native item tooltips. Native class/rating must
+        // come from the winning TES4 record even while this interface exists.
+        TestingOpenMW::VFSTestFile script(R"(
+return { interfaceName = 'Combat', interface = {
+    getArmorSkill = function() return 'mediumarmor' end,
+    getSkillAdjustedArmorRating = function() return 999 end,
+} }
+)");
+        constexpr VFS::Path::NormalizedView path("armor-interface.lua");
+        auto vfs = TestingOpenMW::createTestVFS({{path, &script}});
+        LuaUtil::ScriptsConfiguration configuration;
+        ESM::LuaScriptsCfg scriptsConfig;
+        LuaUtil::parseOMWScripts(scriptsConfig, "CUSTOM: armor-interface.lua\n");
+        configuration.init(std::move(scriptsConfig), false);
+        LuaUtil::LuaState lua(vfs.get(), &configuration);
+        const auto player = f.mFixture.mWorld.getPlayerPtr();
+        auto scripts = std::make_shared<MWLua::LocalScripts>(&lua, MWLua::LObject(player));
+        ASSERT_TRUE(scripts->addCustomScript(*configuration.findId(path)));
+        struct ResetPlayerScripts
+        {
+            MWWorld::Ptr mPlayer;
+            ~ResetPlayerScripts() { mPlayer.getRefData().setLuaScripts({}); }
+        } resetScripts{player};
+        player.getRefData().setLuaScripts(std::move(scripts));
+        EXPECT_EQ(cls.getEquipmentSkill(item, true), ESM::Skill::HeavyArmor);
+        item.getCellRef().setNativeItemCondition(150.f);
+        EXPECT_NEAR(cls.getSkillAdjustedArmorRating(item, f.mActor, true), full * .5f, .001f);
+        const float playerRating = cls.getSkillAdjustedArmorRating(item, player, &store);
+        EXPECT_NEAR(cls.getSkillAdjustedArmorRating(item, player, true), playerRating, .001f);
+        EXPECT_NE(cls.getToolTipInfo(item, 1).text.find("#{sHeavy}"), std::string::npos);
+        // The Morrowind hook still applies to an ordinary legacy item.
+        auto legacy = shared;
+        legacy.mId = ESM::RefId::stringRefId("legacy-lua-armor");
+        store.insertStatic(legacy);
+        MWWorld::ManualRef legacyRef(store, legacy.mId);
+        EXPECT_EQ(cls.getEquipmentSkill(legacyRef.getPtr(), true), ESM::Skill::MediumArmor);
     }
 }
 
