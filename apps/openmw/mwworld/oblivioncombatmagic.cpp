@@ -742,6 +742,7 @@ namespace MWWorld
             std::sort(references.begin(), references.end(), [](const auto& a, const auto& b) { return a.mKey < b.mKey; });
         }
         else writeOblivionEnvironmentalFire(*owner, effect); // A recast replaces this source's remaining effect.
+        if (mOblivionReferenceEffects) mOblivionReferenceEffects->invalidate();
         Log(Debug::Info) << "TES4 environmental fire cast: source=" << key.serialize()
             << " spell=" << spell.serialize() << " magnitude=" << effect->mMagnitude << " duration=" << effect->mDuration;
         return true;
@@ -752,9 +753,9 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || !mOblivionCombat) return;
         if (!std::isfinite(duration) || duration < 0) throw std::invalid_argument("invalid environmental fire frame");
         if (duration == 0) return;
-        std::vector<ESM::FormKey> sources;
-        for (const auto& reference : mOblivionRuntimeState->mReferences)
-            if (readOblivionEnvironmentalFire(reference)) sources.push_back(reference.mKey);
+        if (!mOblivionReferenceEffects)
+            mOblivionReferenceEffects = std::make_unique<OblivionReferenceEffectIndex>();
+        const auto sources = mOblivionReferenceEffects->fire(*mOblivionRuntimeState);
         if (sources.empty()) return;
         const auto player = getPlayerPtr();
         const auto recovery = resolveOblivionEssentialRecoverySettings(mStore);
@@ -762,11 +763,16 @@ namespace MWWorld
         for (const auto& source : sources)
         {
             const auto findOwner = [&]() {
-                auto& references = mOblivionRuntimeState->mReferences;
-                return std::find_if(references.begin(), references.end(), [&](const auto& ref) { return ref.mKey == source; });
+                return findOblivionSavedReference(source);
             };
             const auto owner = findOwner();
-            auto effect = *readOblivionEnvironmentalFire(*owner);
+            const auto current = owner ? readOblivionEnvironmentalFire(*owner) : std::nullopt;
+            if (!current)
+            {
+                mOblivionReferenceEffects->forgetFire(source);
+                continue;
+            }
+            auto effect = *current;
             auto next = *owner;
             const float elapsed = static_cast<float>(std::min(double(effect.mDuration), double(effect.mElapsed) + duration));
             const float time = elapsed - effect.mElapsed;
@@ -791,6 +797,8 @@ namespace MWWorld
             // All timer allocation/validation precedes the atomic Health/life
             // write. Re-find after it: lifecycle preparation may grow references.
             findOwner()->mCustomState.swap(next.mCustomState);
+            if (!pending || player.getClass().getCreatureStats(player).isDead())
+                mOblivionReferenceEffects->forgetFire(source);
             Log(Debug::Verbose) << "TES4 environmental fire tick: source=" << source.serialize()
                 << " damage=" << (getGodModeState() ? 0.f : damage) << " elapsed=" << elapsed
                 << " health=" << mOblivionCombat->getPlayerValue(8);
@@ -970,6 +978,40 @@ namespace MWWorld
         const auto effect = readOblivionCharm(*owner);
         return effect && effect->mCaster == viewer ? static_cast<std::int32_t>(effect->mMagnitude) : 0;
     }
+
+    void OblivionReferenceEffectIndex::refresh(const ESM4::RuntimeState& state)
+    {
+        if (mValid && mState == &state && mStorage == state.mReferences.data()
+            && mSize == state.mReferences.size()) return;
+        std::vector<ESM::FormKey> fire;
+        std::vector<ESM::FormKey> charm;
+        for (const auto& reference : state.mReferences)
+        {
+            if (readOblivionEnvironmentalFire(reference)) fire.push_back(reference.mKey);
+            if (readOblivionCharm(reference)) charm.push_back(reference.mKey);
+        }
+        mFire.swap(fire);
+        mCharm.swap(charm);
+        mState = &state;
+        mStorage = state.mReferences.data();
+        mSize = state.mReferences.size();
+        mValid = true;
+    }
+
+    const std::vector<ESM::FormKey>& OblivionReferenceEffectIndex::fire(const ESM4::RuntimeState& state)
+    {
+        refresh(state);
+        return mFire;
+    }
+
+    const std::vector<ESM::FormKey>& OblivionReferenceEffectIndex::charm(const ESM4::RuntimeState& state)
+    {
+        refresh(state);
+        return mCharm;
+    }
+
+    void OblivionReferenceEffectIndex::forgetFire(const ESM::FormKey& key) { std::erase(mFire, key); }
+    void OblivionReferenceEffectIndex::forgetCharm(const ESM::FormKey& key) { std::erase(mCharm, key); }
 
     std::optional<OblivionTargetDamage> resolveOblivionTargetSpellDamage(
         const ESMStore& store, const ESM4::Spell& spell)
@@ -1367,22 +1409,33 @@ namespace MWWorld
             || !mPhysics || !mWorldScene || !mProjectileManager) return;
         if (!std::isfinite(duration) || duration < 0) throw std::invalid_argument("invalid native magic frame");
         if (duration > 0)
-            for (auto& reference : mOblivionRuntimeState->mReferences)
-                if (auto effect = readOblivionCharm(reference))
+        {
+            if (!mOblivionReferenceEffects)
+                mOblivionReferenceEffects = std::make_unique<OblivionReferenceEffectIndex>();
+            const auto recipients = mOblivionReferenceEffects->charm(*mOblivionRuntimeState);
+            for (const auto& key : recipients)
+            {
+                auto* reference = findOblivionSavedReference(key);
+                const auto current = reference ? readOblivionCharm(*reference) : std::nullopt;
+                if (auto effect = current)
                 {
                     const float elapsed = static_cast<float>(std::min(30., double(effect->mElapsed) + duration));
-                    const auto* life = mOblivionCombat->findActorLife(reference.mKey);
+                    const auto* life = mOblivionCombat->findActorLife(key);
                     if (elapsed >= 30 || (life && life->mPhase != ESM4::ActorLifePhase::Alive))
                     {
-                        writeOblivionCharm(reference, std::nullopt);
-                        Log(Debug::Info) << "M16 Charm expired: target=" << reference.mKey.serialize();
+                        writeOblivionCharm(*reference, std::nullopt);
+                        mOblivionReferenceEffects->forgetCharm(key);
+                        Log(Debug::Info) << "M16 Charm expired: target=" << key.serialize();
                     }
                     else
                     {
                         effect->mElapsed = elapsed;
-                        writeOblivionCharm(reference, effect);
+                        writeOblivionCharm(*reference, effect);
                     }
                 }
+                else mOblivionReferenceEffects->forgetCharm(key);
+            }
+        }
         auto& projectiles = mOblivionRuntimeState->mNativeMagicProjectiles;
         if (projectiles.empty() || duration == 0)
         {
@@ -1445,6 +1498,7 @@ namespace MWWorld
                             std::sort(references.begin(), references.end(), [](const auto& a, const auto& b) { return a.mKey < b.mKey; });
                             appliedCharm.emplace(key, magnitude);
                             mOblivionRuntimeState->mReferences.swap(references);
+                            if (mOblivionReferenceEffects) mOblivionReferenceEffects->invalidate();
                         }
                     }
                     else

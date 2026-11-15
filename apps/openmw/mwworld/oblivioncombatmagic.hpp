@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <vector>
 #include <components/esm/formkey.hpp>
 #include <components/esm4/potionattributes.hpp>
 #include <components/esm4/ingredientuse.hpp>
@@ -99,6 +100,26 @@ namespace MWWorld
         const ESMStore& store, const ESM4::Spell& spell);
     std::optional<OblivionCharm> readOblivionCharm(const ESM4::RuntimeReferenceState& reference);
     void writeOblivionCharm(ESM4::RuntimeReferenceState& reference, const std::optional<OblivionCharm>& effect);
+
+    // Derived membership only: timers and values remain in the current saved
+    // reference. Writers adding effects to an existing row must invalidate.
+    class OblivionReferenceEffectIndex
+    {
+        const ESM4::RuntimeState* mState = nullptr;
+        const ESM4::RuntimeReferenceState* mStorage = nullptr;
+        std::size_t mSize = 0;
+        bool mValid = false;
+        std::vector<ESM::FormKey> mFire;
+        std::vector<ESM::FormKey> mCharm;
+        void refresh(const ESM4::RuntimeState& state);
+
+    public:
+        void invalidate() noexcept { mValid = false; }
+        const std::vector<ESM::FormKey>& fire(const ESM4::RuntimeState& state);
+        const std::vector<ESM::FormKey>& charm(const ESM4::RuntimeState& state);
+        void forgetFire(const ESM::FormKey& key);
+        void forgetCharm(const ESM::FormKey& key);
+    };
     std::int32_t oblivionCharmModifier(const ESM4::RuntimeState& state,
         const ESM::FormKey& actor, const ESM::FormKey& viewer);
 

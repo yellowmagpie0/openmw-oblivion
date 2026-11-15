@@ -5,9 +5,10 @@
 Target: responsive tutorial play using the player's existing saved game, with
 working armor UI and native skill progression. The bounded routing/reference
 lookup performance chunk and both recurring error repairs are verified. The
-saved game remains slow; this is not a completed performance course. Current
-chunk: remove repeated full-world effect-owner scans while preserving live
-casts, expiration, save/load and runtime ownership. Broader tutorial gates remain in
+saved game remains slow; this is not a completed performance course. The
+effect-owner scan chunk is also verified: autosave performance is now about
+18 FPS, versus the original 7.3 FPS. Next: inspect the remaining AI/physics
+cost before selecting another bounded change. Broader tutorial gates remain in
 [the tutorial handoff](TUTORIAL-PLAYABLE-CHUNK-HANDOFF.md).
 
 ## Performance chunk
@@ -78,6 +79,51 @@ binding refresh. No normal-input UI or screenshot acceptance is claimed.
 No Windows sanitizer configuration was available for this run. This document
 was written after the listed tests; the verified C++ sources are unchanged.
 Earlier Windows provenance is linked in [the performance handoff](../WINDOWS-PERFORMANCE.md).
+
+## Effect-owner scan repair
+
+Fire and Charm updates now keep a derived list of owner keys, rather than
+scanning all 52,625 saved references every frame. Timers, damage and caster
+ownership are read from the current reference on each tick. Casts invalidate
+membership; expiry removes membership without further allocation. Snapshot or
+reference-vector changes rebuild the index, and load/simulation switch/reset
+boundaries discard it. Disposition queries use the validated sparse reference
+lookup. No saved schema, effect formula, AI cadence or collision validation
+was changed.
+
+The new regression covers initially empty lists, both effect types, in-place
+casts, live timer changes, expiry, vector growth, snapshot replacement and
+failed malformed-state rebuilds. Existing World tests cover recasts after
+expiry, resistance/god mode, lethal damage without replay and partially elapsed
+effects after save/load. Charm timer/ownership checks are engine tests, not a
+rendered Charm-casting course.
+
+- Focused **21/21**: `build-windows/checks-591bd24acc3441f9a195c263530b6051`,
+  `live-fix-effects-focused.log`.
+- Final complete engine inventory **2,300/2,300**, no failures/skips:
+  `build-windows/checks-176f354483104e06abeba3de44f60430`,
+  `live-fix-effects-full.log`. Tested source fingerprint at HEAD
+  `773e11deab7688213d913548024465dc8442ce46`:
+  `641df9736de3ffb69a98386b89c8b3f17539a4a833427608d4311e59c01c6bca`.
+  Component sources are unchanged; the 3,303-test evidence above is reused.
+- Final game SHA256:
+  `bc03073a03441bb9097eec0e5728e0ecf19a4f67731fae4e7f41b46dc6e0b120`.
+  Build: `build-windows/live-fix-effects-runtime-build.log`.
+- Same stationary autosave protocol, two clean loads:
+  `build-windows/performance/live-save-effects-final-01/results.json`.
+  **17.87/18.08 FPS**; mechanics **32.71/32.32 ms**, physics **12.79/12.55 ms**,
+  scripts **6.39/6.43 ms**. Frame p95 remains **84.8 ms**, p99 **103–106 ms**.
+  The original input hash was checked again after both runs and is unchanged.
+- Fresh prison **33.10/33.26 FPS**, city **28.35/27.58 FPS**, four clean exits:
+  `build-windows/performance/live-fix-effects-final-fresh/results.json`.
+- Rendered final-binary skill/error probe:
+  `build-windows/live-skill-effects-final-01/result.json`: real movement,
+  native Athletics progress, **zero skill/focus/frame errors**, clean exit,
+  unchanged executable/input hashes. Original control evidence above is reused.
+
+This documentation was updated after the checks; tested C++ sources are
+unchanged. These results verify the identified repairs, not smooth 60 FPS,
+normal-input loot/visual acceptance, or a warning-free tutorial course.
 
 ## Armor UI repair
 

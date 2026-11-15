@@ -115,6 +115,7 @@ namespace MWWorld
     class Player;
     class ProjectileManager;
     class OblivionScriptManager;
+    class OblivionReferenceEffectIndex;
     struct EquippedWeaponDrop;
     struct OblivionNativeIdleSelection;
 
@@ -210,6 +211,7 @@ namespace MWWorld
         ESM::GameProfile mGameProfile = ESM::GameProfile::Auto;
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
         mutable std::unique_ptr<MWMechanics::OblivionSavedReferenceLookup> mOblivionReferenceLookup;
+        std::unique_ptr<OblivionReferenceEffectIndex> mOblivionReferenceEffects;
         const ESM4::RuntimeReferenceState* findOblivionSavedReference(const ESM::FormKey& key) const;
         ESM4::RuntimeReferenceState* findOblivionSavedReference(const ESM::FormKey& key);
         bool mUpdatingOblivionBoundEquipment = false;

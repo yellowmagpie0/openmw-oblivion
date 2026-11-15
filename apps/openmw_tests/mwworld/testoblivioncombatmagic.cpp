@@ -884,6 +884,68 @@ TEST(OblivionMagicContent, CharmBelongsOnlyToRecipientAndCasterAndRejectsPartial
     EXPECT_EQ(reference.mCustomState.size(), 1u);
 }
 
+TEST(OblivionMagicContent, EffectIndexTracksMembershipAcrossCastsExpiryGrowthAndSnapshotReplacement)
+{
+    ESM4::RuntimeState state;
+    state.mReferences.resize(2);
+    const auto first = ESM::FormKey::content("oblivion.esm", 1);
+    const auto second = ESM::FormKey::content("oblivion.esm", 2);
+    state.mReferences[0].mKey = first;
+    state.mReferences[1].mKey = second;
+    MWWorld::OblivionReferenceEffectIndex index;
+    EXPECT_TRUE(index.fire(state).empty());
+    EXPECT_TRUE(index.charm(state).empty());
+
+    MWWorld::OblivionEnvironmentalFire fire{ESM::FormKey::content("oblivion.esm", 0xabc), 5, 10, 0};
+    MWWorld::OblivionCharm charm{ESM::FormKey::content("oblivion.esm", 0x47add),
+        ESM::FormKey::dynamic("player", 1), 30, 0};
+    MWWorld::writeOblivionEnvironmentalFire(state.mReferences[0], fire);
+    MWWorld::writeOblivionCharm(state.mReferences[1], charm);
+    index.invalidate(); // Casts may add membership without changing vector storage.
+    EXPECT_EQ(index.fire(state), std::vector<ESM::FormKey>{first});
+    EXPECT_EQ(index.charm(state), std::vector<ESM::FormKey>{second});
+
+    fire.mElapsed = 3;
+    MWWorld::writeOblivionEnvironmentalFire(state.mReferences[0], fire);
+    EXPECT_EQ(index.fire(state), std::vector<ESM::FormKey>{first});
+    EXPECT_EQ(MWWorld::readOblivionEnvironmentalFire(state.mReferences[0]), fire);
+    MWWorld::writeOblivionEnvironmentalFire(state.mReferences[0], std::nullopt);
+    index.forgetFire(first);
+    MWWorld::writeOblivionCharm(state.mReferences[1], std::nullopt);
+    index.forgetCharm(second);
+    EXPECT_TRUE(index.fire(state).empty());
+    EXPECT_TRUE(index.charm(state).empty());
+
+    auto reference = state.mReferences[0];
+    reference.mKey = ESM::FormKey::content("oblivion.esm", 3);
+    MWWorld::writeOblivionEnvironmentalFire(reference, fire);
+    MWWorld::writeOblivionCharm(reference, charm);
+    state.mReferences.push_back(reference);
+    EXPECT_EQ(index.fire(state), std::vector<ESM::FormKey>{reference.mKey});
+    EXPECT_EQ(index.charm(state), std::vector<ESM::FormKey>{reference.mKey});
+
+    auto replacement = state;
+    MWWorld::writeOblivionEnvironmentalFire(replacement.mReferences[2], std::nullopt);
+    MWWorld::writeOblivionCharm(replacement.mReferences[2], std::nullopt);
+    EXPECT_TRUE(index.fire(replacement).empty());
+    EXPECT_TRUE(index.charm(replacement).empty());
+    EXPECT_EQ(index.fire(state), std::vector<ESM::FormKey>{reference.mKey});
+
+    // A failed rebuild must not publish a partial membership set.
+    state.mReferences[0].mCustomState["native.charm.elapsed"] = 1.;
+    index.invalidate();
+    EXPECT_THROW(index.fire(state), std::invalid_argument);
+    EXPECT_THROW(index.charm(state), std::invalid_argument);
+    state.mReferences[0].mCustomState.clear();
+    EXPECT_EQ(index.charm(state), std::vector<ESM::FormKey>{reference.mKey});
+
+    // Replacing the vector in the same snapshot is also an epoch change.
+    state.mReferences = replacement.mReferences;
+    index.invalidate();
+    EXPECT_TRUE(index.fire(state).empty());
+    EXPECT_TRUE(index.charm(state).empty());
+}
+
 TEST(OblivionMagicContent, NirnrootHealthDrainRechecksWinningIngredientAndEffect)
 {
     Fixture fixture;
