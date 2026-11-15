@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "name": "Actually recovered Scales: cold inventory and no world resurrection (ASan/UBSan)",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\nat 0 command content:oblivion.esm:04e936 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal camera=require('openmw.camera')\nlocal util=require('openmw.util')\nlocal nearby=require('openmw.nearby')\nlocal t=-1\nreturn {{engineHandlers={{onFrame=function(dt)\n print('ScalesUiFrame')\n t=t+dt;if t<.2 then return end;t=0\n assert(not Actor.isDead(self),'Player died approaching real Wellspring Scales')\n print('ScalesCarry count='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x105f3)))\n print(string.format('ScalesApproach level aim x=0 y=%d',math.floor(-camera.getPitch()*512+.5)))\n if math.abs(camera.getPitch())<.1 then print('ScalesApproach pitch level') end\n local target=nil\n for _,obj in ipairs(nearby.items) do if obj.recordId==core.getFormId('Oblivion.esm',0x105f3) then target=obj;break end end\n if not target then print('ScalesApproach target absent');return end\n print('ScalesApproach target item=true'..' position='..tostring(target.position)..' player='..tostring(self.position))\n local origin=camera.getPosition();local view=camera.viewportToWorldVector(util.vector2(.5,.5));local dv=target.position-self.position\n local yaw=math.atan2(view.y*dv.x-view.x*dv.y,view.x*dv.x+view.y*dv.y)\n print(string.format('ScalesApproach walk aim x=%d y=0',math.max(-150,math.min(150,math.floor(yaw*256+.5)))))\n if math.sqrt(dv.x*dv.x+dv.y*dv.y)<90 then print('ScalesApproach close') end\n local box=target:getBoundingBox();local aim=nil\n for _,x in ipairs({{0,-.6,.6}}) do for _,y in ipairs({{0,-.6,.6}}) do for _,z in ipairs({{0,-.6,.6}}) do\n local point=box.center+util.vector3(x*box.halfSize.x,y*box.halfSize.y,z*box.halfSize.z);local hit=nearby.castRenderingRay(origin,point,{{ignore=self}})\n if hit.hitObject==target then aim=hit.hitPos;break end\n end;if aim then break end end;if aim then break end end\n local point=camera.getViewTransform():apply(aim or box.center);local ax=math.atan2(point.x,-point.z);local ay=-math.atan2(point.y,math.sqrt(point.x*point.x+point.z*point.z))\n print(string.format('ScalesApproach item aim x=%d y=%d',math.max(-100,math.min(100,math.floor(ax*256+.5))),math.max(-100,math.min(100,math.floor(ay*256+.5)))))\n local ray=nearby.castRenderingRay(origin,origin+view*2000,{{ignore=self}})\n if ray.hitObject==target and ray.hitPos and (ray.hitPos-origin):length()<tonumber(core.getGMST('iMaxActivateDist')) then print('ScalesApproach focused in native range') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "ScalesCarry count=1",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    },
+    {
+      "type": "screenshot",
+      "name": "actual-scales-cold-inventory-world.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "ScalesCarry count=1",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "fWortChanceValue",
+    "Water Breathing",
+    "Dangling inventory script instance",
+    "Failed to save game"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "scales-cold-inventory-sanitized",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "virtual_gamepad": false
+}

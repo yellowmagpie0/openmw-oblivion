@@ -928,10 +928,13 @@ namespace MWWorld
                     || definition.mBodies.front().mMass <= 0 || !definition.mReferenceRoot)
                     return std::nullopt;
             }
-            // Multi-body miscellaneous props retain their existing path; clothing
-            // uses its authored articulated ground model and constraints.
+            // A singleton miscellaneous prop owns its whole authored rig, just
+            // like articulated clothing. Counted drops retain the single-body
+            // policy until their multi-instance physical representation is defined.
             if constexpr (std::is_same_v<Record, ESM4::MiscItem>)
-                if (definition.mBodies.size() != 1 || !definition.mJoints.empty()) return std::nullopt;
+                if (definition.mBodies.empty()
+                    || (dropCount != 1 && (definition.mBodies.size() != 1 || !definition.mJoints.empty())))
+                    return std::nullopt;
             if (definition.mBodies.empty() || !definition.mReferenceRoot || definition.mSourceHash != file->mHash)
                 throw std::invalid_argument("native inventory loose item drop has no identified world body");
             if (!current()) throw std::invalid_argument("native loose item source changed during asset preparation");

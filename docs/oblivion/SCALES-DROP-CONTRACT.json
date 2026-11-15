@@ -1,0 +1,59 @@
+{
+  "status": "accepted bounded native Scales drop, moving cold continuation, settling, pickup and retained cold inventory; final normal/SAN admission checks passed",
+  "milestones": "M4 native collision/constraints / M13 inventory world ownership",
+  "target": {
+    "name": "Scales",
+    "base": "content:oblivion.esm:0105f3",
+    "original_reference": "content:oblivion.esm:06efbd",
+    "cell": "content:oblivion.esm:0352a9",
+    "enabled": true,
+    "model": "meshes/clutter/upperclass/upperscales01.nif",
+    "authored_bodies": 4,
+    "authored_joints": 3,
+    "input_shape_discovery": "build/oblivion-compat/scales/model-profile-discovery.json",
+    "discovery_boundary": "Production parser identifies the input; it is not the independent original-game behavior oracle."
+  },
+  "source": {
+    "path": "build/oblivion-compat/scripted-club-drop/normal-club-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "e5443b71bffee2211e8234b4f10b38d87b00618190bc8dfd6c4c54fceb481e57",
+    "provenance": "Accepted primary Wellspring course; target 128.895 units from saved Player, with no teleport, actor enabling or item grant.",
+    "allocator": 19,
+    "health": 70.4800033569336
+  },
+  "actual_acquisition": {
+    "case": "normal-scales-pickup-baseline-01",
+    "input": "Ordinary camera input then Space activation of enabled original prop.",
+    "save_sha256": "7a8c7aa737341fbff88322e04c3952491d6444391e404ba1bd0e562fc8e419b4",
+    "count": 1,
+    "allocator": 19
+  },
+  "observed_gap": {
+    "case": "normal-scales-drop-baseline-01",
+    "input": "Ctrl-click carried singleton in actual inventory, click world.",
+    "save_sha256": "cc01306700be7f6431990816dcc528b010876fd46d66edb5ca6e90a79b76187a",
+    "held_count_after": 0,
+    "native_allocator_after": 19,
+    "new_native_scales_references": 0,
+    "saved_native_scales_bodies": 0,
+    "saved_native_scales_constraints": 0,
+    "evidence": "build/oblivion-compat/scales/drop-baseline-audit.json",
+    "admission": "Current MISC path rejects any multi-body or constrained authored rig before native ownership preparation."
+  },
+  "plan": [
+    "Independently verify original-game ordinary Scales drop/motion and save/reload behavior with identified executable/content; retain isolated prefix restoration and actual captures.",
+    "Extend the existing native reference-ragdoll admission, world binding, lifetime and persistence only as needed for this actually acquired singleton four-body prop. Preserve all four authored bodies and three joints; retain atomic inventory-to-world ownership and pickup.",
+    "Use normal and instrumented actual acquired-content courses for drop, active/settled cold load, continued physics and pickup; independently inspect saved body identity/pose/velocities, reference identity and no duplicate inventory.",
+    "Run focused checks during implementation and required integration gates at closure, record honest original-vs-fork behavior/tolerances and retained failures, commit locally then select another real content gap."
+  ],
+  "scope_limits": [
+    "No synthetic actors/items/deficits, teleports, disabled-NPC enabling or invented inventory; preserve unrelated equipped Club/script owners and book/quest/actor state.",
+    "No broad multi-body MISC, all joints/meshes, complete M4/M13 or TES4 MCP acceptance claim. Expand into a dependency only when required for this concrete lifecycle.",
+    "The separately acquired Inkwell is a positive control, not an implementation target: its actual native one-body drop and saved body already work. Keep its earlier cave branch separate.",
+    "Proprietary source assets and bulky evidence stay ignored; editable source manifests and concise receipts will be published with final implementation.",
+    "Do not push."
+  ],
+  "implementation": "A single ordinary MISC item may use its complete authored reference-ragdoll rig. Empty body definitions and multi-item drops of articulated models retain the existing fallback. Runtime schema105 is unchanged.",
+  "independent_oracle": "SCALES-DROP-ORACLE.json",
+  "evidence_reuse": "Completed normal/SAN four-stage courses retain original ELF and source provenance. The final source only restores the pre-existing empty-body fallback; final normal/SAN admission is checked afresh. Four-body Scales continuation and pickup code is unchanged.",
+  "verification": "SCALES-DROP-VERIFICATION.json"
+}

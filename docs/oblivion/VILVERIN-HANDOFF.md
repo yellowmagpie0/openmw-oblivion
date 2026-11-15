@@ -2,15 +2,19 @@
 
 Target course: genuine sewer exit → independent Vilverin expedition → outside
 alive with retained loot. **Normal retained expedition completed.** Broader
-M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
+M4/M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [earned Amulet quest-item protection](QUEST-ITEM-AMULET-HANDOFF.md).
-The actually earned Amulet now contributes zero carried weight and refuses
-cursor drop. Four normal and four instrumented actual input/cold phases pass,
-including original script execution and retained per-item identity. Both modes
-pass 3,304 component/2,295 engine cases; 619 Python checks pass. Preserve its separate shore
-inventory. [Receipt](QUEST-ITEM-AMULET-VERIFICATION.json). Other quest-item paths
-and full milestone acceptance remain open.
+Latest completed bounded chunk: [native articulated Scales drop](SCALES-DROP-HANDOFF.md).
+The genuinely acquired Wellspring Scales now retain all four authored bodies and
+three constraints through native drop, moving cold continuation, settling and
+pickup. Normal/SAN four-stage courses pass, with fresh final-binary admission
+checks and explicit provenance for reused continuation evidence. The separate
+[receipt](SCALES-DROP-VERIFICATION.json) records exact engine/Python gates and
+retained environment/build failures. M4/M13 remain open.
+
+Prior [earned Amulet quest-item protection](QUEST-ITEM-AMULET-HANDOFF.md) remains
+accepted on its separate shore inventory. Preserve its original script and
+per-item identity evidence; other quest-item paths remain open.
 
 The prior completed bounded chunk: [crafted novice weapon poison](CRAFTED-POISON-HANDOFF.md).
 The real tutorial recipe now coats the axe and damages the original goblin over
@@ -48,12 +52,15 @@ accepted with their original ownership, native body and event/restart evidence.
 No full M13/M15/M16/M18/M19 milestone claim.
 
 Current main Cairn/Wellspring continuation:
-`build/oblivion-compat/scripted-club-drop/normal-club-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `e5443b71bffee2211e8234b4f10b38d87b00618190bc8dfd6c4c54fceb481e57`.
-SAN: same root `sanitized-club-inventory-01`, SHA256 `962d1717709bdaa6528adc2a020403ed6fe82cb8031507dddbafc8ca57dd86f3`.
+`build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a`.
+SAN: same root `sanitized-scales-native-inventory-01`, SHA256
+`fd6779644a334fe60a0d4992b59e158b0105c2e12733ecdd6b4f0675b805e012`.
 Health70.480003/110, End55, Club59.5000458 equipped/owner18, Cuirass19.6576748
 owner9, Torch987+2fresh1000 inactive, Alembic1/Retort1, Song1/Fundaments2/Charter2,
-BooksRead17, allocator19/key17 retired; no native-reference18. Preserve branches.
+BooksRead17, Scales1, allocator20; dropped native-reference19 retired and the
+original Scales06efbd consumed. Preserve independent inventories. The earlier
+allocator19 Club continuation retains its provenance in the Scales contract.
 
 Separate accepted [Immortal Blood native transfer](SKILL-BOOK-DROP-VERIFICATION.json)
 uses the independent shore branch: Hand-to-Hand36/history0243fc, Book1/BooksRead5,
@@ -73,7 +80,7 @@ preserves987 beside2fresh1000; [container discovery](NATIVE-CONTAINER-DISCOVERY-
 exposes original Sack06efcf. [Bonemeal](BONEMEAL-DROP-VERIFICATION.json) retains
 its original movable body. No full M16/M18 or TES4 MCP authoring claim.
 
-Latest rule investigation: [original dropped Torch state](TORCH-WORLD-STATE-ORACLE.json).
+Prior rule investigation: [original dropped Torch state](TORCH-WORLD-STATE-ORACLE.json).
 Both inactive and equipped original Torch02 drops extinguish; spent904.2193 fuel
 holds across15 unpaused seconds. Pickup/equip relights it. Existing OffDefault/
 inactive world fuel behavior is appropriate; no dropped ignition/ticking fix.

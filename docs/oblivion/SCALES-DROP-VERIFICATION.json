@@ -1,0 +1,567 @@
+{
+  "status": "accepted bounded actual-content course; M4/M13 remain open",
+  "tested_parent": "91a7408fd6a802f948a72507b80177837144b9c3",
+  "production_sources_sha256": {
+    "apps/openmw/mwworld/oblivionweapondrop.cpp": "9c2515a4ef7a87de07f8e275247472c49392cfca5950bbb4dd937b9347f156f8"
+  },
+  "auditor_sha256": "b6206171b75810ddb7b6c7ba0a5d9ef8f03189dfcad22c645eea502457f1a20c",
+  "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+  "oracle": "SCALES-DROP-ORACLE.json",
+  "contract": "SCALES-DROP-CONTRACT.json",
+  "source": "Original Scales06efbd actually picked up in Wellspring0352a9; no fork grants, teleports, forced actor state or merged branches.",
+  "body_identity_pairs": [
+    [
+      7,
+      0
+    ],
+    [
+      12,
+      9
+    ],
+    [
+      18,
+      15
+    ],
+    [
+      34,
+      31
+    ]
+  ],
+  "native_asset_hash": "b66cbab38f44af052d448dbcae8ab49c",
+  "nif_sha256": "45cf23e14e61bd567f2513b3eaf62a92269fb95a73506d4ed1884f29ce6448da",
+  "physical_tolerances": {
+    "tick_zero_absolute": 0.0001,
+    "tick_zero_relative": 1e-06,
+    "settled_max_linear_speed": 2,
+    "continued_position_delta_min": 0.0001,
+    "maximum_body_distance_from_player": 200
+  },
+  "primary_runtime_courses": {
+    "normal-scales-native-drop-01": {
+      "phase": "drop",
+      "source_sha256": "7a8c7aa737341fbff88322e04c3952491d6444391e404ba1bd0e562fc8e419b4",
+      "save_sha256": "8e8534d46644b7a6251ce80906e80a2bc97fc35808a386f07ff2bf51943ee55a",
+      "binary_sha256": "9232985d9d236b1072457c5582f300341207ed490520dc050d0955c900e4ca8c",
+      "production_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+      "audit_sha256": "22eb2551b346df90934dee1538270f823ff322f36f52dcaf0d75637111272049",
+      "manifest_sha256": "65b0d590f085cfc96f60dc86047bc2a556011fd1fa297d9216d73cae80eedf30",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 4
+    },
+    "normal-scales-native-world-01": {
+      "phase": "world",
+      "source_sha256": "8e8534d46644b7a6251ce80906e80a2bc97fc35808a386f07ff2bf51943ee55a",
+      "save_sha256": "e10112f410677c174c7326db1f3cb879dc5dc90a8b850591c46eaa9499f998b7",
+      "binary_sha256": "9232985d9d236b1072457c5582f300341207ed490520dc050d0955c900e4ca8c",
+      "production_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+      "audit_sha256": "dc597bf986e25ae0addefcb741db45a2e37290c6a61c4675274ef08371a1fed2",
+      "manifest_sha256": "f9e1da2f7d3220d0da24638283ff61afabb4f9fc7c82c04a8ae2ceb97d2237ee",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 4
+    },
+    "normal-scales-native-pickup-01": {
+      "phase": "pickup",
+      "source_sha256": "e10112f410677c174c7326db1f3cb879dc5dc90a8b850591c46eaa9499f998b7",
+      "save_sha256": "98a80685c5b6667b3d5de0b4d8463cd2f29a4f67d00bbdd9e9e1c16bb767e90a",
+      "binary_sha256": "9232985d9d236b1072457c5582f300341207ed490520dc050d0955c900e4ca8c",
+      "production_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+      "audit_sha256": "fdd197d774f59912aa420b19691ef744e6e31ffe33182d612686138eba286a18",
+      "manifest_sha256": "96e48e324db478898505fe9902ff8212aa2b5b7d729c415d21e8af74c2fa2313",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 0
+    },
+    "normal-scales-native-inventory-01": {
+      "phase": "inventory",
+      "source_sha256": "98a80685c5b6667b3d5de0b4d8463cd2f29a4f67d00bbdd9e9e1c16bb767e90a",
+      "save_sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+      "binary_sha256": "9232985d9d236b1072457c5582f300341207ed490520dc050d0955c900e4ca8c",
+      "production_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+      "audit_sha256": "ce94d832557967251a239a6102fd4c24b0927c624053ea198ead67300d9fc932",
+      "manifest_sha256": "ac6630f329309f88957a76d80bebc424c4a76b909f78893deb98a42daa26dacb",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 0
+    },
+    "sanitized-scales-native-drop-01": {
+      "phase": "drop",
+      "source_sha256": "7a8c7aa737341fbff88322e04c3952491d6444391e404ba1bd0e562fc8e419b4",
+      "save_sha256": "de7b6271dea3ea089597ae1e4b1d635178443ea8d15362d657a7bf2fe1523bdc",
+      "binary_sha256": "71f0295b7b10c610e45de75ea054460e77b138acdcc0ffdcddd9eaa6e2d329a5",
+      "production_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+      "audit_sha256": "d27f00e490c7a89fcfc52545fd856d59e84f608c6a42c9ff57d307f48c265e33",
+      "manifest_sha256": "31c41572f84629d59cb3350ad5afa5015905eccc7d2b753fa501226182797013",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 4
+    },
+    "sanitized-scales-native-world-01": {
+      "phase": "world",
+      "source_sha256": "de7b6271dea3ea089597ae1e4b1d635178443ea8d15362d657a7bf2fe1523bdc",
+      "save_sha256": "74916de57861d86f8966280433ca7491435dbd742f0de43f1ab5bf5f43e74b5e",
+      "binary_sha256": "71f0295b7b10c610e45de75ea054460e77b138acdcc0ffdcddd9eaa6e2d329a5",
+      "production_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+      "audit_sha256": "98f01d84c1c21bdefaa54c156ee0b0c099d8960155cbab3b9fa0e4e177dd0701",
+      "manifest_sha256": "ed252ca00febd607f3e623e14682d961370cf79f5d488ff123fe098946c29663",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 4
+    },
+    "sanitized-scales-native-pickup-01": {
+      "phase": "pickup",
+      "source_sha256": "74916de57861d86f8966280433ca7491435dbd742f0de43f1ab5bf5f43e74b5e",
+      "save_sha256": "2d8e6e2092c562dcc9ea39be879fdd6d41d199ef1e82ab67a76a1699a5473f33",
+      "binary_sha256": "71f0295b7b10c610e45de75ea054460e77b138acdcc0ffdcddd9eaa6e2d329a5",
+      "production_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+      "audit_sha256": "5e5cc2e67dc2bbfb1ca3b4590d42380de21eaab6d5a9c3748eabeaf7fa943035",
+      "manifest_sha256": "b50899d20dff4a1a356ad5e9f8526fd9557dc03a1801a21123b0fd9683383118",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 0
+    },
+    "sanitized-scales-native-inventory-01": {
+      "phase": "inventory",
+      "source_sha256": "2d8e6e2092c562dcc9ea39be879fdd6d41d199ef1e82ab67a76a1699a5473f33",
+      "save_sha256": "fd6779644a334fe60a0d4992b59e158b0105c2e12733ecdd6b4f0675b805e012",
+      "binary_sha256": "71f0295b7b10c610e45de75ea054460e77b138acdcc0ffdcddd9eaa6e2d329a5",
+      "production_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+      "audit_sha256": "50ccf969a0f0470b3f66d7de8bf141d65a29e642aea431a683d562b65a9f1d76",
+      "manifest_sha256": "622c5d88cc51e15f69effaeb4147e77f26250a66a01b9b7d564a2b75f99114f5",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 0
+    }
+  },
+  "final_binary_admission_checks": {
+    "normal-scales-final-admission-01": {
+      "phase": "drop",
+      "source_sha256": "7a8c7aa737341fbff88322e04c3952491d6444391e404ba1bd0e562fc8e419b4",
+      "save_sha256": "87ba346eb9b5f06db3ec613b5cacc0ae195b6db22bf4d5d3142125e05f5a053b",
+      "binary_sha256": "4909bc4856d0c259af62d887ac50b6bf30d7e2727416d404148fa11db387815f",
+      "production_source_sha256": "9c2515a4ef7a87de07f8e275247472c49392cfca5950bbb4dd937b9347f156f8",
+      "audit_sha256": "88f936694fd69220fd33c1db5006f6a5b477f6c18752d686be0ae827e9f17506",
+      "manifest_sha256": "65b0d590f085cfc96f60dc86047bc2a556011fd1fa297d9216d73cae80eedf30",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 4
+    },
+    "sanitized-scales-final-admission-01": {
+      "phase": "drop",
+      "source_sha256": "7a8c7aa737341fbff88322e04c3952491d6444391e404ba1bd0e562fc8e419b4",
+      "save_sha256": "2a9e4ce9fcbbf14e1cccc116efd1acb425668a1fed093ff4e44dd5550aeee662",
+      "binary_sha256": "58b02df684880dba01b42de1af304984f896737bd74f944554de76b72da66e83",
+      "production_source_sha256": "9c2515a4ef7a87de07f8e275247472c49392cfca5950bbb4dd937b9347f156f8",
+      "audit_sha256": "54de975442f962e556cf2f0bbf5b6b5e4150c865083e6416bc80fb8148410ed7",
+      "manifest_sha256": "31c41572f84629d59cb3350ad5afa5015905eccc7d2b753fa501226182797013",
+      "native_reference": "dynamic:native-reference:0000000000000013",
+      "next_dynamic_serial": 20,
+      "remaining_loose_bodies": 4
+    }
+  },
+  "checks": {
+    "normal-focused-01": {
+      "path": "build/oblivion-compat/scales/normal-focused-01/verification.json",
+      "sha256": "735fb0c4fb4884b8fa6fed75d9099124878dd8edbcba422a80ee4fe35ba09f7f",
+      "result": {
+        "executed": 22,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "LooseWeaponAdmissionTest.*:*LooseObject*:*ReferenceRagdoll*",
+        "binary_sha256": "94eb7c823cee53c75ada58b7a8c8027d88c656ab5a710c2af265fcf05199ddd3",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "03cfe2e5e9a75166676d1f61985399877c27037639da7c99b1bbccb02d9b1124",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "a198d5501bc4d273cf111b1235f9e618018c66775898582e9baadbb9e1636353"
+      }
+    },
+    "normal-engine-01": {
+      "path": "build/oblivion-compat/scales/normal-engine-01/verification.json",
+      "sha256": "514780d5ad230f66640ef7b0e9de493d26fad2ee2827190b6463505528b37e42",
+      "result": {
+        "executed": 2295,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "94eb7c823cee53c75ada58b7a8c8027d88c656ab5a710c2af265fcf05199ddd3",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "4d5f82577411490f6163c51d547a9dea31a39ec56c7b64c3721f9b80bd4b615f",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "a198d5501bc4d273cf111b1235f9e618018c66775898582e9baadbb9e1636353"
+      }
+    },
+    "sanitized-focused-01": {
+      "path": "build/oblivion-compat/scales/sanitized-focused-01/verification.json",
+      "sha256": "2e7b04e070b71ce91a16aa7d122d880d20c5494aca99eadd8b8497f5fd34804b",
+      "result": {
+        "executed": 22,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "LooseWeaponAdmissionTest.*:*LooseObject*:*ReferenceRagdoll*",
+        "binary_sha256": "92b3bd6663c69047b7e6a83d5255e456a62cca54ce2ea5a09ea502e4d39fe73c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "a073731bc6cee0aefd2f51bd51d0f65ba37433b1b6eeeaa76fef21727ab9e4d1",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "a198d5501bc4d273cf111b1235f9e618018c66775898582e9baadbb9e1636353"
+      }
+    },
+    "sanitized-engine-worker0-01": {
+      "path": "build/oblivion-compat/scales/sanitized-engine-worker0-01/verification.json",
+      "sha256": "f8072746d880e91030098c90683568939bce286e5f8a389cbfb6028c60a4b949",
+      "result": {
+        "executed": 82,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "WorkerCounts/*/0",
+        "binary_sha256": "92b3bd6663c69047b7e6a83d5255e456a62cca54ce2ea5a09ea502e4d39fe73c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "20f5a6f068a97b0077dc49019ca6e8f46ed5e688e11317497a5e2fcde548899c",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "f57f7ba4fbf2dd69b6d797f3bdc1df5edb6eac3b020144a412479b113ad198f7"
+      }
+    },
+    "sanitized-engine-worker1-01": {
+      "path": "build/oblivion-compat/scales/sanitized-engine-worker1-01/verification.json",
+      "sha256": "6c9ec8631615faa5419500b67153576c85bb1004277902442f66f28b35dfbf2c",
+      "result": {
+        "executed": 82,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "WorkerCounts/*/1",
+        "binary_sha256": "92b3bd6663c69047b7e6a83d5255e456a62cca54ce2ea5a09ea502e4d39fe73c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "ee7b290dfe6e3d424334e6c0cdd0b80e1de5d711ecd6ac1d83d6b8da3061f37e",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "f57f7ba4fbf2dd69b6d797f3bdc1df5edb6eac3b020144a412479b113ad198f7"
+      }
+    },
+    "sanitized-engine-worker2-01": {
+      "path": "build/oblivion-compat/scales/sanitized-engine-worker2-01/verification.json",
+      "sha256": "9ae9311711aec8ea9387ac334ac5ba13ef063d910b80caba2769016d301de1fb",
+      "result": {
+        "executed": 82,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "WorkerCounts/*/2",
+        "binary_sha256": "92b3bd6663c69047b7e6a83d5255e456a62cca54ce2ea5a09ea502e4d39fe73c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "6b12d049f1df6ffd7eb8a3aed77426bb6bfa262e0b7976d3d4844a9e5b96f117",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "f57f7ba4fbf2dd69b6d797f3bdc1df5edb6eac3b020144a412479b113ad198f7"
+      }
+    },
+    "sanitized-engine-rest-02": {
+      "path": "build/oblivion-compat/scales/sanitized-engine-rest-02/verification.json",
+      "sha256": "102087b281b53612a98fb5f7eaf8fb6da7c8a6da0435cf8f3b5e7906dfe192c3",
+      "result": {
+        "executed": 2049,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*-WorkerCounts/*",
+        "binary_sha256": "92b3bd6663c69047b7e6a83d5255e456a62cca54ce2ea5a09ea502e4d39fe73c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "54ae187010935ad5ee701ca3148146be7dfc9c005fe4e602cda7c104d26152d4",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "f57f7ba4fbf2dd69b6d797f3bdc1df5edb6eac3b020144a412479b113ad198f7"
+      }
+    },
+    "sanitized-input-focused-01": {
+      "path": "build/oblivion-compat/scales/sanitized-input-focused-01/verification.json",
+      "sha256": "e1b20cbd0c9a33edf971433a2ee69f307c620a1a8ce57edc9fbba101f4159353",
+      "result": {
+        "executed": 8,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "InputRuntime.*:InputRuntimeFacade.*",
+        "binary_sha256": "92b3bd6663c69047b7e6a83d5255e456a62cca54ce2ea5a09ea502e4d39fe73c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "fe0995a5dbcb6a729f0618b7fc24e6e3d83694f1c1953afd22af198432e8359b",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "f57f7ba4fbf2dd69b6d797f3bdc1df5edb6eac3b020144a412479b113ad198f7"
+      }
+    },
+    "python-01": {
+      "path": "build/oblivion-compat/scales/python-01/verification.json",
+      "sha256": "9c2d7794a1a5c635cb0e21b950531d1fae44e1610b2ccbb9778b1d798fd03e40",
+      "result": {
+        "executed": 619,
+        "passed": true,
+        "log_sha256": "eab782df1e9d54ac5fcff2b94bff19d59acfbb4312032b5701dd862499ac792c"
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "f57f7ba4fbf2dd69b6d797f3bdc1df5edb6eac3b020144a412479b113ad198f7"
+      }
+    },
+    "normal-final-focused-01": {
+      "path": "build/oblivion-compat/scales/normal-final-focused-01/verification.json",
+      "sha256": "7715e69d25cad94d0424457d0a2bc011c25bbd2e664cd530cad82d75f480b89e",
+      "result": {
+        "executed": 22,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "LooseWeaponAdmissionTest.*:*LooseObject*:*ReferenceRagdoll*",
+        "binary_sha256": "5becdfb2cfa207471258524b098adde20baf3bf39d58997ff1f2b149d605cb6a",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "4702e82753ad16481d00f3ff9f45dc473892bd442d6c6a0e7dfc8e68aef7d29f",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "19fc8bc3727ec632a3882d793fd11f5007f61281df480939144d693e85823a09"
+      }
+    },
+    "sanitized-final-focused-02": {
+      "path": "build/oblivion-compat/scales/sanitized-final-focused-02/verification.json",
+      "sha256": "653000bf4ae387fa752269b018af681f082af332984269ba95e5bd80b71ada62",
+      "result": {
+        "executed": 22,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "LooseWeaponAdmissionTest.*:*LooseObject*:*ReferenceRagdoll*",
+        "binary_sha256": "17b7daaaa2755b6929bf657cd4dcf76f7094dff9fe3159d74d479a6005a88b24",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "1dbe728f5cf971f74c9fea37030c365f25eec4caac5b810282f577960d597a4e",
+        "inventory_sha256": "c03d63544d3714e8d17e1f3bf0f98ba01b248e87f897bed54ad2f40ce8043bdf",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "tested_source": {
+        "head": "91a7408fd6a802f948a72507b80177837144b9c3",
+        "source_fingerprint": "19fc8bc3727ec632a3882d793fd11f5007f61281df480939144d693e85823a09"
+      }
+    }
+  },
+  "final_sanitized_runtime_preparation": {
+    "path": "build/oblivion-compat/scales/final-sanitized-runtime-prepared.json",
+    "sha256": "3a899b44ec48d0ef9f55f60d67e22b12ea6ce569d7bc584b37b96b5a1359909a",
+    "details": {
+      "command": [
+        "cmake",
+        "--build",
+        "build/m15-sanitize",
+        "--target",
+        "openmw",
+        "esmtool",
+        "-j",
+        "2"
+      ],
+      "exit_code": 0,
+      "cpp_source_sha256_before": "9c2515a4ef7a87de07f8e275247472c49392cfca5950bbb4dd937b9347f156f8",
+      "cpp_source_sha256_after": "9c2515a4ef7a87de07f8e275247472c49392cfca5950bbb4dd937b9347f156f8",
+      "head_before": "91a7408fd6a802f948a72507b80177837144b9c3",
+      "head_after": "91a7408fd6a802f948a72507b80177837144b9c3",
+      "runtime_sha256": "58b02df684880dba01b42de1af304984f896737bd74f944554de76b72da66e83",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "source_unchanged": true
+    }
+  },
+  "evidence_reuse": {
+    "primary_source_sha256": "b1d8d6026e8afe214f5a356e3e2f034c7b726fc4515bad9c07e3186e734617d4",
+    "final_source_sha256": "9c2515a4ef7a87de07f8e275247472c49392cfca5950bbb4dd937b9347f156f8",
+    "verified_delta": "Only an explicit empty-body fallback was added after the completed four-body course. This preserves pre-existing zero-body behavior; for Scales with four bodies the added condition is false. All restore, simulation and pickup code is unchanged.",
+    "validation": "Full normal/SAN four-stage courses and broad gates retain their original ELF/source provenance. Final normal/SAN binaries pass fresh focused checks and actual acquired-Scales admission/save audits. Unchanged cold continuation and pickup evidence is reused rather than relabelled.",
+    "component_receipt": "docs/oblivion/QUEST-ITEM-AMULET-VERIFICATION.json",
+    "component_receipt_sha256": "3eae090d80f23686846f820debeaf9368fd834c1712a55caf0d7f5a97bff56a5",
+    "component_rationale": "No components/schema changes; prior accepted full normal/SAN3304 component checks reused."
+  },
+  "retained_build_failure": {
+    "path": "build/oblivion-compat/scales/sanitized-final-focused-01",
+    "reason": "Final linker exhausted workspace space; no test execution. Completed generated test binaries retired with source/result provenance retained; unchanged source rebuilt in focused02."
+  },
+  "retained_failure": {
+    "path": "build/oblivion-compat/scales/sanitized-engine-rest-01",
+    "reason": "All2049 assertions passed but LeakSanitizer failed process shutdown:19822bytes/372allocations. Automatic graphics/DBus environment omitted documented settings. Reusing documented Mesa/X11 and disabledDBus with leak detection enabled passed focused SDL8 and failed partition2049; no source fix or suppression."
+  },
+  "limits": [
+    "Single dropped ordinary Scales accepted; no broad all-MISC/all-joints/multi-item or fullmilestone claim.",
+    "Original probe uses an original-only grant; fork acceptance starts with normal actual content pickup.",
+    "Three authored constraints reconstruct from identified model; four complete body states are saved, not separate joint-state schema.",
+    "Original/fork rest poses and solver sequences need not match bit-for-bit.",
+    "Unit ASan leak detection1; rendered ASan leak detection0."
+  ],
+  "ui_review": {
+    "status": "reviewed accepted original, primary normal/SAN and final admission captures",
+    "captures": [
+      {
+        "path": "build/oblivion-compat/scales/original-01/scales-focused.png",
+        "sha256": "e859be121434d301c488e94d8b6d9bab931bc7eea229b2190c358ffabfbf8000",
+        "observed": "Visibly toppled articulated Scales on table, actual Scales/value3/weight3 crosshair label."
+      },
+      {
+        "path": "build/oblivion-compat/scales/original-02/cold-scales.png",
+        "sha256": "61755c3cee8f5a1198817d2a57b766b2077c68f162b0caea7685d1111a1ebef1",
+        "observed": "Fresh original process retains recognizable articulated arrangement and Scales crosshair label."
+      },
+      {
+        "path": "build/oblivion-compat/scales/original-02/cold-pickup-count.png",
+        "sha256": "2c6d9274f65ae30c7e94137d0937726e5357537a6eab3d02af80b20291c1d7a1",
+        "observed": "Scales no longer on table; console getitemcount105f3 reports1 after ordinary Space."
+      },
+      {
+        "path": "build/oblivion-compat/scales/normal-scales-native-drop-01/actual-scales-dropped-world.png",
+        "sha256": "c5f1c426fae6ac4f486260bf8f446a6bf5790ca235821fcd8773e1f2560c2289",
+        "observed": "Native Scales upright on table after actual drop; nearby Weight tooltip belongs adjacent object."
+      },
+      {
+        "path": "build/oblivion-compat/scales/normal-scales-native-world-01/actual-scales-cold-world.png",
+        "sha256": "9e0b90cf06c0cf57d0763f352d2790c31e120e9a28264de9e3a95f4108cbee6a",
+        "observed": "Native Scales stable on table after cold continuation; nearby Weight tooltip belongs adjacent object."
+      },
+      {
+        "path": "build/oblivion-compat/scales/normal-scales-native-pickup-01/actual-native-scales-before-pickup.png",
+        "sha256": "701ac8e5bb5f06f9d432f9e258e5bdb8d2d037792d73125cdf05f776e6cc325a",
+        "observed": "Actual cold-restored Scales identified by Scales crosshair caption."
+      },
+      {
+        "path": "build/oblivion-compat/scales/normal-scales-native-pickup-01/original-scales-actually-acquired.png",
+        "sha256": "c0830de32b5dda5aea0115d0125d94dcc13e03751b432dd10afde61484519bbd",
+        "observed": "Scales removed from table after ordinary activation; underlying Weight remains."
+      },
+      {
+        "path": "build/oblivion-compat/scales/sanitized-scales-native-drop-01/actual-scales-dropped-world.png",
+        "sha256": "426c7a13307b9528a1d718b4b49066a3238c6e07792e666cf6e4163121fe8bc8",
+        "observed": "Actual instrumented dropped Scales visibly falling above table; nearby Weight tooltip belongs adjacent object."
+      },
+      {
+        "path": "build/oblivion-compat/scales/sanitized-scales-native-world-01/actual-scales-cold-world.png",
+        "sha256": "23d1bd97fc74d1f46845481b6359bda59e8631e444c622189e17224b3b8181e0",
+        "observed": "Instrumented cold-world Scales resting stably on table after restored fall; nearby Weight tooltip belongs adjacent object."
+      },
+      {
+        "path": "build/oblivion-compat/scales/sanitized-scales-native-pickup-01/actual-native-scales-before-pickup.png",
+        "sha256": "7fe7f81b0c16be8a32c0b674f8f692067bcddc215b30121ff37056ae0cd875b5",
+        "observed": "Instrumented cold-restored Scales identified by Scales caption."
+      },
+      {
+        "path": "build/oblivion-compat/scales/sanitized-scales-native-pickup-01/original-scales-actually-acquired.png",
+        "sha256": "98f8d646250b0a105759e0ac0ec74f5c5a03c1a948cfb05dd0155b5fba40c972",
+        "observed": "Scales removed by ordinary activation; adjacent weights remain."
+      },
+      {
+        "path": "build/oblivion-compat/scales/normal-scales-final-admission-01/actual-scales-dropped-world.png",
+        "sha256": "e1a85c8f100d000fd54b7c83cc5c29a7bbbf89ece56bda0596c15113a9e1ab7f",
+        "observed": "Final source normal ELF: real Scales physically above table in actual drop; nearby Weight tooltip belongs adjacent object."
+      },
+      {
+        "path": "build/oblivion-compat/scales/normal-scales-native-inventory-01/actual-scales-cold-inventory-world.png",
+        "sha256": "c65e921e677d9d9d91774f997cc0083c7028bfcd33cbcbadb7796aa8182bd3f0",
+        "observed": "Final cold held-item normal course: no Scales world resurrection; adjacent weights remain. Count1 verified by save auditor."
+      },
+      {
+        "path": "build/oblivion-compat/scales/sanitized-scales-native-inventory-01/actual-scales-cold-inventory-world.png",
+        "sha256": "695ccc14f608d5452d840a1ea9ae2f52e5007eb6324b5751a1c7e98658bb2085",
+        "observed": "Final cold held-item instrumented course: no Scales world resurrection; adjacent weights remain. Count1 verified by save auditor."
+      },
+      {
+        "path": "build/oblivion-compat/scales/sanitized-scales-final-admission-01/actual-scales-dropped-world.png",
+        "sha256": "8e89a67ce2a5546894af67735b2aede20e9cdc98f21a2dd59977addf59c3360a",
+        "observed": "Final source instrumented ELF: actual dropped Scales physically above table; nearby Weight tooltip belongs adjacent object. Four moving body states and ownership verified independently by save audit."
+      }
+    ],
+    "limits": "Counts, four-body identity, motion and ownership require native-save audits; screenshots alone do not prove them."
+  }
+}
