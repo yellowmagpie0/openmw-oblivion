@@ -4,6 +4,7 @@
 #include <array>
 #include <cassert>
 #include <limits>
+#include <stdexcept>
 
 #include <osg/Stats>
 
@@ -771,8 +772,18 @@ namespace MWMechanics
                 playerStats.getAttribute(ESM::Attribute::Luck).getModified() };
             const ESM4::BarterActor merchantActor{ ptr.getClass().getSkill(ptr, ESM::Skill::Mercantile),
                 sellerStats.getAttribute(ESM::Attribute::Luck).getModified() };
-            return ESM4::barterOffer(
-                basePrice, buying, playerActor, merchantActor, getDerivedDisposition(ptr));
+            int disposition;
+            if (ptr.getType() == ESM::REC_NPC_4)
+            {
+                const auto* native = dynamic_cast<const MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+                const auto value = native ? native->getOblivionDisposition(
+                    ptr.getCellRef().getFormKey(), ESM::FormKey::dynamic("player", 1)) : std::nullopt;
+                if (!value) throw std::runtime_error("Native merchant disposition is not ready");
+                disposition = *value;
+            }
+            else
+                disposition = getDerivedDisposition(ptr);
+            return ESM4::barterOffer(basePrice, buying, playerActor, merchantActor, disposition);
         }
 
         // I suppose the temporary disposition change (second param to getDerivedDisposition()) _has_ to be considered

@@ -359,6 +359,7 @@ namespace MWGui
 
     void DialogueWindow::onTradeComplete()
     {
+        if (mPtr.getType() == ESM::REC_NPC_4) return;
         MyGUI::UString message = MyGUI::LanguageManager::getInstance().replaceTags("#{sBarterDialog5}");
         addResponse({}, message);
     }
@@ -417,6 +418,13 @@ namespace MWGui
 
         if (mPtr.getType() == ESM::REC_NPC_4 || mPtr.getType() == ESM::REC_CREA4)
         {
+            const std::string barter = MyGUI::LanguageManager::getInstance().replaceTags("#{Interface:Barter}").asUTF8();
+            if (topic == barter
+                && (mPtr.getClass().getServices(mPtr) & ESM::NPC::AllItems))
+            {
+                MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_Barter, mPtr);
+                return;
+            }
             onTopicActivated(topic);
             if (mGoodbyeButton->getEnabled())
                 MWBase::Environment::get().getWindowManager()->setKeyFocusWidget(mGoodbyeButton);
@@ -532,7 +540,8 @@ namespace MWGui
 
     void DialogueWindow::restock()
     {
-        // Native linked dialogue does not offer TES3 merchant services.
+        // Native trades use their linked chest and fixed original budget;
+        // the inherited TES3 restock/disposition update does not apply.
         if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
             return;
 
@@ -608,7 +617,9 @@ namespace MWGui
             mTopicsList->addItem(gmst.find("sPersuasion")->mValue.getString());
 
         if (services & ESM::NPC::AllItems)
-            mTopicsList->addItem(gmst.find("sBarter")->mValue.getString());
+            mTopicsList->addItem(mPtr.getType() == ESM::REC_NPC_4
+                ? MyGUI::LanguageManager::getInstance().replaceTags("#{Interface:Barter}").asUTF8()
+                : gmst.find("sBarter")->mValue.getString());
 
         if (services & ESM::NPC::Spells)
             mTopicsList->addItem(gmst.find("sSpells")->mValue.getString());

@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "kind": "editable_original_game_manual_ui_protocol",
+  "evidence": "original-04/observations.json",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "source": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m5-original-test/prefix/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/Save 1 - Gaius - Weynon House, Level 1, Playing Time 00.49.51.ess",
+    "sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+    "reason": "Use genuine completed chargen original save rather than force unfinished prison quest service availability. Other DLC states are outside this bounded merchant probe.",
+    "plugins": [
+      {
+        "name": "Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "Knights.esp",
+        "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCBattlehornCastle.esp",
+        "sha256": "f8bd2baa13f17f8994c0e737146097bc320f28c0d9821a00516bcec53fc6e28d",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCSpellTomes.esp",
+        "sha256": "3146d1f3936606410f75a54d385276e364f8a346437b919c398d8bd7d66e339e",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCMehrunesRazor.esp",
+        "sha256": "8d52b80c7ceb9f18aae3f48815a5b0468b8479992eb69fa3cbf910f8b66b7971",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCShiveringIsles.esp",
+        "sha256": "7725fc1cf14f60b258aeb089a112b518ab904acb3c3f549487d6e554fb873bcb",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCVileLair.esp",
+        "sha256": "fa174924ff2b44e69d1d27dc2a4c99e757d90c7b34109138d2b1ed9f430d5002",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCThievesDen.esp",
+        "sha256": "bade981f2c6665a934afb3ece481c4bba358d8114389a7f811403534e506407d",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCHorseArmor.esp",
+        "sha256": "d20d968a3492a73aa3f6c7ba033604f32b3aee7ea4e7447ae90881a25267b305",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCFrostcrag.esp",
+        "sha256": "ade51332829033c95f9ba73fbbb3ee31f44dd62f12fbf8e0066dd6384a65b6c0",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCOrrery.esp",
+        "sha256": "b1533ce31acdeb0c0385ab15c898b1c59c730e1d9b05848c8b4b76f2aaf3ad7d",
+        "bounded_merchant_or_item_overrides": []
+      }
+    ]
+  },
+  "isolation": "Use the native-oracle skill isolated prefix, backup/restore wrapper and exact original executable/content identities. Do not run setup commands in fork acceptance.",
+  "setup_console": [
+    "player.moveto c45b8",
+    "player.setpos x 20800",
+    "player.setpos y 69800",
+    "player.setangle z 340",
+    "player.setangle x 0"
+  ],
+  "controls": {
+    "activate": "Space",
+    "ready_item": "F",
+    "point_of_view": "R",
+    "inventory": "Tab",
+    "barter": "Circular-arrow service icon; Sam has no persuasion service"
+  },
+  "context": {
+    "player_mercantile": 15,
+    "player_luck": 50,
+    "merchant_mercantile": 51,
+    "merchant_luck": 50,
+    "disposition": 35
+  },
+  "steps": [
+    {
+      "action": "Query Player Lockpick/Gold counts and chest Lockpick/Gold counts",
+      "expected": {
+        "player_lockpicks": 23,
+        "player_gold": 44,
+        "chest_lockpicks": 30,
+        "chest_gold": 0
+      }
+    },
+    {
+      "action": "Activate Sam, choose Barter, select carried Lockpicks and choose count1",
+      "expected": {
+        "sale_quote": 2,
+        "merchant_budget": 400
+      }
+    },
+    {
+      "action": "Decline sale confirmation",
+      "expected": "All initial counts unchanged"
+    },
+    {
+      "action": "Select count1 and accept sale confirmation; wait for settled UI",
+      "expected": {
+        "player_lockpicks": 22,
+        "player_gold": 46,
+        "chest_lockpicks": 31,
+        "merchant_budget": 400
+      }
+    },
+    {
+      "action": "Select stock Lockpicks count2, decline the12gold confirmation",
+      "expected": "Post-sale counts unchanged"
+    },
+    {
+      "action": "Select stock Lockpicks count1, accept6gold confirmation; wait for settled UI",
+      "expected": {
+        "player_lockpicks": 23,
+        "player_gold": 40,
+        "chest_lockpicks": 30,
+        "chest_gold": 0,
+        "merchant_budget": 400
+      }
+    }
+  ],
+  "queries": [
+    "player.getav mercantile",
+    "player.getav luck",
+    "player.getitemcount a",
+    "player.getitemcount f",
+    "prid c45b8",
+    "getav mercantile",
+    "getav luck",
+    "getdisposition player",
+    "prid c45b7",
+    "getitemcount a",
+    "getitemcount f"
+  ],
+  "restoration": "Stop owned original process and require exact prefix/documents/plugins/pristine save restoration.",
+  "limitations": [
+    "The attempted original named save during dialogue was not produced. This protocol has no accepted original restart gate.",
+    "The native SKIL usage0 value0.4 is independently record-audited; original runtime XP was not measured.",
+    "UI coordinates and modified controls are specific to the recorded original prefix; inspect actual menus before delivering input."
+  ]
+}

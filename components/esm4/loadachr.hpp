@@ -58,6 +58,8 @@ namespace ESM4
         ESM::FormKey mBaseKey;
         ESM::FormId mHorse;
         ESM::FormKey mHorseKey;
+        ESM::FormId mMerchantContainer;
+        ESM::FormKey mMerchantContainerKey;
 
         ESM::Position mPos;
         float mScale = 1.0f;

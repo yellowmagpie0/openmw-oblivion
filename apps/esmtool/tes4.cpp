@@ -208,6 +208,8 @@ namespace EsmTool
                 std::cout << "\n  Parent: " << value.mParent;
             if constexpr (requires { value.mBaseObj; })
                 std::cout << "\n  BaseObj: " << value.mBaseObj;
+            if constexpr (requires { value.mMerchantContainerKey; })
+                std::cout << "\n  MerchantContainer: " << value.mMerchantContainerKey.serialize();
             if constexpr (ESM4::HasEditorId<T>)
                 std::cout << "\n  EditorId: " << value.mEditorId;
             if constexpr (std::is_same_v<T, ESM4::Quest>)

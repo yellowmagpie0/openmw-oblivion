@@ -20,6 +20,8 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/worldimp.hpp"
+#include <components/esm4/loadnpc.hpp>
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/creaturestats.hpp"
@@ -207,8 +209,11 @@ namespace MWGui
 
         std::vector<MWWorld::Ptr> itemSources;
         // Important: actor goes first, so purchased items come out of the actor's pocket first
-        itemSources.push_back(actor);
+        if (actor.getType() != ESM::REC_NPC_4) itemSources.push_back(actor);
         MWBase::Environment::get().getWorld()->getContainersOwnedBy(actor, itemSources);
+        // ContainerItemModel requires a source even when the linked chest
+        // is unavailable. The World purchase authority will reject that case.
+        if (itemSources.empty()) itemSources.push_back(actor);
 
         std::vector<MWWorld::Ptr> worldItems;
         MWBase::Environment::get().getWorld()->getItemsOwnedBy(actor, worldItems);
@@ -221,6 +226,12 @@ namespace MWGui
         mItemView->setModel(std::move(sortModel));
         mItemView->resetScrollBars();
 
+        const bool native = actor.getType() == ESM::REC_NPC_4;
+        mIncreaseButton->setVisible(!native);
+        mDecreaseButton->setVisible(!native);
+        mMaxSaleButton->setVisible(!native);
+        mTotalBalance->setEnabled(!native);
+        mOfferButton->setCaptionWithReplacing(native ? "#{Interface:Offer}" : "#{sBarterDialog8}");
         updateLabels();
 
         setTitle(actor.getClass().getName(actor));
@@ -296,6 +307,7 @@ namespace MWGui
 
         MWWorld::Ptr object = item.mBase;
         size_t count = item.mCount;
+        if (mPtr.getType() == ESM::REC_NPC_4) count = 1;
         bool shift = MyGUI::InputManager::getInstance().isShiftPressed();
         if (MyGUI::InputManager::getInstance().isControlPressed())
             count = 1;
@@ -336,6 +348,11 @@ namespace MWGui
         }
         else
         {
+            if (mPtr.getType() == ESM::REC_NPC_4 && !playerTradeModel->getItemsBorrowedToUs().empty())
+            {
+                MWBase::Environment::get().getWindowManager()->messageBox("Choose one item at a time.");
+                return;
+            }
             // borrow item to player
             playerTradeModel->borrowItemToUs(mItemToSell, mTradeModel, count);
             mTradeModel->borrowItemFromUs(mItemToSell, count);
@@ -389,6 +406,44 @@ namespace MWGui
     {
         TradeItemModel* playerItemModel
             = MWBase::Environment::get().getWindowManager()->getInventoryWindow()->getTradeModel();
+
+        if (mPtr.getType() == ESM::REC_NPC_4)
+        {
+            auto windows = MWBase::Environment::get().getWindowManager();
+            const auto& bought = playerItemModel->getItemsBorrowedToUs();
+            const auto& sold = mTradeModel->getItemsBorrowedToUs();
+            const bool buying = sold.empty() && bought.size() == 1;
+            const bool selling = bought.empty() && sold.size() == 1;
+            const auto& lines = buying ? bought : sold;
+            if ((!buying && !selling) || lines.front().mCount != 1
+                || mCurrentBalance == 0 || mCurrentBalance != mCurrentMerchantOffer
+                || (buying ? mCurrentBalance > 0 : mCurrentBalance < 0))
+            {
+                windows->messageBox("Choose one item at the listed price.");
+                return;
+            }
+            const MWWorld::Ptr item = lines.front().mBase;
+            const MWWorld::Ptr merchant = mPtr;
+            const int price = std::abs(mCurrentBalance);
+            auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+            // Clear UI reservations before stock publication can refresh it.
+            mTradeModel->abort();
+            playerItemModel->abort();
+            const bool completed = world && world->tradeOblivionMerchantItem(merchant, item, 1, price, buying);
+            if (mPtr != merchant || !windows->containsMode(GM_Barter)) return;
+            if (!completed)
+            {
+                windows->messageBox("The trade could not be completed.");
+                mCurrentBalance = mCurrentMerchantOffer = 0;
+                updateItemView();
+                windows->getInventoryWindow()->updateItemView();
+                updateLabels();
+                return;
+            }
+            eventTradeDone();
+            windows->removeGuiMode(GM_Barter);
+            return;
+        }
 
         const MWWorld::Store<ESM::GameSetting>& gmst
             = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
@@ -579,7 +634,9 @@ namespace MWGui
     {
         MWWorld::Ptr player = MWMechanics::getPlayer();
         int playerGold = player.getClass().getContainerStore(player).count(MWWorld::ContainerStore::sGoldId);
-        mPlayerGold->setCaptionWithReplacing("#{sYourGold} " + MyGUI::utility::toString(playerGold));
+        const bool native = mPtr.getType() == ESM::REC_NPC_4;
+        mPlayerGold->setCaptionWithReplacing(std::string(native ? "#{Interface:YourGold} " : "#{sYourGold} ")
+            + MyGUI::utility::toString(playerGold));
 
         TradeItemModel* playerTradeModel
             = MWBase::Environment::get().getWindowManager()->getInventoryWindow()->getTradeModel();
@@ -593,16 +650,17 @@ namespace MWGui
 
         if (mCurrentBalance < 0)
         {
-            mTotalBalanceLabel->setCaptionWithReplacing("#{sTotalCost}");
+            mTotalBalanceLabel->setCaptionWithReplacing(native ? "#{Interface:TotalCost}" : "#{sTotalCost}");
         }
         else
         {
-            mTotalBalanceLabel->setCaptionWithReplacing("#{sTotalSold}");
+            mTotalBalanceLabel->setCaptionWithReplacing(native ? "#{Interface:TotalSold}" : "#{sTotalSold}");
         }
 
         mTotalBalance->setValue(std::abs(mCurrentBalance));
 
-        mMerchantGold->setCaptionWithReplacing("#{sSellerGold} " + MyGUI::utility::toString(getMerchantGold()));
+        mMerchantGold->setCaptionWithReplacing(std::string(native ? "#{Interface:MerchantGold} " : "#{sSellerGold} ")
+            + MyGUI::utility::toString(getMerchantGold()));
     }
 
     void TradeWindow::updateOffer()
@@ -635,7 +693,8 @@ namespace MWGui
                 = static_cast<int>(std::max(1.f, 0.75f * basePrice)); // Maximum selling price -- 75% of the base
             const int sellingPrice
                 = MWBase::Environment::get().getMechanicsManager()->getBarterOffer(mPtr, basePrice, false);
-            merchantOffer += mPtr.getClass().isNpc() ? std::min(cap, sellingPrice) : sellingPrice;
+            merchantOffer += mPtr.getType() == ESM::REC_NPC_4 ? sellingPrice
+                : (mPtr.getClass().isNpc() ? std::min(cap, sellingPrice) : sellingPrice);
         }
 
         int diff = merchantOffer - mCurrentMerchantOffer;
@@ -654,6 +713,8 @@ namespace MWGui
 
     int TradeWindow::getMerchantGold()
     {
+        if (mPtr.getType() == ESM::REC_NPC_4)
+            return mPtr.get<ESM4::Npc>()->mBase->mBaseConfig.tes4.barterGold;
         int merchantGold = mPtr.getClass().getCreatureStats(mPtr).getGoldPool();
         return merchantGold;
     }
@@ -694,6 +755,11 @@ namespace MWGui
         }
         else if (arg.button == SDL_CONTROLLER_BUTTON_X)
         {
+            if (mPtr.getType() == ESM::REC_NPC_4)
+            {
+                onOfferButtonClicked(mOfferButton);
+                return true;
+            }
             if (mCurrentBalance == 0)
                 return true;
             // Show a count dialog to allow for bartering.

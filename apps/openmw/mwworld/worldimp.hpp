@@ -1045,6 +1045,8 @@ namespace MWWorld
         float getWindSpeed() const override;
 
         void getContainersOwnedBy(const MWWorld::ConstPtr& npc, std::vector<MWWorld::Ptr>& out) override;
+        Ptr getOblivionMerchantContainer(const ConstPtr& merchant);
+        bool tradeOblivionMerchantItem(const Ptr& merchant, const Ptr& item, int count, int price, bool buying);
         ///< get all containers in active cells owned by this Npc
         void getItemsOwnedBy(const MWWorld::ConstPtr& npc, std::vector<MWWorld::Ptr>& out) override;
         ///< get all items in active cells owned by this Npc

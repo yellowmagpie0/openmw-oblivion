@@ -1,0 +1,53 @@
+{
+  "status": "Verified bounded real-content Lockpick trade and cold persistence in normal and sanitizer runtimes; M13/M19 remain incomplete",
+  "milestones": [
+    "M13 inventory/economy",
+    "M19 service UI"
+  ],
+  "parent_commit": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "npc": "content:oblivion.esm:0c45b5",
+    "actor": "content:oblivion.esm:0c45b8",
+    "merchant_chest": "content:oblivion.esm:0c45b7",
+    "chest_base": "content:oblivion.esm:0c45b4",
+    "item": "content:oblivion.esm:00000a",
+    "item_name": "Lockpick",
+    "link": "Original ACHR XMRC; chest XOWN names the NPC base",
+    "npc_services": "AIDT 0x2400: miscellaneous goods and potions; projected Lockpick also needs shared Picks filtering",
+    "original_stock": 30,
+    "original_budget": 400
+  },
+  "course": "Continue the genuine independent healthy-shore inventory, defeat the two pursuing original Mud Crabs with learned Flare, walk to Shady Sam, stage/cancel and reject an unaffordable purchase, sell carried Lockpicks as individual transactions, then buy one from original linked stock. Cold-load both funded and purchased states.",
+  "source": {
+    "path": "build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "e38b5b86444feac911d7516fc4b00b4907f273fcf30b197ac39010a4629bb305",
+    "player_lockpicks": 8,
+    "player_gold": 0,
+    "health": 110,
+    "allocator": 7,
+    "branch_policy": "Keep separate from the main Cairn/Wellspring and Natural Caverns alchemy/poison inventories. No merging."
+  },
+  "acceptance": [
+    "Actual normal-input Sam dialogue and original linked-stock trade window; no fork grants, teleport, actor disable or edited gameplay stats",
+    "One ordinary native MISC/ALCH unit per fixed offer; quote revalidated against current actor/item inputs",
+    "Cancellation and insufficient funds leave actual inventory, stock, gold and Mercantile progress unchanged",
+    "Accepted sale/purchase publishes exact item count, quoted gold and legal ownership before inventory observers",
+    "One native Mercantile usage0 per completed sale; no award for buying, cancellation or rejection",
+    "Unrelated carried instance metadata, Player progression/quests and native allocator preserved except independently witnessed normal movement/combat/skill effects",
+    "Original merchant budget stays 400; chest remains its original locked, NPC-owned reference",
+    "Fresh-process funded and purchased continuations retain purse/stock/ownership without replay",
+    "Current normal and sanitizer runtime courses and appropriate focused/broad integration checks, followed by a local commit"
+  ],
+  "pricing": "Use the existing approximate native barter backend. Original observed unit quotes are buy6/sell2 at the oracle's recorded actor/disposition context. Strict acceptance covers the actual fork quote and its exact debit/credit; no exact original barter-formula or potion auto-value parity claim.",
+  "boundaries": [
+    "Explicit original NPC-owned XMRC chest only; no general faction-owned/remote vendor discovery",
+    "No haggling, mixed baskets, bulk offers, scripted/bound/stateful equipment sales, filled soul gems, explicit-scale sales or native vendor respawn/restock acceptance",
+    "Poison of Fatigue application and the original ALCH auto-value discrepancy remain separate content chunks",
+    "No full M13/M19, combat or TES4 MCP authoring claim",
+    "Runtime transfer acceptance is the original Lockpick. Other authored ordinary MISC/ALCH items use the admitted code path but require their own real-content courses.",
+    "Sales admit unowned carried instances only; explicit Player/faction ownership profiles remain separate.",
+    "Inherited inventory tabs/tooltips retain TES3 labels and Lockpick Uses/Quality; native offer/gold controls are implemented here."
+  ],
+  "evidence_root": "build/oblivion-compat/shady-sam-purchase"
+}

@@ -1117,6 +1117,130 @@ namespace MWWorld
         }
     }
 
+    bool World::tradeOblivionMerchantItem(const Ptr& merchant, const Ptr& item, int count, int price, bool buying)
+    {
+        // One ordinary, unscripted unit at the displayed native offer.
+        if (count != 1 || price <= 0 || item.isEmpty()) return false;
+        const Ptr chest = getOblivionMerchantContainer(merchant);
+        if (chest.isEmpty() || merchant.getClass().getCreatureStats(merchant).isDead()) return false;
+        auto& stockStore = chest.getClass().getContainerStore(chest);
+        const Ptr player = getPlayerPtr();
+        auto& inventory = player.getClass().getInventoryStore(player);
+        auto& sourceStore = buying ? stockStore : static_cast<ContainerStore&>(inventory);
+        if (item.getContainerStore() != &sourceStore
+            || !item.getClass().canSell(item, merchant.getClass().getServices(merchant))) return false;
+        if (std::none_of(sourceStore.begin(), sourceStore.end(), [&](const Ptr& current) { return current == item; }))
+            return false;
+        if (!buying && (!item.getCellRef().getOwner().empty() || !item.getCellRef().getFaction().empty()
+            || item.getCellRef().getNativeOwnershipRank() || !item.getCellRef().getNativeOwnershipGlobal().empty()))
+            return false;
+        const auto nativeId = OblivionProfileServices::nativeItemId(mStore, item.getCellRef().getRefId());
+        const auto* form = nativeId.getIf<ESM::FormId>();
+        if (!form) return false;
+        const auto* potion = mStore.get<ESM4::Potion>().search(nativeId);
+        const auto* misc = mStore.get<ESM4::MiscItem>().search(nativeId);
+        if ((!potion && !misc) || (potion && !potion->mScriptId.isZeroOrUnset())
+            || (misc && !misc->mScriptId.isZeroOrUnset())) return false;
+        // This sale profile creates ordinary stock; explicitly scaled
+        // instances need a separate admitted transfer profile.
+        if (!buying && item.getCellRef().getNativeItemScale()) return false;
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        const auto key = resolver.toFormKey(*form);
+        const auto definition = OblivionProfileServices::itemDefinition(mStore, nativeId);
+        if (!definition || definition->mMaxCondition >= 0 || definition->mMaxCharge >= 0
+            || definition->mMaxUsageTime >= 0 || !item.getClass().getScript(item).empty()
+            || !item.getCellRef().getNativeScriptOwner().isNull()
+            || item.getCellRef().getNativeBoundSource()
+            || !item.getCellRef().getNativeWeaponPoison().isNull()) return false;
+        const int expectedPrice = MWBase::Environment::get().getMechanicsManager()->getBarterOffer(
+            merchant, item.getClass().getValue(item), buying);
+        if (price != expectedPrice) return false;
+        if (!buying && price > merchant.get<ESM4::Npc>()->mBase->mBaseConfig.tes4.barterGold) return false;
+        auto debit = buying ? inventory.prepareItemRemoval(ContainerStore::sGoldId, price)
+                            : inventory.prepareItemRemoval(item, 1);
+        if (debit->getCount() != (buying ? price : 1)) return false;
+
+        const auto before = captureOblivionInventory(chest);
+        auto after = before;
+        ESM4::RuntimeInventoryItem received;
+        if (buying)
+        {
+            auto selected = std::find_if(after.begin(), after.end(), [&](const auto& value) { return value.mBase == key; });
+            if (selected == after.end() || selected->mCount != item.getCellRef().getCount(false)
+                || std::count_if(after.begin(), after.end(), [&](const auto& value) { return value.mBase == key; }) != 1)
+                return false;
+            received = *selected;
+            received.mCount = 1;
+            received.mOwner = {};
+            received.mOwnershipGlobal = {};
+            received.mOwnershipRank.reset();
+            if (--selected->mCount == 0) after.erase(selected);
+        }
+        else
+        {
+            // Plain goods only: do not turn script/bound/instance state into
+            // anonymous stock. Ownership of legally sold goods passes to Sam.
+            ESM4::RuntimeInventoryItem sold;
+            sold.mBase = key;
+            sold.mCount = 1;
+            sold.mOwner = merchant.get<ESM4::Npc>()->mBase->mFormKey;
+            if (!ESM4::addInventoryItem(after, sold)) return false;
+            const auto goldKey = mStore.findEsm4FormKey("Gold001");
+            if (!goldKey) return false;
+            received.mBase = *goldKey;
+            received.mCount = price;
+        }
+        auto chestAfter = OblivionProfileServices::stageActorInventory(
+            OblivionProfileServices::prepareActorInventory(mStore, resolver, after));
+        auto prototypes = OblivionProfileServices::prepareActorInventory(mStore, resolver, {received});
+        auto addition = inventory.prepareItemAddition(prototypes.front().mReference.getPtr(), received.mCount);
+        std::vector<Ptr> removed, inserted;
+        for (auto current : stockStore)
+            if (current.mRef->mWorldModel == &mWorldModel) removed.push_back(current);
+        for (auto current : *chestAfter)
+        {
+            current.setContainerStore(&stockStore);
+            inserted.push_back(current);
+        }
+        if (addition->needsRegistration()) inserted.push_back(addition->getItem());
+        auto registration = mWorldModel.preparePtrReplacement(removed, inserted);
+        if (!registration.isValid() || !debit->isValid() || !addition->isValid()
+            || getPlayerPtr() != player || getOblivionMerchantContainer(merchant) != chest
+            || captureOblivionInventory(chest) != before) return false;
+        if (!mOblivionDynamicReferenceIdentity)
+            mOblivionDynamicReferenceIdentity = std::make_shared<const char>(0);
+        const std::weak_ptr<const char> worldIdentity = mOblivionDynamicReferenceIdentity;
+        // No callbacks occur between these prepared publications. Gold and
+        // the purchased stack are different item bases in the same store.
+        if (!debit->commit()) return false;
+        const Ptr published = addition->commit();
+        if (published.isEmpty()) throw std::logic_error("Prepared native purchase addition changed during commit");
+        stockStore.swapPreparedContents(*chestAfter);
+        registration.commit();
+        if (mOblivionRuntimeState)
+            for (auto& reference : mOblivionRuntimeState->mReferences)
+                if (reference.mKey == chest.getCellRef().getFormKey()) reference.mInventory.swap(after);
+        Log(Debug::Info) << "TES4 merchant trade committed: merchant=" << merchant.getCellRef().getFormKey().serialize()
+            << " chest=" << chest.getCellRef().getFormKey().serialize() << " item=" << key.serialize()
+            << " count=1 gold=" << price << " buying=" << (buying ? "true" : "false");
+        std::exception_ptr failure;
+        // Native Mercantile usage0 awards one transaction, independently of
+        // its price. Buying and cancelled/rejected offers award nothing.
+        if (!buying)
+        {
+            try { useOblivionPlayerSkill(29, 0); }
+            catch (...) { failure = std::current_exception(); }
+        }
+        try { debit->notify(); } catch (...) { if (!failure) failure = std::current_exception(); }
+        try { addition->notify(); } catch (...) { if (!failure) failure = std::current_exception(); }
+        if (!worldIdentity.expired() && getPlayerPtr() == player)
+        {
+            if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull()) windows->inventoryUpdated(player);
+        }
+        if (failure) std::rethrow_exception(failure);
+        return true;
+    }
+
     std::unique_ptr<InventoryStore> World::prepareOblivionContainerInventory(const Ptr& container)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || container.isEmpty() || container.getType() != ESM::REC_CONT4)

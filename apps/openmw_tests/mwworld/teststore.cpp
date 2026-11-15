@@ -1619,6 +1619,7 @@ TEST(MWWorldStoreTest, PreparedSharedDefinitionsInvalidateSiblingEvenWhenOnlyDef
 
 TEST(MWWorldStoreTest, PreparedInventoryReferencesUseIncomingOrStaticDefinitionsAcrossClear)
 {
+    MWClass::Weapon::registerSelf();
     MWWorld::ESMStore store;
     populateSharedDefinitionContent(store);
     const auto id = ESM::RefId(ESM::FormId{0x940, 0});

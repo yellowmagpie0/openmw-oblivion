@@ -331,9 +331,17 @@ namespace MWClass
         return (actorFlags(data) & ESM4::Npc::TES4_Essential) != 0;
     }
 
-    int ESM4Npc::getServices(const MWWorld::ConstPtr&) const
+    int ESM4Npc::getServices(const MWWorld::ConstPtr& ptr) const
     {
-        return 0;
+        // Only the native purchase categories currently admitted by the UI.
+        // AIDT services belong to this NPC, not its class's default services.
+        const auto* base = ptr.get<ESM4::Npc>()->mBase;
+        if (!base->mIsTES4) return 0;
+        int services = static_cast<int>(base->mAIData.aiFlags & (ESM::NPC::Misc | ESM::NPC::Potions));
+        // Native Lockpick is MISC; its shared inventory projection is a
+        // TES3 Lockpick and therefore asks for Picks during UI filtering.
+        if (services & ESM::NPC::Misc) services |= ESM::NPC::Picks;
+        return services;
     }
 
     bool ESM4Npc::isPersistent(const MWWorld::ConstPtr& ptr) const

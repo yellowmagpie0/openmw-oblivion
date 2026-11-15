@@ -303,6 +303,8 @@ namespace MWGui
 
         if (mTrading)
         {
+            if (MWBase::Environment::get().getWindowManager()->getTradeWindow()->mPtr.getType() == ESM::REC_NPC_4)
+                count = 1;
             // Can't give conjured items to a merchant
             if (item.mFlags & ItemStack::Flag_Bound)
             {

@@ -10794,8 +10794,33 @@ namespace MWWorld
         }
     };
 
+    Ptr World::getOblivionMerchantContainer(const ConstPtr& merchant)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || merchant.isEmpty()
+            || merchant.getType() != ESM::REC_NPC_4)
+            return {};
+        const auto* placement = mStore.get<ESM4::ActorCharacter>().search(merchant.getCellRef().getFormKey());
+        if (!placement || placement->mBaseKey != merchant.get<ESM4::Npc>()->mBase->mFormKey
+            || placement->mMerchantContainerKey.isNull())
+            return {};
+        const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(placement->mMerchantContainerKey);
+        if (!id) return {};
+        const Ptr chest = mWorldModel.getResidentPtr(*id);
+        if (chest.isEmpty() || chest.getType() != ESM::REC_CONT4
+            || chest.getCellRef().getFormKey() != placement->mMerchantContainerKey
+            || chest.getCellRef().getOwner() != merchant.getCellRef().getRefId())
+            return {};
+        return chest;
+    }
+
     void World::getContainersOwnedBy(const MWWorld::ConstPtr& owner, std::vector<MWWorld::Ptr>& out)
     {
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+        {
+            const Ptr chest = getOblivionMerchantContainer(owner);
+            if (!chest.isEmpty()) out.push_back(chest);
+            return;
+        }
         for (CellStore* cellstore : mWorldScene->getActiveCells())
         {
             GetContainersOwnedByVisitor visitor(owner, out);
@@ -10805,6 +10830,7 @@ namespace MWWorld
 
     void World::getItemsOwnedBy(const MWWorld::ConstPtr& npc, std::vector<MWWorld::Ptr>& out)
     {
+        if (mGameProfile == ESM::GameProfile::Oblivion) return;
         for (CellStore* cellstore : mWorldScene->getActiveCells())
         {
             cellstore->forEach([&](const auto& ptr) {

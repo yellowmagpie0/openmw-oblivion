@@ -289,6 +289,9 @@ namespace MWWorld
         std::unique_ptr<PreparedInitialInventory> mPreparedInitialInventory;
         std::unique_ptr<PreparedInitialInventory> mPreparedInitialAutoEquip;
         friend class PreparedInitialInventory;
+        // World publishes native merchant stock together with its prepared
+        // Player debit/addition and registry replacement, before observers.
+        friend class World;
         std::shared_ptr<const char> mPreparedAdditionIdentity;
 
         mutable float mCachedWeight = 0;

@@ -1,4 +1,5 @@
 #include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadachr.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/toutf8/toutf8.hpp>
@@ -70,4 +71,25 @@ TEST(ESM4NpcCombat, ReusedRecordDoesNotRetainPriorActorInputs)
     EXPECT_TRUE(empty.mCombatStyle.isZeroOrUnset());
     EXPECT_TRUE(empty.mSpell.empty());
     EXPECT_TRUE(empty.mInventory.empty());
+}
+
+TEST(ESM4NpcCombat, MerchantChestLinkUsesStableIdentityAndRejectsMalformedOrDuplicatePayloads)
+{
+    const auto loadPlacement = [](const std::string& payload, ESM4::ActorCharacter result = {}) {
+        const auto header = record("TES4", sub("HEDR", bytes(1.f) + bytes(std::uint32_t{1}) + bytes(std::uint32_t{0x900})));
+        auto stream = std::make_unique<std::stringstream>(header + record("ACHR", payload), std::ios::in | std::ios::binary);
+        ESM4::Reader reader(std::move(stream), "actors.esm", nullptr, nullptr, true);
+        if (!reader.getRecordHeader()) throw std::runtime_error("missing placement fixture");
+        reader.getRecordData();
+        result.load(reader);
+        return result;
+    };
+    const auto link = sub("XMRC", bytes(std::uint32_t{0xc45b7}));
+    const auto actor = loadPlacement(link);
+    EXPECT_EQ(actor.mMerchantContainerKey, ESM::FormKey::content("actors.esm", 0xc45b7));
+    EXPECT_EQ(actor.mMerchantContainer.mIndex, 0xc45b7u);
+    EXPECT_TRUE(loadPlacement({}, actor).mMerchantContainerKey.isNull());
+    EXPECT_THROW(loadPlacement(link + link), std::runtime_error);
+    for (int size : {0, 3, 5, 8})
+        EXPECT_THROW(loadPlacement(sub("XMRC", std::string(size, '\0'))), std::runtime_error);
 }

@@ -39,6 +39,9 @@ void ESM4::ActorCharacter::load(ESM4::Reader& reader)
     mFlags = reader.hdr().record.flags;
     mParent = reader.currCell();
     mParentKey = reader.currCellFormKey();
+    mMerchantContainer = {};
+    mMerchantContainerKey = {};
+    bool merchantContainerSeen = false;
 
     while (reader.getSubRecordHeader())
     {
@@ -126,6 +129,20 @@ void ESM4::ActorCharacter::load(ESM4::Reader& reader)
                 break;
             }
             case ESM::fourCC("XMRC"): // merchant container formId
+            {
+                if (merchantContainerSeen || subHdr.dataSize != sizeof(ESM::FormId32))
+                    reader.fail("ACHR XMRC must be a unique FormID");
+                merchantContainerSeen = true;
+                ESM::FormId32 rawValue = 0;
+                if (!reader.getExact(rawValue))
+                    reader.fail("ACHR XMRC is truncated");
+                const ESM::FormId raw = ESM::FormId::fromUint32(rawValue);
+                reader.recordRawFormId(raw);
+                mMerchantContainer = raw;
+                reader.adjustFormId(mMerchantContainer);
+                mMerchantContainerKey = reader.resolveRawFormId(raw);
+                break;
+            }
             // TES5
             case ESM::fourCC("XAPD"): // activation parent
             case ESM::fourCC("XAPR"): // active parent

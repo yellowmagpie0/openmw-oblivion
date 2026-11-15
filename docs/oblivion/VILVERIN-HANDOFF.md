@@ -4,14 +4,20 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [original Poison of Illness coating](TUTORIAL-POISON-HANDOFF.md).
-The separate Natural Caverns branch now supports the original crate bottle,
-Yes/No equipped-axe application, saved coating, air miss retention, original
-Goblin Skirmisher hit and cold spent/death ownership. Normal/SAN ownership
-courses,3302 component and2292 engine tests per mode, plus618 Python, pass;
-[receipt](TUTORIAL-POISON-VERIFICATION.json) records exact scope. The SAN hit/cold
-tail uses a genuine normal-input pre-combat checkpoint from that same branch;
-complete instrumented approach acceptance remains open.
+Latest completed bounded chunk: [original Shady Sam unit barter](SHADY-SAM-TRADE-HANDOFF.md).
+The independent healthy-shore branch reached Sam, sold six original Lockpicks,
+bought one and retained the paid inventory across normal/SAN cold processes.
+Player 3 Lockpicks/1 gold, stock 35, Health 110, allocator 7, Mercantile progress 2.4. Native
+linked-stock ownership, fixed 400 budget, cancel/reject controls and quoted gold
+pass; prices remain approximate. All 3,303 component/2,292 engine cases per mode and
+618 Python checks pass, with exact SAN engine partitions after Bullet's global thread
+limit aborted the full process. See the [receipt](SHADY-SAM-TRADE-VERIFICATION.json)
+for exact provenance and the unchanged main-cave source below.
+
+The separate [Poison of Illness coating](TUTORIAL-POISON-HANDOFF.md) remains
+accepted for crate acquisition, equipped-axe application, miss retention, Goblin
+contact and cold spent/death ownership. Its receipt retains the incomplete full
+instrumented approach boundary. Keep its inventory separate from the shore.
 
 The prior [tutorial kit](TUTORIAL-ALCHEMY-HANDOFF.md) remains accepted. Its earned
 1pt/5s generated poison is retained separately and still needs timed application.

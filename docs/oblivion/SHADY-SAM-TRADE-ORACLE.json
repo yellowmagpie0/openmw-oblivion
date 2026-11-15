@@ -1,0 +1,50 @@
+{
+  "status": "Accepted original-game UI observations; no original cold-save claim",
+  "evidence": "build/oblivion-compat/shady-sam-purchase/original-04/observations.json",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "save_sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+  "source": "Existing genuine Gaius Weynon House original-game save after character generation; its 11 original plugins are hash-recorded in the private source receipt. Independent raw audit found no DLC overrides of the bounded Sam/chest/Lockpick records.",
+  "setup": "Original-engine teleport/reposition to Sam only. Player and merchant Mercantile/Luck were queried, not altered. These setup controls are not permitted in fork acceptance.",
+  "context": {
+    "player_mercantile": 15,
+    "player_luck": 50,
+    "merchant_mercantile": 51,
+    "merchant_luck": 50,
+    "disposition": 35
+  },
+  "observations": {
+    "initial": {
+      "player_gold": 44,
+      "player_lockpicks": 23,
+      "chest_lockpicks": 30,
+      "budget": 400
+    },
+    "sale_quote": 2,
+    "sale_decline": "No debit, credit or stock transfer",
+    "after_one_sale": {
+      "player_gold": 46,
+      "player_lockpicks": 22,
+      "chest_lockpicks": 31,
+      "budget": 400
+    },
+    "declined_two_unit_purchase": "Confirmation quoted12; No retained the post-sale state",
+    "single_purchase_quote": 6,
+    "after_one_purchase": {
+      "player_gold": 40,
+      "player_lockpicks": 23,
+      "chest_lockpicks": 30,
+      "chest_gold": 0,
+      "budget": 400
+    }
+  },
+  "skill_content": "Winning native SKIL00004e names Mercantile AV29 and usage0=0.4000000059604645. This is a record/default audit, not a claim that original runtime XP was numerically measured in this probe.",
+  "typed_field_check": "Current esmtool parses original ACHR0c45b8 with MerchantContainer content:oblivion.esm:0c45b7; independent raw XMRC/XOWN audit is retained separately.",
+  "restoration": {
+    "wrapper_exit": 0,
+    "exact_input_restoration": true,
+    "pristine_quicksave_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "retained_failures": "original01/02 forced unfinished-prison setup did not establish the bounded trade course and exited5; both restored inputs. original03 failed before launch from a helper NameError and restored inputs. original04's attempted named save during dialogue produced no file; no persistence evidence is claimed.",
+  "editable_protocol": "SHADY-SAM-TRADE-ORACLE-PROBE.json"
+}

@@ -1,0 +1,932 @@
+{
+  "status": "Verified bounded real-content unit trade; M13 and M19 remain incomplete",
+  "contract": "SHADY-SAM-TRADE-CONTRACT.json",
+  "oracle": "SHADY-SAM-TRADE-ORACLE.json",
+  "source": {
+    "parent_commit": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+    "tested_dirty": {
+      "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+      "source_fingerprint": "70af8cdaced397eb22ab775e33170b5b77a53b71f4c01dd64db974e5f99f6142"
+    },
+    "implementation_sha256": {
+      "apps/components_tests/esm4/testloadnpc.cpp": "c9a1a869b43f55155bf4364195457e5390819fc98d9b82225d82323faaea85fd",
+      "apps/esmtool/tes4.cpp": "4ff980ea24535ae760d57eefe693aa1c1b5d63a6ee0b1ff6e8c7e5154a8bf52a",
+      "apps/openmw/mwclass/esm4npc.cpp": "cba00a4a69ded34ebb71756aaef77c4674b43e9504c13bc39f05b05274711dd9",
+      "apps/openmw/mwgui/dialogue.cpp": "cb8aa0f3b994759f57a429596fa5f4a7eae6329216391b3a2fde5d1845ea3824",
+      "apps/openmw/mwgui/inventorywindow.cpp": "48ef22e699add1649b084079f35faf9b45166e29931ebb028e925cf7f8db6d13",
+      "apps/openmw/mwgui/tradewindow.cpp": "0d53350f4756a88a8e374e51ce871e69cd644a0dfb02bea67ccc07a0ec4783e5",
+      "apps/openmw/mwmechanics/mechanicsmanagerimp.cpp": "d4278f02c9c7790dbda6525dab6554fdfc8e3b7d484678bb87d8fd5a637119f5",
+      "apps/openmw/mwworld/containerstore.hpp": "f04e6ff9fcefb31e48cf67832b3a89e1717d7b5be9df458235eff1f644d19bef",
+      "apps/openmw/mwworld/oblivioninteraction.cpp": "395b6b7c5b291144f7dfe2d38e781f4f733eb98a412c8947ac8bab2fcb37f48e",
+      "apps/openmw/mwworld/worldimp.cpp": "3112f54cf7bfda3f7f54b7337601fc0ea38571a197efea410e0ed284714ddaed",
+      "apps/openmw/mwworld/worldimp.hpp": "9f8104b14ab8f58ebfa90a38fe33dca39573ddc18a1c64db366eefe67befe796",
+      "apps/openmw_tests/mwworld/teststore.cpp": "66fd5c7e9c34e779bc34eb5035988f66e4ebe54fa777e7a8d07088a54aaad458",
+      "components/esm4/loadachr.cpp": "01bcea70edb47c6ccccf1d99d80090dc70e398cee8d99e0df17ac1c693167e7d",
+      "components/esm4/loadachr.hpp": "57fb9f9c1d02dc63586e15bde897e78f18bd5a2c101970101ccc2e8e7aa600a2",
+      "files/data/l10n/Interface/en.yaml": "920242b7a7337193650ca5f3f57b8d431a3c9b9a27df57009a28794c9bc2b1c3"
+    },
+    "auditor_sha256": "e3ebc0e76de5deefc8dfa40adaf31966231cc5af0cd5056d9b0779eb119deec1",
+    "auditor_tested_dirty": {
+      "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+      "source_fingerprint": "0306c37a281be0d07bdabe0ff0f2ad362fa4a63f9021552b478428348bd57ba3"
+    },
+    "post_gate_changes": "Public auditor strengthened with source-to-load checks and directly verified on every accepted course; final618Python checks cover that exact script and published manifests. Subsequent changes are evidence documents only; production implementation remains as hashed."
+  },
+  "layers": {
+    "structural": "Typed ACHR XMRC retained with stable identity and duplicate/malformed-payload rejection; original typed dump agrees with independent raw audit. No save schema change.",
+    "semantic": "Independent Python re-encodes actual saved DATA and checks exact legal inventory metadata, purse, linked stock, chest owner/lock, unrelated progression and allocator.",
+    "runtime": {
+      "normal": [
+        {
+          "label": "normal-sam-open-03",
+          "phase": "open",
+          "manifest_sha256": "ccbf35828b42ee04d4aeb7b6e410222f7406f1b2d57f0b96f62e27060c22326d",
+          "audit_sha256": "032defe5cac61e846d09024084fbba74ea862a62df29f47620ec3c4d89c9e245",
+          "source_sha256": "a4365d605c2864e7658f0fd5c484e2b369dcb110e6dc9ee9309d4541009c98df",
+          "save_sha256": "04d23777542b85a5650861048b88baa84380de08b1e4e634819c9c80c1c512d5",
+          "loaded_libraries_sha256": "683c17a62ba50248682b6cf2a2a0135d902021a88e791c7dcd0444003e439a63",
+          "binary_sha256": "9ab87d8df9c62dbba79354472f879159ff862184de61af2941958db5c40b4d4a",
+          "pid": 1370186,
+          "start_ticks": 25966966,
+          "player_lockpicks": 8,
+          "player_gold": 0,
+          "merchant_lockpicks": 30,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.0
+          }
+        },
+        {
+          "label": "normal-sam-cancel-02",
+          "phase": "cancel",
+          "manifest_sha256": "fee8f5c1ee7cae8dc36365a26a1c0d2f438c33c70508f7677a29b84ec19f0c42",
+          "audit_sha256": "ac43ffb0d62ee6a4c7aa5c56554cc0307fff864442f8d7fd2da934adecff0637",
+          "source_sha256": "04d23777542b85a5650861048b88baa84380de08b1e4e634819c9c80c1c512d5",
+          "save_sha256": "dd8747ef88fdb58ddfc69a696c060501ed4b799abf30702d1c34bbd99c96e6e4",
+          "loaded_libraries_sha256": "8ac9944c53ff51f711a1f51d957533fe651bb1ac5b1e63f50bf84a1497642f21",
+          "binary_sha256": "261d6b142f0bcb56274febc42047ecf767b80fd22de6210c801fa7cab9b329f8",
+          "pid": 1371130,
+          "start_ticks": 26061130,
+          "player_lockpicks": 8,
+          "player_gold": 0,
+          "merchant_lockpicks": 30,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.0
+          }
+        },
+        {
+          "label": "normal-sam-insufficient-02",
+          "phase": "insufficient",
+          "manifest_sha256": "ecc1240c5a668390d8b20220a3cba22808ab2ae75ce5681e40dd82ab6f88a79f",
+          "audit_sha256": "a271a2b0db2ad77f49285dd72036c877c4b3a5add19db6733a9a36f89ec83135",
+          "source_sha256": "dd8747ef88fdb58ddfc69a696c060501ed4b799abf30702d1c34bbd99c96e6e4",
+          "save_sha256": "1083cea4eddef012c5501963233cc775a35eab6f02e712e8e2f490d754ce155c",
+          "loaded_libraries_sha256": "8e4b13e532ef9d5aad344acf3fff4ea1ca8da9e281baa1de519aee0eefb77ed8",
+          "binary_sha256": "261d6b142f0bcb56274febc42047ecf767b80fd22de6210c801fa7cab9b329f8",
+          "pid": 1377272,
+          "start_ticks": 26093311,
+          "player_lockpicks": 8,
+          "player_gold": 0,
+          "merchant_lockpicks": 30,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.0
+          }
+        },
+        {
+          "label": "normal-sam-sale-04",
+          "phase": "sell",
+          "manifest_sha256": "09ef570ecd99c6e7413429823c028f0ba2c78ce19be40bbc7e7c142c30cca19d",
+          "audit_sha256": "8c7f140fbf9259e15e74dfecb862cf790a613da2330d5f7048c99e7cd80bc7c3",
+          "source_sha256": "1083cea4eddef012c5501963233cc775a35eab6f02e712e8e2f490d754ce155c",
+          "save_sha256": "8e5421f43a0d2cd6e3da9c33dc9e1c002a5216271819e1bc78ceca4f5f7713f9",
+          "loaded_libraries_sha256": "ad91ef73ae95dc4d730e204209f29b7edcba820991456c50a91f5424d3b577d1",
+          "binary_sha256": "bf77adf50dae2d8fb0a31451645d0f09820bceb980dd3374c8d10ab0c18101d5",
+          "pid": 1378483,
+          "start_ticks": 26125691,
+          "player_lockpicks": 7,
+          "player_gold": 1,
+          "merchant_lockpicks": 31,
+          "sales": [
+            1
+          ],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.4000000059604645
+          }
+        },
+        {
+          "label": "normal-sam-fund-five-02",
+          "phase": "sell",
+          "manifest_sha256": "d70df6101b62cdb0cd9c314b565b0c254ac4228199b147a42c9dc03c4203a3be",
+          "audit_sha256": "12a8eece5534b33275bd4705f4a862907fd60ba94b564cb3dcf66888d9d40bc9",
+          "source_sha256": "8e5421f43a0d2cd6e3da9c33dc9e1c002a5216271819e1bc78ceca4f5f7713f9",
+          "save_sha256": "ef40075afd38e378e34dc5e4d908bfde935fada4b72d0d7a1c53420e9b0e9838",
+          "loaded_libraries_sha256": "80818db98fa37c70adaafbbd5d99549c2f036b87d8c1a482fbc531f4c5d8657b",
+          "binary_sha256": "bf77adf50dae2d8fb0a31451645d0f09820bceb980dd3374c8d10ab0c18101d5",
+          "pid": 1378902,
+          "start_ticks": 26145546,
+          "player_lockpicks": 2,
+          "player_gold": 6,
+          "merchant_lockpicks": 36,
+          "sales": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          }
+        },
+        {
+          "label": "normal-sam-funded-cold-01",
+          "phase": "reload",
+          "manifest_sha256": "7b05c8d3c5d65a7f369fab8e351deb25b375da2c5ab5f3edd8421e7c87d47bdf",
+          "audit_sha256": "fbb6c04ac2bed745aa9abafcf9317a38640ac768b416513e6d58638b936b6fc2",
+          "source_sha256": "ef40075afd38e378e34dc5e4d908bfde935fada4b72d0d7a1c53420e9b0e9838",
+          "save_sha256": "328626f0d84300c91401cb1391d6ba432d67ac513e9558ba3c107c4e73f9abe1",
+          "loaded_libraries_sha256": "1b845dd3a9f23bb91c2adace1f036cad2a328ec42ed463131c2c43e95d45f233",
+          "binary_sha256": "bf77adf50dae2d8fb0a31451645d0f09820bceb980dd3374c8d10ab0c18101d5",
+          "pid": 1379193,
+          "start_ticks": 26155611,
+          "player_lockpicks": 2,
+          "player_gold": 6,
+          "merchant_lockpicks": 36,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          }
+        },
+        {
+          "label": "normal-sam-buy-01",
+          "phase": "buy",
+          "manifest_sha256": "622e9926edf2b49f1490874e5ae5ca7e79ec079514b4c6b28dbcc9a6d586f3ec",
+          "audit_sha256": "194686d5b7c0f217926bc3e53aa5091fcd8d25223bdaf08fffc96a232a96f52a",
+          "source_sha256": "328626f0d84300c91401cb1391d6ba432d67ac513e9558ba3c107c4e73f9abe1",
+          "save_sha256": "a45a6598d01938b416b5c7ce0d8ef7f3d4fbac8ac489ee90a577d2619fb73a61",
+          "loaded_libraries_sha256": "1c31a0736ef61a9ba1f69206cfdf1d7c7507741ca9e686648d4ab3f7697cc728",
+          "binary_sha256": "bf77adf50dae2d8fb0a31451645d0f09820bceb980dd3374c8d10ab0c18101d5",
+          "pid": 1379311,
+          "start_ticks": 26162089,
+          "player_lockpicks": 3,
+          "player_gold": 1,
+          "merchant_lockpicks": 35,
+          "sales": [],
+          "purchases": [
+            5
+          ],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          }
+        },
+        {
+          "label": "normal-sam-purchased-cold-01",
+          "phase": "reload",
+          "manifest_sha256": "7b05c8d3c5d65a7f369fab8e351deb25b375da2c5ab5f3edd8421e7c87d47bdf",
+          "audit_sha256": "5472e01509858dc65ab9142f2b231cd86643da6add24461e49a1d96d9ccf408a",
+          "source_sha256": "a45a6598d01938b416b5c7ce0d8ef7f3d4fbac8ac489ee90a577d2619fb73a61",
+          "save_sha256": "8944665bd947e09018e1a0a1640889237c3fad5fded95f49cf6a48bcd5b0c5f2",
+          "loaded_libraries_sha256": "ec3401d313c54e86bb69c98e4f5dda5b3941beebea16ebc3b4e0b816caadbf63",
+          "binary_sha256": "bf77adf50dae2d8fb0a31451645d0f09820bceb980dd3374c8d10ab0c18101d5",
+          "pid": 1379500,
+          "start_ticks": 26169410,
+          "player_lockpicks": 3,
+          "player_gold": 1,
+          "merchant_lockpicks": 35,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          }
+        },
+        {
+          "label": "normal-sam-insufficient-03",
+          "phase": "insufficient",
+          "manifest_sha256": "ecc1240c5a668390d8b20220a3cba22808ab2ae75ce5681e40dd82ab6f88a79f",
+          "audit_sha256": "373907d8f1ea1b81b45c7153fc5f3332101206cbc2eeb98adc5f12bf7b5350f1",
+          "source_sha256": "dd8747ef88fdb58ddfc69a696c060501ed4b799abf30702d1c34bbd99c96e6e4",
+          "save_sha256": "fa8a9a036e52c9e4b4e30a8e1693259380130537062b94c5111fd8974499cf24",
+          "loaded_libraries_sha256": "a1b9a21b2d5252ce80afd2f9fa53592405fdc4eed25664c72f03381136ca9642",
+          "binary_sha256": "bf77adf50dae2d8fb0a31451645d0f09820bceb980dd3374c8d10ab0c18101d5",
+          "pid": 1379638,
+          "start_ticks": 26176013,
+          "player_lockpicks": 8,
+          "player_gold": 0,
+          "merchant_lockpicks": 30,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.0
+          }
+        }
+      ],
+      "sanitized": [
+        {
+          "label": "sanitized-sam-cancel-01",
+          "phase": "cancel",
+          "manifest_sha256": "fee8f5c1ee7cae8dc36365a26a1c0d2f438c33c70508f7677a29b84ec19f0c42",
+          "audit_sha256": "5a5404d1e08875f7f14e89e455093b866dd7b711bc39c4393a10177adc17e90e",
+          "source_sha256": "04d23777542b85a5650861048b88baa84380de08b1e4e634819c9c80c1c512d5",
+          "save_sha256": "8eb2db538a000080e5daf7f21ebe6ff66930b2573e264429ffc40c5c6b8ed54d",
+          "loaded_libraries_sha256": "3f9dde74cb0b8423161445c675575fec2e211f7c5db7833b9efcfe7ba33b64c7",
+          "binary_sha256": "1ea5f8667214fbe3972f8eb364086a925c611ae5232a6037337f46d1b23a2a95",
+          "pid": 1396124,
+          "start_ticks": 26646188,
+          "player_lockpicks": 8,
+          "player_gold": 0,
+          "merchant_lockpicks": 30,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.0
+          }
+        },
+        {
+          "label": "sanitized-sam-insufficient-01",
+          "phase": "insufficient",
+          "manifest_sha256": "ecc1240c5a668390d8b20220a3cba22808ab2ae75ce5681e40dd82ab6f88a79f",
+          "audit_sha256": "43b0bec60346726d810d04521afe548180bc2459d63ce0264d3fbb388129b2a0",
+          "source_sha256": "8eb2db538a000080e5daf7f21ebe6ff66930b2573e264429ffc40c5c6b8ed54d",
+          "save_sha256": "5023a905f4af88efd62ad56ae56a5a1c3f0934a297050900aa5f8cfdac598543",
+          "loaded_libraries_sha256": "6fa65d7ebfc1a1f697867b15d1ccab71d6d9a5eefe0f774487dce5a112b2695c",
+          "binary_sha256": "1ea5f8667214fbe3972f8eb364086a925c611ae5232a6037337f46d1b23a2a95",
+          "pid": 1396905,
+          "start_ticks": 26684256,
+          "player_lockpicks": 8,
+          "player_gold": 0,
+          "merchant_lockpicks": 30,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.0
+          }
+        },
+        {
+          "label": "sanitized-sam-sale-01",
+          "phase": "sell",
+          "manifest_sha256": "09ef570ecd99c6e7413429823c028f0ba2c78ce19be40bbc7e7c142c30cca19d",
+          "audit_sha256": "6ecfb756207c5f98c2e1cec3cf194c48ccfa7c40cbcd93cfcdefece7bfd1a1ab",
+          "source_sha256": "5023a905f4af88efd62ad56ae56a5a1c3f0934a297050900aa5f8cfdac598543",
+          "save_sha256": "567c1661f160e7903eb9f5d4a81e2f0f32e50d1358280dc8f977997a4cf15674",
+          "loaded_libraries_sha256": "2ffc3d2aaf6c840f4b8a0c2255dc1fce83f95481b5e8a38367b97d48f1ba5301",
+          "binary_sha256": "1ea5f8667214fbe3972f8eb364086a925c611ae5232a6037337f46d1b23a2a95",
+          "pid": 1397174,
+          "start_ticks": 26721871,
+          "player_lockpicks": 7,
+          "player_gold": 1,
+          "merchant_lockpicks": 31,
+          "sales": [
+            1
+          ],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.4000000059604645
+          }
+        },
+        {
+          "label": "sanitized-sam-fund-five-01",
+          "phase": "sell",
+          "manifest_sha256": "d70df6101b62cdb0cd9c314b565b0c254ac4228199b147a42c9dc03c4203a3be",
+          "audit_sha256": "105ba3acc520245242f4803a741202b462fb86f36cc8cd79f44e002cd0d49fa4",
+          "source_sha256": "567c1661f160e7903eb9f5d4a81e2f0f32e50d1358280dc8f977997a4cf15674",
+          "save_sha256": "51616fbf41c161e6dbf155a28735e960656aafcd38b6d030aecdd2a3def8f554",
+          "loaded_libraries_sha256": "2b59b0aacdd4de3a962b369367e02a9af7631a3d83886a14598e1d6e92df9b68",
+          "binary_sha256": "1ea5f8667214fbe3972f8eb364086a925c611ae5232a6037337f46d1b23a2a95",
+          "pid": 1397411,
+          "start_ticks": 26759405,
+          "player_lockpicks": 2,
+          "player_gold": 6,
+          "merchant_lockpicks": 36,
+          "sales": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          }
+        },
+        {
+          "label": "sanitized-sam-funded-cold-01",
+          "phase": "reload",
+          "manifest_sha256": "7b05c8d3c5d65a7f369fab8e351deb25b375da2c5ab5f3edd8421e7c87d47bdf",
+          "audit_sha256": "579fcdf537d47d01c43db1b5f5312e45e20eec7f5724fef70cd385603f009e32",
+          "source_sha256": "51616fbf41c161e6dbf155a28735e960656aafcd38b6d030aecdd2a3def8f554",
+          "save_sha256": "9b7c95b597cc11b6f8f2fb9d17a1892de5f7f056867ce5d1b286d83a08abd1b2",
+          "loaded_libraries_sha256": "65a635e09494a42875c0deb1e0e351e524394ba1e4155139ba53deaaaec13b8d",
+          "binary_sha256": "1ea5f8667214fbe3972f8eb364086a925c611ae5232a6037337f46d1b23a2a95",
+          "pid": 1397871,
+          "start_ticks": 26800285,
+          "player_lockpicks": 2,
+          "player_gold": 6,
+          "merchant_lockpicks": 36,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          }
+        },
+        {
+          "label": "sanitized-sam-buy-01",
+          "phase": "buy",
+          "manifest_sha256": "622e9926edf2b49f1490874e5ae5ca7e79ec079514b4c6b28dbcc9a6d586f3ec",
+          "audit_sha256": "67d72f3d58fc750519e168a224616969f31a719cf06b4c76063babcec87029ad",
+          "source_sha256": "9b7c95b597cc11b6f8f2fb9d17a1892de5f7f056867ce5d1b286d83a08abd1b2",
+          "save_sha256": "d37a72ebc71b728e42c365709621d910b61f0027a7a786d056eeb1f6ba0b3391",
+          "loaded_libraries_sha256": "8923f55ae12c1d34a77076a5d3c36391afbfe55cad5c8091bf92d9a8048fb375",
+          "binary_sha256": "1ea5f8667214fbe3972f8eb364086a925c611ae5232a6037337f46d1b23a2a95",
+          "pid": 1398085,
+          "start_ticks": 26837502,
+          "player_lockpicks": 3,
+          "player_gold": 1,
+          "merchant_lockpicks": 35,
+          "sales": [],
+          "purchases": [
+            5
+          ],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          }
+        },
+        {
+          "label": "sanitized-sam-purchased-cold-01",
+          "phase": "reload",
+          "manifest_sha256": "7b05c8d3c5d65a7f369fab8e351deb25b375da2c5ab5f3edd8421e7c87d47bdf",
+          "audit_sha256": "2d09a14392b3a260eb3fcafda6c78d1a8e72e5c332929f978dc8a6a49e102533",
+          "source_sha256": "d37a72ebc71b728e42c365709621d910b61f0027a7a786d056eeb1f6ba0b3391",
+          "save_sha256": "7a1b321217019f164835b1156641102768106b15da4d3d2db18d80b35d0f1e07",
+          "loaded_libraries_sha256": "7e1e502f3e79d60da102182c6ae359cfc07c4d36562e544740b768e6bceece0d",
+          "binary_sha256": "1ea5f8667214fbe3972f8eb364086a925c611ae5232a6037337f46d1b23a2a95",
+          "pid": 1398333,
+          "start_ticks": 26874873,
+          "player_lockpicks": 3,
+          "player_gold": 1,
+          "merchant_lockpicks": 35,
+          "sales": [],
+          "purchases": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          }
+        }
+      ]
+    }
+  },
+  "checks": {
+    "normal-integration-01": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/normal-integration-01/verification.json",
+      "sha256": "e2e15e6e1c0f4bc1a0da6c128d61171a0e797c38369ec1a7eaca2eddd4a1935c",
+      "results": {
+        "components": {
+          "executed": 3303,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f28cf8c8e1e7f0888a3015a74f366a1aafa4ece565bd5dc0e1324de5aacd77c3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "31ad0890fc205a9c307995bcc043b44ae604193a14276cdd967b8857415edca1",
+          "inventory_sha256": "d1aa275ec825ddb1ff0aaa8d85737e23f74765e0b1f67597d64c15fabcd35c7a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2292,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "3ea10ddf32e8c3bf83d463072af6f86395047656c9d323ab4ac1fab7524a14ee",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9763d56fa020111b74484821a8e2333584a904e95b03fcc7b7855577c52691ee",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "003ee034614bd685692e5e7093dd2079d83d40ff26234be84c528478c8a04388"
+      }
+    },
+    "normal-engine-02": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/normal-engine-02/verification.json",
+      "sha256": "eb85b192f6efdbdfb43b3b5289cfcef02f77bdfda93fe00e349612a39c4e7f07",
+      "results": {
+        "engine": {
+          "executed": 2292,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "836c6ee2c90723a7cdd5a0ca5240aa95d1d6185817777a689924507a6d8440a1",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "0c4898c6aed8f2ae8913d25adeaff56be0c6052ad91af624e98e87e212ffe613",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "6e2589a71fb620277e3cca3010c82d3c2328f9000ac02d598df9493e704cdbbc"
+      }
+    },
+    "normal-rejected-label-02": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/normal-rejected-label-02/verification.json",
+      "sha256": "0cb95f4a316e4839736ad57d902f31f195578af0eeb1127a032169b8c80f52c2",
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "MWWorldStoreTest.PreparedInventoryReferencesUseIncomingOrStaticDefinitionsAcrossClear",
+          "binary_sha256": "4abe7dc152bd51f635c32aedfce3059d96e41c869649999510f6ea535e4516a4",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "c0d3bcb34326a4bdebc8b09ed95e9337c1fd4f8e71d27f83486b4bb22383816a",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "287b54d3b55ccb547ee57a00dc9c43ead22da6eb6d3a2d7b094617515b0cc3c9"
+      }
+    },
+    "sanitized-engine-worker-0": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/sanitized-engine-worker-0/verification.json",
+      "sha256": "180367413e5d099895f9b4bce3092b7dd1d78bfa7162c06f14658d8c46d62be9",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "928948916236a9f6974c60bcafe6fff671805bb7a6a5f9f1b48d8940b43f43e9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "346dc686f105c952a6ea023d18aebf529162eed7d0a20d6e3713028919835a50",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "70af8cdaced397eb22ab775e33170b5b77a53b71f4c01dd64db974e5f99f6142"
+      }
+    },
+    "sanitized-engine-worker-1": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/sanitized-engine-worker-1/verification.json",
+      "sha256": "f8a40c8e16529beda11b70740097b7e8df4cf46460b48e986acf5fdc87fd0059",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "928948916236a9f6974c60bcafe6fff671805bb7a6a5f9f1b48d8940b43f43e9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "5e4ab5274adf2bf8bc7d721b1c12adc85e5380e9840479064fa366c7c5ecd4e2",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "70af8cdaced397eb22ab775e33170b5b77a53b71f4c01dd64db974e5f99f6142"
+      }
+    },
+    "sanitized-engine-worker-2": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/sanitized-engine-worker-2/verification.json",
+      "sha256": "0edf75d2eeb5a33f6cc883efbaa1e057f8fe40979c6d0d38a9d13c2d28e1448e",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "928948916236a9f6974c60bcafe6fff671805bb7a6a5f9f1b48d8940b43f43e9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "0cc8d65e094ac96cf0eb23facd8321b48a01fbcfaeaba374eb624a8572269d40",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "70af8cdaced397eb22ab775e33170b5b77a53b71f4c01dd64db974e5f99f6142"
+      }
+    },
+    "sanitized-engine-rest": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/sanitized-engine-rest/verification.json",
+      "sha256": "b9d5e456bb5e65a7278b2b7ada02ee6a6780ce5c14d81f8ecb327c64d3642997",
+      "results": {
+        "engine": {
+          "executed": 2046,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "928948916236a9f6974c60bcafe6fff671805bb7a6a5f9f1b48d8940b43f43e9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "e464bf214c0f8c2fb606c22b44c75edd6fcf395ab44486254a29c2176c894771",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "70af8cdaced397eb22ab775e33170b5b77a53b71f4c01dd64db974e5f99f6142"
+      }
+    },
+    "sanitized-components-01": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/sanitized-components-01/verification.json",
+      "sha256": "e1a0817adf15f8c4f7bd389bc1b7e7c1da7b981dcbe69aec8078ebec9360bf07",
+      "results": {
+        "sanitize": {
+          "executed": 3303,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "67f52234ddaf2e95047cc2058ea8acf453682e02df5026d11aeabc108386ffdb",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "1b3af1e075bf8430e7425e1e956ccc2c90ddb78d69fc220ff1f05f56cb52ba34",
+          "inventory_sha256": "795beda6a24acc3cd32d6b8d0d2765451909ba82be2a430b5cdf55e8c49d085b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "70af8cdaced397eb22ab775e33170b5b77a53b71f4c01dd64db974e5f99f6142"
+      }
+    },
+    "python-final-02": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/python-final-02/verification.json",
+      "sha256": "45a7205b17d0d05169219bda03e7cc2ddbca46e5dd298ea93220cce4d4c3640e",
+      "results": {
+        "python": {
+          "executed": 618,
+          "passed": true,
+          "log_sha256": "21f5bdf360833547fcda04d2f16069a85a0321b0f48fcb9142fc22a275551d3d"
+        }
+      },
+      "source": {
+        "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+        "source_fingerprint": "0306c37a281be0d07bdabe0ff0f2ad362fa4a63f9021552b478428348bd57ba3"
+      }
+    }
+  },
+  "reuse": "Normal components are unchanged after normal-integration-01. Full normal engine normal-engine-02 includes the native disposition bridge; the later rejection-label refresh is covered by a rebuilt focused check and actual normal/SAN rejection courses. The exact disjoint sanitizer partitions cover all2292 cases of the final implementation.",
+  "original": "Original executable and winning-record observations are independent. Original unit quotes buy6/sell2 at the recorded context differ from fork quotes buy5/sell1; existing barter arithmetic remains approximate. Ownership, exact quoted gold/counts, sale XP and persistence are strict.",
+  "failures_retained": [
+    "Native disposition cast failure in normal-sam-cancel-01: no inventory mutation; repaired with native disposition query.",
+    "normal-sam-sale-02 and normal-sam-fund-five-01 used wrong icon positions; no merchant commit, failed physical-count gates.",
+    "normal-sam-sale-03 committed one sale but waited for a gameplay observer while dialogue paused updates; no accepted save. Corrected input resumes gameplay before observing counts.",
+    "normal-rejected-label-01 selected no engine tests; rejected by inventory verifier. Corrected explicit test selection passed.",
+    "Original01/02 unfinished-charGen probes and original03 prelaunch helper failure retained/restored; only original04 accepted.",
+    "Unpartitioned sanitized-engine-01 aborted after2038 passing cases at Bullet ThreadsafeCounter thread counter exceeded in a repeated worker fixture. Fresh isolated failing case passed; all2292 cases are then covered by the established disjoint process partitions. No full-process passing claim."
+  ],
+  "boundaries": [
+    "One original Lockpick per offer; ordinary authored unscripted MISC/ALCH admission only, no scripted/bound/stateful equipment, explicit-scale sales, filled soul gems or generated potion sales.",
+    "Explicit resident NPC-owned XMRC chest; no faction/remote vendor discovery, haggling, bulk/mixed baskets, vendor restock or investment.",
+    "No full economy/UI milestone, original formula/potion autovalue parity, or TES4 MCP authoring claim.",
+    "Inherited inventory tabs/tooltips still expose TES3 labels and Lockpick Uses/Quality; this slice adds native offer and gold controls, not complete native inventory presentation.",
+    "Runtime transfer acceptance is the original Lockpick. Other authored ordinary MISC/ALCH items use the admitted code path but require their own real-content courses.",
+    "Sales admit unowned carried instances only; explicit Player/faction ownership profiles remain separate."
+  ],
+  "observed_test_environment": {
+    "engine": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/observed-sanitized-engine-worker-0-environment.json",
+      "sha256": "bebaa17ac6e02aede9fa331dc8c9baf340da79c5f331e24fc71eee9887b62bee",
+      "environment": {
+        "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "SDL_VIDEODRIVER": "x11",
+        "SDL_AUDIODRIVER": "dummy",
+        "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+        "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+      }
+    },
+    "components": {
+      "receipt": "build/oblivion-compat/shady-sam-purchase/observed-sanitized-components-environment.json",
+      "sha256": "050b9be4b79cf4cbe9c0794c6eb59ce3d48a147f2ebc90fba4a40802d919511a",
+      "environment": {
+        "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus",
+        "ASAN_OPTIONS": "detect_leaks=0",
+        "UBSAN_OPTIONS": "halt_on_error=1"
+      }
+    }
+  },
+  "preparation_provenance": {
+    "passed": true,
+    "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_sha256": "e38b5b86444feac911d7516fc4b00b4907f273fcf30b197ac39010a4629bb305",
+    "sam_ready_sha256": "a4365d605c2864e7658f0fd5c484e2b369dcb110e6dc9ee9309d4541009c98df",
+    "steps": [
+      {
+        "label": "normal-route-07",
+        "whole_course_passed": true,
+        "driver_exit": 0,
+        "acceptance": "Complete normal-input course",
+        "source_sha256": "e38b5b86444feac911d7516fc4b00b4907f273fcf30b197ac39010a4629bb305",
+        "save_sha256": "c97b3bb8ca8334ebdaa8a8f693ba3bd2a14f783e581728d36ae7c1a131f494c2",
+        "manifest_sha256": "1f5e4b60d95cc674b5c37712ef6b0a56d157ecbac2312ff108311263ae7c673a",
+        "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+        "pid": 1296198,
+        "health": 110,
+        "player_lockpicks": 8,
+        "player_gold": 0,
+        "allocator": 7,
+        "save_events": 1
+      },
+      {
+        "label": "normal-flare-select-01",
+        "whole_course_passed": true,
+        "driver_exit": 0,
+        "acceptance": "Complete normal-input course",
+        "source_sha256": "c97b3bb8ca8334ebdaa8a8f693ba3bd2a14f783e581728d36ae7c1a131f494c2",
+        "save_sha256": "d7d1ea1119e083b47806d7c82a79da65f8cea81de5d07c4ab5c9d421edc16b0e",
+        "manifest_sha256": "197207ec48a17a52cae9129d386824a6f5ffcb8d223cd5f12a4d0b136dcad681",
+        "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+        "pid": 1304792,
+        "health": 110,
+        "player_lockpicks": 8,
+        "player_gold": 0,
+        "allocator": 7,
+        "save_events": 1
+      },
+      {
+        "label": "normal-crab-combat-02",
+        "whole_course_passed": true,
+        "driver_exit": 0,
+        "acceptance": "Complete normal-input course",
+        "source_sha256": "d7d1ea1119e083b47806d7c82a79da65f8cea81de5d07c4ab5c9d421edc16b0e",
+        "save_sha256": "e3bfd6845900a3f64efff029282bf2d4a1ab9efa065ff4dc7c9c2e1b9a7ce972",
+        "manifest_sha256": "c26a4147dcce41e1fda26365ba3ba9651ab4a4e7b641e872c5930374e269b01d",
+        "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+        "pid": 1316457,
+        "health": 110,
+        "player_lockpicks": 8,
+        "player_gold": 0,
+        "allocator": 7,
+        "save_events": 1
+      },
+      {
+        "label": "normal-terrain-05",
+        "whole_course_passed": true,
+        "driver_exit": 0,
+        "acceptance": "Complete normal-input course",
+        "source_sha256": "e3bfd6845900a3f64efff029282bf2d4a1ab9efa065ff4dc7c9c2e1b9a7ce972",
+        "save_sha256": "82c71d869de42c9afc681fa743c2fd92d5ddecf00b062640a79d2acf3d5fa146",
+        "manifest_sha256": "411d23596e5e7a42ce8dc6b394281ad151bdd1221b447609c5074eb03bb672d1",
+        "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+        "pid": 1352197,
+        "health": 110,
+        "player_lockpicks": 8,
+        "player_gold": 0,
+        "allocator": 7,
+        "save_events": 1
+      },
+      {
+        "label": "normal-terrain-07",
+        "whole_course_passed": true,
+        "driver_exit": 0,
+        "acceptance": "Complete normal-input course",
+        "source_sha256": "82c71d869de42c9afc681fa743c2fd92d5ddecf00b062640a79d2acf3d5fa146",
+        "save_sha256": "a29e3baafcdb17055b1bae9b39b91bdd419dda4a4b0a13d7508af55fc4cd14e5",
+        "manifest_sha256": "ddef36455a745cb80030c0b11b80c43fefb8d3619bc55ee7356b6c78d3603dda",
+        "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+        "pid": 1362534,
+        "health": 110,
+        "player_lockpicks": 8,
+        "player_gold": 0,
+        "allocator": 7,
+        "save_events": 1
+      },
+      {
+        "label": "normal-terrain-09",
+        "whole_course_passed": false,
+        "driver_exit": 1,
+        "acceptance": "Only actual completed F5 prefix checkpoint; remaining course failed",
+        "source_sha256": "a29e3baafcdb17055b1bae9b39b91bdd419dda4a4b0a13d7508af55fc4cd14e5",
+        "save_sha256": "464bd2e055df115db1b46507781368e9e4b334e0406c8eac6f2e0b21669729fc",
+        "manifest_sha256": "868037d76dd33afc505d96107d3ff376df49e298b07a9279923dfbd1008248a7",
+        "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+        "pid": 1363206,
+        "health": 110,
+        "player_lockpicks": 8,
+        "player_gold": 0,
+        "allocator": 7,
+        "save_events": 4
+      },
+      {
+        "label": "normal-navmesh-02",
+        "whole_course_passed": true,
+        "driver_exit": 0,
+        "acceptance": "Complete normal-input course",
+        "source_sha256": "464bd2e055df115db1b46507781368e9e4b334e0406c8eac6f2e0b21669729fc",
+        "save_sha256": "75bba6404926342bc56aafcda6af94bd529c4171e7712430e8401b348d5ca073",
+        "manifest_sha256": "97e159a81f87280a043d52ed14301fe5fc97429827dbb2e8b81d3e431944ad64",
+        "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+        "pid": 1363917,
+        "health": 110,
+        "player_lockpicks": 8,
+        "player_gold": 0,
+        "allocator": 7,
+        "save_events": 1
+      },
+      {
+        "label": "normal-sam-baseline-01",
+        "whole_course_passed": true,
+        "driver_exit": 0,
+        "acceptance": "Complete normal-input course",
+        "source_sha256": "75bba6404926342bc56aafcda6af94bd529c4171e7712430e8401b348d5ca073",
+        "save_sha256": "a4365d605c2864e7658f0fd5c484e2b369dcb110e6dc9ee9309d4541009c98df",
+        "manifest_sha256": "b57f626dc8fc0618737961e301ebfb35ef720196bd6b9fd3e37e22de6a687c30",
+        "binary_sha256": "37ea02fb47f86d5a548bb9c89c57fae4a8f79e16ef2bc9cfe1a9aeaa4e9f0f96",
+        "pid": 1369745,
+        "health": 110,
+        "player_lockpicks": 8,
+        "player_gold": 0,
+        "allocator": 7,
+        "save_events": 1
+      }
+    ]
+  },
+  "partition_audit": {
+    "kind": "exact_disjoint_gtest_partition_coverage",
+    "passed": true,
+    "executed": 2292,
+    "disjoint": true,
+    "exact_union": true,
+    "partitions": [
+      {
+        "label": "sanitized-engine-worker-0",
+        "executed": 82,
+        "filter": "WorkerCounts/*/0"
+      },
+      {
+        "label": "sanitized-engine-worker-1",
+        "executed": 82,
+        "filter": "WorkerCounts/*/1"
+      },
+      {
+        "label": "sanitized-engine-worker-2",
+        "executed": 82,
+        "filter": "WorkerCounts/*/2"
+      },
+      {
+        "label": "sanitized-engine-rest",
+        "executed": 2046,
+        "filter": "*-WorkerCounts/*"
+      }
+    ],
+    "binary_sha256": "928948916236a9f6974c60bcafe6fff671805bb7a6a5f9f1b48d8940b43f43e9",
+    "source_before": {
+      "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+      "source_fingerprint": "70af8cdaced397eb22ab775e33170b5b77a53b71f4c01dd64db974e5f99f6142"
+    },
+    "source_after": {
+      "head": "9fc2e80261e1a883d55436ca53d115e19b5f2407",
+      "source_fingerprint": "70af8cdaced397eb22ab775e33170b5b77a53b71f4c01dd64db974e5f99f6142"
+    }
+  },
+  "sanitizer_runtime_options": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "coverage": "Actual process environment and loaded libraries audited for every rendered case; no rendered-game leak-coverage claim."
+  },
+  "warnings": "Retained GCC standard-regex maybe-uninitialized and unchanged inventory shadow/native combat/test initializer warnings; matching prior warnings exist in tutorial-poison/sanitized-focused-02. Not a warning-free build claim.",
+  "editable_manifests": [
+    {
+      "source": "sam-open-03.json",
+      "target": "docs/oblivion/original-shady-sam-open.json",
+      "sha256": "ccbf35828b42ee04d4aeb7b6e410222f7406f1b2d57f0b96f62e27060c22326d"
+    },
+    {
+      "source": "sam-cancel-01.json",
+      "target": "docs/oblivion/original-shady-sam-cancel.json",
+      "sha256": "fee8f5c1ee7cae8dc36365a26a1c0d2f438c33c70508f7677a29b84ec19f0c42"
+    },
+    {
+      "source": "sam-insufficient-01.json",
+      "target": "docs/oblivion/original-shady-sam-insufficient.json",
+      "sha256": "ecc1240c5a668390d8b20220a3cba22808ab2ae75ce5681e40dd82ab6f88a79f"
+    },
+    {
+      "source": "sam-sale-04.json",
+      "target": "docs/oblivion/original-shady-sam-first-sale.json",
+      "sha256": "09ef570ecd99c6e7413429823c028f0ba2c78ce19be40bbc7e7c142c30cca19d"
+    },
+    {
+      "source": "sam-fund-five-02.json",
+      "target": "docs/oblivion/original-shady-sam-fund-five.json",
+      "sha256": "d70df6101b62cdb0cd9c314b565b0c254ac4228199b147a42c9dc03c4203a3be"
+    },
+    {
+      "source": "sam-buy-01.json",
+      "target": "docs/oblivion/original-shady-sam-buy.json",
+      "sha256": "622e9926edf2b49f1490874e5ae5ca7e79ec079514b4c6b28dbcc9a6d586f3ec"
+    },
+    {
+      "source": "sam-cold-01.json",
+      "target": "docs/oblivion/original-shady-sam-cold.json",
+      "sha256": "7b05c8d3c5d65a7f369fab8e351deb25b375da2c5ab5f3edd8421e7c87d47bdf"
+    }
+  ],
+  "evidence_root": "build/oblivion-compat/shady-sam-purchase",
+  "original_protocol_sha256": "3070ed9fc51977041b95d06ed76bd9f84e4f7d10e36c11e8b6ac7347bb2df05e",
+  "harness_identifiers": "The inherited tutorial observer/event filenames and run-id are retained byte-for-byte in the editable manifests. Actual phases are identified by their unique course paths, inputs, process epochs and audited state.",
+  "runtime_mygui_libraries": {
+    "normal": {
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "8f3dd119f58d1513cbe68e15126fa89957f2cb5504647b043ceb9330de1980ca"
+    },
+    "sanitized": {
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "796d2e34894e7f7163f0db8d2dc5fe1e64c0ce5cf9f68bf9d06377848dda2f9b"
+    }
+  }
+}
