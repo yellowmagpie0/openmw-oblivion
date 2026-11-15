@@ -4,10 +4,10 @@
 
 Target: responsive tutorial play using the player's existing saved game, with
 working armor UI and native skill progression. The bounded routing/reference
-lookup performance chunk and armor UI repair are verified. The saved game
-remains slow; this is not a completed performance course. Next: finish the
-native skill-award repair, then address remaining saved-world effect scans and
-measured CPU work. Broader tutorial gates remain in
+lookup performance chunk and both recurring error repairs are verified. The
+saved game remains slow; this is not a completed performance course. Current
+chunk: remove repeated full-world effect-owner scans while preserving live
+casts, expiration, save/load and runtime ownership. Broader tutorial gates remain in
 [the tutorial handoff](TUTORIAL-PLAYABLE-CHUNK-HANDOFF.md).
 
 ## Performance chunk
@@ -100,3 +100,47 @@ Combined tested fingerprint at HEAD `b9d69469098f3cd5d16c8c7eecb4410396dc622e`:
 Component evidence above is reused; those component sources are unchanged.
 The armor and skill changes are committed separately after this verification.
 This section was added afterward; the verified C++ sources are unchanged.
+
+## Native skill-award repair
+
+Engine skill-use requests in the Oblivion profile now publish through the
+existing native skill-training authority rather than enqueueing Morrowind Lua
+facade writes. Running/swimming retain their fractional native awards and
+tutorial skill-use tracking, without a second once-per-second award. Morrowind
+skill events retain their existing route.
+
+The before-fix regression shows a missing native level/experience award. The
+fixed regression checks earned levels, fractional experience, counters,
+serialization, repeated delayed-action draining and rejected invalid input.
+The full/filtered evidence for the combined fixes is recorded above.
+
+Editable rendered probe:
+`scripts/validate_windows_live_skill.py`, with the manifest and Lua controls in
+`scripts/data/oblivion_compat/windows_live_skill/`. It uses a private profile,
+checks real movement and earned Athletics, clean exit, unchanged executable and
+input save, and the expected presence/absence of the reported errors. This is
+automated Lua control, not normal human input or a visual loot acceptance course.
+
+- `build-windows/live-skill-control-02/result.json`: original executable,
+  six simulated seconds of movement, **5 rejected skill-update errors**.
+- `build-windows/live-skill-fixed-02/result.json`: fixed executable, six
+  simulated seconds of movement, **0 skill/focus/frame errors**, earned native
+  Athletics and clean exit. Both preserve the pristine input save hash above.
+- Both runs advanced Athletics at approximately 0.01008 normalized progress per
+  simulated second; the repair does not double the existing movement award.
+- Fixed executable SHA256:
+  `d6eaba90c90503405d7a57d838a65bcadc2e116b092c3e5cdb28271b22292b30`.
+  Build log: `build-windows/live-fix-errors-runtime-build-02.log`.
+- First rendered probe retained a failure because normal input overwrote its
+  driver. The corrected fixture uses the supported Controls interface override;
+  movement/experience assertions were retained. The first focused build also
+  caught a pointer-wrapper conversion error, corrected before the passing run.
+
+Reproduce with a new output directory:
+
+```powershell
+python scripts/validate_windows_live_skill.py --save PATH_TO_SAVE --output build-windows/live-skill-new
+```
+
+Startup missing-GMST/script compatibility warnings are separate existing issues;
+these receipts do not claim an entirely warning-free game or sanitizer coverage.

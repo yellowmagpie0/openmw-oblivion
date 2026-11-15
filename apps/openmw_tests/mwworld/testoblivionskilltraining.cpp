@@ -1,3 +1,4 @@
+#include "apps/openmw/mwlua/luamanagerimp.hpp"
 #include "oblivionworldfixture.hpp"
 
 #include "apps/openmw/mwclass/npc.hpp"
@@ -275,4 +276,32 @@ TEST(OblivionSkillTraining, OriginalDestructionUsesCrossOneMinorLevelAndPersistI
     world.useOblivionPlayerSkill(22, 1, 0);
     EXPECT_NEAR(skill.getProgress(), 1.9062095f, .001f);
     EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mActorValues.at("pc_misc_stat.2"), 1);
+}
+
+TEST(OblivionSkillTraining, LuaSkillUsePublishesNativeExperienceWithoutLegacyDelayedWrites)
+{
+    TrainingFixture fixture(true);
+    auto& world = fixture.mWorld;
+    const auto player = world.getPlayerPtr();
+    auto& stats = player.getClass().getNpcStats(player);
+    auto& skill = stats.getSkill(ESM::Skill::Mercantile);
+    const auto required = MWWorld::oblivionPlayerSkillProgressRequirement(world.getStore(), player, 29);
+    skill.setProgress(required - .5f);
+    fixture.mLuaManager->skillUse(player, ESM::Skill::Mercantile, 0, 1.f);
+    EXPECT_EQ(skill.getBase(), 99);
+    EXPECT_NEAR(skill.getProgress(), .5f, .001f);
+    EXPECT_EQ(stats.getLevelProgress(), 1);
+    const auto before = world.captureOblivionRuntimeState();
+    EXPECT_EQ(before.mPlayer.mActorValues.at("skill_advances.29"), 1);
+    EXPECT_NO_THROW(fixture.mLuaManager->applyDelayedActions());
+    EXPECT_NO_THROW(fixture.mLuaManager->applyDelayedActions());
+    EXPECT_NEAR(skill.getProgress(), .5f, .001f);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mActorValues, before.mPlayer.mActorValues);
+    const auto saved = ESM4::RuntimeState::deserializeBinary(before.serializeBinary());
+    EXPECT_EQ(saved.mPlayer.mActorValues.at("skill_advances.29"), 1);
+    fixture.mLuaManager->skillUse(player, ESM::Skill::Mercantile, 1, .25f);
+    EXPECT_NEAR(skill.getProgress(), .75f, .001f);
+    EXPECT_EQ(skill.getBase(), 99);
+    EXPECT_THROW(fixture.mLuaManager->skillUse(player, ESM::Skill::Mercantile, 0, -1.f), std::invalid_argument);
+    EXPECT_NEAR(skill.getProgress(), .75f, .001f);
 }
