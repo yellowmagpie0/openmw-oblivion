@@ -4,18 +4,26 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [Mages Guild Charter reader/Take](CHARTER-BOOK-CONTRACT.json).
-Original BOOK026d8b / placed06efb5 now opens the five-page reader and transfers
-through its Take control. Normal/SAN world pages1->3->1 count8->9; Take0->1
-retires only that source. Cold inventory pages1->3->5->3->1 count9->10, hide Take
-and retain full text. Final cold loading retains1/count10 without replay.
-Independent original IsInCombat1 reading proves inventory books remain usable in
-combat; the fork preserves all3 incoming Player engagements. NoTake is guarded
-structurally, without a reached NoTake runtime claim. [Receipt](CHARTER-BOOK-VERIFICATION.json)
-records actual per-phase binaries and unchanged Take-path evidence reuse across
-the later inventory combat-guard fix.101 focused/3301 components/2292 full engine
-per mode and618 Python pass. Prior [ordinary read counting](ORDINARY-BOOK-READ-VERIFICATION.json)
-keeps skills/award history distinct from BooksRead. No full M13/M16/M18 claim.
+Latest completed bounded chunk: [A Less Rude Song native BOOK drop](SONG-DROP-CONTRACT.json).
+Original BOOK024569 / placed06efb2 was reached under Fundaments06efb3; ordinary
+reader Take removes the upper book, then Song (BooksRead10->12). Pre-change drag
+made a legacy world book, with no native body or serial. Native normal/SAN drop
+now creates key14/next15 with original Quarto02 body4 and supported virtual root18.
+Cold world restores physical state; ordinary focus/read/Take returns exactly1,
+counts12->13 and retires key14/body. Cold inventory retains1/count13. All79 original
+Song references are unchanged during drop/retrieval; original06efb2 stays retired.
+[Receipt](SONG-DROP-VERIFICATION.json) separates original/raw/model, structural,
+compiler, semantic and actual input evidence.195 focused/2292 full engine cases
+per mode pass; unchanged Python618 is retained with its original provenance.
+The interrupted zero-byte test-object/reduced1572-case normal run is rejected,
+then repaired and checked against the prior exact2292 inventory. No component
+code changed; prior Charter3301-per-mode component evidence remains separate.
+Plain takeable scriptless/unenchanted singleton books only; no stacked, skill,
+scroll, scripted, NoTake or old legacy-object migration acceptance.
+Prior [Charter reader/Take](CHARTER-BOOK-VERIFICATION.json) keeps full paginated
+text, native Take and permitted combat inventory reading. Earlier
+[ordinary read counts](ORDINARY-BOOK-READ-VERIFICATION.json) preserve skill history.
+No full M13/M16/M18 or TES4 MCP authoring claim.
 
 Prior [Alembic](ALEMBIC-DROP-VERIFICATION.json) retains separate original sphere
 children and native loose ownership. [Retort](RETORT-DROP-VERIFICATION.json)
@@ -24,10 +32,10 @@ preserves987 beside2fresh1000; [container discovery](NATIVE-CONTAINER-DISCOVERY-
 exposes original Sack06efcf. [Bonemeal](BONEMEAL-DROP-VERIFICATION.json) retains
 its original movable body. No full M16/M18 or TES4 MCP authoring claim.
 
-Next bounded candidate: original **A Less Rude Song**, BOOK024569 / placed06efb2
-on the same reached workbench. Inspect its original NIF and exercise the missing
-native loose BOOK drop, cold persistence and retrieval after ordinary reader Take.
-Do not expand into unrelated scroll/scripted-book events or unsupported physics.
+Next action: choose another reached original item that exposes an unimplemented
+milestone behavior, inspect its winning record and current ordinary interaction,
+and bound the implementation by that actual failure. Inspect carried ingredients
+and the remaining workbench apparatus before expanding into distant routes.
 Keep independent branches separate; do not enable Zahrasha or reroll the sack.
 
 Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
@@ -37,16 +45,16 @@ The opening harness awaited the wrong kind label and did not retain a save.
 normal input receipts and failure; no looting acceptance or continuation claim.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/charter-book/normal-charter-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `ff3c998d145f2477a5ee41325bd647672ba6e31a6b7266080d3e355eabc1bbc7`.
-Instrumented continuation: same root `sanitized-charter-cold-01`,
-SHA256 `9cd3057cdda8851f54dd14081b5dcb6c1e2919b12490c59a31e7d7a266ee4be3`.
-BooksRead10; Charter1 carried, original06efb5 retired/count0/taken/read; other
-Charters06efb6/06efd0 remain unchanged. Original06efb3 enabled/read/in place;
-no ordinary-book taught history entry. All3 incoming Player combat edges retained.
+`build/oblivion-compat/song-drop/normal-song-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `55f394c7585291b6ebb755ea9a62ba303343237947108a9b34fb95784a3c0a9c`.
+Instrumented continuation: same root `sanitized-song-native-inventory-01`,
+SHA256 `7b30708d10fcbea318e6b48c235569fbcf02b7b78501d52319376f42bfc90bc4`.
+BooksRead13; Song1/Fundaments1/Charter1 carried, original06efb2/3/5 retired/
+count0/taken/read. Other78 Song and Charters06efb6/06efd0 unchanged; no ordinary-
+book taught history entry. All3 incoming Player combat edges retained.
 Alembic1/Retort1, Cuirass equipped/condition19.6576748/scriptowner9, Torch1/fuel987
 plus2fresh1000 all unequipped, Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/
-Bone1, Club equipped, MQ01flags1/1, allocator14. Native keys1..8,10..13 retired/
+Bone1, Club equipped, MQ01flags1/1, allocator15. Native keys1..8,10..14 retired/
 count0/no bodies; inventory-script9 active and no native ref9. Original06efb7/8
 remain deleted/count0/taken. Health70.480003/110, Endurance55, all27skills/book
 award history/33 credited deaths preserved. MS39stage0 and original absence of
@@ -110,5 +118,5 @@ Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
 Checkpoint: native singleton ingredient/weapon/MISC/KEYM, articulated clothing,
 ammunition quantities and the closed-convex Lockpick stack now have separate
-real-content evidence. Charter reader/Take chunk complete; choose the next reached gameplay gap
+real-content evidence. Song native drop chunk complete; choose the next reached gameplay gap
 without closing broader milestones.

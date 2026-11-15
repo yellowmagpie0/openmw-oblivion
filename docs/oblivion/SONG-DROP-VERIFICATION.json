@@ -1,0 +1,494 @@
+{
+  "status": "Accepted bounded M13 plain singleton native BOOK loose ownership, cold restoration and reader Take in normal and ASan/UBSan games; broader milestones remain open.",
+  "parent_commit": "35f7798a47ad099555ed200d9c1f47feb2151a26",
+  "contract": "SONG-DROP-CONTRACT.json",
+  "oracle": "SONG-DROP-ORACLE.json",
+  "schema": 103,
+  "layers": {
+    "original": "Independently decoded original BOOK024569/REFR06efb2 and pinned master/archive/member hashes. Original Quarto02 model retained; existing parser diagnostic identifies authored bhkRigidBodyT/body4 and supported virtual root18. No new original physical-trajectory probe or exact numerical trajectory claim.",
+    "asset_identity": {
+      "path": "build/oblivion-compat/song-drop/asset-override-audit-final.json",
+      "sha256": "c9ad4454e471835a7132d0af5da05070c1a7890e8bf53b0109eb7b55f9240ef2"
+    },
+    "structural": "Native BOOK joins prepared cell/reference variant, capture/base/model validation and cold scene restoration. Plain takeable scriptless/unenchanted singleton flags0/skill-1 only, with one movable positive-mass body/no joints; book fields/text/model/source validated before publication. Existing reader/Take retires loose world ownership. No parser/save schema change.",
+    "acquisition": {
+      "path": "build/oblivion-compat/song-drop/normal-song-take-07/song-book-verification.json",
+      "sha256": "c3fc63e4406a365d7dd42b69702d6bbbd789f7c3bca91cce6044c6369b9a7f53",
+      "source_sha256": "ff3c998d145f2477a5ee41325bd647672ba6e31a6b7266080d3e355eabc1bbc7",
+      "save_sha256": "a876afd033050dde2664415252fbb0404d08a3e9a3b11f0a3617eb4dcb307622",
+      "scope": "Ordinary unstacking: read/Take upper Fundaments06efb3, then Song06efb2; BooksRead10->12 and both quantities0->1, Charter1 retained, no grants/teleport/save edits. Public original-song-acquisition.json byte-matches captured recipe."
+    },
+    "baseline": {
+      "path": "build/oblivion-compat/song-drop/normal-song-drop-baseline-01/baseline-verification.json",
+      "sha256": "a65d2c0180caaa1849f4adba21c72433fe6463278070ca246acfae4e109712ca",
+      "result": {
+        "passed": true,
+        "source_sha256": "a876afd033050dde2664415252fbb0404d08a3e9a3b11f0a3617eb4dcb307622",
+        "save_sha256": "1abadc4a9c9c908ad0cb2f73e7aca8a7df382e4bca33aa3bd1991e4f3bc6e1f0",
+        "process": {
+          "pid": 1072396,
+          "start_ticks": 21160524,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/pre-change-openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-drop-baseline-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-take-07/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d7f85cbf0ec1a407f363be129457c6604250bfa07aa10222ab685220720da7ac"
+        },
+        "inventory_before": 1,
+        "inventory_after": 0,
+        "legacy_world_book_observed": true,
+        "native_book_references_unchanged": true,
+        "native_loose_bodies": 0,
+        "allocator": 14,
+        "books_read": 12.0,
+        "scope": "Actual legacy world placement, not disappearance; baseline only, never continue new native course from this save."
+      },
+      "scope": "Actual pre-change shared legacy BOOK placement, inventory1->0, all79 native same-base refs unchanged and no native body/serial. Never continue native course from legacy baseline."
+    },
+    "compiler_and_regression": {
+      "engine-focused-normal-02": {
+        "path": "build/oblivion-compat/song-drop/engine-focused-normal-02/verification.json",
+        "sha256": "3f148f4086e4b599e80bdb0299e7180a91e984fc2c2ae3d0234417d4cb74fcce",
+        "results": {
+          "engine": {
+            "executed": 195,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Loose*:*Book*:*Inventory*:*Pickup*:*ScriptTransfer*",
+            "binary_sha256": "964b38d60fcbb30504cc097c82e68f46d93588ed25bf72b4e268aee1a6f4b0a9",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "bfb91d882039ee3325a370e7e8efbeca2d7ed1c8fccf42d1b17ba4bd490e1cbc",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "engine-focused-sanitized-01": {
+        "path": "build/oblivion-compat/song-drop/engine-focused-sanitized-01/verification.json",
+        "sha256": "a9f0720774eb54d8bfc631f94fe2455582b539db2c919cfe20e05dd5a3b40283",
+        "results": {
+          "engine": {
+            "executed": 195,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Loose*:*Book*:*Inventory*:*Pickup*:*ScriptTransfer*",
+            "binary_sha256": "ebcbdde85926ed78360195fa3b2aff8a9829e78c1e1587fb8979eac182e96e3c",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "6ecbb54626b6f15f523e543d2586dce98abdd0f3bd4cf5a44cb95d939cae569d",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "integration-normal-02": {
+        "path": "build/oblivion-compat/song-drop/integration-normal-02/verification.json",
+        "sha256": "12c1784644d4f497fb6bc83f832cc92936c6eba3db4c3d14e007ee54d4d09004",
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "964b38d60fcbb30504cc097c82e68f46d93588ed25bf72b4e268aee1a6f4b0a9",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "fe1958cb73f5c300e8b259b998facf2e65608f416d35f535a477b7e854bfeb14",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "engine-sanitized-01": {
+        "path": "build/oblivion-compat/song-drop/engine-sanitized-01/verification.json",
+        "sha256": "4de5e09782d44bb47639ad49c82abac9a6d7509c027cb17755c57fa69cfa60b0",
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "ebcbdde85926ed78360195fa3b2aff8a9829e78c1e1587fb8979eac182e96e3c",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "fce6cf396b5d2d8515358689888aa468429de678a6a8dc6b21cd231d34a22cef",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "engine-sanitized-02": {
+        "path": "build/oblivion-compat/song-drop/engine-sanitized-02/verification.json",
+        "sha256": "45eb8768e126dbc37ba4df0e3ffcd8d968f2e21f7d1c3417eab30a33c8cda129",
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "ebcbdde85926ed78360195fa3b2aff8a9829e78c1e1587fb8979eac182e96e3c",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "16700cb657a028f417f3d65f85b6c5a98fbee06487fd274fc8fae78557743ca3",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "engine-sanitized-03": {
+        "path": "build/oblivion-compat/song-drop/engine-sanitized-03/verification.json",
+        "sha256": "822ebd8bd11cd4cb36e6009ba57949ff70e221e051eda2bcda26b6b628fa4b52",
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "ebcbdde85926ed78360195fa3b2aff8a9829e78c1e1587fb8979eac182e96e3c",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "39adbd65d2407a9102944e64bb49547bc90ff00bf6aecdea66ae448afb758416",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "engine-sanitized-04": {
+        "path": "build/oblivion-compat/song-drop/engine-sanitized-04/verification.json",
+        "sha256": "f2f9425ec1bddfaa90f55129cb3d7c5f5d1626f2a39d5994429110e81856aed8",
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "ebcbdde85926ed78360195fa3b2aff8a9829e78c1e1587fb8979eac182e96e3c",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "0515be7205d390d3b2835867c1bcf3fc7621d95383f9d5b19962367e29602262",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "python-retained": {
+        "path": "build/oblivion-compat/song-drop/integration-normal-01/verification.json",
+        "sha256": "ee88925f68f038365040854f2e94fb2a2f0c5a26c6d950e64b0c18c9e3678a65",
+        "results": {
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "79861933ffebd8af884c2bd792ab9e6e092e21148324f5b4dbe63c8030164bbc"
+          }
+        },
+        "scope": "Unchanged Python618 only; reduced1572-case engine result in this report is rejected and superseded by integration-normal-02."
+      }
+    },
+    "component_reuse": {
+      "path": "build/oblivion-compat/song-drop/component-evidence-reuse.json",
+      "sha256": "5033f31f246682545806743e3ff5adf12923c867829c4e75861a080d930e65aa",
+      "passed": true,
+      "parent": "35f7798a47ad099555ed200d9c1f47feb2151a26",
+      "component_source_unchanged": true,
+      "changed_paths": [
+        "apps/openmw/mwworld/oblivionlooseweapon.cpp",
+        "apps/openmw/mwworld/oblivionweapondrop.cpp",
+        "apps/openmw/mwworld/worldmodel.hpp",
+        "docs/oblivion/VILVERIN-HANDOFF.md"
+      ],
+      "scope": "This chunk changes only3 engine C++ files, real-course auditors/manifests and docs. No NIF/component code change; reuse Charter full3301-per-mode component results with original source/binary provenance. Fresh engine and Python gates remain required.",
+      "prior_component_receipt": "docs/oblivion/CHARTER-BOOK-VERIFICATION.json"
+    },
+    "sanitized_engine_union": {
+      "path": "build/oblivion-compat/song-drop/sanitized-engine-union.json",
+      "sha256": "c5519784b2a6efbaafeafff5fb642b668aedf4feec5d9dd8064e8b2679b9c64f"
+    },
+    "normal_input": {
+      "normal-song-native-drop-02": {
+        "path": "build/oblivion-compat/song-drop/normal-song-native-drop-02/song-drop-verification.json",
+        "sha256": "1e9c98d77367e50f35abcbc80ce55ad7ee69cad7f805e55d6b7c257310805477",
+        "phase": "drop",
+        "source_sha256": "a876afd033050dde2664415252fbb0404d08a3e9a3b11f0a3617eb4dcb307622",
+        "save_sha256": "d0d8b9f3b3c475877b6bb9e22499b3fa1bbaf449d567b6715c074537c4c18bd1",
+        "process": {
+          "pid": 1072918,
+          "start_ticks": 21178875,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-native-drop-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-take-07/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "6ebd00798b7a52a84a3bd9dfa3cba42821e127b49c2340e9e5aad7f5e14a9c62"
+        },
+        "inventory_count": 0,
+        "allocator": 15,
+        "credited_deaths": 33
+      },
+      "normal-song-native-world-01": {
+        "path": "build/oblivion-compat/song-drop/normal-song-native-world-01/song-drop-verification.json",
+        "sha256": "8a04b0e3ed6e9117c13331b3ffe22aa9b74224ee3891a57af875c2f623670801",
+        "phase": "world",
+        "source_sha256": "d0d8b9f3b3c475877b6bb9e22499b3fa1bbaf449d567b6715c074537c4c18bd1",
+        "save_sha256": "8570a0c652e00a4b9f6aae5550031a829a752b353056ed87df165dcbffb452ed",
+        "process": {
+          "pid": 1073167,
+          "start_ticks": 21187557,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-native-drop-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "6ebd00798b7a52a84a3bd9dfa3cba42821e127b49c2340e9e5aad7f5e14a9c62"
+        },
+        "inventory_count": 0,
+        "allocator": 15,
+        "credited_deaths": 33
+      },
+      "normal-song-native-pickup-01": {
+        "path": "build/oblivion-compat/song-drop/normal-song-native-pickup-01/song-drop-verification.json",
+        "sha256": "5822148e2962eb31eae39774405b7d1826042a86bfb7181c6ec127a4f58fe7f0",
+        "phase": "pickup",
+        "source_sha256": "8570a0c652e00a4b9f6aae5550031a829a752b353056ed87df165dcbffb452ed",
+        "save_sha256": "f14c65bf8517b808dcb801f50fda9fc11c5f8231a17dfed60bd08f18ce8e4cf3",
+        "process": {
+          "pid": 1073365,
+          "start_ticks": 21196054,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "6ebd00798b7a52a84a3bd9dfa3cba42821e127b49c2340e9e5aad7f5e14a9c62"
+        },
+        "inventory_count": 1,
+        "allocator": 15,
+        "credited_deaths": 33
+      },
+      "normal-song-native-inventory-01": {
+        "path": "build/oblivion-compat/song-drop/normal-song-native-inventory-01/song-drop-verification.json",
+        "sha256": "5930750a35f524d7791f1ff8fe67a946793e930f8e7b2e6e9802106f1210edee",
+        "phase": "inventory",
+        "source_sha256": "f14c65bf8517b808dcb801f50fda9fc11c5f8231a17dfed60bd08f18ce8e4cf3",
+        "save_sha256": "55f394c7585291b6ebb755ea9a62ba303343237947108a9b34fb95784a3c0a9c",
+        "process": {
+          "pid": 1073499,
+          "start_ticks": 21204586,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "6ebd00798b7a52a84a3bd9dfa3cba42821e127b49c2340e9e5aad7f5e14a9c62"
+        },
+        "inventory_count": 1,
+        "allocator": 15,
+        "credited_deaths": 33
+      },
+      "sanitized-song-native-drop-01": {
+        "path": "build/oblivion-compat/song-drop/sanitized-song-native-drop-01/song-drop-verification.json",
+        "sha256": "ff6d7aa2d3c81d6fc12bc93b07c0f6425400cccd8d6889801961c18dfab6bc3e",
+        "phase": "drop",
+        "source_sha256": "a876afd033050dde2664415252fbb0404d08a3e9a3b11f0a3617eb4dcb307622",
+        "save_sha256": "5de1708f75ae6e5d404ce4dfa7846bcaa60f0b13d66cb351707e34290ef79014",
+        "process": {
+          "pid": 1073808,
+          "start_ticks": 21222842,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/sanitized-song-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/normal-song-take-07/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "0c79ee069018691bd71860d388662d3004b3a4ac9c5e282b04780dd3e8040d1c"
+        },
+        "inventory_count": 0,
+        "allocator": 15,
+        "credited_deaths": 33
+      },
+      "sanitized-song-native-world-01": {
+        "path": "build/oblivion-compat/song-drop/sanitized-song-native-world-01/song-drop-verification.json",
+        "sha256": "5614b17da84377bbb8303115b38094d7c771be40805ee26b84f3d1d1a3b26b46",
+        "phase": "world",
+        "source_sha256": "5de1708f75ae6e5d404ce4dfa7846bcaa60f0b13d66cb351707e34290ef79014",
+        "save_sha256": "ad1c6a453b06bf73ae20fcab20c781e443b0d6122716217bd2dce5f2681395aa",
+        "process": {
+          "pid": 1076266,
+          "start_ticks": 21257565,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/sanitized-song-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/sanitized-song-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "0c79ee069018691bd71860d388662d3004b3a4ac9c5e282b04780dd3e8040d1c"
+        },
+        "inventory_count": 0,
+        "allocator": 15,
+        "credited_deaths": 33
+      },
+      "sanitized-song-native-pickup-01": {
+        "path": "build/oblivion-compat/song-drop/sanitized-song-native-pickup-01/song-drop-verification.json",
+        "sha256": "4cb916b3b77f9780ee8b5287e7c68f4c77473e3bf238ba14899d4f4bfd10f382",
+        "phase": "pickup",
+        "source_sha256": "ad1c6a453b06bf73ae20fcab20c781e443b0d6122716217bd2dce5f2681395aa",
+        "save_sha256": "d1581c3b92ab939a9dce830a70db4a52fe24adfa3d19fcb0c93182f7dae6f2d5",
+        "process": {
+          "pid": 1076691,
+          "start_ticks": 21292788,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/sanitized-song-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/sanitized-song-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "0c79ee069018691bd71860d388662d3004b3a4ac9c5e282b04780dd3e8040d1c"
+        },
+        "inventory_count": 1,
+        "allocator": 15,
+        "credited_deaths": 33
+      },
+      "sanitized-song-native-inventory-01": {
+        "path": "build/oblivion-compat/song-drop/sanitized-song-native-inventory-01/song-drop-verification.json",
+        "sha256": "555d1d460adcc96e603949e78f930ff440a7a01cbacd12ea7be6523d864b6ebb",
+        "phase": "inventory",
+        "source_sha256": "d1581c3b92ab939a9dce830a70db4a52fe24adfa3d19fcb0c93182f7dae6f2d5",
+        "save_sha256": "7b30708d10fcbea318e6b48c235569fbcf02b7b78501d52319376f42bfc90bc4",
+        "process": {
+          "pid": 1083312,
+          "start_ticks": 21326869,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/sanitized-song-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/song-drop/sanitized-song-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "0c79ee069018691bd71860d388662d3004b3a4ac9c5e282b04780dd3e8040d1c"
+        },
+        "inventory_count": 1,
+        "allocator": 15,
+        "credited_deaths": 33
+      }
+    },
+    "semantic": "Native key14/next15 on drop; body4/root18/original asset hash retained through cold-world tick-zero restoration. Ordinary reader/Take returns exactly1 and retires key14/body; cold inventory retains original value6/weight0.5. Drop/load do not count reads; pickup reader12->13. All other inventory including upper Fundaments1/Charter1, conditions/fuel, all27skills/progression/award history, Player native values, Cuirass scriptowner9/MQ01flags1/1, quests/globals/life/33deaths and3 incoming combat edges retained. All79 original Song refs unchanged during drop/retrieval, target06efb2 remains retired."
+  },
+  "source": {
+    "tested": {
+      "head": "35f7798a47ad099555ed200d9c1f47feb2151a26",
+      "source_fingerprint": "5d9a2e36532c0a8caa6e301bb7db257716f2acb11808e08f3731e0105d77e104"
+    },
+    "after": {
+      "head": "35f7798a47ad099555ed200d9c1f47feb2151a26",
+      "source_fingerprint": "5d9a2e36532c0a8caa6e301bb7db257716f2acb11808e08f3731e0105d77e104"
+    },
+    "tested_cpp": {
+      "apps/openmw/mwworld/worldmodel.hpp": "f7cba4bd0f4e650b7df0912c4274829474b7995e9a65a6f76f3eb0ef9e823c24",
+      "apps/openmw/mwworld/oblivionlooseweapon.cpp": "3aed8aaef05f06383fa66922cc2f15fefadbe4ebe33c493065075e51a83c0d13",
+      "apps/openmw/mwworld/oblivionweapondrop.cpp": "eac7b9c557fc81331afd338cc0ddaca850c29e50fc87c802547622003a0a356c"
+    },
+    "pre_change_binary": {
+      "path": "build/oblivion-compat/song-drop/pre-change-binary.json",
+      "sha256": "a28e0e25d920ce01bed596c2f747ed34f1d9c43dcc598bf438a8539bf3d683ff",
+      "scope": "Exact d7f85cbf final Charter binary, built from d5e382817b plus tested Charter changes; matching C++ is committed in parent35f7798a47. Captured resources/version kept at matching d5e382817b; source checkout head at copy time is not a clean-build claim."
+    },
+    "post_checks": "Receipt/final handoff only; tested implementation, manifests and auditors unchanged."
+  },
+  "retained_failures": [
+    "take01/04 activation hit upper Fundaments while exposed lower Song edge was visible; no accepted save. Genuine unstacking resolves access dependency.",
+    "take02/03 preserved executable lacked local config/defaults. Owned failed-startup groups stopped after game exit; these held extra virtual controllers. Cleanup receipt retained.",
+    "take05 controller barrier rejected3open controllers and wrong freshly regenerated resource version; no acceptance. Matching frozen resources and only one active controller used subsequently.",
+    "take06 firstA changed visible-cursor mode without Take; accepted07 uses next normal controllerA. No input harness changes.",
+    "normalbuild01 missing Book definition include corrected before successful normal02/SAN01 builds. Normal test compilation was interrupted by SIGTERM and left a zero-byte testoblivionworld.cpp.o; resumed normal03 linked with720missing tests. Reject focused110/full1572 reports, remove only the empty generated object, rebuild normal04 and require prior exact2292 inventory before fresh195/full2292 gates. Python618 from the same source is retained independently.",
+    "Baseline auditor first incorrectly assumed one placed same-base original; raw/live state has79. Corrected strict all79 equality and specifically retired06efb2, preserving original failed auditor. No gameplay rerun needed for the count assertion correction.",
+    "normal-native-drop01 all ordinary actions/save succeeded but expected-log label said apparatus. Rejected scenario retained; fresh02 corrected book label with unchanged C++."
+  ],
+  "limits": [
+    "No stacked, scroll, NoTake, skill/scripted/enchanted book drop acceptance.",
+    "No exact original physical trajectory or UI art parity; no old legacy-object migration.",
+    "No full M13/M16/M18 or TES4 MCP authoring claim."
+  ]
+}

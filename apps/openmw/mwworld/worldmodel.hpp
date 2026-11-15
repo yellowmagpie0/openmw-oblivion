@@ -195,7 +195,8 @@ namespace MWWorld
             std::reference_wrapper<const LiveCellRef<ESM4::Key>>,
             std::reference_wrapper<const LiveCellRef<ESM4::Light>>,
             std::reference_wrapper<const LiveCellRef<ESM4::Ingredient>>,
-            std::reference_wrapper<const LiveCellRef<ESM4::Apparatus>>>;
+            std::reference_wrapper<const LiveCellRef<ESM4::Apparatus>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Book>>>;
         struct LooseWeaponAdmission
         {
             CellStore& mCell;

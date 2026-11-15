@@ -24,6 +24,7 @@
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadbook.hpp>
 #include <components/esm4/bipedmodel.hpp>
 #include <components/esm4/crimerules.hpp>
 #include "../mwclass/esm4base.hpp"
@@ -63,6 +64,7 @@ namespace MWWorld
             if (ptr.getType() == ESM::REC_LIGH4) return ptr.get<ESM4::Light>()->mBase;
             if (ptr.getType() == ESM::REC_INGR4) return ptr.get<ESM4::Ingredient>()->mBase;
             if (ptr.getType() == ESM::REC_APPA4) return ptr.get<ESM4::Apparatus>()->mBase;
+            if (ptr.getType() == ESM::REC_BOOK4) return ptr.get<ESM4::Book>()->mBase;
             if (ptr.getType() == ESM::REC_ARMO4) return ptr.get<ESM4::Armor>()->mBase;
             return nullptr;
         }
@@ -118,6 +120,12 @@ namespace MWWorld
                 return store.get<ESM4::Apparatus>().search(base->mId) == base
                     ? store.get<ESM4::Apparatus>().findFormKey(base->mId) : std::nullopt;
             }
+            if (ptr.getType() == ESM::REC_BOOK4)
+            {
+                const auto* base = ptr.get<ESM4::Book>()->mBase;
+                return store.get<ESM4::Book>().search(base->mId) == base
+                    ? store.get<ESM4::Book>().findFormKey(base->mId) : std::nullopt;
+            }
             const auto* base = ptr.get<ESM4::Armor>()->mBase;
             return store.get<ESM4::Armor>().search(base->mId) == base
                 ? store.get<ESM4::Armor>().findFormKey(base->mId) : std::nullopt;
@@ -140,9 +148,11 @@ namespace MWWorld
             const auto* light = mStore.get<ESM4::Light>().search(snapshot.mBase);
             const auto* ingredient = mStore.get<ESM4::Ingredient>().search(snapshot.mBase);
             const auto* apparatus = mStore.get<ESM4::Apparatus>().search(snapshot.mBase);
+            const auto* book = mStore.get<ESM4::Book>().search(snapshot.mBase);
             if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr)
                 + int(clothing != nullptr) + int(ammunition != nullptr) + int(keyItem != nullptr)
-                + int(light != nullptr) + int(ingredient != nullptr) + int(apparatus != nullptr) > 1)
+                + int(light != nullptr) + int(ingredient != nullptr) + int(apparatus != nullptr)
+                + int(book != nullptr) > 1)
                 throw std::runtime_error("loose equipment base has ambiguous native types");
             const ESM::Path* selected = nullptr;
             if (weapon) selected = &weapon->mModel;
@@ -152,6 +162,7 @@ namespace MWWorld
             else if (light) selected = &light->mModel;
             else if (ingredient) selected = &ingredient->mModel;
             else if (apparatus) selected = &apparatus->mModel;
+            else if (book) selected = &book->mModel;
             else if (clothing || armor)
             {
                 const auto found = references.find(key);
@@ -693,19 +704,26 @@ namespace MWWorld
             constexpr bool isLight = std::is_same_v<Record, ESM4::Light>;
             constexpr bool isIngredient = std::is_same_v<Record, ESM4::Ingredient>;
             constexpr bool isApparatus = std::is_same_v<Record, ESM4::Apparatus>;
+            constexpr bool isBook = std::is_same_v<Record, ESM4::Book>;
             constexpr bool isStackable = isAmmunition || isLight || std::is_same_v<Record, ESM4::MiscItem>;
             constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP
                 : isClothing ? ESM4::REC_CLOT : isAmmunition ? ESM4::REC_AMMO
                 : isKey ? ESM4::REC_KEYM : isLight ? ESM4::REC_LIGH
                 : isArmor ? ESM4::REC_ARMO : isIngredient ? ESM4::REC_INGR
-                : isApparatus ? ESM4::REC_APPA : ESM4::REC_MISC;
+                : isApparatus ? ESM4::REC_APPA : isBook ? ESM4::REC_BOOK : ESM4::REC_MISC;
             if (!baseDefinition) return std::nullopt;
-            if constexpr (isIngredient || isApparatus)
+            if constexpr (isIngredient || isApparatus || isBook)
                 if (count != 1 || item.getCellRef().getCount() != 1) return std::nullopt;
             if constexpr (isApparatus)
                 if (baseDefinition->mData.type > 3 || !std::isfinite(baseDefinition->mData.quality)
                     || baseDefinition->mData.quality < 0 || !std::isfinite(baseDefinition->mData.weight)
                     || baseDefinition->mData.weight < 0) return std::nullopt;
+            // Start with ordinary takeable books; scrolls and skill/scripted
+            // books retain their existing path until their own real courses.
+            if constexpr (isBook)
+                if (baseDefinition->mData.flags != 0 || baseDefinition->mData.bookSkill != -1
+                    || !std::isfinite(baseDefinition->mData.weight) || baseDefinition->mData.weight < 0)
+                    return std::nullopt;
             const auto lightProfile = [&] {
                 if constexpr (isLight) return std::array{baseDefinition->mData.time, baseDefinition->mData.flags};
                 else return std::array{0, 0};
@@ -725,7 +743,7 @@ namespace MWWorld
                 else return std::uint32_t(0);
             };
             const auto enchantment = [&] {
-                if constexpr (isWeapon || isArmor || isClothing || isAmmunition) return baseDefinition->mEnchantment;
+                if constexpr (isWeapon || isArmor || isClothing || isAmmunition || isBook) return baseDefinition->mEnchantment;
                 else return ESM::FormId{};
             };
             const auto script = [&] {
@@ -808,6 +826,12 @@ namespace MWWorld
                 else return std::tuple<std::uint8_t, std::uint32_t, float, float>{};
             };
             const auto apparatusBefore = apparatusProfile();
+            const auto bookProfile = [&] {
+                if constexpr (isBook) return std::tuple{baseDefinition->mData.flags, baseDefinition->mData.bookSkill,
+                    baseDefinition->mData.value, baseDefinition->mData.weight, baseDefinition->mText};
+                else return std::tuple<std::uint8_t, std::int8_t, std::uint32_t, float, std::string>{};
+            };
+            const auto bookBefore = bookProfile();
             const auto current = [&] {
                 // The removal token owns the inventory epoch. Test it before any
                 // borrowed item dereference after a model/resource callback.
@@ -819,6 +843,7 @@ namespace MWWorld
                     && health() == healthBefore && script() == scriptBefore
                     && enchantment() == enchantmentBefore && lightProfile() == lightBefore
                     && armorProfile() == armorBefore && apparatusProfile() == apparatusBefore
+                    && bookProfile() == bookBefore
                     && live.getOwner() == sourceBefore.getOwner()
                     && live.getNativeOwnershipRank() == sourceBefore.getNativeOwnershipRank()
                     && live.getNativeOwnershipGlobal() == sourceBefore.getNativeOwnershipGlobal()
@@ -875,10 +900,10 @@ namespace MWWorld
             const auto model = preview.getClass().getCorrectedModel(preview);
             const auto file = mResourceSystem->getNifFileManager()->get(VFS::Path::Normalized(model));
             const auto selectedDefinition = [&]() -> std::optional<NifBullet::ActorRagdollDefinition> {
-                if constexpr (isIngredient || isApparatus)
+                if constexpr (isIngredient || isApparatus || isBook)
                 {
                     // Unsupported models keep their prior path: native static
-                    // ingredients or legacy apparatus. Do not debit inventory.
+                    // ingredients or legacy apparatus/books. Do not debit inventory.
                     try { return NifBullet::loadWeaponReferenceRagdollDefinition(*file); }
                     catch (const std::runtime_error&)
                     {
@@ -890,7 +915,7 @@ namespace MWWorld
             }();
             if (!selectedDefinition) return std::nullopt;
             const auto& definition = *selectedDefinition;
-            if constexpr (isIngredient || isApparatus)
+            if constexpr (isIngredient || isApparatus || isBook)
             {
                 if (!current()) throw std::invalid_argument("native singleton source changed during asset preparation");
                 if (definition.mBodies.size() != 1 || !definition.mJoints.empty()
@@ -960,6 +985,7 @@ namespace MWWorld
                                         : isLight ? "TES4 inventory light dropped: base="
                                         : isIngredient ? "TES4 inventory ingredient dropped: base="
                                         : isApparatus ? "TES4 inventory apparatus dropped: base="
+                                        : isBook ? "TES4 inventory book dropped: base="
                                                        : "TES4 inventory misc dropped: base=") << base->serialize()
                 << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f)
                 << " count=" << dropCount;
@@ -998,6 +1024,8 @@ namespace MWWorld
             return admit(mStore.get<ESM4::Ingredient>().search(sourceId));
         if (item.getType() == ESM::REC_APPA)
             return admit(mStore.get<ESM4::Apparatus>().search(sourceId));
+        if (item.getType() == ESM::REC_BOOK)
+            return admit(mStore.get<ESM4::Book>().search(sourceId));
         return std::nullopt;
     }
 
