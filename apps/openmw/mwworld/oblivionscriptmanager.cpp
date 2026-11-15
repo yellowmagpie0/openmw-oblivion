@@ -2082,8 +2082,6 @@ namespace MWWorld
                 if (name == "getitemcount")
                 {
                     const auto count = mWorld.oblivionPlayerItemCount(*item);
-                    trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
-                        + " count=" + std::to_string(count));
                     return std::int64_t(count);
                 }
                 const auto requested = boundedCount(argument(itemArg + 1));
@@ -2107,8 +2105,6 @@ namespace MWWorld
                     const auto count = id ? oblivionInventoryItemCount(actor.getClass().getContainerStore(actor),
                                                 OblivionProfileServices::sharedItemId(mWorld.mStore, ESM::RefId(*id)))
                                           : std::int64_t(0);
-                    trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
-                        + " count=" + std::to_string(count));
                     return count;
                 }
             }
