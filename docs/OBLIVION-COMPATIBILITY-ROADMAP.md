@@ -467,8 +467,10 @@ native skill use and normal/SAN cold persistence. The separate
 [original Poison of Illness course](oblivion/TUTORIAL-POISON-VERIFICATION.json)
 adds equipped-melee coating, miss retention, instant10-damage contact and cold
 spent/death ownership. The sanitizer hit/cold tail uses a genuine normal-input
-pre-combat checkpoint. Higher skill/tool recipes, timed crafted poisons and
-other poison branches remain open; this does not close M16.
+pre-combat checkpoint. The [crafted timed-poison course](oblivion/CRAFTED-POISON-VERIFICATION.json)
+adds the actual novice brew’s five-second Damage Health effect, including
+paused active cold loads and spent-state persistence in normal and sanitizer runs.
+Higher skill/tool recipes and other poison branches remain open; this does not close M16.
 
 #### M17 - Dialogue, voice, persuasion, and services
 
