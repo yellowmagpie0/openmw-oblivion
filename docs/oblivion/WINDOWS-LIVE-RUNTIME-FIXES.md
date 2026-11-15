@@ -6,9 +6,11 @@ Target: responsive tutorial play using the player's existing saved game, with
 working armor UI and native skill progression. The bounded routing/reference
 lookup performance chunk and both recurring error repairs are verified. The
 saved game remains slow; this is not a completed performance course. The
-effect-owner scan chunk is also verified: autosave performance is now about
-18 FPS, versus the original 7.3 FPS. Next: inspect the remaining AI/physics
-cost before selecting another bounded change. Broader tutorial gates remain in
+effect-owner and recovered-arrow scan chunks are also verified: final autosave
+performance is 17.9–18.6 FPS, versus the original 7.3–7.4 FPS. Remaining cost
+includes low-process AI routing and physics-worker waits; smooth gameplay is
+still an acceptance gap. Next: a bounded AI-routing/physics investigation,
+using the final CPU sample below. Broader tutorial gates remain in
 [the tutorial handoff](TUTORIAL-PLAYABLE-CHUNK-HANDOFF.md).
 
 ## Performance chunk
@@ -124,6 +126,43 @@ rendered Charm-casting course.
 This documentation was updated after the checks; tested C++ sources are
 unchanged. These results verify the identified repairs, not smooth 60 FPS,
 normal-input loot/visual acceptance, or a warning-free tutorial course.
+
+## Recovered-arrow scan follow-up
+
+The final isolated 60-stack CPU sample found no recurring fire/Charm scan, but
+five stacks still parsed recovered-arrow metadata. That parser now examines
+only the sorted `native.arrow.` range, preserving all partial/unknown-field
+rejections and leaving unrelated custom state alone. Existing regressions cover
+empty, valid, partial, unknown, malformed, noncanonical and fading ownership.
+
+- Complete final engine suite **2,300/2,300**, exact inventory, no failures/skips:
+  `build-windows/checks-78f6a31fd0a640d4b56b9c9952370e8a`,
+  `live-fix-arrow-scan-full.log`. Tested source fingerprint at HEAD
+  `b80a693a154dd413f17b4bbb705605cefd1d7f41`:
+  `032557dfe78be4b959ca782d59a2b54a69e8bf931be14df87a44d7e91c9acfe6`.
+- Final game SHA256:
+  `0b8486c5e737611fe30fc7979cf359c61280f51bc3aa305dbeebee7cf0921751`.
+  Build: `build-windows/live-fix-arrow-scan-runtime-build.log`.
+- Two clean autosave loads, same protocol:
+  `build-windows/performance/live-save-arrow-final-01/results.json`.
+  **18.60/17.86 FPS**, mechanics **32.12/33.62 ms**, physics **11.29/11.88 ms**,
+  scripts **6.31/6.48 ms**; p95 **84.8/87.7 ms**, p99 **102.7/109.4 ms**.
+  Short-run variance does not establish a separate FPS improvement from this
+  small parser change. Fresh-scene evidence above uses the preceding executable;
+  it is not relabeled as final-binary evidence.
+- Final rendered movement/skill probe:
+  `build-windows/live-skill-arrow-final-01/result.json`: passed, clean exit,
+  **zero skill/focus/frame errors**, unchanged input/executable hashes.
+- Diagnostic sample before this small parser follow-up:
+  `build-windows/live_stack_sample_16048.json`. Of 60 stacks, 26 include
+  low-process AI, 14 door planning, and 12 physics-worker waits during loose-item
+  synchronization. These overlapping inclusive counts are diagnostic, not a
+  timing measurement. Its private process exited cleanly; sampled timing in
+  `performance/live-save-effects-diagnostic-01` is excluded from benchmarks.
+
+The documentation update follows verification; the tested C++ is unchanged.
+The final executable is ready for a human loot/traversal check. Original save,
+full component evidence and limitations remain as recorded above.
 
 ## Armor UI repair
 
