@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "name": "Original acquired Novice Charter: pickup",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\nat 0 command content:oblivion.esm:04e936 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal types=require('openmw.types')\nlocal Actor=require('openmw.types').Actor\nlocal core=require('openmw.core')\nlocal camera=require('openmw.camera')\nlocal util=require('openmw.util')\nlocal nearby=require('openmw.nearby')\nlocal t=-1\nreturn {{engineHandlers={{onFrame=function(dt)\n t=t+dt;if t<.2 then return end;t=0\n for _,obj in ipairs(Actor.inventory(self):getAll()) do if obj.recordId==core.getFormId('Oblivion.esm',0x026d8b) then local rec=types.Book.record(obj);assert(rec.name=='Mages Guild Charter' and rec.weight==1 and rec.value==1,'Original Charter properties changed');print('WholeBookDrop original properties value=1 weight=1') end end\n assert(not Actor.isDead(self),'Player died during real Wellspring Charter retrieval')\n print('WholeBookDrop stock='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x026d8b))..' health='..Actor.stats.dynamic.health(self).current)\n local bonemealItem=nil;local nearest=200\n for _,obj in ipairs(nearby.items) do if obj.recordId==core.getFormId('Oblivion.esm',0x026d8b) and obj.count>0 then\n  local distance=(obj.position-self.position):length()\n  if distance<nearest then nearest=distance;bonemealItem=obj end\n end end\n if not bonemealItem then print('WholeBookDrop world absent');return end\n assert(not types.Book.objectIsInstance(bonemealItem),'Retrieve native counted book, not a legacy clone')\n print('WholeBookDrop selected nearby native distance='..nearest..' count='..bonemealItem.count)\n local box=bonemealItem:getBoundingBox();local origin=camera.getPosition();local view=camera.viewportToWorldVector(util.vector2(.5,.5))\n print('WholeBookDrop player='..tostring(self.position)..' root='..tostring(bonemealItem.position)..' center='..tostring(box.center)..' half='..tostring(box.halfSize))\n local dv=box.center-self.position;local yaw=math.atan2(view.y*dv.x-view.x*dv.y,view.x*dv.x+view.y*dv.y)\n print(string.format('VilverinContinue key walk aim x=%d y=%d',math.max(-150,math.min(150,math.floor(yaw*256+.5))),0))\n if math.sqrt(dv.x*dv.x+dv.y*dv.y)<10 then print('VilverinContinue key close') end\n local aim=nil\n for _,x in ipairs({{0,-.6,.6}}) do\n  for _,y in ipairs({{0,-.6,.6}}) do\n   for _,z in ipairs({{0,-.6,.6}}) do\n    local point=box.center+util.vector3(x*box.halfSize.x,y*box.halfSize.y,z*box.halfSize.z)\n    local hit=nearby.castRenderingRay(origin,point,{{ignore=self}})\n    if hit.hitObject==bonemealItem then aim=hit.hitPos;break end\n   end\n   if aim then break end\n  end\n  if aim then break end\n end\n if not aim then print('WholeBookDrop no visible bounds point');aim=box.center end\n local point=camera.getViewTransform():apply(aim)\n local ax=math.atan2(point.x,-point.z);local ay=-math.atan2(point.y,math.sqrt(point.x*point.x+point.z*point.z))\n print(string.format('VilverinContinue key item aim x=%d y=%d',math.max(-100,math.min(100,math.floor(ax*256+.5))),math.max(-100,math.min(100,math.floor(ay*256+.5)))))\n local ray=nearby.castRenderingRay(origin,origin+view*2000,{{ignore=self}})\n print('WholeBookDrop focus='..tostring(ray.hitObject)..' point='..tostring(ray.hitPos))\n if ray.hitObject==bonemealItem and ray.hitPos then\n print('WholeBookDrop visible focus eyeDistance='..(ray.hitPos-origin):length()..' playerDistance='..(ray.hitPos-self.position):length()..' setting='..tostring(core.getGMST('iMaxActivateDist'))..' thirdDistance='..camera.getThirdPersonDistance())\n if (ray.hitPos-origin):length()<tonumber(core.getGMST('iMaxActivateDist')) then print('WholeBookDrop in native range') end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "WholeBookDrop stock=0 health=",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "WholeBookDrop visible focus",
+      "after_start": true,
+      "maximum_iterations": 100,
+      "timeout_seconds": 150,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "VilverinContinue key item aim",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "VilverinContinue key item aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "key_hold",
+      "value": "w",
+      "seconds": 0.35
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "WholeBookDrop in native range",
+      "after_start": true,
+      "maximum_iterations": 100,
+      "timeout_seconds": 90,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "VilverinContinue key item aim",
+          "after_start": true,
+          "timeout_seconds": 30,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "VilverinContinue key item aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "original-charter-whole-focused.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "space",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M5 interaction: kind=read result=read ref=dynamic:native-reference:0000000000000010",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "native-dropped-charter-whole-reader.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "gamepad_button",
+      "value": "a",
+      "hold_seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "WholeBookDrop stock=2 health=",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-charter-whole-picked-up.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "WholeBookDrop stock=2 health=",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "fWortChanceValue",
+    "Water Breathing",
+    "Dangling inventory script instance",
+    "Failed to save game"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-charter-whole-pickup",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": true,
+  "sdl_xvfb_input": true
+}

@@ -1,0 +1,118 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "record_audit": {
+    "026d8b": {
+      "tag": "BOOK",
+      "id": "026d8b",
+      "payload_sha256": "1f3a255a6994b3f929875aaad794587c19a4c466c0bbf89f5823b32aed4074b3",
+      "data": [
+        0,
+        -1,
+        1,
+        1.0
+      ],
+      "model": "Clutter\\Books\\Octavo02.NIF",
+      "scriptless": true,
+      "unenchanted": true
+    },
+    "06efb6": {
+      "tag": "REFR",
+      "id": "06efb6",
+      "payload_sha256": "2f112b1fe14726080265e59c8005534e645cb5f23274f57659540b919608cada",
+      "position": [
+        -2787.85400390625,
+        -1772.666748046875,
+        -582.5912475585938,
+        -0.00047914907918311656,
+        0.0007176423096098006,
+        1.7883888483047485
+      ],
+      "owner": ""
+    },
+    "member": "meshes/clutter/books/octavo02.nif",
+    "member_sha256": "abf39c0b356aa9658ab753ea19c666e187cdc00bb644e2dca01b35fcd0df94d3"
+  },
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_probe": {
+    "path": "build/oblivion-compat/book-whole-stack/original-01",
+    "plan": {
+      "question": "Does original ordinary whole-stack book drop create one counted REFR or multiple unit REFRs?",
+      "content": "Original Mages Guild Charter BOOK026d8b, flags0/skill-1/value1/weight1",
+      "controls": [
+        "Isolated original prefix, pristine save hash checked; copy baseline only and restore exact Documents/Plugins on exit",
+        "Controlled oracle console setup testinghall and give2originalCharters, separate from genuine fork acquisition",
+        "Ordinary inventory whole-stack drop; read-only FormMap/REFR/ExtraCount observation and inventory quantity queries",
+        "Ordinary reader/Take and inventory return; no F5 or pristine overwrite; clean qqq exit"
+      ],
+      "expected": "Unresolved until actual original gameplay observation; do not assume counted-stack representation from fork code.",
+      "tolerances": {
+        "quantity": 0,
+        "reference_count": 0
+      },
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "layout_source": "xOBSE f64a8fa0481e24b3e159d276b29b721a548876bf, corroborate original mapped vtable/instructions and actual reference observations"
+    },
+    "observations": {
+      "passed": true,
+      "whole_request": 5,
+      "new_world_references": 1,
+      "world_quantity": 5,
+      "reader_take_inventory_return": 5,
+      "whole_reference_removed": true,
+      "earlier_single_reference_retained": true,
+      "initial_two_copy_shift_behavior": "Ordinary Shift click at count2 dropped one; larger controlled stack5 exposed actual quantity dialog default5. No original whole2 UI claim.",
+      "setup": "Pristine isolated save; testinghall and original book grants only for independent oracle. No game save/F5.",
+      "caller_scope": "Actual original quantity dialog whole5, actual rendered focus/Space/readerTake. Inference for same plain book whole2 is counted-reference ownership, not original input shortcut equality or exact trajectory.",
+      "layout_source": "xOBSE f64a8fa0481e24b3e159d276b29b721a548876bf; mapped ExtraCount vtable and original Compare word+C instructions verified against hash-identified executable."
+    },
+    "process": {
+      "pid": 1108026,
+      "start_ticks": 21624723,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "window_id": 37748739,
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "mapped_original_exe": [
+        "00400000-00401000 r-xp 00000000 00:25 2071952                            /home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe"
+      ]
+    },
+    "restoration": {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    }
+  },
+  "layout": {
+    "source_revision": "xOBSE f64a8fa0481e24b3e159d276b29b721a548876bf",
+    "reference_type": "0x31",
+    "base_offset": "0x1c",
+    "extra_list_offset": "0x44",
+    "extra_count_type": "0x2a",
+    "extra_count_vtable": "0xa3583c",
+    "count_offset": "0xc signed16",
+    "corroboration": "Mapped original ExtraCount vtable/Compare instructions verified byte-for-byte; original Compare reads word+C. Actual original count5 field, world label(5), UI whole5 and inventory GetItemCount5 agree."
+  },
+  "model": {
+    "member_sha256": "abf39c0b356aa9658ab753ea19c666e187cdc00bb644e2dca01b35fcd0df94d3",
+    "runtime_asset_hash": "0eae81ef5f5cc50219d3e78244708e61",
+    "body_record": 4,
+    "authored_root": 0,
+    "prepared_root": 18,
+    "bodies": 1,
+    "joints": 0,
+    "authored_mass": 1,
+    "body_transform": true
+  },
+  "expected": {
+    "inventory_before": 2,
+    "inventory_after_drop": 0,
+    "world_references": 1,
+    "world_count": 2,
+    "inventory_after_take": 2,
+    "read_delta_on_open": 1,
+    "read_delta_on_drop_load_take": 0
+  },
+  "limits": [
+    "Original actual UI observation was whole5, not whole2. Counted world ownership for whole2 is an inference in the same ordinary book family.",
+    "Controlled oracle grants/testinghall are separate from genuine fork acquired copies.",
+    "No exact original physical trajectory/mass parity or full milestone completion."
+  ]
+}

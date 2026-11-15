@@ -1,0 +1,35 @@
+{
+  "target": "M13 counted native ordinary whole-book stack drop/cold restoration/readerTake",
+  "parent_commit": "d0034c10ea",
+  "source": {
+    "path": "build/oblivion-compat/book-whole-stack/normal-second-charter-acquisition-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "50d002ae0b58c402b6d9b332d2cb8fd2b23351c58ade5f00d05bb475ff5fb1cb",
+    "books_read": 16,
+    "allocator": 16
+  },
+  "content": {
+    "base": "BOOK026d8b",
+    "second_original": "content:oblivion.esm:06efb6",
+    "first_original": "content:oblivion.esm:06efb5",
+    "title": "Mages Guild Charter",
+    "flags": 0,
+    "book_skill": -1,
+    "value": 1,
+    "weight": 1,
+    "model": "meshes/clutter/books/octavo02.nif"
+  },
+  "acceptance": [
+    "Ordinary second-copy acquisition1->2 and BooksRead15->16 retires06efb6 and preserves old06efb5; no grants/teleports/save edits in fork.",
+    "Actual whole2 drop2->0 creates one native reference key16/count2/next17 with original one-body Octavo02 model.",
+    "Cold world restores quantity2 and exact tick-zero physical state; ordinary read/Take returns both2, counts16->17 once and retires key16/body.",
+    "Cold inventory retains2/count17 without replay; other inventory including Fundaments2/Song1, skills/progression/awards, scripts/life/33deaths/quests/combat and old retired native refs unchanged.",
+    "Normal/SAN real courses, focused/full engine gates with exact2292 inventory, Python checks and prior unit-split real regression pass."
+  ],
+  "original_scope": "Actual hash-identified original whole5 UI quantity dialog creates one Count5 REFR; normal focus/read/Take returns5. Inference for same plain book whole2 concerns counted ownership. Original Shift click atcount2 drops1; no original/fork shortcut equivalence claim. Exact original mass/trajectory not required.",
+  "profile": "Existing takeable ordinary scriptless/unenchanted content-defined BOOK/one supported movable body/no joints. Positive requested count bounded by source; original one-reference counted ownership. No parser/save schema or new geometry change.",
+  "limits": [
+    "No skill/scroll/scripted/enchanted book-stack acceptance, high-count/overflow or malformed gameplay claim.",
+    "No original whole2 UI shortcut parity or exact drop trajectory/mass claim.",
+    "No full M13/M16/M18 or TES4 MCP authoring claim."
+  ]
+}

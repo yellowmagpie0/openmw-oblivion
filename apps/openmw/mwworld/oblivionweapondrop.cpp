@@ -720,9 +720,9 @@ namespace MWWorld
                     || baseDefinition->mData.weight < 0) return std::nullopt;
             // Start with ordinary takeable books; scrolls and skill/scripted
             // books retain their existing path until their own real courses.
-            // Transfer one physical book while retaining any sibling copies.
+            // A plain book stack uses one counted world reference, as in Oblivion.
             if constexpr (isBook)
-                if (count != 1 || baseDefinition->mData.flags != 0 || baseDefinition->mData.bookSkill != -1
+                if (baseDefinition->mData.flags != 0 || baseDefinition->mData.bookSkill != -1
                     || !std::isfinite(baseDefinition->mData.weight) || baseDefinition->mData.weight < 0)
                     return std::nullopt;
             const auto lightProfile = [&] {

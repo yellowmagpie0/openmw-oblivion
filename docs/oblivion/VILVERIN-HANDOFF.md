@@ -4,27 +4,29 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [Fundaments native book split](BOOK-STACK-CONTRACT.json).
-Original second Fundaments06efb4 / BOOK024567 was read/taken into an existing
-copy from06efb3, count1->2 and BooksRead13->14. Actual normal/SAN Control drag
-now splits one native physical book, leaving its sibling: inventory1/world1,
-key15/next16, original Quarto03 body4/virtual root18. Cold world restores physical
-ownership; ordinary read/Take returns exactly2, counts14->15 and retires key15/body.
-Cold inventory keeps2/count15 without replay. Exact complementary item metadata,
-other inventory, skills/progression/history, character generation, scripts/life/
-quests/33deaths and3 incoming Player combat edges are retained.
-[Receipt](BOOK-STACK-VERIFICATION.json) separates raw/model, structural, compiler,
-semantic and actual input evidence.195 focused/2292 full engine cases per mode
-and618 Python pass; exact prior inventory preflight prevents missing test-object
-coverage. No geometry/component change; Charter3301-per-mode component evidence
-remains separate. Whole-stack requests and skill/scroll/scripted/enchanted profiles
-retain their prior paths; this course accepts one book from a positive stack.
-Prior [Song native book drop](SONG-DROP-VERIFICATION.json) introduced singleton
-BOOK physical ownership; its interrupted/reduced1572-test run remains rejected
-with the repaired exact2292 run documented there. [Charter reader/Take](CHARTER-BOOK-VERIFICATION.json)
-keeps full text, native Take and permitted combat reading. Earlier
-[ordinary read counting](ORDINARY-BOOK-READ-VERIFICATION.json) preserves skill history.
-No full M13/M16/M18 or TES4 MCP authoring claim.
+Latest completed bounded chunk: [Charter whole-book stack](BOOK-WHOLE-STACK-CONTRACT.json).
+Second original Charter06efb6 / BOOK026d8b was read/taken into existing06efb5 loot,
+count1->2/BooksRead15->16/allocator16. Native normal/SAN whole2 drop now publishes
+one key16/count2/body4/root18/next17 using original Octavo02. Cold world restores
+physical/quantity ownership; ordinary readerTake returns2, counts16->17 once and
+retires key16/body. Final cold inventory retains2/count17 without replay. Fresh
+normal/SAN one-from2 regressions retain inventory1/world1 and complementary metadata.
+Original whole5 quantity-dialog drop creates one count5 reference and readerTake
+returns5; read-only original observations/mapped ExtraCount instructions agree.
+Isolated original inputs restored exactly. Whole2 counted ownership is an explicit
+same-family inference; original Shift atcount2 drops1, so no shortcut parity claim.
+[Receipt](BOOK-WHOLE-STACK-VERIFICATION.json) separates original, structural,
+compiler, semantic and actual input layers.195 focused/2292 full engine per mode
+and618 Python pass. Failed normal pickup01 targeted distant untouched06efd0;
+nearest-native observer fixes normal02/SAN01. Both gates finished before publishing
+only the2 corrected pickup recipes; reverse fingerprint proves tested C++/other
+files unchanged. No geometry/component change; prior Charter3301-per-mode evidence
+remains separate. No skill/scroll/scripted/enchanted or high-count gameplay claim.
+Prior [Fundaments unit split](BOOK-STACK-VERIFICATION.json) preserves stack siblings;
+[Song singleton drop](SONG-DROP-VERIFICATION.json) introduced BOOK physical ownership.
+[Charter reader/Take](CHARTER-BOOK-VERIFICATION.json) keeps full text and permitted
+combat reading; [ordinary count](ORDINARY-BOOK-READ-VERIFICATION.json) keeps skill
+history separate. No full M13/M16/M18 or TES4 MCP authoring claim.
 
 Prior [Alembic](ALEMBIC-DROP-VERIFICATION.json) retains separate original sphere
 children and native loose ownership. [Retort](RETORT-DROP-VERIFICATION.json)
@@ -33,9 +35,9 @@ preserves987 beside2fresh1000; [container discovery](NATIVE-CONTAINER-DISCOVERY-
 exposes original Sack06efcf. [Bonemeal](BONEMEAL-DROP-VERIFICATION.json) retains
 its original movable body. No full M16/M18 or TES4 MCP authoring claim.
 
-Next action: choose another reached original piece exposing a remaining gameplay
-acceptance gap. Keep ordinary book whole-stack requests and skill/scroll/scripted
-profiles open rather than claiming general book-drop completion.
+Next action: choose another real content source exposing an unimplemented
+acceptance gap. Ordinary singleton, unit split and counted whole-book ownership
+are now covered; keep skill/scroll/scripted/enchanted profiles open.
 Keep independent branches separate; do not enable Zahrasha or reroll the sack.
 
 Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
@@ -45,16 +47,16 @@ The opening harness awaited the wrong kind label and did not retain a save.
 normal input receipts and failure; no looting acceptance or continuation claim.
 
 Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/book-stack/normal-book-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `be2714a2ba8e51d4ada017f51cc930f36372e4b9b3c15cf48616d6a915727c03`.
-Instrumented continuation: same root `sanitized-book-stack-inventory-01`,
-SHA256 `7900231722b649b33a2a3f3cadcf2753bfa63a8cc3babd96b2083c13e1725ad9`.
-BooksRead15; Fundaments2/Song1/Charter1 carried, original06efb2/3/4/5 retired/
-count0/taken/read. Other78 Song and Charters06efb6/06efd0 unchanged; no ordinary-
+`build/oblivion-compat/book-whole-stack/normal-book-whole-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `0517fbe28fbe044a41e3c247253556ba1513d5c6f2fcd1e2504f4ec4d8b02a64`.
+Instrumented continuation: same root `sanitized-book-whole-stack-inventory-01`,
+SHA256 `025818b0f70c26b180659438a7c860d0f92f2155ab9388ce3abd8c4f49c49d04`.
+BooksRead17; Charter2/Fundaments2/Song1 carried, original06efb2/3/4/5/6 retired/
+count0/taken/read. Other78 Song and untouched Charter06efd0 unchanged; no ordinary-
 book taught history entry. All3 incoming Player combat edges retained.
 Alembic1/Retort1, Cuirass equipped/condition19.6576748/scriptowner9, Torch1/fuel987
 plus2fresh1000 all unequipped, Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/
-Bone1, Club equipped, MQ01flags1/1, allocator16. Native keys1..8,10..15 retired/
+Bone1, Club equipped, MQ01flags1/1, allocator17. Native keys1..8,10..16 retired/
 count0/no bodies; inventory-script9 active and no native ref9. Original06efb7/8
 remain deleted/count0/taken. Health70.480003/110, Endurance55, all27skills/book
 award history/33 credited deaths preserved. MS39stage0 and original absence of
@@ -118,5 +120,5 @@ Mandrake is70k away. Chameleon alpha0.75 is approximate.
 
 Checkpoint: native singleton ingredient/weapon/MISC/KEYM, articulated clothing,
 ammunition quantities and the closed-convex Lockpick stack now have separate
-real-content evidence. Fundaments split chunk complete; choose the next reached gameplay gap
+real-content evidence. Charter whole-stack chunk complete; choose the next reached gameplay gap
 without closing broader milestones.
