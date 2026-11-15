@@ -1,0 +1,33 @@
+{
+  "status": "Verified bounded native Player currency presentation in normal and sanitizer runtimes; full M19 remains open",
+  "milestone": "M19 Player inventory currency presentation",
+  "parent_commit": "d8bcae99f6",
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "gold": "content:oblivion.esm:00000f",
+    "editor_id": "Gold001",
+    "inventory_alias": "gold_001"
+  },
+  "source": {
+    "path": "build/oblivion-compat/shady-sam-purchase/normal-sam-purchased-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "8944665bd947e09018e1a0a1640889237c3fad5fded95f49cf6a48bcd5b0c5f2",
+    "gold": 1,
+    "lockpicks": 3,
+    "health": 110,
+    "allocator": 7
+  },
+  "course": "Use the Septim earned from original Shady Sam, show a noninteractive native purse footer and omit currency from the Player item list; exercise footer controls, genuine zero balance, a real6to1purchase and cold processes.",
+  "acceptance": [
+    "Original executable UI: Gold is absent from the Player Misc list, footer44 survives click/Shift-click/drag; no original console/script DropGold rule claim.",
+    "Actual inventory retains canonical Gold001 and exact purse; only the native Player presentation filters its shared alias.",
+    "Native footer reflects0,1and6, remains outside the item grid, and follows actual fixed-offer purchase6to1.",
+    "Footer interactions neither debit currency nor allocate native references; unrelated inventory, progression and quests persist.",
+    "Normal and sanitizer actual UI/purchase/cold courses and appropriate focused/integration checks."
+  ],
+  "boundaries": [
+    "No physical Gold drop/pickup or console/script DropGold implementation; the original normal UI does not expose the carried Gold item.",
+    "Non-Player stores and Morrowind retain their existing presentation; no general native currency, crime, container or full M19 claim.",
+    "Existing approximate merchant prices, inherited tabs/tooltips and the main cave/tutorial branches remain separate."
+  ],
+  "evidence_root": "build/oblivion-compat/earned-gold"
+}

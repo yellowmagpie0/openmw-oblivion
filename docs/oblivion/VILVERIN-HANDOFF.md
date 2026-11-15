@@ -4,15 +4,18 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [original Shady Sam unit barter](SHADY-SAM-TRADE-HANDOFF.md).
-The independent healthy-shore branch reached Sam, sold six original Lockpicks,
-bought one and retained the paid inventory across normal/SAN cold processes.
-Player 3 Lockpicks/1 gold, stock 35, Health 110, allocator 7, Mercantile progress 2.4. Native
-linked-stock ownership, fixed 400 budget, cancel/reject controls and quoted gold
-pass; prices remain approximate. All 3,303 component/2,292 engine cases per mode and
-618 Python checks pass, with exact SAN engine partitions after Bullet's global thread
-limit aborted the full process. See the [receipt](SHADY-SAM-TRADE-VERIFICATION.json)
-for exact provenance and the unchanged main-cave source below.
+Latest completed bounded chunk: [native Player currency purse](CURRENCY-PURSE-HANDOFF.md).
+The Septim earned from Sam now appears in a noninteractive balance, matching the
+observed original UI, and remains in actual native inventory for trade/scripts.
+Real purchase 6 to 1, zero/one balance, footer controls and normal/SAN cold saves
+pass. Full 2,292 engine cases per mode (exact SAN partitions) and 618 Python
+checks pass; component mechanics retain prior provenance. [Receipt](CURRENCY-PURSE-VERIFICATION.json).
+Physical/console/script GoldDrop remains outside this UI slice.
+
+The prior [Shady Sam unit barter](SHADY-SAM-TRADE-HANDOFF.md) remains accepted:
+Player 3 Lockpicks/1 gold, chest stock 35, Health 110, allocator 7, Mercantile
+progress 2.4. Native linked-stock ownership, fixed 400 budget and cancel/reject
+controls pass; prices remain approximate. Preserve the independent shore branch.
 
 The separate [Poison of Illness coating](TUTORIAL-POISON-HANDOFF.md) remains
 accepted for crate acquisition, equipped-axe application, miss retention, Goblin

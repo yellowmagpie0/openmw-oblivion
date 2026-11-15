@@ -73,5 +73,12 @@
 
         </Widget>
 
+        <!-- Oblivion currency is a balance, outside the item pane. -->
+        <Widget type="TextBox" skin="NormalText" position="228 223 350 24" align="Left Top" name="GoldBalance">
+            <Property key="Visible" value="false"/>
+            <Property key="NeedMouse" value="false"/>
+            <Property key="TextAlign" value="Right VCenter"/>
+        </Widget>
+
     </Widget>
 </MyGUI>

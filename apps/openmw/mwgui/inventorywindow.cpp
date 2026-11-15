@@ -1,5 +1,6 @@
 #include "inventorywindow.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -114,6 +115,7 @@ namespace MWGui
         getWidget(mLeftPane, "LeftPane");
         getWidget(mRightPane, "RightPane");
         getWidget(mArmorRating, "ArmorRating");
+        getWidget(mGoldBalance, "GoldBalance");
         getWidget(mFilterEdit, "FilterEdit");
 
         mAvatarImage->eventMouseButtonClick += MyGUI::newDelegate(this, &InventoryWindow::onAvatarClicked);
@@ -163,8 +165,14 @@ namespace MWGui
         const float aspect = 0.5; // fixed aspect ratio for the avatar image
         int leftPaneWidth = static_cast<int>((mMainWidget->getSize().height - 44 - mArmorRating->getHeight()) * aspect);
         mLeftPane->setSize(leftPaneWidth, mMainWidget->getSize().height - 44);
+        const bool nativePurse = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        const int footerHeight = nativePurse ? mGoldBalance->getHeight() : 0;
         mRightPane->setCoord(mLeftPane->getPosition().left + leftPaneWidth + 4, mRightPane->getPosition().top,
-            mMainWidget->getSize().width - 12 - leftPaneWidth - 15, mMainWidget->getSize().height - 44);
+            mMainWidget->getSize().width - 12 - leftPaneWidth - 15,
+            std::max(0, mMainWidget->getSize().height - 44 - footerHeight));
+        mGoldBalance->setCoord(mRightPane->getLeft(), mRightPane->getTop() + mRightPane->getHeight(),
+            mRightPane->getWidth(), mGoldBalance->getHeight());
+        mGoldBalance->setVisible(nativePurse);
     }
 
     void InventoryWindow::updatePlayer()
@@ -758,6 +766,15 @@ namespace MWGui
         float encumbrance = player.getClass().getEncumbrance(player);
         mTradeModel->adjustEncumbrance(encumbrance);
         mEncumbranceBar->setValue(static_cast<int>(std::ceil(encumbrance)), capacity);
+
+        const bool nativePurse = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        if (mGoldBalance->getVisible() != nativePurse)
+            adjustPanes();
+        if (nativePurse)
+        {
+            const int gold = player.getClass().getContainerStore(player).count(MWWorld::ContainerStore::sGoldId);
+            mGoldBalance->setCaptionWithReplacing("#{Interface:YourGold} " + MyGUI::utility::toString(gold));
+        }
     }
 
     void InventoryWindow::onFrame(float dt)

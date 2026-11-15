@@ -12,6 +12,7 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
+#include "../mwbase/world.hpp"
 
 namespace MWGui
 {
@@ -111,10 +112,17 @@ namespace MWGui
 
         mItems.clear();
 
+        auto* world = MWBase::Environment::get().getWorldOrNull();
+        const bool nativePurse = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            && mActor == world->getPlayerPtr();
         for (MWWorld::ContainerStoreIterator it = store.begin(); it != store.end(); ++it)
         {
             MWWorld::Ptr item = *it;
 
+            // Native Player gold is a purse balance. Keep the actual stack
+            // available to transactions, scripts and non-Player loot views.
+            if (nativePurse && item.getCellRef().getRefId() == MWWorld::ContainerStore::sGoldId)
+                continue;
             if (!item.getClass().showsInInventory(item))
                 continue;
 

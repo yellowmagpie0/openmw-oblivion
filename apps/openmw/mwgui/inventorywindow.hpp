@@ -97,6 +97,7 @@ namespace MWGui
         MyGUI::Widget* mAvatar;
         MyGUI::ImageBox* mAvatarImage;
         MyGUI::TextBox* mArmorRating;
+        MyGUI::TextBox* mGoldBalance;
         Widgets::MWDynamicStat* mEncumbranceBar;
 
         MyGUI::Widget* mLeftPane;

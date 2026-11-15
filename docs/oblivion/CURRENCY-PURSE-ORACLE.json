@@ -1,0 +1,21 @@
+{
+  "status": "Accepted original Player currency presentation, no original cold-save claim",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_save_sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+  "source": "Genuine Gaius Weynon House source with11hash-recorded original plugins; raw audit found no Gold001 overrides.",
+  "observations": [
+    "Original Misc list contains Bear Pelt, Flawed Ruby, Lockpick, Sapphire and Torch; Gold is absent between Flawed Ruby and Lockpick.",
+    "Purse footer shows44 throughout ordinary click, Shift-click and drag attempts.",
+    "Read-only console player.getitemcount f returns44.00 after those controls."
+  ],
+  "setup": "Genuine completed-character Gaius Weynon House source; no teleports, grants or stat edits.",
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "scope": "Player inventory presentation only; this does not establish console/script DropGold semantics.",
+  "evidence": "build/oblivion-compat/earned-gold/original-01",
+  "winning_content": "build/oblivion-compat/earned-gold/gold-winning-content.json",
+  "editable_protocol": "CURRENCY-PURSE-ORACLE-PROBE.json"
+}

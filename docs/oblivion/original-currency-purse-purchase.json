@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "name": "Original Gold001 purse6to1 through actual Shady Sam purchase",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<.2 then return end;timer=0\n assert(not Actor.isDead(self),'Player died at original Sam')\n local sam=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0xc45b8));assert(sam and sam:isValid(),'Original Sam missing')\n print('SamFocus Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n local inventory=Actor.inventory(self);local picks=0\n for _,item in ipairs(inventory:getAll(require('openmw.types').Lockpick)) do picks=picks+item.count end\n print('SamTrade Player lockpicks='..picks..' gold='..inventory:countOf('gold_001'))\n local origin=camera.getPosition();local center=sam:getBoundingBox().center;local delta=center-origin\n local view=camera.viewportToWorldVector(util.vector2(.5,.5));if view:length()>2 or view:length()<.5 then return end\n local ax=math.atan2(view.y*delta.x-view.x*delta.y,view.x*delta.x+view.y*delta.y)\n local wanted=-math.atan2(delta.z,math.sqrt(delta.x*delta.x+delta.y*delta.y));local ay=wanted-camera.getPitch()\n print(string.format('SamFocus aim x=%d y=%d',math.max(-80,math.min(80,math.floor(ax*64+.5))),math.max(-80,math.min(80,math.floor(ay*128+.5)))))\n local ray=nearby.castRenderingRay(origin,origin+view*2000,{{ignore=self}})\n if ray.hitObject==sam and ray.hitPos and (ray.hitPos-origin):length()<tonumber(core.getGMST('iMaxActivateDist')) then print('SamFocus ready') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "SamFocus Player",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "SamFocus ready",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "Tab",
+      "seconds": 0.6
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "native-purse-six-before-purchase.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "key_hold",
+      "value": "space",
+      "seconds": 0.6
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "native-sam-barter-topic.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 950,
+      "y": 415
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "actual-native-linked-stock.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 900,
+      "y": 285
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.6
+    },
+    {
+      "type": "screenshot",
+      "name": "original-lockpick-purchase-staged.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 1133,
+      "y": 619
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.6
+    },
+    {
+      "type": "screenshot",
+      "name": "accepted-purchase-back-to-dialogue.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "SamTrade Player lockpicks=3 gold=1",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "Tab",
+      "seconds": 0.6
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "native-purse-one-after-purchase.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 900,
+  "expected_exit": 0,
+  "expected_log": [
+    "SamFocus ready",
+    "Writing saved game",
+    "TES4 merchant trade committed: merchant=content:oblivion.esm:0c45b8"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "Dangling inventory script instance"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-tutorial-poison",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": false
+}

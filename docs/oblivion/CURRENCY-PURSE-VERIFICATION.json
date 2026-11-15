@@ -1,0 +1,546 @@
+{
+  "status": "Verified bounded native Player currency presentation; M19 remains open",
+  "contract": "CURRENCY-PURSE-CONTRACT.json",
+  "oracle": "CURRENCY-PURSE-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/earned-gold",
+  "source": {
+    "parent_commit": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+    "implementation_sha256": {
+      "apps/openmw/mwgui/inventoryitemmodel.cpp": "38a5e8fca471433cdaacffc3c4cf9c25bf1c5fe6f078100696c448a1121dc844",
+      "apps/openmw/mwgui/inventorywindow.cpp": "4ce95b255a80046b4ae65c94fe21d52ba64ea0fccae98841d0b2e46077420d8c",
+      "apps/openmw/mwgui/inventorywindow.hpp": "fbd10235ac2fde6f62c1bcef064f03f6ea306a7f94b9c22896093d33f1926347",
+      "files/data/mygui/openmw_inventory_window.layout": "155ba9dfb51987324b76d91a8c344b00865b33231d201598cb8ae2c8a97407d3"
+    },
+    "tested_dirty": {
+      "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+      "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+    },
+    "post_gate_changes": "Final evidence documents and handoff only; implementation/layout remain as hashed."
+  },
+  "layers": {
+    "structural": "Gold001 remains canonical native inventory data; only native Player item presentation filters the shared alias. Original records unchanged. Default layout adds noninteractive purse footer; no save schema change.",
+    "semantic": "Reused independent Shady Sam auditor checks actual source-to-load inventory/chest data, exact saved DATA, quoted currency debit, ownership, progression and allocator. Additional coin-reference identity checks pass.",
+    "runtime": {
+      "normal": [
+        {
+          "label": "normal-purse-one-01",
+          "phase": "reload",
+          "source_sha256": "8944665bd947e09018e1a0a1640889237c3fad5fded95f49cf6a48bcd5b0c5f2",
+          "save_sha256": "4f086898fd8c96266d0f18a7f4239be6ab8e8dda468c21ddf9e10695d9b08120",
+          "binary_sha256": "7e18126a8c34af586dc2b409f0b3ca8080ccd0336b4edc6608f1cccfc428c5c1",
+          "pid": 1413008,
+          "start_ticks": 27142853,
+          "manifest_sha256": "7ecebad0647e163c15117f63c00a7efa618150caa02e35717a6889dceab8a765",
+          "audit_sha256": "8ab20718198698c20bd11826586f139684390e0b953fd8dc0840c2254980c7c2",
+          "loaded_libraries_sha256": "146f5780174efe3d3ee5f45a71271fbf81da017e75c4ce842ad9bd2dd2806174",
+          "player_gold": 1,
+          "player_lockpicks": 3,
+          "stock": 35,
+          "quoted_purchase": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          },
+          "native_coin_references_unchanged": true,
+          "images": {
+            "earned-one-gold-inventory.png": "56de4dedd8206c389cfed75156bb02c619cc6e30975480888463b958eeceb9fe"
+          }
+        },
+        {
+          "label": "normal-purse-controls-01",
+          "phase": "reload",
+          "source_sha256": "4f086898fd8c96266d0f18a7f4239be6ab8e8dda468c21ddf9e10695d9b08120",
+          "save_sha256": "3e1f3922ad2fbea07d116c412e162c1f76385963b120b696dc92056fd6727bf5",
+          "binary_sha256": "7e18126a8c34af586dc2b409f0b3ca8080ccd0336b4edc6608f1cccfc428c5c1",
+          "pid": 1413311,
+          "start_ticks": 27165885,
+          "manifest_sha256": "f67100e791ee97235bab75a978c4bc9c6757b2e1b0146f6c4f41cdef02c666ee",
+          "audit_sha256": "d224552de07236ca19ba1855c8e95cc6de473804e1b63bfa546e002ac4321997",
+          "loaded_libraries_sha256": "f7b7c2f6969738a94540227d624086cdf2042934f21a46e69a3a98b8b47debe8",
+          "player_gold": 1,
+          "player_lockpicks": 3,
+          "stock": 35,
+          "quoted_purchase": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          },
+          "native_coin_references_unchanged": true,
+          "images": {
+            "native-purse-after-footer-controls.png": "69e2a0ad3853d57036eb1ce72829cda2909d0ea792b4d195092383f0ee7bfe30",
+            "native-purse-one.png": "1bb3c8ac790ec2efae0aa397d75a8b873f4536db9613dee77d359bd3f91f3ac9"
+          }
+        },
+        {
+          "label": "normal-purse-zero-01",
+          "phase": "reload",
+          "source_sha256": "dd8747ef88fdb58ddfc69a696c060501ed4b799abf30702d1c34bbd99c96e6e4",
+          "save_sha256": "658fd4df1bee8572ad7b971226fd94c173ee99ca0ac8a9e311ff91bdab766a9b",
+          "binary_sha256": "7e18126a8c34af586dc2b409f0b3ca8080ccd0336b4edc6608f1cccfc428c5c1",
+          "pid": 1419136,
+          "start_ticks": 27183233,
+          "manifest_sha256": "0a908686460e622194ae473e5e2fa753957d2df48fdd035cd3db4f238a44046e",
+          "audit_sha256": "e7036c264052ff02529b3337b607c5170e781f583f08ce5e56e159da6d558ca6",
+          "loaded_libraries_sha256": "55d4a1a403b4c45f90ba983e400ae96d032587b55bb04cad7b9be4d500217ce5",
+          "player_gold": 0,
+          "player_lockpicks": 8,
+          "stock": 30,
+          "quoted_purchase": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 0.0
+          },
+          "native_coin_references_unchanged": true,
+          "images": {
+            "native-purse-zero.png": "501e6dc8dda1fff679470d8da78d9f8b64e9dda877505a1ce32710625ed4ff25"
+          }
+        },
+        {
+          "label": "normal-purse-purchase-01",
+          "phase": "buy",
+          "source_sha256": "328626f0d84300c91401cb1391d6ba432d67ac513e9558ba3c107c4e73f9abe1",
+          "save_sha256": "bcce7b4d611f0b9c59d0d55f3d03482560394ac41f11d9d12df6e84193dd5977",
+          "binary_sha256": "7e18126a8c34af586dc2b409f0b3ca8080ccd0336b4edc6608f1cccfc428c5c1",
+          "pid": 1419907,
+          "start_ticks": 27212089,
+          "manifest_sha256": "c1845cdeaeac79b90b11a09e239851d588ab1a6d0d82f617e0cae0ee41bb755d",
+          "audit_sha256": "ccb97691c37ed7bb58efe6a05266c7230ceb7764383609295b9b8f172cdea98c",
+          "loaded_libraries_sha256": "f3105670b365135e1d4bd15f353980fed1f64c1cb0d794ba6592560502352fce",
+          "player_gold": 1,
+          "player_lockpicks": 3,
+          "stock": 35,
+          "quoted_purchase": [
+            5
+          ],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          },
+          "native_coin_references_unchanged": true,
+          "images": {
+            "accepted-purchase-back-to-dialogue.png": "e3293b1174730703fbf0cb25037c2e6093ae7e197c232cccf4d1deb3d6818dc2",
+            "actual-native-linked-stock.png": "ff88b2d0cc1290c885585744f064b57531c5dafcc619d0f8a74be10c22d8395f",
+            "native-purse-one-after-purchase.png": "cf6b2eb21656c60358f7e6ae8f14285326ea1530d29adc20a3c66639357c17f9",
+            "native-purse-six-before-purchase.png": "61dd5e61f27b710ff3ad1105ab16f35e9727533f9aa422f91cdfee661766e4f1",
+            "native-sam-barter-topic.png": "d76e176286be9799316d73028cc17688b21893cb82ce967d94e34c33fb939477",
+            "original-lockpick-purchase-staged.png": "c5fd44c007841367e7a7333283e3e28cac4551bb9584fa7cc4221f3dbc6cdb1e"
+          }
+        },
+        {
+          "label": "normal-purse-purchased-cold-01",
+          "phase": "reload",
+          "source_sha256": "bcce7b4d611f0b9c59d0d55f3d03482560394ac41f11d9d12df6e84193dd5977",
+          "save_sha256": "90baa6fdfc96832b8a9e6d66883632decbbc9a3d174d8822afff93267598d1ee",
+          "binary_sha256": "7e18126a8c34af586dc2b409f0b3ca8080ccd0336b4edc6608f1cccfc428c5c1",
+          "pid": 1421872,
+          "start_ticks": 27227950,
+          "manifest_sha256": "f67100e791ee97235bab75a978c4bc9c6757b2e1b0146f6c4f41cdef02c666ee",
+          "audit_sha256": "44cf8f82c92dc1760cadb33beb1e8c9a0ea4a0e31c671a37b5596c8a2a382400",
+          "loaded_libraries_sha256": "41b834c808e4d5c133b442e7d5c7e34e6f6eac9a3c32591f9208a8b69ef9c216",
+          "player_gold": 1,
+          "player_lockpicks": 3,
+          "stock": 35,
+          "quoted_purchase": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          },
+          "native_coin_references_unchanged": true,
+          "images": {
+            "native-purse-after-footer-controls.png": "96d75d799ef6dad1464cad8d4f35acaa7b49aa4e615e968df948296f623a4205",
+            "native-purse-one.png": "31499be25e1830a5e3eeee400e32b36e40064d57b3b975c396208bc505da6665"
+          }
+        }
+      ],
+      "sanitized": [
+        {
+          "label": "sanitized-purse-purchase-01",
+          "phase": "buy",
+          "source_sha256": "328626f0d84300c91401cb1391d6ba432d67ac513e9558ba3c107c4e73f9abe1",
+          "save_sha256": "de2c5ef59422b4c2c1abee08a4e429ab95e9402ba4b3b10ec3002f169e69d875",
+          "binary_sha256": "0d4489d1b0b434885e8017b41b7d5d8e35589708546613c8daa65547c8b1c0a8",
+          "pid": 1420118,
+          "start_ticks": 27220958,
+          "manifest_sha256": "c1845cdeaeac79b90b11a09e239851d588ab1a6d0d82f617e0cae0ee41bb755d",
+          "audit_sha256": "1d2a8ffd8be1ae6f7888764f7e385cba9017440ba768d13684906743763c6928",
+          "loaded_libraries_sha256": "4312ac8782f276aefc501827900afcd43d7a35c7b61ce8bc9b27d00392e287f7",
+          "player_gold": 1,
+          "player_lockpicks": 3,
+          "stock": 35,
+          "quoted_purchase": [
+            5
+          ],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          },
+          "native_coin_references_unchanged": true,
+          "images": {
+            "accepted-purchase-back-to-dialogue.png": "7557729f134f12c7d94415acaa4da264a89339963a142f8842f94ade46c6c0b5",
+            "actual-native-linked-stock.png": "50cc9e2dc754cf7db1a6c95f6b68dd80dba8b06db05c21ccbdac0fc904e2b2e9",
+            "native-purse-one-after-purchase.png": "c92cf434ebc70bcc547c66abc4566695662ba4b089d33f4bd97fabcaf2db7796",
+            "native-purse-six-before-purchase.png": "47687c9bfda050e8f5669572c542ba76404fc8aa0bce0fe57e547fe4f0acc8e2",
+            "native-sam-barter-topic.png": "7838365930ada5507007ea12190f48f804e32e4e9c1fa8e823fac39c0f89baf1",
+            "original-lockpick-purchase-staged.png": "a45fcc61667f45dba963d4b8e9c5bc74858e2cddd1ae5ded1aff95b3d472ba89"
+          }
+        },
+        {
+          "label": "sanitized-purse-purchased-cold-01",
+          "phase": "reload",
+          "source_sha256": "de2c5ef59422b4c2c1abee08a4e429ab95e9402ba4b3b10ec3002f169e69d875",
+          "save_sha256": "424a38bc0f9bf5f0b6a758af712b2ce673679af2287f63fbdbd71c3051415b76",
+          "binary_sha256": "0d4489d1b0b434885e8017b41b7d5d8e35589708546613c8daa65547c8b1c0a8",
+          "pid": 1426871,
+          "start_ticks": 27262102,
+          "manifest_sha256": "f67100e791ee97235bab75a978c4bc9c6757b2e1b0146f6c4f41cdef02c666ee",
+          "audit_sha256": "85dd9705f62de5efaadd4bc643af75017f0308b33157a8424a1825040452e8cb",
+          "loaded_libraries_sha256": "bb1881dc8272773a006bec8ccdefce5a0ccab4dff8870c5986b9c5f723b59003",
+          "player_gold": 1,
+          "player_lockpicks": 3,
+          "stock": 35,
+          "quoted_purchase": [],
+          "mercantile": {
+            "base": 15.0,
+            "experience": 2.4000000953674316
+          },
+          "native_coin_references_unchanged": true,
+          "images": {
+            "native-purse-after-footer-controls.png": "6bc7ed92c40143fd26daea89f1d940729cb71b5d6e8cd3ed577924682e6b1e97",
+            "native-purse-one.png": "8c316f3442abfc8591db5b78d331ab35a5205923c010e3cb627ffd8cba539794"
+          }
+        }
+      ]
+    }
+  },
+  "visual_method": "Direct inspection of actual runtime PNGs: zero/one/six footer, hidden grey currency item, purchase6to1 and cold/footer controls. No OCR or raw-widget query claim.",
+  "checks": {
+    "normal-currency-focused-03": {
+      "receipt": "build/oblivion-compat/earned-gold/normal-currency-focused-03/verification.json",
+      "sha256": "acbec9871f9b9b0b7ce7b55b04a17618cf3569f5abc12a0d18e29856f4daf731",
+      "results": {
+        "engine": {
+          "executed": 81,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Inventory*:*ItemModel*:*Trade*:*Barter*",
+          "binary_sha256": "7dfcd8a24341c5956a4230ea6da3f8df080e591b0e712bb51722c9ccbcaea0c6",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "765ab6b1e5feb1a98be0a8230c66dc6fc302d78dd77e23a320eae065149c53fb",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+        "source_fingerprint": "727a731cc190f3a2748fcca16ab42f982dcad12225d11008f1afb60b1ba40079"
+      }
+    },
+    "normal-currency-integration-01": {
+      "receipt": "build/oblivion-compat/earned-gold/normal-currency-integration-01/verification.json",
+      "sha256": "703a9a8b60501e1ddfb9963b5e24ba52f24a10f6f3818808a7866130d0f79679",
+      "results": {
+        "engine": {
+          "executed": 2292,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7dfcd8a24341c5956a4230ea6da3f8df080e591b0e712bb51722c9ccbcaea0c6",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "2fe8100114d32b9ece73ee29e5869240ce32470abf74007dc915d74ef3b3f50c",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+        "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+      }
+    },
+    "sanitized-currency-focused-01": {
+      "receipt": "build/oblivion-compat/earned-gold/sanitized-currency-focused-01/verification.json",
+      "sha256": "6ed9723f7e9358b98379530a80ef0879bcc423da66d8e0164a38993128fd4d94",
+      "results": {
+        "engine": {
+          "executed": 88,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Inventory*:*ItemModel*:*Gui*:*GUI*:*Widget*:*Tooltip*:*ToolTip*",
+          "binary_sha256": "8145b402c2071c0a9a1ad3f89c97bd0659ffd2ad038e7d541631b43ee78c58d3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "41ab5a4526481d5c746f42d30ca14de12e73fe86215f549d545dab34d88e7eb8",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+        "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+      }
+    },
+    "sanitized-currency-worker-0": {
+      "receipt": "build/oblivion-compat/earned-gold/sanitized-currency-worker-0/verification.json",
+      "sha256": "d64bcaaa3f858e02fa9fad3fe9620823cf44fef531fab38ae46935a7fc706f93",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "8145b402c2071c0a9a1ad3f89c97bd0659ffd2ad038e7d541631b43ee78c58d3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "a6d3e47ae2844d2bee066e55328d6ddbdfaf2015ebef276b0935a707a5fadaed",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+        "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+      }
+    },
+    "sanitized-currency-worker-1": {
+      "receipt": "build/oblivion-compat/earned-gold/sanitized-currency-worker-1/verification.json",
+      "sha256": "230b7b10a2190159fbc2c1efafee9b4d1555ee82cebcb5344bf3d9d8f37f1afc",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "8145b402c2071c0a9a1ad3f89c97bd0659ffd2ad038e7d541631b43ee78c58d3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ec7fa5527ac8848b747b72fa270441b6ac4ffa25f27cfb61829c2dfff2ac9765",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+        "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+      }
+    },
+    "sanitized-currency-worker-2": {
+      "receipt": "build/oblivion-compat/earned-gold/sanitized-currency-worker-2/verification.json",
+      "sha256": "1700ffcc0b2687010b18d5323def6dfef1ca1d8a4240d4d2b2125bab91f5acf6",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "8145b402c2071c0a9a1ad3f89c97bd0659ffd2ad038e7d541631b43ee78c58d3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "0d43bbbf353c4c8630f6e34bac2d2a0a8e5b5c1e751fc71da0a6a07f7f721160",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+        "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+      }
+    },
+    "sanitized-currency-rest": {
+      "receipt": "build/oblivion-compat/earned-gold/sanitized-currency-rest/verification.json",
+      "sha256": "54bab0d54b9a72f13a9cdacceea14ffdb223dec4acead35dde12e3b8bf2326ed",
+      "results": {
+        "engine": {
+          "executed": 2046,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "8145b402c2071c0a9a1ad3f89c97bd0659ffd2ad038e7d541631b43ee78c58d3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "529091013aa3561d6ecc73ef1bf258800e94cd41e69cc2ddf2b1df3bcaec8e4c",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+        "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+      }
+    },
+    "python-currency-final-01": {
+      "receipt": "build/oblivion-compat/earned-gold/python-currency-final-01/verification.json",
+      "sha256": "14afa9fe81dda08cf379a33b646c8bfd1ea5d224211256798f5d4cdb438fee9c",
+      "results": {
+        "python": {
+          "executed": 618,
+          "passed": true,
+          "log_sha256": "0cf5d537072481751bb75086b46aabdb9ea009fddeffde3f0fbf9ae8f37a5802"
+        }
+      },
+      "source": {
+        "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+        "source_fingerprint": "d778c41b6cff465dbd0dae049639b6501deb49a1ed4edb5b4e32376e571c97f8"
+      }
+    }
+  },
+  "partition_audit": {
+    "kind": "exact_disjoint_gtest_partition_coverage",
+    "passed": true,
+    "executed": 2292,
+    "disjoint": true,
+    "exact_union": true,
+    "partitions": [
+      {
+        "label": "sanitized-currency-worker-0",
+        "executed": 82,
+        "filter": "WorkerCounts/*/0"
+      },
+      {
+        "label": "sanitized-currency-worker-1",
+        "executed": 82,
+        "filter": "WorkerCounts/*/1"
+      },
+      {
+        "label": "sanitized-currency-worker-2",
+        "executed": 82,
+        "filter": "WorkerCounts/*/2"
+      },
+      {
+        "label": "sanitized-currency-rest",
+        "executed": 2046,
+        "filter": "*-WorkerCounts/*"
+      }
+    ],
+    "binary_sha256": "8145b402c2071c0a9a1ad3f89c97bd0659ffd2ad038e7d541631b43ee78c58d3",
+    "source_before": {
+      "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+      "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+    },
+    "source_after": {
+      "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+      "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+    }
+  },
+  "reused_component_evidence": {
+    "receipt": "SHADY-SAM-TRADE-VERIFICATION.json",
+    "executed_each_mode": 3303,
+    "reason": "No component mechanics or component test code changed; current GUI code gets fresh full normal/SAN engine gates and actual runtime courses."
+  },
+  "assets": {
+    "normal-01": {
+      "metadata": {
+        "binary_sha256": "7e18126a8c34af586dc2b409f0b3ca8080ccd0336b4edc6608f1cccfc428c5c1",
+        "check": "normal-currency-focused-03",
+        "source": {
+          "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+          "source_fingerprint": "727a731cc190f3a2748fcca16ab42f982dcad12225d11008f1afb60b1ba40079"
+        },
+        "resources": "Frozen version, MyGUI layouts/skins and localization; other children linked to build resources",
+        "critical_resource_sha256": {
+          "mygui/openmw_inventory_window.layout": "155ba9dfb51987324b76d91a8c344b00865b33231d201598cb8ae2c8a97407d3",
+          "l10n/Interface/en.yaml": "920242b7a7337193650ca5f3f57b8d431a3c9b9a27df57009a28794c9bc2b1c3"
+        }
+      },
+      "loaded_mygui": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "8f3dd119f58d1513cbe68e15126fa89957f2cb5504647b043ceb9330de1980ca"
+      }
+    },
+    "sanitized-01": {
+      "metadata": {
+        "binary_sha256": "0d4489d1b0b434885e8017b41b7d5d8e35589708546613c8daa65547c8b1c0a8",
+        "check": "sanitized-currency-focused-01",
+        "source": {
+          "head": "d8bcae99f6a9dc7945abc2f72f168df72c4e2f6e",
+          "source_fingerprint": "33cbd0090fb75500b430d22472189b792c6839ee5dce3e3bd048a4435c02dbf0"
+        },
+        "resources": "Frozen version, MyGUI layouts/skins and localization; other children linked",
+        "critical_resource_sha256": {
+          "mygui/openmw_inventory_window.layout": "155ba9dfb51987324b76d91a8c344b00865b33231d201598cb8ae2c8a97407d3",
+          "l10n/Interface/en.yaml": "920242b7a7337193650ca5f3f57b8d431a3c9b9a27df57009a28794c9bc2b1c3"
+        }
+      },
+      "loaded_mygui": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "796d2e34894e7f7163f0db8d2dc5fe1e64c0ce5cf9f68bf9d06377848dda2f9b"
+      }
+    }
+  },
+  "editable_manifests": [
+    {
+      "source": "currency-peek-01.json",
+      "target": "docs/oblivion/original-currency-purse-view.json",
+      "sha256": "7ecebad0647e163c15117f63c00a7efa618150caa02e35717a6889dceab8a765"
+    },
+    {
+      "source": "purse-footer-controls-01.json",
+      "target": "docs/oblivion/original-currency-purse-controls.json",
+      "sha256": "f67100e791ee97235bab75a978c4bc9c6757b2e1b0146f6c4f41cdef02c666ee"
+    },
+    {
+      "source": "purse-zero-01.json",
+      "target": "docs/oblivion/original-currency-purse-zero.json",
+      "sha256": "0a908686460e622194ae473e5e2fa753957d2df48fdd035cd3db4f238a44046e"
+    },
+    {
+      "source": "purse-purchase-01.json",
+      "target": "docs/oblivion/original-currency-purse-purchase.json",
+      "sha256": "c1845cdeaeac79b90b11a09e239851d588ab1a6d0d82f617e0cae0ee41bb755d"
+    }
+  ],
+  "original_protocol_sha256": "904aa2287a7cc268fe6a5c03726003f6b97a2912c9bd84f74b369390de5fd5eb",
+  "boundaries": [
+    "Player UI only. Non-Player/Morrowind paths are guarded separately; no added NPC-corpse or Morrowind gameplay acceptance claim.",
+    "No physical, console or script GoldDrop implementation. Existing direct native drop alias gap remains outside this UI slice.",
+    "Inherited native tabs/tooltips, exact merchant arithmetic, full M19 and TES4 MCP remain open."
+  ],
+  "retained_failures": [
+    "normal-currency-focused-01 used a hidden overload and02 hit private ItemView sizing;03 uses parent layout resizing and passes.",
+    "Old normal-gold-drop-baseline-01 ran its automation but is a domain diagnostic only: exposed legacy currency debit1to0, allocator7unchanged, no native reference added. No physical transfer acceptance."
+  ],
+  "sanitizer_options": {
+    "engine": "ASAN detect_leaks=1:halt_on_error=1; UBSAN halt_on_error=1:print_stacktrace=1; Mesa/X11; per-partition actual process environments captured",
+    "rendered": "ASAN detect_leaks=0:halt_on_error=1; UBSAN halt_on_error=1:print_stacktrace=1; actual process environment/libraries checked per case; no rendered leak-coverage claim"
+  }
+}
