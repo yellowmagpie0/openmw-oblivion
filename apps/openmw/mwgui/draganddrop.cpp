@@ -112,6 +112,11 @@ namespace MWGui
 
         // If item is dropped where it was taken from, we don't need to do anything -
         // otherwise, do the transfer
+        if ((mItem.mFlags & ItemStack::Flag_Quest) && targetModel != mSourceModel)
+        {
+            MWBase::Environment::get().getWindowManager()->messageBox("#{Interface:QuestItemRemovalDenied}");
+            return;
+        }
         if (targetModel != mSourceModel)
         {
             mSourceModel->moveItem(mItem, mDraggedCount, targetModel);

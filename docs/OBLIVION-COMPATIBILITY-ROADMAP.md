@@ -414,6 +414,12 @@ every operation.
 repair, and persist every official item category without duplication, loss, or
 TES3 behavior leakage.
 
+Bounded real-content acceptance: the [earned Amulet quest-item course](oblivion/QUEST-ITEM-AMULET-VERIFICATION.json)
+adds zero effective carried weight and refusal of cursor drop, with actual
+normal/instrumented cold persistence and original equip-script ownership.
+Other quest-item types, dynamic quest flags and additional transfer controls
+remain open; this does not close M12, M13 or M19.
+
 #### M14 - Navigation, detection, and AI packages
 
 **Deliver:** Interpret TES4 pathgrids and package data; implement high/low actor

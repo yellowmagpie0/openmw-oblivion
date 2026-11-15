@@ -1,0 +1,223 @@
+{
+  "status": "accepted bounded earned-Amulet quest-item weight and Player inventory removal; full M12/M13/M19 remain open",
+  "tested_parent_revision": "a1e8b0237f6df2e9222e6556bfd0b90439fa33f1",
+  "contract": "docs/oblivion/QUEST-ITEM-AMULET-CONTRACT.json",
+  "oracle": "docs/oblivion/QUEST-ITEM-AMULET-ORACLE.json",
+  "schema": 105,
+  "new_saved_fields": false,
+  "source_files_sha256": {
+    "apps/openmw/mwgui/draganddrop.cpp": "07d1b989b7c0e7b07c1e28027f6f45538ff5b7ee585b4b66ca9da7b4898b1a21",
+    "apps/openmw/mwgui/hud.cpp": "967883f85cdc955285c7cd04c0a5494ec76fe53fc0545f4f7e8733daf87e6015",
+    "apps/openmw/mwgui/inventorywindow.cpp": "0cce7e8a08c5ed0c5095997a768d6ca67e24ab1a951d703e6c3d7c68f9569735",
+    "apps/openmw/mwgui/itemmodel.cpp": "1dac42b654b05b528d4b90cf762c9d9be5d01c107fa3c6a96a7a053e120be404",
+    "apps/openmw/mwgui/itemmodel.hpp": "e8aa15b343559d9252a0e60e782bfd280614edc995e4a7d0519f15e2110c171f",
+    "apps/openmw/mwgui/itemtransfer.hpp": "b980d8cde729645a10942e851ba892e97e112b557fd9e25b990723fa29eae669",
+    "apps/openmw/mwworld/oblivionprofileservices.cpp": "29f7b7fcec360803be4432dbfa02bc867063a9b32f6e7ab9264046126b6a1e30",
+    "apps/openmw_tests/mwworld/testoblivionprofileservices.cpp": "a393f06e5c88550ba642c961b0c07a182dc2519ba77d36d1f8706081abc6eb95",
+    "components/esm4/inventorymechanics.hpp": "31a2cdd88de96c42d8a67324d10ae4281eeba9a6fb3eaf82106260d023a0547e",
+    "files/data/l10n/Interface/en.yaml": "ac02bfddfcf251b5a54406781994ba9807337d5c60c2c708c5f807b89ce02633",
+    "scripts/verify_quest_item_amulet.py": "ce5f9c3c9a61df8b9756d3a90ecf5e8b9cfe79a31c68f8a3673f0660bc252474"
+  },
+  "editable_manifests_sha256": {
+    "docs/oblivion/original-quest-item-amulet-drop.json": "eea985638dadd9f5e4775a9a9cf0c9956d8feeef25d6c728c0657222bf5573ba",
+    "docs/oblivion/original-quest-item-amulet-script-equip.json": "81971a49a83cc1fc719126b2d1133e5c18717d058fbf94b16da0ba9a3a9a1012",
+    "docs/oblivion/original-quest-item-amulet-drop-sanitized.json": "fa9f4dd4ea790d8f3561f9aaac0670f4bce8d90dccb6b30277732856cb35216e",
+    "docs/oblivion/original-quest-item-amulet-script-equip-sanitized.json": "984db4bd51c0a91b049c7f971823d154d75143e6f8db2e193098a21cb9cf83a5"
+  },
+  "codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+  "binaries": {
+    "normal": {
+      "path": "build/oblivion-compat/quest-items/candidate-assets/normal-dev-01/openmw",
+      "sha256": "5bd8912e2e1515eec089cad87d1ed549de872dc5c4e7f7fd94ec03a410f3c047",
+      "metadata_sha256": "6e53f9a6764848b2535e96c9d1cea8d417570ae4b46ae99fc9141b83b7da4b6b"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/quest-items/candidate-assets/sanitized-dev-01/openmw",
+      "sha256": "02329dd17f2732a6bc3c74cb1b61fad8337768ceda592ad1606ca7c9e9cd8df4",
+      "metadata_sha256": "1e7b0dbcb1fc603d988384430a207e9e543d38a23601772ac4b2bdbb02c47357"
+    }
+  },
+  "real_courses": [
+    {
+      "label": "normal-earned-amulet-drop-01",
+      "kind": "normal",
+      "phase": 0,
+      "source_sha256": "90baa6fdfc96832b8a9e6d66883632decbbc9a3d174d8822afff93267598d1ee",
+      "save_sha256": "cddae2b13a637d7c858f43a915984188349554009b7474d85d3187a298b3cd80",
+      "manifest_sha256": "eea985638dadd9f5e4775a9a9cf0c9956d8feeef25d6c728c0657222bf5573ba",
+      "binary_sha256": "5bd8912e2e1515eec089cad87d1ed549de872dc5c4e7f7fd94ec03a410f3c047",
+      "allocator": 7,
+      "amulet_script_owner": null,
+      "audit_sha256": "2fa8a75eac75312b4f3c5bd747eff8cd27210fdcf21e9ef5dba48ff141a3b7c8",
+      "ui_capture_sha256": "6f34948d26180164259b1ea6f5273d0e337a982664b0c7dc9b8ac4753e9b88d4"
+    },
+    {
+      "label": "normal-earned-amulet-cold-drop-01",
+      "kind": "normal",
+      "phase": 1,
+      "source_sha256": "cddae2b13a637d7c858f43a915984188349554009b7474d85d3187a298b3cd80",
+      "save_sha256": "1f40f25aec1f93d68a39ae9571b61c069785d3cdd0807898139f92da968ab3b1",
+      "manifest_sha256": "eea985638dadd9f5e4775a9a9cf0c9956d8feeef25d6c728c0657222bf5573ba",
+      "binary_sha256": "5bd8912e2e1515eec089cad87d1ed549de872dc5c4e7f7fd94ec03a410f3c047",
+      "allocator": 7,
+      "amulet_script_owner": null,
+      "audit_sha256": "94aee6bb13e8945740ddab9023bc4c703d2e696549e99aa03acda90fd6c5a774",
+      "ui_capture_sha256": "2afadf4ccc03469a1314f54df0926124bc322d0c1e3f62e9b1038a88b801e04d"
+    },
+    {
+      "label": "normal-earned-amulet-script-equip-02",
+      "kind": "normal",
+      "phase": 2,
+      "source_sha256": "1f40f25aec1f93d68a39ae9571b61c069785d3cdd0807898139f92da968ab3b1",
+      "save_sha256": "754082adf4a9cb0c2c9316e98531b90002dc17d8529ba13d5bc6efb0ce4f1fda",
+      "manifest_sha256": "81971a49a83cc1fc719126b2d1133e5c18717d058fbf94b16da0ba9a3a9a1012",
+      "binary_sha256": "5bd8912e2e1515eec089cad87d1ed549de872dc5c4e7f7fd94ec03a410f3c047",
+      "allocator": 8,
+      "amulet_script_owner": "dynamic:inventory-script:0000000000000007",
+      "audit_sha256": "08bb03d8462ab2da4d114a432fd86b03ef2e4491327ec594ddca191eb7e9208b",
+      "ui_capture_sha256": "8a519765a412eb71478963e3cc7d5337034129cca197318353ba4480f9d947f5"
+    },
+    {
+      "label": "normal-earned-amulet-owned-cold-drop-01",
+      "kind": "normal",
+      "phase": 3,
+      "source_sha256": "754082adf4a9cb0c2c9316e98531b90002dc17d8529ba13d5bc6efb0ce4f1fda",
+      "save_sha256": "0d820b5cb21300bb43344ce2c4c8db1c815578f21560b84580ee6aeae4a8d292",
+      "manifest_sha256": "eea985638dadd9f5e4775a9a9cf0c9956d8feeef25d6c728c0657222bf5573ba",
+      "binary_sha256": "5bd8912e2e1515eec089cad87d1ed549de872dc5c4e7f7fd94ec03a410f3c047",
+      "allocator": 8,
+      "amulet_script_owner": "dynamic:inventory-script:0000000000000007",
+      "audit_sha256": "7ec57fba9cf1efcef2dffa377d5669aedd2ea30ff546be1882d932ce24881ede",
+      "ui_capture_sha256": "7b902f3a27d25a7d51e19137ba7d35a646ac90260c6220897f7f2d8c35fe9c70"
+    },
+    {
+      "label": "sanitized-earned-amulet-drop-03",
+      "kind": "sanitized",
+      "phase": 0,
+      "source_sha256": "90baa6fdfc96832b8a9e6d66883632decbbc9a3d174d8822afff93267598d1ee",
+      "save_sha256": "5bca2c426125840aaea624bfe1ad6de1c68ecbc96cf34bbe7c123e4d04fb4f81",
+      "manifest_sha256": "fa9f4dd4ea790d8f3561f9aaac0670f4bce8d90dccb6b30277732856cb35216e",
+      "binary_sha256": "02329dd17f2732a6bc3c74cb1b61fad8337768ceda592ad1606ca7c9e9cd8df4",
+      "allocator": 7,
+      "amulet_script_owner": null,
+      "audit_sha256": "f98035eaa395cee1aad02f1e398ec9ee397d4c29c97b9d441bab49125e0eab32",
+      "ui_capture_sha256": "6f4d7accfab30b24bbbced8e4bdef7a0612d63c8120275dec31161b1afe18962"
+    },
+    {
+      "label": "sanitized-earned-amulet-cold-drop-02",
+      "kind": "sanitized",
+      "phase": 1,
+      "source_sha256": "5bca2c426125840aaea624bfe1ad6de1c68ecbc96cf34bbe7c123e4d04fb4f81",
+      "save_sha256": "db8e384ee4a73dab7c0f75ed30bba037f018b866664c72c215c6971b67eee8d1",
+      "manifest_sha256": "fa9f4dd4ea790d8f3561f9aaac0670f4bce8d90dccb6b30277732856cb35216e",
+      "binary_sha256": "02329dd17f2732a6bc3c74cb1b61fad8337768ceda592ad1606ca7c9e9cd8df4",
+      "allocator": 7,
+      "amulet_script_owner": null,
+      "audit_sha256": "05c21eb0bc6f0035d5ae2cd7c383d5d2a1357e64cd555dd6668191dc5e16d815",
+      "ui_capture_sha256": "ce655ccbcaae31707de23110ffa0c2cc993b34bc915a8bfdca84e79e7862ed3b"
+    },
+    {
+      "label": "sanitized-earned-amulet-script-equip-01",
+      "kind": "sanitized",
+      "phase": 2,
+      "source_sha256": "db8e384ee4a73dab7c0f75ed30bba037f018b866664c72c215c6971b67eee8d1",
+      "save_sha256": "d40474bf37f9a57e7fab95be0dee000fc4a8f97fb7926baacecc389cbedef80f",
+      "manifest_sha256": "984db4bd51c0a91b049c7f971823d154d75143e6f8db2e193098a21cb9cf83a5",
+      "binary_sha256": "02329dd17f2732a6bc3c74cb1b61fad8337768ceda592ad1606ca7c9e9cd8df4",
+      "allocator": 8,
+      "amulet_script_owner": "dynamic:inventory-script:0000000000000007",
+      "audit_sha256": "fa0a3d1849f26a1ef2ca7741151b963429aa1d882a36996f1589458192234aa2",
+      "ui_capture_sha256": "ab55542b2710bc467adc6d83d648c948bf414714bef55643d52fc82a6d3883dc"
+    },
+    {
+      "label": "sanitized-earned-amulet-owned-cold-drop-01",
+      "kind": "sanitized",
+      "phase": 3,
+      "source_sha256": "d40474bf37f9a57e7fab95be0dee000fc4a8f97fb7926baacecc389cbedef80f",
+      "save_sha256": "ab1a9d43741173406e8c0611a252c02b26994ded8cfaa118c76bf758cad79568",
+      "manifest_sha256": "fa9f4dd4ea790d8f3561f9aaac0670f4bce8d90dccb6b30277732856cb35216e",
+      "binary_sha256": "02329dd17f2732a6bc3c74cb1b61fad8337768ceda592ad1606ca7c9e9cd8df4",
+      "allocator": 8,
+      "amulet_script_owner": "dynamic:inventory-script:0000000000000007",
+      "audit_sha256": "9450f21baebf7972290f238522e91bb46fca4081e0e1d92b282d23fb48d99bf6",
+      "ui_capture_sha256": "6c281dc4adce3edc430bceb9f4bd2422f9d79ea39f39a8d2e1058f3dd15bc524"
+    }
+  ],
+  "normal_regression": {
+    "evidence": "build/oblivion-compat/quest-items/normal-integration-02/verification.json",
+    "components": 3304,
+    "engine": 2295,
+    "python": 619,
+    "source": {
+      "head": "a1e8b0237f6df2e9222e6556bfd0b90439fa33f1",
+      "source_fingerprint": "997ec56b488c519e7a5267e0efdeb3614545f200d5f2331246cb3d8bc1df266b"
+    }
+  },
+  "sanitized_regression": {
+    "components": 3304,
+    "engine": 2295,
+    "partitions": {
+      "kind": "exact_disjoint_gtest_partition_coverage",
+      "passed": true,
+      "executed": 2295,
+      "disjoint": true,
+      "exact_union": true,
+      "partitions": [
+        {
+          "label": "sanitized-quest-item-worker-0",
+          "executed": 82,
+          "filter": "WorkerCounts/*/0"
+        },
+        {
+          "label": "sanitized-quest-item-worker-1",
+          "executed": 82,
+          "filter": "WorkerCounts/*/1"
+        },
+        {
+          "label": "sanitized-quest-item-worker-2",
+          "executed": 82,
+          "filter": "WorkerCounts/*/2"
+        },
+        {
+          "label": "sanitized-quest-item-rest",
+          "executed": 2049,
+          "filter": "*-WorkerCounts/*"
+        }
+      ],
+      "binary_sha256": "ecfbd3842d88b5e1c39407711632f04c8de46637f6f3a688201c438af60b0d4d",
+      "source_before": {
+        "head": "a1e8b0237f6df2e9222e6556bfd0b90439fa33f1",
+        "source_fingerprint": "5e24830131bf37e4668b33482088f8cc9fdf90c6598cc2bd03e3c47032dc83c6"
+      },
+      "source_after": {
+        "head": "a1e8b0237f6df2e9222e6556bfd0b90439fa33f1",
+        "source_fingerprint": "5e24830131bf37e4668b33482088f8cc9fdf90c6598cc2bd03e3c47032dc83c6"
+      }
+    },
+    "unit_leak_checks": true,
+    "rendered_leak_checks": false
+  },
+  "validation_layers": {
+    "original": "Winning record audit plus isolated original normal-input refusal and weight observation; original-only grant explicitly confined to diagnostic.",
+    "structural": "Independent Python codec validates all actual saved native payloads byte-for-byte.",
+    "semantic": "Inventory/quests/non-encumbrance actor values preserved; correct one-item script identity/local and global allocation retained.",
+    "runtime": "Eight actual ordinary-input/fresh-process phases with inspected captures. New quest refusal text is visually verified in all drop phases; original equip regression uses normal visible text plus actual normal/SAN VM trace and saved ownership. SAN equip transient caption is not visible in its capture."
+  },
+  "limits": [
+    "Only actually earned singleton Amulet has real-content acceptance; other quest-item types and dynamic quest-object flag changes require their own content courses.",
+    "Shared zero-weight tooltip omits its weight line; original row displays numeric0.",
+    "SAN scripted-equip transient caption was not visible in the capture; that phase is proven by actual native script/message/unequip trace and saved identity, with visible caption in the normal counterpart.",
+    "No broad M12/M13/M19, whole quest chain, TES4 MCP or generic inventory-event completion claim."
+  ],
+  "retained_failures": [
+    "Initial fixture omitted still-referenced events file; fatal before accepted gameplay.",
+    "Controller-layout first two item selections hit axe/lettuce; later Amulet selections never completed a world drop/save. All retained, none accepted.",
+    "First focused engine run built successfully; supplemental new test omitted required native Player boot record. Seven existing tests passed. Add required Player and rerun same focused eight before broadening.",
+    "First independent save audit incorrectly required encumbrance unchanged; inspection showed encumbrance was the sole actor-value change, exactly the intended minus1 correction. Auditor now checks that correction and preserves all other values. Same actual save was reinspected; gameplay was not rerun.",
+    "First explicit avatar-equip regression correctly executed the original script and saved, but inherited restart-only forbidden OnEquip/message assertions made the whole scenario fail. Retained as failed; explicit equip manifest now requires those two events and retains other prohibitions, then repeats from same pristine cold input.",
+    "First full normal orchestration terminated with143 after C++ logs/XML reported passes, before Python/final verification. It is not a completed gate. Unchanged sources reran in a detached process: all3304 components/2295 engine/619 Python passed with a complete source-stable report.",
+    "First instrumented drop case hit inherited whole-scenario300s limit during actual outdoor loading; no inventory input or save occurred. Driver/scenario are terminal failed, source unchanged, no accepted prefix. Fresh drop02 keeps ordinary controls/state assertions but enlarges load/overall waits to900/1200s.",
+    "SANdrop02 native-save audit passed, but its capture did not show the refusal caption; not accepted as complete UI evidence. ColdDrop01 did show the message. Retain both; fresh complete four-phase series adds passive render-frame observation and waits before capture, preserving all state checks and ordinary controls.",
+    "First engine partition wrapper stopped before launching tests on a stale prerequisite for an intentionally omitted duplicate focused run. Repaired to require passed full3304 components; resumed exact disjoint2295 engine union and actual child sanitizer environment verified."
+  ]
+}

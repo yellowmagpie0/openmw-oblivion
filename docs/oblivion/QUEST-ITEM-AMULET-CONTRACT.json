@@ -1,0 +1,126 @@
+{
+  "status": "accepted bounded earned-Amulet quest-item weight and cursor-drop protection; full M12/M13/M19 remain open",
+  "milestone": "M12 encumbrance / M13 inventory / M19 inventory UI",
+  "content": {
+    "item": "content:oblivion.esm:0250a0",
+    "name": "Amulet of Kings",
+    "script": "content:oblivion.esm:027589",
+    "record_flag": "0x400",
+    "nominal_weight": 1
+  },
+  "original_evidence": {
+    "root": "build/oblivion-compat/quest-items/original-01",
+    "record_audit": "build/oblivion-compat/quest-items/original-record-audit.json",
+    "expected": "Zero displayed and carried weight; normal inventory removal refused with quest-item message. Original-only console grant used to isolate this rule; not fork acceptance."
+  },
+  "fork_source": {
+    "path": "build/oblivion-compat/earned-gold/normal-purse-purchased-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "90baa6fdfc96832b8a9e6d66883632decbbc9a3d174d8822afff93267598d1ee",
+    "provenance": "Emperor original dialogue actually gave this Amulet; continued through accepted shore/merchant course. No grant or inventory merge."
+  },
+  "plan": [
+    "Capture current actual Shift-click behavior and encumbrance from this save.",
+    "Derive quest-item classification and effective weight from winning native records; preserve raw record and saved inventory/script state.",
+    "Reject player-driven inventory removal before unequip/debit/drop allocation; keep original OnEquip and scripted removal independent.",
+    "Repeat ordinary Shift-click and cursor drop, inspect displayed weight, independently compare actual native saves, fresh-process reload and repeat.",
+    "Run focused integration checks while developing and required normal/sanitizer gates and actual gameplay before local commit; then select next content."
+  ],
+  "scope_limits": [
+    "Acceptance limited to actually earned singleton Amulet; other quest items and other interaction paths need separate real-content coverage.",
+    "No complete M12/M13/M19 claim; no synthetic grant/teleport in fork; no push."
+  ],
+  "baseline": {
+    "course": "build/oblivion-compat/quest-items/normal-earned-amulet-classic-drop-baseline-01",
+    "audit": "build/oblivion-compat/quest-items/classic-drop-baseline-audit.json",
+    "actual_input": "Ctrl-click actually earned Amulet in classic inventory, click world.",
+    "observed": "Amulet displayed weight1, removed from saved native inventory; allocator7 unchanged and no new native reference. Quests unchanged. Source pristine.",
+    "output_sha256": "8c202d4fd161163d8851caab5ec39783aebf1adc3430c4cb42b6a3dbc8e9d796",
+    "encumbrance_before": 102.30000305176,
+    "encumbrance_after": 101.30000305176
+  },
+  "retained_failures": [
+    "Initial fixture omitted still-referenced events file; fatal before accepted gameplay.",
+    "Controller-layout first two item selections hit axe/lettuce; later Amulet selections never completed a world drop/save. All retained, none accepted.",
+    "First focused engine run built successfully; supplemental new test omitted required native Player boot record. Seven existing tests passed. Add required Player and rerun same focused eight before broadening.",
+    "First independent save audit incorrectly required encumbrance unchanged; inspection showed encumbrance was the sole actor-value change, exactly the intended minus1 correction. Auditor now checks that correction and preserves all other values. Same actual save was reinspected; gameplay was not rerun.",
+    "First explicit avatar-equip regression correctly executed the original script and saved, but inherited restart-only forbidden OnEquip/message assertions made the whole scenario fail. Retained as failed; explicit equip manifest now requires those two events and retains other prohibitions, then repeats from same pristine cold input.",
+    "First full normal orchestration terminated with143 after C++ logs/XML reported passes, before Python/final verification. It is not a completed gate. Unchanged sources reran in a detached process: all3304 components/2295 engine/619 Python passed with a complete source-stable report.",
+    "First instrumented drop case hit inherited whole-scenario300s limit during actual outdoor loading; no inventory input or save occurred. Driver/scenario are terminal failed, source unchanged, no accepted prefix. Fresh drop02 keeps ordinary controls/state assertions but enlarges load/overall waits to900/1200s.",
+    "SANdrop02 native-save audit passed, but its capture did not show the refusal caption; not accepted as complete UI evidence. ColdDrop01 did show the message. Retain both; fresh complete four-phase series adds passive render-frame observation and waits before capture, preserving all state checks and ordinary controls.",
+    "First engine partition wrapper stopped before launching tests on a stale prerequisite for an intentionally omitted duplicate focused run. Repaired to require passed full3304 components; resumed exact disjoint2295 engine union and actual child sanitizer environment verified."
+  ],
+  "implementation": {
+    "schema": 105,
+    "new_saved_fields": false,
+    "classification": "Winning native inventory base-record flag0x400; static metadata, never reference persistence.",
+    "weight": "Zero effective shared inventory/tooltip and native definition weight, retaining raw native record weight1.",
+    "removal": "Actual Player-owned quest items denied at UI removal boundaries before debit/unequip; cursor can be cancelled. Direct script commands and original OnEquip are separate.",
+    "first_normal": "normal-earned-amulet-drop-01",
+    "first_save_sha256": "cddae2b13a637d7c858f43a915984188349554009b7474d85d3187a298b3cd80",
+    "focused": "normal-focused-02: 8 exact engine tests pass; runtime freshly built.",
+    "observed_ui": "Quest refusal message appears; zero-weight tooltip omits the weight line using existing shared UI formatting. This differs from original numeric0 row."
+  },
+  "normal_acceptance": {
+    "chain": "build/oblivion-compat/quest-items/normal-chain-audit.json",
+    "phases": [
+      "normal-earned-amulet-drop-01",
+      "normal-earned-amulet-cold-drop-01",
+      "normal-earned-amulet-script-equip-02",
+      "normal-earned-amulet-owned-cold-drop-01"
+    ],
+    "final_save_sha256": "0d820b5cb21300bb43344ce2c4c8db1c815578f21560b84580ee6aeae4a8d292",
+    "amulet_count": 1,
+    "equipped_slots": 0,
+    "script_owner": "dynamic:inventory-script:0000000000000007",
+    "next_dynamic_serial": 8,
+    "health": 110,
+    "weight": 101.3,
+    "gates": {
+      "evidence": "build/oblivion-compat/quest-items/normal-integration-02/verification.json",
+      "components": 3304,
+      "engine": 2295,
+      "python": 619
+    }
+  },
+  "sanitized_regression": {
+    "status": "passed",
+    "components": 3304,
+    "engine": 2295,
+    "exact_partitions": [
+      82,
+      82,
+      82,
+      2049
+    ],
+    "unit_leak_checks": true,
+    "rendered_leak_checks": false,
+    "evidence": "build/oblivion-compat/quest-items/sanitizer-integration-status.json"
+  },
+  "input_mapping": {
+    "original": "Original-game Shift-click requests removal and is refused.",
+    "fork": "Accepted fork course Ctrl-clicks the singleton Amulet, then clicks the world; existing fork modifier/layout behavior differs from the original.",
+    "coverage": "Actual runtime acceptance covers that cursor-drop path and avatar equip. Controller drop, merchant sale and container transfer guards are implemented but need separate real-content interaction coverage."
+  },
+  "visual_limits": [
+    "Native quest-item refusal caption is visible in reviewed normal and fresh SAN drop/cold captures.",
+    "Original slips-off caption is visible in normal equip capture. SAN equip image does not show that transient caption; actual SAN script event, message command, Player local, unequip and saved identity are independently verified. It is not evidence of SAN caption visibility."
+  ],
+  "sanitized_acceptance": {
+    "chain": "build/oblivion-compat/quest-items/sanitized-chain-audit.json",
+    "phases": [
+      "sanitized-earned-amulet-drop-03",
+      "sanitized-earned-amulet-cold-drop-02",
+      "sanitized-earned-amulet-script-equip-01",
+      "sanitized-earned-amulet-owned-cold-drop-01"
+    ],
+    "final_save_sha256": "ab1a9d43741173406e8c0611a252c02b26994ded8cfaa118c76bf758cad79568",
+    "amulet_count": 1,
+    "equipped_slots": 0,
+    "script_owner": "dynamic:inventory-script:0000000000000007",
+    "next_dynamic_serial": 8,
+    "health": 110,
+    "weight": 101.3,
+    "caption_limit": "SAN equip transient caption not visible in its capture; actual VM message/unequip and saved identity verified. All new drop-refusal captions are visually verified."
+  },
+  "verification": "docs/oblivion/QUEST-ITEM-AMULET-VERIFICATION.json"
+}

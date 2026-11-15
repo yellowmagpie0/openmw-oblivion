@@ -432,6 +432,11 @@ namespace MWGui
 
     void InventoryWindow::transferItem(MyGUI::Widget* /*sender*/, std::size_t count)
     {
+        if (mTradeModel->getItem(mSelectedItem).mFlags & ItemStack::Flag_Quest)
+        {
+            MWBase::Environment::get().getWindowManager()->messageBox("#{Interface:QuestItemRemovalDenied}");
+            return;
+        }
         ensureSelectedItemUnequipped(static_cast<int>(count));
         mItemTransfer->apply(mTradeModel->getItem(mSelectedItem), count, *mItemView);
         notifyContentChanged();
@@ -439,6 +444,11 @@ namespace MWGui
 
     void InventoryWindow::sellItem(MyGUI::Widget* /*sender*/, std::size_t count)
     {
+        if (mTradeModel->getItem(mSelectedItem).mFlags & ItemStack::Flag_Quest)
+        {
+            MWBase::Environment::get().getWindowManager()->messageBox("#{Interface:QuestItemRemovalDenied}");
+            return;
+        }
         ensureSelectedItemUnequipped(static_cast<int>(count));
         const ItemStack& item = mTradeModel->getItem(mSelectedItem);
         const ESM::RefId& sound = item.mBase.getClass().getUpSoundId(item.mBase);
@@ -465,6 +475,12 @@ namespace MWGui
     {
         if (mGuiMode != MWGui::GM_Inventory)
             return;
+
+        if (mTradeModel->getItem(mSelectedItem).mFlags & ItemStack::Flag_Quest)
+        {
+            MWBase::Environment::get().getWindowManager()->messageBox("#{Interface:QuestItemRemovalDenied}");
+            return;
+        }
 
         if (!mDragAndDrop->mIsOnDragAndDrop)
             dragItem(sender, count);

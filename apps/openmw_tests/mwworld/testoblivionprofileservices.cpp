@@ -17,6 +17,44 @@
 
 namespace
 {
+    TEST(OblivionProfileServicesTest, QuestClothingHasZeroCarriedWeightWithoutChangingNativeRecord)
+    {
+        MWWorld::ESMStore store;
+        ESM4::Npc player{};
+        player.mId = {7, 0};
+        player.mEditorId = "Player";
+        player.mIsTES4 = true;
+        store.getWritable<ESM4::Npc>().insertStatic(player);
+        ESM4::Clothing quest{};
+        quest.mId = {0x250a0, 0};
+        quest.mFlags = ESM4::Rec_Persistent;
+        quest.mData.weight = 1.f;
+        quest.mClothingFlags = ESM4::Armor::TES4_Amulet;
+        quest.mData.value = 1000;
+        store.getWritable<ESM4::Clothing>().insertStatic(quest);
+        ESM4::Clothing ordinary = quest;
+        ordinary.mId = {0x250a1, 0};
+        ordinary.mFlags = 0;
+        store.getWritable<ESM4::Clothing>().insertStatic(ordinary);
+
+        MWWorld::OblivionProfileServices::install(store);
+        const auto questId = ESM::RefId(quest.mId);
+        const auto ordinaryId = ESM::RefId(ordinary.mId);
+        const auto definition = MWWorld::OblivionProfileServices::itemDefinition(store, questId);
+        ASSERT_TRUE(definition);
+        EXPECT_TRUE(definition->mQuestItem);
+        EXPECT_EQ(definition->mWeight, 0.f);
+        EXPECT_EQ(definition->mValue, 1000);
+        EXPECT_EQ(definition->mSlots, ESM4::Armor::TES4_Amulet);
+        EXPECT_EQ(store.get<ESM::Clothing>().find(questId)->mData.mWeight, 0.f);
+        EXPECT_EQ(store.get<ESM4::Clothing>().find(questId)->mData.weight, 1.f);
+        const auto ordinaryDefinition = MWWorld::OblivionProfileServices::itemDefinition(store, ordinaryId);
+        ASSERT_TRUE(ordinaryDefinition);
+        EXPECT_FALSE(ordinaryDefinition->mQuestItem);
+        EXPECT_EQ(ordinaryDefinition->mWeight, 1.f);
+        EXPECT_EQ(store.get<ESM::Clothing>().find(ordinaryId)->mData.mWeight, 1.f);
+    }
+
     TEST(OblivionProfileServicesTest, RestoresHairSlotArmorAlongsideCuirass)
     {
         MWWorld::ESMStore store;

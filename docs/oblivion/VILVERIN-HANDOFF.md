@@ -4,7 +4,15 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [crafted novice weapon poison](CRAFTED-POISON-HANDOFF.md).
+Latest completed bounded chunk: [earned Amulet quest-item protection](QUEST-ITEM-AMULET-HANDOFF.md).
+The actually earned Amulet now contributes zero carried weight and refuses
+cursor drop. Four normal and four instrumented actual input/cold phases pass,
+including original script execution and retained per-item identity. Both modes
+pass 3,304 component/2,295 engine cases; 619 Python checks pass. Preserve its separate shore
+inventory. [Receipt](QUEST-ITEM-AMULET-VERIFICATION.json). Other quest-item paths
+and full milestone acceptance remain open.
+
+The prior completed bounded chunk: [crafted novice weapon poison](CRAFTED-POISON-HANDOFF.md).
 The real tutorial recipe now coats the axe and damages the original goblin over
 five simulation seconds. All eight normal and instrumented input/cold phases
 pass, including paused time, expiry and no replay. Both modes pass 3,304 component

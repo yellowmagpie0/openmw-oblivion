@@ -447,7 +447,7 @@ namespace
         result.mModel = inventoryModel(source.mModel);
         result.mIcon = source.mIcon;
         result.mData.mType = ESM::Weapon::Arrow;
-        result.mData.mWeight = source.mData.mWeight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.mWeight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.mValue);
         const auto damage = static_cast<unsigned char>(std::clamp(std::lround(source.mData.mDamage), 0l, 255l));
         result.mData.mChop = result.mData.mSlash = result.mData.mThrust = { damage, damage };
@@ -465,7 +465,7 @@ namespace
         result.mIcon = source.mIcon;
         result.mData.mType = std::min<int>(source.mData.type, ESM::Apparatus::Retort);
         result.mData.mQuality = source.mData.quality;
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         return result;
     }
@@ -490,7 +490,7 @@ namespace
         result.mModel = inventoryModel(source.mModelMaleWorld.empty() ? source.mModelMale : source.mModelMaleWorld);
         result.mIcon = source.mIconMale;
         result.mData.mType = armorType(source.mArmorFlags);
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         result.mData.mHealth = clampInteger<std::int32_t>(source.mData.health);
         result.mData.mArmor = source.mData.armor;
@@ -521,7 +521,7 @@ namespace
         result.mModel = inventoryModel(source.mModelMaleWorld.empty() ? source.mModelMale : source.mModelMaleWorld);
         result.mIcon = source.mIconMale;
         result.mData.mType = clothingType(source.mClothingFlags);
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::uint16_t>(source.mData.value);
         result.mData.mEnchant = enchantmentCapacity(source.mEnchantment, source.mEnchantmentPoints);
         return result;
@@ -537,7 +537,7 @@ namespace
         result.mIcon = source.mIcon;
         result.mText = source.mText;
         result.mData.mSkillId = bookSkillId(source.mData.bookSkill);
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         result.mData.mIsScroll = (source.mData.flags & ESM4::Book::Flag_Scroll) != 0;
         result.mData.mEnchant = enchantmentCapacity(source.mEnchantment, source.mEnchantmentPoints);
@@ -555,7 +555,7 @@ namespace
         result.mName = source.mFullName;
         result.mModel = inventoryModel(source.mModel);
         result.mIcon = source.mIcon;
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         return result;
     }
@@ -569,7 +569,7 @@ namespace
         result.mName = source.mFullName;
         result.mModel = inventoryModel(source.mModel);
         result.mIcon = source.mIcon;
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         result.mData.mFlags = key ? ESM::Miscellaneous::Key : 0;
         return result;
@@ -583,7 +583,7 @@ namespace
         result.mName = source.mFullName;
         result.mModel = inventoryModel(source.mModel);
         result.mIcon = source.mIcon;
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         result.mData.mQuality = 1.f;
         result.mData.mUses = 1;
@@ -598,7 +598,7 @@ namespace
         result.mName = source.mFullName;
         result.mModel = inventoryModel(source.mModel);
         result.mIcon = source.mIcon;
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         result.mData.mQuality = 1.f;
         result.mData.mUses = 1;
@@ -613,7 +613,7 @@ namespace
         result.mName = source.mFullName;
         result.mModel = inventoryModel(source.mModel);
         result.mIcon = source.mIcon;
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = std::max(0, source.mItem.value);
         return result;
     }
@@ -627,7 +627,7 @@ namespace
         result.mModel = inventoryModel(source.mModel);
         result.mIcon = source.mIcon;
         result.mSound = ESM::RefId(source.mSound);
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         result.mData.mTime = source.mData.time;
         result.mData.mRadius = clampInteger<std::int32_t>(source.mData.radius);
@@ -653,7 +653,7 @@ namespace
         result.mModel = inventoryModel(source.mModel);
         result.mIcon = source.mIcon;
         result.mData.mType = weaponType(source.mData.type);
-        result.mData.mWeight = source.mData.weight;
+        result.mData.mWeight = (source.mFlags & ESM4::Rec_Persistent) ? 0.f : source.mData.weight;
         result.mData.mValue = clampInteger<std::int32_t>(source.mData.value);
         result.mData.mHealth = clampInteger<std::uint16_t>(source.mData.health);
         result.mData.mSpeed = source.mData.speed;
@@ -980,6 +980,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Ammunition;
             result.mValue = clampInteger<std::int32_t>(ammunition->mData.mValue);
             result.mWeight = ammunition->mData.mWeight;
+            result.mQuestItem = (ammunition->mFlags & ESM4::Rec_Persistent) != 0;
             result.mSlots = ESM4::InventorySlotAmmunition;
         }
         else if (const ESM4::Apparatus* apparatus = store.get<ESM4::Apparatus>().search(id))
@@ -987,12 +988,14 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Apparatus;
             result.mValue = clampInteger<std::int32_t>(apparatus->mData.value);
             result.mWeight = apparatus->mData.weight;
+            result.mQuestItem = (apparatus->mFlags & ESM4::Rec_Persistent) != 0;
         }
         else if (const ESM4::Armor* armor = store.get<ESM4::Armor>().search(id))
         {
             result.mType = ESM4::InventoryItemType::Armor;
             result.mValue = clampInteger<std::int32_t>(armor->mData.value);
             result.mWeight = armor->mData.weight;
+            result.mQuestItem = (armor->mFlags & ESM4::Rec_Persistent) != 0;
             result.mMaxCondition
                 = armor->mData.health == 0 ? -1 : clampInteger<std::int32_t>(armor->mData.health);
             const std::uint16_t capacity = enchantmentCapacity(armor->mEnchantment, armor->mEnchantmentPoints);
@@ -1008,6 +1011,7 @@ namespace MWWorld
                 : ESM4::InventoryItemType::Book;
             result.mValue = clampInteger<std::int32_t>(book->mData.value);
             result.mWeight = book->mData.weight;
+            result.mQuestItem = (book->mFlags & ESM4::Rec_Persistent) != 0;
             const std::uint16_t capacity = enchantmentCapacity(book->mEnchantment, book->mEnchantmentPoints);
             result.mMaxCharge = capacity == 0 ? -1.f : capacity;
             result.mConsumable = result.mType == ESM4::InventoryItemType::Scroll;
@@ -1017,6 +1021,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Clothing;
             result.mValue = clampInteger<std::int32_t>(clothing->mData.value);
             result.mWeight = clothing->mData.weight;
+            result.mQuestItem = (clothing->mFlags & ESM4::Rec_Persistent) != 0;
             const std::uint16_t capacity = enchantmentCapacity(clothing->mEnchantment, clothing->mEnchantmentPoints);
             result.mMaxCharge = capacity == 0 ? -1.f : capacity;
             result.mSlots = clothing->mClothingFlags & 0xffffu;
@@ -1028,6 +1033,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Ingredient;
             result.mValue = clampInteger<std::int32_t>(ingredient->mData.value);
             result.mWeight = ingredient->mData.weight;
+            result.mQuestItem = (ingredient->mFlags & ESM4::Rec_Persistent) != 0;
             result.mConsumable = true;
         }
         else if (const ESM4::Key* key = store.get<ESM4::Key>().search(id))
@@ -1035,6 +1041,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Key;
             result.mValue = clampInteger<std::int32_t>(key->mData.value);
             result.mWeight = key->mData.weight;
+            result.mQuestItem = (key->mFlags & ESM4::Rec_Persistent) != 0;
         }
         else if (const ESM4::Light* light = store.get<ESM4::Light>().search(id))
         {
@@ -1043,6 +1050,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Light;
             result.mValue = clampInteger<std::int32_t>(light->mData.value);
             result.mWeight = light->mData.weight;
+            result.mQuestItem = (light->mFlags & ESM4::Rec_Persistent) != 0;
             result.mSlots = ESM4::InventorySlotLight;
             result.mMaxUsageTime = light->mData.time > 0 ? static_cast<float>(light->mData.time) : -1.f;
         }
@@ -1051,12 +1059,14 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Miscellaneous;
             result.mValue = clampInteger<std::int32_t>(miscellaneous->mData.value);
             result.mWeight = miscellaneous->mData.weight;
+            result.mQuestItem = (miscellaneous->mFlags & ESM4::Rec_Persistent) != 0;
         }
         else if (const ESM4::Potion* potion = store.get<ESM4::Potion>().search(id))
         {
             result.mType = ESM4::InventoryItemType::Potion;
             result.mValue = std::max(0, potion->mItem.value);
             result.mWeight = potion->mData.weight;
+            result.mQuestItem = (potion->mFlags & ESM4::Rec_Persistent) != 0;
             result.mConsumable = true;
             result.mFood = (potion->mItem.flags & 0x00000002u) != 0;
         }
@@ -1065,6 +1075,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::SigilStone;
             result.mValue = clampInteger<std::int32_t>(stone->mData.value);
             result.mWeight = stone->mData.weight;
+            result.mQuestItem = (stone->mFlags & ESM4::Rec_Persistent) != 0;
             result.mConsumable = true;
         }
         else if (const ESM4::SoulGem* gem = store.get<ESM4::SoulGem>().search(id))
@@ -1072,6 +1083,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::SoulGem;
             result.mValue = clampInteger<std::int32_t>(gem->mData.value);
             result.mWeight = gem->mData.weight;
+            result.mQuestItem = (gem->mFlags & ESM4::Rec_Persistent) != 0;
             result.mConsumable = gem->mSoul != 0;
         }
         else if (const ESM4::Weapon* weapon = store.get<ESM4::Weapon>().search(id))
@@ -1079,6 +1091,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Weapon;
             result.mValue = clampInteger<std::int32_t>(weapon->mData.value);
             result.mWeight = weapon->mData.weight;
+            result.mQuestItem = (weapon->mFlags & ESM4::Rec_Persistent) != 0;
             result.mMaxCondition
                 = weapon->mData.health == 0 ? -1 : clampInteger<std::int32_t>(weapon->mData.health);
             const std::uint16_t capacity = enchantmentCapacity(weapon->mEnchantment, weapon->mEnchantmentPoints);
@@ -1087,6 +1100,7 @@ namespace MWWorld
         }
         else
             return std::nullopt;
+        if (result.mQuestItem) result.mWeight = 0.f;
         return result;
     }
 

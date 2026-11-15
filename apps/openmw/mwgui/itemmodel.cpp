@@ -3,9 +3,11 @@
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
+#include "../mwbase/windowmanager.hpp"
 
 namespace MWGui
 {
@@ -22,6 +24,18 @@ namespace MWGui
 
         if (MWBase::Environment::get().getMechanicsManager()->isBoundItem(base))
             mFlags |= Flag_Bound;
+
+        auto* world = MWBase::Environment::get().getWorldOrNull();
+        if (world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            && base.getContainerStore()
+            == &world->getPlayerPtr().getClass().getContainerStore(world->getPlayerPtr()))
+        {
+            const auto& store = world->getStore();
+            const auto definition = MWWorld::OblivionProfileServices::itemDefinition(
+                store, MWWorld::OblivionProfileServices::nativeItemId(store, base.getCellRef().getRefId()));
+            if (definition && definition->mQuestItem)
+                mFlags |= Flag_Quest;
+        }
     }
 
     ItemStack::ItemStack()
@@ -58,6 +72,11 @@ namespace MWGui
 
     MWWorld::Ptr ItemModel::moveItem(const ItemStack& item, size_t count, ItemModel* otherModel, bool allowAutoEquip)
     {
+        if ((item.mFlags & ItemStack::Flag_Quest) && otherModel != this)
+        {
+            MWBase::Environment::get().getWindowManager()->messageBox("#{Interface:QuestItemRemovalDenied}");
+            return {};
+        }
         // Inventory GUI wrappers also enter here directly. Prepare native
         // ownership before any wrapper can debit the selected source stack.
         if (auto* world = dynamic_cast<WorldItemModel*>(otherModel))

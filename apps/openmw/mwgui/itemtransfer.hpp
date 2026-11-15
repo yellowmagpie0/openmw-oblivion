@@ -30,6 +30,11 @@ namespace MWGui
 
         void apply(const ItemStack& item, std::size_t count, ItemView& sourceView)
         {
+            if (item.mFlags & ItemStack::Flag_Quest)
+            {
+                mWindowManager->messageBox("#{Interface:QuestItemRemovalDenied}");
+                return;
+            }
             if (item.mFlags & ItemStack::Flag_Bound)
             {
                 mWindowManager->messageBox("#{sBarterDialog12}");

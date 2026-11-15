@@ -174,6 +174,12 @@ namespace MWGui
         if (!mDragAndDrop->mIsOnDragAndDrop)
             return;
 
+        if (mDragAndDrop->mItem.mFlags & ItemStack::Flag_Quest)
+        {
+            MWBase::Environment::get().getWindowManager()->messageBox("#{Interface:QuestItemRemovalDenied}");
+            return;
+        }
+
         MWBase::Environment::get().getWorld()->breakInvisibility(MWMechanics::getPlayer());
 
         WorldItemModel drop(mouseX, mouseY);
@@ -188,6 +194,11 @@ namespace MWGui
         MWBase::WindowManager* winMgr = MWBase::Environment::get().getWindowManager();
         if (mDragAndDrop->mIsOnDragAndDrop)
         {
+            if (mDragAndDrop->mItem.mFlags & ItemStack::Flag_Quest)
+            {
+                winMgr->messageBox("#{Interface:QuestItemRemovalDenied}");
+                return;
+            }
             const MyGUI::IntSize viewSize = MyGUI::RenderManager::getInstance().getViewSize();
             const MyGUI::IntPoint cursorPosition = MyGUI::InputManager::getInstance().getMousePosition();
             const float cursorX = cursorPosition.left / static_cast<float>(viewSize.width);

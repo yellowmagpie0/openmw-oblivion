@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "name": "Actual earned Amulet cursor drop and weight",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal elapsed=0\nlocal t=0\nreturn {{engineHandlers={{onFrame=function(dt)\n elapsed=elapsed+dt;t=t+dt;if t<.2 then return end;t=0\n assert(not Actor.isDead(self),'Player died during original amulet continuation')\n print('VilverinContinue amulet sample count='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x250a0))..' weight='..Actor.getEncumbrance(self)..' stance='..tostring(Actor.getStance(self))..' health='..Actor.stats.dynamic.health(self).current)\n if elapsed>=4 then print('VilverinContinue amulet settled') end\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": ""
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinContinue amulet settled",
+      "timeout_seconds": 240,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_hold",
+      "value": "Tab",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 283,
+      "y": 478
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "quest-inventory-before.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "Control_L"
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "key_up",
+      "value": "Control_L"
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 700,
+      "y": 550
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.4
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "screenshot",
+      "name": "quest-world-drop-attempt.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 300,
+  "expected_exit": 0,
+  "expected_log": [
+    "VilverinContinue amulet sample count=1",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died during original VilverinContinue acquisition",
+    "M16 Welkynd consumed:",
+    "M16 potion attributes applied:",
+    "M16 native scroll consumed:",
+    "Error in frame",
+    "onFrame failed",
+    "M7 inventory equip event:",
+    "messagebox text=The Amulet of Kings slips off"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-amulet-kings-restart",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}

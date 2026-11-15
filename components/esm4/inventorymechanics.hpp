@@ -47,6 +47,9 @@ namespace ESM4
         // distinct from mConsumable because ordinary potions are usable but
         // are not valid Eat-package targets.
         bool mFood = false;
+        // Base-record flag 0x400 is Quest Item for inventory objects.
+        // This is content metadata, not additional saved instance state.
+        bool mQuestItem = false;
     };
 
     struct BarterParameters

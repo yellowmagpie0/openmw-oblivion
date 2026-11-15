@@ -1,0 +1,122 @@
+{
+  "status": "independent original-game observations; bounded Player quest Amulet",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_source": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m5-original-test/prefix/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/Save 1 - Gaius - Weynon House, Level 1, Playing Time 00.49.51.ess",
+    "sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+    "reason": "Use genuine completed chargen original save rather than force unfinished prison quest service availability. Other DLC states are outside this bounded merchant probe.",
+    "plugins": [
+      {
+        "name": "Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "Knights.esp",
+        "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCBattlehornCastle.esp",
+        "sha256": "f8bd2baa13f17f8994c0e737146097bc320f28c0d9821a00516bcec53fc6e28d",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCSpellTomes.esp",
+        "sha256": "3146d1f3936606410f75a54d385276e364f8a346437b919c398d8bd7d66e339e",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCMehrunesRazor.esp",
+        "sha256": "8d52b80c7ceb9f18aae3f48815a5b0468b8479992eb69fa3cbf910f8b66b7971",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCShiveringIsles.esp",
+        "sha256": "7725fc1cf14f60b258aeb089a112b518ab904acb3c3f549487d6e554fb873bcb",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCVileLair.esp",
+        "sha256": "fa174924ff2b44e69d1d27dc2a4c99e757d90c7b34109138d2b1ed9f430d5002",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCThievesDen.esp",
+        "sha256": "bade981f2c6665a934afb3ece481c4bba358d8114389a7f811403534e506407d",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCHorseArmor.esp",
+        "sha256": "d20d968a3492a73aa3f6c7ba033604f32b3aee7ea4e7447ae90881a25267b305",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCFrostcrag.esp",
+        "sha256": "ade51332829033c95f9ba73fbbb3ee31f44dd62f12fbf8e0066dd6384a65b6c0",
+        "bounded_merchant_or_item_overrides": []
+      },
+      {
+        "name": "DLCOrrery.esp",
+        "sha256": "b1533ce31acdeb0c0385ab15c898b1c59c730e1d9b05848c8b4b76f2aaf3ad7d",
+        "bounded_merchant_or_item_overrides": []
+      }
+    ]
+  },
+  "winning_record": {
+    "plugin": "Oblivion.esm",
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "type": "CLOT",
+    "id": "0250a0",
+    "flags": "0x400",
+    "editor_id": "AmuletofKings",
+    "weight": 1.0,
+    "script": "0x27589"
+  },
+  "record_audit": {
+    "path": "build/oblivion-compat/quest-items/original-record-audit.json",
+    "sha256": "336b427765feb55b72b10fa61685e9eb281746ce9002bf1d3c6309da1781b4c7"
+  },
+  "probe_root": "build/oblivion-compat/quest-items/original-01",
+  "observations": {
+    "status": "passed original-only bounded diagnostic",
+    "source": "source.json",
+    "initial_amulet_count": 0,
+    "diagnostic_setup": "Original-only player.additem 250a0 1. No fork grant permitted.",
+    "count_after_add": 1,
+    "encumbrance_before": 183.55,
+    "encumbrance_after": 183.55,
+    "ui_amulet_weight": 0,
+    "shift_click_message": "You cannot remove Quest Items from your Inventory.",
+    "count_after_refusal": 1,
+    "exit_code": 0,
+    "exact_prefix_restoration": "restoration.json",
+    "captures": [
+      "initial-count-weight.png",
+      "quest-weight-added.png",
+      "apparel-02.png",
+      "quest-drop-refused.png",
+      "after-refused-drop.png"
+    ],
+    "retained_failures": [
+      "Initial input attempted while startup window unavailable; no gameplay evidence from it.",
+      "Console load attempted at main menu had no effect; actual source was loaded via Load menu."
+    ]
+  },
+  "tolerances": {
+    "encumbrance": "No difference at original console two-decimal precision; nominal weight1 is large enough to distinguish ordinary weight.",
+    "ui_weight": "Displayed integer0, versus raw native record weight1.",
+    "refusal": "Ordinary Shift-click displays quest-item refusal and retains count1."
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "boundaries": [
+    "Original-only diagnostic additem isolated a single winning original quest item because source Gaius had already handed over the Amulet. This does not supply fork acceptance inventory.",
+    "Fork course starts from the actual Amulet earned through original Emperor dialogue and tests ordinary cursor-drop at its own controls.",
+    "This diagnostic does not establish every quest-item type, scripted RemoveItem semantics, or dynamic SetQuestObject behavior."
+  ],
+  "proprietary_assets": "Original executable, content, saves and captures stay in ignored evidence; no proprietary file copies are published."
+}
