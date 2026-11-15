@@ -1,5 +1,36 @@
 OpenMW ships with its own benchmarking tool. This document describes how to collect performance data and vizualise it.
 
+Windows Oblivion location probes
+===============================
+
+After building the Windows game, run the dependency-free Python runner:
+
+```powershell
+python scripts/benchmark_windows.py --output build-windows/performance/baseline
+```
+
+It starts one game at a time in fresh private profiles at the prison, Imperial
+City Market District, Old Bridge and Goblin Jim's Cave. Each location runs twice,
+with a fixed random seed, a five-second warmup and a twenty-second sample.
+Settings are 1280x720, windowed, VSync off and no frame cap. Sound remains enabled.
+The output directory must be new. `--locations city bridge`, `--repeats`,
+`--warmup`, `--seconds`, `--build` and `--data` customize the run.
+
+`results.json` retains the executable hash, revision, tracked diff, per-run FPS,
+median/p95/p99 frame times, frames over 50 ms and engine subsystem timings.
+Raw OSG statistics, stdout/stderr and private configuration are retained per run.
+FPS is the inverse of mean frame duration, rather than the mean of instantaneous
+FPS. Startup latency is wall time from process launch to the first observed
+buffered gameplay statistics; it includes the profiler's three-frame delay.
+Fresh profiles do not flush Windows' filesystem cache. These are stationary-view
+probes, not cold-disk loading or traversal/combat acceptance tests.
+
+Use the same completed build configuration and sample settings for before/after
+runs. Close other game instances and finish builds/tests before measuring. Keep
+the laptop's power conditions consistent. Compare repeated runs and subsystem
+timings before attributing a small FPS difference to an optimization. Profiling
+itself adds overhead, as described below.
+
 Collecting data
 ===============
 
