@@ -14,6 +14,7 @@
 #include <bit>
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 #include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
@@ -30,8 +31,12 @@ namespace SceneUtil
 
         bool isActorAttachment(const osg::Node& node)
         {
+            // This predicate runs for every child in repeated hierarchy
+            // validation. OSG takes a string reference; constructing this
+            // long name for every query otherwise allocates on every call.
+            static const std::string name = "openmwNativeActorAttachment";
             bool attachment = false;
-            return node.getUserValue("openmwNativeActorAttachment", attachment) && attachment;
+            return node.getUserValue(name, attachment) && attachment;
         }
 
         osg::Matrixd inverse(const osg::Matrixd& matrix)

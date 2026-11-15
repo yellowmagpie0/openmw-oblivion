@@ -88,17 +88,11 @@ namespace MWWorld
         // resident changes remain visible within the same low-process pass.
         const auto rootEnabled = [&](const auto* record) -> std::optional<bool> {
             if (!record || !record->mEsp.parent.isZeroOrUnset()) return std::nullopt;
-            bool value = (record->mFlags & ESM4::Rec_Disabled) == 0;
-            const auto* snapshot = references ? references->find(referenceKey) : nullptr;
-            if (!references)
-            {
-                const auto found = std::find_if(source.begin(), source.end(),
-                    [&](const auto& reference) { return reference.mKey == referenceKey; });
-                if (found != source.end()) snapshot = &*found;
-            }
-            if (snapshot) value = snapshot->mEnabled;
             if (const Ptr resident = mWorldModel.getPtr(record->mId); !resident.isEmpty())
-                value = resident.getRefData().isEnabled();
+                return resident.getRefData().isEnabled();
+            bool value = (record->mFlags & ESM4::Rec_Disabled) == 0;
+            const auto* snapshot = references ? references->find(referenceKey) : findOblivionSavedReference(referenceKey);
+            if (snapshot) value = snapshot->mEnabled;
             return value;
         };
         if (auto value = rootEnabled(mStore.get<ESM4::ActorCharacter>().searchStatic(referenceKey))) return value;

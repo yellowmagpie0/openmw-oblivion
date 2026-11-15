@@ -261,7 +261,10 @@ namespace MWMechanics
             // to plan a low-process transition.
             ESM::FormKey mTeleportDoor;
             osg::Vec3f mTeleportPosition;
+            ESM::FormId mRuntimeId;
+            bool mOpenByDefault = false;
         };
+        using DoorStateCache = std::map<const UnloadedLocation*, OblivionDoorState>;
 
         MWWorld::World& mWorld;
         const OblivionSavedReferenceIndex* mLowProcessReferenceIndex = nullptr;
@@ -280,9 +283,13 @@ namespace MWMechanics
         // Derived street topology is shared by route plans and rebuilt after
         // graph/overlay changes; it is not part of saved actor state.
         bool mStreetCellIndexValid = false;
+        bool mStreetQueryBatch = false;
         std::map<ESM::FormKey, std::uint64_t> mStreetGraphGenerations;
         std::map<ESM::FormKey, std::set<ESM::FormKey>> mIncomingStreetCells;
         std::map<ESM::FormKey, std::set<ESM::FormKey>> mOutgoingStreetCells;
+        using StreetCells = std::set<ESM::FormKey>;
+        std::map<ESM::FormKey, std::shared_ptr<const StreetCells>> mReachableStreetCells;
+        std::vector<std::shared_ptr<const StreetCells>> mStreetReachabilityOwners;
         mutable std::map<std::pair<ESM::FormKey, ESM::FormKey>, ESM4::RuntimeDetectionVector> mDetectionVectors;
         mutable std::map<std::string, std::uint64_t> mDiagnosticCounters;
         mutable std::uint64_t mNextEvaluationGeneration = 1;
@@ -313,10 +320,11 @@ namespace MWMechanics
 
         MWWorld::Ptr ptrFor(const ESM::FormKey& key) const;
         MWWorld::Ptr loadedPtrFor(const ESM::FormKey& key) const;
-        OblivionDoorState currentDoorState(const UnloadedLocation& door) const;
+        OblivionDoorState currentDoorState(const UnloadedLocation& door, DoorStateCache* cache = nullptr) const;
         bool doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor = nullptr) const;
         void buildUnloadedLocationIndex();
         void ensureStreetCellIndex();
+        const std::set<ESM::FormKey>& reachableStreetCells(const ESM::FormKey& origin);
         void seedActors();
         void seedActors(std::map<ESM::FormKey, LiveActor>& actors);
         std::vector<ESM4::PackageCandidate> basePackages(const ESM::FormKey& base) const;
@@ -362,7 +370,7 @@ namespace MWMechanics
         bool hasCellOwnershipPermission(const LiveActor& live, const ESM::FormKey& cell,
             const MWWorld::Ptr* actor = nullptr) const;
         bool canUseUnloadedDoor(const LiveActor& live, const UnloadedLocation& door, bool& locked,
-            const MWWorld::Ptr* actor = nullptr) const;
+            const MWWorld::Ptr* actor = nullptr, DoorStateCache* cache = nullptr) const;
         bool reserveAction(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::AIPackage& package);
         bool completeAction(const MWWorld::Ptr& actor, LiveActor& live);
         void releasePhysicalDoorCollision(const MWWorld::Ptr& actor, LiveActor& live) const;

@@ -2671,6 +2671,19 @@ namespace MWWorld
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
+    const ESM4::RuntimeReferenceState* World::findOblivionSavedReference(const ESM::FormKey& key) const
+    {
+        if (!mOblivionRuntimeState) return nullptr;
+        if (!mOblivionReferenceLookup)
+            mOblivionReferenceLookup = std::make_unique<MWMechanics::OblivionSavedReferenceLookup>();
+        return mOblivionReferenceLookup->find(mOblivionRuntimeState->mReferences, key);
+    }
+
+    ESM4::RuntimeReferenceState* World::findOblivionSavedReference(const ESM::FormKey& key)
+    {
+        return const_cast<ESM4::RuntimeReferenceState*>(std::as_const(*this).findOblivionSavedReference(key));
+    }
+
     std::optional<ESM::FormKey> World::getOblivionReferenceBaseKey(const ESM::FormKey& reference) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion)
@@ -2703,10 +2716,7 @@ namespace MWWorld
             if (const auto* object = resident.getCellRef().getNativeReference())
                 return base(*object);
         }
-        if (mOblivionRuntimeState)
-            for (const auto& saved : mOblivionRuntimeState->mReferences)
-                if (saved.mKey == key)
-                    return saved.mBase;
+        if (const auto* saved = findOblivionSavedReference(key)) return saved->mBase;
         if (const auto* actor = mStore.search<ESM4::ActorCharacter>(key))
             return base(*actor);
         if (const auto* creature = mStore.search<ESM4::ActorCreature>(key))

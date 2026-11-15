@@ -102,6 +102,7 @@ namespace MWMechanics
 {
     class OblivionAiService;
     class OblivionSavedReferenceIndex;
+    class OblivionSavedReferenceLookup;
     class OblivionCombatService;
 }
 
@@ -208,6 +209,9 @@ namespace MWWorld
         ESM::GameProfile mRequestedGameProfile;
         ESM::GameProfile mGameProfile = ESM::GameProfile::Auto;
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
+        mutable std::unique_ptr<MWMechanics::OblivionSavedReferenceLookup> mOblivionReferenceLookup;
+        const ESM4::RuntimeReferenceState* findOblivionSavedReference(const ESM::FormKey& key) const;
+        ESM4::RuntimeReferenceState* findOblivionSavedReference(const ESM::FormKey& key);
         bool mUpdatingOblivionBoundEquipment = false;
         bool mSynchronizingOblivionEnableParents = false;
         void normalizeOblivionEnableParents(ESM4::RuntimeState& state) const;

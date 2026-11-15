@@ -743,6 +743,7 @@ namespace MWMechanics
 
     void OblivionAiService::ensureStreetCellIndex()
     {
+        if (mStreetQueryBatch && mStreetCellIndexValid) return;
         const auto& service = mWorld.mStore.getOblivionPathgridService();
         if (mStreetCellIndexValid && std::equal(service.graphs().begin(), service.graphs().end(),
                 mStreetGraphGenerations.begin(), mStreetGraphGenerations.end(),
@@ -753,6 +754,8 @@ namespace MWMechanics
         mStreetCellIndexValid = false;
         mIncomingStreetCells.clear();
         mOutgoingStreetCells.clear();
+        mReachableStreetCells.clear();
+        mStreetReachabilityOwners.clear();
         mStreetGraphGenerations.clear();
         for (const auto& [_, graph] : service.graphs())
         {
@@ -777,6 +780,40 @@ namespace MWMechanics
             }
         }
         mStreetCellIndexValid = true;
+    }
+
+    const std::set<ESM::FormKey>& OblivionAiService::reachableStreetCells(const ESM::FormKey& origin)
+    {
+        if (const auto found = mReachableStreetCells.find(origin); found != mReachableStreetCells.end())
+            return *found->second;
+        auto cells = std::make_shared<StreetCells>();
+        cells->insert(origin);
+        std::vector<ESM::FormKey> pending{origin};
+        while (!pending.empty())
+        {
+            const auto cell = pending.back();
+            pending.pop_back();
+            if (const auto streets = mOutgoingStreetCells.find(cell); streets != mOutgoingStreetCells.end())
+                for (const auto& successor : streets->second)
+                    if (cells->insert(successor).second) pending.push_back(successor);
+        }
+        // Every cell in the origin's strongly connected component has the
+        // same forward closure. Share it without treating one-way links as
+        // bidirectional. Large exterior networks are built once per topology.
+        StreetCells component{origin};
+        pending.push_back(origin);
+        while (!pending.empty())
+        {
+            const auto cell = pending.back();
+            pending.pop_back();
+            if (const auto incoming = mIncomingStreetCells.find(cell); incoming != mIncomingStreetCells.end())
+                for (const auto& predecessor : incoming->second)
+                    if (cells->contains(predecessor) && component.insert(predecessor).second)
+                        pending.push_back(predecessor);
+        }
+        for (const auto& cell : component) mReachableStreetCells.emplace(cell, cells);
+        if (cells->size() > 1) mStreetReachabilityOwners.push_back(cells);
+        return *cells;
     }
 
     void OblivionAiService::buildUnloadedLocationIndex()
@@ -828,6 +865,8 @@ namespace MWMechanics
                 resolver.toFormKey(reference.mOwner), ESM::RefId(reference.mKey), {}, {} };
             location.mTeleportDoor = resolver.toFormKey(reference.mDoor.destDoor);
             location.mTeleportPosition = reference.mDoor.destPos.asVec3();
+            location.mRuntimeId = reference.mId;
+            location.mOpenByDefault = reference.mOpenByDefault;
             add(std::move(location));
         }
         for (const ESM4::ActorCharacter& reference : mWorld.mStore.get<ESM4::ActorCharacter>())
@@ -3816,25 +3855,23 @@ namespace MWMechanics
         // Follow resolved, directed PGRI edges backwards at zero door cost;
         // the eventual node route still validates the complete approach.
         ensureStreetCellIndex();
-        const auto streetCellsFrom = [&](const ESM::FormKey& origin) {
-            std::set<ESM::FormKey> cells{origin};
-            std::vector<ESM::FormKey> pending{origin};
-            while (!pending.empty())
-            {
-                const auto cell = pending.back();
-                pending.pop_back();
-                if (const auto streets = mOutgoingStreetCells.find(cell); streets != mOutgoingStreetCells.end())
-                    for (const auto& successor : streets->second)
-                        if (cells.insert(successor).second) pending.push_back(successor);
-            }
-            return cells;
-        };
-        const auto sourceStreetCells = streetCellsFrom(live.mState.mCell);
+        // Bound the derived cache between plans. References into it remain
+        // stable throughout this plan, including when another origin is added.
+        if (mStreetReachabilityOwners.size() > 64)
+        {
+            mReachableStreetCells.clear();
+            mStreetReachabilityOwners.clear();
+        }
+        const auto& sourceStreetCells = reachableStreetCells(live.mState.mCell);
+        // No game callbacks or door mutations run inside a route query.
+        // Reuse values only for this plan; the next actor/plan reads them anew.
+        DoorStateCache doorStates;
         // An interior can reach an exterior street frontier through its own
         // exit. Without this frontier, every offscreen room-to-room plan walks
         // backwards through all Tamriel streets and thousands of other doors.
         // Validate that first exit now; retain it as the actual next XTEL leg.
-        std::map<ESM::FormKey, std::set<ESM::FormKey>> exitStreetCells;
+        std::map<ESM::FormKey, const std::set<ESM::FormKey>*> exitStreetCells;
+        bool reachableSourceDoor = false;
         if (!sameCell)
             if (const auto exits = mUnloadedDoorsByCell.find(live.mState.mCell);
                 exits != mUnloadedDoorsByCell.end())
@@ -3845,18 +3882,28 @@ namespace MWMechanics
                         || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
                         continue;
                     bool locked = false;
-                    if (!canUseUnloadedDoor(live, door, locked, actor)) continue;
+                    if (!canUseUnloadedDoor(live, door, locked, actor, &doorStates)) continue;
                     const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
                     if (marker == mUnloadedLocationByReference.end()) continue;
                     const auto& landing = mUnloadedLocations[marker->second];
-                    if (landing.mCell.isNull() || sourceStreetCells.contains(landing.mCell)
-                        || exitStreetCells.contains(landing.mCell) || !currentDoorState(landing).mAvailable)
+                    if (landing.mCell.isNull() || !currentDoorState(landing, &doorStates).mAvailable)
                         continue;
                     const auto node = service.nearestEnabledNode(sourceGraph->pathgridKey(),
                         {door.mPosition.x(), door.mPosition.y(), door.mPosition.z()}, 4096.f);
                     if (node && service.route(start, *node))
-                        exitStreetCells.emplace(landing.mCell, streetCellsFrom(landing.mCell));
+                    {
+                        // Include same-cell teleports: they may bridge a
+                        // disconnected component that has its own outward exit.
+                        reachableSourceDoor = true;
+                        if (!sourceStreetCells.contains(landing.mCell) && !exitStreetCells.contains(landing.mCell))
+                            exitStreetCells.emplace(landing.mCell, &reachableStreetCells(landing.mCell));
+                    }
                 }
+        if (!sameCell && sourceStreetCells.size() == 1 && !reachableSourceDoor)
+        {
+            live.mLastRouteFailure = "door-route-no-accessible-exit";
+            return false;
+        }
         std::deque<ESM::FormKey> pendingCells;
         remainingHops.emplace(destinationCell, 0);
         pendingCells.push_back(destinationCell);
@@ -3878,11 +3925,17 @@ namespace MWMechanics
         };
         std::size_t reverseDoors = 0;
         std::size_t reverseLocked = 0;
+        std::optional<std::size_t> exitDistance;
         while (!sameCell && !pendingCells.empty())
         {
             const ESM::FormKey cell = pendingCells.front();
             pendingCells.pop_front();
             const std::size_t distance = remainingHops.at(cell);
+            // Once a validated current-cell exit reaches the destination,
+            // longer reverse branches cannot improve the next door. Finish
+            // all equal-distance frontiers for deterministic alternative exits.
+            if (exitDistance && distance > *exitDistance)
+                continue;
             // This frontier is already approachable without another door.
             // Expanding it backwards would search unrelated doors across the
             // entire continent. Keep same-cell component-bridging door plans.
@@ -3890,7 +3943,7 @@ namespace MWMechanics
                 continue;
             bool reachedExit = false;
             for (const auto& [landing, streets] : exitStreetCells)
-                if (streets.contains(cell))
+                if (streets->contains(cell))
                 {
                     const auto recordDistance = [&](const ESM::FormKey& key, std::size_t hops) {
                         const auto [it, inserted] = remainingHops.emplace(key, hops);
@@ -3898,6 +3951,7 @@ namespace MWMechanics
                     };
                     recordDistance(landing, distance);
                     recordDistance(live.mState.mCell, distance + 1);
+                    exitDistance = exitDistance ? std::min(*exitDistance, distance) : distance;
                     reachedExit = true;
                 }
             if (reachedExit) continue;
@@ -3915,7 +3969,7 @@ namespace MWMechanics
                     || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
                     continue;
                 bool locked = false;
-                if (!canUseUnloadedDoor(live, door, locked, actor))
+                if (!canUseUnloadedDoor(live, door, locked, actor, &doorStates))
                 {
                     reverseLocked += locked ? 1 : 0;
                     continue;
@@ -3953,7 +4007,7 @@ namespace MWMechanics
                     || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
                     continue;
                 bool locked = false;
-                if (!canUseUnloadedDoor(live, door, locked, actor))
+                if (!canUseUnloadedDoor(live, door, locked, actor, &doorStates))
                 {
                     sourceLockedCount += locked ? 1 : 0;
                     continue;
@@ -3964,7 +4018,7 @@ namespace MWMechanics
                 if (destination == mUnloadedLocationByReference.end())
                     continue;
                 const UnloadedLocation& marker = mUnloadedLocations[destination->second];
-                if (marker.mCell.isNull() || !currentDoorState(marker).mAvailable)
+                if (marker.mCell.isNull() || !currentDoorState(marker, &doorStates).mAvailable)
                     continue;
                 // A same-cell bridge must land back in that cell. Reject
                 // other doors before routing to them, rather than after an
@@ -5059,6 +5113,16 @@ namespace MWMechanics
         requireMutableRuntime();
         if (!std::isfinite(duration) || duration <= 0.f)
             return;
+        // Package callbacks run after this pass. Check graph generations once
+        // for the batch; overlay APIs still invalidate the index immediately.
+        ensureStreetCellIndex();
+        struct ResetStreetBatch
+        {
+            bool& mSlot;
+            bool mPrevious;
+            ~ResetStreetBatch() { mSlot = mPrevious; }
+        } streetBatch{mStreetQueryBatch, mStreetQueryBatch};
+        mStreetQueryBatch = true;
         // Callbacks are queued, but package door actions can still insert saved
         // references. Refresh the borrowed index at actor/step boundaries when
         // the backing vector changes; in-place state edits remain visible.
@@ -5465,12 +5529,19 @@ namespace MWMechanics
         return found != references.end() ? &*found : nullptr;
     }
 
-    OblivionDoorState OblivionAiService::currentDoorState(const UnloadedLocation& door) const
+    OblivionDoorState OblivionAiService::currentDoorState(const UnloadedLocation& door, DoorStateCache* cache) const
     {
+        if (cache)
+        {
+            const auto [it, inserted] = cache->try_emplace(&door);
+            if (inserted) it->second = currentDoorState(door);
+            return it->second;
+        }
         OblivionDoorState authored{ door.mEnabled, door.mLocked, door.mKey, door.mOwner };
-        if (const auto* reference = mWorld.mStore.search<ESM4::Reference>(door.mReference))
-            authored.mOpen = reference->mOpenByDefault && door.mTeleportDoor.isNull();
-        if (const MWWorld::Ptr loadedDoor = loadedPtrFor(door.mReference); !loadedDoor.isEmpty())
+        authored.mOpen = door.mOpenByDefault && door.mTeleportDoor.isNull();
+        const MWWorld::Ptr loadedDoor = !door.mRuntimeId.isZeroOrUnset()
+            ? mWorld.mWorldModel.getPtr(door.mRuntimeId) : loadedPtrFor(door.mReference);
+        if (!loadedDoor.isEmpty())
         {
             OblivionDoorState resident{ loadedDoor.getRefData().isEnabled() && !loadedDoor.mRef->isDeleted(),
                 loadedDoor.getCellRef().isLocked(), loadedDoor.getCellRef().getKey(), {} };
@@ -5496,19 +5567,20 @@ namespace MWMechanics
     }
 
     bool OblivionAiService::canUseUnloadedDoor(
-        const LiveActor& live, const UnloadedLocation& door, bool& locked, const MWWorld::Ptr* actor) const
+        const LiveActor& live, const UnloadedLocation& door, bool& locked, const MWWorld::Ptr* actor,
+        DoorStateCache* cache) const
     {
         locked = false;
         if (door.mType != ESM::REC_DOOR4)
             return false;
-        const OblivionDoorState current = currentDoorState(door);
+        const OblivionDoorState current = currentDoorState(door, cache);
         if (!current.mAvailable)
             return false;
         if (!door.mTeleportDoor.isNull())
         {
             const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
             if (marker == mUnloadedLocationByReference.end()
-                || !currentDoorState(mUnloadedLocations[marker->second]).mAvailable)
+                || !currentDoorState(mUnloadedLocations[marker->second], cache).mAvailable)
                 return false;
         }
         if (!current.mLocked || (door.mTeleportDoor.isNull() && current.mOpen))

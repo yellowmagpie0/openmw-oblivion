@@ -670,8 +670,9 @@ namespace MWWorld
         const ESM4::RuntimeReferenceState& reference)
     {
         const auto& values = reference.mCustomState;
-        const auto count = std::count_if(values.begin(), values.end(),
-            [](const auto& entry) { return entry.first.starts_with("native.fire."); });
+        std::size_t count = 0;
+        for (auto it = values.lower_bound("native.fire.");
+             it != values.end() && it->first.starts_with("native.fire."); ++it) ++count;
         if (!count) return {};
         if (static_cast<std::size_t>(count) != sFireFields.size()
             || std::any_of(sFireFields.begin(), sFireFields.end(), [&](auto key) { return !values.contains(key); }))
@@ -916,8 +917,9 @@ namespace MWWorld
     std::optional<OblivionCharm> readOblivionCharm(const ESM4::RuntimeReferenceState& reference)
     {
         const auto& values = reference.mCustomState;
-        const auto count = std::count_if(values.begin(), values.end(),
-            [](const auto& entry) { return entry.first.starts_with("native.charm."); });
+        std::size_t count = 0;
+        for (auto it = values.lower_bound("native.charm.");
+             it != values.end() && it->first.starts_with("native.charm."); ++it) ++count;
         if (!count) return {};
         if (static_cast<std::size_t>(count) != sCharmFields.size()
             || std::any_of(sCharmFields.begin(), sCharmFields.end(), [&](auto key) { return !values.contains(key); }))

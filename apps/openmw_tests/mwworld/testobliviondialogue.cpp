@@ -3601,6 +3601,46 @@ TEST(OblivionTutorialDoor, ForeignCellTeleportUsesFloorApproachAndFinishesOnlyAt
     }
 }
 
+TEST(OblivionTutorialDoor, AbstractRouteCannotLeaveADisabledOrLockedOnlyExitAcrossRestore)
+{
+    for (const bool shifted : {false, true})
+        for (const bool locked : {false, true})
+        {
+            SCOPED_TRACE(shifted);
+            SCOPED_TRACE(locked);
+            MWClass::ESM4Door::registerSelf();
+            SwitchFixture f(shifted, false, sameCellTeleportRecords(true, true), 8, false);
+            auto& world = f.mFixture.mWorld;
+            auto& ai = *world.getOblivionAiService();
+            MWWorld::Ptr door;
+            f.mActor.getCell()->forEach([&](const MWWorld::Ptr& candidate) {
+                if (candidate.getCellRef().getFormKey() == key(0xd01)) door = candidate;
+                return true;
+            }, true);
+            ASSERT_FALSE(door.isEmpty());
+            world.getWorldModel().registerPtr(door);
+            // Admit the package normally, then change the physical door
+            // before its first abstract route query. No renderer is required.
+            ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd05)));
+            world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+            if (locked) door.getCellRef().lock(100);
+            else door.getRefData().disable();
+            for (int i = 0; i < 16; ++i) ai.updateUnloaded(.25f);
+            const auto* state = ai.state(key(0xa00));
+            ASSERT_NE(state, nullptr);
+            EXPECT_EQ(state->mCell, key(0xb04));
+            EXPECT_TRUE(state->mDoor.isNull());
+            EXPECT_TRUE(state->mLastTransitionDoor.isNull());
+            EXPECT_EQ(state->mPhase, ESM4::PackagePhase::Stalled);
+            EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+            ai.restore(ESM4::RuntimeState::deserializeBinary(f.capture().serializeBinary()));
+            for (int i = 0; i < 16; ++i) ai.updateUnloaded(.25f);
+            EXPECT_EQ(ai.state(key(0xa00))->mCell, key(0xb04));
+            EXPECT_TRUE(ai.state(key(0xa00))->mLastTransitionDoor.isNull());
+            EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+        }
+}
+
 TEST(OblivionTutorialDoor, OwnedLockedTeleportRetainsLockAcrossAbstractTransitionAndActivationDenial)
 {
     for (bool shifted : {false,true})
@@ -4134,10 +4174,12 @@ TEST(OblivionTutorialDoor, DoorChainIncludesDirectedExteriorStreetBetweenTelepor
 {
     MWClass::ESM4Door::registerSelf();
     for (const bool shifted : {false, true})
-        for (const bool connected : {false, true})
+        for (const auto [connected, reverse] :
+            {std::pair{false, false}, std::pair{false, true}, std::pair{true, false}, std::pair{true, true}})
         {
             SCOPED_TRACE(shifted);
             SCOPED_TRACE(connected);
+            SCOPED_TRACE(reverse);
             const auto group = [](unsigned kind, unsigned label, const std::string& data) {
                 return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
                     + bytes(label) + bytes(kind) + bytes(0u) + data;
@@ -4179,7 +4221,7 @@ TEST(OblivionTutorialDoor, DoorChainIncludesDirectedExteriorStreetBetweenTelepor
             ESM4::Pathgrid second{};
             second.mFormKey = key(0xd09); second.mData = 1;
             second.mNodes = {{4096,0,0,0,0,0}};
-            second.mForeign = {{0,0,1280,0,0}};
+            if (reverse) second.mForeign = {{0,0,1280,0,0}};
             ESM4::Pathgrid shop{};
             shop.mFormKey = key(0xd17); shop.mData = 2;
             shop.mNodes = {{8192,0,0,1,0,0},{8256,0,0,1,0,0}};

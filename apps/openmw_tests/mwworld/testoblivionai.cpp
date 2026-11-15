@@ -898,6 +898,45 @@ namespace
             EXPECT_EQ(references[i].mKey, order[i]);
     }
 
+    TEST(OblivionAiTest, SavedReferenceLookupRevalidatesOffsetsAfterEveryStructuralChange)
+    {
+        MWMechanics::OblivionSavedReferenceLookup lookup;
+        std::vector<ESM4::RuntimeReferenceState> references(4);
+        for (unsigned i = 0; i < references.size(); ++i) references[i].mKey = key(i + 1);
+        const auto check = [&] {
+            for (unsigned id = 1; id <= 9; ++id)
+            {
+                const auto wanted = key(id);
+                const auto linear = std::find_if(references.begin(), references.end(),
+                    [&](const auto& ref) { return ref.mKey == wanted; });
+                EXPECT_EQ(lookup.find(references, wanted), linear == references.end() ? nullptr : &*linear);
+            }
+        };
+        check(); // Warm locations and miss keys that will be inserted later.
+        references[1].mEnabled = false;
+        references[1].mCustomState["locked"] = true;
+        EXPECT_FALSE(lookup.find(references, key(2))->mEnabled);
+        EXPECT_TRUE(std::get<bool>(lookup.find(references, key(2))->mCustomState.at("locked")));
+        references.emplace_back().mKey = key(5);
+        references.reserve(references.capacity() + 100);
+        check();
+        std::reverse(references.begin(), references.end());
+        check();
+        references.erase(references.begin() + 1);
+        check();
+        references[0].mKey = key(6); // In-place identity edit, unchanged storage/size.
+        check();
+        auto replacement = references;
+        for (auto& ref : replacement) ref.mEnabled = false;
+        references.swap(replacement);
+        check();
+        for (const auto& ref : references) EXPECT_FALSE(lookup.find(references, ref.mKey)->mEnabled);
+        references.clear();
+        check();
+        references.emplace_back().mKey = key(9);
+        check();
+    }
+
     TEST(OblivionAiTest, SavedReferenceIndexReadsCurrentValuesAndRejectsChangedStorage)
     {
         std::vector<ESM4::RuntimeReferenceState> references(2);
