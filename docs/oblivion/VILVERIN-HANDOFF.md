@@ -4,26 +4,32 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [Immortal Blood native transfer](SKILL-BOOK-DROP-CONTRACT.json).
-Original skill BOOK0243fc / placed066cc1 on the independent shore branch was already
-awarded Hand-to-Hand35->36. Normal readerTake gives inventory1/BooksRead3->4;
-normal/SAN native drop publishes key1/count1/body4/root18/next2. Cold world restores
-physics; normal downhill walk/focus/readTake returns1 and counts4->5 without another
-skill award, retires key1/body; final cold inventory retains history, all skills/XP/
-progression, unrelated loot/life/deaths/quests. [Receipt](SKILL-BOOK-DROP-VERIFICATION.json)
-separates reused original rules, structural, compiler, semantic and runtime layers.
-195 focused/2292 full engine per mode and618 Python pass. Shore book slides downhill;
-world acceptance checks original terrain contact, not an indoor proximity assumption.
-Retained harness failures and corrected eye-range approach are linked in the receipt.
-Valid skill indices are admitted, but only skill5 runtime is claimed; scroll/scripted/
-enchanted remain open. No full M13/M15/M16/M18 or TES4 MCP authoring claim.
+Latest completed bounded chunk: [original scripted Club transfers](SCRIPTED-CLUB-DROP-CONTRACT.json).
+Genuine worn CGClub159829 / stateless CGWeaponScript047ac0 now uses native Player
+weapon drop/pickup ownership. Normal/SAN drop publishes key17/body7/condition59.5000458,
+script owner17/next18 without event replay; cold world preserves it. Actual pickup
+retires body/key17, transfers script to inventory18/next19 and fires original OnAdd
+(MQweapon0->1). Cold paperdoll equip fires OnEquip (MQweaponEquip0->1); final cold
+inventory retains owner18/slots65536/condition and flags1/1. All unrelated inventory,
+27skills/XP/history/life/deaths/combat, Cuirass owner9/heavyflags1/1 remain intact.
+[Receipt](SCRIPTED-CLUB-DROP-VERIFICATION.json) distinguishes structural/compiler/
+semantic/runtime evidence;195 focused/2292 full engine per mode and618 Python pass.
+First audit confused authored Havok motion4 with runtime schema Dynamic1; retained,
+corrected without physics changes. Stateful/other event/enchanted/bound and NPC
+disarm profiles remain open. No full M15/M18 acceptance claim.
 
-Separate accepted skill-book continuation (do not merge with main cave branch):
-`build/oblivion-compat/skill-book-drop/normal-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `398a76813259777d0a3b024a8685b7d68b840848bc768d5f89df4c34786b6bf0`.
-SAN: same root `sanitized-inventory-01`, SHA256 `3dbf9b41f958cf750c98f36d161d665b43121204bcdb45b457bcab5842a9e25a`.
-Health83, Hand-to-Hand36, ImmortalBlood1, BooksRead5, awarded history0243fc,
-allocator2/key1 retired. Main Cairn/Wellspring continuation below remains separate.
+Current main Cairn/Wellspring continuation:
+`build/oblivion-compat/scripted-club-drop/normal-club-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `e5443b71bffee2211e8234b4f10b38d87b00618190bc8dfd6c4c54fceb481e57`.
+SAN: same root `sanitized-club-inventory-01`, SHA256 `962d1717709bdaa6528adc2a020403ed6fe82cb8031507dddbafc8ca57dd86f3`.
+Health70.480003/110, End55, Club59.5000458 equipped/owner18, Cuirass19.6576748
+owner9, Torch987+2fresh1000 inactive, Alembic1/Retort1, Song1/Fundaments2/Charter2,
+BooksRead17, allocator19/key17 retired; no native-reference18. Preserve branches.
+
+Separate accepted [Immortal Blood native transfer](SKILL-BOOK-DROP-VERIFICATION.json)
+uses the independent shore branch: Hand-to-Hand36/history0243fc, Book1/BooksRead5,
+Health83, allocator2/key1 retired. Normal/SAN continuations are in its receipt.
+Do not merge it with the main cave continuation.
 
 Prior [Charter whole stack](BOOK-WHOLE-STACK-VERIFICATION.json),
 [Fundaments unit split](BOOK-STACK-VERIFICATION.json),
@@ -45,9 +51,10 @@ inactive world fuel behavior is appropriate; no dropped ignition/ticking fix.
 Original inputs restored exactly. Other light profiles and exhausted/infinite
 lights remain open.
 
-Next action: inspect genuinely carried scripted weapon content for a missing
-native ownership path; stateless Cuirass itself is already accepted. Keep branches
-separate; do not enable Zahrasha or reroll sack contents.
+Next action: select the next genuinely carried/reached original content exposing
+an unimplemented acceptance requirement or observed gameplay failure. Finish its
+bounded course before expanding. Keep independent branches separate; do not
+enable Zahrasha or reroll sack contents.
 
 Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
 ordinary approach reached the sack, whose first roll contained an inkwell/no gold.
@@ -55,22 +62,8 @@ The opening harness awaited the wrong kind label and did not retain a save.
 `build/oblivion-compat/gold-drop/normal-sack-first-open-04` retains the capture,
 normal input receipts and failure; no looting acceptance or continuation claim.
 
-Current **separate Cairn/Wellspring Cave continuation**:
-`build/oblivion-compat/book-whole-stack/normal-book-whole-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `0517fbe28fbe044a41e3c247253556ba1513d5c6f2fcd1e2504f4ec4d8b02a64`.
-Instrumented continuation: same root `sanitized-book-whole-stack-inventory-01`,
-SHA256 `025818b0f70c26b180659438a7c860d0f92f2155ab9388ce3abd8c4f49c49d04`.
-BooksRead17; Charter2/Fundaments2/Song1 carried, original06efb2/3/4/5/6 retired/
-count0/taken/read. Other78 Song and untouched Charter06efd0 unchanged; no ordinary-
-book taught history entry. All3 incoming Player combat edges retained.
-Alembic1/Retort1, Cuirass equipped/condition19.6576748/scriptowner9, Torch1/fuel987
-plus2fresh1000 all unequipped, Bonemeal1, Iron Key1/Lockpick8/Iron Arrow24/Pants1/
-Bone1, Club equipped, MQ01flags1/1, allocator17. Native keys1..8,10..16 retired/
-count0/no bodies; inventory-script9 active and no native ref9. Original06efb7/8
-remain deleted/count0/taken. Health70.480003/110, Endurance55, all27skills/book
-award history/33 credited deaths preserved. MS39stage0 and original absence of
-Nirnroot/counter27 retained. Earlier sources remain in linked receipts; keep
-independent branches separate.
+Previous main-cave source and its allocator17/whole-book continuation remain in
+[Charter whole-stack verification](BOOK-WHOLE-STACK-VERIFICATION.json).
 
 Healthy shore continuation remains separate:
 `build/oblivion-compat/weapon-drop/normal-worn-axe-native-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

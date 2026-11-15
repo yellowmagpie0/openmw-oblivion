@@ -1,0 +1,72 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "weapon": {
+    "type": "WEAP",
+    "payload_sha256": "37ad369bded9672c1306cf8c16d8b8fd83be75946ad237a7ef658872a25a712f",
+    "subrecord_names": [
+      "EDID",
+      "FULL",
+      "MODL",
+      "MODB",
+      "MODT",
+      "ICON",
+      "SCRI",
+      "DATA"
+    ],
+    "EDID": "CGClub",
+    "FULL": "Club",
+    "MODL": "Weapons\\Club\\Club.NIF",
+    "data": {
+      "type": 2,
+      "speed": 0.8999999761581421,
+      "reach": 0.8999999761581421,
+      "flags": 1,
+      "value": 3,
+      "maximum_condition": 70,
+      "weight": 8.0,
+      "damage": 7
+    },
+    "script": "0x47ac0",
+    "unenchanted": true
+  },
+  "script": {
+    "id": "047ac0",
+    "editor_id": "CGWeaponScript",
+    "payload_sha256": "fdc6772134b6ba94866767ee5df1fcd1c889501a2feec673924ed159a48b024d",
+    "source_sha256": "ac2f0657395bb03fba6c8d3c5f3a2d317ef3a57eab6d225bfff644553f19d525",
+    "compiled_sha256": "84cae38db83ec5472e16a768831e3e37f167faec5e379a1c7d28c10e110b352d",
+    "local_declarations": 0,
+    "handlers": {
+      "OnAdd Player": "MQ01.weapon=1",
+      "OnEquip Player": "MQ01.weaponEquip=1"
+    },
+    "MQ_declaration_positions": [
+      15,
+      16
+    ],
+    "MQ_native_local_ids": [
+      12,
+      13
+    ],
+    "source_quirk": "Original SCTX contains a stray endif; retained original SCDA/SCTX untouched. Existing corpus compiler supplies the original loaded event program."
+  },
+  "model": {
+    "member": "meshes/weapons/club/club.nif",
+    "member_sha256": "dd1c7dc47075e97fecdb158e61df59ac1d45268f3a189bbc2632287cbdf54182",
+    "asset_hash": "6042a7103fd1e592b5a8a491e22f9e7d",
+    "records": 20,
+    "bodies": 1,
+    "joints": 0,
+    "body_record": 7,
+    "root": 0,
+    "authored_mass": 7,
+    "authored_motion": 4,
+    "body_transform": false,
+    "runtime_motion": "Dynamic=1 (RuntimeRagdollMotion schema), distinct from authored Havok motion4"
+  },
+  "scope": "Independent original record, script event/variable metadata and member audit plus separately labeled parser graph diagnostics; existing prepared stateless transfer provenance reused from CUIRASS-DROP-ORACLE.json. No new numerical original-executable rule or original script edit.",
+  "limits": [
+    "No stateful, OnHit/OnDrop, enchanted or broad weapon-profile claim",
+    "Actual normal-input event effects and cold script ownership still require fork acceptance"
+  ]
+}

@@ -957,12 +957,13 @@ namespace MWWorld
         if (!owner.empty()) custom["ownership_checked"] = true;
         const bool transferredNirnroot = item.mBase == ESM::FormKey::content("oblivion.esm", 0x4e940)
             && key.isDynamic() && mOblivionScriptManager;
-        const bool transferredArmor = ptr.getType() == ESM::REC_ARMO4 && key.isDynamic()
+        const bool transferredEquipment = (ptr.getType() == ESM::REC_ARMO4 || ptr.getType() == ESM::REC_WEAP4)
+            && key.isDynamic()
             && sourceRelations.mDropper && !sourceRelations.mDropper->isNull()
             && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(item.mBase);
         std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer> scriptTransfer;
         const auto scriptSerial = mNextOblivionDynamicSerial;
-        if (transferredNirnroot || transferredArmor)
+        if (transferredNirnroot || transferredEquipment)
         {
             if (item.mCount != 1 || !scriptSerial || scriptSerial == std::numeric_limits<std::uint64_t>::max())
                 throw std::invalid_argument("scripted native pickup requires a singleton identity");

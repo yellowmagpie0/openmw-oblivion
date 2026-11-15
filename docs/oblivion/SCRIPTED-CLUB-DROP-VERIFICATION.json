@@ -1,0 +1,427 @@
+{
+  "status": "Accepted bounded original stateless-scripted Player weapon native transfers in normal and ASan/UBSan gameplay",
+  "tested_parent": "9448b9c5ece03dbb165422569f83d1472321462b",
+  "implementation": {
+    "apps/openmw/mwworld/oblivionweapondrop.cpp": "f8275f74140c1092bedab2d036f790e66e725e10c655938f86d832566ba65da0",
+    "apps/openmw/mwworld/oblivioninteraction.cpp": "179ca6315afb8d2946e4beade1dac0b0d9e66b922f97694fa4b04890f6aa6a9d"
+  },
+  "evidence_root": "build/oblivion-compat/scripted-club-drop",
+  "layers": {
+    "structural": "Schema103 independent decode/re-encode per accepted stage; singleton native WEAP key17/count1, original Club body7/root0; retired on pickup; next18 then19 with inventory scriptowner18",
+    "compiler": "Both runtime binaries build;195 focused/2292 full engine per mode and618 Python; SAN four partitions exact disjoint union",
+    "semantic": "Original CGWeaponScript no locals and only OnAdd/OnEquip; drop/load no replay, actual pickup flags0/0->1/0, actual cold equip->1/1. Preserve original condition59.5000458 and every unrelated inventory/skill/history/life/death/combat/quest/CG armor owner9/heavyflags1/1",
+    "runtime": "Frozen old binary reproduces legacy exclusion; genuine already-carried main-cave Club drops natively, survives cold world, ordinary Space pickup, cold paperdoll equip and final fresh-process inventory in both modes"
+  },
+  "source": {
+    "save": "build/oblivion-compat/book-whole-stack/normal-book-whole-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "0517fbe28fbe044a41e3c247253556ba1513d5c6f2fcd1e2504f4ec4d8b02a64",
+    "branch": "Main Cairn/Wellspring cave continuation; independent awarded skill-book shore branch stays separate",
+    "next_dynamic_serial": 17
+  },
+  "baseline": {
+    "passed": true,
+    "source_sha256": "0517fbe28fbe044a41e3c247253556ba1513d5c6f2fcd1e2504f4ec4d8b02a64",
+    "save_sha256": "5a5579a12c252ae286dcfc6174522c8e937dc5b8caf96a20319a8016a5853bcd",
+    "process": {
+      "pid": 1168502,
+      "start_ticks": 22474822,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scripted-club-drop/pre-change-openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scripted-club-drop/normal-club-baseline-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/book-whole-stack/normal-book-whole-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "b11c30817289977e5a8e3e681f9103d9dad038a75f1bad8f5b7ff95b9a9a8e14"
+    },
+    "legacy_world_weapon_observed": true,
+    "native_loose_bodies": 0,
+    "allocator": 17,
+    "tutorial_weapon_flags": [
+      0,
+      0
+    ],
+    "scope": "Actual worn Club leaves inventory through legacy world path; no disappearance/reload claim. New native course must start from declared genuine source."
+  },
+  "courses": {
+    "normal": {
+      "drop": {
+        "course": "build/oblivion-compat/scripted-club-drop/normal-club-drop-01",
+        "source_sha256": "0517fbe28fbe044a41e3c247253556ba1513d5c6f2fcd1e2504f4ec4d8b02a64",
+        "save_sha256": "5639b4ea6bdde95de9c549d1fe18bee2e16b61ba850aa83d6db63084906b502a",
+        "game_sha256": "7aac98a97532a2071b87690e1339810c13303255b8c81a186d8c23b948ed0282",
+        "tutorial_flags": [
+          0,
+          0
+        ],
+        "next_dynamic_serial": 18
+      },
+      "world": {
+        "course": "build/oblivion-compat/scripted-club-drop/normal-club-world-01",
+        "source_sha256": "5639b4ea6bdde95de9c549d1fe18bee2e16b61ba850aa83d6db63084906b502a",
+        "save_sha256": "0cd2f088b6f44ee77a8248a5700880d3356df872064bd9b4965a5eef08b99603",
+        "game_sha256": "7aac98a97532a2071b87690e1339810c13303255b8c81a186d8c23b948ed0282",
+        "tutorial_flags": [
+          0,
+          0
+        ],
+        "next_dynamic_serial": 18
+      },
+      "pickup": {
+        "course": "build/oblivion-compat/scripted-club-drop/normal-club-pickup-01",
+        "source_sha256": "0cd2f088b6f44ee77a8248a5700880d3356df872064bd9b4965a5eef08b99603",
+        "save_sha256": "b56f708f4a44df1c840ef099ca481292abd68064762c98fabae884db337279b9",
+        "game_sha256": "7aac98a97532a2071b87690e1339810c13303255b8c81a186d8c23b948ed0282",
+        "tutorial_flags": [
+          1,
+          0
+        ],
+        "next_dynamic_serial": 19
+      },
+      "equip": {
+        "course": "build/oblivion-compat/scripted-club-drop/normal-club-equip-01",
+        "source_sha256": "b56f708f4a44df1c840ef099ca481292abd68064762c98fabae884db337279b9",
+        "save_sha256": "c3a0c651ce07d1563d33f7abfaef7464b6b240162101a5dbc5a9052a4503f3b3",
+        "game_sha256": "7aac98a97532a2071b87690e1339810c13303255b8c81a186d8c23b948ed0282",
+        "tutorial_flags": [
+          1,
+          1
+        ],
+        "next_dynamic_serial": 19
+      },
+      "inventory": {
+        "course": "build/oblivion-compat/scripted-club-drop/normal-club-inventory-01",
+        "source_sha256": "c3a0c651ce07d1563d33f7abfaef7464b6b240162101a5dbc5a9052a4503f3b3",
+        "save_sha256": "e5443b71bffee2211e8234b4f10b38d87b00618190bc8dfd6c4c54fceb481e57",
+        "game_sha256": "7aac98a97532a2071b87690e1339810c13303255b8c81a186d8c23b948ed0282",
+        "tutorial_flags": [
+          1,
+          1
+        ],
+        "next_dynamic_serial": 19
+      }
+    },
+    "sanitized": {
+      "drop": {
+        "course": "build/oblivion-compat/scripted-club-drop/sanitized-club-drop-01",
+        "source_sha256": "0517fbe28fbe044a41e3c247253556ba1513d5c6f2fcd1e2504f4ec4d8b02a64",
+        "save_sha256": "4ee13956f0ccae67f04b0d66590990b0941e474101cbba0e47898088d866e286",
+        "game_sha256": "f1902d01fd87c88e83332f9c0c69c510ca4e07ce3c4ae5317a2252f84b35617d",
+        "tutorial_flags": [
+          0,
+          0
+        ],
+        "next_dynamic_serial": 18
+      },
+      "world": {
+        "course": "build/oblivion-compat/scripted-club-drop/sanitized-club-world-01",
+        "source_sha256": "4ee13956f0ccae67f04b0d66590990b0941e474101cbba0e47898088d866e286",
+        "save_sha256": "62c5faeea812323dc0e73ca3abfd273f600b21879d5a206350dcc352cbee18ee",
+        "game_sha256": "f1902d01fd87c88e83332f9c0c69c510ca4e07ce3c4ae5317a2252f84b35617d",
+        "tutorial_flags": [
+          0,
+          0
+        ],
+        "next_dynamic_serial": 18
+      },
+      "pickup": {
+        "course": "build/oblivion-compat/scripted-club-drop/sanitized-club-pickup-02",
+        "source_sha256": "62c5faeea812323dc0e73ca3abfd273f600b21879d5a206350dcc352cbee18ee",
+        "save_sha256": "2f3756c7fade24f719419dc3edc72d3261c9bc340f6c4278f4dc71bcda9193e5",
+        "game_sha256": "f1902d01fd87c88e83332f9c0c69c510ca4e07ce3c4ae5317a2252f84b35617d",
+        "tutorial_flags": [
+          1,
+          0
+        ],
+        "next_dynamic_serial": 19
+      },
+      "equip": {
+        "course": "build/oblivion-compat/scripted-club-drop/sanitized-club-equip-01",
+        "source_sha256": "2f3756c7fade24f719419dc3edc72d3261c9bc340f6c4278f4dc71bcda9193e5",
+        "save_sha256": "72abcd26e6dd95970291d94ac322a7bee84ee29b52091947f5e51d6f4dbbbea9",
+        "game_sha256": "f1902d01fd87c88e83332f9c0c69c510ca4e07ce3c4ae5317a2252f84b35617d",
+        "tutorial_flags": [
+          1,
+          1
+        ],
+        "next_dynamic_serial": 19
+      },
+      "inventory": {
+        "course": "build/oblivion-compat/scripted-club-drop/sanitized-club-inventory-01",
+        "source_sha256": "72abcd26e6dd95970291d94ac322a7bee84ee29b52091947f5e51d6f4dbbbea9",
+        "save_sha256": "962d1717709bdaa6528adc2a020403ed6fe82cb8031507dddbafc8ca57dd86f3",
+        "game_sha256": "f1902d01fd87c88e83332f9c0c69c510ca4e07ce3c4ae5317a2252f84b35617d",
+        "tutorial_flags": [
+          1,
+          1
+        ],
+        "next_dynamic_serial": 19
+      }
+    }
+  },
+  "checks": {
+    "engine-focused-normal-01": {
+      "path": "build/oblivion-compat/scripted-club-drop/engine-focused-normal-01/verification.json",
+      "sha256": "cabe7a33c5e5efbc113a938e54c386d9c8a9737454c2c08554224c64a8dfd91c",
+      "results": {
+        "engine": {
+          "executed": 195,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Loose*:*Book*:*Inventory*:*Pickup*:*ScriptTransfer*",
+          "binary_sha256": "ab7a36e00cdbcd19f2453be9df9964305bce62e5b10107b314fabaa68446eabf",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "88b57433447c09f403d1e79c36705b7dc7701045abe6e8933b33792ba8695758",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+        "source_fingerprint": "d0f42dcb2fdedd6e9797499d76b531b5373188da857e7eff92777bce1a3e6622"
+      }
+    },
+    "engine-focused-sanitized-01": {
+      "path": "build/oblivion-compat/scripted-club-drop/engine-focused-sanitized-01/verification.json",
+      "sha256": "0e838516f0bf4204082da39b11d56d07b5f9cdbf443af852e6edaf0a6bf80a2e",
+      "results": {
+        "engine": {
+          "executed": 195,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Loose*:*Book*:*Inventory*:*Pickup*:*ScriptTransfer*",
+          "binary_sha256": "5a5803dbc11b48409d63f978ea09c6446857e0f73d79a7b85e033f01cb3df023",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "8f231e4096dada94223c5ca6ec92e8db883f2e9a73f765990a2a4d8e8f15370f",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+        "source_fingerprint": "d0f42dcb2fdedd6e9797499d76b531b5373188da857e7eff92777bce1a3e6622"
+      }
+    },
+    "integration-normal-01": {
+      "path": "build/oblivion-compat/scripted-club-drop/integration-normal-01/verification.json",
+      "sha256": "7752666eaffc88a79ea19bb90cc1d69647ad9f582374f61f3aa271911f24612a",
+      "results": {
+        "engine": {
+          "executed": 2292,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ab7a36e00cdbcd19f2453be9df9964305bce62e5b10107b314fabaa68446eabf",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "2b2f8fb249520dd3f2a14f345d38fa5096e3c1b0d8866f0f2b94d8044a42dcc8",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 618,
+          "passed": true,
+          "log_sha256": "ee46aa8e6f8b857d49932b82cd343120386d0c922577fa7e49428c17c76de05b"
+        }
+      },
+      "source_before": {
+        "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+        "source_fingerprint": "5166b4da3fe6177d4d6d1cddb802b90f6051fce98cd9d4b7005c899355dfb6ee"
+      }
+    },
+    "python-final-01": {
+      "path": "build/oblivion-compat/scripted-club-drop/python-final-01/verification.json",
+      "sha256": "a39e9679e5a56a6d848dc14a5730a3a28b1b6ea0f4f5485888f60b666c9f589f",
+      "results": {
+        "python": {
+          "executed": 618,
+          "passed": true,
+          "log_sha256": "6b54e8f259552cad4a3dbf03813b8a13d5e39f0a24c2b222f629769a98acf3a5"
+        }
+      },
+      "source_before": {
+        "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+        "source_fingerprint": "501eac705db700cc0bdbc946078cb2a355c72636916ad3f8735168cbae81b4b5"
+      }
+    },
+    "engine-sanitized-01": {
+      "path": "build/oblivion-compat/scripted-club-drop/engine-sanitized-01/verification.json",
+      "sha256": "bda253d1a95590cee0578b6cd5b31d70b15a753b5313e6f1ca292bca2165f93e",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "5a5803dbc11b48409d63f978ea09c6446857e0f73d79a7b85e033f01cb3df023",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "349ea0535401751c89136a2ed8f6532b0f179541ab66727447361c2990ab0c83",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+        "source_fingerprint": "5166b4da3fe6177d4d6d1cddb802b90f6051fce98cd9d4b7005c899355dfb6ee"
+      }
+    },
+    "engine-sanitized-02": {
+      "path": "build/oblivion-compat/scripted-club-drop/engine-sanitized-02/verification.json",
+      "sha256": "65a630a174e4d792c080b20a70f98e5155aa98678db8dce963fd17790f290109",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "5a5803dbc11b48409d63f978ea09c6446857e0f73d79a7b85e033f01cb3df023",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "3e39afe123216873004e3f196e2ea7f84478197ad0828639be78d850ac7f55a5",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+        "source_fingerprint": "5166b4da3fe6177d4d6d1cddb802b90f6051fce98cd9d4b7005c899355dfb6ee"
+      }
+    },
+    "engine-sanitized-03": {
+      "path": "build/oblivion-compat/scripted-club-drop/engine-sanitized-03/verification.json",
+      "sha256": "5a17399740e34310f870b03458e39896a1cff0a809c15176ec5c618f807039fe",
+      "results": {
+        "engine": {
+          "executed": 82,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "5a5803dbc11b48409d63f978ea09c6446857e0f73d79a7b85e033f01cb3df023",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "206c9ff17e26831a754b7d748f2162e562b5d2e102a49a8c307f8b1f7590836e",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+        "source_fingerprint": "5166b4da3fe6177d4d6d1cddb802b90f6051fce98cd9d4b7005c899355dfb6ee"
+      }
+    },
+    "engine-sanitized-04": {
+      "path": "build/oblivion-compat/scripted-club-drop/engine-sanitized-04/verification.json",
+      "sha256": "9bcb4eb71471c9e163e83f1abef61ed48502199e7541655a44b10afbd9b583d7",
+      "results": {
+        "engine": {
+          "executed": 2046,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "5a5803dbc11b48409d63f978ea09c6446857e0f73d79a7b85e033f01cb3df023",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f58a91702f58d08e3dc5d7566a8a4dfe733d4e8b4dcde5244a759a2181a24f91",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+        "source_fingerprint": "5166b4da3fe6177d4d6d1cddb802b90f6051fce98cd9d4b7005c899355dfb6ee"
+      }
+    }
+  },
+  "sanitized_partitions": [
+    82,
+    82,
+    82,
+    2046
+  ],
+  "source_final": {
+    "head": "9448b9c5ece03dbb165422569f83d1472321462b",
+    "source_fingerprint": "501eac705db700cc0bdbc946078cb2a355c72636916ad3f8735168cbae81b4b5"
+  },
+  "post_gate_recipe_proof": {
+    "path": "build/oblivion-compat/scripted-club-drop/post-gate-sanitized-pickup-proof.json",
+    "sha256": "ccf5bc9093bac721a1869846a6cda6f4bf85545b1bc26f3f85d733d746dc305a"
+  },
+  "asset_audit": {
+    "path": "build/oblivion-compat/scripted-club-drop/asset-identity-audit.json",
+    "sha256": "2983cb7e7ffc747144c0f78c1b467511faa3fe34e4e841f3893a0f3cd717ffe1"
+  },
+  "identity_audit": {
+    "path": "build/oblivion-compat/scripted-club-drop/identity-audit.json",
+    "sha256": "5e6763dbccc3fc58e80af95112d86422b98f2d770c4bd4eb8812d40dc1259bb8"
+  },
+  "oracle": "SCRIPTED-CLUB-DROP-ORACLE.json",
+  "retained_attempts": [
+    "Initial actual native drop succeeds, but first audit erroneously compares authored Havok motion4 to saved RuntimeRagdollMotion enum. Original model motion4 remains recorded; runtime schema Dynamic=1 is explicitly mapped by oblivionragdoll.cpp capture. Corrected audit only, no engine/physics or runtime save change. Failed audit and original controller log retained.",
+    "SAN pickup01 is rejected: actual rendered native Club is visible, but eye ray remains166..171 against GMST150 after one fixed forward step; final aim-only range loop times out. No pickup/event/save. New sanitizer-only pickup02 walks .2-second ordinary steps within the actual range loop; normal accepted recipe unchanged. Sole added file reverse-fingerprint matches entire full-engine-tested source; no C++ change. Fresh Python will follow addition."
+  ],
+  "provenance": [
+    "Initial focused gates preceded the schema-motion audit correction and final inventory coordinates; C++ unchanged. Fresh full integration/Python gates precede the sole added sanitizer pickup approach recipe. Reverse fingerprint proves all prior files and C++ unchanged; fresh Python follows this addition. Actual per-course captured manifests retain input provenance. Final contract/receipt/handoff publication happens afterward.",
+    "Existing CUIRASS-DROP and CHARTER-BOOK unchanged component3301-per-mode evidence remains prior provenance, not fresh component tests. NIF/schema/compiler/VM transaction implementation unchanged.",
+    "Original authored script/source/compiled hashes, variable identities and Club member audit supply independent expectations; no new numerical rule or edited original script.",
+    "Survey is read-only normal UI, not a save continuation. Exact Club icon200,475 used for actual paperdoll equip."
+  ],
+  "limits": [
+    "Only Player singleton unenchanted stateless weapon profiles with a loaded OnAdd handler and no events beyond OnAdd/OnEquip; stateful, OnHit/OnDrop, enchanted/bound and NPC disarm profiles remain excluded",
+    "No historical OnAdd or OnEquip replay when initializing the source missing stateless owner",
+    "Original Havok motion4 is dynamic; runtime schema enum Dynamic=1 is a distinct representation, not an arithmetic/physics change",
+    "No full M15/M18 acceptance or bit-identical trajectories; separate awarded skill-book shore branch remains separate"
+  ],
+  "sanitizers": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "scope": "Observed actual instrumented binaries and libasan/libubsan, libasan before SDL shim; no leak coverage"
+  }
+}

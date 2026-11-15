@@ -759,9 +759,9 @@ namespace MWWorld
             // Other records retain singleton admission; equipment, scripts and
             // associated bound/enchantment effects retain their own policies.
             const auto base = mStore.get<Record>().findFormKey(sourceId);
-            const bool scriptedArmor = isArmor && !script().isZeroOrUnset() && base
+            const bool scriptedEquipment = (isArmor || isWeapon) && !script().isZeroOrUnset() && base
                 && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(*base);
-            if ((!script().isZeroOrUnset() && !scriptedArmor) || !enchantment().isZeroOrUnset()
+            if ((!script().isZeroOrUnset() && !scriptedEquipment) || !enchantment().isZeroOrUnset()
                 || (baseDefinition->mFlags & ESM4::Rec_Persistent)) return std::nullopt;
             if (!base || !base->isContent() || (baseDefinition->mFlags & ESM4::Rec_Deleted))
                 throw std::invalid_argument("native inventory loose item drop has no winning base");
@@ -773,7 +773,7 @@ namespace MWWorld
                 || count == 0 || count > static_cast<size_t>(sourceCount)
                 || (!isStackable && (count != 1 || sourceCount != 1))
                 || item.getCellRef().getNativeBoundSource()
-                || (!scriptedArmor && !item.getCellRef().getNativeScriptOwner().isNull())
+                || (!scriptedEquipment && !item.getCellRef().getNativeScriptOwner().isNull())
                 || item.getCellRef().getNativeItemScale() || item.getCellRef().getEnchantmentCharge() >= 0)
                 throw std::invalid_argument("native inventory loose item drop requires an ordinary supported quantity");
             auto& inventory = actor.getClass().getInventoryStore(actor);
@@ -790,7 +790,7 @@ namespace MWWorld
             const std::weak_ptr<const char> identity = mOblivionDynamicReferenceIdentity;
             const CellRef sourceBefore = item.getCellRef();
             std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer> scriptTransfer;
-            if (scriptedArmor)
+            if (scriptedEquipment)
                 scriptTransfer = mOblivionScriptManager->prepareItemScriptTransfer(*base,
                     sourceBefore.getNativeScriptOwner(), keys->key(), sourceBefore.getNativeScriptOwner().isNull());
             if constexpr (!isWeapon && !isArmor)

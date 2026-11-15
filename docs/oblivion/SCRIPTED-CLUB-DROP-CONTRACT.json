@@ -1,0 +1,39 @@
+{
+  "status": "Accepted bounded original stateless-scripted Player weapon native transfer and cold persistence",
+  "milestones": [
+    "M15 native loose weapon ownership",
+    "M18 original inventory script events and ownership"
+  ],
+  "source": {
+    "save": "build/oblivion-compat/book-whole-stack/normal-book-whole-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "0517fbe28fbe044a41e3c247253556ba1513d5c6f2fcd1e2504f4ec4d8b02a64",
+    "branch": "Main Cairn/Wellspring cave continuation; independent awarded skill-book shore branch stays separate",
+    "next_dynamic_serial": 17
+  },
+  "content": {
+    "base": "content:oblivion.esm:159829",
+    "name": "Club",
+    "script": "047ac0 CGWeaponScript",
+    "condition": 59.50004577636719,
+    "maximum_condition": 70,
+    "count": 1,
+    "weight": 8,
+    "initial_equipped_slots": 65536,
+    "initial_script_owner": null
+  },
+  "acceptance": [
+    "Ordinary drag unequips original worn Club, drops1->0 as nativeWEAP key17/count1/next18, preserves earned condition and single original Club body; no synthetic grants or inventory/stat/save edits",
+    "Preserve all unrelated inventory, Cuirass scriptowner9/MQheavyflags1/1, all27 skills/XP, health70.480003, BooksRead17/history, life/deaths/combat and earlier retired references",
+    "Drop/cold world creates or transfers one stateless script owner atkey17 without replaying OnAdd or OnEquip; MQweapon flags remain0/0",
+    "Normal pickup transfers script to inventory-script18/next19 and retires key17/body; original OnAdd sets MQweapon0->1, remains unequipped",
+    "Cold inventory then ordinary equip fires original OnEquip MQweaponEquip0->1; final fresh process retains owner18/condition/slots65536 and flags1/1 without duplicate event",
+    "Normal and actual ASan/UBSan gameplay, focused and required integration checks; retain all failed attempts and exact binary/source provenance"
+  ],
+  "boundaries": [
+    "Only original scripts with no locals and only OnAdd/OnEquip entry points, on Player singleton unenchanted weapon drops; stateful/other events, enchanted/bound and NPC disarms remain excluded",
+    "Missing historical owners may be initialized only for this proven stateless event profile, with no historical event replay",
+    "No combat formula, NIF geometry, schema or original script text alteration"
+  ],
+  "oracle": "SCRIPTED-CLUB-DROP-ORACLE.json",
+  "verification": "SCRIPTED-CLUB-DROP-VERIFICATION.json"
+}
