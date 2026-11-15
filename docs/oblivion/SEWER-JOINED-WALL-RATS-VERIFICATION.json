@@ -1,0 +1,95 @@
+{
+  "scope": "Player defeats both authored wall rats by normal power punches, crosses original broken wall and fresh-loads the real intermediate victory without state injection. Composite proof, not full continuous escape.",
+  "full_escape_complete": false,
+  "first_prefix": {
+    "raw_scenario": "build/oblivion-compat/sewer-escape/joined-wall-rats-03/scenario.json",
+    "raw_scenario_passed": false,
+    "accepted_prefix": "All actions through actual first-rat death and F5 pass. Later crossing-facing gate fails; raw failure remains unchanged. Only its genuine F5 prefix supplies the continuation.",
+    "save": "build/oblivion-compat/sewer-escape/joined-wall-rats-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "b9229a24ce113fbae58d98425dd89f4b65be688fcf21092f0c779bafb1bc8035",
+    "player_health": 68.0
+  },
+  "finish": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-wall-rats-06/scenario.json",
+    "passed": true,
+    "save": "build/oblivion-compat/sewer-escape/joined-wall-rats-06/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "837d20a13a346ef92ac447519203153fcdfba799f9fe113b796fb526c1d09033",
+    "player_health": 38.0,
+    "player_position": [
+      585.3901977539062,
+      3175.597412109375,
+      -855.2778930664062,
+      0.907031238079071,
+      0.0,
+      0.792382538318634
+    ],
+    "rat_deaths": [
+      {
+        "actor": "content:oblivion.esm:037e42",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e41",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    ],
+    "wall_rat_base_death_counts": [
+      0,
+      1,
+      2
+    ],
+    "actual_player_contacts": [
+      "[18:40:30.371 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=23 fatigue_cost=35 before=140 after=105 action=3 health_damage=3.55 fatigue_damage=4.275 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=content:oblivion.esm:037e42 victim_action=ffffffff armor_condition_writes=0 combat_random_draws=0",
+      "[18:52:14.954 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=35 fatigue_cost=35 before=140 after=105 action=3 health_damage=3.55 fatigue_damage=4.275 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=content:oblivion.esm:037e41 victim_action=ffffffff armor_condition_writes=0 combat_random_draws=0"
+    ],
+    "pending_deaths": [],
+    "physical_action_owners": [],
+    "combat_engagements": [],
+    "capture_inspected": "build/oblivion-compat/sewer-escape/joined-wall-rats-06/joined-wall-crossed.png"
+  },
+  "whole_native_runtime_entries": {
+    "joined-wall-rats-03": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/continuous-escort-continuation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "9aededc78a77c68acd482903af3354fc470fa4717c925ee3c5bc92ad9f697d6a",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "joined-wall-rats-06": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-wall-rats-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "b9229a24ce113fbae58d98425dd89f4b65be688fcf21092f0c779bafb1bc8035",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    }
+  },
+  "runtime_executable_sha256": "eb9107844c32da73276e406990fde6228f6bc0b891b28a41bde108bb317ff301",
+  "implementation": "No C++/Python engine or test-runner changes. Camera observations/read-only local arithmetic drive ordinary mouse/keyboard input; original mechanics own contacts/deaths and movement. Prior2202 normal/ASan/UBSan gates retain original fingerprints.",
+  "retained_failures": {
+    "01": "Power punches missed before camera alignment.",
+    "02": "Strict facing gate exposed insufficient correction; no attack was issued.",
+    "03": "Actual first-rat victory saved, then crossing-facing correction oscillated.",
+    "04": "World-axis aim converged and physical opening crossed, but straight movement bypassed the offset second wall rat; reach gate failed. A separate room rat attacked farther east.",
+    "05": "Corrected path approached second wall rat, but too few camera updates missed the facing threshold.",
+    "06": "Pass: repeated fresh camera samples, world-axis corrections and~0.04rad facing bounds; actual second contact/death and crossing still required."
+  },
+  "next_encounter": {
+    "actor": "content:oblivion.esm:037e40",
+    "base": "content:oblivion.esm:02509b",
+    "phase": "Alive, not part of the authored wall pair; handle during next room/loot route."
+  },
+  "new_required_gap": "Idle vanity view is serialized as third-person: first-person CAM FIRS1 at19 becomes0 at30 with no POV input, then persists through reload. Fix selected view preference before next longer gameplay course. Native T4ST exact entry alone does not cover legacy CAM metadata.",
+  "remaining": [
+    "Camera preference save fix and actual fresh idle-view reload",
+    "Normal next-room rat/loot/equipment and joined solo dungeon/shaman",
+    "Joined late story/exterior, fresh full-course outdoor reload and rendered sanitizer gameplay"
+  ]
+}

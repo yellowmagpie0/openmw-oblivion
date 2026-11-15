@@ -1,0 +1,80 @@
+{
+  "status": "Accepted bounded original novice Cairn Bolete Health restoration; broader M16 remains open",
+  "milestone": "M16 native ingredient Restore Health ingestion",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_deficit_source": {
+    "path": "build/oblivion-compat/skill-book/normal-book-repeat-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "fb073ae38596c6e476dcaf3aae4dad4fd65b394d6f4ae15e849132dd28b2613b",
+    "provenance": "SKILL-BOOK-READ-VERIFICATION.json; genuine campfire approach damage27, Health83/110, Hand36/major progress1, Alchemy5. Separate from Wine and later Alchemy branches."
+  },
+  "content": {
+    "ingredient": "06251e CairnBoleteCap",
+    "acquired_from": "099b6e, base062517, WellspringCave0352a9",
+    "script": null,
+    "owner": null,
+    "enable_parent": null,
+    "harvest_chance_each_season": 33,
+    "first_effect": {
+      "code": "REHE",
+      "authored_magnitude": 15,
+      "authored_duration": 0,
+      "range": 0,
+      "area": 0,
+      "actor_value": 8
+    },
+    "non_food_low_flags": 1,
+    "other_authored_effects": [
+      "DGAT Intelligence",
+      "RSPA",
+      "SHDG"
+    ]
+  },
+  "controlled_domain": {
+    "alchemy": 5,
+    "luck": 50,
+    "magic_resistance": 0,
+    "actor": "Living Player",
+    "canonical_effect": "REHE00188c flags0x01000870 cost10 associatedAV8 school5 resistance-1"
+  },
+  "independent_expectation": {
+    "health_per_second": 1,
+    "duration_seconds": 3,
+    "total_health": 3,
+    "original_observation_tolerance": 0.5,
+    "scope": "Original active magnitude1 and completed gain3; duration inferred from rate/total, not frame-exact timing."
+  },
+  "genuine_acquisition": {
+    "path": "build/oblivion-compat/cairn-bolete/normal-original-wellspring-interior-harvest-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "68b5b5a14815fc943db2a2f2b87b9de70ced0d03a271bd7f3df6833598c86498",
+    "health": 67.4800033569336,
+    "cap_count": 1,
+    "provenance": "Original skill-book branch campfire damage27, then two logged enemy hits7.76 each. All six failed original harvests retained; no branch merging."
+  },
+  "acceptance": [
+    "Reach and harvest an original placed plant through ordinary movement/activation; preserve failed33% harvests, do not reroll or force seeds. Generic harvesting already exists.",
+    "Retain ordinary unsupported-use baseline in the current Wine binary before changing ingestion.",
+    "Establish novice ingestion magnitude/duration independently with original executable/content; authored EFIT and Bonemeal are insufficient potency evidence.",
+    "Consume once from actual Health deficit: one item debit, first-effect healing only, nonfood secondary Alchemy XP once, no effect on unrelated complete metadata or earned skills/quest state.",
+    "Save during an active healing effect, cold load and naturally finish remaining healing; save/cold after completion adds no healing/debit/XP.",
+    "Appropriate focused normal/instrumented checks, required integration gates and genuine normal/instrumented runtime acceptance."
+  ],
+  "result": {
+    "old_binary_baseline": "Correct item remains owned, no healing or Alchemy XP.",
+    "normal_and_instrumented": "One cap debit, Alchemy XP0.5 once; partial save/cold remaining healing to70.48; completed cold load adds no healing/debit/XP.",
+    "save_schema": 101,
+    "normal_components": 3300,
+    "normal_engine": 2289,
+    "instrumented_native_components": 1121,
+    "instrumented_engine_complete_disjoint_union": 2289,
+    "python": 617
+  },
+  "oracle": "CAIRN-BOLETE-ORACLE.json",
+  "verification": "CAIRN-BOLETE-VERIFICATION.json",
+  "limits": [
+    "No general potency across all skills/Luck, brewing, later known effects, arbitrary MGEF profiles, resistance or full M16 claim.",
+    "No fork grants, stat/time/position/seed setters, edited save sources or independent-branch merging.",
+    "Original oracle console isolation, if used, is separate from genuine fork acceptance.",
+    "No general potency across skills/Luck/resistance or later effects, crafting, arbitrary MGEF profiles, broad inventory lifetime or full M16 claim.",
+    "Full-Health/dead-owner boundaries have original control and focused service/serialization evidence, not manufactured fork gameplay."
+  ]
+}

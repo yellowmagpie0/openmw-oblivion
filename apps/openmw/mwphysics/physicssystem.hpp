@@ -205,6 +205,23 @@ namespace MWPhysics
         osg::Vec3f mNormal;
     };
 
+    struct AnimatedReferenceContact
+    {
+        MWWorld::Ptr mReference, mActor;
+        std::uint32_t mBodyRecord = 0;
+        std::uint8_t mLayer = 0;
+        // A small positive manifold gap retains an existing contact, but
+        // cannot start damage before the surfaces actually touch.
+        bool mTouching = false;
+        osg::Vec3f mPoint, mIncomingVelocity;
+    };
+
+    struct AnimatedReferenceContactStep
+    {
+        float mDuration = 0;
+        std::vector<AnimatedReferenceContact> mContacts;
+    };
+
     struct LOSRequest
     {
         LOSRequest(const std::weak_ptr<Actor>& a1, const std::weak_ptr<Actor>& a2);
@@ -215,6 +232,15 @@ namespace MWPhysics
         int mAge;
     };
     bool operator==(const LOSRequest& lhs, const LOSRequest& rhs) noexcept;
+
+    // Borrowed collision targets live only through the current physics substep.
+    // Movement jobs collect intents; the serial barrier validates ownership and
+    // applies them before advancing the dynamic world.
+    struct CharacterBodyPush
+    {
+        const btCollisionObject* mBody;
+        osg::Vec3f mPoint, mNormal, mVelocity;
+    };
 
     struct ActorFrameData
     {
@@ -231,6 +257,7 @@ namespace MWPhysics
         const float mSlowFall;
         osg::Vec2f mRotation;
         osg::Vec3f mMovement;
+        std::vector<CharacterBodyPush> mBodyPushes;
         std::optional<ESM4::TimedKnockbackState> mNativeKnockback;
         std::optional<ESM4::TimedKnockbackState> mInitialNativeKnockback;
         osg::Vec3f mLastStuckPosition;
@@ -262,6 +289,7 @@ namespace MWPhysics
         WorldFrameData(bool isInStorm, const osg::Vec3f& stormDirection);
         bool mIsInStorm;
         osg::Vec3f mStormDirection;
+        bool mNativeCharacterPushes = false;
     };
 
     template <class Ptr, class FrameData>
@@ -362,6 +390,7 @@ namespace MWPhysics
         // one-body model. Read-only; waits for the prior physical frame.
         // Requires the native length scale, independently of actor ragdolls.
         osg::Matrixf captureLooseObjectRootPose(const MWWorld::Ptr& ptr);
+        std::vector<NifBullet::RagdollBoneWorldPose> captureLooseObjectWorldBones(const MWWorld::Ptr& ptr);
         // Prepare one native root scene traversal without advancing its local
         // state. Commit only after validating the complete World frame.
         NifBullet::RagdollBonePoseWriteback captureLooseObjectRootFrame(
@@ -385,6 +414,7 @@ namespace MWPhysics
             const ESM::FormKey& base = {}, std::string_view model = {});
         bool hasAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
         std::vector<MWWorld::Ptr> animatedReferenceOwners();
+        std::vector<AnimatedReferenceContactStep> takeAnimatedReferenceContacts();
         std::vector<NifBullet::RagdollBodyState> captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
         ESM4::RuntimeActorRagdoll captureAnimatedReferenceSnapshot(
             const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);

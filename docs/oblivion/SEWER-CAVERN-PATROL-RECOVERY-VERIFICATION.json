@@ -1,0 +1,187 @@
+{
+  "passed": true,
+  "scope": "Actual loaded original40\u201345 potion/patrol/reinforcement/eastern/full-recovery course; not uninterrupted full sewer escape acceptance",
+  "course": "build/oblivion-compat/sewer-escape/reinforcement-healing-07",
+  "game_pid": 282339,
+  "runtime_sha256": "eddf9a70e18fdb54b1706ded01b53dc8ba119ca433a4205527d2b4684774177d",
+  "entry": {
+    "passed": true,
+    "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-after-logs-01/retained-saves/3-0005-Quicksave.omwsave",
+    "source_save_sha256": "3da39fdae20801d225f4685aa7baa1fed990402376547c25efc32f56ce4fa486",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": [
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/0",
+        -0.0015301189851015806,
+        -0.0015301191015169024
+      ],
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/1",
+        -0.001823942642658949,
+        -0.0018239427590742707
+      ],
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/2",
+        -0.0004863087960984558,
+        -0.00048630882520228624
+      ]
+    ]
+  },
+  "all_ordinary_input_bytes_delivered": true,
+  "all_saves_archived_with_receipt_hashes": true,
+  "saves": [
+    {
+      "sequence": 3,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0003-Quicksave.omwsave",
+      "save_sha256": "cd045a0d685f9312cca08fb8c53c0d1bf87ca2df85e192fc8c811d5c824231e7",
+      "native_sha256": "f9e7ab35d735f2e7ce2828ccb6905dc8f985b5e09929e53e6854824189e59e07",
+      "health": 80,
+      "magicka": 73.59465026855469,
+      "parsed_save_equals_native_snapshot": true
+    },
+    {
+      "sequence": 4,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0004-Quicksave.omwsave",
+      "save_sha256": "2c341ad535f18fb2c37c75ce7266a0f9df22fb31debaca6ee0f9b22c5e08d33b",
+      "native_sha256": "7069594aa22844e1eab77e840499aee094ea6933d6518286c90b950bb91cc436",
+      "health": 80,
+      "magicka": 80
+    },
+    {
+      "sequence": 5,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0005-Quicksave.omwsave",
+      "save_sha256": "b97e183070bce1cad432bcfc6f1b69d245a89768ef09afea50abc1be7efa7b16",
+      "native_sha256": "c4d2b7c2588d9824c132cc3e03fd4c4eb6fcdea1b41593f043c08cae3cb6ad35",
+      "health": 65.5999984741211,
+      "magicka": 80,
+      "parsed_save_equals_native_snapshot": true
+    },
+    {
+      "sequence": 6,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0006-Quicksave.omwsave",
+      "save_sha256": "97a1df497346cb102cc9430b65fa88c1545d1d43d2ea452c14abccf036ff366a",
+      "native_sha256": "5f79075afc0bdd9ca2bf3e515316d0976776a583263db34f7f34fa8801d9cd87",
+      "health": 65.5999984741211,
+      "magicka": 80
+    },
+    {
+      "sequence": 7,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0007-Quicksave.omwsave",
+      "save_sha256": "51d9988a1681c918b03aac6df6748c6a15df680dde47af5313d5f4b0a3cd076c",
+      "native_sha256": "f778c7864ca47c5dc4e24ffd6bbe7bda9a60fe22c68c9888976e34b615d8fc84",
+      "health": 45.43999481201172,
+      "magicka": 80,
+      "parsed_save_equals_native_snapshot": true
+    },
+    {
+      "sequence": 8,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0008-Quicksave.omwsave",
+      "save_sha256": "09787bf95dea0a7630b540fb392022ac993263a36cd787559b03175afd0f63a6",
+      "native_sha256": "ebc37e3a72f912f2a06550c23a8f8c5fff5f36518fcd3a83740ad4d157b40f67",
+      "health": 59.19999313354492,
+      "magicka": 6.968666076660156
+    },
+    {
+      "sequence": 9,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0009-Quicksave.omwsave",
+      "save_sha256": "4f3642ca96167e40e3c2fc0542b079f80f13ec8349c56b3b779c60e9ccc0733e",
+      "native_sha256": "9cd8f24d2f7ff9311f3928edfc49c4dcc11db67497eeb2085cba0bdb935eb320",
+      "health": 33.21998596191406,
+      "magicka": 30.262367248535156,
+      "parsed_save_equals_native_snapshot": true
+    },
+    {
+      "sequence": 10,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0010-Quicksave.omwsave",
+      "save_sha256": "d64319d82d4742eddf956a31cc2e16194064ed81b7dffa9503e39597c765e35a",
+      "native_sha256": "f87d1c46b383d06bb8abae7c2285bf383a7defb8f8cbcce0b27798d8e7d71b11",
+      "health": 33.21998596191406,
+      "magicka": 80
+    },
+    {
+      "sequence": 11,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-healing-07/retained-saves/3-0011-Quicksave.omwsave",
+      "save_sha256": "d8a2a0c69161ddb18cbc3aa949fbb1cd39e53b91df5d3a360f1b46d3d421dca5",
+      "native_sha256": "41246be1bd3d5e112ee4ecb2a36318c83acab471f82dbeba2a362d068b13d824",
+      "health": 80,
+      "magicka": 80,
+      "parsed_save_equals_native_snapshot": true
+    }
+  ],
+  "first_native_Player_kill_save_indices": {
+    "03b543": 2,
+    "03b541": 4,
+    "03b52f": 6
+  },
+  "final_health": 80,
+  "final_magicka": 80,
+  "three_health_and_two_remaining_supply_potions_consumed": true,
+  "final_queues_clear": true,
+  "native_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 282339,
+    "sequence": 12,
+    "tick": 4734,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 11,
+    "pending_count": 0,
+    "unsupported_count": 0
+  },
+  "source_manifests": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_healing_potions.json",
+      "sha256": "ad064e894da326cf40cc575e7ba2164f75dedde7f46164f587bbc4162267262e",
+      "selected_actions": 20
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_northern_patrol.json",
+      "sha256": "9ee27f72b01cc1d245e22f027b2861d09d8e3a82052c3f5a4aa7ab6438886ea1",
+      "selected_actions": 219
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_reinforcement.json",
+      "sha256": "033a02df3032148bcdf758d8c9b1d2331d7dcc6135014991eebdd17a9fa532a2",
+      "selected_actions": 83
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_reinforcement_recovery.json",
+      "sha256": "60619ed5a72314d1c9d7860967fe8dcbafb7148a5c162daa3777210457d8bb6b",
+      "selected_actions": 17
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_engaged_eastern.json",
+      "sha256": "6de9b4b44aec76531a4afd4d4d42c3533f600e6f43d0e5960a6c746967679d63",
+      "selected_actions": 8
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_sewer_joined_cavern_full_recovery.json",
+      "sha256": "c4c45e29cf4c04216220cdfc86a198a577a27d0233a97486697e3449b7f26c4c",
+      "selected_actions": 69
+    }
+  ],
+  "full_course_compile": {
+    "segments": 67,
+    "actions": 11111,
+    "LuaJIT_passed": true,
+    "assembly": "build/oblivion-compat/sewer-escape/reinforcement-full-assembly-07"
+  },
+  "focused_python": {
+    "cases": 18,
+    "passed": true,
+    "log": "build/oblivion-compat/sewer-escape/reinforcement-healing-python-focused-07.log"
+  },
+  "unchanged_engine_gates": "SEWER-ENVIRONMENTAL-FIRE-VERIFICATION.json; original normal/sanitizer fingerprints reused, not rerun for data-only input/observer changes",
+  "failed_attempts_retained": [
+    "remaining-after-logs-01",
+    "reinforcement-healing-01",
+    "reinforcement-healing-02",
+    "reinforcement-healing-03",
+    "reinforcement-healing-04 (invalid fixture, explicit stop; see fixture-failure.json)",
+    "reinforcement-healing-05",
+    "reinforcement-healing-06"
+  ],
+  "rendered_inspection": "Actual original40 restored-All capture and final original45 full-recovery capture inspected: All category, axe/HUD, full bars and defeated goblin visible. Upright corpses and prior-clothing paperdoll remain known presentation gaps."
+}

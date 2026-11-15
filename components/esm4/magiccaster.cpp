@@ -1,11 +1,160 @@
 #include "magiccaster.hpp"
+#include <components/esm/defs.hpp>
+#include <algorithm>
 #include <bit>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
+#include <set>
+#include <utility>
 namespace ESM4
 {
+    void PowerUseState::validate() const
+    {
+        if (!mSpell.isContent() || ESM::FormKey::deserialize(mSpell.serialize()) != mSpell
+            || !std::isfinite(mUsedAt) || mUsedAt < 0)
+            throw std::invalid_argument("invalid native greater-power use history");
+    }
+
+    bool PowerUseState::available(double gameHours) const
+    {
+        validate();
+        if (!std::isfinite(gameHours) || gameHours < 0)
+            throw std::invalid_argument("invalid native greater-power clock");
+        return gameHours - mUsedAt >= 24.;
+    }
+
+    void MagicProjectileState::validate() const
+    {
+        if (mCaster.isNull() || !mSource.isContent() || !mCell.isContent()
+            || ESM::FormKey::deserialize(mCaster.serialize()) != mCaster
+            || ESM::FormKey::deserialize(mSource.serialize()) != mSource
+            || ESM::FormKey::deserialize(mCell.serialize()) != mCell
+            || mModel.empty() || mModel.find('\0') != std::string::npos)
+            throw std::invalid_argument("invalid native magic projectile identity or model");
+        if (mEffectCode != ESM::fourCC("SHDG") && mEffectCode != ESM::fourCC("FIDG")
+            && mEffectCode != ESM::fourCC("CHRM"))
+            throw std::invalid_argument("unsupported native projectile effect");
+        for (float value : mPosition)
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite magic projectile position");
+        double speedSquared = 0;
+        for (float value : mVelocity)
+        {
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite magic projectile velocity");
+            speedSquared += double(value) * value;
+        }
+        if (speedSquared <= 0 || !std::isfinite(mMagnitude) || mMagnitude < 0
+            || !std::isfinite(mDistance) || !std::isfinite(mMaximumDistance)
+            || mDistance < 0 || mMaximumDistance <= 0 || mDistance > mMaximumDistance)
+            throw std::invalid_argument("invalid native magic projectile magnitude or flight range");
+    }
+
+    MagicProjectileState advanceMagicProjectile(const MagicProjectileState& state, float duration)
+    {
+        state.validate();
+        if (!std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid magic projectile frame duration");
+        const double speed = std::hypot(double(state.mVelocity[0]), double(state.mVelocity[1]), double(state.mVelocity[2]));
+        const double distance = std::min(double(state.mMaximumDistance) - state.mDistance, speed * duration);
+        auto next = state;
+        for (std::size_t i = 0; i < 3; ++i)
+            next.mPosition[i] = static_cast<float>(state.mPosition[i] + state.mVelocity[i] * (distance / speed));
+        next.mDistance = static_cast<float>(state.mDistance + distance);
+        next.validate();
+        return next;
+    }
+
+    void SpellCastState::validate() const
+    {
+        if (!mSpell.isContent() || mSpell != ESM::FormKey::deserialize(mSpell.serialize()) || mAnimationGroup.empty()
+            || mAnimationGroup.find('\0') != std::string::npos)
+            throw std::invalid_argument("native cast requires a content spell and animation group");
+        for (float value : {mCost, mElapsed, mReleaseTime, mDuration})
+            if (!std::isfinite(value) || value < 0)
+                throw std::invalid_argument("native cast timing and cost must be finite and nonnegative");
+        if (mReleaseTime <= 0 || mReleaseTime >= mDuration || mElapsed > mDuration
+            || mReleased != (mElapsed >= mReleaseTime))
+            throw std::invalid_argument("inconsistent native cast release ownership");
+    }
+
+    bool advanceSpellCast(SpellCastState& state, float duration)
+    {
+        state.validate();
+        if (!std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native cast frame duration");
+        const float elapsed = static_cast<float>(std::min(double(state.mDuration), double(state.mElapsed) + duration));
+        const bool release = !state.mReleased && elapsed >= state.mReleaseTime;
+        state.mElapsed = elapsed;
+        state.mReleased = state.mReleased || release;
+        return release;
+    }
+
+    ScrollChameleonStep advanceScrollChameleon(float elapsed, float duration)
+    {
+        if (!std::isfinite(elapsed) || elapsed < 0 || elapsed >= ScrollChameleonDuration
+            || !std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native Chameleon lifetime");
+        const float next = static_cast<float>(std::min(double(ScrollChameleonDuration), double(elapsed) + duration));
+        return {next, next >= ScrollChameleonDuration};
+    }
+
+    void ScrollChameleonState::validate() const
+    {
+        if (!mScroll.isContent() || !mEnchantment.isContent()
+            || ESM::FormKey::deserialize(mScroll.serialize()) != mScroll
+            || ESM::FormKey::deserialize(mEnchantment.serialize()) != mEnchantment
+            || mMagnitude != ScrollChameleonMagnitude)
+            throw std::invalid_argument("invalid native Chameleon source or resolved magnitude");
+        advanceScrollChameleon(mElapsed, 0.f);
+    }
+
+    float applyScrollChameleon(std::vector<ScrollChameleonState>& effects, ScrollChameleonState application)
+    {
+        application.validate();
+        if (application.mElapsed != 0)
+            throw std::invalid_argument("new Chameleon application must start at zero");
+        std::set<ESM::FormKey> sources;
+        for (const auto& effect : effects)
+        {
+            effect.validate();
+            if (!sources.insert(effect.mEnchantment).second)
+                throw std::invalid_argument("duplicate Chameleon application source");
+        }
+        auto next = effects;
+        const auto previous = std::find_if(next.begin(), next.end(),
+            [&](const auto& effect) { return effect.mEnchantment == application.mEnchantment; });
+        const float delta = application.mMagnitude - (previous == next.end() ? 0.f : previous->mMagnitude);
+        if (previous != next.end()) next.erase(previous);
+        next.push_back(std::move(application));
+        effects.swap(next);
+        return delta;
+    }
+
     namespace
     {
+        void validateSpellCostSettings(const SpellCostSettings& settings)
+        {
+            for (float value : {settings.mAreaMultiplier, settings.mDurationMultiplier,
+                     settings.mMagnitudeExponent, settings.mTargetMultiplier, settings.mSkillBase,
+                     settings.mSkillMultiplier, settings.mLuckMultiplier})
+                if (!std::isfinite(value) || value < 0)
+                    throw std::invalid_argument("invalid native spell cost setting");
+        }
+
+        double spellCostSkillFactor(std::int32_t skill, std::int32_t luck, const SpellCostSettings& settings)
+        {
+            const double adjusted = std::clamp(double(skill) + double(luck) * settings.mLuckMultiplier
+                    + settings.mLuckBase, 0., 100.);
+            return settings.mSkillBase + (1. - adjusted / 100.) * settings.mSkillMultiplier;
+        }
+
+        float checkedSpellCost(double cost)
+        {
+            if (!std::isfinite(cost) || cost < 0 || cost > std::numeric_limits<float>::max())
+                throw std::invalid_argument("native spell cost overflow");
+            return static_cast<float>(cost);
+        }
+
         float integerRatio24(std::int32_t numerator, std::int32_t denominator)
         {
             const bool negative = (numerator < 0) != (denominator < 0);
@@ -64,6 +213,35 @@ namespace ESM4
             const double mantissa = lower + (fraction > .5 || (fraction == .5 && static_cast<std::uint32_t>(lower) % 2));
             return std::copysign(std::ldexp(mantissa, exponent - 24), value);
         }
+    }
+
+    float spellEffectMagickaCost(const SpellEffectCostInput& effect, std::int32_t skill,
+        std::int32_t luck, const SpellCostSettings& settings)
+    {
+        validateSpellCostSettings(settings);
+        if (!std::isfinite(effect.mBaseCost) || effect.mBaseCost < 0)
+            throw std::invalid_argument("invalid native effect base cost");
+        for (auto value : {effect.mMagnitude, effect.mDuration, effect.mArea})
+            if (value > std::uint32_t(std::numeric_limits<std::int32_t>::max()))
+                throw std::invalid_argument("unrepresentable native spell cost input");
+        const double area = std::max(1., double(effect.mArea) * settings.mAreaMultiplier);
+        const double magnitude = std::pow(double(std::max(1u, effect.mMagnitude)), settings.mMagnitudeExponent);
+        const double base = effect.mBaseCost * double(settings.mDurationMultiplier)
+            * std::max(1u, effect.mDuration) * area * magnitude
+            * (effect.mTarget ? settings.mTargetMultiplier : 1.f);
+        const float cost = checkedSpellCost(base * spellCostSkillFactor(skill, luck, settings));
+        // Original 413890 floors each calculated effect and applies a minimum
+        // of one. Gameplay arithmetic uses ordinary floating point here.
+        return std::max(1.f, std::floor(cost));
+    }
+
+    float manualSpellMagickaCost(std::uint32_t cost, std::int32_t skill,
+        std::int32_t luck, const SpellCostSettings& settings)
+    {
+        validateSpellCostSettings(settings);
+        if (cost > std::uint32_t(std::numeric_limits<std::int32_t>::max()))
+            throw std::invalid_argument("unrepresentable native manual spell cost");
+        return checkedSpellCost(cost * spellCostSkillFactor(skill, luck, settings));
     }
 
     void validateCombatSpellPowerSettings(const CombatSpellPowerSettings& settings)

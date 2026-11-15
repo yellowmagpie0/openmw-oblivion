@@ -1,0 +1,93 @@
+{
+  "passed": true,
+  "scope": "Genuine healed continuation, explicit ordinary R first-person selection, original room rat defeated by one actual Player power-punch contact without losing health. Full escape remains incomplete.",
+  "full_escape_complete": false,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-room-rat-02/scenario.json",
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-post-wall-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "7054e28c46c21447a6079c2c7bffabac30b9e91426f03d05b2ab6b61d6d523ba",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": [
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/0",
+        0.015589713118970394,
+        0.015589714050292969
+      ],
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/1",
+        0.10279630124568939,
+        0.1027962937951088
+      ],
+      [
+        "/native_animated_references/0/bodies/5/linear_velocity/2",
+        -0.027358833700418472,
+        -0.02735883556306362
+      ],
+      [
+        "/native_animated_references/0/bodies/6/linear_velocity/0",
+        -0.011679112911224365,
+        -0.01167911384254694
+      ],
+      [
+        "/native_animated_references/0/bodies/6/linear_velocity/2",
+        0.001875796471722424,
+        0.0018757963553071022
+      ],
+      [
+        "/native_animated_references/0/bodies/9/linear_velocity/1",
+        -0.07590168714523315,
+        -0.07590167969465256
+      ],
+      [
+        "/native_animated_references/0/bodies/9/linear_velocity/2",
+        -0.0558563657104969,
+        -0.0558563694357872
+      ],
+      [
+        "/native_animated_references/0/bodies/10/linear_velocity/1",
+        0.013244325295090675,
+        0.01324432622641325
+      ],
+      [
+        "/native_animated_references/0/bodies/10/linear_velocity/2",
+        -0.001573573681525886,
+        -0.0015735735651105642
+      ],
+      [
+        "/native_animated_references/0/bodies/12/linear_velocity/1",
+        0.007019456475973129,
+        0.007019456941634417
+      ]
+    ]
+  },
+  "save": "build/oblivion-compat/sewer-escape/joined-room-rat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "save_sha256": "eaf6a703a8e211bb97f64936789552ffafc1e627cd9976b00e793446b6115339",
+  "player_health": 62,
+  "player_position": [
+    1663.147705078125,
+    2739.201416015625,
+    -835.2595825195312,
+    0.03554682061076164,
+    0.0,
+    1.7658199071884155
+  ],
+  "life": {
+    "actor": "content:oblivion.esm:037e40",
+    "base": "content:oblivion.esm:02509b",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "dynamic:player:0000000000000001"
+  },
+  "actual_hit": "[19:24:43.473 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=39 fatigue_cost=35 before=140 after=105 action=3 health_damage=3.55 fatigue_damage=4.275 block_fraction=0 block_fatigue=0 weapon_condition_write=-1 victim=content:oblivion.esm:037e40 victim_action=ffffffff armor_condition_writes=0 combat_random_draws=0",
+  "legacy_cam_firs": true,
+  "pending_deaths": [],
+  "combat_engagements": [],
+  "physical_action_owners": [],
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "capture_inspected": "build/oblivion-compat/sewer-escape/joined-room-rat-02/joined-room-rat-victory.png",
+  "retained_failure": "joined-room-rat-01 fails before mouse movement on an overescaped observation pattern; no engine error or progression substitution. Corrected02 passes.",
+  "reused_checks": "2203 normal engine cases at camera-fix fingerprint; no implementation change or repeated broad gate. Current sanitizer/rendered integration remains due.",
+  "next": "Joined key corpse loot, Club equipment and original keyed transition."
+}

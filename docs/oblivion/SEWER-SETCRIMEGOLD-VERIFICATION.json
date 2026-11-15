@@ -1,0 +1,205 @@
+{
+  "scope": "Native SetCrimeGold command, original67 exit review/physical door and own outdoor reload from a genuine checkpoint; not full escape acceptance",
+  "passed": true,
+  "implementation": "Use legal queried bounty to calculate requested-minus-current float delta; route to owned normal or Player alternate bucket and publish existing actor views. Preserve AV37 modifiers; no new save schema or crime alarm.",
+  "focused_engine": {
+    "results": {
+      "engine": {
+        "executed": 4,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionDialogueMenu.ScriptSetCrimeGold*:OblivionDialogueMenu.CrimeGoldQueries*:OblivionOwnership.*",
+        "binary_sha256": "d6e6c3504263b7cb4e3d5345e5f9fe0bd181f60e7503c6380097bc49334e12d3",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "2947021ff86c14c974034f93abc10097664b585c8534ab55a74b0bf41edc7eac",
+        "inventory_sha256": "0ff00bd25d9c1e56a120d14b7c1886857e3ccbaab1fe8909d7cf4705432c501d",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "source": {
+      "head": "8e2e8a80a3d17555e8464ca79ad857a863d2fce5",
+      "source_fingerprint": "5555b24d0de341691b0dbb143a18915303a60c94a51d61be5e45ec7954822069"
+    },
+    "path": "build/oblivion-compat/sewer-escape/story-crimegold-focused-04"
+  },
+  "original_instruction_oracle": "SEWER-SETCRIMEGOLD-ORACLE.json",
+  "runtime": {
+    "openmw_sha256": "4be4ec657da6735518198b97a0888a91fceecef8bf1b046f30ba6903e91d6558",
+    "resources_version": "0.52.0\n8e2e8a80a3d17555e8464ca79ad857a863d2fce5\n\n",
+    "implementation": "SetOwnership and SetCrimeGold; same production source as focused02 runtime build, focused03 fixture correction only",
+    "libraries": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib"
+  },
+  "runs": {
+    "story-crimegold-exit-02": {
+      "passed": true,
+      "scope": "Focused original exit script and actual outdoor save; not full escape acceptance",
+      "course": "story-crimegold-exit-02",
+      "actions": 76,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 324358,
+        "sequence": 5,
+        "tick": 779,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 4,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "all_input_delivered": true,
+      "no_observer_findings": true,
+      "saves": [
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-crimegold-exit-02/retained-saves/3-0003-Quicksave.omwsave",
+          "sequence": 3,
+          "sha256": "ebfca6988ff2204538bf6094efdf3e43867bfe41f98453689a59ea9bedf4ddc2",
+          "native_save_exact": true
+        },
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-crimegold-exit-02/retained-saves/3-0004-Quicksave.omwsave",
+          "sequence": 4,
+          "sha256": "a468527df559c5d7d490c07a0146df7d6909232e3bc6bd9e7974642f88e10ff8",
+          "native_save_exact": true
+        }
+      ],
+      "cell": "content:oblivion.esm:005e3d",
+      "health": 35.13861846923828,
+      "bounty": {
+        "normal": 0.0,
+        "shivering_isles": 0.0,
+        "player_in_shivering_isles": false
+      },
+      "MQ01": {
+        "quest": "content:oblivion.esm:01e723",
+        "stage": 88,
+        "running": true,
+        "completed_stages": [
+          5,
+          10,
+          15,
+          18,
+          20,
+          24,
+          28,
+          34,
+          52,
+          72,
+          73,
+          74,
+          76,
+          80,
+          88
+        ]
+      },
+      "setcrimegold_commands": 1,
+      "original_exit_door_teleports": 1,
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/final-three-02/retained-saves/3-0005-Quicksave.omwsave",
+        "source_save_sha256": "a9adaa613e2b222e54037e3ee487a66f06ad73ba4b2d783d1cbf74c66ef3baf7",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    },
+    "story-crimegold-outdoor-reload-01": {
+      "passed": true,
+      "scope": "Focused original exit script and actual outdoor save; not full escape acceptance",
+      "course": "story-crimegold-outdoor-reload-01",
+      "actions": 5,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 324564,
+        "sequence": 4,
+        "tick": 57,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "all_input_delivered": true,
+      "no_observer_findings": true,
+      "saves": [
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-crimegold-outdoor-reload-01/retained-saves/3-0003-Quicksave.omwsave",
+          "sequence": 3,
+          "sha256": "4a75635612fb23fd23d8503a5ee3d12cada74ab734bd2612a7cd8e5937c829b2",
+          "native_save_exact": true
+        }
+      ],
+      "cell": "content:oblivion.esm:005e3d",
+      "health": 35.13861846923828,
+      "bounty": {
+        "normal": 0.0,
+        "shivering_isles": 0.0,
+        "player_in_shivering_isles": false
+      },
+      "MQ01": {
+        "quest": "content:oblivion.esm:01e723",
+        "stage": 100,
+        "running": false,
+        "completed_stages": [
+          5,
+          10,
+          15,
+          18,
+          20,
+          24,
+          28,
+          34,
+          52,
+          72,
+          73,
+          74,
+          76,
+          80,
+          88,
+          90,
+          100
+        ]
+      },
+      "setcrimegold_commands": 0,
+      "original_exit_door_teleports": 0,
+      "entry_restore": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/story-crimegold-exit-02/retained-saves/3-0004-Quicksave.omwsave",
+        "source_save_sha256": "a468527df559c5d7d490c07a0146df7d6909232e3bc6bd9e7974642f88e10ff8",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    }
+  },
+  "python_assembly_repeat": {
+    "passed": true,
+    "executed": 18
+  },
+  "controller_recipe": "Explicit established SDL hat mapping added to editable original67 exit source. Full course already inherits the same mapping from its opening.",
+  "retained_failures": {
+    "story-crimegold-focused-01": "Missing actor-stats declaration include; compilation failed.",
+    "story-crimegold-focused-02": "Fixture incorrectly assigned Player alternate bounty to an NPC; native validation rejected it.",
+    "story-crimegold-focused-03": "Fixture actor was in unsaveable draft cell; whole-world capture rejected it. Corrected to managed native cell.",
+    "story-crimegold-exit-01": "Focused recipe omitted established controller hat mapping; input receipt timeout, no exit acceptance. Runtime terminated before corrected02 launch.",
+    "first_reload_audit": "Temporary focused auditor assumed final MQ01 must remain88. Actual entry restored88 exactly, then original timer legitimately completed90/100. Corrected after independently auditing winning script0297ad and stage results."
+  },
+  "outdoor_quest_completion": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "quest": "content:oblivion.esm:01e723",
+    "script": "content:oblivion.esm:0297ad",
+    "rule": "Stage88 sets timer5 and local requested stage90; gamemode timer dispatches requested stage; original90 requests100, original100 stops MQ01 and CharacterGen. Retain completed88 on both saves.",
+    "raw_evidence": "build/oblivion-compat/sewer-escape/original-mq01-outdoor-completion.json"
+  },
+  "rendered_review": "Original exit review and actual outdoor capture inspected. Player alive; terrain/water/lighting remain visibly rough. No exterior rendering completion claim.",
+  "integration_gates": "Broad normal/component/Python and sanitizer checks remain pending; batch with shared faction-rank implementation.",
+  "full_escape_complete": false
+}

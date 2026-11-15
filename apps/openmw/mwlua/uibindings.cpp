@@ -17,6 +17,7 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwgui/windowbase.hpp"
 
 namespace sol
 {
@@ -324,6 +325,13 @@ namespace MWLua
               };
         api["_isWindowVisible"]
             = [windowManager](std::string_view window) { return windowManager->isWindowVisible(window); };
+        // Controller pages remain visible off-screen when another page is active.
+        api["_getActiveControllerWindow"] = [windowManager]() -> sol::optional<std::string_view> {
+            const auto* window = windowManager->getActiveControllerWindow();
+            if (window && !window->getWindowIdForLua().empty())
+                return window->getWindowIdForLua();
+            return sol::nullopt;
+        };
 
         // TODO
         // api["_showMouseCursor"] = [](bool) {};

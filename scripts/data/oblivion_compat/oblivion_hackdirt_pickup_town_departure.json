@@ -1,0 +1,791 @@
+{
+  "schema_version": 1,
+  "name": "Accepted MS45 stage10: normal Chorrol gate departure",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\nat 0 command dynamic:player:0000000000000001 GetInCell content:oblivion.esm:024802\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal points={{{{-66717.390625, 92723.578125, 14298.0}}, {{-66442.03125, 92596.015625, 14198.0}}, {{-66193.796875, 92548.71875, 14184.0}}, {{-65845.8984375, 92421.2890625, 14204.0}}, {{-65307.5625, 92539.8125, 14184.0}}, {{-65003.28125, 92568.03125, 14184.0}}, {{-64752.3125, 92300.265625, 14184.0}}, {{-64731.38671875, 92111.96875, 14184.0}}, {{-64640, 91990, 14184}}}}\nlocal index=1\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.05 then return end;timer=0\n print('TownGate tamriel='..tostring(self.cell.worldSpaceId==core.getFormId('Oblivion.esm',0x3c))..' cell='..self.cell.name..' world='..tostring(self.cell.worldSpaceId))\n local target\n if index<=9 then\n  local p=points[index];target=util.vector3(p[1],p[2],p[3])\n  local d=target-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<25 then print('TownGate reached='..index);index=index+1;return end\n else\n  local door=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x2d89))\n  if not door or not door:isValid() then return end\n  target=door.position+util.vector3(0,0,30)\n end\n local d=target-self.position;local f=self.rotation:apply(util.vector3(0,1,0))\n local angle=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n local pitch=camera.getPitch()\n if index>9 then local v=target-camera.getPosition();pitch=-math.atan2(v.z,math.sqrt(v.x*v.x+v.y*v.y)) end\n if math.abs(angle)<0.015 and (index<=9 or math.abs(pitch-camera.getPitch())<0.02) then print('TownGate ready='..index) end\n print(string.format('TownGate aim x=%d y=%d step=%d pos=%.2f,%.2f,%.2f distance=%.2f',math.max(-200,math.min(200,math.floor(angle*512+.5))),math.max(-150,math.min(150,math.floor((pitch-camera.getPitch())*512+.5))),index,self.position.x,self.position.y,self.position.z,math.sqrt(d.x*d.x+d.y*d.y)))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "TownGate aim x=",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=1(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=1(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=2(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=2(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=3(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=3(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=4(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=4(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "screenshot",
+      "name": "town-route-4.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=5(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=5(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=6(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=6(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "screenshot",
+      "name": "town-route-6.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=7(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=7(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=8(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=8(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "screenshot",
+      "name": "town-route-8.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=9(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate reached=9(?:\\s|$)",
+      "maximum_iterations": 600,
+      "timeout_seconds": 300,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.2
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "screenshot",
+      "name": "town-route-9.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "TownGate ready=10(?:\\s|$)",
+      "maximum_iterations": 40,
+      "timeout_seconds": 90,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "TownGate aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-town-gate-aimed.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "TownGate tamriel=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "original-town-gate-exited.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1800,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "TownGate reached=9",
+    "TownGate tamriel=true"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "conversation-player ref=content:oblivion.esm:0280fa",
+    "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c",
+    "Native dialogue menu:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt"
+  },
+  "sdl_xvfb_input": true,
+  "sdl_input_timeout_seconds": 60
+}

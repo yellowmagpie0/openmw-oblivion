@@ -8,6 +8,7 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
 
 #include "../mwworld/actionrepair.hpp"
 #include "../mwworld/cellstore.hpp"
@@ -105,6 +106,13 @@ namespace MWClass
         std::string_view name = getName(ptr);
         info.caption = MyGUI::TextIterator::toTagsString(MyGUI::UString(name)) + MWGui::ToolTips::getCountString(count);
         info.icon = ref->mBase->mIcon.getOriginal();
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            info.text = MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, "#{Interface:Weight}")
+                + MWGui::ToolTips::getValueString(ref->mBase->mData.mValue, "#{Interface:Value}");
+            return info;
+        }
 
         std::string text;
 

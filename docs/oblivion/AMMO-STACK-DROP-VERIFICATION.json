@@ -1,0 +1,561 @@
+{
+  "status": "Accepted bounded original24 Iron Arrow stack drop, cold world, ordinary pickup and cold inventory in normal and instrumented games. Broader M18/M15 remain open.",
+  "parent_commit": "fdb589d996773776a4477cf557ced1c9f26d38bf",
+  "contract": "docs/oblivion/AMMO-STACK-DROP-CONTRACT.json",
+  "oracle_reused": "docs/oblivion/IRON-ARROW-DROP-ORACLE.json",
+  "schema": 103,
+  "behavior": {
+    "quantity": "24 inventory ->0 plus one native world reference count24 ->24 inventory plus retired count0 reference. Native key4/allocator5; earlier key3 remains retired.",
+    "physics": "Existing original two-body locked-prismatic quiver/model, saved full histories and prior solver tolerances; no physics/solver/mass-rule change.",
+    "ownership": "Positive requested quantity bounded by selected source count before signed conversion; exact prepared removal and reference count publish together. Non-AMMO admissions retain singleton restriction. Unequipped ordinary AMMO only."
+  },
+  "layers": {
+    "structural": "Typed AMMO admission retains requested count with one cell/registry/model/body/Lua owner.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/ammo-stack-drop/integration-normal-01/verification.json",
+        "sha256": "0c0b6320b490160bc9aa26d63cbfbe5175fc095a600fc8f0431005f7965dd0fa",
+        "source": {
+          "head": "fdb589d996773776a4477cf557ced1c9f26d38bf",
+          "source_fingerprint": "6be80c0b5fb3062035c02b8964206c50c369968fab9d03f93ee2e3c1bae973df"
+        },
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "5c043193d3d9fd9af37b0b4706d9078ec8c13c6016ab1fccc85a7936dacef6d8",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "b4a7ba9b71af2e037b60109a8e731f6ad854ed7628ce4b605343e830170df687",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "f9060fa5c4fe9610efd14eb0d8eb6d4ae3be9e55ec752660a773d1ceaf07d367"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ammo-stack-drop/integration-sanitized-1/verification.json",
+        "sha256": "9ae0724a3e0be19abf516011522d31f340d84585962b9b1895cc28a0757c1b53",
+        "source": {
+          "head": "fdb589d996773776a4477cf557ced1c9f26d38bf",
+          "source_fingerprint": "6be80c0b5fb3062035c02b8964206c50c369968fab9d03f93ee2e3c1bae973df"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "6f6552e2c82b3900fc6c924aa29cdba1ee93bbaef92201e6faa91836fb0870e9",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "9133df24b35a8a930d751dc11a583715d47f3b6e68a80e6dde55c2ac93ec9ea2",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ammo-stack-drop/integration-sanitized-2/verification.json",
+        "sha256": "500951549213f8d5cba2bb3bcd1b4b8e50e1f9d9561f88c8a9d7532f73c16233",
+        "source": {
+          "head": "fdb589d996773776a4477cf557ced1c9f26d38bf",
+          "source_fingerprint": "6be80c0b5fb3062035c02b8964206c50c369968fab9d03f93ee2e3c1bae973df"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "6f6552e2c82b3900fc6c924aa29cdba1ee93bbaef92201e6faa91836fb0870e9",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "238d3691501615e28308abeb3e7f1afa402e17fca4c0ce1673e7d6165fa2a971",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ammo-stack-drop/integration-sanitized-3/verification.json",
+        "sha256": "0980cc429856e6488c8858561b2edb05cd30a80f47705de0d0cadfc14b3c0e5b",
+        "source": {
+          "head": "fdb589d996773776a4477cf557ced1c9f26d38bf",
+          "source_fingerprint": "6be80c0b5fb3062035c02b8964206c50c369968fab9d03f93ee2e3c1bae973df"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "6f6552e2c82b3900fc6c924aa29cdba1ee93bbaef92201e6faa91836fb0870e9",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "81f4a2a13dc0aa6d700d34d630248e6339594d4dff56a44a96937e8f0a5fc53a",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/ammo-stack-drop/integration-sanitized-4/verification.json",
+        "sha256": "bb4ad89222234089bd972be40b2a3b60d2e09aa02a3d42d8edad97615023fa82",
+        "source": {
+          "head": "fdb589d996773776a4477cf557ced1c9f26d38bf",
+          "source_fingerprint": "6be80c0b5fb3062035c02b8964206c50c369968fab9d03f93ee2e3c1bae973df"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "6f6552e2c82b3900fc6c924aa29cdba1ee93bbaef92201e6faa91836fb0870e9",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "ab0febdd0562d4e2232ecb0f8f9312a0e6102ea4c96587c279372b14323c364f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "sanitizer_partition_union": {
+      "passed": true,
+      "total": 2292,
+      "parts": [
+        {
+          "path": "build/oblivion-compat/ammo-stack-drop/integration-sanitized-1/engine.xml",
+          "count": 82,
+          "sha256": "9133df24b35a8a930d751dc11a583715d47f3b6e68a80e6dde55c2ac93ec9ea2"
+        },
+        {
+          "path": "build/oblivion-compat/ammo-stack-drop/integration-sanitized-2/engine.xml",
+          "count": 82,
+          "sha256": "238d3691501615e28308abeb3e7f1afa402e17fca4c0ce1673e7d6165fa2a971"
+        },
+        {
+          "path": "build/oblivion-compat/ammo-stack-drop/integration-sanitized-3/engine.xml",
+          "count": 82,
+          "sha256": "81f4a2a13dc0aa6d700d34d630248e6339594d4dff56a44a96937e8f0a5fc53a"
+        },
+        {
+          "path": "build/oblivion-compat/ammo-stack-drop/integration-sanitized-4/engine.xml",
+          "count": 2046,
+          "sha256": "ab0febdd0562d4e2232ecb0f8f9312a0e6102ea4c96587c279372b14323c364f"
+        }
+      ],
+      "equals_normal_unfiltered_inventory": true
+    },
+    "reused_components": {
+      "receipt": "docs/oblivion/IRON-ARROW-DROP-VERIFICATION.json",
+      "receipt_sha256": "f2d23d02601fd1942d348ae836b7a845285f13fc2eb9456d540cd6df19e42e50",
+      "reports": [
+        {
+          "path": "build/oblivion-compat/iron-arrow-drop/integration-normal-01/verification.json",
+          "sha256": "4209b4cfe6d5b51a69cae7ee74942f97252798051f3b2d0fbc8d1b26a2ce32f1",
+          "source": {
+            "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+            "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+          },
+          "result": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "7d110917ad4c7b3630cc599238eabe8a78994efd62d599f7dccaa692aa7e1e1f",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "90391341a7dd6cc6b92151a7a240e84a549c676e30be62700e5f9f4e8b0550a9",
+            "inventory_sha256": "1c20cfec2bf2405daa100c986297376de1d4b548ad247ee1966297cdfedd3daf",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        {
+          "path": "build/oblivion-compat/iron-arrow-drop/components-sanitized-01/verification.json",
+          "sha256": "dd89b1265b1e0f81a3afffb297edc2a4b22ba4f53dc36d888c29490b9ec3e931",
+          "source": {
+            "head": "618cb09d268b2b30b9cb2215273d671db1d8a9df",
+            "source_fingerprint": "2cecef4d482c7d9285ed787c6db59b0f5d35ccabb8ee52039be6e2fffd210810"
+          },
+          "result": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c504e815d55916b1020e2f7c19c54140d9a8d1a9cb1e03821a02df614759373a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "458c80178debd2b0a96e296bcfbca3f99d01591eb9a9e979d2429e6bb1ce2acf",
+            "inventory_sha256": "ab43f468bfa0c58bb0b63350220126641a46e03bd75058e878ad5df3e21ed393",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      ],
+      "reason": "No changes to components or component tests relative to resulting committed prior implementation; engine changes are freshly tested in both modes."
+    },
+    "runtime": [
+      {
+        "mode": "normal",
+        "phase": "drop",
+        "path": "build/oblivion-compat/ammo-stack-drop/normal-stack-drop-01",
+        "manifest": "docs/oblivion/original-ammo-stack-drop.json",
+        "manifest_sha256": "15d253e62193cc58b928294d66fb473f1d339e88d5ac1bccf07fc8cffaf332de",
+        "verification_sha256": "9b666842c0ec1a14f26fbe9b89c234ad5259472112ba97ca0ff4a7ef5810dfaf",
+        "scenario_sha256": "87b83b7448f286d42b4d87847ec3c39e7af7c09a8aaf0ef48eb147bef7c325f0",
+        "source_sha256": "2e131af56fc955b97d66ebe596e26167470cb37ffa360af78ef2a64aa90fec85",
+        "save_sha256": "74e9fd70e9410447e679c7faaff4fd82ff473f7153a81fa40f0990886dfd14be",
+        "process": {
+          "pid": 844701,
+          "start_ticks": 17102135,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d43733db15b0e971036f2cdcfc4eeef916f1bf9bb9408af12e674170bc19cf09"
+        },
+        "next_dynamic_serial": 5,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "normal",
+        "phase": "world",
+        "path": "build/oblivion-compat/ammo-stack-drop/normal-stack-world-02",
+        "manifest": "docs/oblivion/original-ammo-stack-world.json",
+        "manifest_sha256": "06b4c9b4847f8b826bdc242bad800b51c220fdac2669b25e7d6b5a9fa58e6eda",
+        "verification_sha256": "bcd6bb470ae1f17709568b7f878577fed64476fb7467839b46a68fcfc57c95c0",
+        "scenario_sha256": "2de9678500c634477bb817868c4693015edbf65c3391175874000d4b56216d7c",
+        "source_sha256": "74e9fd70e9410447e679c7faaff4fd82ff473f7153a81fa40f0990886dfd14be",
+        "save_sha256": "4e1c77867cb47bb1682a320f054ea19ad218f6dbf7a892dabca76241a840fd6b",
+        "process": {
+          "pid": 852754,
+          "start_ticks": 17124484,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-world-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d43733db15b0e971036f2cdcfc4eeef916f1bf9bb9408af12e674170bc19cf09"
+        },
+        "next_dynamic_serial": 5,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "normal",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/ammo-stack-drop/normal-stack-pickup-01",
+        "manifest": "docs/oblivion/original-ammo-stack-pickup.json",
+        "manifest_sha256": "cd4f616f39bba0fc9be5ba05160a3018468a427ec9f03678056eb52b524944d5",
+        "verification_sha256": "ebf75dcbf13a6cb8d8a65291efe82fdf26dd14683b7564644cf667bdca6eb87f",
+        "scenario_sha256": "93b6d262d0ed9f175c4f654663b2b0f2176153f79cb541b2236409ffcc152661",
+        "source_sha256": "4e1c77867cb47bb1682a320f054ea19ad218f6dbf7a892dabca76241a840fd6b",
+        "save_sha256": "061e2d274b447bd96edd198e1e616596861d21ef9f6c0fe0fcd42dd6ccb77181",
+        "process": {
+          "pid": 852900,
+          "start_ticks": 17132814,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-world-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d43733db15b0e971036f2cdcfc4eeef916f1bf9bb9408af12e674170bc19cf09"
+        },
+        "next_dynamic_serial": 5,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "normal",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/ammo-stack-drop/normal-stack-inventory-01",
+        "manifest": "docs/oblivion/original-ammo-stack-inventory.json",
+        "manifest_sha256": "8f8f778315f78372098d67186ec446ffa6b3b6b6a4848e68d0de79ed02dd964d",
+        "verification_sha256": "328372be83c204bc41dcb14a7bd0145dcd55843d56ea6a917dcf0bd904529c2f",
+        "scenario_sha256": "3eba769f0299254f1ae64e4e46189f70753f8352ec1ef4cafde10ddc0d69e452",
+        "source_sha256": "061e2d274b447bd96edd198e1e616596861d21ef9f6c0fe0fcd42dd6ccb77181",
+        "save_sha256": "6cc32234c8a81a2f12f32e84c3005b818a29e401ce45b3b7c7fb60453d72885f",
+        "process": {
+          "pid": 853062,
+          "start_ticks": 17141160,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/normal-stack-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d43733db15b0e971036f2cdcfc4eeef916f1bf9bb9408af12e674170bc19cf09"
+        },
+        "next_dynamic_serial": 5,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "sanitized",
+        "phase": "drop",
+        "path": "build/oblivion-compat/ammo-stack-drop/sanitized-stack-drop-02",
+        "manifest": "docs/oblivion/original-ammo-stack-drop-sanitized.json",
+        "manifest_sha256": "f4e978f1d8f2ddce528711098238f0c5b0d9bb874c1f02b7a1292388d8107283",
+        "verification_sha256": "b578c65097a8227e47d04d876877a475095ebba3828ed63cbbbc1bd1e1a63351",
+        "scenario_sha256": "59a8234961c197afb5e9f0e34b68eadb837323724d18a2664e737a3225081d54",
+        "source_sha256": "2e131af56fc955b97d66ebe596e26167470cb37ffa360af78ef2a64aa90fec85",
+        "save_sha256": "fac88092873302d631cf314772923f3d948018e1fa614ece009cebec775a4ff0",
+        "process": {
+          "pid": 858272,
+          "start_ticks": 17187282,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/sanitized-stack-drop-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e3bacc5fb31443ef3e7ad2b6f82193222be4203d2864888717b08a99522a6b9f"
+        },
+        "next_dynamic_serial": 5,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "sanitized",
+        "phase": "world",
+        "path": "build/oblivion-compat/ammo-stack-drop/sanitized-stack-world-03",
+        "manifest": "docs/oblivion/original-ammo-stack-world-sanitized.json",
+        "manifest_sha256": "99823775d8688c1424a240aba06a85b3a123dc1068aeff134bab8bf3bd41769e",
+        "verification_sha256": "44a873f166bf0730fd6be087af1cdc8a99554c9469f59f78125f8c16fddc3c03",
+        "scenario_sha256": "6748f8af93c2195b520331cce5853b4d4d88a8ccfa6df164d97f8d898c2c2b83",
+        "source_sha256": "fac88092873302d631cf314772923f3d948018e1fa614ece009cebec775a4ff0",
+        "save_sha256": "980da4d11842536f7efcc6d8b68a523edb8919be80a9586cec4af9c9a4364eb4",
+        "process": {
+          "pid": 858548,
+          "start_ticks": 17218107,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/sanitized-stack-world-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/sanitized-stack-drop-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e3bacc5fb31443ef3e7ad2b6f82193222be4203d2864888717b08a99522a6b9f"
+        },
+        "next_dynamic_serial": 5,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "sanitized",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/ammo-stack-drop/sanitized-stack-pickup-01",
+        "manifest": "docs/oblivion/original-ammo-stack-pickup-sanitized.json",
+        "manifest_sha256": "0b5517c0041384e028ba7fab94c2ce9d61ac004ee8a0a2c5c8a541b2521e673f",
+        "verification_sha256": "dba7db6ff728f4936f0a1ff335f7ec1b5b2de0fdf731c692c82b242f24b4d62c",
+        "scenario_sha256": "21f8e9da30a72c2e68e6921808100a9097bdbc3e7f007fb1e8710cf8f5233f71",
+        "source_sha256": "980da4d11842536f7efcc6d8b68a523edb8919be80a9586cec4af9c9a4364eb4",
+        "save_sha256": "a49ef6cb20d7cb1f783c35e14737338474635697bda745de7b143b5167dd46c2",
+        "process": {
+          "pid": 858779,
+          "start_ticks": 17248034,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/sanitized-stack-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/sanitized-stack-world-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e3bacc5fb31443ef3e7ad2b6f82193222be4203d2864888717b08a99522a6b9f"
+        },
+        "next_dynamic_serial": 5,
+        "credited_deaths": 33
+      },
+      {
+        "mode": "sanitized",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/ammo-stack-drop/sanitized-stack-inventory-01",
+        "manifest": "docs/oblivion/original-ammo-stack-inventory-sanitized.json",
+        "manifest_sha256": "089465d19c79238e7e4cb54533da6bc64f8f3c93c55cb97f86c3914272b110bf",
+        "verification_sha256": "573e4f1e93a957f39a3e1cf14bc621d8365017591bf5dd3fc676b5182cfdbac7",
+        "scenario_sha256": "ee2345fc0d7461061e2f004e89d66969a98fdb2d1170c2bb025efa24847ad65e",
+        "source_sha256": "a49ef6cb20d7cb1f783c35e14737338474635697bda745de7b143b5167dd46c2",
+        "save_sha256": "302f6757df72dc93a524c7e4e81708c1f9d5784e2714f64e034b16b58a990c6e",
+        "process": {
+          "pid": 859046,
+          "start_ticks": 17279735,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/sanitized-stack-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ammo-stack-drop/sanitized-stack-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e3bacc5fb31443ef3e7ad2b6f82193222be4203d2864888717b08a99522a6b9f"
+        },
+        "next_dynamic_serial": 5,
+        "credited_deaths": 33
+      }
+    ],
+    "semantic": "All eight current auditor passes preserve item metadata, other equipment/inventory, Health/passives/all27 skills/book progression, quests/counters/script owners and33 credited deaths; expected encumbrance delta2.4. Tick-zero physics retains all bodies and velocities."
+  },
+  "fresh_one_unit_regression": {
+    "path": "build/oblivion-compat/ammo-stack-drop/regression-normal-one-arrow-drop-01",
+    "verification_sha256": "bcae5eaabbe1b1654a5a2ef898bdd84816d4a485c66b8cfea533ce26a8e807b5",
+    "source_sha256": "432ff1ca7e37288558ec27281a2056925e6eaf6d5f7de2198143a6b02850c4fc",
+    "save_sha256": "697e9186c79744f5b48aadc595b75b65cf049ec881502da84c6049e4db85cc77",
+    "result": "24->23 plus one native AMMO item; original one-unit verifier passed against unchanged historical recipe/source."
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/ammo-stack-drop/sanitized-stack-drop-01",
+      "result": "24->0/drop/save passed, but save caught the quiver still falling near100 units/s; see transient-strain-review.json."
+    },
+    {
+      "path": "build/oblivion-compat/ammo-stack-drop/sanitized-stack-world-02",
+      "result": "Cold load/resave actions and tick-zero full snapshot restoration passed. Post-simulation comparison to transient strained source failed0.5/.01 limits: offset0.944664/rotation0.042866. Kept failed; rerun after simulation-based settling, no physics/tolerance tuning."
+    },
+    {
+      "path": "build/oblivion-compat/ammo-stack-drop/normal-stack-baseline-01",
+      "result": "Actual pre-fix Shift-click reaches native admission and rejects ordinary singleton restriction; no quantity-transfer success claimed."
+    },
+    {
+      "path": "build/oblivion-compat/ammo-stack-drop/normal-stack-world-01",
+      "result": "Actual cold load/resave count24 succeeded; scenario failed because final expected_log retained stock23. Retained unchanged; corrected new world02 run accepted."
+    }
+  ],
+  "post_gate_manifest_correction": {
+    "changes": [
+      {
+        "path": "docs/oblivion/original-ammo-stack-world.json",
+        "before_sha256": "77608807cdbbfadf7cd74a2af5a3b510419c146ccbef670ceb88f2f01f8c41f6",
+        "after_sha256": "06b4c9b4847f8b826bdc242bad800b51c220fdac2669b25e7d6b5a9fa58e6eda"
+      },
+      {
+        "path": "docs/oblivion/original-ammo-stack-world-sanitized.json",
+        "before_sha256": "92b59d39c792a58cfc999fa816426e7f5e17ab4ad648b96f8d9a2adc78eab746",
+        "after_sha256": "99823775d8688c1424a240aba06a85b3a123dc1068aeff134bab8bf3bd41769e"
+      }
+    ],
+    "settling_review": {
+      "max_loaded_float_delta": 9.5367431640625e-07,
+      "relative_offset_change": 0.9446638432096438,
+      "relative_rotation_coefficient_change": 0.0428661605848184,
+      "source_velocity_units_per_second": [
+        [
+          7.902623176574707,
+          -8.191004753112793,
+          -96.05718231201172
+        ],
+        [
+          -4.655918121337891,
+          1.1292741298675537,
+          -101.12320709228516
+        ]
+      ],
+      "decision": "Preserve0.5/.01 settled tolerances; require three unpaused simulation seconds after drop before save; retain old in-flight strain comparison as failed attempt.",
+      "timing_provenance": {
+        "engine": "apps/openmw/engine.cpp:1170-1196 uses capped/scaled frameDuration and advances simulation by it",
+        "observer": "apps/openmw/mwlua/luamanagerimp.cpp:626-632 passes zero when paused or the same Environment frameDuration to Player onFrame",
+        "gate_reuse": "Only instrumented input observer/wait changed; C++ and auditor remain the frozen tested sources."
+      },
+      "accepted_simulation_wait_comparison": {
+        "offset": 0.009763281767669156,
+        "rotation_coefficient": 0.006873604701210234
+      }
+    },
+    "settling_review_path": "build/oblivion-compat/ammo-stack-drop/transient-strain-review.json",
+    "settling_review_sha256": "09697ef5855520d91c7b330aa78125ae2cbef4c0df87d1d50571de43286ef86a",
+    "reason": "Corrected world final expected_log stock23->stock0; instrumented drop waits three unpaused simulation seconds before save rather than comparing transient falling constraint strain with settled history. Original0.5/.01 tolerances unchanged. Tick-zero restoration already passed. All final captured manifests match published bytes; C++ and auditor unchanged after gates."
+  },
+  "source_sha256": {
+    "apps/openmw/mwworld/oblivionlooseweapon.cpp": "771ae733f781d1e57e6dca3e7afbbf2dfa9b1b012e4da5c3921e261c72c7ba66",
+    "apps/openmw/mwworld/oblivionweapondrop.cpp": "d77e104aff82f29d1ca6659adcf14f24e8e7201c45e8d1ea394a6eff8a01595b",
+    "scripts/verify_ammo_stack_drop.py": "0d619be3a254f76f6eb546910ad60fdf8b212c71730c9e23177922777d0d92fb",
+    "docs/oblivion/original-ammo-stack-drop.json": "15d253e62193cc58b928294d66fb473f1d339e88d5ac1bccf07fc8cffaf332de",
+    "docs/oblivion/original-ammo-stack-world.json": "06b4c9b4847f8b826bdc242bad800b51c220fdac2669b25e7d6b5a9fa58e6eda",
+    "docs/oblivion/original-ammo-stack-pickup.json": "cd4f616f39bba0fc9be5ba05160a3018468a427ec9f03678056eb52b524944d5",
+    "docs/oblivion/original-ammo-stack-inventory.json": "8f8f778315f78372098d67186ec446ffa6b3b6b6a4848e68d0de79ed02dd964d",
+    "docs/oblivion/original-ammo-stack-drop-sanitized.json": "f4e978f1d8f2ddce528711098238f0c5b0d9bb874c1f02b7a1292388d8107283",
+    "docs/oblivion/original-ammo-stack-world-sanitized.json": "99823775d8688c1424a240aba06a85b3a123dc1068aeff134bab8bf3bd41769e",
+    "docs/oblivion/original-ammo-stack-pickup-sanitized.json": "0b5517c0041384e028ba7fab94c2ce9d61ac004ee8a0a2c5c8a541b2521e673f",
+    "docs/oblivion/original-ammo-stack-inventory-sanitized.json": "089465d19c79238e7e4cb54533da6bc64f8f3c93c55cb97f86c3914272b110bf"
+  },
+  "limits": [
+    "Only this original unequipped unscripted/unenchanted AMMO24 stack and retained one-unit regression; no all-assets/quantities or equipped/scripted/bound acceptance.",
+    "Other native drops retain singleton admission; no serializer migration, coastal rendering, fired-arrow or broader milestone closure claim."
+  ]
+}

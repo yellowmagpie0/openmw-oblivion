@@ -1,0 +1,143 @@
+{
+  "status": "accepted bounded real-content slice; full M16 and expedition remain open",
+  "milestone": "M16 mixed potion effects: original Mead alcohol",
+  "content": {
+    "potion": "content:oblivion.esm:0b1201 DrinkMead",
+    "placed_candidates": [
+      "content:oblivion.esm:06c362",
+      "content:oblivion.esm:06c363",
+      "content:oblivion.esm:06c364"
+    ],
+    "effects": [
+      {
+        "code": "DRAT",
+        "magnitude": 1,
+        "duration": 60,
+        "range": "Self",
+        "actor_value": 1,
+        "meaning": "Intelligence"
+      },
+      {
+        "code": "DRAT",
+        "magnitude": 1,
+        "duration": 60,
+        "range": "Self",
+        "actor_value": 2,
+        "meaning": "Willpower"
+      },
+      {
+        "code": "REFA",
+        "magnitude": 2,
+        "duration": 0,
+        "range": "Self",
+        "actor_value": 10,
+        "meaning": "Fatigue"
+      }
+    ],
+    "value": 2,
+    "weight": 1,
+    "scope": "Actual original placed content reached from the continued expedition; no fork-side grants or manufactured gameplay state."
+  },
+  "record_validation": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "typed_and_raw": "build/oblivion-compat/mead-use/original-potion-audit-01/verification.json",
+    "records": 253,
+    "effects": 330,
+    "raw_mead_and_mgef": "build/oblivion-compat/mead-use/original-mead-records.json",
+    "raw_report_sha256": "9f74403f3ebda12180c4cbf3bb09ff87fa4ba546058ccb307103b63233250aae"
+  },
+  "known_source_gap": "Baseline binary admitted only instant restoration, so the complete original mixed Mead profile was rejected without partial spending or restoration. The accepted implementation adds atomic timed-attribute ownership alongside the instant restoration.",
+  "route_progress": {
+    "start": "build/oblivion-compat/chameleon-scroll/chameleon-expired-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "tripwire": "06bf50 already works with the existing native script/physics path",
+    "observed_impact": "0c4986 body54, damage11.5, Player survives; no implementation change claimed",
+    "remaining": "Bounded Mead acquisition/use complete; continue the original expedition and choose the next observed unsupported content.",
+    "current_sha256": "23dcba6570d73d39aee093be9dd0dbb2a0e3789b487cc0ccb1082e650e7f51b2",
+    "current_health": 56.17946243286133,
+    "checks": {
+      "route": "build/oblivion-compat/vilverin-trap-passage/route-semantic-verification.json",
+      "route_checks": 81,
+      "lower_room": "build/oblivion-compat/vilverin-trap-passage/lower-room-semantic-verification.json",
+      "lower_room_checks": 9
+    },
+    "encounter": "Original 04bb72/04bb73/06bfba defeated with owned starter healing and carried Club; deaths and Player killer survive fresh acquisition process.",
+    "table_approach_checkpoint": "build/oblivion-compat/vilverin-trap-passage/mead-table-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+  },
+  "plan": [
+    "Complete ordinary travel/acquisition and retain a no-cheat actual-save input. Establish the unsupported ordinary-use baseline.",
+    "Use an isolated original-game control to resolve attribute/resource changes, same-source repeat behavior, expiry and potion admission; reuse existing applicable mechanics evidence.",
+    "Implement the admitted original mixed profile with exact selected-instance debit, native attribute ownership and derived-resource updates; keep all three effects atomic.",
+    "Save/reload active timed effects and naturally expire them without duplicate instant restoration or contribution replay.",
+    "Verify normal/instrumented real-content behavior and appropriate focused/integration gates; close this bounded slice and continue the expedition."
+  ],
+  "acceptance": [
+    "One actually collected original Mead is consumed through normal inventory UI; unrelated inventory and prior expedition state persist.",
+    "Both authored attribute drains and the instant Fatigue restoration execute under native authority, with original-game evidence defining the expected resource effects.",
+    "An explicit source/application lifetime survives a fresh process independently of consumed stock; no instant-effect replay.",
+    "Natural expiry removes only this application; a completed reload stays expired.",
+    "Any repeated-source semantics implemented are established independently; no assumed Chameleon-style refresh.",
+    "Normal/instrumented runtime and structural, semantic and independent evidence are reported separately."
+  ],
+  "outside_scope": [
+    "General arbitrary potion/effect interpreter, poisons, addiction and all alcohol types",
+    "Exact shader or frame scheduling parity",
+    "Full M16 and full Vilverin expedition/return",
+    "General resistance/absorption interactions and actors other than the controlled zero-Magic-Resistance Player"
+  ],
+  "actual_input": {
+    "save": "build/oblivion-compat/vilverin-trap-passage/mead-second-bottle-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "9ad029ea9c65bee445bf1f1e6b38101483cdb70db637e6c1f844749e0d0b1282",
+    "health": 29.73583984375,
+    "magicka": 80,
+    "fatigue": 170,
+    "intelligence": 40,
+    "willpower": 30,
+    "mead_count": 2,
+    "scope": "Original bottles 06c362 and06c363 collected through ordinary activation after actual club/healing combat; no fork-side grants.",
+    "single_bottle_predecessor": "build/oblivion-compat/vilverin-trap-passage/mead-acquire-after-encounter-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "single_bottle_sha256": "6677188fc1f68ec1142c994b9398492b3df0266a009b23cf43f117a4a29918b6"
+  },
+  "baseline": {
+    "diagnostic_passed": true,
+    "feature_passed": false,
+    "checks": {
+      "diagnostic_passed": true,
+      "inventory_exactly_unchanged": true,
+      "Intelligence_and_Willpower_unchanged": true,
+      "Health_Magicka_Fatigue_unchanged": true,
+      "wire_roundtrip": true
+    },
+    "input_sha256": "6677188fc1f68ec1142c994b9398492b3df0266a009b23cf43f117a4a29918b6",
+    "save_sha256": "61e2348c02349e928e41e94967463a5cb0d9a2f2fb2ced80fc1656ab4b0c923c",
+    "observation": "Correct original Mead tooltip/normal drag-to-avatar attempt leaves exactly one bottle and native attributes/resources unchanged. First Escape cancels unsupported drag; second closes inventory. Initial baseline01 save timeout is retained separately.",
+    "case": "build/oblivion-compat/mead-use/mead-use-baseline-02",
+    "semantic": "build/oblivion-compat/mead-use/baseline02-semantic.json"
+  },
+  "independent_probe": {
+    "status": "completed and closed; original files unchanged",
+    "oracle": "docs/oblivion/MEAD-POTION-ORACLE.json",
+    "rule": "Same-source applications stack and expire independently. REFA2 is instant and capped. Attribute/derived resource bases return without replaying restoration."
+  },
+  "implementation": {
+    "schema": 94,
+    "ownership": "Each consumed application stores its source, resolved attribute contributions, duration and elapsed time; source stock is independent. Legacy negative modifiers do not imply a potion timer.",
+    "current": "Accepted: both five-stage real-content courses pass127 semantic checks each. Full3281 component and2266 engine tests pass per configuration; full604 unchanged Python checks reused with original provenance. Real Chameleon schema94 regression passes90 semantic checks.",
+    "runtime_plan": "Completed ordinary real exertion and two actually collected bottles, then separate fresh-process expiries and completed-state reload without replay."
+  },
+  "normal_runtime": {
+    "semantic": "build/oblivion-compat/mead-use/normal-development-01-semantic-verification.json",
+    "checks": 127,
+    "outgoing_save": "build/oblivion-compat/mead-use/normal-development-01-completed-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7c9f46eb893c161f94dab6e6161b05fefb4a6ec285dff996b03e007b89494566",
+    "behavior": "Separate same-source clocks persist across processes, each expires once at60, all attribute/resource bases return, and completed reload neither reapplies nor consumes."
+  },
+  "sanitized_runtime": {
+    "semantic": "build/oblivion-compat/mead-use/sanitized-development-01-semantic-verification.json",
+    "checks": 127,
+    "outgoing_save": "build/oblivion-compat/mead-use/sanitized-development-01-completed-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "458a0a847c2cdc132003d878364e4b0f630bf729d0e8b4bbc277be6576009728",
+    "rendered_leak_detection": false,
+    "full_engine_leak_detection": true
+  },
+  "verification": "docs/oblivion/MEAD-POTION-VERIFICATION.json"
+}

@@ -1,0 +1,47 @@
+{
+  "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "winning_content": {
+    "path": "build/oblivion-compat/cheap-wine/original-wine-record.json",
+    "sha256": "3ec07eb717c2183ada874d885a010c8259a08c2a6e7acee0ac9f12d0263d7802"
+  },
+  "reference_admission": {
+    "path": "build/oblivion-compat/cheap-wine/original-reference-admission.json",
+    "sha256": "2992828417a2aa871186251ceddd22a724e67998101d96d54b27fd31d6affa38"
+  },
+  "typed_raw_audit": {
+    "path": "build/oblivion-compat/mead-use/original-potion-audit-01/verification.json",
+    "sha256": "29f911fad75d8eea753ccb2d762fec26526e3f151e5fc65f4d1a0e58a608c28c"
+  },
+  "records": 253,
+  "effects": 330,
+  "original_live_reuse": {
+    "path": "docs/oblivion/MEAD-POTION-ORACLE.json",
+    "sha256": "94df25c5bf332524cd8f90e180d101067ecd3d5953026b2cc800e0d878ba3dd5"
+  },
+  "rule": "Original037f7f four authored effects, in order: instant REFA10; DRAT Agility5/120s; DRAT Intelligence5/120s; DRAT Personality10/120s. Canonical DRAT/REFA winning effect semantics and food low flags3. Distinct source/application owns all three Maximum contributions; instant restoration is excluded from the persisted owner.",
+  "expected_healthy_source": {
+    "intelligence": "40->35->40",
+    "agility": "30->25->30",
+    "personality": "50->40->50",
+    "magicka": "80->70->80",
+    "fatigue_maximum": "170->165->170",
+    "health": "110 retained",
+    "fatigue_instant": "min(current+10, original maximum) before derived Agility decrease; compare paused before/after observation",
+    "alchemy_experience": "food potion does not train Alchemy"
+  },
+  "boundaries": [
+    "The independent original live control observed Mead, not Cheap Wine. Reuse its contribution lifetime, stacking, resource-offset and no-replay ownership evidence only; no new original Wine live probe is claimed.",
+    "Wine-specific shape, magnitudes, duration, order, flags and reference admission come directly from the hash-identified original master. The typed/raw audit covers all253 original ALCH records/330 effects.",
+    "Derived Agility-to-Fatigue and Intelligence-to-Magicka use existing native dynamic-base mechanics. Ordinary fork observations and raw save/restart checks must establish actual Wine acceptance.",
+    "No arbitrary mixed profile, Fortify Health, poison, resistance scaling or full M16 claim."
+  ],
+  "activation_range_reuse": {
+    "initializer_source": "build/oblivion-compat/m15/S2/sources-01/native-setting-initializers.json",
+    "name": "iActivatePickLength",
+    "compiled_value": 150,
+    "storage": "0xb37d30",
+    "constructor": "0x9edfaa",
+    "scope": "Original master has no override. Existing native compatibility iMaxActivateDist150 matches this default; gameplay tests do not extend it."
+  }
+}

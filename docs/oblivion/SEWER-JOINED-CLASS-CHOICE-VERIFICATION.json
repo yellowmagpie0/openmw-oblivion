@@ -1,0 +1,146 @@
+{
+  "scope": "Connected original final assassin battle, native Warrior class, Baurus CharacterGen88/key, and ordinary secret passage traversal",
+  "full_escape_complete": false,
+  "course": "joined-final-battle-class-01",
+  "passed": true,
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-emperor-death-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "d2f4a235d174bb01fe58bace2f634fb8dc370d3129973f029ae095d440e57cbf",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "save_sha256": "40c65f733dc1c5f3c82cf3a51625d78fa99742fc5e6d5385fb2b6fa6f6ac2c0d",
+  "quest_stages": {
+    "content:oblivion.esm:01e723": 80,
+    "content:oblivion.esm:02466e": 88
+  },
+  "player": {
+    "cell": "content:oblivion.esm:022282",
+    "position": [
+      2724.39697265625,
+      10065.5419921875,
+      -1439.0,
+      0.06855468451976776,
+      0.0,
+      -0.10957030206918716
+    ],
+    "class": "content:oblivion.esm:023787",
+    "birthsign": "content:oblivion.esm:01fd9d",
+    "health": 101.97138214111328,
+    "max_health": 110.0,
+    "strength": 55.0,
+    "endurance": 55.0,
+    "amulet_count": 1,
+    "sewer_key_count": 1
+  },
+  "final_assassin": {
+    "actor": "content:oblivion.esm:01e703",
+    "base": "content:oblivion.esm:01e6ff",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "content:oblivion.esm:032a17"
+  },
+  "combat_evidence": "Player holds real weapon block and read-only camera aim. Two genuine dagger contacts4.01367+4.01495 damage; Baurus three real sword hits13.3748+13.349+13.3066 kill40-health assassin. Native onDeath handled; no Player attack injection. Warrior class naturally adds10 current/maxHP after battle.",
+  "cleanup": {
+    "dead_foe_bound_inventory_absent": true,
+    "dead_foe_bound_ability_owner_absent": true,
+    "combat_engagements": [],
+    "pending_deaths": [],
+    "physical_action_owners": []
+  },
+  "input_receipts_match": true,
+  "images_inspected": [
+    "warrior-selected.png",
+    "baurus-final-response.png"
+  ],
+  "secret_passage": {
+    "course": "joined-sanctum-secret-passage-01",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-final-battle-class-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "40c65f733dc1c5f3c82cf3a51625d78fa99742fc5e6d5385fb2b6fa6f6ac2c0d",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "position": [
+      3323.080078125,
+      10368.7802734375,
+      -1439.0,
+      0.4115234911441803,
+      0.0,
+      1.5697267055511475
+    ],
+    "inventory_health_unchanged": true,
+    "capture_inspected": "joined-secret-passage-crossed.png"
+  },
+  "executable_provenance": {
+    "battle_class": "e4689275beba4c04b1ccde59087d9fc13676b1bfe2f40928a202b1d1f59fdd2d",
+    "secret_passage": "b2a22b98ba3baf33ef21323ca03b518773ffa3c0686fe44a2618b12a3d4640d1",
+    "note": "Runtime rebuilt with94370948f1 and fixture-only test ID cleanup; production code unchanged from04152787f5."
+  },
+  "fixture_identity_cleanup": {
+    "change": "Actor fixture basesB00/B01 are distinct from packageA00/A01; production unchanged.",
+    "affected_cases_rechecked": {
+      "escort-recipient-fixture-identities-normal-01": {
+        "evidence": "build/oblivion-compat/sewer-escape/escort-recipient-fixture-identities-normal-01/verification.json",
+        "source": {
+          "head": "94370948f15af9455a3d2f5f8b79f80d2d10fba2",
+          "source_fingerprint": "99541926726ad6e82868a9bafbdd458855b60889e46258b1815fbe50e573ae2d"
+        },
+        "results": {
+          "engine": {
+            "executed": 2,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "OblivionAiTest.PausedEscort*:OblivionAiTest.StationaryEscortRecipient*",
+            "binary_sha256": "aa8828913ac80aa3865e510d55eba272788958fb710e5af3a1fa932ac2e2c6a7",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "e6dec0a95c089481c2fe63eadd888134694a77fdbb7b0475437866f3f7ebe4d3",
+            "inventory_sha256": "2a96803d99c2571b94e3596dadebe1325e8f38bdf91e8eaaa017fe73475bf80c",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "escort-recipient-fixture-identities-sanitized-01": {
+        "evidence": "build/oblivion-compat/sewer-escape/escort-recipient-fixture-identities-sanitized-01/verification.json",
+        "source": {
+          "head": "94370948f15af9455a3d2f5f8b79f80d2d10fba2",
+          "source_fingerprint": "99541926726ad6e82868a9bafbdd458855b60889e46258b1815fbe50e573ae2d"
+        },
+        "results": {
+          "engine": {
+            "executed": 2,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "OblivionAiTest.PausedEscort*:OblivionAiTest.StationaryEscortRecipient*",
+            "binary_sha256": "066016cd4d54c54c73d73a39390ce0653095b2cebbf61f37897e0f1a7519f748",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "39613053ffbc66d8ebd15dd245d341998c3af100980213b6c1dee8dcc45732e9",
+            "inventory_sha256": "2a96803d99c2571b94e3596dadebe1325e8f38bdf91e8eaaa017fe73475bf80c",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    },
+    "full_gate_reuse": "Full2206 normal and ASan/UBSan/leak1 gates retain original source provenance in SEWER-ESCORT-RECIPIENT-VERIFICATION.json. Only fixture IDs changed afterward, both affected tests rechecked in both configurations."
+  },
+  "remaining": "Physical final sewer traversal and distinct MQ01 exit88/outdoor fresh reload, then uninterrupted new-game escape; CharacterGen88 alone is not exit acceptance."
+}

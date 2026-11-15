@@ -75,6 +75,9 @@ namespace MWBase
         /** Used for quick save and autosave **/
         virtual void quickSave(std::string = "Quicksave") = 0;
 
+        // Script requests may arrive while dialogue/character UI is unsaveable.
+        virtual void requestAutosave() { quickSave("Autosave"); }
+
         /// Simple loader, loads the last saved file
         /** Used for quickload **/
         virtual void quickLoad() = 0;

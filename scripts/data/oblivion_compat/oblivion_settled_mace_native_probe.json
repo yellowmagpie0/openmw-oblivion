@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "name": "Original Vilverin spent-mace contact observation",
+  "kind": "isolated_original_game_probe",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "content": [
+    "Oblivion.esm"
+  ],
+  "references": [
+    "0006c605",
+    "000c4986",
+    "0006bf50"
+  ],
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "retained_probe_save_sha256": "f1931326cd98287242a1aaa8021db7be9a0edc2c60fef0abdd9c0acee3be3cf2",
+  "setup": [
+    "Back up complete isolated Documents/My Games/Oblivion and Plugins.txt; restore exact bytes afterwards.",
+    "Use the named retained native ESS, or coc Vilverin and cross original tripwire06bf50 southbound until triggered1, both linked maces triggered3.",
+    "For the retained restart observer, render640x360; disable combat AI and enable God Mode to isolate contact.",
+    "player.setpos x -4987",
+    "player.setpos y -2105",
+    "player.setpos z -1102",
+    "player.setangle z 0",
+    "player.setangle x 0",
+    "Close console, settle2seconds, reopen before baseline scene measurement."
+  ],
+  "measurement": [
+    {
+      "action": "read_only_scene",
+      "tool": "scripts/inspect_oblivion_native_scene.py",
+      "label": "scene-before-w"
+    },
+    {
+      "action": "ordinary_keyboard",
+      "key": "w",
+      "sample_count": 8,
+      "sample_spacing_seconds": 0.4,
+      "labels": "scene-during-w-0 through scene-during-w-7"
+    },
+    {
+      "action": "release_key",
+      "key": "w"
+    }
+  ],
+  "expected": "Actual original mace head moves while the Player advances; settle/baseline drift must be distinguished from contact-induced displacement. No exact force policy is inferred.",
+  "known_observation": {
+    "head_displacement": 19.573333840606903,
+    "player_start": [
+      -4987,
+      -2112.738,
+      -1123.934
+    ],
+    "player_last_sample": [
+      -5008.3799,
+      -2044.5348,
+      -1068.1554
+    ]
+  },
+  "cleanup": [
+    "Exit through original console qqq.",
+    "Stop only owned launcher processes and restore exact prefix inputs.",
+    "Verify pristine quicksave hash and all backed-up files."
+  ],
+  "limits": [
+    "Console setup and disabled combat AI are boundary controls, not normal quest acceptance.",
+    "Scene reader observes NiAVObject world poses and collision binding identities; it does not invoke gameplay code or write process memory.",
+    "Reference mass/response in fork are approximations; original contact displacement establishes the missing gameplay response."
+  ]
+}

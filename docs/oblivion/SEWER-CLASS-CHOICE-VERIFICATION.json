@@ -1,0 +1,224 @@
+{
+  "scope": "Native GetIsClassDefault, original Baurus recommendation, Warrior selection and dialogue88 with fresh-process reload. Physical sewer/outdoor escape remains open.",
+  "full_escape_complete": false,
+  "native_oracle": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "entry": "0x4f83d0",
+    "boundary": "Player recommendation 0x662750 supplies cached/recomputed class; independently verified in tutorial-melee/class-default-oracle-01. Console printing disabled.",
+    "cases": [
+      {
+        "recommended": "0x0",
+        "parameter": "0x0",
+        "parameter_type": 5,
+        "result": 1.0
+      },
+      {
+        "recommended": "0x0",
+        "parameter": "0x0",
+        "parameter_type": 6,
+        "result": 1.0
+      },
+      {
+        "recommended": "0x0",
+        "parameter": "0x2001000",
+        "parameter_type": 5,
+        "result": 0.0
+      },
+      {
+        "recommended": "0x0",
+        "parameter": "0x2001000",
+        "parameter_type": 6,
+        "result": 1.0
+      },
+      {
+        "recommended": "0x0",
+        "parameter": "0x2002000",
+        "parameter_type": 5,
+        "result": 0.0
+      },
+      {
+        "recommended": "0x0",
+        "parameter": "0x2002000",
+        "parameter_type": 6,
+        "result": 1.0
+      },
+      {
+        "recommended": "0x2001000",
+        "parameter": "0x0",
+        "parameter_type": 5,
+        "result": 0.0
+      },
+      {
+        "recommended": "0x2001000",
+        "parameter": "0x0",
+        "parameter_type": 6,
+        "result": 0.0
+      },
+      {
+        "recommended": "0x2001000",
+        "parameter": "0x2001000",
+        "parameter_type": 5,
+        "result": 1.0
+      },
+      {
+        "recommended": "0x2001000",
+        "parameter": "0x2001000",
+        "parameter_type": 6,
+        "result": 0.0
+      },
+      {
+        "recommended": "0x2001000",
+        "parameter": "0x2002000",
+        "parameter_type": 5,
+        "result": 0.0
+      },
+      {
+        "recommended": "0x2001000",
+        "parameter": "0x2002000",
+        "parameter_type": 6,
+        "result": 0.0
+      }
+    ]
+  },
+  "implementation": "GetIsClassDefault compares the supplied CLAS identity with the Player recommendation, independently of condition subject. Reuses the existing skill-use/cache/save owner; the recommendation and GetClassDefaultMatch share the same calculation. No actor-ID or fixed-class branch.",
+  "checks": {
+    "class-identity-focused-02": {
+      "path": "build/oblivion-compat/sewer-escape/class-identity-focused-02/verification.json",
+      "source": {
+        "head": "87e86b982d02cfa3cb252bd92c51a7a34bd734dc",
+        "source_fingerprint": "4b7327a1a01a590e9d2b5aa5720e2eab53e3a5a144f5dcfd92c63d94eb40db5e"
+      },
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogueMenu.ClassDefaultQueryTracksUsesAndRetainsRealClassIdentityAcrossDisabledTracking",
+          "binary_sha256": "15520d6ecebb429ce72b229602f98e91f9e1a8cecdd953ec06ad43db67f7d71b",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "0d55a8d2e6f1e76349bb4e76376a72a8740c391c3082e1fc9ec425525a1e1040",
+          "inventory_sha256": "c461fd9c42474bcfe5a44d78ccc126353682540c23727729b1e4b1694158af9e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "class-identity-normal-integration-01": {
+      "path": "build/oblivion-compat/sewer-escape/class-identity-normal-integration-01/verification.json",
+      "source": {
+        "head": "87e86b982d02cfa3cb252bd92c51a7a34bd734dc",
+        "source_fingerprint": "4b7327a1a01a590e9d2b5aa5720e2eab53e3a5a144f5dcfd92c63d94eb40db5e"
+      },
+      "results": {
+        "engine": {
+          "executed": 2197,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "15520d6ecebb429ce72b229602f98e91f9e1a8cecdd953ec06ad43db67f7d71b",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "4bea44ff9e5cdcebd76ac1b4c9fb311f8c22f8b58ebf4415439e014bcb8b20c3",
+          "inventory_sha256": "c461fd9c42474bcfe5a44d78ccc126353682540c23727729b1e4b1694158af9e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "baurus-class-menu-02": {
+      "path": "build/oblivion-compat/sewer-escape/baurus-class-menu-02/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/final-victory-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "da75b253a4c09430dae9aa92b0c34ba61466d8e85b6a1dcb6525e146ce6ddf0e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    },
+    "baurus-class-completion-02": {
+      "path": "build/oblivion-compat/sewer-escape/baurus-class-completion-02/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/final-victory-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "da75b253a4c09430dae9aa92b0c34ba61466d8e85b6a1dcb6525e146ce6ddf0e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    },
+    "baurus-class-reload-01": {
+      "path": "build/oblivion-compat/sewer-escape/baurus-class-reload-01/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/baurus-class-completion-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "7a17e9aa81612a1772e925b008f9517d99088d784f1cba7011ece20b48c75d7f",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    }
+  },
+  "remaining": [
+    "Physical sewer entry and exterior exit; fresh outdoor restart",
+    "Shaman encounter victory",
+    "Continuous normal prison-to-outdoors acceptance",
+    "Fresh accumulated sanitizer integration"
+  ],
+  "known_limitations": [
+    "Original stage88 AddTopic calls still use the existing deferred handler. Learned topic support remains open.",
+    "Stage88 Autosave is requested while dialogue is open and rejected by the existing save guard. Subsequent ordinary F5 succeeds; automatic post-dialogue saving remains open."
+  ],
+  "runtime_executable_sha256": "54dc759c7d46cad0c022473bc4a2c0bd657debfd3ea37cc80638d4dac297ccff",
+  "saved_state": {
+    "class": "content:oblivion.esm:023787",
+    "birthsign": "content:oblivion.esm:01fd9d",
+    "recommended_class": "content:oblivion.esm:023788",
+    "character_generation_flags": 12,
+    "character_generation_stage": 88,
+    "deliver_amulet_stage": 20,
+    "key_count": 1,
+    "amulet_count": 1,
+    "health_base": 110,
+    "health_current": 84.29767608642578,
+    "class_stat_change": "Base health and current health both increase by10; prior25.7023239 health deficit is preserved.",
+    "completion_save_sha256": "7a17e9aa81612a1772e925b008f9517d99088d784f1cba7011ece20b48c75d7f",
+    "reload_save_sha256": "28fd2d0ad6e3dfda14c0d4507bfd2a9457cf427b358fdb152db523319d1548fa",
+    "whole_reload_entry_differences": 0,
+    "class_choices_replayed_on_reload": false,
+    "inventory_actor_values_generation_and_deaths_retained": true
+  },
+  "retained_failures": {
+    "class-identity-focused-01": "Test argument used FormKey directly rather than VM ReferenceValue; corrected fixture, no production bypass.",
+    "baurus-class-menu-01": "Prior missing condition228, retained at original source.",
+    "baurus-class-choice-01": "D-pad button mapping never reached SDL state; delivery timeout.",
+    "baurus-class-choice-02": "Same mapping with60-second diagnostic receipt; GDB proves game scripts still running, no menu-handler deadlock.",
+    "baurus-class-choice-03": "Warrior chosen; course incorrectly tried linked choices while original Goodbye response remained.",
+    "baurus-class-completion-01": "After closing Goodbye, activation missed Baurus because third-person camera was aimed past him. Corrected normal mouse input from read-only camera view."
+  },
+  "captures_inspected": [
+    "baurus-class-menu-02/native-class-menu.png",
+    "baurus-class-choice-03/warrior-selected.png",
+    "baurus-class-completion-02/baurus-final-response.png",
+    "baurus-class-reload-01/class88-fresh-reload.png"
+  ]
+}

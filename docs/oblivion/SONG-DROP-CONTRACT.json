@@ -1,0 +1,37 @@
+{
+  "target": "Original A Less Rude Song singleton native BOOK drop/cold world/reader Take/cold inventory",
+  "parent_commit": "35f7798a47ad099555ed200d9c1f47feb2151a26",
+  "acquisition": "Original Song06efb2 lies underneath Fundaments06efb3 on the reached Wellspring workbench. Ordinary reader/controller Take of upper Fundaments is an access dependency, followed by the Song. No grants/teleports/save edits. Accepted normal-song-take-07: BooksRead10->12, Fundaments1/Song1/Charter1 and original two source refs retired; scripts/skills/life/combat/prior loot retained.",
+  "record": {
+    "base": "BOOK024569",
+    "reference": "content:oblivion.esm:06efb2",
+    "value": 6,
+    "weight": 0.5,
+    "flags": 0,
+    "book_skill": -1
+  },
+  "acceptance": [
+    "Current pre-change ordinary drag is retained and classified separately from native loose ownership; no disappearance assumption.",
+    "Ordinary native drop1->0 creates key14/count1/allocator15 with authored body4 and supported virtual root18; one body/no joints/finite positive mass.",
+    "Cold world restores exact tick-zero physical state and stable identity, then ordinary rendered focus/read/Take0->1 retires key14/body; cold inventory retains one Song and original properties.",
+    "Acquisition BooksRead10->12 includes upper book; drop/load do not count. Pickup reader counts12->13; skill/progression/award history unchanged.",
+    "Fundaments1/Charter1 and all prior loot/condition/fuel, Cuirass scriptowner9/MQ01flags1/1, health/skills/life/deaths/quests/combat remain intact; original Song reference stays retired and keys are never reused.",
+    "Normal/SAN actual courses and focused/full engine/Python gates pass."
+  ],
+  "profile": "Plain ordinary content-defined takeable singleton BOOK flags0/skill-1; script/enchantment/persistent/bound/scaled extras excluded by existing policy. Finite nonnegative inventory weight, one movable positive-mass supported body/no joints. Book data/text/model and native source revalidated before publication.",
+  "fallback": "Unsupported book profiles/models keep their prior legacy path without native transaction debit.",
+  "limits": [
+    "No stacked, scroll, NoTake, skill/scripted/enchanted book drop acceptance.",
+    "No exact original physical trajectory or UI art parity; no old legacy-object migration.",
+    "No full M13/M16/M18 or TES4 MCP authoring claim."
+  ],
+  "oracle": "SONG-DROP-ORACLE.json",
+  "auditor": "scripts/verify_song_drop.py",
+  "schema": 103,
+  "source": {
+    "path": "build/oblivion-compat/song-drop/normal-song-take-07/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "a876afd033050dde2664415252fbb0404d08a3e9a3b11f0a3617eb4dcb307622",
+    "books_read": 12,
+    "allocator": 14
+  }
+}

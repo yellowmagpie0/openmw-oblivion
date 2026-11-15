@@ -1,0 +1,39 @@
+{
+  "scope": "Connected Baurus-key door and physical manhole entry to final sewers; full escape remains incomplete",
+  "passed": true,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-final-sewers-entry-01/scenario.json",
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-sanctum-secret-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "e8c1196a92668e5a5782634fe5239fc2eb2de5c245361a18a02a60f935aecc80",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "save": "build/oblivion-compat/sewer-escape/joined-final-sewers-entry-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "sha256": "a1291d1fd258b56dd3374742d24068dfdd71951234901692b84b9555b5c57e9b",
+  "player": {
+    "cell": "content:oblivion.esm:0272f2",
+    "position": [
+      -2595.823486328125,
+      1077.30908203125,
+      6878.33544921875,
+      0.0,
+      0.0,
+      -3.1415905952453613
+    ],
+    "class": "content:oblivion.esm:023787",
+    "birthsign": "content:oblivion.esm:01fd9d"
+  },
+  "health": 101.97138214111328,
+  "inventory_change": "Only original Baurus sewer key01e702 consumed; Amulet retained",
+  "death_counts_unchanged": true,
+  "quest_stages": {
+    "content:oblivion.esm:01e723": 80,
+    "content:oblivion.esm:02466e": 88
+  },
+  "no_combat_or_pending_death_action": true,
+  "capture_inspected": "joined-imperial-sewers-entry.png",
+  "runtime_sha256": "b2a22b98ba3baf33ef21323ca03b518773ffa3c0686fe44a2618b12a3d4640d1",
+  "source_note": "Runtime built at94370948f1 with fixture-only ID cleanup subsequently committed7d263cf859; production unchanged from04152787f5."
+}

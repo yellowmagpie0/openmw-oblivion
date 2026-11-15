@@ -156,6 +156,31 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
+    Version103 adds additional loose-item bodies. Current-schema fixture copies
+    preserve their complete poses and velocities; older seeds contain no extra bodies.
+    Version102 permits food Endurance restoration in the existing ingredient
+    effect layout; current-schema copies preserve its actor value and elapsed time.
+    Version101 retains skill-book awards by content base; copies preserve this history
+    without rerunning awards, independently of inventory and placed read flags.
+    Version100 retains the ingredient actor value and independent Health-drain lifetimes.
+    Current-schema copies preserve the owner and Maximum modifier without reapplication.
+    Version99 retains Player potion Light sources and their elapsed durations.
+    Older seeds have no active potion Light applications.
+    Version98 retains resolved signed ingredient magnitude/duration per use.
+    Copies preserve these fields independently of later caster skills.
+    Version97 adds inventory script identity after physical arrow flight. Fixture copies retain its
+    source and elapsed-game-hour timestamp without inventing uses for older seeds.
+    Version94 adds owned timed potion attribute contributions. Current-schema
+    copies retain these applications/modifiers; older seeds have no application.
+    Version93 adds explicit Player scroll Chameleon sources. Older seeds have none;
+    current-schema copies retain existing source/timer/modifier state unchanged.
+    Version92 adds Player-owned ingredient restoration. Older seeds have no
+    pending food; current-schema copies retain any existing timers unchanged.
+    Version91 adds empty shared PACK waiting overrides; these fixtures issue no Wait commands.
+    Version90 adds optional shared-base faction replacements, absent in these fixtures.
+    Version89 adds empty daily-package completion history; these fixtures run no daily packages.
+    Version88 adds empty magic-projectile ownership and its initial serial; these fixtures have no casts or projectiles.
+    Version86 adds empty trap-contact ownership; these fixtures have no contacts.
     Version85 adds an empty animated-reference body collection; these fixture
     sources contain no released reference bodies.
     Version84 adds optional base essential flags, absent in these fixtures.
@@ -167,7 +192,7 @@ def is_current_fixture_schema(target, current, minimum):
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 85)
+            and target == current and minimum <= target <= 103)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):

@@ -1,0 +1,71 @@
+{
+  "scope": "Terminal failure audit, not escape acceptance",
+  "course": "build/oblivion-compat/sewer-escape/full-escape-continuous-20",
+  "game_pid": 417401,
+  "passed": false,
+  "failure_segment": 39,
+  "failure_action": {
+    "duration_seconds": 30.052887,
+    "passed": false,
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-20/process.log",
+    "pattern": "M16 native cast release: spell=content:oblivion.esm:000136 applied=1",
+    "poll_interval_seconds": 0.1,
+    "start_offset": 123782548,
+    "type": "wait_log"
+  },
+  "native_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 417401,
+    "sequence": 83,
+    "tick": 29852,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 82,
+    "pending_count": 0,
+    "unsupported_count": 5
+  },
+  "all_automated_SDL_inputs_delivered": true,
+  "manual_record": {
+    "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-20/manual-log-combat-recovery-input-01.json",
+    "sha256": "1d7aa2adf119fbb1815dbcd3e52baaa2a1ae85c551d7959aa51208887cacf9bc",
+    "actions_sha256": "376bd736e76da218aecbc86005ce4fe659db6e2536ec03833497251761c67291",
+    "actions": 9,
+    "observed_outcome": "Both screenshots and subsequent section38 capture show Inventory still open. The record scope describes attempted open/close, not successful closure. No manual cast/equip/drop was issued."
+  },
+  "rendered_review": [
+    {
+      "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-20/manual-menu-observation-02.png",
+      "sha256": "962ba333b55b288383ab84738538f95c793ebffbd05e5f726695a7f88c437958",
+      "finding": "Inventory remains open"
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-20/segment38-phase2-joined-final-log-goblin.png",
+      "sha256": "fd4abdc36c2af8c7f9f747a77a648e86b557c69eaaadaa8c0165665d56086810",
+      "finding": "Inventory remains open"
+    }
+  ],
+  "last_save": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 417401,
+    "sequence": 82,
+    "tick": 29558,
+    "event": "save-complete",
+    "action_id": "observation-82",
+    "actor": "dynamic:player:0000000000000001",
+    "cause": "normal-save",
+    "deltas": {
+      "health": 14.080001831054688
+    },
+    "live": "live-3-82.json",
+    "live_sha256": "6e61771dde97451c3605ac5fec4f260deeb1a95e5928b5c563f491aa8a99a060",
+    "result": "committed",
+    "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/full-escape-continuous-20/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "save_sha256": "fd2aba1eee114526fbe9e0eff303b1ed8bb23921f24a712906b0ebb0e6c2d0a3",
+    "target": "dynamic:player:0000000000000001"
+  },
+  "last_save_health": 29.34001922607422,
+  "cause": "Manual menu inspection after stale low-health observation left Inventory open. Next automated C had no native cast receipt. Do not infer a healing implementation failure from this run.",
+  "next_check": "Fresh-process genuine save82 sources39\u201345 without manual menu interaction; then repeat all67 original-new-game course."
+}

@@ -1,0 +1,725 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Original rescue, active/waiting follower restart, original resumption, cavern-to-inn and inn-to-street escort. Full quest remains open.",
+  "acceptance": {
+    "structural_save_write": true,
+    "original_result_execution": true,
+    "normal_input_runtime": true,
+    "semantic_reinspection": true,
+    "active_follow_restart": true,
+    "waiting_restart": true,
+    "resumed_follow_restart": true,
+    "cavern_and_inn_door_traversal": true,
+    "original_escape_conversation": false,
+    "return_and_reward": false,
+    "full_course": false
+  },
+  "original": {
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "courses": [
+    {
+      "course": "rescue-recovery-01",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_rescue_recovery.json",
+      "manifest_sha256": "f7034c2d0c084509231c431a1e88449a523f2f2a974ed45b30be0843fadefac3",
+      "input_save": "build/oblivion-compat/hackdirt/cavern-guard-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "6a63742d2b90cbd0a1505219076922e7f068e251c547fc47f564137904ce7b87",
+      "output_save": "build/oblivion-compat/hackdirt/rescue-recovery-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "eb9e3603a020ee36f154ce2e8a5c5debe65d2cfc2cb5611a37edb1b4044b3cc4",
+      "result_sha256": "bb619c55008fe06e4fd5a56d0b2b17c05271aab896831e916a2beae948eb3047",
+      "epoch": {
+        "exe_sha256": "fe7cafff73480edc737b7a8f6207c3dc7f6679e51a056f3ceed3801d1a590bf6",
+        "pid": 600301,
+        "start_ticks": 188112682,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": [
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+          "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+        }
+      ]
+    },
+    {
+      "course": "darma-key-rescue-03",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_prison_key_rescue.json",
+      "manifest_sha256": "524acda572dfa9313079ac2dfad3ac89414e26a9b74dd5b7d332e003069edc18",
+      "input_save": "build/oblivion-compat/hackdirt/darma-discovery-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "f6de4ff1e2a749288820d34976a752cc015797b23e0377b186f5794481680afb",
+      "output_save": "build/oblivion-compat/hackdirt/darma-key-rescue-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "e9224553c5e2ff12c468ad708e41d6b7a633cd8d9c3bf20c7d5b85c5bf03fb21",
+      "result_sha256": "9154a5918aa3b6e7c3267eb510a354397acee96a036e954ac6ba168b246ec5f2",
+      "epoch": {
+        "exe_sha256": "cee7fae176813bea98f502c0a37432eb092fdfc673465bbb281d5d7d8bfccfea",
+        "pid": 603232,
+        "start_ticks": 188342306,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": [
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+          "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+        }
+      ]
+    },
+    {
+      "course": "darma-follow-02",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_prison_follow.json",
+      "manifest_sha256": "7d6e63c3b78d4f8944aa76d1b905b5da4267c407a82224a7c5d31881dc425680",
+      "input_save": "build/oblivion-compat/hackdirt/darma-key-rescue-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "e9224553c5e2ff12c468ad708e41d6b7a633cd8d9c3bf20c7d5b85c5bf03fb21",
+      "output_save": "build/oblivion-compat/hackdirt/darma-follow-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "e1f7002619de35a1781489349d8adef2b8414ba0493890140b711c2675d0166d",
+      "result_sha256": "9dfdd109427208b373e99fc79f24f133c82d4a7227487218e213203745509517",
+      "epoch": {
+        "exe_sha256": "8f24f9b1d6efb8a7cda2cf6bce701f1b83e7e891baa9d99d3d49393af47d3f50",
+        "pid": 604444,
+        "start_ticks": 188467623,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": [
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+          "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+        }
+      ]
+    },
+    {
+      "course": "darma-wait-02",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_wait_here.json",
+      "manifest_sha256": "57d0facb6dd85447b695cde70d545f4576858f4c5125cf74762ce8800a82a7a3",
+      "input_save": "build/oblivion-compat/hackdirt/darma-follow-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "e1f7002619de35a1781489349d8adef2b8414ba0493890140b711c2675d0166d",
+      "output_save": "build/oblivion-compat/hackdirt/darma-wait-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "b92f81ea33b3ad127be049631c4484b97228a964c51bee0f2000b6f04ef6177a",
+      "result_sha256": "05da1cf0859cba55ec2f2c9d0b3b14e945f8af4b7af0b018be732e72069b76fa",
+      "epoch": {
+        "exe_sha256": "beab9ebe637c8c80c71c4e90d3f38637a761cde0ebd7129816945ecbd5f77e70",
+        "pid": 609730,
+        "start_ticks": 188722492,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    {
+      "course": "darma-wait-reload-01",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_wait_follower_reload.json",
+      "manifest_sha256": "646bda7c84fc269c31b82b85ee2d214b2e0611839c3e8bd38f84d8c3f1f076d7",
+      "input_save": "build/oblivion-compat/hackdirt/darma-wait-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "b92f81ea33b3ad127be049631c4484b97228a964c51bee0f2000b6f04ef6177a",
+      "output_save": "build/oblivion-compat/hackdirt/darma-wait-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "c66bbe1d372565cd512f498cc483b8c59b91e4a1b4e49f428ed6e0efa96ded75",
+      "result_sha256": "b7f318634715675b7f971ca798014712b8a720dc0f6e2138b97318f3219c75f9",
+      "epoch": {
+        "exe_sha256": "beab9ebe637c8c80c71c4e90d3f38637a761cde0ebd7129816945ecbd5f77e70",
+        "pid": 615514,
+        "start_ticks": 188740802,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    {
+      "course": "darma-resume-03",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_resume_follower.json",
+      "manifest_sha256": "42d307d6cd2fc8feb008408b5ae4e666124dacff8ce446b25b8fa1570dd01fbb",
+      "input_save": "build/oblivion-compat/hackdirt/darma-wait-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "c66bbe1d372565cd512f498cc483b8c59b91e4a1b4e49f428ed6e0efa96ded75",
+      "output_save": "build/oblivion-compat/hackdirt/darma-resume-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "abd264adabca8980842eea9bfef72786c881f00b88a899be203f8625db93a766",
+      "result_sha256": "ba208d49dc5ddaf00680ebc6ecaeb9c8c31615239dffef55d0178f0384480d86",
+      "epoch": {
+        "exe_sha256": "6c1bac9f284382a2c82ca5ffe56a9dc5fbf0b97251498217bd161fe8ae38655d",
+        "pid": 622945,
+        "start_ticks": 188867686,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    {
+      "course": "darma-resumed-follow-reload-01",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_resume_follow_reload.json",
+      "manifest_sha256": "ba2c8623e826a34fa649bcc0f32c57480b5f524af20b3a560a4cdca9c143fbfa",
+      "input_save": "build/oblivion-compat/hackdirt/darma-resume-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "abd264adabca8980842eea9bfef72786c881f00b88a899be203f8625db93a766",
+      "output_save": "build/oblivion-compat/hackdirt/darma-resumed-follow-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "4b2653ed6dd2c42bff583638b93c1044fdad734092d22d3f291be553dd4f9f06",
+      "result_sha256": "d96f7c90941444f6d181a2154503bb4dec90b390c066fc2ca9418294819f835f",
+      "epoch": {
+        "exe_sha256": "6c1bac9f284382a2c82ca5ffe56a9dc5fbf0b97251498217bd161fe8ae38655d",
+        "pid": 623474,
+        "start_ticks": 188900927,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    {
+      "course": "darma-escort-inn-ladder-01",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_escort_inn_ladder.json",
+      "manifest_sha256": "01a8bb7ca30566475aba80fe7516592039440cffcd34ee15d6b56c046f4664d8",
+      "input_save": "build/oblivion-compat/hackdirt/darma-resumed-follow-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "4b2653ed6dd2c42bff583638b93c1044fdad734092d22d3f291be553dd4f9f06",
+      "output_save": "build/oblivion-compat/hackdirt/darma-escort-inn-ladder-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "83a2c30fc813c0c194c1bee59dc0ed5be6087faebbc88a7e0df6ca97e32b06d1",
+      "result_sha256": "2cfb3068a83611bfe3edd0fc43b93619fb0edfbed7bcd37a45b6bef64d9d620d",
+      "epoch": {
+        "exe_sha256": "6c1bac9f284382a2c82ca5ffe56a9dc5fbf0b97251498217bd161fe8ae38655d",
+        "pid": 623885,
+        "start_ticks": 188925760,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    {
+      "course": "darma-inn-exit-01",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_escort_cavern_to_inn.json",
+      "manifest_sha256": "da5a18dbefe04f4c735852b638f6f52ed1257ada965b3a1c95a79f5bb4934d14",
+      "input_save": "build/oblivion-compat/hackdirt/darma-escort-inn-ladder-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "83a2c30fc813c0c194c1bee59dc0ed5be6087faebbc88a7e0df6ca97e32b06d1",
+      "output_save": "build/oblivion-compat/hackdirt/darma-inn-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "a9dd31383f8095acd8c338267bb6b6ae368f63c6575b6e7241d3d969432541b1",
+      "result_sha256": "2c702d469b9e4407fb13e183d0fbccd818a92f71a70dd008cf9749b8407278cb",
+      "epoch": {
+        "exe_sha256": "6c1bac9f284382a2c82ca5ffe56a9dc5fbf0b97251498217bd161fe8ae38655d",
+        "pid": 624192,
+        "start_ticks": 188958575,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    {
+      "course": "darma-street-01",
+      "passed": true,
+      "manifest": "scripts/data/oblivion_compat/oblivion_hackdirt_escort_inn_to_street.json",
+      "manifest_sha256": "8cbf0f5f3ad651602a1107996290d85a7c4c85a8341ca79920c8d6c8e90164dd",
+      "input_save": "build/oblivion-compat/hackdirt/darma-inn-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "a9dd31383f8095acd8c338267bb6b6ae368f63c6575b6e7241d3d969432541b1",
+      "output_save": "build/oblivion-compat/hackdirt/darma-street-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "output_sha256": "c02dbfc902576a9026322ac464eb8d38f8e509467082964105550f6aaddeba4c",
+      "result_sha256": "fcee9c76c28ce240653ba103ceae1eeb3931e3e388167fc2247cf02e621a90cc",
+      "epoch": {
+        "exe_sha256": "6c1bac9f284382a2c82ca5ffe56a9dc5fbf0b97251498217bd161fe8ae38655d",
+        "pid": 624445,
+        "start_ticks": 188994333,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    }
+  ],
+  "checks": {
+    "rescue-follow-wait-normal-02": {
+      "path": "build/oblivion-compat/hackdirt/rescue-follow-wait-normal-02/verification.json",
+      "sha256": "fe42f07e7b0c81ee61cf44ba3583641c15e88d7f4ac85f24445a20e2f3c454ad",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "ada83e7a18882cec3cd3108fb932b53f3dad453733c2dc09938d770d42b7bcb6"
+      },
+      "results": {
+        "engine": {
+          "executed": 2247,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ab7693fee696af14907eb79e7590b81d7c20bf9fa22cdab915848461e41b5457",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "f0c82eec1a7b20ef8ce2743ed47e698fa7092a3057e2591ec6411cdc9b6e0983",
+          "inventory_sha256": "4791f29dee1a3117115b78e19d06438fba22df73f1ed8edf1c687adbe56206c0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "rescue-follow-wait-asan-02": {
+      "path": "build/oblivion-compat/hackdirt/rescue-follow-wait-asan-02/verification.json",
+      "sha256": "87aac7cebab94fd8e7b7e179df661a24439eda960f9207c770c4a7d5337f1431",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "ada83e7a18882cec3cd3108fb932b53f3dad453733c2dc09938d770d42b7bcb6"
+      },
+      "results": {
+        "engine": {
+          "executed": 2247,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1fc879dc5634df768ed1317cb9fa1c25c1258461eebc105b05a77f177dfc3011",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ca03e1519fa6dec1886956d24ee98ee60aee5d89cbeaf5666ab44e59e1385c01",
+          "inventory_sha256": "4791f29dee1a3117115b78e19d06438fba22df73f1ed8edf1c687adbe56206c0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "sanitize": {
+          "executed": 1090,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "11ae21f3a767590e8eb50b8cc800e2854574d7db28a8148323c073d5d9c370ca",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "2118e61a2040b57e5b6938f29df6889e7af63765db0d6110f74423ed31ff6c5c",
+          "inventory_sha256": "51d0cea11355ecf4ed2c687810a5ada61c93a2de60618fc2263c0218bb833048",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "rescue-follow-wait-normal-01": {
+      "path": "build/oblivion-compat/hackdirt/rescue-follow-wait-normal-01/verification.json",
+      "sha256": "063958d8ec23419825fe0402836e6a5a061ccc89c9c336066baa961d67859ecc",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "219da5511468c8f3192d8d8842f4af2d4ea81ea28c8d4658d0f0118230707b50"
+      },
+      "results": {
+        "components": {
+          "executed": 3268,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6ac9e8e3fcedcee54fac4620f4bd95c58af2ee966215488d7012ade9f2c1aeab",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e050c01e1af1f76291d312dcd2027a56ead862dfa666a05f4688ed6307fd0ce3",
+          "inventory_sha256": "dfa003f696626f253a8e254ee2c8e9f88af5afbe73b9b23853ba8abbb1d06348",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2246,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "22d0353dc1589245301b89ad630758df09597537e952d1d8ff47947c087a19b5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "f8563e1d66010cfc64dac142749a222d1e6a663a073f1a4dc03f43a8681c05b0",
+          "inventory_sha256": "b505d405867bfcca07f21b4ff7e26699e68824ddf811f6c3cbba669e5190105c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "package-wait-focused-04": {
+      "path": "build/oblivion-compat/hackdirt/package-wait-focused-04/verification.json",
+      "sha256": "365813a6bf6783710f5f63ab976ed8c69891df8543bd77894375c0cb776a4d26",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "219da5511468c8f3192d8d8842f4af2d4ea81ea28c8d4658d0f0118230707b50"
+      },
+      "results": {
+        "engine": {
+          "executed": 79,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionTutorialAction.PackageWaitPersistsAndStopWaitingResumesWithoutReplacingSelection:OblivionTutorialAction.FollowHoldsWithinAuthoredRangeAndRoutesToTheLeader:OblivionTutorialAction.RemoveScriptPackageResumesAuthoredListAndContinuesOriginalResult:OblivionDialogueMenu.*:OblivionAiTest.*",
+          "binary_sha256": "22d0353dc1589245301b89ad630758df09597537e952d1d8ff47947c087a19b5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "0322a49de2059de856ec2111823b1305c7d65a544e2e025c0bf0bc0e0e07aee3",
+          "inventory_sha256": "b505d405867bfcca07f21b4ff7e26699e68824ddf811f6c3cbba669e5190105c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 598,
+          "passed": true,
+          "log_sha256": "054da553e07d43cd5dd5c1ce7c790f341af46ada4d61d5a1c608ba2b0627a425"
+        }
+      }
+    },
+    "reference-index-focused-01": {
+      "path": "build/oblivion-compat/hackdirt/reference-index-focused-01/verification.json",
+      "sha256": "beb06309039fdb5359e4da1c3f80a2e48f3fc1112416e40f22bc47c12d4fddf3",
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "f01707116fd3c9164e012ffdade8a95cd51ae537c0181fd9f5e877a254805969"
+      },
+      "results": {
+        "engine": {
+          "executed": 80,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionTutorialAction.EnableQueryDiscardsBorrowedIndexAfterBackingStorageIsReleased:OblivionTutorialAction.PackageWaitPersistsAndStopWaitingResumesWithoutReplacingSelection:OblivionTutorialAction.FollowHoldsWithinAuthoredRangeAndRoutesToTheLeader:OblivionTutorialAction.RemoveScriptPackageResumesAuthoredListAndContinuesOriginalResult:OblivionDialogueMenu.*:OblivionAiTest.*",
+          "binary_sha256": "ab7693fee696af14907eb79e7590b81d7c20bf9fa22cdab915848461e41b5457",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "07a507fa596945673e05e22e726242e3a881988f371244521bb667da7a606d48",
+          "inventory_sha256": "4791f29dee1a3117115b78e19d06438fba22df73f1ed8edf1c687adbe56206c0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitizer_environments": {
+    "engine": {
+      "SDL_VIDEODRIVER": "x11",
+      "SDL_AUDIODRIVER": "dummy",
+      "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+      "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+      "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "components": {
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "selection": "ESM4*"
+    }
+  },
+  "evidence_reuse": "Normal component 3268 and Python 598 results retain original source fingerprint 219da551...; their implementation files were unchanged by the subsequent C++ reference-index fix. Final normal and sanitizer engine 2247 and sanitized component 1090 gates share fingerprint ada83e7a18882cec3cd3108fb932b53f3dad453733c2dc09938d770d42b7bcb6 before this manifest/document publication.",
+  "native_oracles": {
+    "faction_rank_difference": {
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "entry": "0x4f67e0",
+      "case_count": 147,
+      "rule": "Calling actor rank minus explicit second actor rank; either rank=-1 returns0. Negative ranks other than -1 are subtracted.",
+      "stubs": [
+        "actor virtual+0x190 identity",
+        "0x5e02e0 actor-base provider with existing AI data",
+        "0x467510 rank provider; native Player flag checked for each call"
+      ],
+      "scope": "Full native evaluator and integer-to-double result path; faction membership storage/flags provider and command argument decoding are boundary stubs, not independently proven by this harness.",
+      "artifact": "build/oblivion-compat/hackdirt/faction-rank-difference-oracle.json",
+      "sha256": "dac7711584aa7da6af1c9d6627f7a4e9d30593f759f4b50adb9f240a68110f49"
+    },
+    "package_waiting": {
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "entry": "0x5668e0",
+      "case_count": 12,
+      "rule": "Shared PACK flag0x10000, not per-actor state. True sets; false clears, preserving other bits. Marks form change0x08000000.",
+      "stubs": [
+        "0x446b80 form-existence query returns false",
+        "TESForm change flag callbacks recorded"
+      ],
+      "cases": [
+        {
+          "flags": 0,
+          "waiting": false,
+          "actual": 0
+        },
+        {
+          "flags": 0,
+          "waiting": true,
+          "actual": 65536
+        },
+        {
+          "flags": 1,
+          "waiting": false,
+          "actual": 1
+        },
+        {
+          "flags": 1,
+          "waiting": true,
+          "actual": 65537
+        },
+        {
+          "flags": 4,
+          "waiting": false,
+          "actual": 4
+        },
+        {
+          "flags": 4,
+          "waiting": true,
+          "actual": 65540
+        },
+        {
+          "flags": 65536,
+          "waiting": false,
+          "actual": 0
+        },
+        {
+          "flags": 65536,
+          "waiting": true,
+          "actual": 65536
+        },
+        {
+          "flags": 65540,
+          "waiting": false,
+          "actual": 4
+        },
+        {
+          "flags": 65540,
+          "waiting": true,
+          "actual": 65540
+        },
+        {
+          "flags": 4294967295,
+          "waiting": false,
+          "actual": 4294901759
+        },
+        {
+          "flags": 4294967295,
+          "waiting": true,
+          "actual": 4294967295
+        }
+      ],
+      "authored_waiting_packages": 0,
+      "artifact": "build/oblivion-compat/hackdirt/package-wait-mutator-oracle.json",
+      "sha256": "fba8fbba10ba799aed10c620551fe3769d72e9aeccd7b9d57ce1ae4fdf39315a"
+    },
+    "remove_script_package": {
+      "entry": "0x50b6a0",
+      "evidence": "Hash-verified command descriptor and handler review; not a full executable handler oracle.",
+      "scope": "Releases mandatory script override and reevaluates authored packages. Internal applied/removed booleans are not claimed as native public return-bit parity."
+    }
+  },
+  "semantic": {
+    "quest": {
+      "quest": "content:oblivion.esm:027815",
+      "stage": 80,
+      "running": true,
+      "completed_stages": [
+        1,
+        2,
+        10,
+        35,
+        50,
+        55,
+        60,
+        80
+      ]
+    },
+    "ms45": {
+      "untied": 1,
+      "unlockCell": 1,
+      "thankedPC": 0
+    },
+    "waiting_save_distance": 523.9241777912789,
+    "resumed_follow_save_distance": 346.4291583025249,
+    "street_darma_ai": {
+      "actor": "content:oblivion.esm:0280fa",
+      "base": "content:oblivion.esm:0280c9",
+      "package": "content:oblivion.esm:0292f9",
+      "script_package": "null",
+      "target": "dynamic:player:0000000000000001",
+      "cell": "content:oblivion.esm:00f3c8",
+      "companion_group": "dynamic:player:0000000000000001"
+    },
+    "darma_health": 63.0,
+    "player_inventory": [
+      {
+        "base": "content:oblivion.esm:0be335",
+        "count": 1,
+        "condition": -1.0,
+        "charge": -1.0,
+        "equipped_slots": 16,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      },
+      {
+        "base": "content:oblivion.esm:02731a",
+        "count": 1,
+        "condition": -1.0,
+        "charge": -1.0,
+        "equipped_slots": 32,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      },
+      {
+        "base": "content:oblivion.esm:027319",
+        "count": 1,
+        "condition": -1.0,
+        "charge": -1.0,
+        "equipped_slots": 4,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      },
+      {
+        "base": "content:oblivion.esm:027318",
+        "count": 1,
+        "condition": -1.0,
+        "charge": -1.0,
+        "equipped_slots": 8,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      },
+      {
+        "base": "content:oblivion.esm:028b7b",
+        "count": 1,
+        "condition": -1.0,
+        "charge": -1.0,
+        "equipped_slots": 0,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": null
+      }
+    ],
+    "disposition_modifiers": [
+      {
+        "actor": "content:oblivion.esm:0234fd",
+        "target": "dynamic:player:0000000000000001",
+        "value": 40
+      },
+      {
+        "actor": "content:oblivion.esm:0280da",
+        "target": "dynamic:player:0000000000000001",
+        "value": 40
+      },
+      {
+        "actor": "content:oblivion.esm:0280fa",
+        "target": "dynamic:player:0000000000000001",
+        "value": 30
+      }
+    ],
+    "faction_reactions": [
+      {
+        "from": "content:oblivion.esm:0280b5",
+        "to": "content:oblivion.esm:09ea90",
+        "value": -50
+      }
+    ],
+    "crime_incidents": [],
+    "waiting_overrides": [
+      {
+        "package": "content:oblivion.esm:0292f9",
+        "waiting": false
+      }
+    ]
+  },
+  "retained_failures": [
+    {
+      "course": "darma-discovery-02",
+      "scope": "Failed automatic greeting; only its documented normal-F5 closed-cage approach prefix was used as rescue input. Opening before the plea is supported by the original cage/help scripts."
+    },
+    {
+      "course": "darma-key-rescue-01",
+      "reason": "Original result stopped on unsupported RemoveScriptPackage; partial80 save not accepted."
+    },
+    {
+      "course": "darma-key-rescue-02",
+      "reason": "Original SayTo HELLO condition stopped on unsupported GetFactionRankDifference; partial80 save not accepted."
+    },
+    {
+      "course": "darma-follow-01",
+      "reason": "Radial destination snapped into prison dead-end; physical follow not accepted."
+    },
+    {
+      "course": "darma-follow-reload-01",
+      "reason": "Recorded route walked into Dar-Ma; not an accepted reload course."
+    },
+    {
+      "course": "darma-follow-reload-02",
+      "reason": "Missing recent complete input observation; not accepted."
+    },
+    {
+      "course": "darma-wait-01",
+      "reason": "Original Wait Here result diagnosed unsupported Wait; not accepted."
+    },
+    {
+      "course": "darma-resume-01",
+      "reason": "Engine SIGSEGV: stale saved-reference index after package action grew saved vector.",
+      "backtrace": "build/oblivion-compat/hackdirt/darma-resume-01/crash-backtrace.log",
+      "backtrace_sha256": "5e2911a6dfff71c7323ce2f6dac7fd0ff8ccc8299b082ba3c002d5bf6d92e571"
+    },
+    {
+      "course": "darma-resume-02",
+      "reason": "Crash fixed; normal interaction missed actor due level camera above torso. Not accepted as resumption."
+    },
+    {
+      "check": "rescue-follow-wait-asan-01",
+      "reason": "Build deliberately terminated to fix encountered runtime crash; not a sanitizer pass."
+    },
+    {
+      "checks": [
+        "package-wait-focused-01",
+        "package-wait-focused-02",
+        "package-wait-focused-03"
+      ],
+      "reason": "Retained wire-suffix and test macro compile failures; corrected before passing gates."
+    }
+  ],
+  "limitations": [
+    "Following/navigation is a gameplay implementation, not a claim of bit-identical original route/arithmetic behavior.",
+    "Runtime screenshots, original extracted records/disassembly, saves and emulator outputs remain ignored local artifacts.",
+    "Explicit original escape INFO02820d and return/reward still require actual course acceptance."
+  ]
+}

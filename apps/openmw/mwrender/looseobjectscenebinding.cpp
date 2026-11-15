@@ -15,28 +15,29 @@ namespace MWRender
         Objects& owner, const NifBullet::ActorRagdollDefinition& definition)
         : mAnimation(&animation), mPlacement(&placement), mOwner(owner.mModelPreparationIdentity), mObjects(&owner)
         , mSourceHash(definition.mSourceHash)
-        , mBodyRecord(0), mNodeRecord(0), mCollisionFlags(0), mReferenceRoot(definition.mReferenceRoot)
+        , mReferenceRoot(definition.mReferenceRoot)
         , mReferenceAssetRoot(definition.mReferenceAssetRoot)
         , mReferenceScabbard(definition.mReferenceScabbard)
     {
-        if (definition.mBodies.size() != 1 || mSourceHash.empty() || mOwner.expired())
-            throw std::invalid_argument("loose scene link requires an owned identified single-body model");
-        const auto& body = definition.mBodies.front();
-        mBodyRecord = body.mRecord;
-        mNodeRecord = body.mNodeRecord;
-        mCollisionFlags = body.mCollisionFlags;
+        if (definition.mBodies.empty() || mSourceHash.empty() || mOwner.expired())
+            throw std::invalid_argument("loose scene link requires an owned identified physical model");
+        for (const auto& body : definition.mBodies)
+            mBodies.emplace_back(body.mRecord, body.mNodeRecord, body.mCollisionFlags);
         if (!isValidFor(animation.getPtr()))
             throw std::invalid_argument("invalid prepared loose scene link");
     }
 
     bool LooseObjectSceneBinding::matches(const NifBullet::ActorRagdollDefinition& definition) const
     {
-        return definition.mBodies.size() == 1 && definition.mSourceHash == mSourceHash
-            && definition.mReferenceRoot == mReferenceRoot && definition.mBodies.front().mRecord == mBodyRecord
-            && definition.mReferenceAssetRoot == mReferenceAssetRoot
-            && definition.mReferenceScabbard == mReferenceScabbard
-            && definition.mBodies.front().mNodeRecord == mNodeRecord
-            && definition.mBodies.front().mCollisionFlags == mCollisionFlags;
+        if (definition.mBodies.size() != mBodies.size() || definition.mSourceHash != mSourceHash
+            || definition.mReferenceRoot != mReferenceRoot || definition.mReferenceAssetRoot != mReferenceAssetRoot
+            || definition.mReferenceScabbard != mReferenceScabbard) return false;
+        for (std::size_t i = 0; i < mBodies.size(); ++i)
+        {
+            const auto& body = definition.mBodies[i];
+            if (mBodies[i] != std::tuple(body.mRecord, body.mNodeRecord, body.mCollisionFlags)) return false;
+        }
+        return true;
     }
 
     bool LooseObjectSceneBinding::isValidFor(const MWWorld::Ptr& ptr, bool requirePublished) const

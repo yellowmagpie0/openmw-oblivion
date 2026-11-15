@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x41d320",
+  "spell_layout": {
+    "effect_list_offset": 36,
+    "magic_item_offset": 24,
+    "type": 0,
+    "effect_code": "REHE",
+    "effect_base_cost": 10,
+    "effect_flags": 16779376,
+    "effect_school": 5,
+    "duration": 0,
+    "area": 0
+  },
+  "settings": {
+    "iActorLuckSkillBase": -20,
+    "fActorLuckSkillMult": 0.4000000059604645,
+    "fMagicAreaBaseCostMult": 0.15000000596046448,
+    "fMagicDurMagBaseCostMult": 0.10000000149011612,
+    "fMagicRangeTargetCostMult": 1.5,
+    "fMagicCasterSkillCostBase": 0.20000000298023224,
+    "fMagicCasterSkillCostMult": 1.2000000476837158,
+    "fMagicCostScale": 1.2799999713897705
+  },
+  "cases": [
+    {
+      "manual": false,
+      "record_cost": 24,
+      "skill": 5,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 19.0
+    },
+    {
+      "manual": false,
+      "record_cost": 24,
+      "skill": 25,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 15.0
+    },
+    {
+      "manual": false,
+      "record_cost": 24,
+      "skill": 50,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 11.0
+    },
+    {
+      "manual": false,
+      "record_cost": 24,
+      "skill": 100,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 2.0
+    },
+    {
+      "manual": false,
+      "record_cost": 24,
+      "skill": 5,
+      "luck": 0,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 20.0
+    },
+    {
+      "manual": false,
+      "record_cost": 24,
+      "skill": 5,
+      "luck": 100,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 15.0
+    },
+    {
+      "manual": true,
+      "record_cost": 0,
+      "skill": 5,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 0.0
+    },
+    {
+      "manual": true,
+      "record_cost": 1,
+      "skill": 5,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 1.340000033378601
+    },
+    {
+      "manual": true,
+      "record_cost": 24,
+      "skill": 5,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 32.15999984741211
+    },
+    {
+      "manual": false,
+      "record_cost": 24,
+      "skill": 5,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 2,
+      "cost": 28.0
+    },
+    {
+      "manual": false,
+      "record_cost": 999,
+      "skill": 5,
+      "luck": 50,
+      "magnitude": 8,
+      "range": 0,
+      "cost": 19.0
+    }
+  ],
+  "boundaries": [
+    "Original SpellItem cost virtual, effect list, effect cost, math power and skill/luck adjustment execute.",
+    "Only actor integer AV virtual284 is stubbed to declared skill and luck.",
+    "Synthetic spell/effect structures reflect audited Heal Minor Wounds; live actor construction, admission, resource debit and animation are not executed."
+  ]
+}

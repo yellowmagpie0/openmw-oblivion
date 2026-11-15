@@ -86,24 +86,28 @@ namespace MWGui
         MWWorld::Ptr object = item.mBase;
         size_t count = item.mCount;
         bool shift = MyGUI::InputManager::getInstance().isShiftPressed();
+        const bool native = mPtr.getType() == ESM::REC_CONT4;
+        const bool nativeGold = native && object.getCellRef().getRefId() == MWWorld::ContainerStore::sGoldId;
+        const bool transfer = native || Settings::gui().mControllerMenus
+            || MyGUI::InputManager::getInstance().isAltPressed();
         if (MyGUI::InputManager::getInstance().isControlPressed())
             count = 1;
 
         mSelectedItem = mSortModel->mapToSource(index);
 
-        if (count > 1 && !shift)
+        if (count > 1 && !shift && !nativeGold)
         {
             CountDialog* dialog = MWBase::Environment::get().getWindowManager()->getCountDialog();
             std::string name{ object.getClass().getName(object) };
             name += MWGui::ToolTips::getSoulString(object.getCellRef());
             dialog->openCountDialog(name, "#{sTake}", static_cast<int>(count));
             dialog->eventOkClicked.clear();
-            if (Settings::gui().mControllerMenus || MyGUI::InputManager::getInstance().isAltPressed())
+            if (transfer)
                 dialog->eventOkClicked += MyGUI::newDelegate(this, &ContainerWindow::transferItem);
             else
                 dialog->eventOkClicked += MyGUI::newDelegate(this, &ContainerWindow::dragItem);
         }
-        else if (Settings::gui().mControllerMenus || MyGUI::InputManager::getInstance().isAltPressed())
+        else if (transfer)
             transferItem(nullptr, count);
         else
             dragItem(nullptr, count);
@@ -154,7 +158,8 @@ namespace MWGui
 
     void ContainerWindow::setPtr(const MWWorld::Ptr& container)
     {
-        if (container.isEmpty() || (container.getType() != ESM::REC_CONT && !container.getClass().isActor()))
+        if (container.isEmpty() || (container.getType() != ESM::REC_CONT && container.getType() != ESM::REC_CONT4
+                                       && !container.getClass().isActor()))
             throw std::runtime_error("Invalid argument in ContainerWindow::setPtr");
         bool lootAnyway = mTreatNextOpenAsLoot;
         mTreatNextOpenAsLoot = false;

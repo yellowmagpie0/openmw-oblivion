@@ -1,0 +1,662 @@
+{
+  "schema_version": 1,
+  "name": "Native mace impact and cavern goblin",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal frames=0\nlocal strike=0\nlocal wasUse=false\nlocal released=nil\nlocal done=false\nlocal selected=nil\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1\n assert(Actor.stats.dynamic.health(self).current>0,'Player died in western rat fight')\n if frames==5 then print('Western rat fight ready') end\n local target=nil\n local distance=math.huge\n local dead=0\n for _,id in ipairs({{0x3b513}}) do\n  local rat=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n  assert(rat and rat:isValid(),'Western rat missing')\n  if Actor.isDead(rat) then dead=dead+1\n  else\n   local d=(rat.position-self.position):length()\n   if d<distance then target=rat distance=d end\n  end\n end\n if distance<170 then print('Western rat close approach') end\n if selected and selected:isValid() and not Actor.isDead(selected) then\n  target=selected distance=(target.position-self.position):length()\n else selected=target end\n local x=0\n if target then\n  local d=target.position-self.position\n  local f=self.rotation:apply(util.vector3(0,1,0))\n  local angle=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n  x=math.max(-8192,math.min(8192,math.floor(angle*5120+.5)))\n end\n print(string.format('Western rat aim x=%d y=0 distance=%.2f',x,distance))\n if not done and dead==1 then done=true print('Western rats defeated') end\n local use=self.controls.use~=0\n if use and not wasUse then strike=strike+1 released=nil print('Western strike '..strike..' armed') end\n if wasUse and not use then released=core.getSimulationTime() end\n if released and core.getSimulationTime()-released>=1 then print('Western strike '..strike..' settled') end\n wasUse=use\n timer=timer+dt\n if timer>=1 then timer=0 print('Western rat fight health='..Actor.stats.dynamic.health(self).current..' remaining='..(1-dead)) end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Western rat fight ready",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 1 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 1 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 2 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 2 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 3 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 3 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 4 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 4 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 5 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 5 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 6 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 6 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 7 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 7 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 8 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 8 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 9 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 9 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 10 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 10 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 11 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 11 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rat aim x=",
+      "timeout_seconds": 15,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Western rat aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+) distance="
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 12 armed",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western strike 12 settled",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Western rats defeated",
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "western-rats-defeated.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 240,
+  "expected_exit": 0,
+  "expected_log": [
+    "Western rats defeated",
+    "activate-script ref=content:oblivion.esm:051acb activator=content:oblivion.esm:051ac9",
+    "playgroup ref=content:oblivion.esm:051acb group=unequip played=true",
+    "activate-script ref=content:oblivion.esm:051acc activator=content:oblivion.esm:051acb",
+    "playgroup ref=content:oblivion.esm:051acc group=unequip played=true",
+    "activate-script ref=content:oblivion.esm:051aca activator=content:oblivion.esm:051acc",
+    "playgroup ref=content:oblivion.esm:051aca group=unequip played=true",
+    "TES4 animated reference released: content:oblivion.esm:051acb bodies=8",
+    "TES4 animated reference released: content:oblivion.esm:051acc bodies=8",
+    "TES4 animated reference released: content:oblivion.esm:051aca bodies=8",
+    "TES4 trap impact:"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)",
+    "activate-script ref=content:oblivion.esm:051aca activator=content:oblivion.esm:051aca"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

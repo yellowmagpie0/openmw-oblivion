@@ -5,6 +5,7 @@
 #include "../mwrender/objects.hpp"
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadbook.hpp>
 #include <type_traits>
 #include <components/esm4/dropplacement.hpp>
 #include <components/nifbullet/actorragdoll.hpp>
@@ -20,7 +21,15 @@ namespace MWWorld
         {
             // Destroy borrowed resource preparations before their private node.
             std::variant<std::unique_ptr<CellStore::PreparedInsertion<ESM4::Weapon>>,
-                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Armor>>> mCell;
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Armor>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::MiscItem>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Clothing>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Ammunition>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Key>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Light>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Ingredient>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Apparatus>>,
+                std::unique_ptr<CellStore::PreparedInsertion<ESM4::Book>>> mCell;
             CellStore* mOwner = nullptr;
             MWRender::Objects* mObjects = nullptr;
             std::unique_ptr<MWRender::Objects::PreparedModel> mModel;
@@ -195,12 +204,11 @@ namespace MWWorld
                     || placed->mBaseObj != reference.mBase->mId || placed->mBaseKey != *baseKey
                     || placed->mParent != cell.getCell()->getId() || placed->mParentKey != *cellKey
                     || !placed->mId.isZeroOrUnset() || !placed->mFormKey.isDynamic()
-                    || placed->mFormKey.mValue == 0 || reference.mRef.getCount(false) != 1
+                    || placed->mFormKey.mValue == 0 || reference.mRef.getCount(false) <= 0
+                    || (!std::is_same_v<Record, ESM4::Ammunition> && !std::is_same_v<Record, ESM4::MiscItem>
+                        && reference.mRef.getCount(false) != 1)
                     || model.empty())
                     throw std::invalid_argument("loose weapon admission requires an identified native instance and managed native cell");
-                if constexpr (std::is_same_v<Record, ESM4::Armor>)
-                    if (!(reference.mBase->mArmorFlags & ESM4::Armor::TES4_Shield))
-                        throw std::invalid_argument("loose armor admission requires a native shield");
                 const float scale = reference.mRef.getScale();
                 if (ESM4::droppedReferenceScale(scale) != scale)
                     throw std::invalid_argument("loose weapon admission requires a resolved native reference scale");
@@ -209,12 +217,26 @@ namespace MWWorld
                 ESM::FormKey::dynamic(placed->mFormKey.mNamespace, placed->mFormKey.mValue);
                 if (reference.isDeleted() || !reference.mData.isEnabled())
                     throw std::invalid_argument("loose weapon admission requires a live enabled instance");
-                if (const auto condition = reference.mRef.getNativeItemCondition();
-                    condition && (!std::isfinite(*condition) || *condition < 0
-                        || reference.mBase->mData.health == 0 || *condition > reference.mBase->mData.health))
-                    throw std::invalid_argument("loose weapon condition exceeds native base health");
+                if (const auto condition = reference.mRef.getNativeItemCondition())
+                {
+                    if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Clothing>
+                        || std::is_same_v<Record, ESM4::Ammunition> || std::is_same_v<Record, ESM4::Key>
+                        || std::is_same_v<Record, ESM4::Light> || std::is_same_v<Record, ESM4::Ingredient>
+                        || std::is_same_v<Record, ESM4::Apparatus> || std::is_same_v<Record, ESM4::Book>)
+                        throw std::invalid_argument("loose miscellaneous prop/clothing cannot have durability");
+                    else if (!std::isfinite(*condition) || *condition < 0
+                        || reference.mBase->mData.health == 0 || *condition > reference.mBase->mData.health)
+                        throw std::invalid_argument("loose weapon condition exceeds native base health");
+                }
                 const auto charge = reference.mRef.getEnchantmentCharge();
-                if (!std::isfinite(charge) || (charge != -1.f && (charge < 0
+                if constexpr (std::is_same_v<Record, ESM4::MiscItem> || std::is_same_v<Record, ESM4::Key>
+                    || std::is_same_v<Record, ESM4::Light> || std::is_same_v<Record, ESM4::Ingredient>
+                    || std::is_same_v<Record, ESM4::Apparatus> || std::is_same_v<Record, ESM4::Book>)
+                {
+                    if (charge != -1.f)
+                        throw std::invalid_argument("loose miscellaneous prop cannot have enchantment charge");
+                }
+                else if (!std::isfinite(charge) || (charge != -1.f && (charge < 0
                     || reference.mBase->mEnchantment.isZeroOrUnset()
                     || charge > reference.mBase->mEnchantmentPoints)))
                     throw std::invalid_argument("loose weapon charge exceeds native enchantment capacity");

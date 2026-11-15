@@ -1,0 +1,279 @@
+{
+  "scope": "Genuine connected post-shaman recovery,26 original pathgrid nodes and original Caverns door03816c into Imperial Subterrane022288. Full escape incomplete.",
+  "full_escape_complete": false,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-to-subterrane-course-01/scenario.json",
+  "passed": true,
+  "exit_code": 0,
+  "actions": 978,
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-shaman-continuous-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "d8bf3a42c51a4ad50126682922642160239423d1cf3220e7e3ac3e1d190cf141",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": [
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/1",
+        -0.0031508926767855883,
+        -0.003150892909616232
+      ],
+      [
+        "/native_animated_references/3/bodies/5/linear_velocity/0",
+        0.0069936770014464855,
+        0.006993676535785198
+      ],
+      [
+        "/native_animated_references/3/bodies/6/linear_velocity/1",
+        -0.006961201783269644,
+        -0.0069612013176083565
+      ],
+      [
+        "/native_animated_references/3/bodies/7/linear_velocity/0",
+        -0.0023092885967344046,
+        -0.0023092888295650482
+      ],
+      [
+        "/native_animated_references/3/bodies/7/linear_velocity/2",
+        0.00022373833053279668,
+        0.0002237383450847119
+      ]
+    ]
+  },
+  "save": "build/oblivion-compat/sewer-escape/joined-cavern-to-subterrane-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "sha256": "48bcec921b5469523a25137ad4caae7d0cc1f5d7a79c15cb18a4cb264835d445",
+  "cell": "content:oblivion.esm:022288",
+  "position": [
+    3200.5380859375,
+    3203.45751953125,
+    -763.6801147460938,
+    0.0,
+    0.0,
+    0.02079775743186474
+  ],
+  "health": 80,
+  "magicka": 80.0,
+  "healing_release_health": [
+    22.37,
+    29.41,
+    36.45,
+    43.49,
+    50.53,
+    57.57,
+    64.61,
+    71.65,
+    78.69,
+    80.0
+  ],
+  "route_audit": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "pathgrid": "0x3b511",
+    "source_checkpoint": "joined-shaman-continuous-course-01",
+    "indices": [
+      122,
+      123,
+      261,
+      127,
+      126,
+      262,
+      263,
+      124,
+      264,
+      116,
+      265,
+      121,
+      120,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      199
+    ],
+    "points": [
+      [
+        5493.75244140625,
+        4482.63916015625,
+        -414.0
+      ],
+      [
+        5456.83642578125,
+        4585.86279296875,
+        -414.0
+      ],
+      [
+        5342.26416015625,
+        4582.6962890625,
+        -430.0
+      ],
+      [
+        5219.10400390625,
+        4504.06787109375,
+        -448.0
+      ],
+      [
+        5143.69140625,
+        4366.80712890625,
+        -448.0
+      ],
+      [
+        5161.30322265625,
+        4265.75341796875,
+        -448.0
+      ],
+      [
+        5244.89208984375,
+        4209.96044921875,
+        -448.0
+      ],
+      [
+        5382.38623046875,
+        4136.4697265625,
+        -456.0
+      ],
+      [
+        5544.298828125,
+        4124.85107421875,
+        -452.0
+      ],
+      [
+        5667.72216796875,
+        4119.32568359375,
+        -452.0
+      ],
+      [
+        5751.5751953125,
+        4259.359375,
+        -448.0
+      ],
+      [
+        5832.62939453125,
+        4469.82177734375,
+        -438.0
+      ],
+      [
+        6003.568359375,
+        4652.728515625,
+        -484.0
+      ],
+      [
+        6012.8369140625,
+        4862.07275390625,
+        -462.0
+      ],
+      [
+        6015.5908203125,
+        5066.080078125,
+        -340.0
+      ],
+      [
+        6032.6630859375,
+        5321.06982421875,
+        -220.0
+      ],
+      [
+        5997.67578125,
+        5664.48388671875,
+        -154.0
+      ],
+      [
+        5959.7353515625,
+        5938.85302734375,
+        -156.0
+      ],
+      [
+        5868.14111328125,
+        6169.01904296875,
+        -162.0
+      ],
+      [
+        5869.40869140625,
+        6309.90380859375,
+        -162.0
+      ],
+      [
+        5610.2890625,
+        6276.55615234375,
+        -164.0
+      ],
+      [
+        5383.66552734375,
+        6273.802734375,
+        -80.0
+      ],
+      [
+        5191.94091796875,
+        6266.150390625,
+        14.0
+      ],
+      [
+        4866.353515625,
+        6256.06640625,
+        30.0
+      ],
+      [
+        4637.029296875,
+        6243.39111328125,
+        28.0
+      ],
+      [
+        4452.5771484375,
+        6138.79443359375,
+        38.0
+      ]
+    ]
+  },
+  "door_ref": "content:oblivion.esm:03816c",
+  "door_teleports_observed": 1,
+  "character_gen": {
+    "quest": "content:oblivion.esm:02466e",
+    "stage": 30,
+    "running": true,
+    "completed_stages": [
+      5,
+      6,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      22,
+      23,
+      24,
+      26,
+      27,
+      28,
+      29,
+      30
+    ]
+  },
+  "shaman_death_preserved": {
+    "actor": "content:oblivion.esm:03b52e",
+    "base": "content:oblivion.esm:03b52d",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "dynamic:player:0000000000000001"
+  },
+  "inventory_and_death_counts_unchanged": true,
+  "no_combat_cast_projectile_or_pending_action_death": true,
+  "destination_capture_inspected": true,
+  "implementation_unchanged": true,
+  "runtime_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "limits": [
+    "Fresh native entry permits only recorded animated-body velocity projections\u22641e-5.",
+    "Original second ambush/reunion/Emperor/choices/exterior and uninterrupted new-game proof remain outstanding.",
+    "Data-only input recipe; prior engine/sanitizer gates retain original provenance."
+  ]
+}

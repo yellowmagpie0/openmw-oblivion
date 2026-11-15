@@ -1,0 +1,592 @@
+{
+  "schema_version": 1,
+  "parent_commit": "8ad219e4bb",
+  "status": "Accepted bounded ordinary Player self-restoration secondary-use experience; full magic/XP/expedition remain open.",
+  "contract": "RESTORATION-USE-CONTRACT.json",
+  "oracle": "RESTORATION-USE-ORACLE.json",
+  "schema": 99,
+  "implementation": "After a successful owned ordinary self-restoration release commits, use original SKIL25 secondary slot1. Preserve existing tutorial-history handling; powers, scrolls and rejected releases skip this hook. No training formula or storage changes.",
+  "checks": {
+    "normal-focused-01": {
+      "path": "build/oblivion-compat/restoration-use/normal-focused-01/verification.json",
+      "sha256": "6382f85081af32a9511b4c5250c61ffc4c2dbb9042483e9ff1e6f92cf5f85bb8",
+      "source": {
+        "head": "8ad219e4bbd2706c26a9cea7b96824c1120801db",
+        "source_fingerprint": "dbf14dbed87b4c17bdbc797a73d19b9ba4cf76aa6945e993bcba99cd07000d06"
+      },
+      "results": {
+        "engine": {
+          "executed": 8,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Restoration*:*SpellCast*:*CharacterGeneration*",
+          "binary_sha256": "4fd7ce461f5de5f419dcc38a0494d6789e0da5ff19d15ddb54d25c152fdcf2b2",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "aea1add0098f09a1087056284fff6f18b859632fa659a291cfba1a1fedab2eea",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-focused-01": {
+      "path": "build/oblivion-compat/restoration-use/sanitized-focused-01/verification.json",
+      "sha256": "99e66ba466b1f57734638bec8d76d907f1487c6cb5e87931d281aa8078fc5f47",
+      "source": {
+        "head": "8ad219e4bbd2706c26a9cea7b96824c1120801db",
+        "source_fingerprint": "5437f02248087b52c3b5e88b94611b1f0b858e82b223055db83071c00374bb03"
+      },
+      "results": {
+        "engine": {
+          "executed": 8,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Restoration*:*SpellCast*:*CharacterGeneration*",
+          "binary_sha256": "1b35309c1937bde66abb16032de88a9fa15c0e20096afa8d459991f01dad2d20",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "b1b8f459440c587bb21a7abd96070f386dea1b1f92f30a1eecfd0682a6efa096",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal-integration-01": {
+      "path": "build/oblivion-compat/restoration-use/normal-integration-01/verification.json",
+      "sha256": "e61f46d4a293c5cabc4df44d51f461273ff373d90f250735c0bf5c8fb48db38d",
+      "source": {
+        "head": "8ad219e4bbd2706c26a9cea7b96824c1120801db",
+        "source_fingerprint": "0c6abf971d2ae5bb011b1c603d48575faebc62ccdec412b9e9e1d51216e58557"
+      },
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4fd7ce461f5de5f419dcc38a0494d6789e0da5ff19d15ddb54d25c152fdcf2b2",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "433d93fd678c4830be4356e8f0141b1e556d3d262a873f6e9d78db13002a87d3",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 612,
+          "passed": true,
+          "log_sha256": "f9f68e9c44859193be6d0604948ad8a50274eef189abeecc176425c3e316b55f"
+        }
+      }
+    },
+    "sanitized-integration-01": {
+      "path": "build/oblivion-compat/restoration-use/sanitized-integration-01/verification.json",
+      "sha256": "b56a2e883d8746e76ea10e1c8047a2013ebb262d4336f748350774f8199f85db",
+      "source": {
+        "head": "8ad219e4bbd2706c26a9cea7b96824c1120801db",
+        "source_fingerprint": "0c6abf971d2ae5bb011b1c603d48575faebc62ccdec412b9e9e1d51216e58557"
+      },
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1b35309c1937bde66abb16032de88a9fa15c0e20096afa8d459991f01dad2d20",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "58f21fab27947aaaa190179e730b986c4a19213cc339f3412e9ce6d4478008cf",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "normal-heal-use-01": {
+      "path": "build/oblivion-compat/restoration-use/normal-heal-use-01/restoration-audit.json",
+      "sha256": "708898c74385112c30e5fdba4e298e66c12735146bfa2fd6a7450b0bad2a34e3",
+      "result": {
+        "passed": true,
+        "phase": "use",
+        "sanitized": false,
+        "source_sha256": "df6747123211c25c94b78690b0f95e79fc0868ebfaa60ddfbf23336c9d5936c1",
+        "save_sha256": "52fcb05d44246e651562a36756bf9c8ae9af9f991c08bec1a6b1d71e5d8dc901",
+        "binary_sha256": "4cc8c0c90ba642b8bdd4c299c9dd78e596d71d2b6c06e37f881cd6292c35ddfe",
+        "before": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "releases": [
+          [
+            "content:oblivion.esm:000136",
+            "1",
+            "101.522",
+            "61"
+          ]
+        ],
+        "health_before": 99.38224792480469,
+        "health_after": 96.2272720336914,
+        "pending_casts_before": [],
+        "pending_casts": [],
+        "magicka_before": 80.0,
+        "magicka_after": 62.38902282714844
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_restoration_use_heal.json",
+        "sha256": "8cf20bc3c8bd69b3f921191911bfee75cffbf01f314f06eddc564fc37b598b77"
+      },
+      "process": {
+        "path": "build/oblivion-compat/restoration-use/normal-heal-use-01/process-epoch.json",
+        "sha256": "a266374874f4f656d6734edc761eebd66f07920634c833f20789a595657afb22"
+      }
+    },
+    "normal-heal-restart-01": {
+      "path": "build/oblivion-compat/restoration-use/normal-heal-restart-01/restoration-audit.json",
+      "sha256": "2beae728f37402ae8e895603cf33ec5ef13a175add886c4f5eb2a01da427b9bc",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "52fcb05d44246e651562a36756bf9c8ae9af9f991c08bec1a6b1d71e5d8dc901",
+        "save_sha256": "2899425e4b21ae020b908da6abbda20dfddc5485ebb4ca54dd252d93efb957e2",
+        "binary_sha256": "4cc8c0c90ba642b8bdd4c299c9dd78e596d71d2b6c06e37f881cd6292c35ddfe",
+        "before": {
+          "base": 5.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "releases": [],
+        "health_before": 96.2272720336914,
+        "health_after": 85.6550521850586,
+        "pending_casts_before": [],
+        "pending_casts": [],
+        "magicka_before": 62.38902282714844,
+        "magicka_after": 65.71444702148438
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_restoration_use_observe.json",
+        "sha256": "fd311ded2e2a4fffd901d90ddc4cd31333239224125643780ce67bd769bb6466"
+      },
+      "process": {
+        "path": "build/oblivion-compat/restoration-use/normal-heal-restart-01/process-epoch.json",
+        "sha256": "3a28e93a3a2fb82354c09e39c9eb990937a7cdc9ea8cb8ddd5b92a4476b4c377"
+      }
+    },
+    "normal-heal-select-cancel-01": {
+      "path": "build/oblivion-compat/restoration-use/normal-heal-select-cancel-01/restoration-audit.json",
+      "sha256": "138c1b7982a714924360f2d574f5af549f283b438fa660b6bd0d1585d03670e5",
+      "result": {
+        "passed": true,
+        "phase": "select",
+        "sanitized": false,
+        "source_sha256": "df6747123211c25c94b78690b0f95e79fc0868ebfaa60ddfbf23336c9d5936c1",
+        "save_sha256": "2b0d773ad3fb19456f6825dc1c4aa4b36e894e88174a7bf0933fe4d61724e2a5",
+        "binary_sha256": "4cc8c0c90ba642b8bdd4c299c9dd78e596d71d2b6c06e37f881cd6292c35ddfe",
+        "before": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "releases": [],
+        "health_before": 99.38224792480469,
+        "health_after": 88.78726959228516,
+        "pending_casts_before": [],
+        "pending_casts": [],
+        "magicka_before": 80.0,
+        "magicka_after": 80.0
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_restoration_use_select_cancel.json",
+        "sha256": "a9c3853b18e3982ee7e0a905e401c339b35127f031eaaaf8438ec6ec033cdb0a"
+      },
+      "process": {
+        "path": "build/oblivion-compat/restoration-use/normal-heal-select-cancel-01/process-epoch.json",
+        "sha256": "fcb1acc800ff9809bdb243eabe1669884e6a7e841b9aa52cdc29b3a2f4c76cc0"
+      }
+    },
+    "sanitized-heal-use-01": {
+      "path": "build/oblivion-compat/restoration-use/sanitized-heal-use-01/restoration-audit.json",
+      "sha256": "6b1df4b49285645f735653f1c21dc73905eb973d497fa6765631fff656617487",
+      "result": {
+        "passed": true,
+        "phase": "use",
+        "sanitized": true,
+        "source_sha256": "df6747123211c25c94b78690b0f95e79fc0868ebfaa60ddfbf23336c9d5936c1",
+        "save_sha256": "2a6ab64b37cd0aace73048a6c24fbf3a827e3e596fcda38287feda15b5e2af77",
+        "binary_sha256": "10b8d7780af6eeda1df73b328f595c8205e57f3152bae6499ede4f894cf2fe22",
+        "before": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "releases": [
+          [
+            "content:oblivion.esm:000136",
+            "1",
+            "101.522",
+            "61"
+          ]
+        ],
+        "health_before": 99.38224792480469,
+        "health_after": 101.52191162109375,
+        "pending_casts_before": [],
+        "pending_casts": [
+          {
+            "actor": "dynamic:player:0000000000000001",
+            "spell": "content:oblivion.esm:000136",
+            "animation_group": "castself",
+            "cost": 19.0,
+            "elapsed": 1.162000060081482,
+            "release_time": 0.36666667461395264,
+            "duration": 1.4000000953674316,
+            "released": true
+          }
+        ],
+        "magicka_before": 80.0,
+        "magicka_after": 61.0
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_restoration_use_heal_sanitized.json",
+        "sha256": "ec12ff059b176e9ca24a76365c32abca66569dbd0938d836e758a018e55c9387"
+      },
+      "process": {
+        "path": "build/oblivion-compat/restoration-use/sanitized-heal-use-01/process-epoch.json",
+        "sha256": "bfaf1fa03fde070547d38a93fc35a93616597265a5aee8010527494b05eb8a90"
+      }
+    },
+    "sanitized-heal-restart-01": {
+      "path": "build/oblivion-compat/restoration-use/sanitized-heal-restart-01/restoration-audit.json",
+      "sha256": "68aac25d512853549a90cfd69a5ab46633018b3d5e0cd688d88f05ea2c38270a",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "2a6ab64b37cd0aace73048a6c24fbf3a827e3e596fcda38287feda15b5e2af77",
+        "save_sha256": "cf4bd370df8ddb610e00cfcb48fd2ee68caf49326ffd56239bc86d2786eae53c",
+        "binary_sha256": "10b8d7780af6eeda1df73b328f595c8205e57f3152bae6499ede4f894cf2fe22",
+        "before": {
+          "base": 5.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.6000000238418579,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "releases": [],
+        "health_before": 101.52191162109375,
+        "health_after": 96.2272720336914,
+        "pending_casts_before": [
+          {
+            "actor": "dynamic:player:0000000000000001",
+            "spell": "content:oblivion.esm:000136",
+            "animation_group": "castself",
+            "cost": 19.0,
+            "elapsed": 1.162000060081482,
+            "release_time": 0.36666667461395264,
+            "duration": 1.4000000953674316,
+            "released": true
+          }
+        ],
+        "pending_casts": [],
+        "magicka_before": 61.0,
+        "magicka_after": 61.896484375
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_restoration_use_observe_sanitized.json",
+        "sha256": "997b1a91b8e62068e4f87f2b684d3c1c514d8f46b126bc967b88bc6f84b7fd6c"
+      },
+      "process": {
+        "path": "build/oblivion-compat/restoration-use/sanitized-heal-restart-01/process-epoch.json",
+        "sha256": "bdc82314445891f2a159c99b4e63ffa953e62546dfd2d05180f0a0603113cb6b"
+      }
+    }
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/restoration-use/normal-heal-baseline-01/restoration-audit.json",
+    "sha256": "f6190c70a6ebe4e6527c5c8ba5b745481ad72fb1450dd5412dcebab2ffae1eae",
+    "result": {
+      "passed": true,
+      "phase": "baseline",
+      "sanitized": false,
+      "source_sha256": "df6747123211c25c94b78690b0f95e79fc0868ebfaa60ddfbf23336c9d5936c1",
+      "save_sha256": "380ba3629f9a8895dce3f0bbca1c009137002fcb4fafc458d3ba4f100b0e3e90",
+      "binary_sha256": "9e37a32fe9a497a02ec501a30277d5cad672843d49b8e85d48addda18677a40f",
+      "before": {
+        "base": 5.0,
+        "experience": 0.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          0,
+          0
+        ]
+      },
+      "after": {
+        "base": 5.0,
+        "experience": 0.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          0,
+          0
+        ]
+      },
+      "releases": [
+        [
+          "content:oblivion.esm:000136",
+          "1",
+          "101.522",
+          "61"
+        ]
+      ],
+      "health_before": 99.38224792480469,
+      "health_after": 96.2272720336914,
+      "pending_casts": []
+    }
+  },
+  "production_source": {
+    "path": "apps/openmw/mwmechanics/character.cpp",
+    "sha256": "e8d5bd4b0c24c1b1160e2047aa01609d34322e20b467e8c6dca11af5a9fc8424"
+  },
+  "auditor": {
+    "path": "scripts/verify_restoration_use.py",
+    "sha256": "bb343096972049b662a161c1822c2f4079a74fdd86c98ffc50ab56af764f4ef9"
+  },
+  "source_scope": "Focused and broad engine gates cover unchanged production C++; final receipt/audit assertion changes do not change it. Actual final manifest bytes match captured input. Generic requirement/counter and earlier skill-use evidence retain original provenance.",
+  "validation_layers": {
+    "structural": "Five successful editable scenario manifests; original master and read-only Lua observer, no generated game plugin or stat/item grant.",
+    "compiler_world": "Focused8 and full2278 engine tests in each build; Python612. Independent original skill/record audit and18 original dispatcher cases.",
+    "semantic": "Native wire roundtrip and live/save equality; legacy PLAY Restoration skill15 XP/base/counters versus native AV25; inventory counts, unchanged tutorial history, owned cast and release/resource logs.",
+    "runtime": "Original Heal Minor Wounds spends19 Magicka and restores about7.44 actual Health under incoming arrows, grants0.6 once. Selection/cancel grants none. Normal and instrumented cold loads retain XP. Instrumented source retains released castself pose at elapsed1.162/duration1.4; reload completes it with no new release/heal/debit/award."
+  },
+  "sanitizer_scope": "Full engine gates detect_leaks=1/halt_on_error=1 plus UBSan halt_on_error=1; rendered courses detect_leaks=0 and are not leak coverage.",
+  "visual_review": "All11 accepted primary images plus3 baseline images inspected. Inherited selection-cancel screenshot filename does not imply healing; its semantic result has no cast or XP.",
+  "retained_failures": [],
+  "limits": [
+    "Original experience dispatcher/slot are independently checked; full original self-cast XP caller policy is not certified.",
+    "Full-health, canceled-windup, rejected-cast, level-crossing and all other schools/effects retain separate runtime gaps.",
+    "Ongoing actual incoming arrows are permitted; verify healing at release rather than requiring final Health to exceed loaded Health."
+  ],
+  "outgoing": {
+    "restoration_owned": "normal-heal-restart-01",
+    "health": 85.6550521850586,
+    "broader_expedition": "BONE-RESISTANCES-VERIFICATION.json retains the separate fresh innate-owned secret-wall route."
+  }
+}

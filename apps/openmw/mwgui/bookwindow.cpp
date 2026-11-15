@@ -5,14 +5,17 @@
 
 #include <components/esm3/loadbook.hpp>
 #include <components/esm4/loadbook.hpp>
+#include <components/debug/debuglog.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 
 #include "../mwworld/actiontake.hpp"
 #include "../mwworld/class.hpp"
+#include "../mwworld/oblivioninteraction.hpp"
 
 #include "formatting.hpp"
 
@@ -94,6 +97,9 @@ namespace MWGui
 
         MWWorld::Ptr player = MWMechanics::getPlayer();
         bool showTakeButton = book.getContainerStore() != &player.getClass().getContainerStore(player);
+        if (book.getType() == ESM::REC_BOOK4
+            && (book.get<ESM4::Book>()->mBase->mData.flags & ESM4::Book::Flag_NoTake))
+            showTakeButton = false;
 
         clearPages();
         mCurrentPage = 0;
@@ -103,7 +109,8 @@ namespace MWGui
             text = &book.get<ESM::Book>()->mBase->mText;
         else
             text = &book.get<ESM4::Book>()->mBase->mText;
-        bool shrinkTextAtLastTag = book.getType() == ESM::REC_BOOK;
+        bool shrinkTextAtLastTag = book.getType() == ESM::REC_BOOK
+            && MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion;
 
         Formatting::BookFormatter formatter;
         mPages = formatter.markupToWidget(mLeftPage, *text, shrinkTextAtLastTag);
@@ -143,10 +150,21 @@ namespace MWGui
 
     void BookWindow::onTakeButtonClicked(MyGUI::Widget* /*sender*/)
     {
+        if (mBook.getType() == ESM::REC_BOOK4
+            && (mBook.get<ESM4::Book>()->mBase->mData.flags & ESM4::Book::Flag_NoTake))
+            return;
         MWBase::Environment::get().getWindowManager()->playSound(ESM::RefId::stringRefId("Item Book Up"));
 
-        MWWorld::ActionTake take(mBook);
-        take.execute(MWMechanics::getPlayer());
+        if (mBook.getType() == ESM::REC_BOOK4)
+        {
+            MWWorld::OblivionInteractionAction take(mBook, MWWorld::OblivionInteractionKind::TakeBook);
+            take.execute(MWMechanics::getPlayer());
+        }
+        else
+        {
+            MWWorld::ActionTake take(mBook);
+            take.execute(MWMechanics::getPlayer());
+        }
 
         MWBase::Environment::get().getWindowManager()->removeGuiMode(GM_Book);
     }
@@ -179,6 +197,10 @@ namespace MWGui
 
         if (mPages.empty())
             return;
+
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            Log(Debug::Info) << "M13 native book page: base=" << mBook.getCellRef().getRefId()
+                << " first=" << mCurrentPage * 2 + 1 << " pages=" << mPages.size();
 
         MyGUI::Widget* paper;
 

@@ -76,6 +76,7 @@ struct MWState::StateManager::RetainedRuntime::Data
     double mTimePlayed = 0;
     std::filesystem::path mLastSavegame;
     bool mAskLoadRecent = false;
+    bool mAutosaveRequested = false;
     bool mDetached = false;
     bool mOriginalSelected = false;
     explicit Data(StateManager& owner) : mOwner(&owner) {}
@@ -86,6 +87,7 @@ struct MWState::StateManager::RetainedRuntime::Data
         swap(mOwner->mTimePlayed, mTimePlayed);
         swap(mOwner->mLastSavegame, mLastSavegame);
         swap(mOwner->mAskLoadRecent, mAskLoadRecent);
+        swap(mOwner->mAutosaveRequested, mAutosaveRequested);
         auto* current = mOwner->mCharacterManager.getCurrentCharacter();
         mOwner->mCharacterManager.setCurrentCharacter(mCharacter);
         mCharacter = current;
@@ -144,6 +146,7 @@ MWState::StateManager::~StateManager()
 
 void MWState::StateManager::cleanup(bool force)
 {
+    mAutosaveRequested = false;
     if (mState != State_NoGame || force)
     {
         MWBase::Environment::get().getSoundManager()->clear();
@@ -467,6 +470,12 @@ void MWState::StateManager::saveGame(std::string_view description, const Slot* s
             character->cleanup();
         }
     }
+}
+
+void MWState::StateManager::requestAutosave()
+{
+    if (mState == State_Running && !mQuitRequest && Settings::saves().mAutosave)
+        mAutosaveRequested = true;
 }
 
 void MWState::StateManager::quickSave(std::string name)
@@ -1133,6 +1142,22 @@ void MWState::StateManager::update(float duration)
             character = getCurrentCharacter();
         loadGame(character, mLoadRequest->second);
         mLoadRequest = std::nullopt;
+    }
+
+    // Original quest scripts request Autosave while a dialogue result is still
+    // executing. Open windows cannot be serialized here: keep the request until
+    // the normal UI gate permits saving, after all load/new-game work above.
+    if (mAutosaveRequested && !mRetainedRuntime)
+    {
+        if (mState != State_Running || mQuitRequest || !Settings::saves().mAutosave)
+            mAutosaveRequested = false;
+        else if (MWBase::Environment::get().getWindowManager()->isSavingAllowed())
+        {
+            // Consume before save callbacks, including a failed write. Repeated
+            // requests while blocked coalesce; a later new request can retry.
+            mAutosaveRequested = false;
+            quickSave("Autosave");
+        }
     }
 }
 

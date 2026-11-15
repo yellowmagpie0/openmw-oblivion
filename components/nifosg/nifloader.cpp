@@ -645,7 +645,9 @@ namespace NifOsg
             if (roots.empty())
                 throw Nif::Exception("Found no root nodes", nif.getFilename());
 
-            if (mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB)
+            // The stock Iron Key uses 10.2.0.0 with a Havok bodyT. Its
+            // physical hierarchy needs the same private caches as later exports.
+            if (mVersion == 0x0a020000 || mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB)
                 for (const auto* root : roots)
                 {
                     std::vector<const Nif::NiAVObject*> pending{root};
@@ -934,7 +936,8 @@ namespace NifOsg
         osg::ref_ptr<osg::Group> createNode(const Nif::NiAVObject* nifNode) const
         {
             osg::ref_ptr<osg::Group> node;
-            const bool nativePhysicalTarget = (mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB)
+            const bool nativePhysicalTarget
+                = (mVersion == 0x0a020000 || mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB)
                 && !nifNode->mCollision.empty()
                 && dynamic_cast<const Nif::bhkCollisionObject*>(nifNode->mCollision.getPtr());
             const bool nativePhysicalRoot = mNativePhysicalRoots.contains(nifNode);

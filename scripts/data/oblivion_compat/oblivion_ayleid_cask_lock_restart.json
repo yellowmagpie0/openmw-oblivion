@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "name": "Cold restart preserves original Ayleid Cask cancellation or successful loot",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal timer=0\nlocal t=0\nreturn {{engineHandlers={{onFrame=function(dt)\n t=t+dt; timer=timer+dt;if timer<.1 then return end;timer=0\n assert(not Actor.isDead(self),'Player died during short cask dive')\n print('VilverinContinue sample sim='..t..' health='..Actor.stats.dynamic.health(self).current..' game='..core.getGameTime())\n print(string.format('VilverinContinue dive sample health=%.6f eye=%.3f z=%.3f',Actor.stats.dynamic.health(self).current,camera.getPosition().z,self.position.z))\n local target=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x66e79))\n local aim=target.position+util.vector3(0,0,35)\n local v=aim-self.position;local f=self.rotation:apply(util.vector3(0,1,0));local yaw=math.atan2(f.y*v.x-f.x*v.y,f.x*v.x+f.y*v.y)\n local c=aim-camera.getPosition();local pitch=-math.atan2(c.z,math.sqrt(c.x*c.x+c.y*c.y))\n print(string.format('VilverinContinue cask aim x=%d y=%d',math.floor(yaw*512+.5),math.floor((pitch-camera.getPitch())*512+.5)))\n if self.position.z<-2975 then print('VilverinContinue dive reached cask') end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinContinue dive sample",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "Escape"
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "VilverinContinue dive sample",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "M16 native cast rejected:",
+    "M16 potion attributes applied:",
+    "M16 native scroll consumed:",
+    "Error in frame",
+    "onFrame failed",
+    "M15 native bow rejected:",
+    "Player died during short cask dive",
+    "result=lockpick_failed",
+    "result=looted",
+    "result=lockpick_prompt"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "ayleid-cask-lock-restart",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": true,
+  "sdl_xvfb_input": true
+}

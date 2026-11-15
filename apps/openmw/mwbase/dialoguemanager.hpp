@@ -21,6 +21,7 @@ namespace ESM
     class ESMWriter;
     class RefId;
     struct DialogueState;
+    struct FormKey;
 }
 
 namespace MWWorld
@@ -57,6 +58,9 @@ namespace MWBase
         virtual bool isInChoice() const = 0;
 
         virtual bool startDialogue(const MWWorld::Ptr& actor, ResponseCallback* callback) = 0;
+
+        /// Open a TES4 scripted Player conversation at an authored topic.
+        virtual bool startScriptedDialogue(const MWWorld::Ptr&, const ESM::FormKey&) { return false; }
 
         virtual bool inJournal(const ESM::RefId& topicId, const ESM::RefId& infoId) const = 0;
 

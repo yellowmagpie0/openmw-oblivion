@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T16:02:16.014076+00:00",
+  "scope": "Ordinary-input early solo combat and physical room traversal with frame-synchronized bounded feedback",
+  "status": "Focused genuine stage30 loaded course passes; uninterrupted original-new-game escape remains due",
+  "source_files": {
+    "scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json": "73b3c66e76df3e0b4f0c2d9d54cabab9175413af92eebd87b66979e00379a071",
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_first_wall_rat.json": "489e78567b74ef2eb2d89984fd764672823b6a72396310b99541fb2c603817cb",
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_wall_rats_finish.json": "aa1175545608af34c6538d1b328928f34e209db95f697df23d37d77d26ad7add",
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_room_rat.json": "87f8e0f569d81ef2b04d6d160675c5758f5037ad6eb75ecd3986c6f684d8f5b2"
+  },
+  "runtime": {
+    "course": "build/oblivion-compat/sewer-escape/wall-frame-feedback-slow-06",
+    "scenario_sha256": "37536210f1f70935272cab59069f613763f4f1d0ab7abb57205d27d48705fe4e",
+    "pid": 191804,
+    "passed": true,
+    "exit_code": 0,
+    "fps_cap": 1,
+    "engine_findings": 0,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-05/stage30-departure.omwsave",
+      "source_save_sha256": "90e563dafcec458f67e0f914507780c186a781e91356b2058b85f3ad7012d240",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": [
+        [
+          "/native_animated_references/0/bodies/0/linear_velocity/1",
+          -0.0009403944713994861,
+          -0.000940394529607147
+        ],
+        [
+          "/native_animated_references/0/bodies/1/linear_velocity/1",
+          0.09082356840372086,
+          0.09082357585430145
+        ],
+        [
+          "/native_animated_references/0/bodies/1/linear_velocity/2",
+          -0.008657804690301418,
+          -0.008657805621623993
+        ],
+        [
+          "/native_animated_references/0/bodies/2/linear_velocity/0",
+          0.3743565082550049,
+          0.37435653805732727
+        ],
+        [
+          "/native_animated_references/0/bodies/2/linear_velocity/2",
+          -0.02169414609670639,
+          -0.02169414795935154
+        ],
+        [
+          "/native_animated_references/0/bodies/4/linear_velocity/2",
+          0.007455639075487852,
+          0.007455638609826565
+        ],
+        [
+          "/native_animated_references/0/bodies/5/linear_velocity/1",
+          0.02342871017754078,
+          0.02342871204018593
+        ],
+        [
+          "/native_animated_references/0/bodies/7/linear_velocity/1",
+          -0.23044003546237946,
+          -0.23044005036354065
+        ],
+        [
+          "/native_animated_references/0/bodies/9/linear_velocity/2",
+          2.601498090371024e-05,
+          2.6014982722699642e-05
+        ],
+        [
+          "/native_animated_references/0/bodies/11/linear_velocity/1",
+          -0.005150837358087301,
+          -0.005150836892426014
+        ],
+        [
+          "/native_animated_references/0/bodies/11/linear_velocity/2",
+          -0.021631695330142975,
+          -0.021631697192788124
+        ],
+        [
+          "/native_animated_references/0/bodies/12/linear_velocity/2",
+          -0.006617788225412369,
+          -0.0066177877597510815
+        ]
+      ]
+    },
+    "health_by_save": [
+      {
+        "tick": 85,
+        "health": 74
+      },
+      {
+        "tick": 556,
+        "health": 48
+      },
+      {
+        "tick": 624,
+        "health": 72
+      },
+      {
+        "tick": 744,
+        "health": 72
+      }
+    ],
+    "native_rat_victories": [
+      {
+        "actor": "content:oblivion.esm:037e40",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e41",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:037e42",
+        "base": "content:oblivion.esm:04e870",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    ],
+    "physical_room_position": [
+      1687.00146484375,
+      3223.81884765625,
+      -867.7191162109375,
+      0.040624961256980896,
+      0.0,
+      1.5019532442092896
+    ],
+    "final_health": 72,
+    "queues": {
+      "native_combat_engagements": 0,
+      "pending_death_events": 0,
+      "physical_action_owners": 0,
+      "native_spell_casts": 0,
+      "native_magic_projectiles": 0
+    },
+    "chargen_stage": 30,
+    "save_event": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 191804,
+      "sequence": 6,
+      "tick": 744,
+      "event": "save-complete",
+      "action_id": "observation-6",
+      "actor": "dynamic:player:0000000000000001",
+      "cause": "normal-save",
+      "deltas": {
+        "health": 0
+      },
+      "live": "live-3-6.json",
+      "live_sha256": "5a6582ea1b0b7eea30e08668b47ba3e6408e96541d9ad0c8d4219aba9c3a53cf",
+      "result": "committed",
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/wall-frame-feedback-slow-06/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "58b844f084d310ad7bfb3be64ff486e94b64e12b4c0484d82c9e5ab1648af584",
+      "target": "dynamic:player:0000000000000001"
+    },
+    "parsed_save_equals_native_receipt_snapshot": true,
+    "input_receipts_match": true,
+    "input_count": 365,
+    "rendered_review": {
+      "captures": [
+        "segment02-joined-early-rats-cleared.png",
+        "segment04-joined-room-rat-victory.png"
+      ],
+      "inspected": true,
+      "findings": "First-person wall exit and actual room floor traversal; Player alive. Existing upright creature corpse rendering remains a known limitation."
+    }
+  },
+  "full_assembly": {
+    "path": "build/oblivion-compat/sewer-escape/frame-feedback-full-assembly-01/full-escape.json",
+    "sha256": "18d63be3f55148685997d224e9e08b2eab2d25951644c0cb299e5ee511b1568d",
+    "segments": 67,
+    "actions": 11732,
+    "regex_gates_compile": 4297,
+    "lua_compile_passed": true,
+    "no_load_savegame": true,
+    "status": "Prepared only, no runtime acceptance"
+  },
+  "implementation_evidence_reused": {
+    "python": "SEWER-INPUT-FEEDBACK-HARNESS-VERIFICATION.json:578pass,0fail/0skip; same recipe/code hashes",
+    "code_commit": "392bd5d472",
+    "normal": "bound-cleanup-engine-integration-01:2209pass,0fail/0skip",
+    "sanitizer": "bound-cleanup-sanitizer-integration-01:2209pass,0fail/0skip,leak1",
+    "runtime_sha256": "ef71da25d612636f79b97bf50d2d17643aef49549d044483d5a1a0ad36b7292a",
+    "no_fresh_cpp_claim": true
+  },
+  "failures_preserved": {
+    "full-escape-continuous-05": "Failed second course wall-crossing wait; no engine findings",
+    "wall-frame-feedback-slow-01": "Deliberate SIGINT/-2; movement budget insufficient",
+    "wall-frame-feedback-slow-02": "Actual Player death near crossing threshold",
+    "wall-frame-feedback-slow-03": "Actual Player death during redundant aiming",
+    "wall-frame-feedback-slow-04": "Actual Player death from early-joining room rat omitted from old controller",
+    "wall-frame-feedback-slow-05": "Preflight rejection of nested loops; no game launched"
+  },
+  "limits": "Loaded focused check only. Early room-rat death is a native Player victory; room traversal remains required and passes. No full uninterrupted escape/reload acceptance inferred."
+}

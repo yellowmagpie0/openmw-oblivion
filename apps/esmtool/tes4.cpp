@@ -258,7 +258,17 @@ namespace EsmTool
                               << " resistance=" << data.mResistanceActorValue << " counters=" << data.mCounterCount
                               << " padding=" << data.mCounterPadding;
                     if (data.mAssociatedForm) std::cout << " associatedForm=" << data.mAssociatedForm->serialize();
+                    if (data.mLight) std::cout << " light=" << data.mLight->serialize();
                 }
+            }
+            if constexpr (std::is_same_v<T, ESM4::LevelledCreature> || std::is_same_v<T, ESM4::LevelledItem>)
+            {
+                std::cout << "\n  LevelledList: chanceNone=" << int(value.chanceNone())
+                    << " allLower=" << value.calcAllLvlLessThanPlayer()
+                    << " eachInCount=" << value.calcEachItemInCount();
+                for (const auto& entry : value.mLvlObject)
+                    std::cout << "\n  LevelledEntry: level=" << entry.level
+                        << " base=" << ESM::FormId::fromUint32(entry.item) << " count=" << entry.count;
             }
             if constexpr (std::is_same_v<T, ESM4::LevelledSpell>)
             {
@@ -295,10 +305,13 @@ namespace EsmTool
                     }
                 }
             }
-            if constexpr (std::is_same_v<T, ESM4::Potion>)
+            if constexpr (std::is_same_v<T, ESM4::Ingredient>)
+                std::cout << "\n  Ingredient: value=" << value.mData.value << " weight=" << value.mData.weight
+                          << " flags=" << value.mEnchantment.flags;
+            if constexpr (std::is_same_v<T, ESM4::Potion> || std::is_same_v<T, ESM4::Ingredient>)
             {
                 for (const auto& effect : value.mEffects)
-                    std::cout << "\n  PotionEffect: code=" << effect.mId << " magnitude=" << effect.mMagnitude
+                    std::cout << (std::is_same_v<T, ESM4::Potion> ? "\n  PotionEffect: code=" : "\n  IngredientEffect: code=") << effect.mId << " magnitude=" << effect.mMagnitude
                               << " area=" << effect.mArea << " duration=" << effect.mDuration
                               << " range=" << effect.mRange << " actorValue=" << effect.mActorValue;
             }
@@ -506,7 +519,8 @@ namespace EsmTool
                     std::cout << *value.mFactionRank;
                 else
                     std::cout << "absent";
-                std::cout << "\n  Ownership global: " << value.mGlobal;
+                std::cout << "\n  Ownership global: " << value.mGlobal
+                          << "\n  Open by default: " << value.mOpenByDefault;
             }
             if constexpr (requires { value.mIsLocked; value.mLockLevel; value.mKey; })
             {

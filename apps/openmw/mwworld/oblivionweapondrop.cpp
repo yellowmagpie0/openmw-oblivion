@@ -5,21 +5,26 @@
 #include "inventorystore.hpp"
 #include "oblivionownership.hpp"
 #include "oblivionprofileservices.hpp"
+#include "oblivionscriptmanager.hpp"
 #include "class.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/luamanager.hpp"
+#include "../mwbase/windowmanager.hpp"
 #include "../mwmechanics/oblivionmelee.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
 #include "../mwrender/looseobjectscenebinding.hpp"
 #include "../mwrender/objects.hpp"
+#include "../mwrender/renderingmanager.hpp"
 #include "../mwrender/vismask.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwphysics/collisiontype.hpp"
 #include <components/esm4/dropplacement.hpp>
+#include <components/esm/exteriorcelllocation.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadbook.hpp>
 #include <components/esm4/bipedmodel.hpp>
 #include <components/esm4/crimerules.hpp>
 #include "../mwclass/esm4base.hpp"
@@ -34,10 +39,15 @@
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollbonepose.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
+#include <components/sceneutil/actorragdollpose.hpp>
 #include <bit>
 #include <cmath>
 #include <set>
+#include <functional>
 #include <stdexcept>
+#include <type_traits>
+#include <array>
+#include <tuple>
 
 namespace MWWorld
 {
@@ -47,11 +57,15 @@ namespace MWWorld
         {
             if (ptr.isEmpty()) return nullptr;
             if (ptr.getType() == ESM::REC_WEAP4) return ptr.get<ESM4::Weapon>()->mBase;
-            if (ptr.getType() == ESM::REC_ARMO4)
-            {
-                const auto* armor = ptr.get<ESM4::Armor>()->mBase;
-                if (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield)) return armor;
-            }
+            if (ptr.getType() == ESM::REC_MISC4) return ptr.get<ESM4::MiscItem>()->mBase;
+            if (ptr.getType() == ESM::REC_CLOT4) return ptr.get<ESM4::Clothing>()->mBase;
+            if (ptr.getType() == ESM::REC_AMMO4) return ptr.get<ESM4::Ammunition>()->mBase;
+            if (ptr.getType() == ESM::REC_KEYM4) return ptr.get<ESM4::Key>()->mBase;
+            if (ptr.getType() == ESM::REC_LIGH4) return ptr.get<ESM4::Light>()->mBase;
+            if (ptr.getType() == ESM::REC_INGR4) return ptr.get<ESM4::Ingredient>()->mBase;
+            if (ptr.getType() == ESM::REC_APPA4) return ptr.get<ESM4::Apparatus>()->mBase;
+            if (ptr.getType() == ESM::REC_BOOK4) return ptr.get<ESM4::Book>()->mBase;
+            if (ptr.getType() == ESM::REC_ARMO4) return ptr.get<ESM4::Armor>()->mBase;
             return nullptr;
         }
 
@@ -63,6 +77,54 @@ namespace MWWorld
                 const auto* base = ptr.get<ESM4::Weapon>()->mBase;
                 return store.get<ESM4::Weapon>().search(base->mId) == base
                     ? store.get<ESM4::Weapon>().findFormKey(base->mId) : std::nullopt;
+            }
+            if (ptr.getType() == ESM::REC_MISC4)
+            {
+                const auto* base = ptr.get<ESM4::MiscItem>()->mBase;
+                return store.get<ESM4::MiscItem>().search(base->mId) == base
+                    ? store.get<ESM4::MiscItem>().findFormKey(base->mId) : std::nullopt;
+            }
+            if (ptr.getType() == ESM::REC_CLOT4)
+            {
+                const auto* base = ptr.get<ESM4::Clothing>()->mBase;
+                return store.get<ESM4::Clothing>().search(base->mId) == base
+                    ? store.get<ESM4::Clothing>().findFormKey(base->mId) : std::nullopt;
+            }
+            if (ptr.getType() == ESM::REC_AMMO4)
+            {
+                const auto* base = ptr.get<ESM4::Ammunition>()->mBase;
+                return store.get<ESM4::Ammunition>().search(base->mId) == base
+                    ? store.get<ESM4::Ammunition>().findFormKey(base->mId) : std::nullopt;
+            }
+            if (ptr.getType() == ESM::REC_KEYM4)
+            {
+                const auto* base = ptr.get<ESM4::Key>()->mBase;
+                return store.get<ESM4::Key>().search(base->mId) == base
+                    ? store.get<ESM4::Key>().findFormKey(base->mId) : std::nullopt;
+            }
+            if (ptr.getType() == ESM::REC_LIGH4)
+            {
+                const auto* base = ptr.get<ESM4::Light>()->mBase;
+                return store.get<ESM4::Light>().search(base->mId) == base
+                    ? store.get<ESM4::Light>().findFormKey(base->mId) : std::nullopt;
+            }
+            if (ptr.getType() == ESM::REC_INGR4)
+            {
+                const auto* base = ptr.get<ESM4::Ingredient>()->mBase;
+                return store.get<ESM4::Ingredient>().search(base->mId) == base
+                    ? store.get<ESM4::Ingredient>().findFormKey(base->mId) : std::nullopt;
+            }
+            if (ptr.getType() == ESM::REC_APPA4)
+            {
+                const auto* base = ptr.get<ESM4::Apparatus>()->mBase;
+                return store.get<ESM4::Apparatus>().search(base->mId) == base
+                    ? store.get<ESM4::Apparatus>().findFormKey(base->mId) : std::nullopt;
+            }
+            if (ptr.getType() == ESM::REC_BOOK4)
+            {
+                const auto* base = ptr.get<ESM4::Book>()->mBase;
+                return store.get<ESM4::Book>().search(base->mId) == base
+                    ? store.get<ESM4::Book>().findFormKey(base->mId) : std::nullopt;
             }
             const auto* base = ptr.get<ESM4::Armor>()->mBase;
             return store.get<ESM4::Armor>().search(base->mId) == base
@@ -79,10 +141,29 @@ namespace MWWorld
         {
             const auto* weapon = mStore.get<ESM4::Weapon>().search(snapshot.mBase);
             const auto* armor = mStore.get<ESM4::Armor>().search(snapshot.mBase);
-            if (weapon && armor) throw std::runtime_error("loose equipment base has ambiguous native types");
+            const auto* misc = mStore.get<ESM4::MiscItem>().search(snapshot.mBase);
+            const auto* clothing = mStore.get<ESM4::Clothing>().search(snapshot.mBase);
+            const auto* ammunition = mStore.get<ESM4::Ammunition>().search(snapshot.mBase);
+            const auto* keyItem = mStore.get<ESM4::Key>().search(snapshot.mBase);
+            const auto* light = mStore.get<ESM4::Light>().search(snapshot.mBase);
+            const auto* ingredient = mStore.get<ESM4::Ingredient>().search(snapshot.mBase);
+            const auto* apparatus = mStore.get<ESM4::Apparatus>().search(snapshot.mBase);
+            const auto* book = mStore.get<ESM4::Book>().search(snapshot.mBase);
+            if (int(weapon != nullptr) + int(armor != nullptr) + int(misc != nullptr)
+                + int(clothing != nullptr) + int(ammunition != nullptr) + int(keyItem != nullptr)
+                + int(light != nullptr) + int(ingredient != nullptr) + int(apparatus != nullptr)
+                + int(book != nullptr) > 1)
+                throw std::runtime_error("loose equipment base has ambiguous native types");
             const ESM::Path* selected = nullptr;
             if (weapon) selected = &weapon->mModel;
-            else if (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield))
+            else if (misc) selected = &misc->mModel;
+            else if (ammunition) selected = &ammunition->mModel;
+            else if (keyItem) selected = &keyItem->mModel;
+            else if (light) selected = &light->mModel;
+            else if (ingredient) selected = &ingredient->mModel;
+            else if (apparatus) selected = &apparatus->mModel;
+            else if (book) selected = &book->mModel;
+            else if (clothing || armor)
             {
                 const auto found = references.find(key);
                 if (found == references.end() || found->second->mBase != snapshot.mBase)
@@ -113,7 +194,9 @@ namespace MWWorld
                         throw std::runtime_error("loose shield owner is unresolved");
                 }
                 const auto* npc = mStore.get<ESM4::Npc>().search(owner);
-                selected = &ESM4::bipedModelForSex(armor->mModelMaleWorld,armor->mModelFemaleWorld,
+                selected = &ESM4::bipedModelForSex(
+                    clothing ? clothing->mModelMaleWorld : armor->mModelMaleWorld,
+                    clothing ? clothing->mModelFemaleWorld : armor->mModelFemaleWorld,
                     npc && (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female));
             }
             if (!selected || selected->empty()
@@ -263,6 +346,7 @@ namespace MWWorld
             ESM::Position mPosition;
             std::shared_ptr<const MWRender::LooseObjectSceneBinding> mBinding;
             osg::ref_ptr<MWRender::ObjectAnimation> mAnimation;
+            std::vector<NifBullet::RagdollBoneWorldPose> mBones;
         };
         std::vector<Pose> poses;
         const auto owners = physics.looseObjectOwners();
@@ -300,7 +384,8 @@ namespace MWWorld
                 if (frame.mWorldChangeMask & 1) position.pos[axis] = placement.mPosition.pos[axis];
                 if (frame.mWorldChangeMask & 2) position.rot[axis] = placement.mPosition.rot[axis];
             }
-            poses.push_back({ptr,frame,root,position,binding,std::move(animation)});
+            poses.push_back({ptr,frame,root,position,binding,std::move(animation),
+                physics.captureLooseObjectWorldBones(ptr)});
         }
         // Advance retained locals only after every reference/frame is valid,
         // before cell migration can dispatch any external observers.
@@ -327,6 +412,12 @@ namespace MWWorld
                 // Euler projection. Reference scale remains on this node.
                 node->setPosition(pose.mFrame.mWorld.mTranslation);
                 node->setAttitude(pose.mRoot.getRotate());
+            }
+            if (!pose.mBones.empty())
+            {
+                if (!pose.mAnimation || !pose.mAnimation->getLoosePhysicalPose())
+                    throw std::logic_error("articulated loose graph has no current renderer binding");
+                pose.mAnimation->getLoosePhysicalPose()->applyWorldBones(pose.mBones, pose.mFrame.mWorld);
             }
         }
     }
@@ -597,6 +688,345 @@ namespace MWWorld
         const Ptr result = mData->mAdmission->commit({mData.get(), Data::validate, Data::publish});
         mData->mConsumed = true;
         return result;
+    }
+
+    std::optional<Ptr> World::dropOblivionInventoryLooseItem(
+        const Ptr& actor, const Ptr& item, size_t count, float cursorX, float cursorY)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || item.isEmpty()) return std::nullopt;
+        const ESM::RefId sourceId = item.getCellRef().getRefId();
+        const auto admit = [&]<class Record>(const Record* baseDefinition) -> std::optional<Ptr> {
+            constexpr bool isWeapon = std::is_same_v<Record, ESM4::Weapon>;
+            constexpr bool isArmor = std::is_same_v<Record, ESM4::Armor>;
+            constexpr bool isClothing = std::is_same_v<Record, ESM4::Clothing>;
+            constexpr bool isAmmunition = std::is_same_v<Record, ESM4::Ammunition>;
+            constexpr bool isKey = std::is_same_v<Record, ESM4::Key>;
+            constexpr bool isLight = std::is_same_v<Record, ESM4::Light>;
+            constexpr bool isIngredient = std::is_same_v<Record, ESM4::Ingredient>;
+            constexpr bool isApparatus = std::is_same_v<Record, ESM4::Apparatus>;
+            constexpr bool isBook = std::is_same_v<Record, ESM4::Book>;
+            constexpr bool isStackable = isAmmunition || isLight || std::is_same_v<Record, ESM4::MiscItem>;
+            constexpr auto nativeType = isWeapon ? ESM4::REC_WEAP
+                : isClothing ? ESM4::REC_CLOT : isAmmunition ? ESM4::REC_AMMO
+                : isKey ? ESM4::REC_KEYM : isLight ? ESM4::REC_LIGH
+                : isArmor ? ESM4::REC_ARMO : isIngredient ? ESM4::REC_INGR
+                : isApparatus ? ESM4::REC_APPA : isBook ? ESM4::REC_BOOK : ESM4::REC_MISC;
+            if (!baseDefinition) return std::nullopt;
+            if constexpr (isIngredient || isApparatus || isBook)
+                if (count != 1 || item.getCellRef().getCount() != 1) return std::nullopt;
+            if constexpr (isApparatus)
+                if (baseDefinition->mData.type > 3 || !std::isfinite(baseDefinition->mData.quality)
+                    || baseDefinition->mData.quality < 0 || !std::isfinite(baseDefinition->mData.weight)
+                    || baseDefinition->mData.weight < 0) return std::nullopt;
+            // Start with ordinary takeable books; scrolls and skill/scripted
+            // books retain their existing path until their own real courses.
+            if constexpr (isBook)
+                if (baseDefinition->mData.flags != 0 || baseDefinition->mData.bookSkill != -1
+                    || !std::isfinite(baseDefinition->mData.weight) || baseDefinition->mData.weight < 0)
+                    return std::nullopt;
+            const auto lightProfile = [&] {
+                if constexpr (isLight) return std::array{baseDefinition->mData.time, baseDefinition->mData.flags};
+                else return std::array{0, 0};
+            };
+            if constexpr (isLight)
+            {
+                // Drop an inactive instance with its own remaining fuel.
+                constexpr int required = ESM4::Light::Carryable | ESM4::Light::OffDefault;
+                const float remaining = item.getClass().getRemainingUsageTime(item);
+                if ((baseDefinition->mData.flags & required) != required || baseDefinition->mData.time <= 0
+                    || count != 1 || !std::isfinite(remaining) || remaining <= 0
+                    || remaining > float(baseDefinition->mData.time))
+                    return std::nullopt;
+            }
+            const auto health = [&] {
+                if constexpr (isWeapon || isArmor) return baseDefinition->mData.health;
+                else return std::uint32_t(0);
+            };
+            const auto enchantment = [&] {
+                if constexpr (isWeapon || isArmor || isClothing || isAmmunition || isBook) return baseDefinition->mEnchantment;
+                else return ESM::FormId{};
+            };
+            const auto script = [&] {
+                if constexpr (isAmmunition) return baseDefinition->mScript;
+                else return baseDefinition->mScriptId;
+            };
+            // Inventory drops and combat disarms share the native loose-body owner.
+            // Ammunition and plain miscellaneous items may transfer a positive
+            // part of an unequipped stack; fresh inactive lights transfer one.
+            // Other records retain singleton admission; equipment, scripts and
+            // associated bound/enchantment effects retain their own policies.
+            const auto base = mStore.get<Record>().findFormKey(sourceId);
+            const bool scriptedArmor = isArmor && !script().isZeroOrUnset() && base
+                && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(*base);
+            if ((!script().isZeroOrUnset() && !scriptedArmor) || !enchantment().isZeroOrUnset()
+                || (baseDefinition->mFlags & ESM4::Rec_Persistent)) return std::nullopt;
+            if (!base || !base->isContent() || (baseDefinition->mFlags & ESM4::Rec_Deleted))
+                throw std::invalid_argument("native inventory loose item drop has no winning base");
+            if (const auto* winner = mStore.getFormKeyIndex().winner(*base);
+                winner && (winner->mDeleted || winner->mRecordType != nativeType))
+                throw std::invalid_argument("native inventory loose item drop has no winning record");
+            const int sourceCount = item.getCellRef().getCount();
+            if (actor != getPlayerPtr() || !actor.isInCell() || sourceCount <= 0
+                || count == 0 || count > static_cast<size_t>(sourceCount)
+                || (!isStackable && (count != 1 || sourceCount != 1))
+                || item.getCellRef().getNativeBoundSource()
+                || (!scriptedArmor && !item.getCellRef().getNativeScriptOwner().isNull())
+                || item.getCellRef().getNativeItemScale() || item.getCellRef().getEnchantmentCharge() >= 0)
+                throw std::invalid_argument("native inventory loose item drop requires an ordinary supported quantity");
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            if (item.getContainerStore() != &inventory)
+                throw std::invalid_argument("native inventory loose item drop has a different source owner");
+            if constexpr (isStackable)
+                if (inventory.isEquipped(item))
+                    throw std::invalid_argument("native stack drop requires an unequipped source");
+            const int dropCount = static_cast<int>(count); // Bounded by the positive source count above.
+            auto removal = inventory.prepareItemRemoval(item, dropCount);
+            if (removal->getCount() != dropCount || removal->depletesEquipment())
+                throw std::invalid_argument("native inventory loose item drop requires an unequipped source");
+            auto keys = prepareOblivionDynamicReferenceKey();
+            const std::weak_ptr<const char> identity = mOblivionDynamicReferenceIdentity;
+            const CellRef sourceBefore = item.getCellRef();
+            std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer> scriptTransfer;
+            if (scriptedArmor)
+                scriptTransfer = mOblivionScriptManager->prepareItemScriptTransfer(*base,
+                    sourceBefore.getNativeScriptOwner(), keys->key(), sourceBefore.getNativeScriptOwner().isNull());
+            if constexpr (!isWeapon && !isArmor)
+                if (sourceBefore.getNativeItemCondition() || (!isLight && sourceBefore.getCharge() >= 0))
+                    throw std::invalid_argument("native miscellaneous prop cannot have durability");
+            const CellRef actorBefore = actor.getCellRef();
+            CellRef actorAfter = actorBefore;
+            auto droppedItems = actorAfter.getNativeDropRelations();
+            if (!droppedItems.mItems) droppedItems.mItems.emplace();
+            droppedItems.mItems->insert(droppedItems.mItems->begin(), keys->key());
+            actorAfter.setNativeDropRelations(std::move(droppedItems));
+            CellStore* actorCell = actor.getCell();
+            const auto modelState = [&] {
+                std::array<std::string, 3> paths{baseDefinition->mModel.getOriginal(), {}, {}};
+                if constexpr (isClothing || isArmor)
+                {
+                    paths[1] = baseDefinition->mModelMaleWorld.getOriginal();
+                    paths[2] = baseDefinition->mModelFemaleWorld.getOriginal();
+                }
+                return paths;
+            };
+            const auto modelBefore = modelState();
+            const auto flagsBefore = baseDefinition->mFlags;
+            const auto healthBefore = health();
+            const auto scriptBefore = script();
+            const auto enchantmentBefore = enchantment();
+            const auto lightBefore = lightProfile();
+            const auto armorProfile = [&] {
+                if constexpr (isArmor) return std::array{baseDefinition->mArmorFlags, baseDefinition->mGeneralFlags};
+                else return std::array{0u, 0u};
+            };
+            const auto armorBefore = armorProfile();
+            const auto apparatusProfile = [&] {
+                if constexpr (isApparatus) return std::tuple{baseDefinition->mData.type,
+                    baseDefinition->mData.value, baseDefinition->mData.weight, baseDefinition->mData.quality};
+                else return std::tuple<std::uint8_t, std::uint32_t, float, float>{};
+            };
+            const auto apparatusBefore = apparatusProfile();
+            const auto bookProfile = [&] {
+                if constexpr (isBook) return std::tuple{baseDefinition->mData.flags, baseDefinition->mData.bookSkill,
+                    baseDefinition->mData.value, baseDefinition->mData.weight, baseDefinition->mText};
+                else return std::tuple<std::uint8_t, std::int8_t, std::uint32_t, float, std::string>{};
+            };
+            const auto bookBefore = bookProfile();
+            const auto current = [&] {
+                // The removal token owns the inventory epoch. Test it before any
+                // borrowed item dereference after a model/resource callback.
+                if (!keys->isValid() || getPlayerPtr() != actor || actor.getCell() != actorCell
+                    || !removal->isValid() || (scriptTransfer && !scriptTransfer->isValid())
+                    || mStore.get<Record>().search(sourceId) != baseDefinition) return false;
+                const auto& live = item.getCellRef();
+                return modelState() == modelBefore && baseDefinition->mFlags == flagsBefore
+                    && health() == healthBefore && script() == scriptBefore
+                    && enchantment() == enchantmentBefore && lightProfile() == lightBefore
+                    && armorProfile() == armorBefore && apparatusProfile() == apparatusBefore
+                    && bookProfile() == bookBefore
+                    && live.getOwner() == sourceBefore.getOwner()
+                    && live.getNativeOwnershipRank() == sourceBefore.getNativeOwnershipRank()
+                    && live.getNativeOwnershipGlobal() == sourceBefore.getNativeOwnershipGlobal()
+                    && live.getNativeItemCondition() == sourceBefore.getNativeItemCondition()
+                    && live.getCharge() == sourceBefore.getCharge()
+                    && live.getChargeIntRemainder() == sourceBefore.getChargeIntRemainder()
+                    && live.getEnchantmentCharge() == sourceBefore.getEnchantmentCharge()
+                    && live.hasNativeItemScale(sourceBefore.getNativeItemScale())
+                    && !live.getNativeBoundSource()
+                    && live.getNativeScriptOwner() == sourceBefore.getNativeScriptOwner()
+                    && actor.getCellRef().getNativeDropRelations() == actorBefore.getNativeDropRelations();
+            };
+            auto position = actor.getRefData().getPosition();
+            const auto hit = mRendering->castCameraToViewportRay(cursorX, cursorY, 200.f, true, true, false);
+            if (!hit.mHit) throw std::invalid_argument("native loose item drop requires a visible placement surface");
+            osg::Vec3f normal = hit.mHitNormalWorld;
+            if (!std::isfinite(normal.length2()) || normal.normalize() == 0)
+                throw std::invalid_argument("native loose item drop has no finite surface normal");
+            for (unsigned axis = 0; axis < 3; ++axis) position.pos[axis] = hit.mHitPointWorld[axis];
+            position.rot[0] = position.rot[1] = 0;
+            CellStore* cell = actorCell;
+            if (cell->isExterior())
+                cell = &mWorldModel.getExterior(ESM::positionToExteriorCellLocation(
+                    position.pos[0], position.pos[1], cell->getCell()->getWorldSpace()));
+            if (!current()) throw std::invalid_argument("native loose item source changed during cell preparation");
+            const auto* cellDefinition = mStore.get<ESM4::Cell>().search(cell->getCell()->getId());
+            const auto cellKey = mStore.get<ESM4::Cell>().findFormKey(cell->getCell()->getId());
+            if (!cellDefinition || !cellKey || !cellKey->isContent())
+                throw std::invalid_argument("native loose item drop has no content cell owner");
+            ESM4::Reference placed{};
+            placed.mFormKey = keys->key(); placed.mBaseKey = *base; placed.mBaseObj = baseDefinition->mId;
+            placed.mParentKey = *cellKey; placed.mParent = cellDefinition->mId; placed.mPos = position;
+            const ESM::RefId owner = sourceBefore.getOwner();
+            if (const auto* id = owner.getIf<ESM::FormId>()) placed.mOwner = *id;
+            else if (!owner.empty()) throw std::invalid_argument("native loose item drop has a nonnative owner");
+            const ESM::RefId global = sourceBefore.getNativeOwnershipGlobal();
+            if (const auto* id = global.getIf<ESM::FormId>()) placed.mGlobal = *id;
+            else if (!global.empty()) throw std::invalid_argument("native loose item drop has a nonnative ownership global");
+            placed.mFactionRank = sourceBefore.getNativeOwnershipRank();
+            LiveCellRef<Record> reference(placed, baseDefinition);
+            reference.mRef.setCount(dropCount);
+            const Ptr preview(&reference, cell);
+            auto condition = sourceBefore.getNativeItemCondition();
+            // Shared inventory lights store fuel in the charge field, not durability.
+            if (!isLight && !condition && sourceBefore.getCharge() >= 0)
+                condition = static_cast<float>(double(sourceBefore.getCharge()) + sourceBefore.getChargeIntRemainder());
+            if (condition) reference.mRef.setNativeItemCondition(*condition);
+            reference.mRef.setEnchantmentCharge(sourceBefore.getEnchantmentCharge());
+            if constexpr (isLight)
+                preview.getClass().setRemainingUsageTime(preview, item.getClass().getRemainingUsageTime(item));
+            ESM4::DropRelations relations;
+            relations.mDropper = ESM::FormKey::dynamic("player", 1);
+            reference.mRef.setNativeDropRelations(std::move(relations));
+            const auto model = preview.getClass().getCorrectedModel(preview);
+            const auto file = mResourceSystem->getNifFileManager()->get(VFS::Path::Normalized(model));
+            const auto selectedDefinition = [&]() -> std::optional<NifBullet::ActorRagdollDefinition> {
+                if constexpr (isIngredient || isApparatus || isBook)
+                {
+                    // Unsupported models keep their prior path: native static
+                    // ingredients or legacy apparatus/books. Do not debit inventory.
+                    try { return NifBullet::loadWeaponReferenceRagdollDefinition(*file); }
+                    catch (const std::runtime_error&)
+                    {
+                        if (!current()) throw;
+                        return std::nullopt;
+                    }
+                }
+                else return NifBullet::loadWeaponReferenceRagdollDefinition(*file);
+            }();
+            if (!selectedDefinition) return std::nullopt;
+            const auto& definition = *selectedDefinition;
+            if constexpr (isIngredient || isApparatus || isBook)
+            {
+                if (!current()) throw std::invalid_argument("native singleton source changed during asset preparation");
+                if (definition.mBodies.size() != 1 || !definition.mJoints.empty()
+                    || definition.mBodies.front().mFixed || !std::isfinite(definition.mBodies.front().mMass)
+                    || definition.mBodies.front().mMass <= 0 || !definition.mReferenceRoot)
+                    return std::nullopt;
+            }
+            // Multi-body miscellaneous props retain their existing path; clothing
+            // uses its authored articulated ground model and constraints.
+            if constexpr (std::is_same_v<Record, ESM4::MiscItem>)
+                if (definition.mBodies.size() != 1 || !definition.mJoints.empty()) return std::nullopt;
+            if (definition.mBodies.empty() || !definition.mReferenceRoot || definition.mSourceHash != file->mHash)
+                throw std::invalid_argument("native inventory loose item drop has no identified world body");
+            if (!current()) throw std::invalid_argument("native loose item source changed during asset preparation");
+            auto& objects = mRendering->getObjects();
+            const auto rotation = Misc::Convert::makeOsgQuat(position);
+            {
+                auto view = objects.prepareModel(preview, model, rotation, MWRender::Mask_Object, &definition, current);
+                if (!current()) throw std::invalid_argument("native loose item source changed during model preparation");
+                const auto center = view->worldBoundCenter();
+                const float radius = view->worldBoundRadius();
+                if (!std::isfinite(radius) || radius <= 0)
+                    throw std::invalid_argument("native loose item drop has no finite model extent");
+                // Clear the placement surface using the actual world-model bound,
+                // then let the authored rigid body fall and settle normally.
+                for (unsigned axis = 0; axis < 3; ++axis)
+                {
+                    position.pos[axis] += position.pos[axis] - center[axis] + normal[axis] * (radius + 1.f);
+                    if (!std::isfinite(position.pos[axis])) throw std::invalid_argument("nonfinite native weapon placement");
+                }
+            }
+            reference.mRef.setPosition(position);
+            preview.getRefData().setPosition(position);
+            const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(definition, placed.mScale);
+            const osg::Matrixf root = osg::Matrixf::rotate(rotation) * osg::Matrixf::translate(position.asVec3());
+            std::vector<NifBullet::RagdollBoneWorldPose> bones;
+            for (const auto& body : scaled.mBodies)
+            {
+                auto bind = body.mBoneBind;
+                bind.setTrans(bind.getTrans() * placed.mScale);
+                bones.push_back({body.mNodeRecord, bind * root});
+            }
+            const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, bones);
+            const std::array admissions{ WorldModel::LooseWeaponAdmission{
+                *cell, std::cref(reference), objects, *mPhysics, model, rotation, MWRender::Mask_Object,
+                definition, NifBullet::RagdollNativeLengthScale, poses,
+                MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
+                MWPhysics::CollisionType_AnyPhysical } };
+            auto admission = mWorldModel.prepareLooseWeaponAdmissions(admissions);
+            auto lua = MWBase::Environment::get().getLuaManager()->prepareSceneAdditions(admission->references());
+            struct Hooks { std::function<bool()> mCurrent; std::function<void()> mPublish; } hooks;
+            hooks.mCurrent = [&] { return current() && lua->isValid(); };
+            hooks.mPublish = [&] {
+                if ((scriptTransfer && !scriptTransfer->commit())
+                    || !removal->commit() || !actor.getCellRef().swapNativeDropRelations(actorAfter)
+                    || !lua->commit() || !keys->commit()) std::terminate();
+            };
+            const Ptr dropped = admission->commit({&hooks,
+                [](void* context) noexcept { return static_cast<Hooks*>(context)->mCurrent(); },
+                [](void* context) noexcept { static_cast<Hooks*>(context)->mPublish(); }});
+            if (dropped.isEmpty()) throw std::logic_error("validated native inventory weapon admission rejected");
+            Log(Debug::Info) << (isWeapon ? "TES4 inventory weapon dropped: base="
+                                        : isArmor ? "TES4 inventory armor dropped: base="
+                                        : isClothing ? "TES4 inventory clothing dropped: base="
+                                        : isAmmunition ? "TES4 inventory ammunition dropped: base="
+                                        : isKey ? "TES4 inventory key dropped: base="
+                                        : isLight ? "TES4 inventory light dropped: base="
+                                        : isIngredient ? "TES4 inventory ingredient dropped: base="
+                                        : isApparatus ? "TES4 inventory apparatus dropped: base="
+                                        : isBook ? "TES4 inventory book dropped: base="
+                                                       : "TES4 inventory misc dropped: base=") << base->serialize()
+                << " reference=" << keys->key().serialize() << " condition=" << condition.value_or(-1.f)
+                << " count=" << dropCount;
+            removal->notify();
+            if (identity.expired() || getPlayerPtr() != actor) return dropped;
+            breakInvisibility(actor);
+            if (identity.expired() || getPlayerPtr() != actor) return dropped;
+            if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull()) windows->inventoryUpdated(actor);
+            if (identity.expired() || getPlayerPtr() != actor) return dropped;
+            if (mOblivionRuntimeState) mOblivionRuntimeState->mPlayer.mInventory = captureOblivionInventory(actor);
+            MWBase::Environment::get().getLuaManager()->objectPlaced(dropped, actor, position.asVec3(), rotation);
+            return dropped;
+        };
+        if (item.getType() == ESM::REC_WEAP)
+        {
+            // Shared inventory projects native ammunition as legacy arrows.
+            if (const auto* ammunition = mStore.get<ESM4::Ammunition>().search(sourceId))
+                return admit(ammunition);
+            return admit(mStore.get<ESM4::Weapon>().search(sourceId));
+        }
+        // The original Lockpick is native MISC, projected as a shared tool.
+        if (item.getType() == ESM::REC_MISC || item.getType() == ESM::REC_LOCK)
+        {
+            if (const auto* miscellaneous = mStore.get<ESM4::MiscItem>().search(sourceId))
+                return admit(miscellaneous);
+            // Shared inventory projects native KEYM as miscellaneous keys.
+            return admit(mStore.get<ESM4::Key>().search(sourceId));
+        }
+        if (item.getType() == ESM::REC_CLOT)
+            return admit(mStore.get<ESM4::Clothing>().search(sourceId));
+        if (item.getType() == ESM::REC_LIGH)
+            return admit(mStore.get<ESM4::Light>().search(sourceId));
+        if (item.getType() == ESM::REC_ARMO)
+            return admit(mStore.get<ESM4::Armor>().search(sourceId));
+        if (item.getType() == ESM::REC_INGR)
+            return admit(mStore.get<ESM4::Ingredient>().search(sourceId));
+        if (item.getType() == ESM::REC_APPA)
+            return admit(mStore.get<ESM4::Apparatus>().search(sourceId));
+        if (item.getType() == ESM::REC_BOOK)
+            return admit(mStore.get<ESM4::Book>().search(sourceId));
+        return std::nullopt;
     }
 
     std::unique_ptr<PreparedEquippedWeaponDrops> prepareEquippedWeaponDrops(

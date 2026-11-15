@@ -546,6 +546,9 @@ namespace
     {
         ESM::Ingredient result;
         result.blank();
+        // blank() seeds TES3 WaterBreathing effects. Native effects live only
+        // in the original INGR; the shared facade must not invent legacy magic.
+        for (auto& effect : result.mData.mEffectID) effect = ESM::RefId{};
         result.mId = ESM::RefId(source.mId);
         result.mName = source.mFullName;
         result.mModel = inventoryModel(source.mModel);
@@ -804,6 +807,7 @@ namespace MWWorld
             ptr.getCellRef().setNativeOwnershipRank(item.mOwnershipRank);
             ptr.getCellRef().setNativeItemScale(item.mExtraScale);
             ptr.getCellRef().setNativeBoundSource(item.mBoundSource);
+            ptr.getCellRef().setNativeScriptOwner(item.mScriptOwner);
             std::optional<int> slot;
             if (item.mEquippedSlots != 0)
             {
@@ -1221,6 +1225,19 @@ namespace MWWorld
         // Oblivion does not ship the identically named Morrowind settings.
         addInt("iMaxInfoDist", 150);
         addInt("iLevelUpTotal", 10);
+        // Native compiled defaults used by the shared advancement tooltip.
+        // Winning TES4 GMST overrides were installed above. Full leveling stays separate.
+        addInt("iLevelUp01Mult", 2);
+        addInt("iLevelUp02Mult", 2);
+        addInt("iLevelUp03Mult", 2);
+        addInt("iLevelUp04Mult", 2);
+        addInt("iLevelUp05Mult", 3);
+        addInt("iLevelUp06Mult", 3);
+        addInt("iLevelUp07Mult", 3);
+        addInt("iLevelUp08Mult", 4);
+        addInt("iLevelUp09Mult", 4);
+        addInt("iLevelUp10Mult", 5);
+
         addInt("iMonthsToRespawn", 1);
         addString("sDefaultCellname", "Wilderness");
         addString("FontColor_color_header", "223,201,159");

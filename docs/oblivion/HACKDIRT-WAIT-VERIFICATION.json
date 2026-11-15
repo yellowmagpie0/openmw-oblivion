@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Normal Wait fast-forward reference lookup performance and three original days in Chorrol before disappearance",
+  "implementation": "Scoped saved-reference identity index inside state-only fast-forward steps; uninstalled during resident actions/reconciliation and rebuilt afterward. No timers, actor simulation, routing rules or script results bypassed.",
+  "source": {
+    "path": "apps/openmw/mwmechanics/oblivionai.cpp",
+    "sha256": "72b0920f40ece999d96244827432fff99d16af8804d00dd8b30339ac58fe627f"
+  },
+  "binary": {
+    "path": "build/openmw",
+    "sha256": "799f32767420a3f166432f8582f3341130002b6973ce149569ca794dce3483bd"
+  },
+  "checks": {
+    "wait-index-focused-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/wait-index-focused-01/verification.json",
+        "sha256": "4f89ec185592fb1e45c46bac0b1d3d5dc0f3f872cd47ed6ca93000296cfe9b7e"
+      },
+      "source_before": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "14da8e9344fc798e56e45b8006c3071ab808fc759faa900423e1532093a92e86"
+      },
+      "source_after": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "14da8e9344fc798e56e45b8006c3071ab808fc759faa900423e1532093a92e86"
+      },
+      "results": {
+        "engine": {
+          "executed": 41,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogueMenu.*:OblivionWorldTest.*Package*:OblivionWorldTest.*Door*:OblivionWorldTest.*Unloaded*",
+          "binary_sha256": "3ae8deba26403cee4e14f684d3cb75682049650057e771b80e6726b3ff4bfb8f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "5b039742a06f05995b7f59b00e67ea1dc3ff1e39fd0147292bdc48d7e8b17659",
+          "inventory_sha256": "ef851ec6cf292652a765008956df23445045e914bd121b88cf2e9b96bed6d297",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "wait-index-sanitized-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/wait-index-sanitized-01/verification.json",
+        "sha256": "428ea6666a52db872607e712f734ca4359e131d2d3d7150f4e3bda32ca648901"
+      },
+      "source_before": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "14da8e9344fc798e56e45b8006c3071ab808fc759faa900423e1532093a92e86"
+      },
+      "source_after": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "14da8e9344fc798e56e45b8006c3071ab808fc759faa900423e1532093a92e86"
+      },
+      "results": {
+        "engine": {
+          "executed": 43,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*.*SavedReferenceIndex*:OblivionDialogueMenu.*:OblivionWorldTest.*Package*:OblivionWorldTest.*Door*:OblivionWorldTest.*Unloaded*",
+          "binary_sha256": "c310edd715af264b3a8a39a389147a4853c26e1cd02fd10353bef0348e132ab6",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "e83798f33d267c315f42c9db1c7e3ce765a4dcffc8c469a72851433dd64ea509",
+          "inventory_sha256": "ef851ec6cf292652a765008956df23445045e914bd121b88cf2e9b96bed6d297",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "reused_baseline": "docs/oblivion/HACKDIRT-PLAYER-CONDITIONS-VERIFICATION.json; full normal/sanitizer baseline predates this optimization. Current coverage is the explicitly filtered tests above and actual normal Wait courses.",
+  "runtime": {
+    "seedneeus-reload-01": {
+      "artifact": {
+        "path": "build/oblivion-compat/hackdirt/seedneeus-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "c43a7692136a2254fbaa97cecd633de97be34dd43a7a06f5d04439b425ce708b"
+      },
+      "exact_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 27,
+        "hour": 1.4440407752990723,
+        "time_scale": 30.0
+      },
+      "days_passed": 1,
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "actor_ai_count": 3663
+    },
+    "normal-wait-indexed-day-01": {
+      "artifact": {
+        "path": "build/oblivion-compat/hackdirt/normal-wait-indexed-day-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "20a8aa1d6ad04bc20c1fb9d09608e37fb00a6d4d521ad5709428af9fbe86ec99"
+      },
+      "exact_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 28,
+        "hour": 1.4578742980957031,
+        "time_scale": 30.0
+      },
+      "days_passed": 2,
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "actor_ai_count": 3663
+    },
+    "normal-wait-indexed-three-days-01": {
+      "artifact": {
+        "path": "build/oblivion-compat/hackdirt/normal-wait-indexed-three-days-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "5c76e2a23e1e086cd910fcbd73256ec807a9e0310d5295ae5ae0d7cef383749f"
+      },
+      "exact_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 30,
+        "hour": 1.5920538902282715,
+        "time_scale": 30.0
+      },
+      "days_passed": 4,
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "ms45_script": {
+        "unit": "content:oblivion.esm:028155@oblivion.esm/quest/unit=0",
+        "context": "content:oblivion.esm:027815",
+        "on_load_fired": false,
+        "locals": [
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0
+          },
+          {
+            "type": "number",
+            "value": 0.0
+          },
+          null
+        ]
+      },
+      "actor_ai_count": 3663
+    }
+  },
+  "observations": {
+    "old_45_second_capture": "normal-wait-three-days-01/wait-1-finished.png: 0/24",
+    "indexed_45_second_capture": "normal-wait-indexed-day-01/wait-finished.png: 19/24",
+    "limit": "Observed responsiveness improvement, not a controlled benchmark; concurrent build load differed.",
+    "three_day_course": "100-second windows between ordinary T/slider/Wait inputs; final saved clock proves all three days. MS45 stage0/startDay1 preserved while in the Chorrol shop.",
+    "world_simulation": "3663 saved actor AI states after the course; simulation was not disabled."
+  },
+  "next_action": "Ordinary stairs descent and shop exit, then original city gate exit and timed disappearance/pickup. Full quest remains open."
+}

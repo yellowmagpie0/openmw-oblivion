@@ -1,0 +1,55 @@
+{
+  "scope": "Reproduction and diagnosis only: rat037e42 falls through the prison stair floor during ordinary native AI pursuit. No repair or full sewer acceptance claimed.",
+  "reproduction_confirmed": true,
+  "repaired": false,
+  "source_revision": "f3ed11f1fb",
+  "input_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-11/retained-saves/3-0020-Quicksave.omwsave",
+  "input_save_sha256": "c4c35665e3a86845132b49d9fa4702069bc4ba430abfa9aed6a6387d7b886d9b",
+  "unmodified_runtime_reproductions": [
+    "build/oblivion-compat/sewer-escape/wall-floor-trace-01",
+    "build/oblivion-compat/sewer-escape/wall-floor-ray-01"
+  ],
+  "instrumented_diagnostic": "build/oblivion-compat/sewer-escape/rat-unstuck-trace-03",
+  "scenario_passed": true,
+  "unreviewed_errors": [],
+  "instrumentation": "Temporary OPENMW_TRACE_ACTOR_UNSTUCK logging immediately before gatherContacts(positionDelta), printing grounded state, half-height, penetration and proposed correction. Removed from worktree after retaining diagnostic binary. No gameplay mutation.",
+  "instrumented_elf_sha256": "4e666c0ad58990343ff9db76a7399ec8848d613b8222da6c3c61fd3b46be901d",
+  "resources": "Own immutable snapshot resources; diff against original runtime resources differs only in version marker.",
+  "observations": {
+    "initial_rat_position": [
+      27.166099548339844,
+      2994.061279296875,
+      -735.5711669921875
+    ],
+    "stair_reference": "content:oblivion.esm:03c26e",
+    "stair_base": "content:oblivion.esm:03c26a",
+    "grounded_rejection_position": [
+      43.5649,
+      2969.23,
+      -762.215
+    ],
+    "physical_half_height": 22.2345,
+    "penetration": -58.3648,
+    "proposed_correction": [
+      -10.0323,
+      -39.5393,
+      -41.7426
+    ],
+    "following_position": [
+      33.4982,
+      2929.56,
+      -804.101
+    ],
+    "ray_floor_z_at_following_position": -754.194580078125,
+    "subsequent_downward_corrections": [
+      -28.792,
+      -16.8143
+    ]
+  },
+  "conclusion": "Overlap rejection accepts a lower-penetration candidate below the stair surface, followed by further downward corrections and free fall. A support-preserving physics repair and regression/runtime verification remain necessary.",
+  "retained_failures": {
+    "rat-unstuck-trace-01": "Snapshot missing defaults.bin; no gameplay.",
+    "rat-unstuck-trace-02": "Reproduces correction but scenario fails unreviewed resource-version warning; use03 for clean diagnostic evidence.",
+    "wall-combat-route-02": "Fails remaining-rat completion; not all-three-kill acceptance."
+  }
+}

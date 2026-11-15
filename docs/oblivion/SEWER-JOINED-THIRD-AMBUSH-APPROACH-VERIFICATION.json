@@ -1,0 +1,85 @@
+{
+  "scope": "Connected birthsign50 to original third-ambush approach; not full escort54 acceptance",
+  "full_escape_complete": false,
+  "course": "joined-third-ambush-approach-01",
+  "passed": true,
+  "source_save": "build/oblivion-compat/sewer-escape/joined-escort-door-clearance-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "source_save_sha256": "2423b915b97d14e1981e6edae1cc48af4bf2d4d82a5b2821b77db9ef05253b99",
+  "save": "build/oblivion-compat/sewer-escape/joined-third-ambush-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "save_sha256": "b0c3e1817bd1e3df1258b05c24d2d80685be966e578f81dd1a32894586ce847b",
+  "fresh_entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-escort-door-clearance-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "2423b915b97d14e1981e6edae1cc48af4bf2d4d82a5b2821b77db9ef05253b99",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "player": {
+    "cell": "content:oblivion.esm:022288",
+    "position": [
+      2540.173828125,
+      6212.1435546875,
+      -1183.047119140625,
+      0.5242188572883606,
+      0.0,
+      -0.22879347205162048
+    ],
+    "birthsign": "content:oblivion.esm:01fd9d",
+    "class": "content:oblivion.esm:0230e6"
+  },
+  "health": 100,
+  "magicka": 80.0,
+  "quests": [
+    {
+      "quest": "content:oblivion.esm:02466e",
+      "stage": 50,
+      "running": true,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        34,
+        36,
+        40,
+        42,
+        43,
+        44,
+        45,
+        50
+      ]
+    }
+  ],
+  "normal_inputs_delivered": 313,
+  "all_input_receipts_match": true,
+  "inventory_unchanged": true,
+  "death_counts_unchanged": true,
+  "combat_engagements": [],
+  "pending_death_events": [],
+  "screenshot_inspected": "joined-before-third-ambush.png",
+  "failed_attempts": {
+    "joined-adaptive-escort-01": "Player killed after waypoint15 by017734; no checkpoint accepted",
+    "joined-adaptive-sprint-escort-01": "Original52/54 reached, Player killed before waypoint21 by01774a; no checkpoint accepted",
+    "joined-continuous-sprint-escort-01": "Player stationary at2781.915,6928.704 after waypoint15, killed by01772e; no checkpoint accepted"
+  },
+  "next": "Resolve actual third ambush from the genuine100HP approach save; then continue escort through original54/56/Sanctum"
+}

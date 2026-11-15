@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "accepted": true,
+  "scope": "Original physical Skeleton corpse activation, controller Take All and empty restart; integration checkpoint, no production C++ change",
+  "implementation": "f8f2cb3448",
+  "courses": [
+    {
+      "course": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-baseline-02",
+      "audit": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-baseline-02/corpse-loot-audit.json",
+      "sha256": "22a160961710ca4a7cc8b6229d7c924d8b9c4033446d6d81a08e19855ab090eb",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_corpse_loot.json",
+      "manifest_sha256": "7bbc8b8a72362e310f23353be4aa4a8766a39287b06032ea1c477ea7ed219493",
+      "result": {
+        "passed": true,
+        "phase": "loot",
+        "sanitized": false,
+        "source_sha256": "201979758edd473452d8f735fe999689814d45da0235e8d3901f3de2a6c8d123",
+        "save_sha256": "047b3141584cb763f424d5dd0cc9a17850750999e80b390ab49fbb6de444b400",
+        "binary_sha256": "cde56dd6bbfcf0c17c6ec8e3ced94aa6efd344cb4717d04557b8b0b39f6974b5",
+        "transferred": [
+          {
+            "base": "content:oblivion.esm:01ebff",
+            "count": 1,
+            "condition": -1.0
+          },
+          {
+            "base": "content:oblivion.esm:0229bd",
+            "count": 1,
+            "condition": 149.79989624023438
+          }
+        ],
+        "player_health": 51.40465545654297,
+        "blunt": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "bodies": 17,
+        "inventory_empty": true
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-restart-01",
+      "audit": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-restart-01/corpse-loot-audit.json",
+      "sha256": "a0c4d8a3f147bc308e7f3afe2b33e940197460b1cbd594287654c96dc1cec347",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_corpse_loot_restart.json",
+      "manifest_sha256": "0a83a0a2ed5d5f72afd17b329413a80698c4b5801dbaceee86fa56d5b9c88f3a",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "047b3141584cb763f424d5dd0cc9a17850750999e80b390ab49fbb6de444b400",
+        "save_sha256": "8506b0938d99f6101b40c0566e179f4e009994a3661176aa26450ede675bac3f",
+        "binary_sha256": "cde56dd6bbfcf0c17c6ec8e3ced94aa6efd344cb4717d04557b8b0b39f6974b5",
+        "transferred": [],
+        "player_health": 51.40465545654297,
+        "blunt": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "bodies": 17,
+        "inventory_empty": true
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-corpse-loot/sanitized-corpse-loot-01",
+      "audit": "build/oblivion-compat/skeleton-corpse-loot/sanitized-corpse-loot-01/corpse-loot-audit.json",
+      "sha256": "cecad97eeddcab669664438bb64b6032a6d5b31858726ef2557422d9224e24a2",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_corpse_loot_sanitized.json",
+      "manifest_sha256": "1fe56154c3b882861a72d9ebd8bab9f31a431ac32d07857c164d2aa9dab68185",
+      "result": {
+        "passed": true,
+        "phase": "loot",
+        "sanitized": true,
+        "source_sha256": "201979758edd473452d8f735fe999689814d45da0235e8d3901f3de2a6c8d123",
+        "save_sha256": "790fafca58475d1d040e674c1c834f1f08e34b5c20ee345079434781d82b5e4e",
+        "binary_sha256": "1a305a647638d1329863b9ab073b90768085a6e73ccc7c298b80eb0aa77110ff",
+        "transferred": [
+          {
+            "base": "content:oblivion.esm:01ebff",
+            "count": 1,
+            "condition": -1.0
+          },
+          {
+            "base": "content:oblivion.esm:0229bd",
+            "count": 1,
+            "condition": 149.79989624023438
+          }
+        ],
+        "player_health": 51.40465545654297,
+        "blunt": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "bodies": 17,
+        "inventory_empty": true
+      }
+    },
+    {
+      "course": "build/oblivion-compat/skeleton-corpse-loot/sanitized-corpse-loot-restart-01",
+      "audit": "build/oblivion-compat/skeleton-corpse-loot/sanitized-corpse-loot-restart-01/corpse-loot-audit.json",
+      "sha256": "fc09ac9c9842cab91ee4ffd9bf4afca6a12da9d6d1d195ef5fee438b48efaf1b",
+      "manifest": "scripts/data/oblivion_compat/oblivion_skeleton_corpse_loot_restart_sanitized.json",
+      "manifest_sha256": "db622a9b762afe2f850520877cac56d58e755e6416118f8f14caf71e366f6aad",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "790fafca58475d1d040e674c1c834f1f08e34b5c20ee345079434781d82b5e4e",
+        "save_sha256": "7f0e9a3225b92020413e9b466bc8679ae09f2297027c250936d0ce838f319a56",
+        "binary_sha256": "1a305a647638d1329863b9ab073b90768085a6e73ccc7c298b80eb0aa77110ff",
+        "transferred": [],
+        "player_health": 51.40465545654297,
+        "blunt": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "bodies": 17,
+        "inventory_empty": true
+      }
+    }
+  ],
+  "images": [
+    {
+      "path": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-baseline-02/original-Skeleton-corpse-inventory.png",
+      "sha256": "06d105e3e8c37e803709996dec4269e1171797c2efa919605c17551c1551b6dc",
+      "inspected": true
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-baseline-02/original-Skeleton-corpse-looted.png",
+      "sha256": "9ca9934ca02bcaf52c96758aa21f6ffa5b7454a8ac09d3b4ba44b4ce60b2de44",
+      "inspected": true
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-baseline-02/original-physical-corpse-before-activation.png",
+      "sha256": "09b74dcf6b9b4b7b8234e8eefab55d2170dd7369204463444b7292774aa0ec56",
+      "inspected": true
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-restart-01/original-collapsed-Skeleton-focused.png",
+      "sha256": "ce9dee1ed3f025a502b99a11c0bba87ca35d1999d3f9e557f6af5e686c8cadeb",
+      "inspected": true
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-corpse-loot/sanitized-corpse-loot-01/original-Skeleton-corpse-inventory.png",
+      "sha256": "42bd4f9806d90f9eb8e9ad4e77302ea2732d2b4d6c7c0e87b43f29807b8b1d02",
+      "inspected": true
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-corpse-loot/sanitized-corpse-loot-01/original-Skeleton-corpse-looted.png",
+      "sha256": "2b05cb7c39298c8cfc42cdf9dd730543422e94c1fae83295a7f4768eeedf0054",
+      "inspected": true
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-corpse-loot/sanitized-corpse-loot-01/original-physical-corpse-before-activation.png",
+      "sha256": "0782165288955747cb5c8843302484f657830e1e18d5ffad04fa4177cf7cb0e9",
+      "inspected": true
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-corpse-loot/sanitized-corpse-loot-restart-01/original-collapsed-Skeleton-focused.png",
+      "sha256": "fc345801405fe93fe2418ed65e7116651f551a7d6e6bf60f9fdfe62eea3d9c06",
+      "inspected": true
+    }
+  ],
+  "python": {
+    "receipt": "build/oblivion-compat/skeleton-corpse-loot/python-01/verification.json",
+    "sha256": "001c1566bea90c6f8103d97ae1e18587e063a34357d9e7cf2e3561b84cb19824",
+    "executed": 612
+  },
+  "reused_engine_evidence": {
+    "receipt": "docs/oblivion/SKELETON-DEATH-POSE-VERIFICATION.json",
+    "sha256": "2d349285d07088d5bedb206148b25d3675f58b7baf626b57d28292aecb4eb765",
+    "scope": "Unchanged production C++ and game binaries; prior336 focused and2278 full engine checks per build retain original provenance. No new engine run claimed."
+  },
+  "retained_input_failure": {
+    "course": "build/oblivion-compat/skeleton-corpse-loot/normal-corpse-loot-baseline-01",
+    "observation": "Loose aiming tolerance selected floor STAT049cc7 beside a thin bone. Camera-relative precise aim then selected the actual corpse; no engine inventory/picking fix was required."
+  },
+  "semantics": [
+    "Bonemeal1 and Steel War Axe1 move from corpse to Player exactly once, preserving condition149.7999 and ownership metadata.",
+    "Corpse inventory is explicitly empty; cold-load live inventory query does not regenerate its original CNTO/LVLO contents.",
+    "Player Health51.4047, Blunt35/XP2.0, level counters, native death counts and17-body corpse ownership persist."
+  ],
+  "remaining": "Heal through existing bedroll if needed, return toward exit, select next observed unsupported content behavior. Full expedition remains open."
+}

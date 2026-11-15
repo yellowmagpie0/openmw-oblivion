@@ -293,6 +293,7 @@ namespace MWWorld
         mTeleported = false;
         mJumping = false;
         mOblivionJumpRequested = false;
+        mOblivionCastRequested = false;
         mOblivionCharacterGenerationFlags = 0;
         mOblivionCharacterGeneration.reset();
         mCurrentCrimeId = -1;

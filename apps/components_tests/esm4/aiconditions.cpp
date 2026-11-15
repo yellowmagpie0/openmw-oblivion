@@ -1,3 +1,5 @@
+#include <components/esm4/cellcondition.hpp>
+#include <tuple>
 #include <gtest/gtest.h>
 #include <array>
 #include <limits>
@@ -33,6 +35,28 @@ TEST(ESM4AIConditions, UsesExplicitSubjectContextAndGlobalComparison)
     global.mComparisonGlobalKey = ESM::FormKey::content("Oblivion.esm", 0x123);
     context.mResolveGlobal = [](const ESM::FormKey&) { return std::optional<double>(8.0); };
     EXPECT_EQ(ESM4::evaluateCondition(global, context), ESM4::ConditionResult::False);
+}
+
+TEST(ESM4AIConditions, GlobalNativeCallbackDoesNotRequireSelectedTarget)
+{
+    ESM4::ConditionEvaluationContext context;
+    unsigned calls = 0;
+    context.mResolve = [&](const auto&, auto subject) {
+        ++calls;
+        EXPECT_EQ(subject, ESM4::ConditionSubject::Target);
+        return ESM4::ConditionValue::value(1);
+    };
+    auto global = condition(1);
+    global.mFunction = 176; // Original IsPCAMurderer reads global Player, not the selected subject.
+    global.mRunOnTarget = true;
+    EXPECT_EQ(ESM4::evaluateCondition(global, context), ESM4::ConditionResult::True);
+    EXPECT_EQ(calls, 1u);
+    for (const int function : {70, 0, 4096}) // Required actor, absent callback, unknown function.
+    {
+        global.mFunction = function;
+        EXPECT_EQ(ESM4::evaluateCondition(global, context), ESM4::ConditionResult::MissingContext);
+        EXPECT_EQ(calls, 1u);
+    }
 }
 
 TEST(ESM4AIConditions, OrFlagGroupsWithTheFollowingCondition)
@@ -313,4 +337,23 @@ TEST(ESM4AIConditions, SelectedTravelPackageProvesWaitingWithoutInventingProcedu
     const auto unproved = ESM4::nativeAuthoredPackageQueryView(5, 0);
     EXPECT_FALSE(unproved.mProcedureArrayIndex);
     EXPECT_EQ(ESM4::nativePackageIsWaiting(unproved).mStatus, ESM4::ConditionValueStatus::Unsupported);
+}
+
+TEST(ESM4AIConditions, GetInCellUsesAsciiCaseInsensitiveEditorIdPrefix)
+{
+    ESM4::Cell actual, parameter;
+    for (const auto& [name, prefix, expected] : {
+        std::tuple{"ChorrolNorthernGoodsAndTrade", "Chorrol", true},
+        {"Chorrol", "Chorrol", true}, {"chorrolShop", "CHORROL", true},
+        {"NotChorrol", "Chorrol", false}, {"Chor", "Chorrol", false},
+        {"Chorrol", "", true}, {"", "Chorrol", false}, {"", "", true},
+        {"HackdirtCaverns", "Hackdirt", true}, {"ChorrolShop", "horrol", false},
+        {"Chorrol", "ChorrolShop", false}})
+    {
+        actual.mEditorId = name;
+        parameter.mEditorId = prefix;
+        EXPECT_EQ(ESM4::cellConditionMatches(&actual, &parameter), expected);
+    }
+    EXPECT_FALSE(ESM4::cellConditionMatches(nullptr, &parameter));
+    EXPECT_FALSE(ESM4::cellConditionMatches(&actual, nullptr));
 }

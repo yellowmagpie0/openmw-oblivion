@@ -1,0 +1,74 @@
+{
+  "passed": true,
+  "scope": "One recorded ordinary-input landing recovery in a still-running original-new-game course; not full escape or unattended-course acceptance",
+  "game_pid": 335271,
+  "manual_input": {
+    "scope": "Manual ordinary X11 keyboard recovery, separate from replay receipts. No game-memory or actor/health/position/quest commands. Not itself course acceptance.",
+    "game_pid": 335271,
+    "display": ":1",
+    "reason": "Player stalled at625.55,1204.32,-434.76 while controller forward held. Live read-only capture shows stone edge at stair turn.",
+    "before_capture": "landing-observation-before.png",
+    "actions": [
+      {
+        "utc": "2026-11-07T09:57:15.519576+00:00",
+        "command": [
+          "xdotool",
+          "keydown",
+          "d"
+        ],
+        "returncode": 0
+      },
+      {
+        "utc": "2026-11-07T09:57:16.067992+00:00",
+        "command": [
+          "xdotool",
+          "keyup",
+          "d"
+        ],
+        "returncode": 0
+      }
+    ],
+    "after_capture": "landing-observation-after-key.png",
+    "observed_response": {
+      "before": {
+        "position": [
+          625.55072021484,
+          1204.3228759766,
+          -434.76043701172
+        ],
+        "last_progress_local_time": "03:48:30.488"
+      },
+      "first_after": {
+        "position": [
+          702.31072998047,
+          1305.1129150391,
+          -444.65029907227
+        ],
+        "local_time": "03:57:16.048"
+      },
+      "landing_gate_local_time": "03:57:16.530",
+      "roomC_waypoint3_local_time": "03:57:36.961",
+      "same_game_pid": 335271,
+      "original_driver_resumed": true
+    },
+    "acceptance_limitation": "Automated SDL receipts cover the driver only. This additional X11 key pair is separately documented; do not describe this as an entirely unattended run."
+  },
+  "capture_sha256": {
+    "landing-observation-before.png": "87dce1847de913c7b7f102efc7edfa64f9a1b9748d428000846190947aa58cdc",
+    "landing-observation-after-key.png": "ad58f6a81fefcc9d66f9278d99e1a1c5bac258eac75d512b43885f8aa2cfc385"
+  },
+  "source_update": {
+    "manifest": "scripts/data/oblivion_compat/oblivion_sewer_continuous_escort_continuation.json",
+    "behavior": "Keep controller forward held; observe actual Player y>=1200, then ordinary D key for0.5s before the original landing wait. All original approach/encounter/escort actions retained.",
+    "selected_actions": 72,
+    "full_sections": 67,
+    "full_actions": 10462,
+    "checks": {
+      "assembly_repeat_python": 18,
+      "full_observer_luajit_compile": true
+    },
+    "runtime_evidence_scope": "Observed equivalent keyboard recovery in existing full11; revised automatic scheduling has not been independently replayed."
+  },
+  "ongoing_run": "Active full11 manifest remains the original10460-action assembly plus the separately recorded X11 input pair. Do not overwrite or retroactively relabel it unattended.",
+  "full_escape_complete": false
+}

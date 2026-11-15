@@ -1,0 +1,63 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "base": {
+    "tag": "BOOK",
+    "id": "024569",
+    "payload_sha256": "f5fde2cf20b30a4d1d1f010450cf61b188a924369881d6e089636d7214fc3f75",
+    "flags": 0,
+    "book_skill": -1,
+    "value": 6,
+    "weight": 0.5,
+    "name": "A Less Rude Song",
+    "model": "Clutter\\Books\\Quarto02.NIF",
+    "scriptless": true,
+    "unenchanted": true,
+    "text_bytes": 1993,
+    "text_sha256": "083026db29c800122d0854d1434cb21f357d3ded2dafb73ba49092cb9ded00b4"
+  },
+  "placed": {
+    "tag": "REFR",
+    "id": "06efb2",
+    "payload_sha256": "28e34c47ab91d997255a95870428c983fac4381fbaf9b6ddd80189d1a0084d9a",
+    "base": "024569",
+    "position": [
+      -2749.479736328125,
+      -1825.4146728515625,
+      -579.9146118164062,
+      0.00044221716234460473,
+      -0.0004655119846574962,
+      -1.5790871381759644
+    ],
+    "owner": ""
+  },
+  "model": "meshes/clutter/books/quarto02.nif",
+  "member_sha256": "40adc3ffbd5f007562c9a20ca601f92cb30cbac83e7068d7a44d31ff8f9b8807",
+  "raw_shape": {
+    "path": "build/oblivion-compat/song-drop/original-raw-graph.txt",
+    "asset_hash": "66c3e8a0e4db2d9034d17bd49aa6f0d5",
+    "records": 18,
+    "body_record": 4,
+    "mass": 1.3,
+    "shape_record": 3,
+    "authored_motion_type": 4
+  },
+  "parser_diagnostic": {
+    "path": "build/oblivion-compat/song-drop/original-model-graph.json",
+    "bodies": 1,
+    "joints": 0,
+    "authored_root": 0,
+    "prepared_root": 18,
+    "body_transform": true,
+    "scope": "Existing unchanged NIF implementation adds its supported virtual root for authored bhkRigidBodyT; diagnostic is parser evidence, not an independent gameplay oracle."
+  },
+  "expected": {
+    "quantity": 1,
+    "value": 6,
+    "inventory_weight": 0.5,
+    "read_delta_on_open": 1,
+    "read_delta_on_drop_or_load": 0
+  },
+  "reused_original_behavior": "ORDINARY-BOOK-READ-ORACLE.json and CHARTER-BOOK-ORACLE.json: same ordinary scriptless non-scroll/skill-1 family counts actual opens once and permits combat reading. No new original Song drop trajectory probe.",
+  "scope": "Independently decoded original DATA/NAME/placement and original archive bytes; no replacement model or authored plugin. Actual fork drop/cold/body/retrieval acceptance remains separate. No exact original physical trajectory requirement."
+}

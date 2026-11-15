@@ -1,0 +1,37 @@
+{
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_records": {
+    "path": "build/oblivion-compat/armor-use/original-content-audit.json",
+    "sha256": "9fbb97e978ddb7c4e760b2717c0ed89e32ac82d61d48a6067b8762114bafd4f3"
+  },
+  "armor_caller": {
+    "path": "build/oblivion-compat/armor-use/original-armor-use-caller-report.json",
+    "sha256": "3ddb04a69d9a47deedac8a850d9bc8837662cda54b654aad5845022c3862e2de",
+    "cases": 16
+  },
+  "heavy_dispatch": {
+    "path": "build/oblivion-compat/armor-use/original-heavy-use-report.json",
+    "sha256": "871c37a8a214e6ad9220c7d2992f2b2865a3e8ca1f3f95af1ac2e8f0ea0b23da",
+    "cases": 18
+  },
+  "light_dispatch": {
+    "path": "build/oblivion-compat/armor-use/original-light-use-report.json",
+    "sha256": "372fffe0b2fe9770044e4605853867e3debb56bff76e155c56bd0419dd560767",
+    "cases": 18
+  },
+  "expected": [
+    "Heavy SKIL043/AV18 primary1.25, governing Endurance5, Combat0; Light SKIL04c/AV27 primary1.5, governing Speed4, Stealth2.",
+    "Original selected ARMO class dispatch calls receiver use18 or27, slot0 and scale argument0. Null/non-ARMO selected base or prior block-hit sound dispatch skip this call.",
+    "Original Rusty Iron Cuirass0661c1 and Greaves0661c3 are heavy. The previous real unblocked course wears both but leaves Heavy40/XP0."
+  ],
+  "baseline": {
+    "path": "build/oblivion-compat/armor-use/real-armor-use-baseline.json",
+    "sha256": "744515e106c4fe0118ee137c45a920795ba08161427a5f8989508c91437a9683"
+  },
+  "limits": [
+    "Original armor caller starts after selection/condition: supplied selected entry and block dispatch flag; actual4B4C70 class reader, captured receiver39C call. Stops before hit audio/reactions.",
+    "668C30 dispatch probes use audited SKIL floats and independently supplied lookup/base getter/publication boundaries. No original live gameplay claim.",
+    "Earlier block dispatcher sets the guard even if sound playback is disabled or unavailable; this is source selection policy, not an audibility test."
+  ]
+}

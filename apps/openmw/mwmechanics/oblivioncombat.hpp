@@ -452,6 +452,7 @@ namespace MWMechanics
         std::map<ESM::FormKey, float> mAnimationClocks;
         std::optional<float> mPlayerBowTimer;
         std::map<ESM::FormKey, ESM4::RuntimeBowState> mBowStates;
+        std::map<ESM::FormKey, ESM4::SpellCastState> mSpellCasts;
         std::map<ESM::FormKey, ESM4::TimedKnockbackState> mActorKnockback;
         std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mActorRagdolls;
         std::map<ESM::FormKey, ESM4::RuntimeGetUpIdle> mGetUpIdles;
@@ -930,6 +931,12 @@ namespace MWMechanics
         bool changePlayerHealth(MWWorld::Player& player, float delta, const ESM::FormKey& source,
             bool essential, const ESM4::EssentialRecoverySettings& settings,
             const ESM4::PlayerDynamicBaseSettings& baseSettings, bool godMode = false);
+        // Environmental impact: no invented attacking actor or melee action.
+        // Prepare the pushback allocation before the atomic Health publication.
+        bool applyTrapImpact(const MWWorld::Ptr& actor, MWWorld::Player* player, float damage,
+            const std::array<float, 3>& incomingVelocity, float pushback, bool essential,
+            const ESM4::EssentialRecoverySettings& recovery,
+            const ESM4::PlayerDynamicBaseSettings& playerBase, bool godMode);
         // Resource-current requests (including Lua) debit/restore Damage without
         // replacing Maximum or Script. Native Damage clamps still apply; a
         // request above the recoverable pool need not equal the resulting value.
@@ -954,7 +961,10 @@ namespace MWMechanics
         // actors change too; newly published references inherit the override.
         // No pointers survive the call. Event/cache policy remains caller-owned.
         std::optional<bool> getBaseEssential(const ESM::FormKey& base) const;
+        const std::vector<ESM4::RuntimeActorFaction>* getBaseFactions(const ESM::FormKey& base) const;
         void setBaseEssential(const ESM::FormKey& base, ESM4::ActorBaseKind kind, bool essential);
+        void setBaseFactions(const ESM::FormKey& base, ESM4::ActorBaseKind kind,
+            std::vector<ESM4::RuntimeActorFaction> factions);
         void setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,
             std::int32_t requested, std::span<const MWWorld::Ptr> residents);
         // Batch native attribute/skill form writes. Resource form inputs,
@@ -1066,6 +1076,22 @@ namespace MWMechanics
         // rest/wait/jail eligibility and active-item/effect lifecycle.
         bool restorePotionResources(const MWWorld::Ptr& actor, MWWorld::Player* player,
             const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings);
+        const ESM4::SpellCastState* findSpellCast(const ESM::FormKey& actor) const;
+        bool beginSpellCast(const ESM::FormKey& actor, ESM4::SpellCastState cast, bool usesMagicka = true);
+        bool canUsePlayerPower(const ESM::FormKey& spell, double gameHours) const;
+        // Commit daily ownership even for a miss. A living target's Fatigue
+        // debit and the capped Player restoration publish with that ownership.
+        bool releasePlayerAbsorbFatiguePower(MWWorld::Player& player, const MWWorld::Ptr& target,
+            const ESM::FormKey& spell, double gameHours, float magnitude,
+            const ESM4::PlayerDynamicBaseSettings& settings);
+        void cancelSpellCast(const ESM::FormKey& actor) noexcept;
+        struct SpellCastUpdate { bool mReleased; bool mApplied; bool mFinished; };
+        // The item release callback prepares all work before its no-throw
+        // charge/projectile publication. No renderer callback owns this event.
+        std::optional<SpellCastUpdate> advanceItemCast(const ESM::FormKey& actor, float duration,
+            const std::function<bool()>& release);
+        std::optional<SpellCastUpdate> advanceRestorationCast(const MWWorld::Ptr& actor, MWWorld::Player* player,
+            float duration, const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings);
         void restoreNonPlayerResources(const MWWorld::Ptr& actor, const OblivionRestorationUpdate& input,
             const OblivionRestorationSettings& settings);
         void restorePlayerResources(MWWorld::Player& player, const OblivionRestorationUpdate& input,

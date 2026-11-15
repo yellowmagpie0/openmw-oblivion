@@ -55,6 +55,22 @@ namespace ESM4
         };
     }
 
+    SpellCostSettings buildSpellCostSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs input(settings);
+        SpellCostSettings result;
+        result.mAreaMultiplier = input.number("fMagicAreaBaseCostMult", result.mAreaMultiplier);
+        result.mDurationMultiplier = input.number("fMagicDurMagBaseCostMult", result.mDurationMultiplier);
+        result.mMagnitudeExponent = input.number("fMagicCostScale", result.mMagnitudeExponent);
+        result.mTargetMultiplier = input.number("fMagicRangeTargetCostMult", result.mTargetMultiplier);
+        result.mSkillBase = input.number("fMagicCasterSkillCostBase", result.mSkillBase);
+        result.mSkillMultiplier = input.number("fMagicCasterSkillCostMult", result.mSkillMultiplier);
+        result.mLuckMultiplier = input.number("fActorLuckSkillMult", result.mLuckMultiplier);
+        result.mLuckBase = input.number("iActorLuckSkillBase", result.mLuckBase);
+        (void)manualSpellMagickaCost(0, 0, 0, result); // Shared validation.
+        return result;
+    }
+
     float buildFriendHitTimer(std::span<const GameSetting* const> settings)
     {
         // Original 1.2.0416 initializer 9E6D4F / B368A0. Negative finite

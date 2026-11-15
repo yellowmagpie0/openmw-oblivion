@@ -1,0 +1,794 @@
+{
+  "passed": true,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "setter": "0x4675e0",
+  "native_list_insert": "0x446cb0",
+  "script_execute": "0x50ab80",
+  "scope": "Complete original base-component setter and list insertion. Argument parsing, actor casting and base-provider selection are outside this harness; wrapper shared-base dispatch independently inspected at0x50abf7..0x50ac2f. Not live game or save acceptance.",
+  "boundaries": [
+    "Heap allocation returns separate zeroed eight-byte blocks; free records node and returns",
+    "Virtual base changed callback records this pointer and flag0x40",
+    "Fixture supplies initial linked faction list and faction identities"
+  ],
+  "cases": [
+    {
+      "initial": [],
+      "faction": "0x0",
+      "requested": -128,
+      "memberships_after": [],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x0",
+      "requested": -1,
+      "memberships_after": [],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x0",
+      "requested": 1,
+      "memberships_after": [],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x0",
+      "requested": 127,
+      "memberships_after": [],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x0",
+      "requested": 128,
+      "memberships_after": [],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x0",
+      "requested": 257,
+      "memberships_after": [],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003000",
+      "requested": -128,
+      "memberships_after": [
+        [
+          33566720,
+          -128
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003000",
+      "requested": -1,
+      "memberships_after": [
+        [
+          33566720,
+          -1
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003000",
+      "requested": 1,
+      "memberships_after": [
+        [
+          33566720,
+          1
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003000",
+      "requested": 127,
+      "memberships_after": [
+        [
+          33566720,
+          127
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003000",
+      "requested": 128,
+      "memberships_after": [
+        [
+          33566720,
+          -128
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003000",
+      "requested": 257,
+      "memberships_after": [
+        [
+          33566720,
+          1
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003200",
+      "requested": -128,
+      "memberships_after": [
+        [
+          33567232,
+          -128
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003200",
+      "requested": -1,
+      "memberships_after": [
+        [
+          33567232,
+          -1
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003200",
+      "requested": 1,
+      "memberships_after": [
+        [
+          33567232,
+          1
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003200",
+      "requested": 127,
+      "memberships_after": [
+        [
+          33567232,
+          127
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003200",
+      "requested": 128,
+      "memberships_after": [
+        [
+          33567232,
+          -128
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [],
+      "faction": "0x2003200",
+      "requested": 257,
+      "memberships_after": [
+        [
+          33567232,
+          1
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x0",
+      "requested": -128,
+      "memberships_after": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x0",
+      "requested": -1,
+      "memberships_after": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x0",
+      "requested": 1,
+      "memberships_after": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x0",
+      "requested": 127,
+      "memberships_after": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x0",
+      "requested": 128,
+      "memberships_after": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x0",
+      "requested": 257,
+      "memberships_after": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003000",
+      "requested": -128,
+      "memberships_after": [
+        [
+          33566720,
+          -128
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003000",
+      "requested": -1,
+      "memberships_after": [
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 1
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003000",
+      "requested": 1,
+      "memberships_after": [
+        [
+          33566720,
+          1
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003000",
+      "requested": 127,
+      "memberships_after": [
+        [
+          33566720,
+          127
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003000",
+      "requested": 128,
+      "memberships_after": [
+        [
+          33566720,
+          -128
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003000",
+      "requested": 257,
+      "memberships_after": [
+        [
+          33566720,
+          1
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003200",
+      "requested": -128,
+      "memberships_after": [
+        [
+          33567232,
+          -128
+        ],
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003200",
+      "requested": -1,
+      "memberships_after": [
+        [
+          33567232,
+          -1
+        ],
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003200",
+      "requested": 1,
+      "memberships_after": [
+        [
+          33567232,
+          1
+        ],
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003200",
+      "requested": 127,
+      "memberships_after": [
+        [
+          33567232,
+          127
+        ],
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003200",
+      "requested": 128,
+      "memberships_after": [
+        [
+          33567232,
+          -128
+        ],
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    },
+    {
+      "initial": [
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "faction": "0x2003200",
+      "requested": 257,
+      "memberships_after": [
+        [
+          33567232,
+          1
+        ],
+        [
+          33566720,
+          0
+        ],
+        [
+          33566976,
+          2
+        ]
+      ],
+      "changed_flags": [
+        64
+      ],
+      "freed_nodes": 0
+    }
+  ],
+  "conclusion": "New entry inserts at head, including signed rank-1. Existing entry updates low signed byte in place, or removes at-1. Null faction makes no change. Runtime storage must preserve order and absent-versus-empty replacement.",
+  "winning_story_records": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "records": {
+      "MythicDawnCG": {
+        "type": "FACT",
+        "form": "014a20",
+        "flags": 0
+      },
+      "CGAssassinFinal": {
+        "type": "ACHR",
+        "form": "01e703",
+        "flags": 1024,
+        "base": "01e6ff"
+      },
+      "base": {
+        "type": "NPC_",
+        "form": "01e6ff",
+        "factions": [
+          {
+            "faction": "0227bc",
+            "rank": 0
+          }
+        ]
+      },
+      "shared_base_references": [
+        "01e703"
+      ]
+    }
+  },
+  "authored_list_construction": {
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "npc_loader": "0x527e40",
+    "SNAM_dispatch": "0x5280fd..0x528122",
+    "setter_call": "0x52811d -> 0x4675e0",
+    "reused_independent_proof": "M15-DISPOSITION-RUNTIME-VERIFICATION.json/oracles/native-faction-storage-oracle-01 (1296 sequences/5184 snapshots; original fingerprint retained)",
+    "first_match_query_proof": "M15-QUEST-LIVE-ADMISSION-VERIFICATION.json/faction_comparison (196608 original observations; unchanged factionMembership helper)",
+    "regression_interpretation": "Store mFactions retains authored SNAM order; it is not a previously constructed native list. Original first-signed-match query invariant remains checked directly. World queries now first construct the native list through insertion/update/removal semantics. The all256 signed-rank NPC/creature test additionally checks constructed membership and GetFactionRank."
+  }
+}

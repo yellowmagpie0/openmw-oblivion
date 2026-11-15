@@ -1,0 +1,188 @@
+{
+  "scope": "Original-new-game continuous19 prison through physical Natural Caverns entry and full recovery; prefix only, full67 terminal/reload acceptance remains pending",
+  "observed_utc": "2026-11-07T17:29:07.484065+00:00",
+  "game_pid": 410270,
+  "process_start_ticks": "180842841",
+  "runtime_elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+  "entered_sections_prefix": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28
+  ],
+  "no_loads": true,
+  "checkpoint_saves": [
+    {
+      "sequence": 59,
+      "save_sha256": "7df9f403fd9f106de6f02ae7d68f2670d66b18408cd4ed32c453b70aa497e2a0",
+      "live_sha256": "34fb0973edf5d19f5df479d6747d2807a7f28977bff2b81521f021e9dadde9cf",
+      "parsed_native_exact": true,
+      "cell": "content:oblivion.esm:0380bd",
+      "health": 59.10000228881836
+    },
+    {
+      "sequence": 60,
+      "save_sha256": "cea57f44490f9753e5b32e18bace78b4eb6074c910f11a9f9838cacde2acdeaf",
+      "live_sha256": "48807fd9c4905ca4cef0cf368e942238771b309f5954cc45092b9290c2ddf78f",
+      "parsed_native_exact": true,
+      "cell": "content:oblivion.esm:0380bd",
+      "health": 80.0
+    }
+  ],
+  "original_caverns_door": [
+    "[11:27:13.070 I] M5 door activation: result=teleport ref=content:oblivion.esm:0381b8 destination=FormId:0x10380bd"
+  ],
+  "native_recovery_casts": [
+    "[11:27:20.455 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=66.14 magicka=61",
+    "[11:27:33.223 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=73.18 magicka=54.3739",
+    "[11:27:45.959 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=47.7893"
+  ],
+  "persistent_player_kills": [
+    {
+      "actor": "content:oblivion.esm:037e40",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:037e41",
+      "base": "content:oblivion.esm:04e870",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:037e42",
+      "base": "content:oblivion.esm:04e870",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:038171",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:038172",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:038173",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:038174",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:038175",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:038176",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:038818",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:038819",
+      "base": "content:oblivion.esm:0cd335",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:0491fc",
+      "base": "content:oblivion.esm:051445",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:159832",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:159838",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    }
+  ],
+  "delivered_input_prefix_count": 4666,
+  "delivered_input_prefix_contiguous": true,
+  "rendered_review": [
+    "segment26-phase2-actual-natural-caverns-entry.png",
+    "segment27-joined-zombie-healed.png"
+  ],
+  "full_escape_complete": false,
+  "manifest": "build/oblivion-compat/sewer-escape/full19-assembly-02/full-escape.json",
+  "manifest_sha256": "8083f0d3dd9464b507ffcedfe2709172e21a0ad9a488c57f8d02528d30de82b9",
+  "reused_implementation_evidence": {
+    "controller_commit": "97778d7ce8",
+    "python": {
+      "count": 580,
+      "evidence": "build/oblivion-compat/sewer-escape/escort-recovery-broad-python-03",
+      "scope": "Controller source at its tested fingerprint; subsequent changes are docs/evidence only"
+    },
+    "engine": {
+      "normal": 2223,
+      "asan_ubsan": 2223,
+      "proof": "SEWER-DESCENDING-RECOVERY-VERIFICATION.json",
+      "scope": "Original C++ provenance retained; no C++ changes during this course"
+    }
+  },
+  "remaining_acceptance": "Finish all67 in this original process, physical outdoor exit, own outdoor fresh-process reload/walk, terminal every-save/input/native audits and remaining rendered review."
+}

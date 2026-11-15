@@ -1,0 +1,22 @@
+{
+  "feature": "M16 native Alchemy secondary use on genuine non-food ingredient consumption",
+  "source": "Healthy original Vilverin expedition after completed entrance jump:603acf165c4ce24977990c727a4039b8b06c1e6ee94ed0cf361d96a936f32443",
+  "content": {
+    "bonemeal": "01ebff, earned from an original Vilverin Skeleton; first DGFA, low ENIT flags1",
+    "lettuce": "033681 from original food sack06c2ad, low ENIT flags3"
+  },
+  "behavior": [
+    "After successful native non-food ingredient effect publication and committed one-item debit, use winning Alchemy19 secondary0.5. Food bit2 excludes Lettuce from XP.",
+    "Retain skill base5, raw PLAY Alchemy16 fractional progress, original resource timers, inventory/script ownership and prior earned Athletics/Acrobatics; no new schema or timer."
+  ],
+  "acceptance": [
+    "Actual original Bonemeal baseline consumes1->0 but earns0XP.",
+    "Normal/instrumented Bonemeal use earns0.5 once; cold load retains0.5 while owned effect finishes without replay.",
+    "Actual carried Lettuce consumes1->0 and earns0, retaining its existing native first-effect ownership."
+  ],
+  "limits": [
+    "Supported existing ingredient profiles only, not general ingestion/potency, brewing, apparatus or misc-stat UI.",
+    "No level-crossing/cap or malformed/unsupported-item gameplay admission claim; unchanged existing progression/content checks remain separate.",
+    "No original full ingestion/live eating skill measurement; original caller prefix/dispatcher boundaries declared in oracle."
+  ]
+}

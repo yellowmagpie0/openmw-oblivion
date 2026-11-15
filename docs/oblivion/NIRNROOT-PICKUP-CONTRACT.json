@@ -1,0 +1,55 @@
+{
+  "status": "Accepted bounded harvest OnAdd course: two original pickups, independent locals/counters, normal and sanitizer cold loads, valid two-owner saves",
+  "scope": "Harvested Player singleton ingredient OnAdd with distinct persistent inventory identity, original Nirnroot06f184",
+  "source": {
+    "save": "build/oblivion-compat/nirnroot-pickup/normal-first-plant-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "2a9d328c54ebb8c5da559af0461d08fe5ae35b683d2a5dce578bdf76ce8aa393"
+  },
+  "original": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "plant_reference": "06f184",
+    "plant_base": "066538",
+    "plant_script": "066539",
+    "ingredient": "04e940",
+    "ingredient_script": "0eed76",
+    "quest": "04e936",
+    "quest_script": "04e93b",
+    "record_survey": "build/oblivion-compat/expedition-return/nirnroot-content-survey.json"
+  },
+  "recipe": "scripts/data/oblivion_compat/oblivion_nirnroot_first_pickup.json",
+  "requirements": [
+    "Actual pickup disables original plant and gives one ingredient",
+    "MS39 stage10 and NirnCountTotal/current each1; miscstat27 increments1",
+    "Item owns Found1 by distinct inventory-script identity, not base/Player",
+    "Cold load retains locals/counters and does not replay pickup",
+    "Second original plant counts independently without merging script owners",
+    "Retain genuine loot/progression/life state; no grants, teleports or save edits"
+  ],
+  "remaining": [],
+  "limits": [
+    "New dispatch enrollment is limited to single-ingredient harvesting. Existing script-driven/bulk AddItem semantics are unchanged. General inventory event transfer/removal remains separate work."
+  ],
+  "normal_evidence": {
+    "pickup": "build/oblivion-compat/nirnroot-pickup/normal-first-pickup-01/nirnroot-audit.json",
+    "restart": "build/oblivion-compat/nirnroot-pickup/normal-first-restart-01/nirnroot-audit.json",
+    "focused": "focused-normal-01: 64 related engine tests",
+    "winning_records": "build/oblivion-compat/nirnroot-pickup/winning-original-records.json",
+    "stack_fix": "stack-regression-after-01: complete ESM4InventoryMechanics suite passed"
+  },
+  "retained_attempts": [
+    "normal-second-pickup-01: partial navigation endpoint exhausted before second plant; no activation",
+    "Initial ignored save-audit prototype selected stage-result instead of main quest unit; corrected selector, actual counters already correct",
+    "normal-second-pickup-02: direct swim blocked at shoreline rock; ordinary X11 F5 recovery saved actual progress, separately recorded, parent course failed",
+    "normal-second-pickup-03: second original pickup created owner2 but capture merged scripted stacks and save rejected; pre-activation save remained valid",
+    "stack-regression-before-01: focused component regression reproduced owned stacks merging",
+    "sanitized-first-pickup-01: observer target exceeded camera pitch range before activation; retry02 selects rendering-ray-confirmed plant point without engine changes"
+  ],
+  "second_source": {
+    "save": "build/oblivion-compat/nirnroot-pickup/normal-second-pickup-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "50215d584053ea95107a84ead74d499e96080b1172ad10177139a219eacebb64",
+    "audit": "normal-second-pickup-03/preactivation-state-audit.json",
+    "boundary": "Actual pre-activation save retained before later failed second-item save; parent automatic course remains failed"
+  },
+  "verification": "NIRNROOT-PICKUP-VERIFICATION.json",
+  "acceptance_boundary": "General M18 journal/UI, script-driven/bulk AddItem, other harvested scripts and generic inventory transfer/removal remain outside this chunk."
+}

@@ -23,8 +23,8 @@ namespace MWMechanics
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
         auto* service = native ? native->getOblivionCombatService() : nullptr;
         const bool player = actor == world.getPlayerPtr();
-        if (!service || actor.isEmpty() || (!player && actor.getType() != ESM::REC_NPC_4))
-            throw std::invalid_argument("native bow query requires Player/NPC authority");
+        if (!service || actor.isEmpty() || (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
+            throw std::invalid_argument("native bow query requires native actor authority");
         // Validate native binding before lazy shared inventory construction.
         if (player)
             (void)service->getPlayerValue(8);

@@ -1,0 +1,238 @@
+{
+  "passed": true,
+  "scope": "Genuine continuous19 save89 through original42\u201345, two Player victories, original waypoint radii, full80HP/80MP recovery; not full continuous escape acceptance",
+  "runtime_identity": {
+    "observed_utc": "2026-11-07T18:16:52.675903+00:00",
+    "game_pid": 415693,
+    "process_start_ticks": "181365377",
+    "exe": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/rat-descending-recovery-runtime-snapshot-01/openmw",
+    "exe_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+    "snapshot_manifest": {
+      "elf_sha256": "13f2f485e27a767cb5c11e07d025a7a414e206c6ee98a5cf5b40b464c14bd56f",
+      "verification": {
+        "head": "79a971c0b298fe5a3608e744e51004249bb93fab",
+        "source_fingerprint": "bae29b7286295b88576cf6b103b06b42968b7f697a8e6a5ca3953cd798b100a8"
+      },
+      "resources_version": "0.52.0\n79a971c0b298fe5a3608e744e51004249bb93fab\n\n",
+      "scope": "Downward-only recovery sweep retaining grounded support guard and legacy lateral/upward overlap separation. Focused10 actor bounds pass; integration pending."
+    },
+    "loaded_libraries": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-response-06/sdl-input.so",
+        "sha256": "2c147dd01fb0ca14fc4bb8a5ac8e8d0721949546874a387628949a11c7d7a89d"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletCollision.so.3.17",
+        "sha256": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libBulletDynamics.so.3.17",
+        "sha256": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libLinearMath.so.3.17",
+        "sha256": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/lib/libMyGUIEngine.so.3.4.3",
+        "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    ],
+    "scope": "Actual immutable runtime; gameplay acceptance separate."
+  },
+  "entry_restore": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-19/retained-saves/3-0089-Quicksave.omwsave",
+    "source_save_sha256": "6e31fb8afce47b9b033f752e8bc9877d44e7457a37dfcd76cef3044fd5216188",
+    "whole_state_restore": true,
+    "schema_migration": null,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": [
+      [
+        "/native_animated_references/0/bodies/1/linear_velocity/2",
+        0.014110811986029148,
+        0.014110812917351723
+      ],
+      [
+        "/native_animated_references/0/bodies/3/linear_velocity/0",
+        0.26956906914711,
+        0.2695690989494324
+      ]
+    ]
+  },
+  "all_actual_saves": {
+    "passed": true,
+    "scope": "Every actual F5 receipt, retained bytes and parsed native snapshot in this terminal passing run; gameplay acceptance remains separate.",
+    "count": 6,
+    "saves": [
+      {
+        "sequence": 3,
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-response-06/retained-saves/3-0003-Quicksave.omwsave",
+        "save_sha256": "9bd4c7d80b2d7e8d8b645aa3918fe60ac224c04d477d66cb086859b25aeeb7f5",
+        "live_sha256": "fa3e08cd3588577cb3d1cc74448e85f68aa0adb58722ed97ef585c883d6fb2e2",
+        "parsed_native_exact": true
+      },
+      {
+        "sequence": 4,
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-response-06/retained-saves/3-0004-Quicksave.omwsave",
+        "save_sha256": "e9b99f89dc56f6915d2d4b4feef0a5721376667f69ac80259e40934ab8fdea70",
+        "live_sha256": "eae17cf93be4b0f5d03d9a548efa33f55dfc5bb8be2af31a2ca84aca884393d9",
+        "parsed_native_exact": true
+      },
+      {
+        "sequence": 5,
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-response-06/retained-saves/3-0005-Quicksave.omwsave",
+        "save_sha256": "4dfc8cfb27227b5187dbe9211d8bc6b415d95d422252a8276d3ecffb6147d091",
+        "live_sha256": "37ff2d40319a18c0a5d4af96374974d079e4a4d4a57b91519fee73e74da0a97d",
+        "parsed_native_exact": true
+      },
+      {
+        "sequence": 6,
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-response-06/retained-saves/3-0006-Quicksave.omwsave",
+        "save_sha256": "df8b4da1c0b8ae0bedd618e3a79a588425563eb9b9138b8871b1a4040c2ea785",
+        "live_sha256": "676cce826bd9a2ce3f79b14ea1e85176923300d4dd68cd9c88be57c57119d6ee",
+        "parsed_native_exact": true
+      },
+      {
+        "sequence": 7,
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-response-06/retained-saves/3-0007-Quicksave.omwsave",
+        "save_sha256": "f37c22f11559ea26f8721abf57c7d6df85f9adb088219addde6c1e132495cf6a",
+        "live_sha256": "dc2b8111b71180d28af8811224e94aaf5e57785678fedf06868e6395be5a0586",
+        "parsed_native_exact": true
+      },
+      {
+        "sequence": 8,
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reinforcement-response-06/retained-saves/3-0008-Quicksave.omwsave",
+        "save_sha256": "581c6851a14ff4f2b54239a535bbbc789bd0ecfd13851d2bc0a909fa71708b58",
+        "live_sha256": "f70cf781c6c0c13c813b611c633871929eda55bb8716d725bd3c8799a24abb3b",
+        "parsed_native_exact": true
+      }
+    ]
+  },
+  "all_issued_inputs_delivered": true,
+  "input_sha256": "6a590e4283452ce15af9d5fb91f39fd792264111e77e9aa2f45df3194d800a78",
+  "native_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 415693,
+    "sequence": 9,
+    "tick": 1895,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 8,
+    "pending_count": 0,
+    "unsupported_count": 0
+  },
+  "player_kills": [
+    {
+      "actor": "content:oblivion.esm:03b541",
+      "base": "content:oblivion.esm:03b531",
+      "phase": 1,
+      "recovery_remaining": 0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:03b52f",
+      "base": "content:oblivion.esm:03b517",
+      "phase": 1,
+      "recovery_remaining": 0,
+      "killer": "dynamic:player:0000000000000001"
+    }
+  ],
+  "waypoint_receipts": [
+    "[12:19:41.580 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 1:\tWest course phase 1:\tJoined corridor waypoint 1 reached (4571.75927734375, 2855.330322265625, -456.63336181640625)",
+    "[12:20:01.713 I] L@0x1[scripts/tutorial_passage_observer.lua]:\tEscape segment 1:\tWest course phase 1:\tJoined corridor waypoint 2 reached (4680.859375, 3013.861572265625, -435.52490234375)"
+  ],
+  "observed_branch_counts": {
+    "attack": 29,
+    "heal": 7,
+    "move": 8
+  },
+  "native_guard_healing_effects": [
+    "[12:17:45.554 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=58.54 magicka=61",
+    "[12:17:52.731 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=57.03 magicka=46.1238",
+    "[12:17:59.762 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=58.37 magicka=31.2477",
+    "[12:18:06.762 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=56.86 magicka=16.1922",
+    "[12:18:17.650 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=55.32 magicka=4.00556",
+    "[12:18:42.254 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=39.32 magicka=2.39751",
+    "[12:19:10.897 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=20.44 magicka=4.19612"
+  ],
+  "route_end_health": 8.91998291015625,
+  "final_health": 80,
+  "final_magicka": 80,
+  "inventory_count_changes": {
+    "content:oblivion.esm:00931a": -1,
+    "content:oblivion.esm:00930e": -1
+  },
+  "rendered_review": [
+    "segment01-phase1-joined-cavern-reinforcement-approach.png",
+    "segment01-phase2-joined-first-cavern-goblin-victory.png",
+    "segment04-phase2-joined-cavern-full-recovery.png"
+  ],
+  "full_escape_complete": false,
+  "change": [
+    "Keep original two XY waypoint/radius gates (25/80) and original phase2 unchanged; repeatedly aim and bound forward movement instead of one long walk.",
+    "Read-only observer chooses move/attack/heal/done. Heal below55HP only with19MP; continue light attacks while mana regenerates. Recovery interval and bounded ordinary-C retries require fresh native applied-effect receipt.",
+    "branch_on_log waits for a fresh complete observation, chooses its latest named choice, validates every case as normal controls/read-only waits, rejects unknown choices and records selected nested input results.",
+    "Original43\u201345 death, potion and80HP/80MP gates retained. No injection, reset, skipped required fight or potion schedule change."
+  ],
+  "original_phase2_unchanged": true,
+  "current_recipe_matches_passing_runtime_actions_and_observer": true,
+  "source42_top_level_actions": {
+    "before": 83,
+    "after": 16
+  },
+  "full_assembly": {
+    "sections": 67,
+    "actions": 10195,
+    "lua_compile_passed": true,
+    "manifest": "build/oblivion-compat/sewer-escape/full20-assembly-02/full-escape.json"
+  },
+  "focused_checks": {
+    "passed": true,
+    "count": 25,
+    "command": "PYTHONPATH=scripts/tests python3 -m unittest test_scenario_log_branch test_scenario_repeat test_oblivion_sewer_course_assembly"
+  },
+  "python_gate": {
+    "passed": true,
+    "count": 587,
+    "evidence": "build/oblivion-compat/sewer-escape/reinforcement-response-broad-python-02",
+    "source": {
+      "head": "e031a6f231476e132c504956b2f8516d6629c529",
+      "source_fingerprint": "6ab68f043aa1ce4504d77320f7e5589d234de8cba2a92dcc8ed739a1007433c5"
+    }
+  },
+  "engine_evidence_reused": {
+    "reason": "C++ unchanged",
+    "normal": 2223,
+    "asan_ubsan": 2223,
+    "proof": "SEWER-DESCENDING-RECOVERY-VERIFICATION.json"
+  },
+  "failed_attempts_retained": [
+    {
+      "course": "full-escape-continuous-19",
+      "failure": "42 waypoint1 timeout90; Playeralive25.85. Two engaged foes pushed Player off fixed heading; no re-aim during walking. Actual input89 has74.3HP and both pursuers alive/engaged."
+    },
+    {
+      "course": "reinforcement-response-01",
+      "failure": "Power-attack guard exhausts fatigue; Player killed after reinforcement dies."
+    },
+    {
+      "course": "reinforcement-response-02/03",
+      "failure": "Immediate post-melee C produced no fresh native effect. Reselecting already-retained MinorHealing did not solve it; added recovery interval. No selected-spell persistence failure claimed."
+    },
+    {
+      "course": "reinforcement-response-04",
+      "failure": "Healing after every attack depleted mana; waiting for it while foes attack ends in Player death."
+    },
+    {
+      "course": "reinforcement-response-05",
+      "failure": "Fixed three-light-attack cadence reaches a30second missing applied-effect gate; Playeralive near2.10HP when diagnostic ends. Replaced fixed schedule with fresh observed choices and bounded C retries."
+    },
+    {
+      "course": "reinforcement-response-07",
+      "failure": "Experimental52f priority plus115distance threshold ends in Playerdeath. Both changes reverted; current actions/observer verified identical to passing06."
+    }
+  ],
+  "remaining_acceptance": "Original new-game all67, physical exit, own fresh outdoor reload/walk, terminal save/input/native audits and rendered review remain required. Loaded06 is scoped evidence only. Route ended at8.92HP before successful ordinary recovery; no broad character-path claim."
+}

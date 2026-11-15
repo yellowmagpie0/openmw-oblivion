@@ -1,0 +1,390 @@
+{
+  "status": "Accepted bounded native Player Acrobatics primary use from original entrance jump",
+  "full_milestone_complete": false,
+  "contract": "ACROBATICS-USE-CONTRACT.json",
+  "original_oracle": "ACROBATICS-USE-ORACLE.json",
+  "cases": [
+    {
+      "mode": "normal",
+      "phase": "baseline",
+      "audit": {
+        "path": "build/oblivion-compat/acrobatics-use/normal-jump-baseline-01/acrobatics-use-audit.json",
+        "sha256": "cdbaace1f168f47d3a20ccb9c1b6ddb557e100035e9076ccbb11a8fcabb0ebe4"
+      },
+      "result": {
+        "passed": true,
+        "phase": "baseline",
+        "sanitized": false,
+        "source_sha256": "b49b0a431aadd4d34b677c6e0460e17b25cbb2ab668da457dc8ca2e478f9e2e0",
+        "save_sha256": "fa338a6ddbb9a949357ffa0b3ed6e46b00038b323e91515d199a3bbd068afede",
+        "binary_sha256": "5703d9afba3a1ce205ced2df92aceeb7b11f28506b5d4ed04afc9d79c1e4ad9d",
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "jump_count": 1,
+        "observed_rise": 65.91827392579,
+        "fatigue_debits": [
+          30.0
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "jump",
+      "audit": {
+        "path": "build/oblivion-compat/acrobatics-use/normal-jump-02/acrobatics-use-audit.json",
+        "sha256": "00579581b47b960c9a5197bf975d578ef8a1c4b77d534ccc7f3accac7ae98c89"
+      },
+      "result": {
+        "passed": true,
+        "phase": "jump",
+        "sanitized": false,
+        "source_sha256": "b49b0a431aadd4d34b677c6e0460e17b25cbb2ab668da457dc8ca2e478f9e2e0",
+        "save_sha256": "53d720d547dd238dd8e7c1d734850c8b005827280f33fbc18a1e00d18234403c",
+        "binary_sha256": "1c72961f77ba20fe86056aa25e5114cb9f642361efe0a2ae4521165c2f062307",
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "jump_count": 1,
+        "observed_rise": 65.91827392579,
+        "fatigue_debits": [
+          30.0
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "idle",
+      "audit": {
+        "path": "build/oblivion-compat/acrobatics-use/normal-idle-01/acrobatics-use-audit.json",
+        "sha256": "3970a3fc124be8410b340e813fb9f71ae38f11345701057e6ba3d306bcf18272"
+      },
+      "result": {
+        "passed": true,
+        "phase": "idle",
+        "sanitized": false,
+        "source_sha256": "53d720d547dd238dd8e7c1d734850c8b005827280f33fbc18a1e00d18234403c",
+        "save_sha256": "64a851dd844b762776d08dd40ffe0455c6a86221eb03d5e7e0acadda3e03a7cf",
+        "binary_sha256": "1c72961f77ba20fe86056aa25e5114cb9f642361efe0a2ae4521165c2f062307",
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "jump_count": 0,
+        "observed_rise": 0.0,
+        "fatigue_debits": []
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "restart",
+      "audit": {
+        "path": "build/oblivion-compat/acrobatics-use/normal-restart-01/acrobatics-use-audit.json",
+        "sha256": "814e9c9c3aec8a215b6f60aedc504d8c88eff8701614c1aed473693d5702f227"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "53d720d547dd238dd8e7c1d734850c8b005827280f33fbc18a1e00d18234403c",
+        "save_sha256": "603acf165c4ce24977990c727a4039b8b06c1e6ee94ed0cf361d96a936f32443",
+        "binary_sha256": "1c72961f77ba20fe86056aa25e5114cb9f642361efe0a2ae4521165c2f062307",
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "jump_count": 0,
+        "observed_rise": 0.0,
+        "fatigue_debits": []
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "jump",
+      "audit": {
+        "path": "build/oblivion-compat/acrobatics-use/sanitized-jump-01/acrobatics-use-audit.json",
+        "sha256": "44a376cfd6e807150afe3b3067bdaae184c9cdafd31d81b55c31eb74f51eecb9"
+      },
+      "result": {
+        "passed": true,
+        "phase": "jump",
+        "sanitized": true,
+        "source_sha256": "b49b0a431aadd4d34b677c6e0460e17b25cbb2ab668da457dc8ca2e478f9e2e0",
+        "save_sha256": "8dd021fb526f647be54e56de77960d22a8b05d33d8c2852f0f7ee009a076e50d",
+        "binary_sha256": "c19ade5601b0113c785006f2db50bf45fdfbf4afaf15e905b37120e140e49c65",
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "jump_count": 1,
+        "observed_rise": 65.91827392579,
+        "fatigue_debits": [
+          30.0
+        ]
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "idle",
+      "audit": {
+        "path": "build/oblivion-compat/acrobatics-use/sanitized-idle-01/acrobatics-use-audit.json",
+        "sha256": "fedd7902e29203626e4d97de4ed5e5e887d1ddce2e9f847a398a2fa2937961e9"
+      },
+      "result": {
+        "passed": true,
+        "phase": "idle",
+        "sanitized": true,
+        "source_sha256": "8dd021fb526f647be54e56de77960d22a8b05d33d8c2852f0f7ee009a076e50d",
+        "save_sha256": "13339139f14822538963b4a80e78a60e197cd4422d16dadf1d0acbf3f2422725",
+        "binary_sha256": "c19ade5601b0113c785006f2db50bf45fdfbf4afaf15e905b37120e140e49c65",
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "jump_count": 0,
+        "observed_rise": 0.0,
+        "fatigue_debits": []
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "restart",
+      "audit": {
+        "path": "build/oblivion-compat/acrobatics-use/sanitized-restart-01/acrobatics-use-audit.json",
+        "sha256": "b8002224b4aedeba6d34b62df7baf464da479d28c780446b518dfb2c0177c727"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "8dd021fb526f647be54e56de77960d22a8b05d33d8c2852f0f7ee009a076e50d",
+        "save_sha256": "4d86e37c257910d48edec1b43139fb3b7a5cb2bb6ef8e75e50106c8fffe050a3",
+        "binary_sha256": "c19ade5601b0113c785006f2db50bf45fdfbf4afaf15e905b37120e140e49c65",
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "jump_count": 0,
+        "observed_rise": 0.0,
+        "fatigue_debits": []
+      }
+    }
+  ],
+  "gates": {
+    "focused-normal-03": {
+      "receipt": {
+        "path": "build/oblivion-compat/acrobatics-use/focused-normal-03/verification.json",
+        "sha256": "425ebf0b7cf954661665408f6c9d5d1aa4fbd65210671c71293750126ceb68a8"
+      },
+      "source": {
+        "head": "3f54ecf31b684b4c73b4362a749c62cab74428e2",
+        "source_fingerprint": "a915e68bbf68fb0abce4e348fc3f2ea1674ddc05f91c7d3fcbe569bc3424f585"
+      },
+      "result": {
+        "executed": 9,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionSkillTraining.*:OblivionWorldTest.*Jump*:OblivionWorldTest.*Skill*",
+        "binary_sha256": "11c9f03d41bd3fb819693ea36e29ae74f911af072f7126d509aaab0ec67bf5c4",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "2c6adae3dfd9d4cbbf3461c340ac31e0f53ae1565609ad89b6e7975498de8522",
+        "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "focused-sanitized-03": {
+      "receipt": {
+        "path": "build/oblivion-compat/acrobatics-use/focused-sanitized-03/verification.json",
+        "sha256": "610eaf408a7e4a97a8090e1e1363f25f9c30059864aff5f439179867e7a44c16"
+      },
+      "source": {
+        "head": "3f54ecf31b684b4c73b4362a749c62cab74428e2",
+        "source_fingerprint": "a915e68bbf68fb0abce4e348fc3f2ea1674ddc05f91c7d3fcbe569bc3424f585"
+      },
+      "result": {
+        "executed": 9,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionSkillTraining.*:OblivionWorldTest.*Jump*:OblivionWorldTest.*Skill*",
+        "binary_sha256": "5653169ecc97a322de7f9912ed25be0535ec3a7fa638f602d472784552028fbc",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "be1012ae8ef581a9aad8724bb489b2cf1caf94086eb52163c2196863dbc33c37",
+        "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "full-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/acrobatics-use/full-normal-01/verification.json",
+        "sha256": "06e25dcbda1ed97b6700305ba83facf407554bce55f8214fb0dcc30b0b3783e4"
+      },
+      "source": {
+        "head": "3f54ecf31b684b4c73b4362a749c62cab74428e2",
+        "source_fingerprint": "a915e68bbf68fb0abce4e348fc3f2ea1674ddc05f91c7d3fcbe569bc3424f585"
+      },
+      "result": {
+        "executed": 2284,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "11c9f03d41bd3fb819693ea36e29ae74f911af072f7126d509aaab0ec67bf5c4",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "f5a9dd5579b651117386de6bc82c5a876cfc876388b6c20d74aa87fa4ebfed0c",
+        "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "full-sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/acrobatics-use/sanitized-inventory-union.json",
+        "sha256": "d9c38ba6e98384483becb15cb59066dcbd89b465dd06f8dc6967e243e0f745cd"
+      },
+      "source": {
+        "head": "3f54ecf31b684b4c73b4362a749c62cab74428e2",
+        "source_fingerprint": "a915e68bbf68fb0abce4e348fc3f2ea1674ddc05f91c7d3fcbe569bc3424f585"
+      },
+      "executed": 2284,
+      "duplicates": 0,
+      "missing": 0,
+      "skipped": 0,
+      "leak_detection": true
+    }
+  },
+  "captures_reviewed": [
+    {
+      "path": "build/oblivion-compat/acrobatics-use/normal-jump-baseline-01/original-vilverin-entrance-jump.png",
+      "sha256": "0f5dab4e1a771373d81c7fa514b53c003b357ee32308b2b0ac30f70ee1116b22"
+    },
+    {
+      "path": "build/oblivion-compat/acrobatics-use/normal-jump-02/original-vilverin-entrance-jump.png",
+      "sha256": "0392b5c1efecccedb23fe091ac5eecc7c6337a4f22ad2afd63e75f14a43f1b42"
+    },
+    {
+      "path": "build/oblivion-compat/acrobatics-use/normal-idle-01/original-vilverin-acrobatics-idle.png",
+      "sha256": "af6e01c6229b5f0a9a0fe4503c63a1b4e674e4306086e9288bcdd68182190cce"
+    },
+    {
+      "path": "build/oblivion-compat/acrobatics-use/normal-restart-01/original-vilverin-acrobatics-restart.png",
+      "sha256": "c39af20ba2660a0e701fa2233938c8cee1defff05ac7e3afa0a8553ef81ac870"
+    },
+    {
+      "path": "build/oblivion-compat/acrobatics-use/sanitized-jump-01/original-vilverin-entrance-jump.png",
+      "sha256": "32719f763e795b62049a32fb8978151417ef45a3984ae2a8fb0b9bc39694bb0e"
+    },
+    {
+      "path": "build/oblivion-compat/acrobatics-use/sanitized-idle-01/original-vilverin-acrobatics-idle.png",
+      "sha256": "25d422ec8d3030fa8cc4f95882f4e029680991ff44680c8ec94a792cf72342ef"
+    },
+    {
+      "path": "build/oblivion-compat/acrobatics-use/sanitized-restart-01/original-vilverin-acrobatics-restart.png",
+      "sha256": "25d422ec8d3030fa8cc4f95882f4e029680991ff44680c8ec94a792cf72342ef"
+    }
+  ],
+  "production": "Physics prepares the actor frame by consuming velocity once. New eligibility reads that captured upward movement, grounded/walkable/non-inert/collidable state and non-swimming/non-flying context. After existing fatigue processing, only a live native Player receives winning Acrobatics26 primary0.3. Legacy notifications, fatigue behavior and GetPCJumping remain. No skill timer/schema change.",
+  "semantic_audit": "One actual input jump produces a greater-than5-unit observed airborne rise, grounded landing, one M12 jump/fatigue debit and exactly one0.3 publication. The legacy vertical field is request1, not physical velocity. Raw PLAY skill20 progresses; native base26 remains5. Other26 skills, including earned Athletics4.066545, native passive ownership, inventory/script-owner counts and Health110 remain. Exact schema101 payload roundtrip and process-bound live/save equality; idle/cold grant0 and retain0.3.",
+  "source_chain": "Healthy genuine original Athletics normal-restart-01 b49b0a43\u2026 at original Vilverin entrance066ac8/architecture066ac9. Ordinary E jump only; no world/stat/script-owner/seed/save editing, generated plugin, grants, teleports or effects supplied by the observer.",
+  "retained_failures": [
+    {
+      "cases": [
+        "focused-normal-01",
+        "focused-sanitized-01"
+      ],
+      "reason": "Compile rejection: direct dynamic_cast from Misc::NotNullPtr wrapper. Corrected explicit raw base pointer before cast; fresh02/03 retained separately."
+    },
+    {
+      "case": "normal-jump-01",
+      "reason": "Actual jump still showed0XP despite passing focused02 tests. ActorFrameData had already consumed velocity(); the second accessor saw0 and rejected reward. Final code uses captured frame movement; actual normal-jump-02 proves0.3. No motion/stat repair."
+    }
+  ],
+  "reused_unchanged_checks": {
+    "receipt": "ATHLETICS-USE-VERIFICATION.json",
+    "scope": "Full616 Python and original book provenance3294 normal/1115 native sanitizer component checks. Components, codec, helper and progression formulas unchanged. Engine and actual normal/instrumented jump/idle/cold courses fresh."
+  },
+  "cold_processes_distinct": true,
+  "limits": [
+    "Ordinary completed ground jump primary only; no damaged-fall secondary3, level-crossing/cap, steep-slope, ceiling, cancelled/in-air request, water/flying/god/terminal or midair-save acceptance.",
+    "Existing request-based fatigue processing is preserved; its rejected-request policy is not certified here.",
+    "Original dispatcher30 cases retain supplied lookup/base and captured publication boundaries; no complete original jump caller or original live jump claim.",
+    "Sanitizer engine inventory enables leak detection; rendered courses disable it. Full inventory is an audited disjoint union. Broader milestones and existing exterior visual gaps remain open."
+  ],
+  "post_gate_changes": "Acceptance documentation/handoff only. Production C++, observer recipes and semantic verifier unchanged after final frozen gates."
+}

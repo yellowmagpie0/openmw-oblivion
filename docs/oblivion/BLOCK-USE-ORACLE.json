@@ -1,0 +1,24 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "record": {
+    "path": "build/oblivion-compat/block-use/original-skill-content-audit.json",
+    "sha256": "118fe4eb5a9d4d984e8e7f10939f8090ea8068d67843af7c784ed8e68deffdde"
+  },
+  "use_dispatch": {
+    "path": "build/oblivion-compat/block-use/original-use-report.json",
+    "sha256": "3c7988fc055982ea4861ea36af8eddb4db8dda62b2a7ee21607669df813a01e3"
+  },
+  "use_dispatch_cases": 18,
+  "caller": {
+    "path": "build/oblivion-compat/block-use/original-block-use-caller-report.json",
+    "sha256": "7b4152e9cf93fcb92ff12595bd6e910fae6eb8950612cc8d4ee49895a573ed3f"
+  },
+  "caller_cases": 36,
+  "expected": "Accepted facing block trains primary use1.25 when absorbed fraction>0 OR pre-wear blocking equipment is empty. Equipped zero-absorption block does not train. Award receiver Player only, once per committed contact before OnHit.",
+  "limits": [
+    "Original caller prefix5F5B70..5F5C0F executes actual High cached-item readers; item-validity484E80 supplied true, skill-use virtual39C captured. Stops before fatigue/wear/reaction.",
+    "Original668C30 runs with audited primary/secondary SKIL values; skill lookup, base getter, progression sink are boundaries. No original live gameplay claim.",
+    "Retained attempt01 dummy item failed native validity predicate and was returned as absent. Fixed only the declared harness boundary; no game-data changes."
+  ]
+}

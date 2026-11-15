@@ -7,6 +7,7 @@
 #include <limits>
 #include <optional>
 #include <sstream>
+#include <utility>
 
 #include <components/debug/debuglog.hpp>
 
@@ -16,8 +17,10 @@
 #include <components/esm3/loadfact.hpp>
 #include <components/esm3/loadinfo.hpp>
 #include <components/esm3/loadmgef.hpp>
-#include <components/esm4/loadinfo.hpp>
+#include <components/esm4/common.hpp>
+#include <components/esm4/dialogue.hpp>
 #include <components/esm4/loaddial.hpp>
+#include <components/esm4/loadinfo.hpp>
 
 #include <components/compiler/errorhandler.hpp>
 #include <components/compiler/exception.hpp>
@@ -63,6 +66,13 @@ namespace MWDialogue
 {
     namespace
     {
+        const ESM4::Dialogue* nativeKnownTopic(const MWWorld::ESMStore& store, const ESM::RefId& id)
+        {
+            if (!id.getIf<ESM::FormId>()) return nullptr;
+            const auto* topic = store.get<ESM4::Dialogue>().search(id);
+            return topic && !(topic->mFlags & ESM4::Rec_Deleted) ? topic : nullptr;
+        }
+
         struct RuntimeCall
         {
             unsigned& mDepth;
@@ -309,10 +319,32 @@ namespace MWDialogue
         }
     }
 
+    bool DialogueManager::startScriptedDialogue(const MWWorld::Ptr& actor, const ESM::FormKey& topic)
+    {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
+        auto* world = dynamic_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
+        if (!scripts || world->getGameProfile() != ESM::GameProfile::Oblivion
+            || actor.isEmpty() || actor.getClass().getCreatureStats(actor).isDead() || mScriptedStart
+            || !scripts->selectNativeDialogueInfo(topic, actor, world->getPlayerPtr()))
+            return false;
+        mScriptedStart.emplace(actor, topic);
+        struct Reset
+        {
+            decltype(mScriptedStart)& mPending;
+            ~Reset() { mPending.reset(); }
+        } reset{mScriptedStart};
+        MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_Dialogue, actor);
+        return true;
+    }
+
     bool DialogueManager::startDialogue(const MWWorld::Ptr& actor, ResponseCallback* callback)
     {
         requireMutableRuntime();
         const RuntimeCall call(mActiveCalls);
+        const auto scriptedStart = std::exchange(mScriptedStart, std::nullopt);
         const bool native = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
         if (!native) updateGlobals();
 
@@ -342,7 +374,9 @@ namespace MWDialogue
             auto* world = dynamic_cast<MWWorld::World*>(
                 static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
             auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
-            const auto greeting = world ? world->getStore().findEsm4FormKey("GREETING") : std::nullopt;
+            const auto greeting = scriptedStart && scriptedStart->first == actor
+                ? std::optional(scriptedStart->second)
+                : world ? world->getStore().findEsm4FormKey("GREETING") : std::nullopt;
             const auto info = scripts && greeting
                 ? scripts->selectNativeDialogueInfo(*greeting, actor, world->getPlayerPtr()) : std::nullopt;
             if (!info) return false;
@@ -352,7 +386,7 @@ namespace MWDialogue
                 mNativeDialogue = false;
                 return false;
             }
-            creatureStats.talkedToPlayer();
+            scripts->markTalkedToPlayer(actor.getCellRef().getFormKey());
             return true;
         }
 
@@ -397,9 +431,8 @@ namespace MWDialogue
         auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
         const auto* info = world ? world->getStore().search<ESM4::DialogInfo>(key) : nullptr;
         if (!mNativeDialogue || !callback || !scripts || !info || mActor.isEmpty()) return false;
-        // This route implements explicit native choice graphs. General learned
-        // topics/services remain a separate dialogue milestone.
-        if (info->mChoiceTopics.empty() && !(info->mInfoFlags & ESM4::INFO_Goodbye)) return false;
+        // Explicit linked choices remain forced questions. Ordinary responses
+        // return to the learned-topic list and permit leaving the conversation.
         const auto responses = info->mResponses;
         const auto flags = info->mInfoFlags;
         const auto links = info->mChoiceTopics;
@@ -442,7 +475,7 @@ namespace MWDialogue
                 choices.emplace_back(topic->mTopicName, id);
                 infos.emplace(id, *selected);
             }
-        if (choices.empty() && !(flags & ESM4::INFO_Goodbye))
+        if (!links.empty() && choices.empty() && !(flags & ESM4::INFO_Goodbye))
             throw std::runtime_error("Native dialogue has no eligible linked choices: " + key.serialize());
         mChoices.swap(choices);
         mNativeChoiceInfos.swap(infos);
@@ -663,7 +696,23 @@ namespace MWDialogue
     std::list<std::string> DialogueManager::getAvailableTopics()
     {
         requireMutableRuntime();
-        if (mNativeDialogue) return {};
+        if (mNativeDialogue)
+        {
+            std::list<std::string> topics;
+            if (mIsInChoice || mGoodbye || mActor.isEmpty()) return topics;
+            auto* world = dynamic_cast<MWWorld::World*>(
+                static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+            auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
+            if (!scripts) return topics;
+            const ESM::FormKeyResolver resolver(world->getContentFiles());
+            for (const auto& id : mKnownTopics)
+                if (const auto* topic = nativeKnownTopic(world->getStore(), id);
+                    topic && topic->mDialType == ESM4::DTYP_Topic && !topic->mTopicName.empty()
+                    && scripts->selectNativeDialogueInfo(resolver.toFormKey(topic->mId), mActor, world->getPlayerPtr()))
+                    topics.push_back(topic->mTopicName);
+            topics.sort(Misc::StringUtils::ciLess);
+            return topics;
+        }
         updateActorKnownTopics();
 
         std::list<std::string> keywordList;
@@ -692,6 +741,26 @@ namespace MWDialogue
     {
         requireMutableRuntime();
         const RuntimeCall call(mActiveCalls);
+        if (mNativeDialogue)
+        {
+            if (mIsInChoice || mGoodbye || mActor.isEmpty()) return;
+            auto* world = dynamic_cast<MWWorld::World*>(
+                static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+            auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
+            if (!scripts) return;
+            const ESM::FormKeyResolver resolver(world->getContentFiles());
+            for (const auto& id : mKnownTopics)
+                if (const auto* topic = nativeKnownTopic(world->getStore(), id);
+                    topic && topic->mDialType == ESM4::DTYP_Topic
+                    && Misc::StringUtils::ciEqual(topic->mTopicName, keyword))
+                    if (const auto info = scripts->selectNativeDialogueInfo(
+                            resolver.toFormKey(topic->mId), mActor, world->getPlayerPtr()))
+                    {
+                        executeNativeDialogue(*info, callback);
+                        return;
+                    }
+            return;
+        }
         if (!mIsInChoice)
         {
             const ESM::Dialogue* dialogue = searchDialogue(ESM::RefId::stringRefId(keyword));
@@ -987,7 +1056,7 @@ namespace MWDialogue
             state.load(reader);
 
             for (const auto& knownTopic : state.mKnownTopics)
-                if (store.get<ESM::Dialogue>().search(knownTopic))
+                if (store.get<ESM::Dialogue>().search(knownTopic) || nativeKnownTopic(store, knownTopic))
                     mKnownTopics.insert(knownTopic);
 
             mChangedFactionReaction = state.mChangedFactionReaction;
@@ -1012,7 +1081,8 @@ namespace MWDialogue
         // This specialized store contains content dialogues only; saved
         // dynamic definitions do not include DIAL records.
         for (const auto& topic : state.mKnownTopics)
-            if (store.get<ESM::Dialogue>().search(topic)) plan->mTopics.insert(topic);
+            if (store.get<ESM::Dialogue>().search(topic) || nativeKnownTopic(store, topic))
+                plan->mTopics.insert(topic);
         plan->mReactions = std::move(state.mChangedFactionReaction);
         plan->mLifetime = mRestoreLifetime;
         plan->mEpoch = mRestoreEpoch + 1;

@@ -1,0 +1,553 @@
+{
+  "status": "accepted bounded original-food first-REFA slice",
+  "milestone": "M16 Player ingredient use and native first-effect presentation",
+  "implementation_commit": "aabc13113308be79eece0c00e3d6771649640e04",
+  "preflight_commit": "0e85a071ebc8ac20f7216a08f93e7e9979a4a416",
+  "content": {
+    "ingredient": "content:oblivion.esm:033681 Lettuce",
+    "source_sack": "content:oblivion.esm:06c2ad",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "actual_intake": "Accepted original Vilverin sack loot, existing character and earned inventory; no synthetic stock/stat setup."
+  },
+  "behavior": {
+    "first_effect": "REFA, authored magnitude15/duration1, Self/area0/AV10",
+    "ingestion": "5 Fatigue per second for1 second; independent owned timers",
+    "inventory": "Lettuce2\u21921, all other carried loot and per-instance metadata preserved",
+    "presentation": "Native known Restore Fatigue, translated weight/value, actual native ENIT value",
+    "persistence": "Schema92 owns source ingredient and elapsed time; old saves have no inferred food; partial effect resumes once and completed effects stay absent",
+    "legacy": "No native fWortChanceValue lookup, dummy WaterBreathing projection or TES3 Alchemy-use dispatch"
+  },
+  "layers": {
+    "independent_native_oracle": {
+      "path": "docs/oblivion/LETTUCE-INGREDIENT-ORACLE.json",
+      "sha256": "1fc4a873db46173faeeeec46204b93b27e4e4a999fb3cc4894e92406f381560d"
+    },
+    "typed_original_data": {
+      "path": "build/oblivion-compat/ingredient-use/typed-original-ingredients-01/verification.json",
+      "sha256": "093213f65c532332cc4221dd94b7c3616abd8420141bfa8db497877420d9b12a"
+    },
+    "official_raw_data_audit": {
+      "path": "build/oblivion-compat/ingredient-use/official-data-audit-01/m15-audit.json",
+      "sha256": "bada12544026941915f08bd2d07e87f6253ef819262950c2b192533091b96677"
+    },
+    "normal_components": {
+      "evidence": {
+        "path": "build/oblivion-compat/ingredient-use/normal-full-01/verification.json",
+        "sha256": "513967dab5d6c28b05f2209f0a66e1388f0d91bc76eb21700f09bf6820955e62"
+      },
+      "executed": 3275,
+      "scope": "Passing component subgroup retained from the run whose Python step failed; exact unchanged component sources and binary verified.",
+      "reuse_proof": {
+        "path": "build/oblivion-compat/ingredient-use/normal-final-build-provenance.json",
+        "sha256": "cbc56c650d409406a33470d20d09f6aa1bd4fcbae91c23a9b5edb4784aec89d4"
+      }
+    },
+    "normal_python": {
+      "evidence": {
+        "path": "build/oblivion-compat/ingredient-use/normal-integration-02/verification.json",
+        "sha256": "6c6802b5baf87717c4ff954ec6cb75a7e9654312efa000cff069d35bc5a78ce6"
+      },
+      "executed": 600,
+      "scope": "Full Python recovery; subsequent admission-guard changes touched two app C++ files/docs only."
+    },
+    "normal_engine": {
+      "path": "build/oblivion-compat/ingredient-use/normal-engine-03/verification.json",
+      "sha256": "eedc891562b8c275767ce1d110d4359ec334a5a069714b5f55b12ca9967946f4"
+    },
+    "sanitizers": {
+      "path": "build/oblivion-compat/ingredient-use/sanitized-full-01/verification.json",
+      "sha256": "73b896990d64ed9e8c3a1c6cbfe1fffbe30ef50d41309dc70acb16cf55695481"
+    },
+    "genuine_jump": {
+      "path": "build/oblivion-compat/ingredient-use/genuine-jump-depletion-verification.json",
+      "sha256": "66d88edf25c4aa6c01ddeac919e8ce0a0f64d675406736f36df6dbfc13132657"
+    }
+  },
+  "runtime": {
+    "normal": {
+      "semantic": {
+        "path": "build/oblivion-compat/ingredient-use/lettuce-semantic-verification-03.json",
+        "sha256": "d78de1258755d40e98d3415f715944c06690a0e064faedd69579356155dd04c5"
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Actual earned original Lettuce normal-input use, pending restart and completed restart; structural, semantic and gameplay evidence remain separate.",
+        "checks": 51,
+        "pending_elapsed": 0.291015625,
+        "amounts": {
+          "use": 1.455079,
+          "pending-restart": 3.544921,
+          "completed-restart": 0
+        }
+      },
+      "runs": {
+        "use": {
+          "scenario": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-use-03/scenario.json",
+            "sha256": "e904c224c22d8a038c81821c935d2e858207da54f3f063afbdb65bf6ac6bee6f"
+          },
+          "driver": {
+            "driver_pid": 859956,
+            "command": [
+              "/usr/bin/python3",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+              "scenario",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_earned_lettuce_use.json",
+              "--output",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-use-03",
+              "--variable",
+              "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+              "--variable",
+              "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--variable",
+              "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/ingredient-normal-resources-01",
+              "--variable",
+              "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+              "--variable",
+              "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "input_sha256": "85e7f595386586eeed29b02d4cb3328370a7322c84f05f4e9a35b65c9afcddd7",
+            "input_unchanged": true,
+            "captured": true,
+            "exit_code": 0
+          },
+          "process": {
+            "pid": 859959,
+            "start_ticks": 196015404,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-use-03/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "3a72455c4f963bb286cb20195c8f9a906908f5f20bf728312681d5c616d79a1e"
+          },
+          "log": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-use-03/process.log",
+            "sha256": "9cb0ec30f77db27ce78a0c614c52e7e9c74b5ed44c9d16ba92f001c04d644c81"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-use-03/loaded-libraries.json",
+            "sha256": "06be5fc0611e9cb4e26f6d310b173bd4b0904ec2e2b79695c636292c901fd18d"
+          },
+          "observer": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-use-03/test-data/scripts/tutorial_passage_observer.lua",
+            "sha256": "1dff7a0df0d3bfb1a21da1fc006fb93670ac5e5f4998f8275044ea563f86517c"
+          },
+          "save": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-use-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "8fc69f225f0f5ed22f1f54515bfcdc94ae4429fa91d3261af307655c010947fd"
+          }
+        },
+        "pending-restart": {
+          "scenario": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/scenario.json",
+            "sha256": "7adb2dc955f1695ac544526b6325b614175ac9b04aee039693a8015d4e1a8837"
+          },
+          "driver": {
+            "driver_pid": 860075,
+            "command": [
+              "/usr/bin/python3",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+              "scenario",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_earned_lettuce_pending_restart.json",
+              "--output",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-pending-restart-03",
+              "--variable",
+              "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+              "--variable",
+              "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--variable",
+              "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/ingredient-normal-resources-01",
+              "--variable",
+              "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+              "--variable",
+              "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-use-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-use-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "input_sha256": "8fc69f225f0f5ed22f1f54515bfcdc94ae4429fa91d3261af307655c010947fd",
+            "input_unchanged": true,
+            "captured": true,
+            "exit_code": 0
+          },
+          "process": {
+            "pid": 860079,
+            "start_ticks": 196019485,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-use-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "3a72455c4f963bb286cb20195c8f9a906908f5f20bf728312681d5c616d79a1e"
+          },
+          "log": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/process.log",
+            "sha256": "bdb54d26388c420125f99ecfc83762bab3969edf5a4c3a0d5745e6c0a422109f"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/loaded-libraries.json",
+            "sha256": "51df198ed5d46eec48cd0f723e636dda4870010cbda248b95eba07df30a2ff41"
+          },
+          "observer": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/test-data/scripts/tutorial_passage_observer.lua",
+            "sha256": "1dff7a0df0d3bfb1a21da1fc006fb93670ac5e5f4998f8275044ea563f86517c"
+          },
+          "save": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "46666a667503452ebf195367d226a1646187c6c54214eb8e71d8500b6707e4d6"
+          }
+        },
+        "completed-restart": {
+          "scenario": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/scenario.json",
+            "sha256": "246079972f38506c16c16590e632600dcceeced890f9aefcb3c945721aee2663"
+          },
+          "driver": {
+            "driver_pid": 860181,
+            "command": [
+              "/usr/bin/python3",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+              "scenario",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_earned_lettuce_completed_restart.json",
+              "--output",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-completed-restart-03",
+              "--variable",
+              "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+              "--variable",
+              "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--variable",
+              "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/ingredient-normal-resources-01",
+              "--variable",
+              "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+              "--variable",
+              "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "input_sha256": "46666a667503452ebf195367d226a1646187c6c54214eb8e71d8500b6707e4d6",
+            "input_unchanged": true,
+            "captured": true,
+            "exit_code": 0
+          },
+          "process": {
+            "pid": 860184,
+            "start_ticks": 196022521,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-pending-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "3a72455c4f963bb286cb20195c8f9a906908f5f20bf728312681d5c616d79a1e"
+          },
+          "log": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/process.log",
+            "sha256": "e1183778fd4577b37cbae31f055a51616e0ce25a6f094e4176abed9dd5dbaad8"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/loaded-libraries.json",
+            "sha256": "03f72cac81b2cbd1833d87867d10dbe42a71b25c3f217b1ab3928ecbdc594cdc"
+          },
+          "observer": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/test-data/scripts/tutorial_passage_observer.lua",
+            "sha256": "1dff7a0df0d3bfb1a21da1fc006fb93670ac5e5f4998f8275044ea563f86517c"
+          },
+          "save": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-completed-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "95f35e0ef3416eddbbcc15eab2de73bd40b8ba78b1d7d803027a3d5a02e6efeb"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "semantic": {
+        "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-semantic-verification-01.json",
+        "sha256": "6aa9de3e7b286c311360f6e1cb3a16bb99636eb9aa82ac7f22489e63192d828d"
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Actual earned original Lettuce normal-input use, pending restart and completed restart; structural, semantic and gameplay evidence remain separate.",
+        "checks": 51,
+        "pending_elapsed": 0.26611328125,
+        "amounts": {
+          "use": 1.3305660000000001,
+          "pending-restart": 3.6694329999999997,
+          "completed-restart": 0
+        }
+      },
+      "runs": {
+        "use": {
+          "scenario": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/scenario.json",
+            "sha256": "f81a6e533d08d2043d6ada802b0b6308c93b61e5898efb5df98f2b68e43d4069"
+          },
+          "driver": {
+            "driver_pid": 867666,
+            "command": [
+              "/usr/bin/python3",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+              "scenario",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_earned_lettuce_use.json",
+              "--output",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01",
+              "--variable",
+              "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+              "--variable",
+              "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--variable",
+              "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/ingredient-sanitized-resources-01",
+              "--variable",
+              "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+              "--variable",
+              "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "input_sha256": "85e7f595386586eeed29b02d4cb3328370a7322c84f05f4e9a35b65c9afcddd7",
+            "input_unchanged": true,
+            "captured": true,
+            "exit_code": 0
+          },
+          "process": {
+            "pid": 867669,
+            "start_ticks": 196144367,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "76db40279570d9f53e3df5239b215a7898d9989fdc3fe43e6af9da312a380a66"
+          },
+          "log": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/process.log",
+            "sha256": "6cf7f4e9834806a3d3892e7f1458660172a9c15d509a42d5b666b9e886da978f"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/loaded-libraries.json",
+            "sha256": "82a435f486ff779bf8b778595333ae0a793d9a68e930ef01e4a1b0101f48b169"
+          },
+          "observer": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/test-data/scripts/tutorial_passage_observer.lua",
+            "sha256": "1dff7a0df0d3bfb1a21da1fc006fb93670ac5e5f4998f8275044ea563f86517c"
+          },
+          "save": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "bedafb8a024afc589677d2b8e3dd8ea65343a85172b92fcbc976ca7b0f236584"
+          },
+          "sanitizer_environment": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/observed-sanitizer-environment.json",
+            "sha256": "93b918be42ec4db0ddbd8ea4a9e8a6ffab89e59e864c4d0dd31e0e2b31f943dd"
+          }
+        },
+        "pending-restart": {
+          "scenario": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/scenario.json",
+            "sha256": "b7dd833d436607efa96750c6d873ebd55e6888879a702c2028f9ef72a5f8e525"
+          },
+          "driver": {
+            "driver_pid": 870886,
+            "command": [
+              "/usr/bin/python3",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+              "scenario",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_earned_lettuce_pending_restart.json",
+              "--output",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01",
+              "--variable",
+              "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+              "--variable",
+              "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--variable",
+              "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/ingredient-sanitized-resources-01",
+              "--variable",
+              "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+              "--variable",
+              "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "input_sha256": "bedafb8a024afc589677d2b8e3dd8ea65343a85172b92fcbc976ca7b0f236584",
+            "input_unchanged": true,
+            "captured": true,
+            "exit_code": 0
+          },
+          "process": {
+            "pid": 870907,
+            "start_ticks": 196167179,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-use-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "76db40279570d9f53e3df5239b215a7898d9989fdc3fe43e6af9da312a380a66"
+          },
+          "log": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/process.log",
+            "sha256": "f706318c068b0eb5f5366944821315e1c30fa613f9f8b8b90af32aba8888f7c7"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/loaded-libraries.json",
+            "sha256": "16e1e1dd8d390f08d848f8c400727804a4b7229d1d677a1610052ba34062cfde"
+          },
+          "observer": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/test-data/scripts/tutorial_passage_observer.lua",
+            "sha256": "1dff7a0df0d3bfb1a21da1fc006fb93670ac5e5f4998f8275044ea563f86517c"
+          },
+          "save": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "e6998f456894fc7f8af5e62d89cc40e8163c26d38328e8c0d1852ce4b1633a93"
+          },
+          "sanitizer_environment": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/observed-sanitizer-environment.json",
+            "sha256": "d097415e5dc10ad3b275eae3a42ee228e15c24d2ab547a60bec8b88f3f3c3ec3"
+          }
+        },
+        "completed-restart": {
+          "scenario": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-completed-restart-01/scenario.json",
+            "sha256": "726e79f223ec860262115d507ddcb9bc377cffae47c8442f797f51be8057508b"
+          },
+          "driver": {
+            "driver_pid": 873129,
+            "command": [
+              "/usr/bin/python3",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+              "scenario",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_earned_lettuce_completed_restart.json",
+              "--output",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-completed-restart-01",
+              "--variable",
+              "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+              "--variable",
+              "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--variable",
+              "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/ingredient-sanitized-resources-01",
+              "--variable",
+              "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+              "--variable",
+              "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "input_sha256": "e6998f456894fc7f8af5e62d89cc40e8163c26d38328e8c0d1852ce4b1633a93",
+            "input_unchanged": true,
+            "captured": true,
+            "exit_code": 0
+          },
+          "process": {
+            "pid": 873132,
+            "start_ticks": 196184055,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-completed-restart-01/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-sanitized-pending-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "76db40279570d9f53e3df5239b215a7898d9989fdc3fe43e6af9da312a380a66"
+          },
+          "log": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-completed-restart-01/process.log",
+            "sha256": "aee789d2482366ff7e2e577d7fd70dbf50ccf93b94dea0b41ffd1aa7700dbafe"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-completed-restart-01/loaded-libraries.json",
+            "sha256": "6cc1ff1ba77f5292f664d129757501f9ee0b510ef0fef875c0d8242946e39fdf"
+          },
+          "observer": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-completed-restart-01/test-data/scripts/tutorial_passage_observer.lua",
+            "sha256": "1dff7a0df0d3bfb1a21da1fc006fb93670ac5e5f4998f8275044ea563f86517c"
+          },
+          "save": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "43908bd9e4b8e2bf4883e0fbe6216deab52cde185d6b702fd071ce73e3bfc496"
+          },
+          "sanitizer_environment": {
+            "path": "build/oblivion-compat/ingredient-use/lettuce-sanitized-completed-restart-01/observed-sanitizer-environment.json",
+            "sha256": "cc2991c694d5576f51d71c117194996d7f5eaaa3ce35b17358590518522b47ab"
+          }
+        }
+      }
+    }
+  },
+  "build_provenance": {
+    "normal": {
+      "path": "build/oblivion-compat/ingredient-use/normal-final-build-provenance.json",
+      "sha256": "cbc56c650d409406a33470d20d09f6aa1bd4fcbae91c23a9b5edb4784aec89d4"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/ingredient-use/sanitized-final-build-provenance.json",
+      "sha256": "51857aabcf4e8eef0e6aaffe32f707c58096cc7a4394391c1de6d3bac10a4dd2"
+    },
+    "matching_cpp_sources": {
+      "apps/components_tests/esm4/runtimestate.cpp": "168d8d1858cd1e7b6ff2e1760f1c375d69bb6b91cc7841867b26cd4ff68957da",
+      "apps/components_tests/esm4/testloadspel.cpp": "c3d9cf31deca1ea50f2d8188c62b4b6f96bde936ba1689d8d89ff3412fb54a96",
+      "apps/esmtool/tes4.cpp": "d331d542a754fe7b2883da047b794afc6eb1791739398d5c7795719a038b4780",
+      "apps/openmw/mwclass/actor.cpp": "1c9df7fdcc807be96161025927a9b6bea6e2b63f353ddcd3c9cbabf2ae108493",
+      "apps/openmw/mwclass/ingredient.cpp": "c2410bb28f1cb7ede290e49384d003b0232b73dd31dbde6438ea27277437eca5",
+      "apps/openmw/mwmechanics/oblivioncombat.cpp": "779827769e8f3e5d5cd06ab4a703e73004fd88e7a2b24de83fe5a429220c7998",
+      "apps/openmw/mwworld/actioneat.cpp": "5c4ad131bda365ebe2048bd257fa1de7123698695074cf0700b197f500aa6fb6",
+      "apps/openmw/mwworld/inventorystore.cpp": "0f3cc265ac5837c34c848ae5e21914e89519a762ac7d52564f25269696c03535",
+      "apps/openmw/mwworld/inventorystore.hpp": "66434d0fddc73ad655009735fbed315caf1b6761351cba3fafc5304076a008d2",
+      "apps/openmw/mwworld/oblivioncombatmagic.cpp": "e77e1e2415369d23aadbacd74dd3d118e8197a3b3dcbd077b1dac8c472195d16",
+      "apps/openmw/mwworld/oblivioncombatmagic.hpp": "328609c80e8fbdfec8a9f8a8f9079f6b06545f03b2ad21b040ba9433090cf8c4",
+      "apps/openmw/mwworld/oblivionprofileservices.cpp": "55601ab3e3e4e0bc40a9022ced2acae4b3950439d90c3e29856e76b760505690",
+      "apps/openmw/mwworld/worldimp.cpp": "20dd86686fcf45149c881c01346471b24368557faa18aa532649e532452c1662",
+      "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "1e711bb9c20edfaee1052eb5f6f64f74453f7a9a1793084d9c09ee9801c3db92",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "bd50e2f9cacd1a3f135b7e2cfce395bc981a920f8dbce1527f5d18aed6790fcd",
+      "apps/openmw_tests/mwworld/teststore.cpp": "b1d97924731ed66022b4c5664bc75afa7e5aaf02b605802a1d51a430b8600f9d",
+      "components/esm4/ingredientuse.hpp": "45b6798083b4f8b354c1fa7dc8494d8ac7107285b2371349e0730d070bb692f2",
+      "components/esm4/loadingr.cpp": "c6f2b57f9d25d63a3a8155c0ec195617d771008be6c30a494f0a454bcb769c10",
+      "components/esm4/loadingr.hpp": "26bf9520d0ba98f26e7ae32efe72d6a4aa6a0f67e42e3bcdf84931d94cc4796c",
+      "components/esm4/runtimestate.cpp": "c4c09a99db4c306928fd16033cab7e6e8184c860f943a8c2e93532cb6a4993bc",
+      "components/esm4/runtimestate.hpp": "65b9f3eab858a91d7bf0d6c77f538a6eb8e13f32bf13675920b9ae9330afd8ea"
+    }
+  },
+  "sanitizer_scope": {
+    "components": "ASan/UBSan, leak detection off",
+    "engine": "ASan/UBSan, leak detection on, owned Mesa/X11 display",
+    "runtime": "ASan/UBSan, leak detection off, actual live environment and loaded libraries captured; ordinary inventory input"
+  },
+  "retained_failures": {
+    "actual_baseline": {
+      "path": "build/oblivion-compat/ingredient-use/lettuce-use-baseline-semantic-verification.json",
+      "sha256": "78f9ef4a3476a58e7661c944036b16c20376da6a6acc00e85bbb1b01b1268161"
+    },
+    "schema_recovery": {
+      "path": "build/oblivion-compat/ingredient-use/fixture-schema-recovery.json",
+      "sha256": "972aadf6366b327117577bec5ddb4e4a89142c65520b1b1c07767671075d889b"
+    },
+    "native_setup": "Original SetAV calibration and unavailable SGTM retained in linked original oracle; pristine source saves/executable unchanged.",
+    "development": "Earlier normal runs01/02 and failed development build01 remain ignored evidence; final normal runtime03 includes the audited-domain guard."
+  },
+  "outside_scope": [
+    "Other ingredient first effects or authored magnitude/duration profiles",
+    "Alchemy experience/progression and apparatus brewing",
+    "General harmful/attribute/shield effects and active-effects UI",
+    "All skill/Luck combinations and bit-identical frame scheduling",
+    "Full M16 or full Vilverin expedition"
+  ]
+}

@@ -2,10 +2,13 @@
 #define OPENMW_COMPONENTS_ESM4_RUNTIMESTATE_H
 
 #include "bounditemsource.hpp"
+#include "magiccaster.hpp"
+#include "potionattributes.hpp"
 #include <cstdint>
 #include <map>
 #include <optional>
 #include <set>
+#include <tuple>
 #include <utility>
 #include <string>
 #include <string_view>
@@ -70,7 +73,12 @@ namespace ESM4
     // v80 retains Player tutorial skill use, tracking and cached recommended CLAS.
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 85;
+    // v87 retains pending native spells and once-only release ownership.
+    // v93 retains Player scroll-owned CHML contributions and refreshed lifetimes.
+    // v94 retains each consumed potion's resolved timed attribute contributions.
+    // v95 retains Player greater-power daily-use history, without inventing
+    // uses for older snapshots.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 103;
 
     struct RuntimeContentIdentity
     {
@@ -109,6 +117,9 @@ namespace ESM4
         std::optional<float> mExtraScale = std::nullopt;
         // v83: exact associated-item effect identity, separate from crime owner.
         std::optional<BoundItemSource> mBoundSource = std::nullopt;
+        // v97: reference identity of this scripted inventory instance. It is
+        // independent of the item base, crime owner and containing actor.
+        ESM::FormKey mScriptOwner;
 
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };
@@ -170,6 +181,10 @@ namespace ESM4
         std::uint8_t mCharacterGenerationFlags = 0;
         // v80: absent older saves begin tracking at adoption, without inferred history.
         std::optional<CharacterGenerationState> mCharacterGeneration;
+        // v102: food Restore Endurance ingredient ownership.
+        // v101: only awarded skill books are exhausted, globally by base form.
+        // Reading at skill100 leaves the book eligible for a later award.
+        std::set<ESM::FormKey> mAwardedSkillBooks;
 
         friend bool operator==(const RuntimePlayerState&, const RuntimePlayerState&) = default;
     };
@@ -351,6 +366,29 @@ namespace ESM4
         friend bool operator==(const RuntimeMeleeParalysis&, const RuntimeMeleeParalysis&) = default;
     };
 
+    struct RuntimeIngredientRestoration
+    {
+        // Historical collection name; schema98 also owns bounded DGFA.
+        // Resolved potency belongs to this use, independently of later skills.
+        ESM::FormKey mIngredient;
+        float mElapsed = 0;
+        float mMagnitude = 5.f;
+        float mDuration = 1.f;
+        // v100: Health is a recoverable drain; Fatigue keeps its timed damage/restoration.
+        std::uint8_t mActorValue = 10;
+        friend bool operator==(const RuntimeIngredientRestoration&, const RuntimeIngredientRestoration&) = default;
+    };
+
+    struct RuntimePotionLight
+    {
+        ESM::FormKey mPotion;
+        ESM::FormKey mLight;
+        float mMagnitude = 0;
+        float mDuration = 0;
+        float mElapsed = 0;
+        friend bool operator==(const RuntimePotionLight&, const RuntimePotionLight&) = default;
+    };
+
     struct RuntimeActorValues
     {
         ESM::FormKey mActor;
@@ -389,6 +427,22 @@ namespace ESM4
         // does not reinterpret an existing Script/Temporary AV48 modifier.
         std::vector<RuntimeMeleeParalysis> mMeleeParalysis;
 
+        // v92: Player-owned first-effect REFA from a consumed ingredient.
+        // Older saves have no pending food, never inferred from carried stock.
+        std::vector<RuntimeIngredientRestoration> mIngredientRestoration;
+
+        // v93: explicit recoverable Maximum AV46 contributions. Legacy values
+        // never imply a scroll source or a remaining duration.
+        std::vector<ScrollChameleonState> mScrollChameleon;
+
+        // v94: applications own their contributions independently of inventory.
+        // A legacy attribute modifier never implies a potion or an expiry time.
+        std::vector<PotionAttributeState> mPotionAttributeEffects;
+        std::vector<PowerUseState> mUsedPowers;
+
+        // v99: the consumed potion owns the light until its simulation lifetime ends.
+        std::vector<RuntimePotionLight> mPotionLightEffects;
+
         // v25: signed native High/MiddleHigh process knocked byte. Absence
         // retains unknown legacy Active-process state; Low queries return zero.
         std::optional<std::int8_t> mProcessKnockedState;
@@ -403,6 +457,13 @@ namespace ESM4
         friend bool operator==(const RuntimeActorValues&, const RuntimeActorValues&) = default;
     };
 
+    struct RuntimeActorFaction
+    {
+        ESM::FormKey mFaction;
+        std::int8_t mRank = -1;
+        friend bool operator==(const RuntimeActorFaction&, const RuntimeActorFaction&) = default;
+    };
+
     struct RuntimeActorBaseOverride
     {
         ESM::FormKey mBase;
@@ -410,6 +471,9 @@ namespace ESM4
         std::vector<ActorBaseValueSet> mValues;
         // v84: shared base flag, independent of cached reference statistics.
         std::optional<bool> mEssential;
+        // v90: ordered shared-base membership replacement. Empty differs from
+        // absent (use authored content). Stable identities survive load order.
+        std::optional<std::vector<RuntimeActorFaction>> mFactions = std::nullopt;
 
         void validate() const;
         friend bool operator==(const RuntimeActorBaseOverride&, const RuntimeActorBaseOverride&) = default;
@@ -423,7 +487,7 @@ namespace ESM4
     // Shape-world transforms and velocities in game world units. Record IDs
     // belong to the identified NIF asset, not the content load order.
     // Logical owned-body mode, not a raw Havok motion class/getter type.
-    enum class RuntimeRagdollMotion : std::uint8_t { Dynamic = 1, Keyframed = 6 };
+    enum class RuntimeRagdollMotion : std::uint8_t { Dynamic = 1, Keyframed = 6, Fixed = 7 };
 
     struct RuntimeRagdollBody
     {
@@ -543,6 +607,8 @@ namespace ESM4
         std::string mModel;
         std::string mAssetHash; // Same opaque NIF hash encoding as RuntimeActorRagdoll.
         RuntimeRagdollBody mBody;
+        // v103: additional authored loose-item bodies; constraints reload from the identified asset.
+        std::vector<RuntimeRagdollBody> mAdditionalBodies;
         // Shape/mass admission scale can differ from the current visible scale.
         float mPhysicalScale = 1;
         std::uint16_t mSceneCollisionFlags = 0;
@@ -865,6 +931,19 @@ namespace ESM4
 
     // The binary representation is private to OpenMW saves and deliberately
     // does not reuse raw load-order indices from Bethesda plugins.
+    struct RuntimeTrapContact
+    {
+        ESM::FormKey mReference;
+        std::uint32_t mBodyRecord = 0;
+        ESM::FormKey mActor;
+        friend bool operator==(const RuntimeTrapContact&, const RuntimeTrapContact&) = default;
+        friend bool operator<(const RuntimeTrapContact& a, const RuntimeTrapContact& b)
+        {
+            return std::tie(a.mReference, a.mBodyRecord, a.mActor)
+                < std::tie(b.mReference, b.mBodyRecord, b.mActor);
+        }
+    };
+
     struct RuntimeState
     {
         static constexpr ESM::RecNameInts sRecordId = ESM::REC_T4ST;
@@ -900,11 +979,15 @@ namespace ESM4
         // v69 also permits Player's hidden process base package. Player +330
         // still returns null; generic process package queries can observe it.
         std::map<ESM::FormKey, std::vector<CombatControllerTarget>> mCombatControllers;
+        // v91: shared PACK waiting flag overrides; false shadows authored true.
+        std::map<ESM::FormKey, bool> mPackageWaiting;
         std::uint64_t mAiRngState = 1;
         // v27: profile-owned combat stream, independent of AI/world scheduling.
         // Zero is a valid CRT seed. Older saves initialize this stream at one.
         std::uint32_t mCombatRngState = 1;
         std::vector<RuntimeActorAiState> mActorAi;
+        // v89: last completion day for each actor/OncePerDay package pair.
+        std::map<std::pair<ESM::FormKey, ESM::FormKey>, CalendarInstant> mDailyPackageCompletions;
         std::vector<RuntimePathPointState> mPathPoints;
         std::vector<RuntimeCompanionRelation> mCompanions;
         std::vector<RuntimeMountRelation> mMounts;
@@ -935,6 +1018,9 @@ namespace ESM4
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
         // v85: independent placed-reference body graphs; never actor or item owners.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeAnimatedReferences;
+        // v86: current trap overlaps, including contacts below the speed
+        // threshold. Restoring an existing overlap must not invent an entry.
+        std::set<RuntimeTrapContact> mNativeTrapContacts;
         // Absent in older saves: never infer solver history or skip flags.
         std::optional<RuntimeMovementState> mNativeMovement = std::nullopt;
         // v53: retained loose weapons, including currently unloaded cells.
@@ -947,6 +1033,13 @@ namespace ESM4
         std::optional<float> mNativePlayerBowTimer = std::nullopt;
         // v38: owned bow playback, retained independently of loaded renderers.
         std::map<ESM::FormKey, RuntimeBowState> mNativeBowStates;
+        std::map<ESM::FormKey, SpellCastState> mNativeSpellCasts;
+        // v88: persistent flight, distinct from once-only cast release ownership.
+        std::uint64_t mNextMagicProjectile = 1;
+        std::map<std::uint64_t, MagicProjectileState> mNativeMagicProjectiles;
+        // v96: physical arrow flight; never a magic effect or a legacy TES3 shot.
+        std::uint64_t mNextArrowProjectile = 1;
+        std::map<std::uint64_t, ArrowProjectileState> mNativeArrowProjectiles;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

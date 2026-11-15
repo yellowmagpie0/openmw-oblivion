@@ -1,0 +1,270 @@
+{
+  "scope": "Connected physical final-sewer bridge, lower passages and27 original nodes to upper tunnel door; real upper rat Player victory",
+  "passed": true,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-final-upper-tunnel-01/scenario.json",
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-final-western-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "7d1973eccfa40fad8a38b401614be13b1535018b730e1f96701ab7311b1629b6",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "save": "build/oblivion-compat/sewer-escape/joined-final-upper-tunnel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "save_sha256": "ef49290499d6a085f0bf341a62007c070621fae99e677d04186ca001a1be823e",
+  "player_position": [
+    352.4523010253906,
+    1601.70166015625,
+    6878.33544921875,
+    0.3257811963558197,
+    0.0,
+    0.011711818166077137
+  ],
+  "health": 84.51138305664062,
+  "upper_rat_life": {
+    "actor": "content:oblivion.esm:066a04",
+    "base": "content:oblivion.esm:02509b",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "dynamic:player:0000000000000001"
+  },
+  "goblin_lives": [
+    {
+      "actor": "content:oblivion.esm:066a02",
+      "base": "content:oblivion.esm:03b531",
+      "phase": 0,
+      "recovery_remaining": 0.0,
+      "killer": "null"
+    },
+    {
+      "actor": "content:oblivion.esm:066a03",
+      "base": "content:oblivion.esm:03b533",
+      "phase": 0,
+      "recovery_remaining": 0.0,
+      "killer": "null"
+    }
+  ],
+  "route": [
+    {
+      "node": 75,
+      "position": [
+        -890.28466796875,
+        357.12738037109375,
+        6582.0
+      ]
+    },
+    {
+      "node": 74,
+      "position": [
+        -787.9590454101562,
+        357.3546142578125,
+        6612.0
+      ]
+    },
+    {
+      "node": 73,
+      "position": [
+        -696.0276489257812,
+        350.4856262207031,
+        6612.0
+      ]
+    },
+    {
+      "node": 72,
+      "position": [
+        -591.8425903320312,
+        349.7661437988281,
+        6582.0
+      ]
+    },
+    {
+      "node": 71,
+      "position": [
+        -500.588623046875,
+        349.245849609375,
+        6542.0
+      ]
+    },
+    {
+      "node": 68,
+      "position": [
+        -455.1022644042969,
+        226.4388427734375,
+        6524.0
+      ]
+    },
+    {
+      "node": 67,
+      "position": [
+        -312.7582092285156,
+        234.46560668945312,
+        6524.0
+      ]
+    },
+    {
+      "node": 66,
+      "position": [
+        -148.8165283203125,
+        225.90914916992188,
+        6524.0
+      ]
+    },
+    {
+      "node": 53,
+      "position": [
+        34.22513198852539,
+        219.29550170898438,
+        6524.0
+      ]
+    },
+    {
+      "node": 52,
+      "position": [
+        239.8719482421875,
+        232.13084411621094,
+        6542.0
+      ]
+    },
+    {
+      "node": 51,
+      "position": [
+        378.542236328125,
+        218.98948669433594,
+        6542.0
+      ]
+    },
+    {
+      "node": 50,
+      "position": [
+        639.7371215820312,
+        207.68992614746094,
+        6528.0
+      ]
+    },
+    {
+      "node": 65,
+      "position": [
+        783.9336547851562,
+        357.2578430175781,
+        6542.0
+      ]
+    },
+    {
+      "node": 48,
+      "position": [
+        841.5865478515625,
+        470.322509765625,
+        6542.0
+      ]
+    },
+    {
+      "node": 47,
+      "position": [
+        701.3667602539062,
+        468.6763000488281,
+        6638.0
+      ]
+    },
+    {
+      "node": 46,
+      "position": [
+        598.8443603515625,
+        468.98773193359375,
+        6696.0
+      ]
+    },
+    {
+      "node": 45,
+      "position": [
+        503.3858642578125,
+        464.7012939453125,
+        6772.0
+      ]
+    },
+    {
+      "node": 44,
+      "position": [
+        409.5508728027344,
+        454.9111022949219,
+        6848.0
+      ]
+    },
+    {
+      "node": 43,
+      "position": [
+        336.9407958984375,
+        512.000244140625,
+        6862.0
+      ]
+    },
+    {
+      "node": 42,
+      "position": [
+        348.4065856933594,
+        587.0968017578125,
+        6876.0
+      ]
+    },
+    {
+      "node": 41,
+      "position": [
+        363.2339172363281,
+        699.4852294921875,
+        6876.0
+      ]
+    },
+    {
+      "node": 40,
+      "position": [
+        371.6051330566406,
+        848.4381713867188,
+        6876.0
+      ]
+    },
+    {
+      "node": 39,
+      "position": [
+        363.65081787109375,
+        999.9108276367188,
+        6876.0
+      ]
+    },
+    {
+      "node": 38,
+      "position": [
+        357.77374267578125,
+        1155.33056640625,
+        6876.0
+      ]
+    },
+    {
+      "node": 37,
+      "position": [
+        354.3487243652344,
+        1305.717529296875,
+        6876.0
+      ]
+    },
+    {
+      "node": 36,
+      "position": [
+        350.02508544921875,
+        1463.612548828125,
+        6876.0
+      ]
+    },
+    {
+      "node": 35,
+      "position": [
+        352.6960144042969,
+        1622.1170654296875,
+        6876.0
+      ]
+    }
+  ],
+  "no_combat_pending_death_action": true,
+  "input_receipts_identical": true,
+  "capture_inspected": "joined-upper-tunnel-door-approach.png",
+  "limits": "Goblins are alive at their actual positions away from this route; no relocated actors or suppressed combat. This is physical route acceptance, not clearing every optional enemy. Full escape and uninterrupted new-game acceptance remain open.",
+  "runtime_sha256": "b2a22b98ba3baf33ef21323ca03b518773ffa3c0686fe44a2618b12a3d4640d1"
+}

@@ -1,0 +1,78 @@
+{
+  "status": "Original winning-record audit and reused original bow/ammunition rules; actual baseline above",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "audit": {
+    "path": "build/oblivion-compat/next-content/skeleton-archer-winning-records-audit.json",
+    "sha256": "9036b4fe8a7bf19624f6f78e291d3a73c7e5339f8db8bb4273c6d46b8be81670",
+    "reader": "build/oblivion-compat/next-content/audit-skeleton-archer-records.py"
+  },
+  "definitions": {
+    "creature": "CreatureSkeleton1Archer084b1a, flags0x1244 including WeaponAndShield4; actual AIDT aggression100/confidence75, styleDefaultSkeletonRanged014f89.",
+    "bow": "Actual LL0CrWeapSkeletonArcherBow10003fae4 level1 entry025231 WeapIronBow. Original bow type5, health112, damage8, speed1; actual retained inventory has1, unequipped.",
+    "ammo": "Original CREA CNTO includes1 Arrow1Iron017829 plus LL0CrWeapSkeletonArcherArrows10003fae5. Actual retained resolved inventory has6, unequipped; preservation is checked against this real baseline."
+  },
+  "reused_rules": {
+    "provenance": "docs/oblivion/M15-NATIVE-RULE-PROVENANCE.md",
+    "ammunition": "S5 checkpoint270: original5FD4A4..5FD4B0 dispatches NPC/Creature ammunition removal to RET60D0A0, versus Player662590.192 independent original cases; never debit NPC ammunition.",
+    "ammunition_evidence": "build/oblivion-compat/m15/S5/native-arrow-ammo-dispatch-oracle-01",
+    "launch": "Existing independently verified ordinary bow launch damage/speed/gravity and NPC full draw. Reuse live AV/condition sampler; extend Creature admission without generating expected values from production helpers.",
+    "fatigue": "Existing original canSpendFatigue distinguishes Creature constructed expenditure flag from Player/NPC; preserve it when admitting Creature bow release.",
+    "fidelity": "Reasonable damage/tactical timing at this actual range; exact original tactical/RNG replay is not an acceptance requirement. Saved identity, release and Health/resource ownership are strict."
+  },
+  "baseline_inspection": "build/oblivion-compat/next-content/normal-skeleton-response-baseline-01/baseline-inspection.json",
+  "authored_bow_animation": {
+    "path": "build/oblivion-compat/next-content/skeleton-bow-assets/inspection.json",
+    "asset_sha256": "55755bd5bd26cfe3023da0b14fbb673baaada242d421fa3e1733a7757a9d1277",
+    "textkeys_sha256": "4255aac3d12c33a551ecc3ad7b6a5451daf14b3684110ee29f6bd7aec4e33ec6",
+    "reader": "build/oblivion-compat/m15/S4/native-melee-kf-inspection-01/driver",
+    "reader_sha256": "0b18f0ec1786493c898a3387d71be5e8e40de78593bdbb1d98d84b8f229b507a",
+    "reader_source_sha256": "07f9660c4549f2e6da0df435b138988c9bc045bfe0c6763f7caaa9f06dce5bd2",
+    "interpretation": "Original Skeleton sequence supplies start0,Attach0.4,Hold1.3667,Release1.4333,end2; NPC full draw advances without the Player held-input pause.",
+    "keys": [
+      {
+        "time": 0.0,
+        "text": "start"
+      },
+      {
+        "time": 0.0333333351,
+        "text": "Enum: Attack"
+      },
+      {
+        "time": 0.400000006,
+        "text": "Attach"
+      },
+      {
+        "time": 1.0333333,
+        "text": "Sound: bowPull"
+      },
+      {
+        "time": 1.36666667,
+        "text": "Hold"
+      },
+      {
+        "time": 1.39999998,
+        "text": "Sound: bowShoot"
+      },
+      {
+        "time": 1.4333334,
+        "text": "Release"
+      },
+      {
+        "time": 2.0,
+        "text": "end"
+      }
+    ]
+  },
+  "clock_acceptance": {
+    "retained_development": "build/oblivion-compat/next-content/normal-skeleton-first-shots-development-02/development-inspection.json",
+    "finding": "Before correction,16.8201 calendar simulation seconds advanced the Skeleton animation clock22.9067 seconds. The idle melee pass also ticks during bow playback; actual archery is too fast.",
+    "requirement": "One owner advances the actor animation clock per frame; the bow owns it through finishing/withdrawal.",
+    "predeclared_tolerance": "Absolute difference between saved actor-clock delta and calendar simulation delta must be <=0.25 seconds for this bounded burst/restart. Allows discrete frame admission and float accumulation; rejects doubled active-bow ticking."
+  },
+  "snapshot_activity_provenance": {
+    "source": "apps/openmw/mwstate/statemanagerimp.cpp: animation persistence precedes Writing saved game; save serialization is synchronous on the game thread.",
+    "correction": "build/oblivion-compat/skeleton-archery/post-gate-auditor-correction.json",
+    "acceptance": "Count releases/impacts through the saved snapshot. Allow later activity in the original process without treating it as part of the retained continuation; saved exact wire/live/HP/serial assertions unchanged."
+  }
+}

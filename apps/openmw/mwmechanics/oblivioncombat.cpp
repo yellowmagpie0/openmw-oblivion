@@ -1,3 +1,5 @@
+#include <components/esm4/ingredientuse.hpp>
+#include "../mwworld/oblivionlevelled.hpp"
 #include <components/esm4/projectilerules.hpp>
 #include "oblivioncombat.hpp"
 
@@ -36,6 +38,7 @@
 #include <components/esm4/physicalcombat.hpp>
 #include <components/esm4/ability.hpp>
 #include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadfact.hpp>
 #include "../mwworld/class.hpp"
 #include "../mwworld/ptr.hpp"
 #include "../mwworld/player.hpp"
@@ -95,8 +98,9 @@ namespace MWMechanics
                 const auto* characterRef = store.search<ESM4::ActorCharacter>(values.mActor);
                 const auto* creatureRef = store.search<ESM4::ActorCreature>(values.mActor);
                 const ESM4::ActorCharacter* reference = creature ? creatureRef : characterRef;
-                if (!reference || (characterRef && creatureRef) || reference->mFormKey != values.mActor
+                if ((!reference || (characterRef && creatureRef) || reference->mFormKey != values.mActor
                     || reference->mBaseKey != values.mBase)
+                    && !MWWorld::oblivionLevelledActorContains(store, values.mActor, values.mBase))
                     throw std::invalid_argument("missing or mismatched native actor reference: " + values.mActor.serialize());
             }
             return creature;
@@ -740,6 +744,7 @@ namespace MWMechanics
         mAnimationClocks.clear();
         mPlayerBowTimer.reset();
         mBowStates.clear();
+        mSpellCasts.clear();
         mActorKnockback.clear();
         mActorRagdolls.clear();
         mGetUpIdles.clear();
@@ -859,7 +864,7 @@ namespace MWMechanics
             || life->mPhase != ESM4::ActorLifePhase::Alive
             || values->mProcess != ESM4::ActorValueProcess::Active
             || values->mProcessKnockedState != 0 || values->mProcessAction != -1
-            || mBowStates.contains(actor) || (melee && (melee->mStrike || melee->mReaction
+            || mBowStates.contains(actor) || mSpellCasts.contains(actor) || (melee && (melee->mStrike || melee->mReaction
                 || (melee->mFirstPerson && (melee->mFirstPerson->mReaction || melee->mFirstPerson->mStrike))))
             || getProcessParalysis(actor) != 0)
             throw std::invalid_argument("native bow draw requires an idle, awake Active actor");
@@ -1140,7 +1145,8 @@ namespace MWMechanics
                 prepared->mCondition->setNativeItemCondition(*after);
             }
             const float current = player ? getPlayerValue(10) : getNonPlayerValue(actor, 10);
-            const float debit = current > 0 ? std::min(current, prepared->mLaunch.mShotFatigueDebit) : 0;
+            const float debit = canSpendFatigue(actor) && current > 0
+                ? std::min(current, prepared->mLaunch.mShotFatigueDebit) : 0;
             if (debit > 0)
                 prepared->mValues.mValues[10] = ESM4::changeActorValueModifier(
                     prepared->mValues.mValues[10], values.mOwner, 10, ESM4::ActorValueModifier::Damage, -debit);
@@ -1467,8 +1473,8 @@ namespace MWMechanics
         ESM4::MeleeStrikeKind kind, std::string_view animationGroup, float playbackSpeed,
         const ESM::FormKey& weaponBase, std::optional<OblivionMeleeStrikeViews> views) const
     {
-        if (mBowStates.contains(actor))
-            throw std::invalid_argument("native melee strike cannot replace owned bow playback");
+        if (mBowStates.contains(actor) || mSpellCasts.contains(actor))
+            throw std::invalid_argument("native melee strike cannot replace owned bow or spell playback");
         ESM4::RuntimeMeleeStrike strike{1, kind, weaponBase, std::string(animationGroup), playbackSpeed, 0, false};
         if (kind >= ESM4::MeleeStrikeKind::StandingPower) strike.mPowerPhase = ESM4::PowerMeleePhase::Start;
         const bool counter = kind == ESM4::MeleeStrikeKind::Counter;
@@ -2601,6 +2607,7 @@ namespace MWMechanics
         mMeleeStates.erase(actor);
         clearBowPlaybackAction(actor);
         mBowStates.erase(actor);
+        mSpellCasts.erase(actor);
         return count;
     }
 
@@ -3088,9 +3095,10 @@ namespace MWMechanics
         {
             const auto& disease = *deltas.mVictimDisease;
             if (continuation || victim.isEmpty() || !player || victim != player->getPlayer()
-                || disease.mSpellType != 1 || disease.mEffects.size() != 1
-                || disease.mEffects[0].mCode != ESM::fourCC("DRAT")
-                || disease.mEffects[0].mValues.mActorValue != 1)
+                || disease.mSpellType != 1 || disease.mEffects.empty()
+                || !std::all_of(disease.mEffects.begin(), disease.mEffects.end(), [](const auto& effect) {
+                    return effect.mCode == ESM::fourCC("DRAT") && effect.mValues.mActorValue < 8;
+                }))
                 throw std::invalid_argument("unsupported native contact disease grant");
         }
         const auto change = [&](ESM4::RuntimeActorValues& values, const MWWorld::Ptr& ptr,
@@ -3137,20 +3145,22 @@ namespace MWMechanics
                 return nullptr;
             if (deltas.mVictimDisease)
             {
-                // Reuse the established owner on a detached service. The narrow
-                // DRAT Intelligence grant changes no shared base or lifecycle;
-                // only the receiving candidate publishes with the contact.
+                // Disease DRAT effects use Maximum ownership, without shared
+                // base writes. Endurance can also stage a terminal/essential
+                // entry; retain that life candidate and publish its event once
+                // through the contact transaction below.
                 auto diseaseOwner = *this;
                 const std::span disease(deltas.mVictimDisease.get(), std::size_t{1});
                 diseaseOwner.preparePlayerPassiveGrants(*receiving, disease, playerBase,
-                    false, {}, playerGodMode);
+                    victimEssential, recovery, playerGodMode);
+                receivingLife = *diseaseOwner.findActorLife(victimKey);
             }
             spendFatigue(*receiving, victim, deltas.mVictimBlockFatigue);
             change(*receiving, victim, 8, deltas.mVictimHealth);
             change(*receiving, victim, 10, deltas.mVictimFatigue);
             if (receiving->mOwner == ESM4::ActorValueOwner::Player)
                 preparePlayerValues(*receiving, playerBase);
-            if (deltas.mVictimHealth < 0
+            if (receivingLife->mPhase == ESM4::ActorLifePhase::Alive && deltas.mVictimHealth < 0
                 && !(playerGodMode && receiving->mOwner == ESM4::ActorValueOwner::Player))
                 receivingLife = prepareHealthReaction(*receiving, victimEssential, recovery, playerGodMode, attackerKey);
             if (deltas.mVictimDefaultParalysisPower && receiving->mOwner != ESM4::ActorValueOwner::Player
@@ -4166,6 +4176,7 @@ namespace MWMechanics
         while (!data.mReactionStates.empty())
         {
             const auto next = data.mReactionStates.begin();
+            mSpellCasts.erase(next->first);
             const auto found = mMeleeStates.find(next->first);
             if (found == mMeleeStates.end()) mMeleeStates.insert(data.mReactionStates.extract(next));
             else
@@ -4340,12 +4351,14 @@ namespace MWMechanics
         life.validate();
         if (actor.getType() == ESM::REC_CREA4)
         {
+            // A fresh reference has never received a native passive grant, even
+            // when its current effects are unsupported. Retain that known empty
+            // ownership so later support can grant them on activation. Existing
+            // null ownership remains unknown and must not be reconstructed.
+            if (!oldValues) values.mPassiveAbilities.emplace();
             const auto abilities = MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, baseKey);
             if (abilities && !abilities->empty())
             {
-                // A fresh Low reference owns a known pending grant. Unknown
-                // legacy ownership stays unknown; activation must not invent it.
-                if (!oldValues) values.mPassiveAbilities.emplace();
                 if ((!oldValues || activate) && values.mPassiveAbilities
                     && values.mProcess == ESM4::ActorValueProcess::Active
                     && life.mPhase == ESM4::ActorLifePhase::Alive)
@@ -4417,12 +4430,29 @@ namespace MWMechanics
         return saved ? saved->mEssential : std::nullopt;
     }
 
+    const std::vector<ESM4::RuntimeActorFaction>* OblivionCombatService::getBaseFactions(const ESM::FormKey& base) const
+    {
+        const auto* saved = findActorBase(base);
+        return saved && saved->mFactions ? &*saved->mFactions : nullptr;
+    }
+
     void OblivionCombatService::setBaseEssential(const ESM::FormKey& base, ESM4::ActorBaseKind kind, bool essential)
     {
         auto candidate = findActorBase(base) ? *findActorBase(base) : ESM4::RuntimeActorBaseOverride{base, kind, {}};
         if (candidate.mKind != kind)
             throw std::invalid_argument("native essential base kind mismatch");
         candidate.mEssential = essential;
+        candidate.validate();
+        mActorBases.insert_or_assign(base, std::move(candidate));
+    }
+
+    void OblivionCombatService::setBaseFactions(const ESM::FormKey& base, ESM4::ActorBaseKind kind,
+        std::vector<ESM4::RuntimeActorFaction> factions)
+    {
+        auto candidate = findActorBase(base) ? *findActorBase(base) : ESM4::RuntimeActorBaseOverride{base, kind, {}};
+        if (candidate.mKind != kind)
+            throw std::invalid_argument("native faction base kind mismatch");
+        candidate.mFactions = std::move(factions);
         candidate.validate();
         mActorBases.insert_or_assign(base, std::move(candidate));
     }
@@ -4603,6 +4633,41 @@ namespace MWMechanics
         else
             publishPlayerValues(player, std::move(candidate), baseSettings);
         return true;
+    }
+
+    bool OblivionCombatService::applyTrapImpact(const MWWorld::Ptr& actor, MWWorld::Player* player,
+        float damage, const std::array<float, 3>& incomingVelocity, float pushback, bool essential,
+        const ESM4::EssentialRecoverySettings& recovery,
+        const ESM4::PlayerDynamicBaseSettings& playerBase, bool godMode)
+    {
+        if (!std::isfinite(damage) || damage < 0 || !std::isfinite(pushback)
+            || std::any_of(incomingVelocity.begin(), incomingVelocity.end(), [](float v) { return !std::isfinite(v); })
+            || (player && player->getPlayer() != actor))
+            throw std::invalid_argument("invalid environmental trap impact");
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* life = findActorLife(key);
+        if (!life) throw std::invalid_argument("trap impact requires actor lifecycle ownership");
+        if (damage == 0 || life->mPhase == ESM4::ActorLifePhase::Dead || (player && godMode)) return false;
+        decltype(mActorKnockback) prepared;
+        if (pushback > 0)
+        {
+            const auto previous = actorKnockback(key).value_or(ESM4::TimedKnockbackState{});
+            // Original noncontinuous controller branch caps force at1000 and
+            // passes duration0.5 to8907A0, the shared timed knockback setter.
+            const auto vector = ESM4::nativeKnockbackVector(incomingVelocity, std::min(pushback, 1000.f));
+            const auto pulse = ESM4::replaceNativeKnockback(previous, vector, .5f);
+            if (pulse != ESM4::TimedKnockbackState{}) prepared.emplace(key, pulse);
+        }
+        const bool changed = player
+            ? changePlayerHealth(*player, -damage, {}, essential, recovery, playerBase, godMode)
+            : changeNonPlayerHealth(actor, -damage, {}, essential, recovery);
+        if (changed && !prepared.empty())
+        {
+            const auto found = mActorKnockback.find(key);
+            if (found == mActorKnockback.end()) mActorKnockback.insert(prepared.extract(prepared.begin()));
+            else found->second = prepared.begin()->second;
+        }
+        return changed;
     }
 
     std::optional<OblivionBreathUpdateResult> OblivionCombatService::prepareBreathUpdate(
@@ -5413,6 +5478,161 @@ namespace MWMechanics
             publishPlayerValues(player, std::move(candidate), baseSettings);
     }
 
+    const ESM4::SpellCastState* OblivionCombatService::findSpellCast(const ESM::FormKey& actor) const
+    {
+        const auto found = mSpellCasts.find(actor);
+        return found == mSpellCasts.end() ? nullptr : &found->second;
+    }
+
+    bool OblivionCombatService::beginSpellCast(const ESM::FormKey& actor, ESM4::SpellCastState cast, bool usesMagicka)
+    {
+        cast.validate();
+        if (cast.mElapsed != 0 || cast.mReleased)
+            throw std::invalid_argument("new native spell cast must start before release");
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!values || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || values->mProcess == ESM4::ActorValueProcess::Low || mSpellCasts.contains(actor)
+            || mBowStates.contains(actor) || getProcessParalysis(actor) != 0
+            || (values->mProcessKnockedState && *values->mProcessKnockedState != 0)) return false;
+        const auto busy = [](const auto& view) {
+            return view.mStrike || view.mReaction || view.mPassiveSequence
+                || std::any_of(view.mHeldBlocks.begin(), view.mHeldBlocks.end(), [](const auto& h) { return h.resident(); });
+        };
+        if (const auto* melee = findMeleeState(actor); melee && (busy(*melee) || melee->mDodge
+                || (melee->mFirstPerson && busy(*melee->mFirstPerson)))) return false;
+        if (usesMagicka && ESM4::composeActorValue(values->mValues[9], values->mOwner, values->mProcess) < cast.mCost)
+            return false;
+        mSpellCasts.emplace(actor, std::move(cast));
+        return true;
+    }
+
+    bool OblivionCombatService::canUsePlayerPower(const ESM::FormKey& spell, double gameHours) const
+    {
+        ESM4::PowerUseState{spell, gameHours}.validate();
+        const auto& values = playerValues();
+        const auto found = std::find_if(values.mUsedPowers.begin(), values.mUsedPowers.end(),
+            [&](const auto& use) { return use.mSpell == spell; });
+        return found == values.mUsedPowers.end() || found->available(gameHours);
+    }
+
+    bool OblivionCombatService::releasePlayerAbsorbFatiguePower(MWWorld::Player& player,
+        const MWWorld::Ptr& target, const ESM::FormKey& spell, double gameHours, float magnitude,
+        const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        const auto key = ESM::FormKey::dynamic("player", 1);
+        const auto* cast = findSpellCast(key);
+        if (!cast || cast->mSpell != spell || cast->mReleased || cast->mCost != 0
+            || !canUsePlayerPower(spell, gameHours)) return false;
+        if (!std::isfinite(magnitude) || magnitude < 0)
+            throw std::invalid_argument("invalid native Absorb Fatigue magnitude");
+        auto candidate = playerValues();
+        const auto use = std::find_if(candidate.mUsedPowers.begin(), candidate.mUsedPowers.end(),
+            [&](const auto& entry) { return entry.mSpell == spell; });
+        if (use == candidate.mUsedPowers.end()) candidate.mUsedPowers.push_back({spell, gameHours});
+        else use->mUsedAt = gameHours;
+        const auto* life = findActorLife(key);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive) return false;
+        const auto targetKey = target.isEmpty() ? ESM::FormKey{} : target.getCellRef().getFormKey();
+        const auto* targetLife = target.isEmpty() ? nullptr : findActorLife(targetKey);
+        if (!targetLife || targetLife->mPhase != ESM4::ActorLifePhase::Alive
+            || target == player.getPlayer())
+        {
+            publishPlayerValues(player, std::move(candidate), settings);
+            return true;
+        }
+        auto victim = nonPlayerValues(target);
+        victim.mValues[10] = ESM4::changeActorValueModifier(victim.mValues[10], victim.mOwner,
+            10, ESM4::ActorValueModifier::Damage, -magnitude);
+        candidate.mValues[10] = ESM4::changeActorValueModifier(candidate.mValues[10], candidate.mOwner,
+            10, ESM4::ActorValueModifier::Damage, magnitude);
+        preparePlayerValues(candidate, settings);
+        const auto* base = findActorBase(victim.mBase);
+        applyActorBase(victim, base);
+        victim.validate();
+        PreparedNonPlayerView receiving(target, victim, base, targetLife);
+        const auto ptr = player.getPlayer();
+        OblivionActorProjection giving(ptr.getClass().getNpcStats(ptr),
+            actorProjection(candidate, nullptr, life));
+        auto& storedPlayer = mActorValues.at(key);
+        auto& storedTarget = mActorValues.at(targetKey);
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
+        // Both projections and all allocations precede either publication.
+        std::swap(storedPlayer, candidate);
+        std::swap(storedTarget, victim);
+        giving.commit();
+        receiving.commit();
+        return true;
+    }
+
+    void OblivionCombatService::cancelSpellCast(const ESM::FormKey& actor) noexcept
+    {
+        mSpellCasts.erase(actor);
+    }
+
+    std::optional<OblivionCombatService::SpellCastUpdate> OblivionCombatService::advanceItemCast(
+        const ESM::FormKey& actor, float duration, const std::function<bool()>& release)
+    {
+        const auto found = mSpellCasts.find(actor);
+        if (found == mSpellCasts.end()) return {};
+        const auto* life = findActorLife(actor);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
+        {
+            mSpellCasts.erase(found);
+            return {};
+        }
+        auto next = found->second;
+        const bool released = ESM4::advanceSpellCast(next, duration);
+        const bool applied = released && release();
+        const bool finished = next.mElapsed >= next.mDuration;
+        static_assert(std::is_nothrow_swappable_v<ESM4::SpellCastState>);
+        if (finished) mSpellCasts.erase(found);
+        else std::swap(found->second, next);
+        return SpellCastUpdate{released, applied, finished};
+    }
+
+    std::optional<OblivionCombatService::SpellCastUpdate> OblivionCombatService::advanceRestorationCast(
+        const MWWorld::Ptr& actor, MWWorld::Player* player, float duration,
+        const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto found = mSpellCasts.find(key);
+        if (found == mSpellCasts.end()) return {};
+        const auto* life = findActorLife(key);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
+        {
+            mSpellCasts.erase(found);
+            return {};
+        }
+        auto next = found->second;
+        const bool release = ESM4::advanceSpellCast(next, duration);
+        bool applied = false;
+        if (release)
+        {
+            for (float value : amounts)
+                if (!std::isfinite(value) || value < 0)
+                    throw std::invalid_argument("native restoration cast requires finite nonnegative magnitudes");
+            auto candidate = player ? playerValues() : nonPlayerValues(actor);
+            if (ESM4::composeActorValue(candidate.mValues[9], candidate.mOwner, candidate.mProcess) >= next.mCost)
+            {
+                candidate.mValues[9] = ESM4::changeActorValueModifier(candidate.mValues[9],
+                    candidate.mOwner, 9, ESM4::ActorValueModifier::Damage, -next.mCost);
+                for (std::size_t i = 0; i < amounts.size(); ++i)
+                    if (amounts[i] > 0)
+                        candidate.mValues[8 + i] = ESM4::changeActorValueModifier(candidate.mValues[8 + i],
+                            candidate.mOwner, 8 + i, ESM4::ActorValueModifier::Damage, amounts[i]);
+                if (player) publishPlayerValues(*player, std::move(candidate), settings);
+                else publishNonPlayerValues(actor, std::move(candidate));
+                applied = true;
+            }
+        }
+        // Resource publication has completed; these ownership changes cannot throw.
+        const bool finished = next.mElapsed >= next.mDuration;
+        if (finished) mSpellCasts.erase(found);
+        else std::swap(found->second, next);
+        return SpellCastUpdate{release, applied, finished};
+    }
+
     bool OblivionCombatService::restorePotionResources(const MWWorld::Ptr& actor, MWWorld::Player* player,
         const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings)
     {
@@ -5571,6 +5791,70 @@ namespace MWMechanics
         // Original actor2E4 runs before life/resource handling. This prepares
         // only the verified recoverable NoMagnitude PARA scalar ownership;
         // the World supplies external preparation before its publication.
+        void prepareIngredientRestoration(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
+        {
+            if (!dead && (!process || duration == 0)) return;
+            for (auto it = values.mIngredientRestoration.begin(); it != values.mIngredientRestoration.end(); )
+            {
+                if (it->mActorValue == 8 && it->mMagnitude < 0)
+                {
+                    it->mElapsed = std::min(it->mDuration, it->mElapsed + duration);
+                    if (!dead && it->mElapsed < it->mDuration) { ++it; continue; }
+                    values.mValues[8] = ESM4::changeActorValueModifier(values.mValues[8], values.mOwner, 8,
+                        ESM4::ActorValueModifier::Maximum, -it->mMagnitude);
+                }
+                else if (!dead)
+                {
+                    const auto step = it->mActorValue == 8
+                        ? ESM4::advanceIngredientHealthRestoration(it->mElapsed, duration)
+                        : ESM4::advanceIngredientFatigue(it->mElapsed, duration, {it->mMagnitude, it->mDuration});
+                    it->mElapsed = step.mElapsed;
+                    values.mValues[it->mActorValue] = ESM4::changeActorValueModifier(
+                        values.mValues[it->mActorValue], values.mOwner, it->mActorValue,
+                        ESM4::ActorValueModifier::Damage, step.mAmount);
+                    Log(Debug::Verbose) << "TES4 ingredient restoration: ingredient=" << it->mIngredient.serialize()
+                        << " amount=" << step.mAmount << " elapsed=" << step.mElapsed
+                        << " actor_value=" << unsigned(it->mActorValue);
+                    if (!step.mFinished) { ++it; continue; }
+                }
+                it = values.mIngredientRestoration.erase(it);
+            }
+        }
+
+        void prepareScrollChameleon(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
+        {
+            if (!process || (!dead && duration == 0)) return;
+            for (auto it = values.mScrollChameleon.begin(); it != values.mScrollChameleon.end(); )
+            {
+                const auto step = dead ? ESM4::ScrollChameleonStep{it->mElapsed, true}
+                    : ESM4::advanceScrollChameleon(it->mElapsed, duration);
+                if (!step.mExpired) { it->mElapsed = step.mElapsed; ++it; continue; }
+                values.mValues[46] = ESM4::changeActorValueModifier(values.mValues[46], values.mOwner, 46,
+                    ESM4::ActorValueModifier::Maximum, -it->mMagnitude);
+                Log(Debug::Info) << "M16 Chameleon expired: scroll=" << it->mScroll.serialize()
+                    << " elapsed=" << step.mElapsed << " magnitude=" << it->mMagnitude << " dead=" << dead;
+                it = values.mScrollChameleon.erase(it);
+            }
+        }
+
+        void preparePotionAttributes(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
+        {
+            if (!process || (!dead && duration == 0)) return;
+            for (auto it = values.mPotionAttributeEffects.begin(); it != values.mPotionAttributeEffects.end(); )
+            {
+                const auto step = dead ? ESM4::PotionAttributeStep{it->mElapsed, true}
+                    : ESM4::advancePotionAttributes(it->mElapsed, it->mDuration, duration);
+                if (!step.mExpired) { it->mElapsed = step.mElapsed; ++it; continue; }
+                for (const auto& modifier : it->mModifiers)
+                    values.mValues[modifier.mAttribute] = ESM4::changeActorValueModifier(
+                        values.mValues[modifier.mAttribute], values.mOwner, modifier.mAttribute,
+                        ESM4::ActorValueModifier::Maximum, -modifier.mDelta);
+                Log(Debug::Info) << "M16 potion attributes expired: potion=" << it->mPotion.serialize()
+                    << " elapsed=" << step.mElapsed << " modifiers=" << it->mModifiers.size() << " dead=" << dead;
+                it = values.mPotionAttributeEffects.erase(it);
+            }
+        }
+
         unsigned prepareMeleeParalysis(ESM4::RuntimeActorValues& values, float elapsed,
             bool deadOrEssential, bool processEffects)
         {
@@ -5650,12 +5934,28 @@ namespace MWMechanics
         updateWithActorClock(mActorUpdateTimes, key, managerTime, [&](float elapsed) {
             auto candidate = before;
             const auto applications = prepareMeleeParalysis(candidate, elapsed, deadOrEssential, processEffects);
+            const bool dead = life ? life->mPhase == ESM4::ActorLifePhase::Dead
+                : ptr.getClass().getCreatureStats(ptr).isDead();
+            preparePotionAttributes(candidate, elapsed, dead, processEffects);
             if (!deadOrEssential)
             {
                 preparePlayerValues(candidate, settings.mFatigue.mPlayerBase);
                 updateFrameResources(candidate,
                     {elapsed, movement.mEncumbrance, movement.mRunning, movement.mCanSpend},
                     hasActiveMagicItem, settings);
+            }
+            prepareIngredientRestoration(candidate, elapsed, deadOrEssential, processEffects);
+            prepareScrollChameleon(candidate, elapsed, dead, processEffects);
+            if (processEffects)
+            {
+                for (auto& light : candidate.mPotionLightEffects)
+                    light.mElapsed += elapsed;
+                std::erase_if(candidate.mPotionLightEffects, [&](const auto& light) {
+                    if (!dead && light.mElapsed < light.mDuration) return false;
+                    Log(Debug::Info) << "M16 potion Light expired: potion=" << light.mPotion.serialize()
+                                     << " elapsed=" << light.mElapsed << " dead=" << dead;
+                    return true;
+                });
             }
             if (applications && !prepareParalysis)
                 throw std::invalid_argument("native paralysis application requires World preparation");
@@ -5804,7 +6104,7 @@ namespace MWMechanics
             || values->second.mProcess != ESM4::ActorValueProcess::Active
             || values->second.mProcessAction != 6 || values->second.mProcessKnockedState != 0
             || !life || life->mPhase != ESM4::ActorLifePhase::Alive
-            || mBowStates.contains(actor) || getProcessParalysis(actor) != 0
+            || mBowStates.contains(actor) || mSpellCasts.contains(actor) || getProcessParalysis(actor) != 0
             || (found != mMeleeStates.end() && (found->second.mDodge || found->second.mStrike
                 || found->second.mReaction || (found->second.mFirstPerson
                     && (found->second.mFirstPerson->mStrike || found->second.mFirstPerson->mReaction)))))
@@ -5864,7 +6164,7 @@ namespace MWMechanics
             || !values->mProcessAction || (*values->mProcessAction != -1 && *values->mProcessAction != 6)
             || !life || life->mPhase != ESM4::ActorLifePhase::Alive
             || (melee && (melee->mStrike || melee->mReaction))
-            || mBowStates.contains(actor) || getProcessParalysis(actor) != 0)
+            || mBowStates.contains(actor) || mSpellCasts.contains(actor) || getProcessParalysis(actor) != 0)
             return false;
         setProcessAction(actor, 6);
         clearMeleeInput(actor);
@@ -5895,7 +6195,7 @@ namespace MWMechanics
             || values->second.mProcessKnockedState != 0 || values->second.mProcessAction != -1
             || (previous && (previous->mStrike || previous->mReaction
                 || (previous->mFirstPerson && (previous->mFirstPerson->mStrike || previous->mFirstPerson->mReaction))))
-            || mBowStates.contains(actor) || getProcessParalysis(actor) != 0)
+            || mBowStates.contains(actor) || mSpellCasts.contains(actor) || getProcessParalysis(actor) != 0)
             return false;
         const bool player = values->second.mOwner == ESM4::ActorValueOwner::Player;
         if (player ? (!first || (firstPersonActive ? body.has_value() : !body))
@@ -6466,14 +6766,22 @@ namespace MWMechanics
             throw std::invalid_argument("native resurrection requires initialized lifecycle");
         auto life = found->second;
         prepareResurrectionReset(values, life);
+        // Original fresh LowProcess6438F0 clears the containing DWORD30,
+        // including BaseProcess's alert byte31.
+        values.mProcessAlerted = false;
         PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
-        // The new process cannot retain the old contact's pending/applied hit.
-        if (const auto graph = mGetUpPlayback.find(found->first); graph != mGetUpPlayback.end())
-            graph->second.mPhysicalHit.reset();
-        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
-            cancelActorActions(found->first);
+        // A replacement process must not restore the old corpse's pose or any
+        // owned contact, cast, knockback or recovery on the next cell load.
+        cancelActorActions(found->first);
+        stopCombat(found->first);
+        mActorKnockback.erase(found->first);
+        mActorRagdolls.erase(found->first);
+        mGetUpIdles.erase(found->first);
+        mGetUpPlayback.erase(found->first);
+        mPreparedGetUpIdentity.mValue.reset();
+        mPreparedRagdollIdentity.mValue.reset();
         prepared.commit();
     }
 
@@ -7028,6 +7336,7 @@ namespace MWMechanics
         {
             owner.mMeleeStates.erase(data.mActor);
             owner.mBowStates.erase(data.mActor);
+            owner.mSpellCasts.erase(data.mActor);
             swap(owner.mActions, *data.mNextActions);
             owner.mActionOwners.swap(data.mNextActionOwners);
             owner.mPreparedReleaseIdentity.mValue.reset();
@@ -7373,6 +7682,24 @@ namespace MWMechanics
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
         {
+            if (state.mVersion < 94 && !actor.mPotionAttributeEffects.empty())
+                throw std::invalid_argument("native potion attributes require an Oblivion v94+ save");
+            if (state.mVersion < 93 && !actor.mScrollChameleon.empty())
+                throw std::invalid_argument("native scroll Chameleon requires an Oblivion v93+ save");
+            if (state.mVersion < 102)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mActorValue == 5)
+                        throw std::invalid_argument("ingredient Endurance restoration requires an Oblivion v102+ save");
+            if (state.mVersion < 100)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mActorValue != 10)
+                        throw std::invalid_argument("ingredient Health drain requires an Oblivion v100+ save");
+            if (state.mVersion < 98)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mMagnitude != 5.f || effect.mDuration != 1.f)
+                        throw std::invalid_argument("resolved ingredient potency requires an Oblivion v98+ save");
+            if (state.mVersion < 92 && !actor.mIngredientRestoration.empty())
+                throw std::invalid_argument("native ingredient restoration requires an Oblivion v92+ save");
             if (state.mVersion < 70 && !actor.mMeleeParalysis.empty())
                 throw std::invalid_argument("native melee paralysis requires an Oblivion v70+ save");
             if (state.mVersion < 26 && actor.mProcessAction)
@@ -7404,6 +7731,9 @@ namespace MWMechanics
                 [](const auto& entry) { return entry.second.mDodge.has_value(); }))
             throw std::invalid_argument("blocking dodge requires an Oblivion v77+ save");
         auto meleeStates = mMeleeStates;
+        if (state.mVersion < 87 && !mSpellCasts.empty())
+            throw std::invalid_argument("Pending native casts require schema87");
+        auto spellCasts = mSpellCasts;
         auto bowStates = mBowStates;
         auto animationClocks = mAnimationClocks;
         auto knockback = mActorKnockback;
@@ -7418,6 +7748,7 @@ namespace MWMechanics
         state.mPhysicalActionOwners.swap(actionOwners);
         state.mNativeMeleeStates.swap(meleeStates);
         state.mNativeBowStates.swap(bowStates);
+        state.mNativeSpellCasts.swap(spellCasts);
         state.mNativeAnimationClocks.swap(animationClocks);
         state.mNativePlayerBowTimer = mPlayerBowTimer;
         state.mNativeActorKnockback.swap(knockback);
@@ -7528,6 +7859,8 @@ namespace MWMechanics
     void OblivionCombatService::restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store)
     {
         state.validate();
+        for (const auto& reference : state.mReferences)
+            MWWorld::validateOblivionLevelledActor(store, reference);
         for (const auto& [actor, idle] : state.mNativeGetUpIdles)
         {
             const auto* record = store.search<ESM4::IdleAnimation>(idle.mIdle);
@@ -7568,6 +7901,13 @@ namespace MWMechanics
                 ? false : nativeBaseIsCreature(base.mBase, store);
             if (creature != (base.mKind == ESM4::ActorBaseKind::Creature))
                 throw std::invalid_argument("native actor base override kind mismatch: " + base.mBase.serialize());
+            if (base.mFactions)
+                for (const auto& membership : *base.mFactions)
+                {
+                    const auto* faction = store.search<ESM4::Faction>(membership.mFaction);
+                    if (!faction || (faction->mFlags & ESM4::Rec_Deleted))
+                        throw std::invalid_argument("saved actor base faction is unresolved");
+                }
         }
         for (const auto& [base, count] : state.mNativeDeathCounts)
             if (base != ESM::FormKey::dynamic("player-base", 1))
@@ -7622,6 +7962,7 @@ namespace MWMechanics
         auto actionOwners = state.mPhysicalActionOwners;
         auto meleeStates = state.mNativeMeleeStates;
         auto bowStates = state.mNativeBowStates;
+        auto spellCasts = state.mNativeSpellCasts;
         auto animationClocks = state.mNativeAnimationClocks;
         auto knockback = state.mNativeActorKnockback;
         auto ragdolls = state.mNativeActorRagdolls;
@@ -7673,6 +8014,7 @@ namespace MWMechanics
         mActionOwners.swap(actionOwners);
         mMeleeStates.swap(meleeStates);
         mBowStates.swap(bowStates);
+        mSpellCasts.swap(spellCasts);
         mAnimationClocks.swap(animationClocks);
         mPlayerBowTimer = state.mNativePlayerBowTimer;
         mActorKnockback.swap(knockback);

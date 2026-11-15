@@ -1,0 +1,72 @@
+{
+  "milestone": "M12 ordinary Security experience / M13 lock interaction",
+  "reference": "content:oblivion.esm:049bbc",
+  "base": "content:oblivion.esm:0228c8",
+  "source": "build/oblivion-compat/iron-gate/normal-final-gate-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "source_sha256": "7ecd4febfef2c4a1011501a1a65679fc460eed82fe3b9c804f8834b5ff17daa1",
+  "baseline": {
+    "path": "build/oblivion-compat/security-use/normal-security-use-baseline-01",
+    "scenario_passed": false,
+    "reason": "All seven earned picks broke. Recipe expected an unlocked gate and therefore failed its final wait; this is retained baseline evidence, not a passing acceptance course.",
+    "observed_security": "base5, progress0 before and after seven explicit failures",
+    "input_save_unchanged": true
+  },
+  "authored_security_skill": {
+    "record": "content:oblivion.esm:00004f",
+    "actor_value": 30,
+    "attribute": 3,
+    "specialization": 2,
+    "use_values": [
+      1.5,
+      1.0
+    ]
+  },
+  "native_training_settings": {
+    "fSkillUseFactor": 0.3499999940395355,
+    "fSkillUseExp": 1.5
+  },
+  "target_acceptance": [
+    "Cancel awards no experience.",
+    "Explicit original-gate Auto Attempts award reasonable authored Security experience, including failures.",
+    "Publish native skill base and existing shared experience/attribute/specialization/major counters consistently.",
+    "Verify nonzero fractional experience and any level increases after actual attempts; cold-load without replaying awards or losing progress."
+  ],
+  "open_questions": [
+    "Exact native action/use-slot scaling remains uncertified; slot0 provides a reasonable authored1.5XP award.",
+    "General skill-use/tutorial-use tracking, other class/mastery matrices, notifications and full character leveling are outside this slice."
+  ],
+  "status": "accepted bounded Security-use extension on actual Canosel gates; broader progression/content acceptance remains open",
+  "scope": [
+    "Only explicit Player Auto Attempt in native door/container lock choices awards Security use slot0, on both failure and success.",
+    "Native winning skill/class/GMST resolution and advancement bookkeeping shared with ModPCSkill; ordinary experience stops at100, scripted rewards retain their existing behavior.",
+    "Fractional experience remains owned by shared NpcStats; native actor values remain authority for skill base/modifiers. No runtime schema addition.",
+    "Lua Player progress uses native skill requirement normalization."
+  ],
+  "fidelity": {
+    "reused_original_probe": "docs/oblivion/IRON-GATE-LOCK-ORACLE.json; observed five failed Auto Attempts and Security5 to7",
+    "unresolved": "Exact use-slot/caller scaling and native normalized fractional XP are not independently certified. Slot0 is a bounded reasonable 1.5XP award; do not claim exact native arithmetic or probabilities."
+  },
+  "acceptance": [
+    "Actual original Gate049bbc approach and Cancel keep Security and picks unchanged.",
+    "One explicit normal-input attempt awards retained fractional Security experience; ordinary failures still debit exactly one earned pick.",
+    "Fresh process load preserves fractional XP, native base/modifiers and counters without replaying an award.",
+    "Focused engine regression covers level crossing, cap100, modifiers, advancement counters, common save/load and existing scripted rewards.",
+    "Normal and instrumented runtime and integration evidence is required before closure.",
+    "Actual adjacent Gate049bba attempt crosses Security5 to6; existing common attribute/Stealth counters and native per-skill counter increase once.",
+    "Open the native Stats tab after gaining experience; no missing-GMST frame error.",
+    "Cold-load the actual level-gain save and retain fractional XP, native base/modifiers and advancement counters."
+  ],
+  "secondary_reference": "content:oblivion.esm:049bba",
+  "required_dependency": "Install original compiled iLevelUp01..10Mult defaults for shared Stats advancement tooltip; real failed attempt reachedSecurity6 but opening Inventory exposed missing-GMST errors.",
+  "verification": "SECURITY-USE-VERIFICATION.json",
+  "validation": {
+    "normal_courses": 5,
+    "sanitized_courses": 5,
+    "engine_normal": 2278,
+    "engine_sanitized": 2278,
+    "python": 611,
+    "focused": 28,
+    "failed_graphics_rerun": 79,
+    "native_schema": 99
+  }
+}

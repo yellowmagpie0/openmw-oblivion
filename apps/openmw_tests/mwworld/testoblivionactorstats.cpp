@@ -4531,6 +4531,56 @@ namespace
             service.capture(saved);
             return saved;
         };
+        const auto impact = [&](float damage, bool essential = false,
+                                ESM4::EssentialRecoverySettings recovery = {3, .5f}, bool godMode = false) {
+            return service.applyTrapImpact(ptr, player, damage, {600, 0, 0}, 900,
+                essential, recovery, {}, godMode);
+        };
+        auto trapState = initial(100);
+        ASSERT_TRUE(impact(21.5f));
+        EXPECT_NEAR(health(), 78.5f, .001f);
+        const auto pulse = service.actorKnockback(values.mActor);
+        ASSERT_TRUE(pulse);
+        EXPECT_NEAR(pulse->mRemaining, .5f, .001f);
+        EXPECT_NEAR(pulse->mAcceleration[0], 257.1781f, .01f);
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Alive);
+        EXPECT_TRUE(service.findActorLife(values.mActor)->mKiller.isNull());
+        service.capture(trapState);
+        MWMechanics::OblivionCombatService restoredTrap;
+        restoredTrap.restore(ESM4::RuntimeState::deserializeBinary(trapState.serializeBinary()));
+        EXPECT_EQ(restoredTrap.actorKnockback(values.mActor), pulse);
+
+        trapState = initial(2);
+        ASSERT_TRUE(impact(21.5f));
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::Dead);
+        EXPECT_TRUE(service.findActorLife(values.mActor)->mKiller.isNull());
+        EXPECT_EQ(service.getDeadCount(values.mBase), 1);
+        service.capture(trapState);
+        ASSERT_EQ(trapState.mPendingDeathEvents.size(), 1u);
+        EXPECT_FALSE(impact(21.5f));
+        auto repeatedTrap = trapState;
+        service.capture(repeatedTrap);
+        EXPECT_EQ(repeatedTrap, trapState);
+
+        initial(2);
+        ASSERT_TRUE(impact(21.5f, true));
+        EXPECT_EQ(service.findActorLife(values.mActor)->mPhase, Phase::EssentialUnconscious);
+        EXPECT_EQ(service.getDeadCount(values.mBase), 0);
+        const auto rejectedTrap = initial(2);
+        EXPECT_THROW(impact(21.5f, true, {std::numeric_limits<float>::quiet_NaN(), .5f}), std::invalid_argument);
+        auto afterRejectedTrap = rejectedTrap;
+        service.capture(afterRejectedTrap);
+        EXPECT_EQ(afterRejectedTrap, rejectedTrap);
+        EXPECT_EQ(health(), 2.f);
+        if (player)
+        {
+            const auto godModeTrap = initial(100);
+            EXPECT_FALSE(impact(21.5f, false, {}, true));
+            auto afterGodModeTrap = godModeTrap;
+            service.capture(afterGodModeTrap);
+            EXPECT_EQ(afterGodModeTrap, godModeTrap);
+        }
+
         auto saved = initial();
         ASSERT_TRUE(change(-.5f));
         EXPECT_FLOAT_EQ(health(), 1.5f);
@@ -5815,6 +5865,144 @@ namespace
     }
 
 
+
+    TEST_F(OblivionActorStatsTest, cairnHealthRestorationResumesClampsAndNeverHealsDeadOwners)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        ESM::NpcState initial{};
+        initial.blank();
+        const auto ptr = player.getPlayer();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        auto settings = MWWorld::resolveOblivionFrameSettings(mStore);
+        settings.mMagicka = {0, 0};
+        settings.mFatigue.mRegeneration = {0, 0};
+        settings.mFatigue.mPlayerBase = {};
+        for (unsigned scenario = 0; scenario < 3; ++scenario)
+        {
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues values;
+            values.mActor = ESM::FormKey::dynamic("player", 1);
+            values.mBase = ESM::FormKey::dynamic("player-base", 1);
+            values.mOwner = ESM4::ActorValueOwner::Player;
+            values.mPlayerFormValues = {{110, 80, 170, 0}};
+            values.mValues[8] = {110, {std::nullopt, std::nullopt, scenario == 1 ? -.25f : -27.f}};
+            values.mIngredientRestoration = {{ESM::FormKey::content("oblivion.esm", 0x6251e), 0, 1, 3, 8}};
+            service.publishPlayerValues(player, values, {});
+            service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            const auto tick = [&] {
+                service.updatePlayerFrameResourcesFromClock(player, {0, false, false}, false, settings);
+            };
+            const auto current = [&]() -> const ESM4::RuntimeActorValues& {
+                return *service.findActorValues(values.mActor);
+            };
+            service.advanceFrameClock(.125f); tick();
+            service.advanceFrameClock(.375f); tick();
+            ASSERT_EQ(current().mIngredientRestoration.size(), 1u);
+            EXPECT_FLOAT_EQ(current().mIngredientRestoration[0].mElapsed, .5f);
+            EXPECT_FLOAT_EQ(current().mValues[8].mModifiers[2].value_or(0), scenario == 1 ? 0 : -26.5f);
+            const auto partial = current();
+            tick();
+            EXPECT_EQ(current(), partial); // A second writer in one clock tick cannot heal twice.
+            if (scenario == 2)
+                service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Dead, 0, {}});
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = values.mActor;
+            saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            service.capture(saved);
+            service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+            service.advanceFrameClock(2.5f); tick();
+            EXPECT_TRUE(current().mIngredientRestoration.empty());
+            EXPECT_FLOAT_EQ(current().mValues[8].mBase, 110.f);
+            EXPECT_FLOAT_EQ(current().mValues[8].mModifiers[0].value_or(0), 0.f);
+            EXPECT_FLOAT_EQ(current().mValues[8].mModifiers[2].value_or(0),
+                scenario == 1 ? 0 : scenario == 2 ? -26.5f : -24.f);
+            const auto completed = current();
+            service.advanceFrameClock(1.f); tick();
+            EXPECT_EQ(current().mValues[8], completed.mValues[8]);
+        }
+    }
+
+    TEST_F(OblivionActorStatsTest, crabEnduranceRestorationResumesWithoutCuringDiseaseOrFortifying)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        ESM::NpcState initial{};
+        initial.blank();
+        const auto ptr = player.getPlayer();
+        ptr.getClass().readAdditionalState(ptr, initial);
+        auto settings = MWWorld::resolveOblivionFrameSettings(mStore);
+        settings.mMagicka = {0, 0};
+        settings.mFatigue.mRegeneration = {0, 0};
+        settings.mFatigue.mPlayerBase = {};
+        for (unsigned scenario = 0; scenario < 3; ++scenario)
+        {
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues values;
+            values.mActor = ESM::FormKey::dynamic("player", 1);
+            values.mBase = ESM::FormKey::dynamic("player-base", 1);
+            values.mOwner = ESM4::ActorValueOwner::Player;
+            values.mPlayerFormValues = {{110, 80, 170, 0}};
+            values.mValues[5] = {55, {-10.f, std::nullopt, scenario == 1 ? -.25f : -10.f}};
+            values.mIngredientRestoration = {{ESM::FormKey::content("oblivion.esm", 0x3366c), 0, 5, 1, 5}};
+            service.publishPlayerValues(player, values, {});
+            service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            const auto tick = [&] {
+                service.updatePlayerFrameResourcesFromClock(player, {0, false, false}, false, settings);
+            };
+            const auto current = [&]() -> const ESM4::RuntimeActorValues& {
+                return *service.findActorValues(values.mActor);
+            };
+            service.advanceFrameClock(.125f); tick();
+            service.advanceFrameClock(.375f); tick();
+            ASSERT_EQ(current().mIngredientRestoration.size(), 1u);
+            EXPECT_FLOAT_EQ(current().mIngredientRestoration[0].mElapsed, .5f);
+            EXPECT_FLOAT_EQ(current().mValues[5].mModifiers[2].value_or(0), scenario == 1 ? 0 : -7.5f);
+            const auto partial = current();
+            tick();
+            EXPECT_EQ(current(), partial); // A second writer in one clock tick cannot heal twice.
+            if (scenario == 2)
+                service.publishPlayerLife(player, {values.mActor, values.mBase, ESM4::ActorLifePhase::Dead, 0, {}});
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = values.mActor;
+            saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            service.capture(saved);
+            service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+            service.advanceFrameClock(.5f); tick();
+            EXPECT_TRUE(current().mIngredientRestoration.empty());
+            EXPECT_FLOAT_EQ(current().mValues[5].mBase, 55.f);
+            EXPECT_FLOAT_EQ(current().mValues[5].mModifiers[0].value_or(0), -10.f);
+            EXPECT_FLOAT_EQ(current().mValues[5].mModifiers[2].value_or(0),
+                scenario == 1 ? 0 : scenario == 2 ? -7.5f : -5.f);
+            const auto completed = current();
+            service.advanceFrameClock(1.f); tick();
+            EXPECT_EQ(current().mValues[5], completed.mValues[5]);
+        }
+    }
 
     TEST_F(OblivionActorStatsTest, terminalHealthCommitRemovesCombatMembershipBeforeCallbackCapture)
     {
@@ -7618,6 +7806,113 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, contactDiseaseEndurancePublishesLifeAndDerivedValuesAtomically)
+    {
+        sharedStats();
+        ESM::NPC facade{}; facade.blank(); facade.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(facade);
+        ESM4::Creature creature{}; creature.mId = {0x800, 3}; creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 1;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf(); MWClass::ESM4Creature::registerSelf();
+        MWWorld::Player player(playerRecord); const auto ptr = player.getPlayer();
+        ESM::NpcState initial{}; initial.blank(); ptr.getClass().readAdditionalState(ptr, initial);
+        ESM4::ActorCreature reference{}; reference.mId = {0x900, 3};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900); reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr carrier(&live);
+        const ESM4::PlayerDynamicBaseSettings settings{2, 1.5f, 5};
+        const ESM4::PassiveAbilityInput fever{ESM::FormKey::content("Oblivion.esm", 0x98415),
+            {{0, ESM::fourCC("DRAT"), 0x100077, {0, 10, 0}},
+             {1, ESM::fourCC("DRAT"), 0x100077, {5, 10, 0}}}, 1};
+        // Healthy; exactly1 Health after Endurance; and a physical hit that
+        // crosses the threshold only after the disease has left2 Health.
+        for (const int damage : {0, -59, -58})
+        for (const bool essential : {false, true})
+        for (const bool godMode : {false, true})
+        {
+            SCOPED_TRACE(damage);
+            SCOPED_TRACE(essential);
+            SCOPED_TRACE(godMode);
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues pv; pv.mActor = ESM::FormKey::dynamic("player", 1);
+            pv.mBase = ESM::FormKey::dynamic("player-base", 1); pv.mOwner = ESM4::ActorValueOwner::Player;
+            pv.mPlayerFormValues = {{0, 0, 0, 0}}; pv.mPassiveAbilities.emplace();
+            for (unsigned i = 0; i < 8; ++i) pv.mValues[i].mBase = 40;
+            pv.mValues[8].mModifiers[2] = damage;
+            service.publishPlayerValues(player, pv, settings);
+            service.publishPlayerLife(player, {pv.mActor, pv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ESM4::RuntimeActorValues cv; cv.mActor = reference.mFormKey; cv.mBase = mActorKey;
+            cv.mValues[8].mBase = 20; cv.mValues[10].mBase = 60;
+            service.publishNonPlayerValues(carrier, cv);
+            service.publishNonPlayerLife(carrier, {cv.mActor, cv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ASSERT_TRUE(service.engage(cv.mActor, pv.mActor));
+            const auto id = service.allocateAction(cv.mActor), victimAction = service.allocateAction(pv.mActor);
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = pv.mActor; saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            ESM4::RuntimeReferenceState ref; ref.mKey = cv.mActor; ref.mBase = cv.mBase;
+            ref.mCell = saved.mPlayer.mCell; saved.mReferences.push_back(ref);
+            const auto snapshot = [&] { service.capture(saved); return saved.serializeBinary(); };
+            const auto before = snapshot();
+            MWMechanics::OblivionPhysicalContactDeltas deltas{-7, damage == -59 ? 0.f : -2.f, 0};
+            deltas.mVictimDisease = std::make_shared<const ESM4::PassiveAbilityInput>(fever);
+            auto malformed = fever; malformed.mEffects[1].mValues.mActorValue = 8;
+            auto rejected = deltas; rejected.mVictimDisease = std::make_shared<const ESM4::PassiveAbilityInput>(malformed);
+            EXPECT_THROW(service.preparePhysicalContact(id, carrier, ptr, rejected, &player,
+                essential, {4, .5f}, settings, godMode), std::invalid_argument);
+            EXPECT_EQ(snapshot(), before);
+            auto contact = service.preparePhysicalContact(id, carrier, ptr, deltas, &player,
+                essential, {4, .5f}, settings, godMode);
+            ASSERT_TRUE(contact); EXPECT_EQ(snapshot(), before);
+            const auto position = carrier.getRefData().getPosition();
+            auto moved = position; moved.pos[0] += 1; carrier.getRefData().setPosition(moved);
+            EXPECT_FALSE(contact->commit()); EXPECT_EQ(snapshot(), before);
+            carrier.getRefData().setPosition(position);
+            ASSERT_TRUE(contact->commit()); EXPECT_FALSE(contact->commit());
+            const bool diseaseTerminal = damage == -59;
+            const bool physicalTerminal = damage == -58 && !godMode;
+            const bool terminal = diseaseTerminal || physicalTerminal;
+            const auto phase = !terminal ? ESM4::ActorLifePhase::Alive
+                : essential ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead;
+            const auto killer = diseaseTerminal ? pv.mActor : physicalTerminal ? cv.mActor : ESM::FormKey{};
+            EXPECT_EQ(service.findActorLife(pv.mActor)->mPhase, phase);
+            EXPECT_EQ(service.findActorLife(pv.mActor)->mKiller, killer);
+            EXPECT_EQ(service.findActorLife(pv.mActor)->mRecoveryRemaining, terminal && essential ? 4 : 0);
+            EXPECT_EQ(service.isActionPending(victimAction, pv.mActor), !terminal);
+            EXPECT_TRUE(service.isActionConsumed(id));
+            EXPECT_EQ(service.isInCombatWith(cv.mActor, pv.mActor), phase != ESM4::ActorLifePhase::Dead);
+            EXPECT_EQ(service.getPlayerBaseValue(0), 40); EXPECT_EQ(service.getPlayerBaseValue(5), 40);
+            EXPECT_EQ(service.getPlayerValue(0), 30); EXPECT_EQ(service.getPlayerValue(5), 30);
+            const auto* values = service.findActorValues(pv.mActor);
+            EXPECT_EQ(values->mValues[8].mBase, 60);
+            EXPECT_EQ(values->mValues[10].mBase, 140); EXPECT_EQ(values->mValues[11].mBase, 150);
+            const float health = terminal && essential ? 30.f : 60.f + damage - (godMode ? 0.f : -deltas.mVictimHealth);
+            EXPECT_EQ(service.getPlayerValue(8), health);
+            ASSERT_EQ(values->mPassiveAbilities->size(), 1);
+            EXPECT_EQ(values->mPassiveAbilities->front().mSpellType, 1u);
+            ASSERT_EQ(values->mPassiveAbilities->front().mEffects.size(), 2);
+            for (const auto& effect : values->mPassiveAbilities->front().mEffects)
+                EXPECT_EQ(effect.mStoredMagnitude, -10);
+            const auto event = service.takeNextDeathEvent();
+            EXPECT_EQ(event.has_value(), terminal && !essential);
+            if (event) EXPECT_EQ(event->mKiller, killer);
+            EXPECT_FALSE(service.takeNextDeathEvent());
+            EXPECT_EQ(service.getDeadCount(pv.mBase), terminal && !essential ? 1 : 0);
+            const auto after = snapshot();
+            service.restore(ESM4::RuntimeState::deserializeBinary(after));
+            EXPECT_EQ(snapshot(), after); EXPECT_FALSE(service.takeNextDeathEvent());
+            EXPECT_EQ(service.findActorLife(pv.mActor)->mPhase, phase);
+            EXPECT_FALSE(service.preparePhysicalContact(id, carrier, ptr, deltas, &player,
+                essential, {4, .5f}, settings, godMode));
+            EXPECT_EQ(snapshot(), after);
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, physicalPlayerCreatureContactOwnsDeathEssentialGodModeAndEventFailure)
     {
         sharedStats();
@@ -8194,10 +8489,70 @@ TEST_F(OblivionActorStatsTest, compiledParalysisContinuationOwnsReplacementResis
             else if (operation == 1) service.setProcessKnockedState(values.mActor, 0);
             else service.initializeNonPlayerActor(npc, mStore, std::nullopt, ESM4::ActorValueProcess::Low,
                 std::nullopt, true);
-            ASSERT_TRUE(service.getUpPlayback(values.mActor));
-            EXPECT_FALSE(service.getUpPlayback(values.mActor)->mPhysicalHit);
+            if (!isPlayer && operation == 0)
+            {
+                // Full nonplayer resurrection replaces the process/3D, so
+                // neither its old recovery graph nor corpse pose may survive.
+                EXPECT_FALSE(service.getUpPlayback(values.mActor));
+                EXPECT_FALSE(service.actorRagdoll(values.mActor));
+            }
+            else
+            {
+                ASSERT_TRUE(service.getUpPlayback(values.mActor));
+                EXPECT_FALSE(service.getUpPlayback(values.mActor)->mPhysicalHit);
+            }
             auto saved = source; service.capture(saved);
             EXPECT_NO_THROW(saved.serializeBinary());
             EXPECT_TRUE(service.isActionConsumed(1));
         }
     }
+
+TEST(OblivionCreatureSpells, CastableLeveledListsDoNotBecomeMeleeContactEffects)
+{
+    MWWorld::ESMStore store;
+    const auto key = [](unsigned id) { return ESM::FormKey::content("witch.esm", id); };
+    ESM4::Creature creature{};
+    creature.mId = {0x3b52d, 2}; creature.mFormKey = key(0x3b52d);
+    creature.mSpell = {{0x90617, 2}};
+    store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+    ESM4::Spell flare{}, protect{};
+    flare.mId = {0xa97df, 2}; flare.mFormKey = key(0xa97df);
+    flare.mData = ESM4::SpellData{0, 9, 0, 0, {}};
+    flare.mEffects = {{ESM::fourCC("FIDG"), 6, 0, 0, 2, 8, {}}};
+    protect.mId = {0xa97a7, 2}; protect.mFormKey = key(0xa97a7);
+    protect.mData = ESM4::SpellData{0, 10, 0, 4, {}};
+    protect.mEffects = {{ESM::fourCC("SHLD"), 5, 0, 30, 0, 43, {}}};
+    store.getWritable<ESM4::Spell>().insertStatic(flare, flare.mFormKey);
+    store.getWritable<ESM4::Spell>().insertStatic(protect, protect.mFormKey);
+    ESM4::LevelledSpell list{};
+    list.mId = {0x90617, 2}; list.mFormKey = key(0x90617);
+    list.mChanceNone = 0; list.mListFlags = 7;
+    list.mEntries = {{1, flare.mId, flare.mFormKey, 1}, {1, protect.mId, protect.mFormKey, 1}};
+    const auto publishList = [&] { store.getWritable<ESM4::LevelledSpell>().insertStatic(list, list.mFormKey); };
+    const auto resolve = [&] { return MWWorld::resolveOblivionCreatureContactSpellSources(store, creature.mFormKey); };
+    publishList();
+    auto sources = resolve();
+    ASSERT_TRUE(sources); EXPECT_TRUE(sources->empty());
+    const auto abilities = MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, creature.mFormKey);
+    ASSERT_TRUE(abilities); EXPECT_TRUE(abilities->empty());
+    // A learned timed Shield spell is not an already-applied passive Shield.
+    // Mixed passive/disease lists still require their own effect ownership.
+    for (unsigned type : {1u, 4u, 5u})
+    {
+        protect.mData->mType = type;
+        store.getWritable<ESM4::Spell>().insertStatic(protect, protect.mFormKey);
+        EXPECT_FALSE(resolve()) << type;
+    }
+    protect.mData->mType = 0;
+    protect.mFlags = ESM4::Rec_Deleted;
+    store.getWritable<ESM4::Spell>().insertStatic(protect, protect.mFormKey);
+    EXPECT_FALSE(resolve());
+    protect.mFlags = 0;
+    store.getWritable<ESM4::Spell>().insertStatic(protect, protect.mFormKey);
+    list.mEntries.back().mSpellKey = key(0xdead); publishList(); EXPECT_FALSE(resolve());
+    list.mEntries.back().mSpellKey = protect.mFormKey;
+    list.mListFlags = 8; publishList(); EXPECT_FALSE(resolve());
+    list.mListFlags = 7; list.mEntries.back().mCount = 0; publishList(); EXPECT_FALSE(resolve());
+    list.mEntries.back().mCount = 1; publishList();
+    sources = resolve(); ASSERT_TRUE(sources); EXPECT_TRUE(sources->empty());
+}

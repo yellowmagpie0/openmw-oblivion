@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "raw_records": {
+    "path": "build/oblivion-compat/restoration-use/original-skill-content-audit.json",
+    "sha256": "013007d848bb3ae5e893f5595c2be5edfbede1c95908e6b3682f103f0617cb4f"
+  },
+  "record_probe": {
+    "path": "build/oblivion-compat/restoration-use/audit-original-skill.py",
+    "sha256": "bdbea60a973d0f11525be6ed05073da0740f7881df8e81011e6e8c1dfd848285"
+  },
+  "spell": {
+    "key": "content:oblivion.esm:000136",
+    "editor_id": "DefaultPlayerSpell",
+    "name": "Heal Minor Wounds",
+    "type": 0,
+    "authored_cost": 24,
+    "mastery": 0,
+    "effect": "REHE",
+    "magnitude": 8,
+    "duration": 0,
+    "area": 0,
+    "range": 0,
+    "actor_value": 8
+  },
+  "effect": {
+    "key": "content:oblivion.esm:00188c",
+    "code": "REHE",
+    "original_data_flags": "0x1000870",
+    "school": 5,
+    "resource_actor_value": 8
+  },
+  "restoration": {
+    "actor_value": 25,
+    "governing_attribute": 2,
+    "specialization": 1,
+    "primary_use": 0.0,
+    "secondary_use": 0.6000000238418579
+  },
+  "source_class": {
+    "key": "content:oblivion.esm:023787",
+    "name": "Warrior",
+    "specialization": 0,
+    "major_skills": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+    ]
+  },
+  "dispatcher": {
+    "entry": "00668c30",
+    "cases": 18,
+    "probe": {
+      "path": "build/oblivion-compat/restoration-use/original-use-probe.py",
+      "sha256": "200a7b9b120727ba470fcf8633fb7429a7552fbba5ee21b6da1968edda56cd5a"
+    },
+    "report": {
+      "path": "build/oblivion-compat/restoration-use/original-use-report.json",
+      "sha256": "50f7ffd00b956b70ce5209c1001c28830a326c7bcd44fb548e276cb73034180b"
+    },
+    "result": "Secondary slot supplies0.6; primary0 makes no publication. Default zero argument and positive scaling execute; base>=100 makes no publication.",
+    "boundaries": [
+      "Winning SKIL lookup returns a fixture token/record with independently audited original use values.",
+      "Base getter and final publication668B30 are boundaries. No advancement/storage/persistence inferred."
+    ]
+  },
+  "policy_scope": "Award one secondary use on committed ordinary self-restoration release. Existing tutorial-history path already uses25/slot1; preserve it separately. Full original cast-caller policy is uncertified; live fork release/ownership checks are separate.",
+  "reused_training": "SECURITY-USE-VERIFICATION.json and MARKSMAN-USE-VERIFICATION.json retain the unchanged generic requirement/projection/counter provenance."
+}

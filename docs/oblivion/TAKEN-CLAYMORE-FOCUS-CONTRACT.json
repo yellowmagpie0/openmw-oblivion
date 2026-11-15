@@ -1,0 +1,22 @@
+{
+  "feature": "Deleted original Iron Claymore excluded from Oblivion fallback focus",
+  "real_content": {
+    "reference": "content:oblivion.esm:0c56f9",
+    "base": "content:oblivion.esm:01c6cd",
+    "cell": "content:oblivion.esm:01663a"
+  },
+  "behavior": [
+    "Exclude deleted references from fallback focus, even when content references remain accessible to world scripting.",
+    "Retain enabled/tool-tip gating, ray targeting and script access. No deletion, inventory or save schema policy change."
+  ],
+  "acceptance": [
+    "Before fix: original normally taken claymore remains deleted/owned once and absent from nearby scene, yet receives zero-count world label after cold load.",
+    "After fix: same genuine taken input no longer receives claymore label; untaken original still has normal label and one scene owner.",
+    "Normal and instrumented taken/untaken/restart controls preserve deletion, inventory and schema101; affected engine checks."
+  ],
+  "limits": [
+    "World HUD image is manually inspected separately from structural/live/save audit.",
+    "No claim of a resurrected model or duplicate ownership from the original zero-count label.",
+    "Broader focus cone/occlusion, telekinesis and UI device matrices remain open."
+  ]
+}

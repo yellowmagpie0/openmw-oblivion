@@ -1,0 +1,105 @@
+{
+  "scope": "Normal post-Baurus88 Player departure through opened assassin passage, original key door and manhole into ImperialSewers03, with fresh landing reload.",
+  "full_escape_complete": false,
+  "source_head": "ba59ec4a1e",
+  "runtime_executable_sha256": "54dc759c7d46cad0c022473bc4a2c0bd657debfd3ea37cc80638d4dac297ccff",
+  "implementation_changes": "None beyond the class-condition chunk; editable normal-input courses only. Existing scripts, key/lock/door animation, collision, jump and XTEL transition retain authority.",
+  "independent_content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "doors": "build/oblivion-compat/sewer-escape/sanctum-exit-doors.json",
+    "interactives": "build/oblivion-compat/sewer-escape/sanctum-gate-interactives.json",
+    "exit_script_audit": "build/oblivion-compat/sewer-escape/character-exit-scripts.json",
+    "mq01_final_stage_audit": "build/oblivion-compat/sewer-escape/mq01-exit-stage88.json",
+    "interpretation": "Side gate03f1b3 is barred from the other side by its original script. Normal Player passes the assassin opening and jumps the50-unit raised threshold into the chamber beyond; this does not require a connected PGRD edge for Player movement. Door02282e uses Baurus key01e702 and its script removes that key. Manhole0270e2 leads to cell0272f2. Actual final exterior door04bed7 separately runs MQ01 stage88; CharacterGen stage88 is the earlier Baurus conversation."
+  },
+  "courses": {
+    "sanctum-secret-passage-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-secret-passage-01/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/baurus-class-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "28fd2d0ad6e3dfda14c0d4507bfd2a9457cf427b358fdb152db523319d1548fa",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save_sha256": "a3175eb14073e94c1e6509c5b2b7a4c9255a7f91e4ba2dcf40fbd59ad69fa612",
+      "cell": "content:oblivion.esm:022282",
+      "position": [
+        3347.350341796875,
+        10368.955078125,
+        -1439.0
+      ],
+      "health": 84.29767608642578
+    },
+    "sanctum-sewer-entry-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-sewer-entry-01/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-secret-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "a3175eb14073e94c1e6509c5b2b7a4c9255a7f91e4ba2dcf40fbd59ad69fa612",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save_sha256": "2c71a27de444b0278f22f58a37ad63bf566109aa1b3221b6d3eb43286b0e781e",
+      "cell": "content:oblivion.esm:0272f2",
+      "position": [
+        -2595.823486328125,
+        1077.30908203125,
+        6878.33544921875
+      ],
+      "health": 84.29767608642578
+    },
+    "sewers03-reload-01": {
+      "path": "build/oblivion-compat/sewer-escape/sewers03-reload-01/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-sewer-entry-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "2c71a27de444b0278f22f58a37ad63bf566109aa1b3221b6d3eb43286b0e781e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save_sha256": "d52b9800b2d54f5a1c688529590ba91ce3c8d6cef2d7423a71dd6e0b08c6bfec",
+      "cell": "content:oblivion.esm:0272f2",
+      "position": [
+        -2595.823486328125,
+        1077.30908203125,
+        6878.33544921875
+      ],
+      "health": 84.29767608642578
+    }
+  },
+  "saved_invariants": {
+    "warrior_class_and_birthsign_retained": true,
+    "key_removed_once_by_original_script": true,
+    "key_door_unlocked_and_open": true,
+    "one_amulet": true,
+    "health_unchanged": 84.29767608642578,
+    "no_pending_death_events": true,
+    "fresh_landing_entry_differences": 0
+  },
+  "captures_inspected": [
+    "sanctum-secret-passage-01/secret-passage-crossed.png",
+    "sanctum-sewer-entry-01/sewer-key-door-before.png",
+    "sanctum-sewer-entry-01/imperial-sewers-entry.png",
+    "sewers03-reload-01/sewers03-fresh-landing.png"
+  ],
+  "retained_failures": {
+    "sanctum-exit-gate-01-report.log": "Manifest preflight rejected a key transition with Shift in both release/press sets; no game launched.",
+    "sanctum-exit-gate-02": "Course timed out at first waypoint after three large turn corrections reused stale samples; Player ran into a wall. Not a gate/escape acceptance pass. Corrected course follows the actual secret passage and waits3seconds between observations."
+  },
+  "remaining": [
+    "Play final sewer section and accept original character-review exit: MQ01 stage88, SetInCharGen0, physical exterior transition and fresh outdoor reload.",
+    "Shaman victory and continuous normal prison-to-outdoors acceptance.",
+    "Accumulated sanitizer integration.",
+    "Previously recorded AddTopic and dialogue-time Autosave limitations."
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "scope": "GetDayOfWeek and original PC AddAchievement command paths required at sewer exit/outdoors",
+  "original": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "weekday_entry": "0x5051d0",
+    "calendar": "0x402c40",
+    "boundaries": "Complete original instructions, no stubs. Calendar GameDaysPassed global supplied, console logging disabled.",
+    "cases": [
+      {
+        "days": null,
+        "weekday": 1.0
+      },
+      {
+        "days": 0.0,
+        "weekday": 0.0
+      },
+      {
+        "days": 1.0,
+        "weekday": 1.0
+      },
+      {
+        "days": 6.0,
+        "weekday": 6.0
+      },
+      {
+        "days": 6.999,
+        "weekday": 6.0
+      },
+      {
+        "days": 7.0,
+        "weekday": 0.0
+      },
+      {
+        "days": 8.0,
+        "weekday": 1.0
+      },
+      {
+        "days": 12.5,
+        "weekday": 5.0
+      },
+      {
+        "days": 365.0,
+        "weekday": 1.0
+      },
+      {
+        "days": 10000.0,
+        "weekday": 4.0
+      },
+      {
+        "days": -1.0,
+        "weekday": 3.0
+      }
+    ],
+    "pc_addachievement": {
+      "entry": "0x977c50",
+      "success": true,
+      "result_unchanged": true,
+      "side_effects": "none"
+    }
+  },
+  "normal_focused": {
+    "evidence": "build/oblivion-compat/sewer-escape/exit-calendar-focused-02/verification.json",
+    "passed": true,
+    "source": {
+      "head": "9596bca093821523d0c0a37f8a6d427dacdf2080",
+      "source_fingerprint": "c3caa7696de8b6618d676bc097998c632ec5a64d7c905e75653eca59865d7bb0"
+    },
+    "results": {
+      "engine": {
+        "executed": 2,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionDialogueMenu.NativeWeekdayUsesElapsedDaysAndPcAchievementHasNoSideEffects:OblivionDialogueMenu.NativeMessageBoxRetainsButtonsAfterFormatArgumentsAndReadsUiSelection",
+        "binary_sha256": "715e5b8ed73be84569408bbf3e92d8bbfecc3c66caea43445d7e7d6d900130e2",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "9e841c4840cbea68dbc04f0d1610458ede0a8057fdb2f469f48983bacd805d25",
+        "inventory_sha256": "188f0ce85b3d8c2af514fd42765b533b07019059271a6e82a4b6d05c82d3a52a",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "retained_failure": {
+    "evidence": "build/oblivion-compat/sewer-escape/exit-calendar-focused-01",
+    "reason": "Whole-world snapshot used a draft-cell fixture lacking native cell identity. Replaced with direct inventory/quest/script observations; production command handlers unchanged."
+  },
+  "limits": "Focused engine/original instruction evidence only. Clean exterior course and fresh outdoor reload remain unverified; native resurrection and accumulated integration remain due."
+}

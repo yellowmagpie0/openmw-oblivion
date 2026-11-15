@@ -21,6 +21,7 @@ namespace MWWorld
         Door,
         Flora,
         Take,
+        TakeBook,
     };
 
     // Executes the deliberately small, native-TES4 interaction vocabulary used

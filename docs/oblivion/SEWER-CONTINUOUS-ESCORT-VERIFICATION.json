@@ -1,0 +1,199 @@
+{
+  "scope": "Original stage19\u219230 in one uninterrupted fresh continuation: passage, lower stairs, first ambush, original post-fight dialogue, all three escort cell transitions and Glenroy arrival. Whole prison\u2192outdoors remains incomplete.",
+  "full_escape_complete": false,
+  "reviewed_acceptance": {
+    "passed": true,
+    "raw_scenario_passed": false,
+    "raw_scenario": "build/oblivion-compat/sewer-escape/continuous-escort-continuation-01/scenario.json",
+    "all_input_gates_passed": true,
+    "engine_exit": 0,
+    "unreviewed_errors": [],
+    "correction": "Inherited MQ01 stage24 exclusion was wrong for this expanded course. The original non-Player wall activation naturally runs during CharacterGen29. Raw failure is preserved; corrected rules are separately audited against the same complete trace. No long unchanged gameplay rerun is relabeled or inferred.",
+    "corrected_recipe": "scripts/data/oblivion_compat/oblivion_sewer_continuous_escort_continuation.json"
+  },
+  "independent_content_audit": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "path": "build/oblivion-compat/sewer-escape/original-wall-activation-records.json",
+    "wall_script": "content:oblivion.esm:03faf5",
+    "wall_reference": "content:oblivion.esm:03e31c",
+    "rat": "content:oblivion.esm:037e42",
+    "package": "content:oblivion.esm:07303d",
+    "rule": "Unpushed wall activated by a non-Player actor plays the break/dust, sets MQ01 stage24, marks destroyed and enables linked paths. Actual trace follows rat package arrival with this original OnActivate and quest-result dispatch exactly once.",
+    "activation_count": 1,
+    "stage24_count": 1
+  },
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/continuous-opening-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "bb5f3e8a803410317faaafbb8f91e12b083da819cb80d78dec5a243ce17c41c6",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "save": {
+    "path": "build/oblivion-compat/sewer-escape/continuous-escort-continuation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "9aededc78a77c68acd482903af3354fc470fa4717c925ee3c5bc92ad9f697d6a",
+    "character_gen": {
+      "quest": "content:oblivion.esm:02466e",
+      "stage": 30,
+      "running": true,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30
+      ]
+    },
+    "mq01": {
+      "quest": "content:oblivion.esm:01e723",
+      "stage": 28,
+      "running": true,
+      "completed_stages": [
+        5,
+        10,
+        24,
+        28
+      ]
+    },
+    "player_health": 80,
+    "player_position": [
+      37.98764419555664,
+      2562.150634765625,
+      -703.0231323242188,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "deaths": [
+      {
+        "actor": "content:oblivion.esm:014a2c",
+        "base": "content:oblivion.esm:014a28",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a16"
+      },
+      {
+        "actor": "content:oblivion.esm:014a30",
+        "base": "content:oblivion.esm:014a27",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a16"
+      },
+      {
+        "actor": "content:oblivion.esm:0178c3",
+        "base": "content:oblivion.esm:017617",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a17"
+      },
+      {
+        "actor": "content:oblivion.esm:0178c4",
+        "base": "content:oblivion.esm:017619",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a17"
+      },
+      {
+        "actor": "content:oblivion.esm:032a15",
+        "base": "content:oblivion.esm:02349f",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "null"
+      }
+    ],
+    "death_counts": [
+      {
+        "base": "content:oblivion.esm:014a27",
+        "count": 1
+      },
+      {
+        "base": "content:oblivion.esm:014a28",
+        "count": 1
+      },
+      {
+        "base": "content:oblivion.esm:017617",
+        "count": 1
+      },
+      {
+        "base": "content:oblivion.esm:017619",
+        "count": 1
+      },
+      {
+        "base": "content:oblivion.esm:02349f",
+        "count": 1
+      }
+    ],
+    "escorts": [
+      {
+        "actor": "content:oblivion.esm:032a16",
+        "cell": "content:oblivion.esm:022288",
+        "life": 0
+      },
+      {
+        "actor": "content:oblivion.esm:032a17",
+        "cell": "content:oblivion.esm:022288",
+        "life": 0
+      },
+      {
+        "actor": "content:oblivion.esm:032a18",
+        "cell": "content:oblivion.esm:022288",
+        "life": 0
+      }
+    ],
+    "pending_deaths": [],
+    "physical_action_owners": [],
+    "assassin_bound_equipment_removed": true,
+    "remaining_combat_edges": [
+      {
+        "first": "content:oblivion.esm:037e41",
+        "second": "dynamic:player:0000000000000001"
+      },
+      {
+        "first": "content:oblivion.esm:037e42",
+        "second": "dynamic:player:0000000000000001"
+      }
+    ],
+    "remaining_combat_note": "Only the newly authored wall-rat\u2192Player engagements remain; no assassin/Blades engagement or physical action survives. Rat combat is the next legitimate encounter, not stale first-ambush ownership."
+  },
+  "runtime_executable_sha256": "eb9107844c32da73276e406990fde6228f6bc0b891b28a41bde108bb317ff301",
+  "loaded_gui_library": {
+    "pid": 67281,
+    "libraries": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+        "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    ]
+  },
+  "inputs": "Original scripts and ordinary SDL/controller actions; one documented diagnostic X11 F5 during escort approach. No health/quest/position/completion writes or save-state substitutions. Blades fight this ambush; Player combat is covered separately and continues in the next rat course.",
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/continuous-escort-continuation-01/phase8-ambush-victory.png",
+    "build/oblivion-compat/sewer-escape/continuous-escort-continuation-01/phase8-escort-departed.png"
+  ],
+  "reused_gates": [
+    "SEWER-ACCUMULATED-SANITIZER-VERIFICATION.json",
+    "SEWER-NATIVE-TOPICS-VERIFICATION.json"
+  ],
+  "remaining": [
+    "Full new-game course joining the solo dungeon/shaman and late story/exterior",
+    "Fresh full-course outdoor reload",
+    "Focused rendered sanitizer gameplay"
+  ]
+}

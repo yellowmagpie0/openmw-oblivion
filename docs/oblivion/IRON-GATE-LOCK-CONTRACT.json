@@ -1,0 +1,56 @@
+{
+  "status": "verified for the bounded unowned keyless Gate049bbd course; full M13 remains open",
+  "milestone": "M13 native door interactions",
+  "content": {
+    "reference": "content:oblivion.esm:049bbd",
+    "base": "content:oblivion.esm:0228c8",
+    "name": "Gate",
+    "cell": "Vilverin Canosel",
+    "position": [
+      -5312,
+      -10496,
+      -2624
+    ],
+    "XLOC": "0761095d0000000004000000",
+    "authored_lock_seed": 7,
+    "leveled_lock": true,
+    "key": null,
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "editor_id": "ARGateDoor01"
+  },
+  "source": {
+    "path": "build/oblivion-compat/container-window/normal-empty-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "b23acab4f165351d71e81185fd985fa4bedca5c15120ca825eac78de2db78637",
+    "health": 53.00106430053711,
+    "lockpicks": 7,
+    "genuine_route": "Completed original Canosel cask branch; approach by ordinary camera and movement input; no fork inventory grants or position setters."
+  },
+  "implementation_boundary": "Eligible Player door attempts use the existing explicit paused Auto Attempt/Cancel flow before ordinary door activation. Key-owned, NPC and permitted-exit paths retain default activation. Deferred FailedAction messages own their text.",
+  "acceptance": [
+    "Original content audit and baseline activation of this actual gate.",
+    "Explicit paused lock choice spends no picks before input. Cancel retains lock, inventory and Health across cold load.",
+    "Failure spends exactly one pick and leaves the gate locked. Success unlocks and opens the actual gate with native state ownership.",
+    "Ordinary traversal through the opened gate; cold-load lock and door state with depleted pick stock preserved.",
+    "Retain existing key-owned, NPC and permitted-exit behavior; run focused checks and applicable integration, plus normal and instrumented real courses."
+  ],
+  "boundaries": [
+    "Reuse the existing approximate auto-chance rule. Original observations establish menu, cancellation and failure debits, without successful native-attempt or probability certification.",
+    "Manual tumblers, Skeleton Key, Security XP, leveled-lock recalculation and full M13 remain open.",
+    "Ordinary lateral movement and lower-panel aim avoid the dead Skeleton; its corpse pose is outside this chunk."
+  ],
+  "evidence_root": "build/oblivion-compat/iron-gate",
+  "reusable_oracle": "AYLEID-CASK-LOCK-ORACLE.json",
+  "independent_oracle": "IRON-GATE-LOCK-ORACLE.json",
+  "required_dependency": "Actual old gate baseline reached Locked then exposed FailedAction borrowing a temporary string (ASan heap-use-after-free). Store owned message text to keep fallback failure actions safe.",
+  "replay_recipes": [
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_attempt.json",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_attempt_sanitized.json",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_cancel.json",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_cancel_restart.json",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_cancel_restart_sanitized.json",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_open_restart_passage.json",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_open_restart_passage_sanitized.json"
+  ],
+  "verifier": "scripts/verify_ayleid_gate_lock.py COURSE PHASE [--sanitized] [--require-failure]",
+  "verification": "IRON-GATE-LOCK-VERIFICATION.json"
+}

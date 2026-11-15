@@ -1,0 +1,339 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Package-controlled owned-interior teleport locks, resident AI promotion and interruptible Ambush reevaluation; original Jiv investigation reaches55/key and survives fresh process. Full Hackdirt course remains open.",
+  "original_executable": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe",
+    "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+  },
+  "master": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "original_evidence": {
+    "records": "build/oblivion-compat/hackdirt/inspection-01/raw.pickle",
+    "prior_content_audit": "docs/oblivion/HACKDIRT-JIV-VERIFICATION.json",
+    "package": {
+      "id": "01778c",
+      "raw_flags": "0x1110",
+      "schedule": "17:00\u201301:00",
+      "location_marker": "01778b",
+      "location_cell": "0280ae",
+      "flags": [
+        "UnlockDoorsAtLocation",
+        "LockDoorsAtEnd"
+      ]
+    },
+    "door": {
+      "reference": "0280db",
+      "original_lock_level": 30,
+      "original_key": "028b7b"
+    },
+    "dialogue": {
+      "topic": "028096",
+      "greeting": "017787",
+      "explanation": "01778d",
+      "stage55_results": [
+        "ModDisposition Player20",
+        "AddItem HackdirtKey1"
+      ]
+    },
+    "oracle_limit": "Original winning content and original invitation establish this bounded expected behavior. Full original-executable instruction oracle for package door enumeration was not established; no bit-identical policy parity is claimed."
+  },
+  "implementation": [
+    "Apply start/location/end flags at actual lifecycle transitions using authoritative AI cell. Conflicting lock/unlock flags for the same event do nothing.",
+    "Reuse native NPC/faction interior ownership. Change existing teleport boundary locks only; preserve key/ownership and untouched physical or unkeyed inner doors.",
+    "Keep cold door changes in validated saved overlays and project once when their Ptr becomes resident. Preserve them in world capture without forcing a cold cell load; reject malformed restore metadata before commit.",
+    "Queue bounded existing-resident actor reconciliation when its abstract AI position reaches an active cell. Commit after actor iteration; retain existing alive/no-combat and door-transition guards.",
+    "Reevaluate interruptible Ambush waiting/ready states so changed original conditions can end the meeting and apply end flags. Respect MustComplete."
+  ],
+  "native_sources": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivionai.cpp",
+      "sha256": "1e3595f88e0e03b11992d07ab4037f9b80fb01b79568f8fdd15d51f38586018e"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionai.hpp",
+      "sha256": "1bc1e09314af8c25006d00023f7a8dd6dc60707a91dbd37ee8b47da073c63b8a"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldmodel.cpp",
+      "sha256": "2a2d0c57171abab7c329a3786cef06a88543dd8351e47d7cdf8c72d8ea0eba03"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "5ba135a6eec0cfaad31d47bb680dd775bf0a602a92f2ce89ab85d0200beed96e"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionownership.cpp",
+      "sha256": "52585be73803216bdb7392e54385def90efe829283a87063074308fb96f4a3ac"
+    }
+  ],
+  "runtime_binary": {
+    "path": "build/openmw",
+    "sha256": "f9fedf9e8d1785b2721ddb1e846af7d15876620290d3be3b54d9fd401a4daa15"
+  },
+  "checks": {
+    "package-door-focused-06": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/package-door-focused-06/verification.json",
+        "sha256": "8b546ea57fa5abdfd30f378970a489407cacb2ba49ae51a2b46d1d031fd6e2ec"
+      },
+      "results": {
+        "engine": {
+          "executed": 59,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionOwnership.*:OblivionAiTest.*:OblivionWorldTest.NativeAi*",
+          "binary_sha256": "0f2f85c0fb42038b5e5ef02c148d19cb320611f0a4dcca1e03c3f84843cbb653",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e8c267c385cced25a1eac923ae4a1acc11b0e40384cf65673f2aea81f3edcece",
+          "inventory_sha256": "82f63cdb4e4c2fbcafa8068bc0b4aabc0653ef1403b43024b26a2ae97fc66c15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "6adb28f7fafd00dfe65da49a14a13321937b70f579a12e17fefd146de8ac2e3f"
+      }
+    },
+    "package-door-normal-02": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/package-door-normal-02/verification.json",
+        "sha256": "f2be4bed83827f2b5ea45041f672f3c5f9cda1034b9f8b7fe472ea1e48721b09"
+      },
+      "results": {
+        "engine": {
+          "executed": 2241,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0f2f85c0fb42038b5e5ef02c148d19cb320611f0a4dcca1e03c3f84843cbb653",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "b76cd81a7346e616ebf57ed2912b246929aa037b9d778d66e699c781cda5c233",
+          "inventory_sha256": "82f63cdb4e4c2fbcafa8068bc0b4aabc0653ef1403b43024b26a2ae97fc66c15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "6adb28f7fafd00dfe65da49a14a13321937b70f579a12e17fefd146de8ac2e3f"
+      }
+    },
+    "package-door-sanitized-02": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/package-door-sanitized-02/verification.json",
+        "sha256": "b931b80e71b535de256640d4b7b47fb5afb252413d60033c0dc6197a05faab14"
+      },
+      "results": {
+        "engine": {
+          "executed": 2241,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a2566901407bfa3784b8a071eea19d7c35f0b7ee3d228f4a81866ec508f7df7e",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "201dc04bc8f78f629ad474133b11784491d0e017d9b0b2e2053fcc40391addbe",
+          "inventory_sha256": "82f63cdb4e4c2fbcafa8068bc0b4aabc0653ef1403b43024b26a2ae97fc66c15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "6adb28f7fafd00dfe65da49a14a13321937b70f579a12e17fefd146de8ac2e3f"
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "SDL_VIDEODRIVER": "x11",
+        "SDL_AUDIODRIVER": "dummy",
+        "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+        "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+        "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+      }
+    }
+  },
+  "runtime_semantics": {
+    "passed": true,
+    "scope": "Original Jiv meeting/key at55 and fresh-process persistence; full quest remains open.",
+    "exact_payload_roundtrips": true,
+    "quest": {
+      "quest": "content:oblivion.esm:027815",
+      "stage": 55,
+      "running": true,
+      "completed_stages": [
+        1,
+        2,
+        10,
+        50,
+        55
+      ]
+    },
+    "identical_restart_fields": [
+      "quest",
+      "MS45 and Dar-Ma script instances",
+      "disposition modifiers",
+      "spoken INFO history",
+      "Player inventory",
+      "native crime"
+    ],
+    "original_key_count": 1,
+    "exterior_door_locked": true,
+    "exterior_lock_level": 30,
+    "unkeyed_inner_door_lock_level": 0,
+    "player_health": 80,
+    "runtime": {
+      "jiv-meeting-course-01": {
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/jiv-meeting-course-01-console.json",
+          "sha256": "ab52fc5eeca8115ed6975c2409a9c1d897f33384c3a97e5eadb36b15a24aabaf"
+        },
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/jiv-meeting-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "f42fef4de19591fcf17867e07d9282b603deac0175049d978433a3a15ce1765c"
+        },
+        "epoch": {
+          "exe_sha256": "f9fedf9e8d1785b2721ddb1e846af7d15876620290d3be3b54d9fd401a4daa15",
+          "pid": 579302,
+          "start_ticks": 187641910,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-meeting-course-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-house-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "player_cell": "content:oblivion.esm:0280ae",
+        "player_position": [
+          1631.3385009765625,
+          2061.340576171875,
+          8052.4052734375,
+          0.0,
+          0.0,
+          1.570801019668579
+        ],
+        "clock": {
+          "year": 433,
+          "month": 8,
+          "day": 1,
+          "hour": 23.215303421020508,
+          "time_scale": 30.0
+        },
+        "process_log": {
+          "path": "build/oblivion-compat/hackdirt/jiv-meeting-course-01/process.log",
+          "sha256": "19e7456c6dc64b87fea3aee9109efcdb319736e18a54cb110cdf8613f36ae865"
+        },
+        "structural_harness_passed": true,
+        "normal_input_runtime_passed": true
+      },
+      "jiv-meeting-reload-01": {
+        "console": {
+          "path": "build/oblivion-compat/hackdirt/jiv-meeting-reload-01-console.json",
+          "sha256": "2717e1ed6f49bfba4a9cf4c5982fbb08991d65cd61e9b441705146810dc7abad"
+        },
+        "save": {
+          "path": "build/oblivion-compat/hackdirt/jiv-meeting-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "0bba3f14907858fb295e1b7d18d913ca92e964f05ce41c4e20816d77bb53e61b"
+        },
+        "epoch": {
+          "exe_sha256": "f9fedf9e8d1785b2721ddb1e846af7d15876620290d3be3b54d9fd401a4daa15",
+          "pid": 584131,
+          "start_ticks": 187673448,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-meeting-reload-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/jiv-meeting-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ]
+        },
+        "player_cell": "content:oblivion.esm:0280ae",
+        "player_position": [
+          1631.3385009765625,
+          2061.340576171875,
+          8052.4052734375,
+          0.0,
+          0.0,
+          1.570801019668579
+        ],
+        "clock": {
+          "year": 433,
+          "month": 8,
+          "day": 1,
+          "hour": 23.25653648376465,
+          "time_scale": 30.0
+        },
+        "process_log": {
+          "path": "build/oblivion-compat/hackdirt/jiv-meeting-reload-01/process.log",
+          "sha256": "b2fef401d608359c4f215fbe9b6dbf111c60a051a88a0550d214dd723b55f8e7"
+        },
+        "structural_harness_passed": true,
+        "normal_input_runtime_passed": true
+      }
+    }
+  },
+  "semantic_receipt": {
+    "path": "build/oblivion-compat/hackdirt/jiv-meeting-semantic-verification.json",
+    "sha256": "fb4070b4cfcc05ad1210362f3619137db539a0cb5ee3a2b01479b67806330231"
+  },
+  "editable_sources": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_meeting.json",
+      "sha256": "cc7d6b412a6a37ea18855406ce5bf5a1e6e63aac1abc784fbbe547893fb81082"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_hackdirt_jiv_meeting_reload.json",
+      "sha256": "30ced05e7073f13c3817d44dba7b224e2b3a1a3b8d5669146343a5818aebf1f8"
+    }
+  ],
+  "retained_failures": {
+    "package-door-focused-01": "Compile failure from SCOPED_TRACE declarations on one line.",
+    "package-door-focused-02": "Invalid synthetic record ordering omitted fixture door.",
+    "package-door-focused-03": "Sub-tick stepping and invalid fixture NPC race; forcing cold door load exposed unwanted actor materialization.",
+    "package-door-focused-04": "Cold static pending door overlay was omitted by world capture; corrected retention.",
+    "jiv-house-presence-01": "First door patch allowed entry, but fresh-process physical Jiv stayed in chapel despite AI arrival home.",
+    "jiv-wait-explanation-01": "Normal one-hour Wait materialized Jiv and original55/key, but interruptible Ambush failed to release/end-lock; diagnostic only."
+  },
+  "limits": [
+    "Structural harness success, engine/unit validation, semantic saved-state inspection and normal-input runtime acceptance are recorded separately.",
+    "Original records/scripts are unchanged. No plugin, stage/time/key/health injection or scripted teleport was used. Acceptance commands query state; observer Lua reads it.",
+    "Full quest remains open: cavern combat, Dar-Ma rescue, active/waiting follower restart, overland return and original completion/reward.",
+    "Explicit-topic Player StartConversation support is required before untied Dar-Ma leaves Hackdirt. Combat equipment/readiness remains unverified.",
+    "Earlier diagnostics/gates retain their own binary identities; do not attribute them to the final build.",
+    "Final check source fingerprint precedes manifest/document publication; native source hashes above identify the tested implementation."
+  ],
+  "ready_save": {
+    "path": "build/oblivion-compat/hackdirt/jiv-meeting-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "0bba3f14907858fb295e1b7d18d913ca92e964f05ce41c4e20816d77bb53e61b"
+  }
+}

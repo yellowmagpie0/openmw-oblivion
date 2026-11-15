@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <set>
 
 #include <components/esm4/loadarmo.hpp>
@@ -31,6 +32,7 @@
 #include "../mwworld/customdata.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivionlevelled.hpp"
 #include "../mwworld/oblivioninteraction.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/worldimp.hpp"
@@ -90,7 +92,15 @@ namespace MWClass
         void fillInventory(ESM4NpcCustomData& data, const std::vector<ESM4::InventoryItem>& items,
             const MWWorld::ESMStore& store)
         {
-            for (const ESM4::InventoryItem& item : items)
+            auto* world = MWBase::Environment::get().getWorldOrNull();
+            const bool native = world && world->getGameProfile() == ESM::GameProfile::Oblivion;
+            const bool hasLevelledItems = native && std::any_of(items.begin(), items.end(), [&](const auto& item) {
+                return item.count != 0 && store.get<ESM4::LevelledItem>().search(
+                    ESM::FormId::fromUint32(item.item));
+            });
+            const auto expanded = hasLevelledItems ? MWWorld::expandOblivionLevelledItems(store, items,
+                world->getPlayerPtr().getClass().getCreatureStats(world->getPlayerPtr()).getLevel(), world->getPrng()) : items;
+            for (const ESM4::InventoryItem& item : expanded)
             {
                 if (item.count == 0)
                     continue;
@@ -387,16 +397,30 @@ namespace MWClass
         return ptr.get<ESM4::Npc>()->mBase->mAIData.aggression;
     }
 
+    static std::optional<ESM4::ActorFaction> currentPrimaryFaction(const MWWorld::ConstPtr& ptr)
+    {
+        const auto* base = ptr.get<ESM4::Npc>()->mBase;
+        const auto* world = dynamic_cast<const MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+        if (world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto factions = world->getOblivionActorFactions(base->mFormKey);
+            const auto found = std::find_if(factions.begin(), factions.end(),
+                [](const auto& faction) { return faction.rank != -1; });
+            return found == factions.end() ? std::nullopt : std::optional(*found);
+        }
+        return base->mFaction.faction == 0 ? std::nullopt : std::optional(base->mFaction);
+    }
+
     ESM::RefId ESM4Npc::getPrimaryFaction(const MWWorld::ConstPtr& ptr) const
     {
-        return ESM::RefId(ESM::FormId::fromUint32(ptr.get<ESM4::Npc>()->mBase->mFaction.faction));
+        const auto faction = currentPrimaryFaction(ptr);
+        return faction ? ESM::RefId(ESM::FormId::fromUint32(faction->faction)) : ESM::RefId{};
     }
 
     int ESM4Npc::getPrimaryFactionRank(const MWWorld::ConstPtr& ptr) const
     {
-        if (ptr.get<ESM4::Npc>()->mBase->mFaction.faction == 0)
-            return -1;
-        return ptr.get<ESM4::Npc>()->mBase->mFaction.rank;
+        const auto faction = currentPrimaryFaction(ptr);
+        return faction ? faction->rank : -1;
     }
 
     std::unique_ptr<MWWorld::Action> ESM4Npc::activate(

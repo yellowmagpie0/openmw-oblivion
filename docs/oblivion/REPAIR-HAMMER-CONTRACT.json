@@ -1,0 +1,31 @@
+{
+  "feature": "M13/M16 ordinary native Repair Hammer use on original worn Rusty Iron Cuirass",
+  "source": {
+    "path": "build/oblivion-compat/repair-hammer/normal-original-hammer-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "5d7eb7b59975204488aecd48f3de65bc853d3fbda968334c78508e0f8bf730d9",
+    "health": 80,
+    "armorer": 5,
+    "strength": 40,
+    "luck": 50,
+    "hammer": "Original00000c acquired normally from CGChest02/04931b in ImperialDungeon05"
+  },
+  "baseline": "Actual icon click enters Morrowind repair, raises missing fRepairAmountMult, leaves worn native condition and native Armorer XP unchanged. Earlier bar click was read-only, not a repair attempt.",
+  "expected": {
+    "cuirass": "0661c1 condition43.584934/maximum250",
+    "repair_amount": 9,
+    "condition_after": 52,
+    "hammer_break_percent": 29,
+    "armorer_primary_experience": 1.5
+  },
+  "acceptance": [
+    "Normal/instrumented one explicit original hammer repair changes only selected cuirass condition, applies observed hammer-break result consistently and grants1.5 Armorer XP once.",
+    "Idle/no-click and cold load add no repair/debit/XP; retain Health80, Security6/XP1.606209 and Acrobatics5/XP0.3 earned during genuine acquisition.",
+    "Exact schema101 codec, process-bound native live/save equality, one carried hammer source owner, original chest count0, other complete item metadata, and appropriate focused/integration gates.",
+    "Native tool/menu shows real hammer quantity without Morrowind quality/uses labels; native weight/value labels and readable repair title."
+  ],
+  "limits": [
+    "Normal maximum condition only; Expert125% over-repair and full-health eligibility remain open.",
+    "Unenchanted single-instance target and original hammer; bound/runtime-script-owned targets and scripted tools rejected. The real cuirass base has CGHeavyArmorScript (0661bf), whose only OnAdd/OnEquip handlers set tutorial quest flags. Condition-only repair does not transfer or equip it. General enchanted/stacked/script-owner mutation is not certified.",
+    "First-use actual novice case; other skill levels/perks have independent arithmetic coverage only. No original full repair UI/live probe, bit-identical RNG or full milestone claim."
+  ]
+}

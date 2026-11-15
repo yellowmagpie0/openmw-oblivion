@@ -1,0 +1,1426 @@
+{
+  "schema_version": 1,
+  "name": "Defeat the actual Vilverin Mead-room bandits using the carried healthy club",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal Actor=require('openmw.types').Actor\nlocal camera=require('openmw.camera')\nlocal util=require('openmw.util')\nlocal nearby=require('openmw.nearby')\nlocal t=0\nreturn {{engineHandlers={{onFrame=function(dt)\n t=t+dt;if t<.2 then return end;t=0\n local target=util.vector3(-4984,-4339,-1285)\n for _,a in ipairs(nearby.actors) do\n  if a.id~=self.id and not Actor.isDead(a) then print('MeadFight actor='..a.id..' base='..a.recordId..' pos='..tostring(a.position)..' health='..Actor.stats.dynamic.health(a).current) end\n end\n local b=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x6c362))\n if b and b:isValid() then print('MeadFight bottle pos='..tostring(b.position)..' bbox='..tostring(b:getBoundingBox().center)) end\n local enemy=nil;local distance=math.huge\n for _,id in ipairs({{0x4bb72,0x4bb73,0x6bfba}}) do\n  local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n  if a and a:isValid() and not Actor.isDead(a) then local dist=(a.position-self.position):length();if dist<distance then enemy=a;distance=dist end end\n end\n if enemy then\n  local aim=enemy:getBoundingBox().center;local v=aim-self.position\n  local f=self.rotation:apply(util.vector3(0,1,0));local angle=math.atan2(f.y*v.x-f.x*v.y,f.x*v.x+f.y*v.y)\n  local c=aim-camera.getPosition();local pitch=-math.atan2(c.z,math.sqrt(c.x*c.x+c.y*c.y))\n  print(string.format('MeadFight look x=%d y=%d health=%.3f distance=%.2f',math.max(-150,math.min(150,math.floor(angle*256+.5))),math.max(-100,math.min(100,math.floor((pitch-camera.getPitch())*256+.5))),Actor.stats.dynamic.health(enemy).current,distance))\n else print('MeadFight victory');print('MeadFight look x=0 y=0 health=0 distance=0') end\n for _,item in pairs(Actor.getEquipment(self)) do if item.recordId==core.getFormId('Oblivion.esm',0x159829) then print('MeadFight club equipped') end end\n local p=camera.getViewTransform():apply(target)\n local a=math.atan2(p.x,-p.z)\n local e=-math.atan2(p.y,math.sqrt(p.x*p.x+p.z*p.z))\n print(string.format('VilverinTrap aim x=%d y=%d',math.max(-150,math.min(150,math.floor(a*256+.5))),math.max(-100,math.min(100,math.floor(e*256+.5)))))\n print('VilverinTrap sample pos='..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current..' dead='..tostring(Actor.isDead(self))..' paused='..tostring(core.isWorldPaused()))\n if self.position.y < -3300 then print('VilverinTrap beyond wire') end\n for _,id in ipairs({{0x6c362,0x6c363,0x6c364}}) do\n  local o=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n  if o and o:isValid() then print('VilverinTrap original '..id..' pos='..tostring(o.position)) end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinTrap sample",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "r"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_hold",
+      "value": "Tab",
+      "seconds": 0.6
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 270,
+      "y": 23
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 180,
+      "y": 180
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "screenshot",
+      "name": "carried-club-before-equip.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "Control_L"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 50,
+      "y": 205
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "key_up",
+      "value": "Control_L"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight club equipped",
+      "timeout_seconds": 10,
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 370,
+      "y": 23
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 400,
+      "y": 230
+    },
+    {
+      "type": "mouse_click",
+      "button": 5
+    },
+    {
+      "type": "mouse_click",
+      "button": 5
+    },
+    {
+      "type": "mouse_click",
+      "button": 5
+    },
+    {
+      "type": "mouse_click",
+      "button": 5
+    },
+    {
+      "type": "mouse_click",
+      "button": 5
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "native-spells-before-mead-encounter.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 95,
+      "y": 245
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "owned-healing-selected.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.6
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "key_hold",
+      "value": "c",
+      "seconds": 0.1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.8
+    },
+    {
+      "type": "key_hold",
+      "value": "c",
+      "seconds": 0.1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.8
+    },
+    {
+      "type": "key_hold",
+      "value": "c",
+      "seconds": 0.1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.8
+    },
+    {
+      "type": "screenshot",
+      "name": "prepared-for-mead-encounter.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "d"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key_up",
+      "value": "d"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.8
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight look",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "MeadFight look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.35
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "MeadFight victory",
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-mead-room-after-encounter.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 300,
+  "expected_exit": 0,
+  "expected_log": [
+    "MeadFight victory",
+    "Writing saved game",
+    "MeadFight club equipped"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died",
+    "M16 native cast rejected:",
+    "dead=true"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}

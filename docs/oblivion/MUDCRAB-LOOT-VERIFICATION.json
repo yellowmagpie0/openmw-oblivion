@@ -1,0 +1,949 @@
+{
+  "status": "accepted",
+  "scope": "Original guaranteed mudcrab06c927 near the genuine sewer exit: expand its real CREA LVLI microtreasure, preserve its rolled inventory through F5/fresh restart, then kill/loot through ordinary input and retain the transfer without replay.",
+  "implementation_commit": "53b1f21ea738a764c3b975fa909567c137a81cc8",
+  "implementation": "ESM4Creature expands actual nonzero LVLI entries through the accepted shared resolver before constructing concrete stock. Direct/empty inventories do not query an unready Player; existing saved inventory bypasses expansion.",
+  "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "reference": "content:oblivion.esm:06c927",
+  "creature": "content:oblivion.esm:000b7f CreatureMudCrab",
+  "input": {
+    "path": "build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+    "reason": "Predates leveled actor admission, so the creature inventory is genuinely new; older authoritative empty inventories must stay empty."
+  },
+  "independent_rules": {
+    "records": "build/oblivion-compat/creature-loot/inspection-01/original-creature-loot-tree.json",
+    "instructions": "build/oblivion-compat/creature-loot/inspection-01/native-microtreasure-oracle.json",
+    "cases": 31,
+    "entry_points": [
+      "0046CDE0",
+      "0046CC70"
+    ],
+    "scope": "Actual count1 and Player level1;85-percent chance-none boundary, each concrete result and every nested silverware candidate. Actual flags0 mudcrab root covers non-EachInCount container path.",
+    "stubs": [
+      "Declared RNG values",
+      "RTTI list/concrete classification",
+      "Detached container allocation/mutation"
+    ],
+    "reused": "Hash-bound original instruction harness and list rules from the accepted Vilverin slice; no exact random-stream claim.",
+    "oracle_artifact": {
+      "path": "build/oblivion-compat/creature-loot/inspection-01/native-microtreasure-oracle.json",
+      "sha256": "9e348994f64a0bae503db969098d31fcb81b99799c2b9c6e381d28eeaf3da206"
+    },
+    "records_artifact": {
+      "path": "build/oblivion-compat/creature-loot/inspection-01/original-creature-loot-tree.json",
+      "sha256": "e3c146778674a0a27990445780b891aa7d307fd50e46d9e5eacf289680751de4"
+    }
+  },
+  "native_instruction_cases": 31,
+  "build_provenance": {
+    "path": "build/oblivion-compat/creature-loot/mudcrab-build-provenance.json",
+    "sha256": "fe171cfe04b25904bf2aeeb6c6f0443df687218f52188ecb97a5e350d6a82f1e"
+  },
+  "cpp_source": {
+    "path": "apps/openmw/mwclass/esm4interactive.cpp",
+    "sha256": "ce09672e0f4f33b4c707699c0067b795a798f83c7d09699082335ffa658b26b7"
+  },
+  "fresh_spawn_attempts": [
+    {
+      "run": "mudcrab-spawn-01",
+      "result": "Crab Meat1 + original eligible Bone0223a8 count1; first normal attempt"
+    },
+    {
+      "run": "mudcrab-sanitized-spawn-01",
+      "result": "Crab Meat1; valid chance-none observed, SDL receipt timeout before F5; retained failed attempt"
+    },
+    {
+      "run": "mudcrab-sanitized-spawn-02",
+      "result": "Crab Meat1; valid chance-none, full instrumented fresh construction/F5 course passed"
+    }
+  ],
+  "runtime": {
+    "mudcrab-baseline-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-01/scenario.json",
+        "sha256": "1a6f9e54752e36c79de237321736684164b692209d38f1213d92b99cb9a4d41f"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-01/process.log",
+        "sha256": "e8f5fb20c28b61e73030e6201a69d51e08bee7c5ce0df4f980a42c6d57ec8347"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "ba3f1c3b6497ca27e0aa7a9322b699eb221f54ce49b932b5e5516f8684928187"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-01/sdl-input.txt.delivered",
+        "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+      },
+      "process": {
+        "pid": 784029,
+        "start_ticks": 194792031,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-baseline-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "6958ea2e4b8fbcf7390ba7f24960d7fd9f43baa3a81cf07cb3c58d3fbf384a49"
+      },
+      "driver": {
+        "driver_pid": 784011,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_loot_baseline.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-baseline-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-final-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-01/loaded-libraries.json",
+        "sha256": "e54d0f2dfebd37f3cf01d4e9ec14fbf9780c2bcb99fd8f00d641ad8c518a8a96"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "d43e595006c6c053826fbfb555489ea7b77e10cf8aeeba13f42d2abb15edfee4"
+      }
+    },
+    "mudcrab-spawn-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-spawn-01/scenario.json",
+        "sha256": "545cd505841a10f0cdf046f9d8d411ea3f9b5544aaa94fa47e8f8736bbfffe4e"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-spawn-01/process.log",
+        "sha256": "6bb222571d90196b32606a8075afa36cc9914375d8cc0467252a895e4c7ce598"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-spawn-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "f407deacdd29835b45f13a40cb9fa4935c301c5dee6b6742c914223687f8e987"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-spawn-01/sdl-input.txt.delivered",
+        "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+      },
+      "process": {
+        "pid": 784616,
+        "start_ticks": 194840246,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-spawn-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "78285c12e35d3ded9a5251ca25665c69b286744110104741a8a7005e1e70db8a"
+      },
+      "driver": {
+        "driver_pid": 784585,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_loot_spawn.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-spawn-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-spawn-01/loaded-libraries.json",
+        "sha256": "89c0f760c73de6e61a68a12bc97ced93d324ad7c304dca7cf1c92d18380f00c6"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-spawn-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "b0621f621331198f4f4f1792c5e3eca8ac156d3378b91ba1ea575f1f2aeceffb"
+      }
+    },
+    "mudcrab-restart-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-restart-01/scenario.json",
+        "sha256": "1bc3b85baa0b337f0a3cdc40ac31f3c2ae16c01dead57292803a038105f66d47"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-restart-01/process.log",
+        "sha256": "44a4430cdf65931c86c5ce27856017c7b66705d741fa66aa16f8c888cffde6f7"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-restart-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "24e6aee55d9d92dc5310746a4e5485caebb6f69fcb6ba7b4cd275f52d34d28c7"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-restart-01/sdl-input.txt.delivered",
+        "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+      },
+      "process": {
+        "pid": 784779,
+        "start_ticks": 194846722,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-spawn-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "78285c12e35d3ded9a5251ca25665c69b286744110104741a8a7005e1e70db8a"
+      },
+      "driver": {
+        "driver_pid": 784767,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_loot_restart.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-restart-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-spawn-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-spawn-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "b0621f621331198f4f4f1792c5e3eca8ac156d3378b91ba1ea575f1f2aeceffb",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-restart-01/loaded-libraries.json",
+        "sha256": "89c0f760c73de6e61a68a12bc97ced93d324ad7c304dca7cf1c92d18380f00c6"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "6311b3bc962f98df039672d8d3b8a685c538bba496a5f6a8b0301a9d94a9ad3f"
+      }
+    },
+    "mudcrab-approach-02": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-approach-02/scenario.json",
+        "sha256": "a8d26a8b7b9020bd148410f3815d142da2d7d229614f904f4349685b96f1558d"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-approach-02/process.log",
+        "sha256": "830a52d0371a7aa76e534b04b2c3cb0b58e1ffc34310f6897314cc114171ebe1"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-approach-02/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "7dc1cab0c1306f013f406d092956a1d42dbd840317b69f345dab4ef936038e68"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-approach-02/sdl-input.txt.delivered",
+        "sha256": "59b8ea6e4f89b6030610039b2466ef395af514f5ec507936bdcee97adbfa9805"
+      },
+      "process": {
+        "pid": 785144,
+        "start_ticks": 194860916,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-approach-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "78285c12e35d3ded9a5251ca25665c69b286744110104741a8a7005e1e70db8a"
+      },
+      "driver": {
+        "driver_pid": 785134,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_approach.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-approach-02",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "6311b3bc962f98df039672d8d3b8a685c538bba496a5f6a8b0301a9d94a9ad3f",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-approach-02/loaded-libraries.json",
+        "sha256": "371cc1aecfcac0f730dbb18a91fd0610ac6df62a1331596f956b3e02ed6202d6"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "766e396d81a8e28d5ee0f47507af8a71a8e8b3114eaf0b025e9ec5e1a1497e1f"
+      }
+    },
+    "mudcrab-select-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-select-01/scenario.json",
+        "sha256": "1d1b49d9593947b1bacbbd6d097c28db409c090a43aea6313935d10e57644b43"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-select-01/process.log",
+        "sha256": "630c3213cfb579f488aa6ac3101a8fd4ec5d51352c0f3f4c99ecd647ed46f9c7"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-select-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "8a3d90fa42c4f885c2dbef976ab5138b7f418f07ab6d8e4ad524bc64758d43f1"
+      },
+      "input_delivery": null,
+      "process": {
+        "pid": 785576,
+        "start_ticks": 194875439,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-select-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "78285c12e35d3ded9a5251ca25665c69b286744110104741a8a7005e1e70db8a"
+      },
+      "driver": {
+        "driver_pid": 785573,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-select-manifest.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-select-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "766e396d81a8e28d5ee0f47507af8a71a8e8b3114eaf0b025e9ec5e1a1497e1f",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-select-01/loaded-libraries.json",
+        "sha256": "89c0f760c73de6e61a68a12bc97ced93d324ad7c304dca7cf1c92d18380f00c6"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-select-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "d94957a9d164131bff04a4831b353349ea45c0cad2c884d7c8f19e6a994719ce"
+      }
+    },
+    "mudcrab-victory-02": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-victory-02/scenario.json",
+        "sha256": "8c470118b8d4f45a9a82fd591e71c5cb781b415fff7a1414472c3e2c11a1870d"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-victory-02/process.log",
+        "sha256": "dd6d3cd7de25c15a6a11155784e546db7f67509526554042f06f3988e9553b7d"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-victory-02/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "80849ee0ef5461f26bd4ab7e4a3fba4840292d902ee21d64619fdbd45535beae"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-victory-02/sdl-input.txt.delivered",
+        "sha256": "4d2928ec43c45aaeb5baa3f3924f24cec25a6eef5ad091f25a76efdb7a508b59"
+      },
+      "process": {
+        "pid": 786425,
+        "start_ticks": 194883809,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-victory-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-select-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ea01c181a0a3d0c9237fd62ddbc93e607cac7e6d6d9c104e6cfd6d7becf243bf"
+      },
+      "driver": {
+        "driver_pid": 786411,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_flare_victory.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-victory-02",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-select-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-select-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "d94957a9d164131bff04a4831b353349ea45c0cad2c884d7c8f19e6a994719ce",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-victory-02/loaded-libraries.json",
+        "sha256": "e54d0f2dfebd37f3cf01d4e9ec14fbf9780c2bcb99fd8f00d641ad8c518a8a96"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-victory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "b0c238232074711502ecfd80437af2dcd52c187f674f903b44b453f76a6300ca"
+      }
+    },
+    "mudcrab-corpse-loot-02": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/scenario.json",
+        "sha256": "2a6807276f5c0825987d855b25b71f56130c94ea77b9a130f872170e47f3bf9d"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/process.log",
+        "sha256": "686a56950c6e9f257bba111fe31f48add66d42b784b9ac36102a64f08207e802"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "16c3f8d5a9e78c698ee1fc9325d9e9e596dd1b2fca358cc088a473285958f45c"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/sdl-input.txt.delivered",
+        "sha256": "b2279f5a851d0df8b69bca1b5b025e5ab7e277257f620ef56045d2751e1112d8"
+      },
+      "process": {
+        "pid": 792040,
+        "start_ticks": 194908712,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-victory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ea01c181a0a3d0c9237fd62ddbc93e607cac7e6d6d9c104e6cfd6d7becf243bf"
+      },
+      "driver": {
+        "driver_pid": 792023,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-corpse-closer-manifest.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-victory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-victory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "b0c238232074711502ecfd80437af2dcd52c187f674f903b44b453f76a6300ca",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/loaded-libraries.json",
+        "sha256": "89c0f760c73de6e61a68a12bc97ced93d324ad7c304dca7cf1c92d18380f00c6"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "c06c53d6099e886daa005dab9c4564a80ea1bb977917460902a5be0b2c72cc31"
+      }
+    },
+    "mudcrab-looted-restart-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/scenario.json",
+        "sha256": "ff8086b6f7f64e938cf4242121f5f11d00ac5ad3e3e8ce9880b68486da1d70ff"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/process.log",
+        "sha256": "8c4afb2de461b98bbb321d79e280b0a3ad3a00e1e3315c085b4ba0b2c51d7b67"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "0e30acdcdb56e189fe0fd9d3db9f9fbf9335d01a3fe2966a2b280c98233beac8"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/sdl-input.txt.delivered",
+        "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+      },
+      "process": {
+        "pid": 796699,
+        "start_ticks": 194921711,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ea01c181a0a3d0c9237fd62ddbc93e607cac7e6d6d9c104e6cfd6d7becf243bf"
+      },
+      "driver": {
+        "driver_pid": 796688,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_looted_restart.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-looted-restart-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-corpse-loot-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "c06c53d6099e886daa005dab9c4564a80ea1bb977917460902a5be0b2c72cc31",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/loaded-libraries.json",
+        "sha256": "90369c827ff69f0893c277332c5b680fafa3d77e7ac624cc22b11af7dbaadc64"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "17efc41e67dc732ea4e3006a9b928d097bdbc9e19e53e6debf569bc2a8cee8c2"
+      }
+    },
+    "mudcrab-baseline-compatibility-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-compatibility-01/scenario.json",
+        "sha256": "468a6aafceaaf0587c4326b6a996c0d10fc13fef64a49d58dde71fe21c1b11ec"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-compatibility-01/process.log",
+        "sha256": "4a3fc190b9d473bf7622afe6594ba873aa123f242196e4addddc46602470cccf"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-compatibility-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "24e6aee55d9d92dc5310746a4e5485caebb6f69fcb6ba7b4cd275f52d34d28c7"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-compatibility-01/sdl-input.txt.delivered",
+        "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+      },
+      "process": {
+        "pid": 797227,
+        "start_ticks": 194928516,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-baseline-compatibility-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ea01c181a0a3d0c9237fd62ddbc93e607cac7e6d6d9c104e6cfd6d7becf243bf"
+      },
+      "driver": {
+        "driver_pid": 797212,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_loot_restart.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-baseline-compatibility-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "d43e595006c6c053826fbfb555489ea7b77e10cf8aeeba13f42d2abb15edfee4",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-compatibility-01/loaded-libraries.json",
+        "sha256": "972b1a51a9728b583915f9847776a39f618b627b9d4301810bceefc8ef2cf7e5"
+      },
+      "observed_sanitizer_environment": null,
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-baseline-compatibility-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "c33276b24bd5ee5f06de14944c8c13395fa0c0e7a71678113d8c8557ad833218"
+      }
+    },
+    "mudcrab-sanitized-spawn-02": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02/scenario.json",
+        "sha256": "a3043256298811449daf70c033f85ee98ac854c89a2ef514fe79327a52bd4ed1"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02/process.log",
+        "sha256": "c6afa0cf6bb5fe078407f670c04817b70a27d389874e28d684694d75020d9cd6"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "f407deacdd29835b45f13a40cb9fa4935c301c5dee6b6742c914223687f8e987"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02/sdl-input.txt.delivered",
+        "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+      },
+      "process": {
+        "pid": 797956,
+        "start_ticks": 194973589,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "a31453d2a7391a57b0438cc339deda74bb35ab209080cfffefaea2e145860389"
+      },
+      "driver": {
+        "driver_pid": 797944,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_loot_spawn_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-sanitized-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02/loaded-libraries.json",
+        "sha256": "511cce4efe8a766537c27ecd10cdf459289ff0cd0e56b80672dadb839dc2619e"
+      },
+      "observed_sanitizer_environment": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02/observed-sanitizer-environment.json",
+        "sha256": "adc8d5ad2211c11dd5bee32717ee425d45173e2e3d458a8c1adceaadf083a389"
+      },
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-spawn-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "a609e4b54c1c40aeaae9f97ac4f740196674053e36687d581a58e803278de3d6"
+      }
+    },
+    "mudcrab-sanitized-restart-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01/scenario.json",
+        "sha256": "4ce3ce22d26627b52cb225d60f35e6d4c32809faa316d0bcdc83f8666097fa3e"
+      },
+      "process_log": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01/process.log",
+        "sha256": "bd7ee8bb4afc2d6f0729d0815a595a85579c0f759db078cd9e964845f8b3abf9"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "24e6aee55d9d92dc5310746a4e5485caebb6f69fcb6ba7b4cd275f52d34d28c7"
+      },
+      "input_delivery": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01/sdl-input.txt.delivered",
+        "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+      },
+      "process": {
+        "pid": 798406,
+        "start_ticks": 195012180,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-spawn-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "a31453d2a7391a57b0438cc339deda74bb35ab209080cfffefaea2e145860389"
+      },
+      "driver": {
+        "driver_pid": 798395,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_mudcrab_loot_restart_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-sanitized-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-spawn-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-spawn-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "b0621f621331198f4f4f1792c5e3eca8ac156d3378b91ba1ea575f1f2aeceffb",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01/loaded-libraries.json",
+        "sha256": "f11129221bf89634f0ae302b1c903288e838aa8768961e70f0b7351ac5cc3423"
+      },
+      "observed_sanitizer_environment": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01/observed-sanitizer-environment.json",
+        "sha256": "bb129a33742be58b356933c1b1d2abd3b54d4a51b37fec260b308051c1e9aada"
+      },
+      "save": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "7bfe0a169fc34887866d56041a5f95c853c3e4c8dd460355bc6d1321ae4d5b43"
+      }
+    }
+  },
+  "semantic_checks": {
+    "receipt": {
+      "path": "build/oblivion-compat/creature-loot/mudcrab-semantic-verification.json",
+      "sha256": "ebc5d5a1d6498bafc6f7786725480ec2050169f6477d4f793737b0bb320d7660"
+    },
+    "executed": 76
+  },
+  "engine_checks": {
+    "mudcrab-constructors-focused-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-constructors-focused-01/verification.json",
+        "sha256": "da8881a948e7eff2df7f76f5e73eac749de4b282b88e5989e77d44fb5a4c2fdb"
+      },
+      "source": {
+        "head": "501d9e845a75510ffaf6602c3226a39c65eb5f82",
+        "source_fingerprint": "3f8503300ef382b7bdd5b26c02994ab29d4805375087395959acf5d1a811ee92"
+      },
+      "selection": {
+        "executed": 112,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionActorStatsTest.*:OblivionWorldTest.LazyNative*:OblivionWorldTest.NativeSavedInventoryAbsenceDoesNotConstructClassOrAuthority:OblivionProfileServicesTest.*",
+        "binary_sha256": "4397383c617e3fde82db2d75b23778c75aa6f335d78b707ba1925ee13b101a0d",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "35191903d22175a7d45b9de1f706b50c5dbf3b9671843496116b6e73a17f6b35",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitizer_environment": null
+    },
+    "mudcrab-normal-engine-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-normal-engine-01/verification.json",
+        "sha256": "6995b51d954c59b2fb84bc7a989099329ac2e184ac13adffe370ce17e5102767"
+      },
+      "source": {
+        "head": "501d9e845a75510ffaf6602c3226a39c65eb5f82",
+        "source_fingerprint": "7de2129849486bf5b6dae068f900a5c102d14ecf7e9715acd994c1f9e6a11a9e"
+      },
+      "selection": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "4397383c617e3fde82db2d75b23778c75aa6f335d78b707ba1925ee13b101a0d",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "b214f8c063f9d5a6f7fcb9a5f2e49ad7b1f5dbc791ed648c2ed9f76174bfd165",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitizer_environment": null
+    },
+    "mudcrab-sanitized-engine-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-engine-01/verification.json",
+        "sha256": "f5f739c716c2e7d314809f245f762980c89eb3259d197726b31ed1c22ba5e569"
+      },
+      "source": {
+        "head": "501d9e845a75510ffaf6602c3226a39c65eb5f82",
+        "source_fingerprint": "7de2129849486bf5b6dae068f900a5c102d14ecf7e9715acd994c1f9e6a11a9e"
+      },
+      "selection": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "1adfc2f4a854ca443b3dd49b4ad469d041542037b2a1a1c0797d747ff3225fff",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "11143592a49dade139a665466f612bfc81d5d24f22ac5cdd8d6e62e9e7231c83",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitizer_environment": {
+        "path": "build/oblivion-compat/creature-loot/mudcrab-sanitized-engine-01/declared-launch-environment.json",
+        "sha256": "3a2d0271b4c146e915aa7a2a5ad591329171ef9ad924dc0bf2c2372966a477f8"
+      }
+    }
+  },
+  "validation_layers": {
+    "structural": "Editable JSON scenarios accepted by the scenario runner; no generated plugins or master edits.",
+    "compiler": "Both C++ configurations built the affected engine class; full engine inventories verified against XML.",
+    "semantic": "Binary native-payload roundtrip plus original placement, concrete inventory, ownership, lifecycle and exact Player transfer audits.",
+    "runtime": "Original master and genuine saves, read-only observers, normal keyboard/mouse/controller gameplay, captured live processes and F5/fresh processes."
+  },
+  "component_reuse": {
+    "receipt": "docs/oblivion/VILVERIN-LEVELLED-ACTORS-VERIFICATION.json",
+    "scope": "Full3272 normal and instrumented component suites remain applicable: this chunk changes only an engine creature constructor. Original-instruction microtreasure cases independently exercise actual lists. Components and shared resolver unchanged.",
+    "provenance": {
+      "path": "build/oblivion-compat/creature-loot/component-reuse-provenance.json",
+      "sha256": "2166355c602413d9f0a1abcf05a7b450709399ff112837a3022ad89cf0796f89"
+    }
+  },
+  "boundaries": [
+    "Merchant restocking",
+    "Actor/cell respawn",
+    "Grouped spawns",
+    "Scripted spawn-root/child identity",
+    "All Player levels",
+    "Native RNG sequence identity",
+    "Full sewer/campaign or death visual fidelity"
+  ],
+  "retained_attempts": [
+    {
+      "run": "mudcrab-sanitized-spawn-01",
+      "failure": "Original creature constructed with valid Crab Meat-only chance-none, but the first exterior AI batch exceeded60s SDL receipt timeout. No saved-course pass claimed. Instrumented receipt timeout raised to300s without changing gameplay checks or C++."
+    },
+    {
+      "run": "mudcrab-approach-01",
+      "failure": "Read-only path readiness preceded the first complete mouse observation; wait for actual aim output before SDL input."
+    },
+    {
+      "console": "build/oblivion-compat/creature-loot/mudcrab-victory-01-console.json",
+      "failure": "Prelaunch validation rejected absolute mouse controls in an isolated SDL fixture; split ordinary menu selection from SDL fight input. No game process launched."
+    },
+    {
+      "run": "mudcrab-corpse-loot-01",
+      "failure": "First corpse activation did not open the menu; no transfer claimed. Closer ordinary approach, sheath and read-only ray inspection passed in02."
+    }
+  ],
+  "remaining": [],
+  "acceptance_scope": "Bounded original creature-inventory and corpse-loot slice",
+  "instrumented_runtime_scope": "Fresh actual CREA list expansion and F5, plus fresh-process preservation/F5 of the naturally nonempty normal inventory. No instrumented combat or rendered-game leak coverage claimed; normal input/images own fight and visible corpse transfer evidence.",
+  "numerical_scope": "Two actual authored Flare projectiles inflicted5.58 each on this Health10 mudcrab. This is observed approximate gameplay behavior, not an independent exact combat-arithmetic oracle; original list instructions independently establish the loot rules.",
+  "source_scope": "Both full engine gates used unchanged tested dirty501d9e845a source fingerprint7de2129849486bf5b6dae068f900a5c102d14ecf7e9715acd994c1f9e6a11a9e. The committed creature file matches its recorded SHA256. Subsequent acceptance edits alter fixtures/docs only. Early normal spawn/restart/arrival used identical constructor behavior before include ordering cleanup; captured binaries distinguish them. Final normal fight/loot and instrumented fresh construction use the final built implementation."
+}

@@ -1,0 +1,198 @@
+{
+  "status": "accepted bounded original unowned bedroll default activation and existing native rest recovery; full M13/M16 remain open",
+  "implementation_commit": "0c13b3247011e7c6a611fb07de46a291ce6d263f",
+  "contract": "docs/oblivion/BEDROLL-REST-CONTRACT.json",
+  "original_content_oracle": "docs/oblivion/BEDROLL-REST-ORACLE.json",
+  "tested_source_files": {
+    "apps/components_tests/CMakeLists.txt": "7bb7430f47eaf48f971a5814ed296c8f7a0bd5af6dd90e321513d43249aecb12",
+    "apps/components_tests/esm4/testloadfurn.cpp": "828169e718185f1306b59ab4f97d06683932f80c2b41782cae81f75ba24f789f",
+    "apps/openmw/CMakeLists.txt": "249521541c2c71bf4536cfc5266183d5937e10ce450b7b8104cd910540c29430",
+    "apps/openmw/mwclass/classes.cpp": "67946be149beb269ebbd20b4d78a3261f982fa78c590b8e54adff0d9a2ced575",
+    "apps/openmw/mwclass/esm4furniture.cpp": "aff4f004492e4e783f347315a3b9bd5cf3172b8fe63de503429cc163301a1257",
+    "apps/openmw/mwclass/esm4furniture.hpp": "13afe3ac66d05cc46280a1f3b994d4f166cf293e02ae466ef36ad59093129a52",
+    "apps/openmw/mwgui/waitdialog.cpp": "69c7e5069e122244cfbe543d84f78e1b65e19c2072fec997392b1d1618c06e96",
+    "components/esm4/loadfurn.cpp": "d96df20e1c8fdda11def3dc7500c759b58bb6341e1ba28655cff3cfda8176c4f",
+    "scripts/verify_oblivion_bedroll_rest_course.py": "db06585439963bf206fb784194961d14179cd83f68643a4dcf8f7935498c6d87"
+  },
+  "tested_editable_manifests": {
+    "scripts/data/oblivion_compat/oblivion_bedroll_rest_cancel.json": "b437873ff44e7f93d8e86b209a85beeb91ba99a0f0167acc2d13aae79f36b44f",
+    "scripts/data/oblivion_compat/oblivion_bedroll_rest_cancel_sanitized.json": "980cf62e60ae7e1b83d931d3325164c5e4d161078216cdba89e812780eec61d8",
+    "scripts/data/oblivion_compat/oblivion_bedroll_rest_hour.json": "dd45839704992c9a479aa95dbc1233888a3809ca34ed2af1c5bbd234211581c3",
+    "scripts/data/oblivion_compat/oblivion_bedroll_rest_hour_sanitized.json": "1bb5f0030d5875fc641468394abbf156927d21b3c198253edca46b9679ac2f0d",
+    "scripts/data/oblivion_compat/oblivion_bedroll_rest_restart.json": "a3bb5fc7f00e29a8f1093860779532f1d7656591d796586a497dde675bd1a426",
+    "scripts/data/oblivion_compat/oblivion_bedroll_rest_restart_sanitized.json": "5213e34aa56724be4feb8f08ef971fc045915cac879f5b5ca21e8a3929b1a70c"
+  },
+  "source_note": "Gate reports retain their exact parentb0bdf4af65 dirty-source fingerprints. Production C++ and the actual runtime verifier are unchanged since those passing runs. Later documentation and instrumented close-checkpoint/Space-duration recipes do not change compiled behavior. Source/manifest hashes are checked against the implementation commit.",
+  "behavior": [
+    "Actual original bedroll06bf97/base01d5bf showed a native focus prompt at73 units but inherited NullAction; a dedicated furniture default now admits sleep-marked native records.",
+    "The real Player and bed pass through existing sleepInBed ownership/danger checks, then the existing GM_Rest bed pointer selects sleeping. Other furniture remains outside this admission.",
+    "Cancelling the actual rest menu performs no hourly update and retains Health40.414. Choosing the default one hour invokes one existing native sleeping-hour update and raises genuine damage to the110 Health maximum.",
+    "Fresh-process loading retains completed recovery. Another actual bed activation/cancel does not replay the hour. Exact stock/equipment, carried Amulet instance/locals and prior bandit death credit persist.",
+    "Absent native MNAM flags reset safely to0; malformed native sizes reject. Original side/crawl bedroll and stone-bench flag values retain their bits. No new rest formula or save-schema version."
+  ],
+  "validation_layers": {
+    "structural": "Safe native FURN marker admission and exact schema97 actual-save binary roundtrips; authoritative live load/save boundary audits.",
+    "compiler_world": [
+      {
+        "path": "build/oblivion-compat/bedroll-rest/normal-integration-final-01/verification.json",
+        "sha256": "97a825fe26fb299466b76908c0418ed1b4ad43f8c73eb8e50ef0b884dec9221e",
+        "source": {
+          "head": "b0bdf4af65359dca9b57fb953df990663be74d30",
+          "source_fingerprint": "a34a79ebe965a9b34bf178cbfc42559b989d99c02d4abaa23894fb5a839124ef"
+        },
+        "results": {
+          "components": {
+            "executed": 3288,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "f89a31d3992047030b3ec2e4e2ce0c6299581c7f544b8ac9b76c1353ab7581c2",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "08642f4e441e7edb0b0cfe66df7190c3f51d014ac6c94a4a5ac50607b954d5f5",
+            "inventory_sha256": "c882b26f5c741a29f4ee6487da6ff458aeeb59cd6239a9e6572ae3cfae80526c",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2271,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "dfa2a29f7388fc340a31f103a6c9e896d2da152f3075394ab34da964d413ad4a",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "a028d7f9ce294a7f96c7f4355619c885680e4b7cf7de0f58663248855305cd04",
+            "inventory_sha256": "2ff4110cf9ce550cdb8b0bb9d7d6ba1d82bf2c6822c849fa5b9a10650b52d6e0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/bedroll-rest/sanitized-integration-final-01/verification.json",
+        "sha256": "cdd32da72aeadad0f29d2752a6c7f58e02a1e965924c8c0e2b321344d1dd1626",
+        "source": {
+          "head": "b0bdf4af65359dca9b57fb953df990663be74d30",
+          "source_fingerprint": "a34a79ebe965a9b34bf178cbfc42559b989d99c02d4abaa23894fb5a839124ef"
+        },
+        "results": {
+          "components": {
+            "executed": 3288,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "a90217a3f2e5d4f02504af639730be99ce6b0c5eaaf422224d2477ee89369ed5",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "b20dfc9d1f2286c9ff2f34b35749e3ec55bcb81852258526620bb6d594a4f9c2",
+            "inventory_sha256": "bd3b0b8ed8e3852aff76132260f7a29e6439070f032b7e2b71189d9af6262377",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2271,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "413c32c956f8736c29781dd3d0ada7cc47acff7c36226d0cca077307c1931a3c",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "5e408143129f5020f565797b61ab553b09fc1d6b0068980f851e096715961ba0",
+            "inventory_sha256": "2ff4110cf9ce550cdb8b0bb9d7d6ba1d82bf2c6822c849fa5b9a10650b52d6e0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "semantic_and_runtime": {
+      "normal": {
+        "path": "build/oblivion-compat/bedroll-rest/normal-runtime-summary.json",
+        "sha256": "5504f181312d497392aebe01cf1b5ac3c2109d36d4943307f0f63f31b73885d8",
+        "cases": 3,
+        "distinct_processes": 3,
+        "game_binary_sha256": "b4dfcb460530804fd78c0edf4a3b9537123341ff0730d67e131833c05d6bc795"
+      },
+      "sanitized": {
+        "path": "build/oblivion-compat/bedroll-rest/sanitized-runtime-summary.json",
+        "sha256": "6ae1a4c21f064eb7fada59a87dc48cf1d2ae2f580930c003a0147450288bb19d",
+        "cases": 3,
+        "distinct_processes": 3,
+        "game_binary_sha256": "4b65ccfea151090b7153c2185e9512eeb0f175fa86581a721ecf838910511e71"
+      }
+    },
+    "reused_python": {
+      "receipt": "docs/oblivion/AMULET-KINGS-EQUIP-VERIFICATION.json",
+      "executed": 608,
+      "unchanged_files": {
+        "scripts/tes4_m15_cached_block_input.py": "f09f9f341722c4318adb77f6c8859f1a4747957d476c0e891925d35077164f0c",
+        "scripts/tes4_m15_fixture_preflight.py": "18ef3a9b6312f71d41d388632b8e504a350229a5438d3b67cc1e3d3131e851b7",
+        "scripts/tes4_m15_npc_passive_fixture.py": "16ad1ca5218f095e79bd6ac070444147170668de27cc22e992f6246b671b3136",
+        "scripts/tes4_m15_passive_slot3_fixture.py": "7a7f4a1c79e037aff81ef44884e44ce084205dfa24896c78e214560d5991f892",
+        "scripts/tes4_runtime_state.py": "89149da23b2aa65b719395b953fbe15ebe057f245f01054468fc0c380e915d5b",
+        "scripts/tests/test_tes4_m15_cached_block_input.py": "f434414711b53d0917e742bb789910b9181bf49bf9302a4f445d99220828f064",
+        "scripts/tests/test_tes4_m15_fixture_preflight.py": "8ff844ecd734a1a5fa344011c2e3f86c082e32db6b742301701e55a7b1699fee",
+        "scripts/tests/test_tes4_m15_npc_passive_fixture.py": "68e9bf9dcaec700652fe17bca76bc023810a018868db0d30873f12f8767607d3",
+        "scripts/tests/test_tes4_m15_passive_slot3_fixture.py": "3198e7bdaae4e516c101df46e3f27c578cd4ec4fafbbb057d72eaaa378cc3467",
+        "scripts/tests/test_tes4_runtime_state.py": "7e88be3c0a28babd5ea950035d1f54e16353157e089e2bb3c8cec751c0e337f2",
+        "scripts/verify_oblivion_amulet_kings_course.py": "1f3da8772834accca3b62d54598ec169da5ea221d7aafc0b8bc67f4c0480fbfe"
+      }
+    },
+    "independent_expectation": "Original winning FURN/REFR audit and unchanged existing hourly-rest backend provenance; no new original-executable instruction or native-game live probe is claimed."
+  },
+  "outgoing": {
+    "path": "build/oblivion-compat/bedroll-rest/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "109d414957caf2748143a90380bb1d51bb6b5dba86050c30181508808d6ed8ce",
+    "cell": "content:oblivion.esm:0463f5",
+    "position": [
+      -6259.9990234375,
+      -6754.47265625,
+      -2044.45849609375,
+      0.90234375,
+      0,
+      -2.4633736610412598
+    ],
+    "player_health": 110,
+    "health_maximum": 110,
+    "clock": {
+      "year": 433,
+      "month": 7,
+      "day": 30,
+      "hour": 6.540213108062744,
+      "time_scale": 30
+    }
+  },
+  "retained_failures": [
+    "First farther162-unit visual-ray baseline did not prove native activation reach; authoritative baseline shows native Bedroll focus at73 units with no menu before implementation.",
+    "Three development gameplay cases passed, but process-capture helper still watched the previous VilverinContinue prefix. Strict verifier rejected captured=false. Helper admits BedrollContinue; fresh acceptance processes all capture correctly.",
+    "sanitized-open-cancel-acceptance-01: same wall-clock walk moved only19 units under ASan and left142 units without usable native activation. Recipe uses genuine prior73-unit checkpoint, no timed walk; activation distance and game state are unchanged.",
+    "Final review added an entry guard for the separate jail-sentence owner; full C++ gates and all six actual cases were repeated against final source."
+  ],
+  "limits": [
+    "Verified actual furniture is this unowned/unoccupied bedroll. Existing permission/danger authority is reused; owned/occupied matrices, seating/sleep poses and leveling are not newly verified.",
+    "Rendered instrumented leak detection is off; full instrumented component/engine checks enable it. No fresh multi-compiler/editor/performance or full S5/M13/M16 closure.",
+    "Original content is unchanged. Observers are read-only, controls ordinary; no grants, synthetic actors/items, forced deficits or teleports. The close checkpoint comes from actual earlier walking.",
+    "Existing plate06bf96/wall06bf95 activation and fresh-process passage were confirmed during exploration; they are not new implementations. Expedition return remains open."
+  ]
+}

@@ -524,6 +524,268 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 "values": [[0., None, None, None] for _ in range(72)], "player_form_values": None})
         return state
 
+    def test_inventory_script97_identity_roundtrip_rejects_shared_and_dangling_context(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 97
+        owner = "dynamic:inventory-script:0000000000000001"
+        state["next_dynamic_serial"] = 2
+        state["player"]["inventory"] = [dict(base="content:oblivion.esm:0250a0", count=1,
+            condition=-1., charge=-1., equipped_slots=0, hotkey=-1, owner="null",
+            remaining_usage_time=-1., script_owner=owner)]
+        state["script_instances"] = [dict(unit="original-inventory-script", context=owner, locals=[])]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(loaded["player"]["inventory"][0]["script_owner"], owner)
+        self.assertNotEqual(owner, state["player"]["reference"])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        for field, value in (("count", 2), ("script_owner", None),
+                             ("script_owner", "dynamic:player:0000000000000001")):
+            bad = copy.deepcopy(state)
+            bad["player"]["inventory"][0][field] = value
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        bad["references"][0]["inventory"].append(copy.deepcopy(state["player"]["inventory"][0]))
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 96
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_ingredient92_preserves_remaining_time_and_rejects_invalid_owners(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 92
+        actor = state["native_actor_values"][0]
+        actor["ingredient_restoration"] = [{"ingredient": "content:oblivion.esm:033681", "elapsed": .25}]
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(next(a for a in restored["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"], actor["ingredient_restoration"])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for change in ({"elapsed": 1}, {"elapsed": -1}, {"elapsed": math.nan},
+                       {"ingredient": "dynamic:item:0000000000000001"}):
+            bad = copy.deepcopy(state)
+            bad["native_actor_values"][0]["ingredient_restoration"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["native_actor_values"][1]["ingredient_restoration"] = actor["ingredient_restoration"]
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state["native_actor_values"][1]["ingredient_restoration"]
+        state["schema_version"] = 91
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del actor["ingredient_restoration"]
+        self.assertNotIn("ingredient_restoration", state_io.decode_payload(state_io.encode_payload(state))["native_actor_values"][0])
+
+    def test_ingredient98_retains_resolved_damage_and_rejects_legacy_downgrade(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 98
+        effect = {"ingredient": "content:oblivion.esm:01ebff", "elapsed": 2,
+                  "magnitude": -1, "duration": 3}
+        state["native_actor_values"][0]["ingredient_restoration"] = [effect]
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(next(a for a in restored["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"], [effect])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for change in ({"elapsed": 3}, {"magnitude": -3}, {"duration": 1}, {"duration": math.nan}):
+            bad = copy.deepcopy(state)
+            bad["native_actor_values"][0]["ingredient_restoration"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 97
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["native_actor_values"][0]["ingredient_restoration"] = [
+            {"ingredient": "content:oblivion.esm:033681", "elapsed": .25}]
+        old = state_io.decode_payload(state_io.encode_payload(state))
+        old["schema_version"] = 98
+        self.assertEqual(next(a for a in state_io.decode_payload(state_io.encode_payload(old))["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"],
+                         next(a for a in old["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"])
+
+    def test_endurance_ingredient102_roundtrip_and_legacy_rejection(self):
+        state = self.combat_controller_state()
+        state['schema_version'] = 102
+        effect = dict(ingredient='content:oblivion.esm:03366c', elapsed=.25, actor_value=5)
+        state['native_actor_values'][0]['ingredient_restoration'] = [effect]
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(next(a for a in restored['native_actor_values'] if a['owner'] == 0)
+                         ['ingredient_restoration'], [effect])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for change in ({'actor_value': 4}, {'elapsed': 1}, {'magnitude': -5, 'duration': 1}):
+            bad = copy.deepcopy(state)
+            bad['native_actor_values'][0]['ingredient_restoration'][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state['schema_version'] = 101
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_skill_book101_history_roundtrip_and_legacy_absence(self):
+        state = self.combat_controller_state()
+        state['schema_version'] = 101
+        books = ['content:oblivion.esm:0243fc', 'content:oblivion.esm:0243fd']
+        state['player']['awarded_skill_books'] = books
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(restored['player']['awarded_skill_books'], books)
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for invalid in ([books[0], books[0]], ['dynamic:book:0000000000000001'], ['null']):
+            bad = copy.deepcopy(state)
+            bad['player']['awarded_skill_books'] = invalid
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state['schema_version'] = 100
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state['player']['awarded_skill_books']
+        self.assertNotIn('awarded_skill_books', state_io.decode_payload(state_io.encode_payload(state))['player'])
+
+    def test_ingredient100_preserves_separate_health_drains(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 100
+        effect = dict(ingredient="content:oblivion.esm:04e940", elapsed=.25,
+                      magnitude=-5, duration=1, actor_value=8)
+        state["native_actor_values"][0]["ingredient_restoration"] = [effect, dict(effect, elapsed=.5)]
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(next(a for a in restored["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"],
+                         state["native_actor_values"][0]["ingredient_restoration"])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for change in ({"elapsed": 1}, {"actor_value": 3}, {"duration": 120}, {"magnitude": 5}):
+            bad = copy.deepcopy(state)
+            bad["native_actor_values"][0]["ingredient_restoration"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 99
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_health_ingredient_restore_preserves_resource_and_remaining_time(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 101
+        actor = next(a for a in state["native_actor_values"] if a["owner"] == 0)
+        restore = dict(ingredient="content:oblivion.esm:06251e", elapsed=.5,
+                       magnitude=1, duration=3, actor_value=8)
+        drain = dict(ingredient="content:oblivion.esm:04e940", elapsed=.25,
+                     magnitude=-5, duration=1, actor_value=8)
+        actor["ingredient_restoration"] = [restore, drain]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        self.assertEqual(next(a for a in loaded["native_actor_values"] if a["owner"] == 0)
+                         ["ingredient_restoration"], [restore, drain])
+        for change in ({"elapsed": 3}, {"duration": 1}, {"actor_value": 10}, {"magnitude": 2}):
+            bad = copy.deepcopy(state)
+            next(a for a in bad["native_actor_values"] if a["owner"] == 0)["ingredient_restoration"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        state["schema_version"] = 99
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+    def test_scroll_chameleon93_preserves_sources_and_rejects_invented_lifetimes(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 93
+        player = lambda s: next(a for a in s["native_actor_values"] if a["owner"] == 0)
+        actor = player(state)
+        actor["values"][46][1] = 25.
+        effect = dict(scroll="content:oblivion.esm:084aeb", enchantment="content:oblivion.esm:05b044",
+                      magnitude=25., elapsed=12.)
+        actor["scroll_chameleon"] = [effect]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        self.assertEqual(player(loaded)["scroll_chameleon"], [effect])
+        for change in ({"elapsed": 30.}, {"elapsed": -1.}, {"elapsed": math.nan},
+                       {"magnitude": 24.}, {"scroll": "dynamic:item:0000000000000001"}):
+            bad = copy.deepcopy(state)
+            player(bad)["scroll_chameleon"][0].update(change)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        player(bad)["scroll_chameleon"].append(effect)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 92
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del actor["scroll_chameleon"]
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("scroll_chameleon", player(loaded))
+        self.assertEqual(player(loaded)["values"][46], actor["values"][46])
+
+    def test_potion_attributes94_preserve_stacked_sources_and_legacy_unknown_modifiers(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 94
+        player = lambda s: next(a for a in s["native_actor_values"] if a["owner"] == 0)
+        actor = player(state)
+        actor["values"][1][1] = actor["values"][2][1] = -2.
+        effect = dict(potion="content:oblivion.esm:0b1201", duration=60., elapsed=39.,
+                      modifiers=[dict(attribute=1, delta=-1.), dict(attribute=2, delta=-1.)])
+        second = copy.deepcopy(effect); second["elapsed"] = 12.
+        actor["potion_attribute_effects"] = [effect, second]
+        payload = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(payload)
+        self.assertEqual(player(loaded)["potion_attribute_effects"], [effect, second])
+        self.assertEqual(state_io.encode_payload(loaded), payload)
+        for mutation in ({"elapsed": 60.}, {"elapsed": -1.}, {"duration": 0.},
+                         {"elapsed": math.nan}, {"potion": "dynamic:item:0000000000000001"},
+                         {"modifiers": []}, {"modifiers": [dict(attribute=8, delta=-1.)]},
+                         {"modifiers": [dict(attribute=1, delta=0.)]},
+                         {"modifiers": [dict(attribute=1, delta=math.inf)]},
+                         {"modifiers": [dict(attribute=1, delta=-1.), dict(attribute=1, delta=-1.)]}):
+            bad = copy.deepcopy(state)
+            player(bad)["potion_attribute_effects"][0].update(mutation)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        literal = struct.pack("<ffIBfBf", 60., 39., 2, 1, -1., 2, -1.)
+        offset = payload.index(literal)
+        bad = bytearray(payload); struct.pack_into("<I", bad, offset + 8, 9)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+        state["schema_version"] = 93
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del actor["potion_attribute_effects"]
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("potion_attribute_effects", player(loaded))
+        self.assertEqual(player(loaded)["values"][1:3], actor["values"][1:3])
+
+    def test_greater_power95_history_roundtrip_malformed_and_legacy_unknown(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 95
+        player = lambda s: next(a for a in s["native_actor_values"] if a["owner"] == 0)
+        power = dict(spell="content:oblivion.esm:047ade", used_at=23.75)
+        player(state)["used_powers"] = [power]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(player(loaded)["used_powers"], [power])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        for mutation in ({"used_at": -1.}, {"used_at": math.nan}, {"used_at": True},
+                         {"spell": "dynamic:spell:0000000000000001"}):
+            bad = copy.deepcopy(state)
+            player(bad)["used_powers"][0].update(mutation)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        player(bad)["used_powers"].append(power)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 94
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del player(state)["used_powers"]
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("used_powers", player(loaded))
+
+    def test_arrow96_launch_snapshot_roundtrip_and_invalid_ownership(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 96
+        state["next_arrow_projectile"] = 2
+        arrow = dict(id=1, caster=state["player"]["reference"],
+                     bow="content:oblivion.esm:047aca", ammunition="content:oblivion.esm:017829",
+                     cell=state["player"]["cell"], position=[10., -0., 30.], velocity=[100., 0., 50.],
+                     damage=8., gravity_factor=2., distance=0., maximum_distance=12000.,
+                     model="weapons/iron/arrow.nif")
+        state["native_arrow_projectiles"] = [arrow]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(loaded["native_arrow_projectiles"], [arrow])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        self.assertEqual(math.copysign(1., loaded["native_arrow_projectiles"][0]["position"][1]), -1.)
+        for mutation in ({"caster": "content:oblivion.esm:001234"}, {"id": 2},
+                         {"gravity_factor": -1.}, {"damage": math.nan}, {"model": ""}):
+            bad = copy.deepcopy(state)
+            bad["native_arrow_projectiles"][0].update(mutation)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state)
+        bad["native_arrow_projectiles"].append(arrow)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 95
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["native_arrow_projectiles"] = []
+        state["next_arrow_projectile"] = 1
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("native_arrow_projectiles", loaded)
+
     @classmethod
     def melee_paralysis_state(cls):
         state = cls.combat_controller_state()
@@ -1848,6 +2110,24 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         known = state_io.encode_payload(old)
         self.assertNotEqual(known, unknown)
         self.assertEqual(state_io.decode_payload(known)["native_actor_values"][0]["passive_abilities"], [])
+
+    def test_original_undead_bone_resistances_retains_all_owned_effects(self):
+        state = make_state()
+        state.update(schema_version=78, ai_rng_state=1)
+        # Original SPEL02b532; WABR's compiled NoMagnitude resolves to one.
+        authored = [("RSDI", 63, 100), ("RSPO", 67, 100), ("RSFR", 62, 70),
+                    ("WABR", 55, 1), ("RSPA", 66, 100)]
+        effects = [[i, int.from_bytes(code.encode("ascii"), "little"), av, value, value]
+                   for i, (code, av, value) in enumerate(authored)]
+        ability = {"spell": "content:oblivion.esm:02b532", "spell_type": 4, "effects": effects}
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "passive_abilities": [ability]}
+        state["native_actor_values"] = [actor]
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["native_actor_values"][0]["passive_abilities"], [ability])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
 
     def test_passive_ownership_rejects_malformed_duplicates_and_unsupported_effects(self):
         state = make_state()
@@ -4854,7 +5134,57 @@ class EssentialBase84Tests(unittest.TestCase):
             with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(corrupt))
 
 
+class TrapContact86Tests(unittest.TestCase):
+    def make_state(self):
+        state = AnimatedReference85Tests.make_state(self)
+        state["schema_version"] = 86
+        state["native_trap_contacts"] = [{
+            "reference": state["native_animated_references"][0]["reference"],
+            "body_record": 13, "actor": state["player"]["reference"]}]
+        return state
+
+    def test_roundtrip_and_legacy_absence(self):
+        state = self.make_state()
+        encoded = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(encoded)
+        self.assertEqual(decoded["native_trap_contacts"], state["native_trap_contacts"])
+        self.assertEqual(state_io.encode_payload(decoded), encoded)
+        state["schema_version"] = 85
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["native_trap_contacts"] = []
+        self.assertNotIn("native_trap_contacts", state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_dangling_duplicate_and_invalid_contact(self):
+        edits = [lambda s: s["native_trap_contacts"][0].update(reference="content:oblivion.esm:000999"),
+                 lambda s: s["native_trap_contacts"][0].update(actor="content:oblivion.esm:000999"),
+                 lambda s: s["native_trap_contacts"][0].update(body_record=999),
+                 lambda s: s["native_trap_contacts"][0].update(body_record=True),
+                 lambda s: s["native_trap_contacts"].append(copy.deepcopy(s["native_trap_contacts"][0]))]
+        for edit in edits:
+            with self.subTest(edit=edit):
+                state = self.make_state(); edit(state)
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.make_state()
+        for body, mode in zip(state["native_animated_references"][0]["bodies"], (1, 7)):
+            body["native_motion"] = mode
+            body["linear_velocity"] = [0.] * 3
+            body["native_packed_velocity"] = {"linear": [0.] * 4, "angular": [0.] * 4}
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+
 class AnimatedReference85Tests(unittest.TestCase):
+    def test_fixed_anchor_motion_roundtrip(self):
+        state = self.make_state()
+        bodies = state["native_animated_references"][0]["bodies"]
+        for body, motion in zip(bodies, (7, 1)):
+            body["linear_velocity"] = [0.] * 3
+            body["native_packed_velocity"] = {"linear": [0.] * 4, "angular": [0.] * 4}
+            body["native_motion"] = motion
+        encoded = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(encoded)
+        self.assertEqual(decoded["native_animated_references"], state["native_animated_references"])
+        self.assertEqual(state_io.encode_payload(decoded), encoded)
+
     def make_state(self):
         state = make_state()
         state.update(schema_version=85, ai_rng_state=1)
@@ -4892,3 +5222,197 @@ class AnimatedReference85Tests(unittest.TestCase):
         for edit in edits:
             invalid = copy.deepcopy(state); edit(invalid)
             with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+
+class SpellCast87Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_state(); state['schema_version'] = 87; state['ai_rng_state'] = 1
+        actor = state['player']['reference']; base = 'content:oblivion.esm:000007'
+        state['native_actor_values'] = [{'actor': actor, 'base': base, 'owner': 0, 'process': 0,
+            'values': [[0., None, None, None] for _ in range(72)]}]
+        state['native_actor_life'] = [{'actor': actor, 'base': base, 'phase': 0,
+            'recovery_remaining': 0., 'killer': 'null'}]
+        state['native_spell_casts'] = [{'actor': actor, 'spell': 'content:oblivion.esm:000136',
+            'animation_group': 'onehandcastself', 'cost': 19., 'elapsed': .25,
+            'release_time': .375, 'duration': 1.25, 'released': False}]
+        return state
+
+    def test_pending_and_released_roundtrip_and_legacy_absence(self):
+        for released in (False, True):
+            state = self.make_state(); cast = state['native_spell_casts'][0]
+            cast.update(released=released, elapsed=.5 if released else .25)
+            wire = state_io.encode_payload(state); decoded = state_io.decode_payload(wire)
+            self.assertEqual(decoded['native_spell_casts'], state['native_spell_casts'])
+            self.assertEqual(state_io.encode_payload(decoded), wire)
+            corrupt = wire[:-1] + bytes([2])
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(corrupt)
+        state['schema_version'] = 86
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state['native_spell_casts'] = []
+        self.assertNotIn('native_spell_casts', state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_replaying_and_dangling_casts(self):
+        for edit in [dict(released=True), dict(elapsed=.5), dict(release_time=0), dict(duration=.1),
+                     dict(cost=float('inf')), dict(cost=-1), dict(animation_group=''),
+                     dict(spell='null'), dict(actor='content:oblivion.esm:000999')]:
+            with self.subTest(edit=edit):
+                state = self.make_state(); state['native_spell_casts'][0].update(edit)
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.make_state(); state['native_actor_life'] = []
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.make_state(); state['native_spell_casts'] *= 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+class MagicProjectile88Tests(unittest.TestCase):
+    def make_state(self):
+        state = SpellCast87Tests().make_state()
+        state['schema_version'] = 88
+        state['native_spell_casts'] = []
+        state['next_magic_projectile'] = 10
+        state['native_magic_projectiles'] = [{'id': 9, 'caster': state['player']['reference'],
+            'source': 'content:oblivion.esm:066c42', 'cell': state['player']['cell'],
+            'effect_code': int.from_bytes(b'SHDG', 'little'), 'magnitude': 5.,
+            'position': [3., 4., 5.], 'velocity': [0., 2000., 0.], 'distance': 250.,
+            'maximum_distance': 10000., 'model': 'MagicEffects/shockbolt.nif'}]
+        return state
+
+    def test_charm_projectile_keeps_effect_identity_and_exact_wire_roundtrip(self):
+        state = self.make_state()
+        projectile = state['native_magic_projectiles'][0]
+        projectile.update(source='content:oblivion.esm:047add',
+            effect_code=int.from_bytes(b'CHRM', 'little'), magnitude=30.,
+            model='MagicEffects/illusion.NIF')
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded['native_magic_projectiles'], state['native_magic_projectiles'])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+
+    def test_flight_roundtrip_and_old_version_absence(self):
+        state = self.make_state()
+        decoded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertEqual(decoded['native_magic_projectiles'], state['native_magic_projectiles'])
+        self.assertEqual(decoded['next_magic_projectile'], 10)
+        state['schema_version'] = 87
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state['next_magic_projectile'] = 1
+        state['native_magic_projectiles'] = []
+        self.assertNotIn('native_magic_projectiles', state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_reused_identity_dangling_caster_and_invalid_flight_are_rejected(self):
+        for edit in [{'id': 10}, {'caster': 'content:oblivion.esm:000999'},
+                     {'velocity': [0., 0., 0.]}, {'position': [float('nan'), 0., 0.]},
+                     {'magnitude': -1.}, {'distance': 10001.}, {'model': ''},
+                     {'effect_code': int.from_bytes(b'REHE', 'little')}]:
+            with self.subTest(edit=edit):
+                state = self.make_state(); state['native_magic_projectiles'][0].update(edit)
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+        state = self.make_state(); state['native_magic_projectiles'] *= 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+
+class DailyPackage89Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_m14_state()
+        state['schema_version'] = 89
+        state['daily_package_completions'] = [{'actor': state['actor_ai'][0]['actor'],
+            'package': 'content:oblivion.esm:04f201', 'day': [433, 7, 28, 0]}]
+        return state
+
+    def test_roundtrip_and_legacy_absence(self):
+        state = self.make_state()
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded['daily_package_completions'], state['daily_package_completions'])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        state['schema_version'] = 88
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state['daily_package_completions'] = []
+        self.assertNotIn('daily_package_completions', state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_invalid_owner_package_day_and_duplicate_are_rejected(self):
+        for edit in [{'actor': 'content:oblivion.esm:000999'}, {'actor': []},
+                     {'package': 'null'}, {'package': 'dynamic:pack:0000000000000001'},
+                     {'day': [433, 1, 31, 0]}, {'day': [433, 7, 28, 1]}, {'day': None}]:
+            with self.subTest(edit=edit):
+                state = self.make_state(); state['daily_package_completions'][0].update(edit)
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+        state = self.make_state(); state['daily_package_completions'] *= 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+class FactionBase90Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_state()
+        state.update(schema_version=90, ai_rng_state=1)
+        state['native_actor_bases'] = [{'base': 'content:oblivion.esm:000800',
+            'kind': 0, 'values': [], 'essential': None,
+            'factions': [['content:oblivion.esm:000803', -128],
+                         ['content:oblivion.esm:000801', 127],
+                         ['content:oblivion.esm:000802', -1]]}]
+        return state
+
+    def test_order_rank_empty_and_legacy_roundtrip(self):
+        state = self.make_state()
+        for factions in [state['native_actor_bases'][0]['factions'], []]:
+            state['native_actor_bases'][0]['factions'] = factions
+            payload = state_io.encode_payload(state)
+            decoded = state_io.decode_payload(payload)
+            self.assertEqual(decoded['native_actor_bases'], state['native_actor_bases'])
+            self.assertEqual(state_io.encode_payload(decoded), payload)
+            state['schema_version'] = 89
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+            state.update(schema_version=90, ai_rng_state=1)
+        state['schema_version'] = 89
+        state['native_actor_bases'][0].update(factions=None, essential=False)
+        decoded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn('factions', decoded['native_actor_bases'][0])
+        decoded['schema_version'] = 90
+        self.assertIsNone(state_io.decode_payload(state_io.encode_payload(decoded))['native_actor_bases'][0]['factions'])
+
+    def test_invalid_and_duplicate_memberships_reject(self):
+        for factions in [[['null', 1]], [['dynamic:faction:0000000000000001', 1]],
+                         [['content:oblivion.esm:000801', 128]],
+                         [['content:oblivion.esm:000801', True]],
+                         [['content:oblivion.esm:000801', -129]],
+                         [['content:oblivion.esm:000801', 1]] * 2]:
+            state = self.make_state(); state['native_actor_bases'][0]['factions'] = factions
+            with self.subTest(factions=factions), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+
+class PackageWaiting91Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_state()
+        state.update(schema_version=91, ai_rng_state=1,
+            package_waiting=[{'package': 'content:oblivion.esm:0292f9', 'waiting': True},
+                             {'package': 'content:oblivion.esm:0292fa', 'waiting': False}])
+        return state
+
+    def test_roundtrip_false_override_legacy_and_malformed_flags(self):
+        state = self.make_state()
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded['package_waiting'], state['package_waiting'])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(payload[:-1] + b'\x02')
+        state['schema_version'] = 90
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state['package_waiting'] = []
+        self.assertNotIn('package_waiting', state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_invalid_and_duplicate_package_overrides(self):
+        for entry in [{'package': 'null', 'waiting': True},
+                      {'package': 'dynamic:package:0000000000000001', 'waiting': True},
+                      {'package': 'content:oblivion.esm:0292f9', 'waiting': 1}]:
+            state = self.make_state(); state['package_waiting'] = [entry]
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        state = self.make_state(); state['package_waiting'] *= 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)

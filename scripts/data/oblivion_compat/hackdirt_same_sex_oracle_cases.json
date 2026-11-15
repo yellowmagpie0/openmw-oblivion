@@ -1,0 +1,376 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x4f6350",
+  "profiles": [
+    {
+      "name": "missing",
+      "present": false,
+      "type": 0,
+      "flags": 0
+    },
+    {
+      "name": "male",
+      "present": true,
+      "type": 35,
+      "flags": 0
+    },
+    {
+      "name": "female",
+      "present": true,
+      "type": 35,
+      "flags": 1
+    },
+    {
+      "name": "male-other-flags",
+      "present": true,
+      "type": 35,
+      "flags": 254
+    },
+    {
+      "name": "female-other-flags",
+      "present": true,
+      "type": 35,
+      "flags": 255
+    },
+    {
+      "name": "creature-male-bit",
+      "present": true,
+      "type": 36,
+      "flags": 0
+    },
+    {
+      "name": "creature-female-bit",
+      "present": true,
+      "type": 36,
+      "flags": 1
+    },
+    {
+      "name": "static",
+      "present": true,
+      "type": 34,
+      "flags": 0
+    }
+  ],
+  "cases": [
+    {
+      "first": "missing",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "male",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "female",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "male-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "female-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "creature-male-bit",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "creature-female-bit",
+      "expected": 0
+    },
+    {
+      "first": "missing",
+      "second": "static",
+      "expected": 0
+    },
+    {
+      "first": "male",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "male",
+      "second": "male",
+      "expected": 1
+    },
+    {
+      "first": "male",
+      "second": "female",
+      "expected": 0
+    },
+    {
+      "first": "male",
+      "second": "male-other-flags",
+      "expected": 1
+    },
+    {
+      "first": "male",
+      "second": "female-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "male",
+      "second": "creature-male-bit",
+      "expected": 0
+    },
+    {
+      "first": "male",
+      "second": "creature-female-bit",
+      "expected": 0
+    },
+    {
+      "first": "male",
+      "second": "static",
+      "expected": 0
+    },
+    {
+      "first": "female",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "female",
+      "second": "male",
+      "expected": 0
+    },
+    {
+      "first": "female",
+      "second": "female",
+      "expected": 1
+    },
+    {
+      "first": "female",
+      "second": "male-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "female",
+      "second": "female-other-flags",
+      "expected": 1
+    },
+    {
+      "first": "female",
+      "second": "creature-male-bit",
+      "expected": 0
+    },
+    {
+      "first": "female",
+      "second": "creature-female-bit",
+      "expected": 0
+    },
+    {
+      "first": "female",
+      "second": "static",
+      "expected": 0
+    },
+    {
+      "first": "male-other-flags",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "male-other-flags",
+      "second": "male",
+      "expected": 1
+    },
+    {
+      "first": "male-other-flags",
+      "second": "female",
+      "expected": 0
+    },
+    {
+      "first": "male-other-flags",
+      "second": "male-other-flags",
+      "expected": 1
+    },
+    {
+      "first": "male-other-flags",
+      "second": "female-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "male-other-flags",
+      "second": "creature-male-bit",
+      "expected": 0
+    },
+    {
+      "first": "male-other-flags",
+      "second": "creature-female-bit",
+      "expected": 0
+    },
+    {
+      "first": "male-other-flags",
+      "second": "static",
+      "expected": 0
+    },
+    {
+      "first": "female-other-flags",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "female-other-flags",
+      "second": "male",
+      "expected": 0
+    },
+    {
+      "first": "female-other-flags",
+      "second": "female",
+      "expected": 1
+    },
+    {
+      "first": "female-other-flags",
+      "second": "male-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "female-other-flags",
+      "second": "female-other-flags",
+      "expected": 1
+    },
+    {
+      "first": "female-other-flags",
+      "second": "creature-male-bit",
+      "expected": 0
+    },
+    {
+      "first": "female-other-flags",
+      "second": "creature-female-bit",
+      "expected": 0
+    },
+    {
+      "first": "female-other-flags",
+      "second": "static",
+      "expected": 0
+    },
+    {
+      "first": "creature-male-bit",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "creature-male-bit",
+      "second": "male",
+      "expected": 0
+    },
+    {
+      "first": "creature-male-bit",
+      "second": "female",
+      "expected": 0
+    },
+    {
+      "first": "creature-male-bit",
+      "second": "male-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "creature-male-bit",
+      "second": "female-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "creature-male-bit",
+      "second": "creature-male-bit",
+      "expected": 0
+    },
+    {
+      "first": "creature-male-bit",
+      "second": "creature-female-bit",
+      "expected": 0
+    },
+    {
+      "first": "creature-male-bit",
+      "second": "static",
+      "expected": 0
+    },
+    {
+      "first": "creature-female-bit",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "creature-female-bit",
+      "second": "male",
+      "expected": 0
+    },
+    {
+      "first": "creature-female-bit",
+      "second": "female",
+      "expected": 0
+    },
+    {
+      "first": "creature-female-bit",
+      "second": "male-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "creature-female-bit",
+      "second": "female-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "creature-female-bit",
+      "second": "creature-male-bit",
+      "expected": 0
+    },
+    {
+      "first": "creature-female-bit",
+      "second": "creature-female-bit",
+      "expected": 0
+    },
+    {
+      "first": "creature-female-bit",
+      "second": "static",
+      "expected": 0
+    },
+    {
+      "first": "static",
+      "second": "missing",
+      "expected": 0
+    },
+    {
+      "first": "static",
+      "second": "male",
+      "expected": 0
+    },
+    {
+      "first": "static",
+      "second": "female",
+      "expected": 0
+    },
+    {
+      "first": "static",
+      "second": "male-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "static",
+      "second": "female-other-flags",
+      "expected": 0
+    },
+    {
+      "first": "static",
+      "second": "creature-male-bit",
+      "expected": 0
+    },
+    {
+      "first": "static",
+      "second": "creature-female-bit",
+      "expected": 0
+    },
+    {
+      "first": "static",
+      "second": "static",
+      "expected": 0
+    }
+  ]
+}

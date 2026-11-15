@@ -1,0 +1,73 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "record": {
+    "passed": true,
+    "payload_sha256": "1f3a255a6994b3f929875aaad794587c19a4c466c0bbf89f5823b32aed4074b3",
+    "flags": 0,
+    "book_skill": -1,
+    "value": 1,
+    "weight": 1.0,
+    "text_bytes": 2347,
+    "text_sha256": "0a12df9e1984168cbd3603805c1ad6de6d27e320aa9847834aa8940e33cd5255",
+    "scriptless": true,
+    "unenchanted": true
+  },
+  "reference": "content:oblivion.esm:06efb5",
+  "base": "BOOK026d8b",
+  "original_counter_evidence": "ORDINARY-BOOK-READ-ORACLE.json: same ordinary flags0/bookSkill-1 family, actual original inventory opens count once, page changes do not count; no original Charter Take probe claimed",
+  "expected": {
+    "value": 1,
+    "weight": 1.0,
+    "source_count": 1,
+    "inventory_before": 0,
+    "inventory_after": 1,
+    "read_delta_on_open": 1,
+    "read_delta_on_page_or_take": 0
+  },
+  "scope": "Original raw BOOK DATA decoded independently as <BbIf; full text content hashed privately. Existing native inventory transaction and actual engine UI/state audits establish fork acceptance. Fallback paper/glyphs are existing editable code-generated assets, not original Oblivion UI art. No exact GUI parity claim.",
+  "combat_read_oracle": {
+    "path": "build/oblivion-compat/charter-book/original-combat-01",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "setup": {
+      "question": "Does original Oblivion allow opening a non-scroll inventory book while Player IsInCombat is true?",
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "book": "026d8b Mages Guild Charter flags0/skill-1",
+      "controls": [
+        "Isolated prefix/pristine copy; console testinghall and give one original book only for independent oracle",
+        "Raise health for safety, no GodMode; spawn original CreatureRat025314 and start its actual combat against Player",
+        "Read-only original GetInCombat query and ordinary inventory click; inspect book UI and misc17",
+        "No save/F5; clean exit and exact restoration of Docs/Plugins"
+      ],
+      "tolerances": {
+        "counter": 0,
+        "combat_query": 0
+      },
+      "query": "player.IsInCombat"
+    },
+    "observations": {
+      "passed": true,
+      "player_is_in_combat_before": 1,
+      "inventory_book_opened": true,
+      "books_read_before": 0,
+      "books_read_after": 1,
+      "player_is_in_combat_after": 1,
+      "no_skill_award": true,
+      "combat_queries": "Original console IsInCombat screenshots before and after; no GodMode, health raised for safe controlled rat combat"
+    },
+    "process": {
+      "pid": 1050039,
+      "start_ticks": 20908272,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "window_id": 37748739,
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "mapped_original_exe": [
+        "00400000-00401000 r-xp 00000000 00:25 2071952                            /home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe"
+      ]
+    },
+    "restoration": {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    }
+  }
+}

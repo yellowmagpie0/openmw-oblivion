@@ -70,7 +70,7 @@ namespace MWWorld
             ESM4::setCharacterGenerationTracking(currentState(world), enabled));
     }
 
-    unsigned oblivionClassDefaultMatch(World& world)
+    static ESM::FormKey oblivionRecommendedClass(World& world)
     {
         const auto player = world.getPlayerPtr();
         if (player.isEmpty()) throw std::invalid_argument("native class query requires Player");
@@ -101,19 +101,36 @@ namespace MWWorld
                 if (world.getStore().search<ESM4::Class>(key)) state.mRecommendedClass = key;
             }
         }
-        const auto* recommended = state.mRecommendedClass.isNull() ? nullptr
-            : world.getStore().search<ESM4::Class>(state.mRecommendedClass);
-        if (!state.mRecommendedClass.isNull() && !recommended)
-            throw std::invalid_argument("native cached class is unresolved");
-        const auto specialization = currentNative ? currentNative->mData.mSpecialization
-                                                  : static_cast<std::uint32_t>(currentShared->mData.mSpecialization);
-        const unsigned result = ESM4::characterClassDefaultMatch(
-            currentKey && *currentKey == state.mRecommendedClass,
-            recommended ? std::optional(recommended->mData.mSpecialization) : std::nullopt, specialization);
         if (!world.getPlayer().getOblivionCharacterGenerationState())
             Log(Debug::Info) << "Native chargen history adopted: tracking=" << state.mTracking;
+        const auto result = state.mRecommendedClass;
+        if (!result.isNull() && !world.getStore().search<ESM4::Class>(result))
+            throw std::invalid_argument("native cached class is unresolved");
         world.getPlayer().setOblivionCharacterGenerationState(std::move(state));
         return result;
+    }
+
+    bool oblivionIsClassDefault(World& world, const ESM::FormKey& parameter)
+    {
+        // Original4F83D0 queries Player regardless of the command/condition subject.
+        // A non-CLAS parameter becomes null before the identity comparison.
+        const auto recommended = oblivionRecommendedClass(world);
+        const auto key = world.getStore().search<ESM4::Class>(parameter) ? parameter : ESM::FormKey{};
+        return recommended == key;
+    }
+
+    unsigned oblivionClassDefaultMatch(World& world)
+    {
+        const auto recommendedKey = oblivionRecommendedClass(world);
+        const auto currentId = world.getPlayerPtr().get<ESM::NPC>()->mBase->mClass;
+        const auto currentKey = world.getStore().get<ESM4::Class>().findFormKey(currentId);
+        const auto* currentNative = currentKey ? world.getStore().search<ESM4::Class>(*currentKey) : nullptr;
+        const auto* currentShared = world.getStore().get<ESM::Class>().search(currentId);
+        const auto* recommended = world.getStore().search<ESM4::Class>(recommendedKey);
+        const auto specialization = currentNative ? currentNative->mData.mSpecialization
+                                                  : static_cast<std::uint32_t>(currentShared->mData.mSpecialization);
+        return ESM4::characterClassDefaultMatch(currentKey && *currentKey == recommendedKey,
+            recommended ? std::optional(recommended->mData.mSpecialization) : std::nullopt, specialization);
     }
 
     std::optional<ESM4::CharacterGenerationState> prepareOblivionCharacterGenerationSkillUse(

@@ -19,6 +19,7 @@
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/weapontype.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 
 #include "class.hpp"
 #include "preparedinitialinventory.hpp"
@@ -718,6 +719,22 @@ MWWorld::ContainerStoreIterator MWWorld::InventoryStore::unequipSlot(int slot, b
     {
         ContainerStoreIterator retval = it;
 
+        // A pending staff release owns this equipped unit. Changing it must
+        // not debit a replacement stack with the same base or enchantment.
+        if (slot == Slot_CarriedRight)
+        {
+            auto* world = dynamic_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+            if (world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+                if (auto* combat = world->getOblivionCombatService())
+                {
+                    const auto actor = getPtr() == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                        : getPtr().getCellRef().getFormKey();
+                    if (const auto* cast = combat->findSpellCast(actor);
+                        cast && world->getStore().get<ESM4::Enchantment>().search(cast->mSpell))
+                        combat->cancelSpellCast(actor);
+                }
+        }
+
         // empty this slot
         mSlots[slot] = end();
 
@@ -855,6 +872,7 @@ struct MWWorld::InventoryStore::PreparedItemRemoval::Impl
     InventoryStore* mOwner = nullptr;
     std::weak_ptr<const char> mIdentity;
     ESM::RefId mBase;
+    std::optional<Ptr> mSelected;
     std::vector<Stack> mStacks;
     std::array<Ptr, Slots> mSlots;
     int mCount = 0;
@@ -875,16 +893,31 @@ bool MWWorld::InventoryStore::PreparedItemRemoval::ownerIsCurrent() const noexce
 std::unique_ptr<MWWorld::InventoryStore::PreparedItemRemoval>
 MWWorld::InventoryStore::prepareItemRemoval(const ESM::RefId& base, int count)
 {
+    return prepareItemRemovalImpl(base, count, nullptr);
+}
+
+std::unique_ptr<MWWorld::InventoryStore::PreparedItemRemoval>
+MWWorld::InventoryStore::prepareItemRemoval(const Ptr& item, int count)
+{
+    if (item.isEmpty() || item.getContainerStore() != this)
+        throw std::invalid_argument("native selected removal requires an owned item");
+    return prepareItemRemovalImpl(item.getCellRef().getRefId(), count, &item);
+}
+
+std::unique_ptr<MWWorld::InventoryStore::PreparedItemRemoval>
+MWWorld::InventoryStore::prepareItemRemovalImpl(const ESM::RefId& base, int count, const Ptr* selected)
+{
     if (base.empty() || count <= 0)
         throw std::invalid_argument("prepared native removal requires a base and positive count");
     auto value = std::make_unique<PreparedItemRemoval::Impl>();
     value->mOwner = this;
     value->mBase = base;
+    if (selected) value->mSelected = *selected;
     value->mIdentity = prepareStorageIdentity();
     std::uint32_t available = 0;
     for (auto it = begin(); it != end(); ++it)
     {
-        if (it->getCellRef().getRefId() != base) continue;
+        if (it->getCellRef().getRefId() != base || (selected && *it != *selected)) continue;
         const auto* ref = std::get_if<ESM::CellRef>(&it->getCellRef().mCellRef.mVariant);
         if (!ref || it->getContainerStore() != this)
             throw std::invalid_argument("native removal requires projected inventory instances");
@@ -927,7 +960,8 @@ bool MWWorld::InventoryStore::PreparedItemRemoval::isValid() const
     std::size_t matched = 0;
     for (auto it = owner.begin(); it != owner.end(); ++it)
     {
-        if (it->getCellRef().getRefId() != mImpl->mBase) continue;
+        if (it->getCellRef().getRefId() != mImpl->mBase
+            || (mImpl->mSelected && *it != *mImpl->mSelected)) continue;
         if (matched == mImpl->mStacks.size()) return false;
         const auto& stack = mImpl->mStacks[matched++];
         if (*it != stack.mItem || it->getCellRef().getCount(false) != stack.mBefore) return false;

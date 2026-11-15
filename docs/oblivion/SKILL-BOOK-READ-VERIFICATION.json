@@ -1,0 +1,445 @@
+{
+  "status": "Accepted bounded original-content skill-book award, repeat and cold-load persistence",
+  "scope": "M16 native skill-book progression; original placed Immortal Blood066cc1/base0243fc",
+  "normal_courses": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/normal-book-first-award-01/skill-book-audit.json",
+        "sha256": "51f127a6237637c34821e98db41694ee880cd78020b4b663fea6c92233c1a56b"
+      },
+      "passed": true,
+      "phase": "award",
+      "reads": 2,
+      "input_sha256": "d178063a2a6e0be83c36843cf6759c80274408492a4ce62ea11f38af908ed254",
+      "output_sha256": "ed9358235f78e7502cbbb77c370c5fd0ff106620022552d395be4e7b7d8b9b00",
+      "before": {
+        "base": 35.0,
+        "experience": 0.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          1,
+          0
+        ]
+      },
+      "after": {
+        "base": 36.0,
+        "experience": 0.0,
+        "level_progress": 1,
+        "attributes": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          1,
+          1,
+          0
+        ]
+      },
+      "book_base": "content:oblivion.esm:0243fc",
+      "history": [
+        "content:oblivion.esm:0243fc"
+      ],
+      "game_sha256": "1af1babfd9875a644fc513317e1b7c28f210e458106e188acbbf43a939d3b0b3"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/normal-book-repeat-restart-01/skill-book-audit.json",
+        "sha256": "3220710f0a2748222dfacc04d4d84c45c7d1ca1d854b3b868125a06ce09bb014"
+      },
+      "passed": true,
+      "phase": "repeat",
+      "reads": 2,
+      "input_sha256": "ed9358235f78e7502cbbb77c370c5fd0ff106620022552d395be4e7b7d8b9b00",
+      "output_sha256": "fb073ae38596c6e476dcaf3aae4dad4fd65b394d6f4ae15e849132dd28b2613b",
+      "before": {
+        "base": 36.0,
+        "experience": 0.0,
+        "level_progress": 1,
+        "attributes": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          1,
+          1,
+          0
+        ]
+      },
+      "after": {
+        "base": 36.0,
+        "experience": 0.0,
+        "level_progress": 1,
+        "attributes": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          1,
+          1,
+          0
+        ]
+      },
+      "book_base": "content:oblivion.esm:0243fc",
+      "history": [
+        "content:oblivion.esm:0243fc"
+      ],
+      "game_sha256": "1af1babfd9875a644fc513317e1b7c28f210e458106e188acbbf43a939d3b0b3"
+    }
+  ],
+  "sanitized_courses": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/sanitized-book-first-award-02/skill-book-audit.json",
+        "sha256": "44b078bb3bee145315dbc25ff62842c91158a01f2c29cb37f6f43a206a6c2466"
+      },
+      "passed": true,
+      "phase": "award",
+      "reads": 2,
+      "input_sha256": "d178063a2a6e0be83c36843cf6759c80274408492a4ce62ea11f38af908ed254",
+      "output_sha256": "ad492b43a94b7e23f982927dab5c858ad05016d7f62e4251d41c41f4b42a6c2c",
+      "before": {
+        "base": 35.0,
+        "experience": 0.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          1,
+          0
+        ]
+      },
+      "after": {
+        "base": 36.0,
+        "experience": 0.0,
+        "level_progress": 1,
+        "attributes": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          1,
+          1,
+          0
+        ]
+      },
+      "book_base": "content:oblivion.esm:0243fc",
+      "history": [
+        "content:oblivion.esm:0243fc"
+      ],
+      "game_sha256": "e00dd4b8c237b498290b79b3aa173c6a67f298107919831b7b67918209083721"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/sanitized-book-repeat-restart-03/skill-book-audit.json",
+        "sha256": "f01fe6d501693521ad61e7925e57fca2e0823af22790f9f5b60253fdf24838c7"
+      },
+      "passed": true,
+      "phase": "repeat",
+      "reads": 2,
+      "input_sha256": "ad492b43a94b7e23f982927dab5c858ad05016d7f62e4251d41c41f4b42a6c2c",
+      "output_sha256": "3b0465765fe95c6839c3152dbde548fe5b7a590ee19c4ca2c51fdb6382455713",
+      "before": {
+        "base": 36.0,
+        "experience": 0.0,
+        "level_progress": 1,
+        "attributes": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          1,
+          1,
+          0
+        ]
+      },
+      "after": {
+        "base": 36.0,
+        "experience": 0.0,
+        "level_progress": 1,
+        "attributes": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          1,
+          1,
+          0
+        ]
+      },
+      "book_base": "content:oblivion.esm:0243fc",
+      "history": [
+        "content:oblivion.esm:0243fc"
+      ],
+      "game_sha256": "e00dd4b8c237b498290b79b3aa173c6a67f298107919831b7b67918209083721"
+    }
+  ],
+  "code_gates": {
+    "integration-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-normal-01/verification.json",
+        "sha256": "a0c3534965501aa7551f71476011600b67c1a46ff43c588d37fd440b9fc16a35"
+      },
+      "results": {
+        "components": {
+          "executed": 3294,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "886aa11db910e9c4f8cbf5fd6e63ffbb89861ca92dbba9002a98bc961dee81a9",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "83e25f8e948776f6aae19021df2ec0fcb89e57927f1b4a7ef0b03661c02692d4",
+          "inventory_sha256": "99ad5ba0cbe0afb4b450b1ba8335b0ab5bec217f1bfa4750727deb7d7a206c20",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2281,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "54789d03ed86f6e92152f4f457854d1f057517b1781b4099e47de0d1c4dce051",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "1be2986ba8cee16bf1c3090065821b715690c4dcc2c90cde702a031377d185a2",
+          "inventory_sha256": "c8413d000ac9b99b100eb048210c45243f7894e8bd7d1c86299b56b185f6ec5d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 616,
+          "passed": true,
+          "log_sha256": "5060b312be75337772ec90483e9b8022e7549e70d94c6688441f7e4078c0f723"
+        }
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "15a12753b47cace52efc78c17e0ba9fbe20595d229c4f9ae79f06b6b5e7d1992"
+      }
+    },
+    "integration-sanitized-components-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-sanitized-components-01/verification.json",
+        "sha256": "e4969f64d683d469f2cfce85f5b7425654c40db3c01ff722504f309091eda83a"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 1115,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "f993b5df17e60cbe53a5524f36b10b39a630c748d912261ddc90f590eaf88db0",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ae70bc58c0b53c342763a7efda334f4f53936f226539f1dcbe98a70e7ffe1272",
+          "inventory_sha256": "be6800224787ab61e5b0e8cfad702400886458ebcda7355d2ed455159e5bd241",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "15a12753b47cace52efc78c17e0ba9fbe20595d229c4f9ae79f06b6b5e7d1992"
+      }
+    },
+    "integration-sanitized-actorbounds-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-sanitized-actorbounds-01/verification.json",
+        "sha256": "25286e2d85fac0a692b191301019576e0536f83108d61e29371ae0acb52da793"
+      },
+      "results": {
+        "engine": {
+          "executed": 11,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*ActorBounds*",
+          "binary_sha256": "18a5dd17ca89b3e393260720c1521568acd087d5a26270fa184ae1f7f61a7072",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "93261422cc4f9b1d16d56a5d636c0a8836fb82f30af029fee5696dcb930f9baf",
+          "inventory_sha256": "c8413d000ac9b99b100eb048210c45243f7894e8bd7d1c86299b56b185f6ec5d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "47685ba9a5f37f4991d3b6d767eb065e3656407a45a8d4aeedc1d550ac61589b"
+      }
+    },
+    "integration-sanitized-rest-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/skill-book/integration-sanitized-rest-01/verification.json",
+        "sha256": "9ddd440d4442fb7b6ea1001b3a8c64966f1660aa351547ccc9cb18569c2815eb"
+      },
+      "results": {
+        "engine": {
+          "executed": 2270,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-*ActorBounds*",
+          "binary_sha256": "18a5dd17ca89b3e393260720c1521568acd087d5a26270fa184ae1f7f61a7072",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "890b14a4d6f4b63268936de10e3dbe09c154616b6701b1e14ec6bd856d02fb84",
+          "inventory_sha256": "c8413d000ac9b99b100eb048210c45243f7894e8bd7d1c86299b56b185f6ec5d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "158ddd85b12b1565af67866930c3c0e595e29557",
+        "source_fingerprint": "47685ba9a5f37f4991d3b6d767eb065e3656407a45a8d4aeedc1d550ac61589b"
+      }
+    }
+  },
+  "sanitized_inventory_union": {
+    "path": "build/oblivion-compat/skill-book/sanitized-inventory-union.json",
+    "sha256": "f52bede52365f0b0931dd127373a1b0f8e2f8298d169d9cfb0df8b64a3b0e1e3"
+  },
+  "captures": [
+    {
+      "path": "build/oblivion-compat/skill-book/normal-book-first-award-01/Immortal-Blood-first-reading.png",
+      "sha256": "4a1155f5be1709d57be62c2d7836e5f9f4f22c78109267e08e13489dfa86aba2"
+    },
+    {
+      "path": "build/oblivion-compat/skill-book/normal-book-first-award-01/Immortal-Blood-second-reading.png",
+      "sha256": "7b82d892b46d98735a87808295a2551346eb8943bd868acdfc00552d2c206885"
+    },
+    {
+      "path": "build/oblivion-compat/skill-book/normal-book-repeat-restart-01/Immortal-Blood-first-reading.png",
+      "sha256": "d3c54a640fb3408eb49f1fdbf1271f2ea61728c1c777567b20bc7f140d9d3e95"
+    },
+    {
+      "path": "build/oblivion-compat/skill-book/normal-book-repeat-restart-01/Immortal-Blood-second-reading.png",
+      "sha256": "51305dadaf36dce6d77aeaf6d6969a7bfca827d845db25e22dc599c8b4fdefda"
+    },
+    {
+      "path": "build/oblivion-compat/skill-book/sanitized-book-first-award-02/Immortal-Blood-first-reading.png",
+      "sha256": "20dd2d04263c57e7ec3dd90f58e86fb2fbd6740dace4c892a28541282bc83a8f"
+    },
+    {
+      "path": "build/oblivion-compat/skill-book/sanitized-book-first-award-02/Immortal-Blood-second-reading.png",
+      "sha256": "8ad9312f40355f601e860e790c8d473441d5a54177c73b9dd89684c1270f80d7"
+    },
+    {
+      "path": "build/oblivion-compat/skill-book/sanitized-book-repeat-restart-03/Immortal-Blood-first-reading.png",
+      "sha256": "324e1843d2e0e4c004395568e78d09b476a391d074105f62755fa07a63e58650"
+    },
+    {
+      "path": "build/oblivion-compat/skill-book/sanitized-book-repeat-restart-03/Immortal-Blood-second-reading.png",
+      "sha256": "1906ba33eacfd5841478c1f2ea5743dfbd3ba5ba74bc389f75adf37f9e8f8716"
+    }
+  ],
+  "all_eight_book_captures_visually_reviewed": true,
+  "retained_attempts": [
+    "sanitized-book-first-award-01: omitted libasan preload; no game load or award; terminated owned waiting scenario.",
+    "sanitized-book-repeat-restart-02: outer orchestrator143 during startup; no completion receipt; cause unproven; game confirmed gone before standalone03."
+  ],
+  "post_gate_changes": "Only acceptance documentation and separate sanitized recipe added after frozen code gates; C++/Python implementation unchanged.",
+  "character_ui": {
+    "path": "build/oblivion-compat/skill-book/normal-awarded-skill-ui-01/ui-audit.json",
+    "sha256": "05d18a688bbb600f0f4793965f0dae2ff91a087661e37be0273b3c5aa08cdd81"
+  },
+  "schema100_nirnroot_regression": {
+    "path": "build/oblivion-compat/skill-book/normal-nirnroot-migration-regression-01/use-audit.json",
+    "sha256": "204239972c62c6f56a3990791c63fb0ff9e5c222a8e286c3195db4537a967d5d"
+  },
+  "wrapper_anomaly": {
+    "path": "build/oblivion-compat/skill-book/integration-normal-01/wrapper-shutdown-note.json",
+    "sha256": "722387484d8f521cf80e58b4955ef0b6b6b046cb10b3cbc2033436de7d97958a"
+  },
+  "retained_watcher_restart": {
+    "path": "build/oblivion-compat/skill-book/sanitized-rest-watcher-restart.json",
+    "sha256": "d27638ab00ef56480c9fd26b11dfac44233b29828ffd103485768cb7d4cbc23e"
+  },
+  "limitations": [
+    "Actual fork course starts at XP0. Positive XP preservation is established independently in original game (0.6) and World integration fixture (25), not an earned positive-XP fork book course.",
+    "Projected inventory ActionRead is wired to native history but genuine inventory-copy runtime is not claimed; cross-reference/base history has World integration and original-game copy evidence.",
+    "General book UI/pagination, OnRead quest scripts and ordinary-book statistics remain open.",
+    "Engine sanitizer tests enable leak detection. Rendered/component sanitizer courses disable leak detection."
+  ],
+  "oracle": "SKILL-BOOK-READ-ORACLE.json",
+  "contract": "SKILL-BOOK-READ-CONTRACT.json"
+}

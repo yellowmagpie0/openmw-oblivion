@@ -3,6 +3,13 @@
 Status: accepted through 2026-08-23. Implementation revision
 `94383690e9478bdc866592912e9d3a724f7b00d4`.
 
+Later bounded extension (2026-11-12): actual Canosel lock Auto Attempts now
+award Security experience, publish native/shared advancement and retain it on
+cold load. [Real-content verification](SECURITY-USE-VERIFICATION.json) records
+five normal and five instrumented courses. The historical backend acceptance
+below is unchanged; general skill progression and character leveling are not
+certified by this extension.
+
 M12 completes the native Oblivion player backend. A player is now constructed
 from the selected race, sex, class, and birthsign; exposes Oblivion's eight
 attributes, 21 skills, and derived values; and uses those values for movement,

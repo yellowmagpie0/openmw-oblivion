@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_record_facts": {
+    "creature": "024ddb CreatureSkeleton1",
+    "reference": "06c2ed",
+    "levelled_base": "03409c",
+    "aggression": 100,
+    "confidence": 100,
+    "creature_flags_hex": "1344",
+    "ability": "02b532",
+    "weapon": {
+      "form": "0229bd",
+      "editor_id": "WeapSteelWarAxe",
+      "name": "Steel War Axe",
+      "type": 2,
+      "health": 160,
+      "weight": 16,
+      "damage": 10,
+      "speed": 1.1,
+      "reach": 0.8
+    }
+  },
+  "record_audit": "build/oblivion-compat/skeleton-retaliation/original-skill-content-audit.json",
+  "record_audit_script": "build/oblivion-compat/skeleton-retaliation/audit-original-content.py",
+  "reused_native_facade_evidence": "docs/oblivion/M15-CONTROLLER-PRODUCER-VERIFICATION.json",
+  "reused_facade_scope": "Original64BBC0, Actor32C6010B0, constructor61BB60, installation5F1590 with declared primitive/actor/process boundaries; this change reuses the existing World facade.",
+  "policy_scope": "No new native instruction claim for melee provocation or script ordering. Actual original content, normal input and persisted combat ownership establish the bounded gameplay change."
+}

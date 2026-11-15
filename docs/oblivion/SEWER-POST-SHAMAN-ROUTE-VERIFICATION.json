@@ -1,0 +1,130 @@
+{
+  "passed": true,
+  "scope": "Actual original48 south-side route connection and ordinary full-health recovery skip into original Subterrane; full escape remains incomplete",
+  "course": "build/oblivion-compat/sewer-escape/post-shaman-route-01",
+  "game_pid": 283666,
+  "runtime_sha256": "eddf9a70e18fdb54b1706ded01b53dc8ba119ca433a4205527d2b4684774177d",
+  "entry": {
+    "passed": true,
+    "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/shaman-active-combat-01/retained-saves/3-0004-Quicksave.omwsave",
+    "source_save_sha256": "f310263873ede63f8526d621e1d73b208f806ff6c8f108c59d4b81c45a3bc45b",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": [
+      [
+        "/native_animated_references/0/bodies/0/linear_velocity/1",
+        2.9727278160862625e-05,
+        2.9727279979852028e-05
+      ]
+    ]
+  },
+  "source_manifest": "scripts/data/oblivion_compat/oblivion_sewer_joined_subterrane_entry.json",
+  "source_manifest_sha256": "c3bc10d78594792922fd5a4011605190f867f7e50df91a726020647f4760428d",
+  "selected_actions": 667,
+  "unchanged_original_exit_nodes": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+  ],
+  "renumbered_actual_arrivals": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "removed_north_room_detour_had_no_encounters_or_loot": true,
+  "actual_door": "content:oblivion.esm:03816c",
+  "destination": "content:oblivion.esm:022288",
+  "door_teleports": 1,
+  "native_healing_casts": 0,
+  "health_and_magicka_preserved_at80": true,
+  "inventory_and_death_counts_unchanged": true,
+  "all_input_bytes_delivered": true,
+  "saves": [
+    {
+      "sequence": 3,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/post-shaman-route-01/retained-saves/3-0003-Quicksave.omwsave",
+      "save_sha256": "0165289bde88f60e7a2641187b10f00099b5cf819683e9024a9b44e2b81a6e23",
+      "native_sha256": "2e54a6cecd94c236faa2e5b2640310e2931eb6a2cfa8cd068acdfcfe6ba12158",
+      "parsed_save_equals_native_snapshot": true,
+      "cell": "content:oblivion.esm:0380bd",
+      "health": 80.0,
+      "magicka": 80.0
+    },
+    {
+      "sequence": 4,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/post-shaman-route-01/retained-saves/3-0004-Quicksave.omwsave",
+      "save_sha256": "c9755875ed3866f15d7290fcef00a68eb147dd027c321dd8c3996439d8b59a26",
+      "native_sha256": "bf57770c639f54790500de36fe6064f51d2a7e5c5df22ce1456b136ec3ec8294",
+      "parsed_save_equals_native_snapshot": true,
+      "cell": "content:oblivion.esm:0380bd",
+      "health": 80.0,
+      "magicka": 80.0
+    },
+    {
+      "sequence": 5,
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/post-shaman-route-01/retained-saves/3-0005-Quicksave.omwsave",
+      "save_sha256": "e1f5ca4b553b0b4efeb7d415848d5528f35f8e305c5a116eb44d3632aa047dc0",
+      "native_sha256": "f70a74be7629d57a0058df34e010ddbf02ed8e3da1332745153d030f76952a74",
+      "parsed_save_equals_native_snapshot": true,
+      "cell": "content:oblivion.esm:022288",
+      "health": 80.0,
+      "magicka": 80.0
+    }
+  ],
+  "native_end": {
+    "run_id": "tutorial-player-intervention",
+    "epoch": 3,
+    "pid": 283666,
+    "sequence": 6,
+    "tick": 1790,
+    "event": "run-end",
+    "error_count": 0,
+    "event_count": 5,
+    "pending_count": 0,
+    "unsupported_count": 0
+  },
+  "focused_python": {
+    "cases": 18,
+    "passed": true,
+    "log": "build/oblivion-compat/sewer-escape/post-shaman-route-python-focused-01.log"
+  },
+  "full_course_luajit_compile": {
+    "segments": 67,
+    "actions": 10477,
+    "passed": true,
+    "assembly": "build/oblivion-compat/sewer-escape/post-shaman-full-assembly-01"
+  },
+  "unchanged_engine_gates": "SEWER-ENVIRONMENTAL-FIRE-VERIFICATION.json; original normal/sanitizer source fingerprints reused; data-only route/feedback change",
+  "failed_course_retained": "remaining-after-shaman-01/scenario.json and remaining-after-shaman-01-failure-verification.json",
+  "rendered_inspection": "Actual destination capture inspected: Imperial Subterrane label, original corridor, equipped axe and full HUD bars. No armor-appearance claim."
+}

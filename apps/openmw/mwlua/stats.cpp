@@ -25,6 +25,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/oblivionskilltraining.hpp"
 
 #include "objectvariant.hpp"
 #include "recordstore.hpp"
@@ -396,6 +397,13 @@ namespace MWLua
             static float getMaxProgress(const MWWorld::Ptr& ptr, ESM::RefId id, const MWMechanics::SkillValue& stat)
             {
                 const auto& store = *MWBase::Environment::get().getESMStore();
+                if (stat.isNativeProjection() && ptr == MWBase::Environment::get().getWorld()->getPlayerPtr())
+                {
+                    const auto& ids = MWWorld::oblivionSkillIds();
+                    const auto found = std::find(ids.begin(), ids.end(), id);
+                    if (found == ids.end()) throw std::invalid_argument("unknown native Player skill");
+                    return MWWorld::oblivionPlayerSkillProgressRequirement(store, ptr, 12 + (found - ids.begin()));
+                }
                 const auto cl = store.get<ESM::Class>().find(ptr.get<ESM::NPC>()->mBase->mClass);
                 return ptr.getClass().getNpcStats(ptr).getSkillProgressRequirement(id, *cl);
             }

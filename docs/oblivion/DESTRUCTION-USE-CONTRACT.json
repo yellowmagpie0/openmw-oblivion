@@ -1,0 +1,68 @@
+{
+  "status": "Accepted bounded post-class Destruction use: six normal and four instrumented real-content courses pass",
+  "milestone": "M16 ordinary Destruction skill use from successful learned-spell projectile hits",
+  "content": {
+    "spell": "content:oblivion.esm:0a97df",
+    "name": "Flare",
+    "target": "content:oblivion.esm:04bb63",
+    "target_base": "content:oblivion.esm:084b1a"
+  },
+  "source": {
+    "path": "build/oblivion-compat/skeleton-archery/normal-impact-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad"
+  },
+  "baseline": {
+    "before": {
+      "base": 5.0,
+      "xp": 0.0
+    },
+    "after": {
+      "base": 5.0,
+      "xp": 0.0
+    },
+    "game_sha256": "1af1babfd9875a644fc513317e1b7c28f210e458106e188acbbf43a939d3b0b3",
+    "input_sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad",
+    "output_sha256": "fc73df7daad42f8732ede1db174811b0fab0acae793e9dde347c6b8f5d9b5c69",
+    "cast_releases": 4,
+    "projectile_impacts": [
+      "[00:22:39.152 I] M16 magic projectile impact: id=26 actor=1 damage=5.58",
+      "[00:22:41.626 I] M16 magic projectile impact: id=27 actor=1 damage=5.58",
+      "[00:22:44.286 I] M16 magic projectile impact: id=28 actor=1 damage=5.58",
+      "[00:22:46.985 I] M16 magic projectile impact: id=29 actor=1 damage=5.58"
+    ],
+    "source_unchanged": true,
+    "driver_exit": 0,
+    "schema": 101,
+    "skill22": [
+      5.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "feature_accepted": false,
+    "baseline_passed": true,
+    "captures_visually_reviewed": true
+  },
+  "requirements": [
+    "Four ordinary Flare impacts against genuine Skeleton04bb63 train secondary1.2 each: Destruction5/XP0\u21926/XP\u22481.90621, Willpower/Magic advances+1, major progress unchanged and misc2+1.",
+    "A real pending-flight save has no early XP; fresh process impact awards exactly one use. Completed reload does not award again.",
+    "A real geometric miss and actual Flash Bolt scroll damage do not grant Destruction XP.",
+    "Retain genuine combat Health/resource changes, native cast/projectile/death owners, prior loot and character state; no grants, stat edits or save edits supply acceptance.",
+    "Normal/instrumented actual courses, independent save/shared-PLAY audit and appropriate source-frozen integration gates."
+  ],
+  "schema": 101,
+  "limits": [
+    "Only positive damaging hits from current supported single-effect instant learned fire/shock target spells. Fully resisted contacts, absorption/reflection, duration/area/multi-effect spells and other schools remain open.",
+    "Known learned-target mastery AV20/22 bug is adjacent; novice Flare0 needs no threshold and this chunk does not change it.",
+    "The ordinary-use Skills Increased statistic now records newly earned levels; historical missing increments are not reconstructed.",
+    "Acceptance uses completed Warrior class; tutorial Destruction recommendation-history handling remains an adjacent open gap."
+  ],
+  "oracle": "DESTRUCTION-USE-ORACLE.json",
+  "normal_audits": "build/oblivion-compat/destruction-use/normal-state-audit-union.json",
+  "retained_regression_attempts": [
+    "Scroll01 passed structurally but inherited driver missed process capture marker.",
+    "Scroll02 captures the process but old recipe has no M15 live journal. First inventory audit also omitted the schema92 absent-script-owner\u2192null migration. Both diagnostic failures retained.",
+    "Derived scroll03 adds observation environment/timeouts only; actual20-damage scroll impact leaves Destruction5/XP0, inventory/owners retained."
+  ],
+  "verification": "DESTRUCTION-USE-VERIFICATION.json"
+}

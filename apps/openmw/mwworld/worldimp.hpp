@@ -62,6 +62,7 @@ namespace ESM
 
 namespace ESM4
 {
+    struct ActorFaction;
     enum class ActorDrawState : std::uint8_t;
     enum class MeleeReactionKind : std::uint8_t;
     struct RuntimeInventoryItem;
@@ -216,6 +217,7 @@ namespace MWWorld
         void validateOblivionAnimatedReferenceState(const ESM4::RuntimeState& state) const;
         void updateOblivionAnimatedReference(const Ptr& ptr);
         void synchronizeOblivionAnimatedReferencePoses();
+        void processOblivionTrapContacts();
         using NativeLooseWeaponStates = std::map<ESM::FormKey, ESM4::RuntimeLooseWeapon>;
         // Immutable retained projection also identifies the cache version to
         // detached scene admissions across reentrant callbacks.
@@ -421,6 +423,7 @@ namespace MWWorld
         std::optional<bool> isOblivionInCombatWith(const Ptr& actor, const Ptr& opponent) const override;
         bool executeOblivionStartCombat(const Ptr& actor, const Ptr& opponent);
         bool executeOblivionStopCombat(const Ptr& actor);
+        bool executeOblivionStopCombatAlarmOnActor(const Ptr& actor);
 
         // Bounded native interaction surface for the M5 prison slice.
         void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor = {});
@@ -431,6 +434,10 @@ namespace MWWorld
         MWMechanics::OblivionAiService* getOblivionAiService() { return mOblivionAi.get(); }
         MWMechanics::OblivionCombatService* getOblivionCombatService() { return mOblivionCombat.get(); }
         const MWMechanics::OblivionCombatService* getOblivionCombatService() const { return mOblivionCombat.get(); }
+        bool castOblivionEnvironmentalFire(const Ptr& source, const ESM::FormKey& spell,
+            const ESM::FormKey& target);
+        void updateOblivionEnvironmentalFire(float duration);
+        void validateOblivionEnvironmentalFire(const ESM4::RuntimeState& state) const;
         // Process-owned configuration, independent of saved actor state. VERSION
         // and OS-processed text are resolved separately by the input adapter.
         const ESM4::PhysicalBlendProfilesConfiguration& getOblivionPhysicalBlendConfiguration() const;
@@ -471,6 +478,9 @@ namespace MWWorld
         bool setOblivionFactionReaction(const ESM::FormKey& from, const ESM::FormKey& to, std::int32_t value);
         bool setOblivionEssential(const ESM::FormKey& base, bool essential);
         std::optional<bool> getOblivionEssentialOverride(const ESM::FormKey& base) const;
+        std::vector<ESM4::ActorFaction> getOblivionActorFactions(const ESM::FormKey& base) const;
+        std::int8_t getOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction) const;
+        bool setOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction, std::int32_t rank);
         bool setOblivionAlerted(const ESM::FormKey& actor, std::int32_t value);
         bool getOblivionAlerted(const ESM::FormKey& actor) const;
         std::optional<bool> getOblivionVampire(const ESM::FormKey& actor) const;
@@ -538,8 +548,10 @@ namespace MWWorld
         bool requestOblivionReputation(const Ptr& actor, int amount) override;
         std::optional<std::int32_t> getOblivionPlayerInfamy() const;
         bool modifyOblivionPlayerInfamy(std::int32_t delta);
+        bool modifyOblivionPlayerFame(std::int32_t delta);
         // False only for actors not yet registered with native value authority.
         bool killOblivionActor(const Ptr& actor, const ESM::FormKey& killer);
+        bool resurrectOblivionActor(const Ptr& actor, bool preserveState);
         std::uint64_t beginOblivionPhysicalAction(const Ptr& actor) override;
         bool cancelOblivionPhysicalAction(std::uint64_t id, const Ptr& actor) override;
         // Player power-input selection precedes animation admission, including
@@ -617,22 +629,34 @@ namespace MWWorld
         bool executeOblivionActorValueCommand(const Ptr& actor, std::uint8_t value,
             ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested);
 
+        // Explicit native Player skill use; fractional XP lives in shared NPC stats.
+        void useOblivionPlayerSkill(unsigned skill, unsigned usage, float scale = 1.f);
+        void updateOblivionPlayerSkill(unsigned skill, std::int32_t count, float experience = 0.f,
+            const ESM::FormKey& skillBook = {});
+        bool readOblivionSkillBook(const Ptr& book);
+
         const MWMechanics::OblivionAiService* getOblivionAiService() const { return mOblivionAi.get(); }
         OblivionScriptManager* getOblivionScriptManager() { return mOblivionScriptManager.get(); }
         const OblivionScriptManager* getOblivionScriptManager() const { return mOblivionScriptManager.get(); }
         bool oblivionPlayerHasItem(const ESM::RefId& id);
         int oblivionPlayerItemCount(const ESM::FormKey& key);
         int oblivionChangePlayerInventory(
-            const ESM::FormKey& key, int delta, const ESM::FormKey& owner = {});
-        int oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item);
+            const ESM::FormKey& key, int delta, const ESM::FormKey& owner = {}, bool dispatchAddEvent = false);
+        std::optional<Ptr> dropOblivionInventoryIngredient(
+            const Ptr& actor, const Ptr& item, size_t count, float cursorX, float cursorY);
+        std::optional<Ptr> dropOblivionInventoryLooseItem(
+            const Ptr& actor, const Ptr& item, size_t count, float cursorX, float cursorY);
+        int oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item, bool dispatchAddEvent = false);
         bool oblivionEquipPlayerItem(const ESM::FormKey& key, bool equip);
+        void notifyOblivionItemEquipped(const Ptr& actor, const Ptr& item);
         bool oblivionEquipActorItem(const Ptr& actor, const ESM::FormKey& key, bool equip);
-        int oblivionAddActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
-        int oblivionRemoveActorItem(const Ptr& actor, const ESM::FormKey& key, int count);
-        std::vector<ESM4::RuntimeInventoryItem> captureOblivionActorInventory(const Ptr& actor) const;
+        int oblivionAddNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count);
+        int oblivionRemoveNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count);
+        std::vector<ESM4::RuntimeInventoryItem> captureOblivionInventory(const Ptr& actor) const;
         void updateOblivionBoundEquipment(const Ptr& actor);
         void removeOblivionDeadBoundEquipment();
         std::unique_ptr<InventoryStore> prepareOblivionSavedActorInventory(const Ptr& actor) const;
+        std::unique_ptr<InventoryStore> prepareOblivionContainerInventory(const Ptr& container);
         bool oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const;
         std::uint32_t oblivionEquipmentSlots(const Ptr& item, int sharedSlot) const;
         void oblivionPlayerEquipmentChanged();
@@ -939,8 +963,17 @@ namespace MWWorld
 
         // Apply the validated native snapshot read by readRecord. World data
         // restoration precedes optional scene attachment in saveLoaded.
+        void updateOblivionLevelledActors();
         void applyOblivionRuntimeState();
         ESM4::RuntimeState captureOblivionRuntimeState() const;
+        bool releaseOblivionStaffProjectile(const Ptr& actor, const ESM::FormKey& enchantment, float chargeCost);
+        bool releaseOblivionPlayerSpellProjectile(const ESM::FormKey& spell, float power);
+        bool releaseOblivionPlayerAbsorbFatiguePower(const ESM::FormKey& spell, Ptr& hitTarget);
+        void updateOblivionMagicProjectiles(float duration);
+        void validateOblivionMagicProjectiles(const ESM4::RuntimeState& state) const;
+        bool releaseOblivionArrow(std::uint64_t draw, MWRender::Animation& animation);
+        void updateOblivionArrowProjectiles(float duration);
+        void validateOblivionArrowProjectiles(const ESM4::RuntimeState& state) const;
         bool beginOblivionHeldBlock(const Ptr& actor, std::string_view group);
         bool releaseOblivionHeldBlock(const Ptr& actor);
         bool cancelOblivionHeldBlock(const Ptr& actor);

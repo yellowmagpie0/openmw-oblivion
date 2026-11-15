@@ -2,6 +2,7 @@
 #include <components/esm3/readerscache.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadalch.hpp>
+#include <components/esm4/loadingr.hpp>
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadpack.hpp>
 #include <zlib.h>
@@ -2258,4 +2259,52 @@ TEST(MWWorldStoreTest, tes4PotionEffectsUseWinningMasterKeysAndDeletionTombstone
     load("patch.esp", { "other.esm", "base.esm" }, 0x01000800, 0, true);
     EXPECT_EQ(store.search<ESM4::Potion>(base), nullptr);
     EXPECT_NE(store.search<ESM4::Potion>(other), nullptr);
+}
+
+
+TEST(MWWorldStoreTest, tes4IngredientEffectsUseWinningMasterKeysAndDeletionTombstones)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto sub = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, std::uint32_t flags, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(flags)
+            + bytes(id) + bytes(std::uint32_t{}) + data;
+    };
+    MWWorld::ESMStore store;
+    const std::map<std::string, int> indices{ { "base.esm", 0 }, { "other.esm", 1 }, { "patch.esp", 2 } };
+    const auto load = [&](const std::string& name, const std::vector<std::string>& masters,
+                          std::uint32_t form, unsigned char chance, bool deleted) {
+        auto header = sub(ESM::fourCC("HEDR"), bytes(1.f) + bytes(std::uint32_t{ 1 }) + bytes(std::uint32_t{ 0x900 }));
+        for (const auto& master : masters)
+            header += sub(ESM::fourCC("MAST"), master + '\0') + sub(ESM::fourCC("DATA"), std::string(8, '\0'));
+        const auto effect = bytes(ESM::fourCC("REFA")) + bytes(std::uint32_t{chance})
+            + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0})
+            + bytes(std::uint32_t{0}) + bytes(std::uint32_t{8});
+        const auto payload = deleted ? std::string{}
+            : sub(ESM::fourCC("EFID"), bytes(ESM::fourCC("REFA"))) + sub(ESM::fourCC("EFIT"), effect);
+        auto stream = std::make_unique<std::stringstream>(record(ESM4::REC_TES4, 0, 1, header)
+            + record(ESM4::REC_INGR, form, deleted ? static_cast<std::uint32_t>(ESM4::Rec_Deleted) : 0u, payload), std::ios::in | std::ios::binary);
+        ESM4::Reader reader(std::move(stream), name, nullptr, nullptr, true);
+        reader.setModIndex(indices.at(name));
+        reader.updateModIndices(indices);
+        store.loadESM4(reader, &dummyListener);
+    };
+    load("base.esm", {}, 0x800, 25, false);
+    load("other.esm", {}, 0x800, 50, false);
+    const auto base = ESM::FormKey::content("base.esm", 0x800);
+    const auto other = ESM::FormKey::content("other.esm", 0x800);
+    ASSERT_NE(store.search<ESM4::Ingredient>(base), nullptr);
+    ASSERT_NE(store.search<ESM4::Ingredient>(other), nullptr);
+    EXPECT_EQ(store.search<ESM4::Ingredient>(base)->mEffects.at(0).mMagnitude, 25);
+    // The file's master order differs from global load order.
+    load("patch.esp", { "other.esm", "base.esm" }, 0x01000800, 75, false);
+    EXPECT_EQ(store.search<ESM4::Ingredient>(base)->mEffects.at(0).mMagnitude, 75);
+    EXPECT_EQ(store.search<ESM4::Ingredient>(other)->mEffects.at(0).mMagnitude, 50);
+    load("patch.esp", { "other.esm", "base.esm" }, 0x01000800, 0, true);
+    EXPECT_EQ(store.search<ESM4::Ingredient>(base), nullptr);
+    EXPECT_NE(store.search<ESM4::Ingredient>(other), nullptr);
 }

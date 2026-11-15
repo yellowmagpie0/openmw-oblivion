@@ -1,0 +1,647 @@
+{
+  "schema_version": 1,
+  "parent_commit": "d3bd3c9221",
+  "status": "Accepted bounded ordinary damaging Player-arrow Marksman use; general XP and full M15/M12/expedition remain open.",
+  "contract": "MARKSMAN-USE-CONTRACT.json",
+  "oracle": "MARKSMAN-USE-ORACLE.json",
+  "schema": 99,
+  "implementation": "One native primary use on accepted damaging Player contact. All projectile impact owners are consumed before training and external notifications; generic training/base/progress/counters are reused without formula changes.",
+  "checks": {
+    "normal-arrow-focused-01": {
+      "path": "build/oblivion-compat/marksman-use/normal-arrow-focused-01/verification.json",
+      "sha256": "e0e63e9ad26100c2ff809555854de4c66f39a1754a909774023b0879ddc71aa6",
+      "source": {
+        "head": "d3bd3c9221d8dd53da4de365300f681f031c7031",
+        "source_fingerprint": "ffff589579a20a96ae77a71d0c05f14f291cae57705770b082dc7a35dee529d1"
+      },
+      "results": {
+        "engine": {
+          "executed": 14,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Arrow*:*Skill*Training*",
+          "binary_sha256": "224f7b6291d675ef72294ec79c494ad042d8db2968a9b64fe43038be83a2d693",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "07d9e09a93921a227ca06e4551ba914bf181258c1e683fa52340963b08c184fd",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-arrow-focused-01": {
+      "path": "build/oblivion-compat/marksman-use/sanitized-arrow-focused-01/verification.json",
+      "sha256": "c7eaeb8b6727000ccd120e3d564103f8756c9a4960bfaf37374b94dba0e5309f",
+      "source": {
+        "head": "d3bd3c9221d8dd53da4de365300f681f031c7031",
+        "source_fingerprint": "15d9964227b34f6c97bf6d95c89d3532f76f30addbb7f73b80794deeac845288"
+      },
+      "results": {
+        "engine": {
+          "executed": 14,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Arrow*:*Skill*Training*",
+          "binary_sha256": "040c14492d82809d30588e382820ad912d92e5f275ba609b8872262e2ea93724",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ee59265981e0c95a753ecb3d16fc25e73b751058c2452c1bf6fd9ac02f1f7d2a",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal-integration-01": {
+      "path": "build/oblivion-compat/marksman-use/normal-integration-01/verification.json",
+      "sha256": "b6326ccff950ce60c824447b19533f9a028f29b1ab2af7f552444d4744e09576",
+      "source": {
+        "head": "d3bd3c9221d8dd53da4de365300f681f031c7031",
+        "source_fingerprint": "2fd17e74a940cf347cd3a0ad3cc7a652e1be0142ca7fb91781fc31f1e68f5afe"
+      },
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "224f7b6291d675ef72294ec79c494ad042d8db2968a9b64fe43038be83a2d693",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3cce56d07b6c0063bcbca1e165b20b3b3bfd657c442e49d22e0e7d4544ca2b5b",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 612,
+          "passed": true,
+          "log_sha256": "13b058f4c389c2b24e565e179df6c328c5945a5467aeb2ec83a6b6dec09af964"
+        }
+      }
+    },
+    "sanitized-integration-01": {
+      "path": "build/oblivion-compat/marksman-use/sanitized-integration-01/verification.json",
+      "sha256": "9b4e5d932fce17075bf971a8db4e65a72389b49380b42e4ac9fa2d3cd3b77a45",
+      "source": {
+        "head": "d3bd3c9221d8dd53da4de365300f681f031c7031",
+        "source_fingerprint": "2fd17e74a940cf347cd3a0ad3cc7a652e1be0142ca7fb91781fc31f1e68f5afe"
+      },
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "040c14492d82809d30588e382820ad912d92e5f275ba609b8872262e2ea93724",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "43af3074cc1d042725b8ad778469f3a534a71af650e38dd4307a51e4a45fc376",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "normal-marksman-hit-02": {
+      "path": "build/oblivion-compat/marksman-use/normal-marksman-hit-02/marksman-audit.json",
+      "sha256": "0c700a0bebdc2f6b97b7cd2a8dccde7575f27ccd8d0f945a762f148abb26a751",
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": false,
+        "source_sha256": "876264955b89026ec1d1a2436377e072d176dc9a364b7caebf19d8aa7cc8731f",
+        "save_sha256": "783c7239a88243b64a92c7807f271b304ef089a5e5e0dbf6b377bd6ef252752e",
+        "binary_sha256": "9e37a32fe9a497a02ec501a30277d5cad672843d49b8e85d48addda18677a40f",
+        "before": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.800000011920929,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "player_impacts": [
+          [
+            "4",
+            "content:oblivion.esm:06bfc2",
+            "1.84206"
+          ]
+        ],
+        "player_health_before": 64.48082733154297,
+        "player_health_after": 64.48082733154297,
+        "arrows_before": 21,
+        "arrows_after": 20,
+        "bow_condition_before": 88.55998992919922,
+        "bow_condition_after": 88.07998657226562
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_marksman_use_hit.json",
+        "sha256": "05e78335524e8b42cf068f548a164212e4695b0f0f178c1ab7ec515c9730f512"
+      },
+      "process": {
+        "path": "build/oblivion-compat/marksman-use/normal-marksman-hit-02/process-epoch.json",
+        "sha256": "2188fb02c8351db8fbbb12baef641625237b2dc502a991f05aa54a5832f561fe"
+      }
+    },
+    "normal-marksman-restart-01": {
+      "path": "build/oblivion-compat/marksman-use/normal-marksman-restart-01/marksman-audit.json",
+      "sha256": "b1a2e0ab7af9db9ecbc257fe9e2d6dc2cb13d90064d7a75dd5a3f74de522ce97",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "783c7239a88243b64a92c7807f271b304ef089a5e5e0dbf6b377bd6ef252752e",
+        "save_sha256": "3ce1f747e0ac4424405341a736ee4e0121cd5661f1927290344165b29ca5ab77",
+        "binary_sha256": "9e37a32fe9a497a02ec501a30277d5cad672843d49b8e85d48addda18677a40f",
+        "before": {
+          "base": 5.0,
+          "experience": 0.800000011920929,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.800000011920929,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "player_impacts": [],
+        "player_health_before": 64.48082733154297,
+        "player_health_after": 64.48082733154297,
+        "arrows_before": 20,
+        "arrows_after": 20,
+        "bow_condition_before": 88.07998657226562,
+        "bow_condition_after": 88.07998657226562
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_marksman_use_observe.json",
+        "sha256": "b2f68a032c429241b4a132a16888ac77c594d6ce1b4f1a11550ca43939fab561"
+      },
+      "process": {
+        "path": "build/oblivion-compat/marksman-use/normal-marksman-restart-01/process-epoch.json",
+        "sha256": "4bf67b8cf44920eedb27e9e1c2e2a8522d7bf9e9624411e12e0987c6a95d5b95"
+      }
+    },
+    "normal-marksman-miss-01": {
+      "path": "build/oblivion-compat/marksman-use/normal-marksman-miss-01/marksman-audit.json",
+      "sha256": "f23b1a852cc3646c6e54b3c809d66e80a1a1e0e741d8b7870104692f7cd9a674",
+      "result": {
+        "passed": true,
+        "phase": "miss",
+        "sanitized": false,
+        "source_sha256": "5e07e91b1cff534a11d575f4885f89c889da4f292d6302cc27b7ab1d8305231c",
+        "save_sha256": "60d680499a74977c348123f680cccc5ae0c481b4ca3b923b6b34abf5adcf1901",
+        "binary_sha256": "9e37a32fe9a497a02ec501a30277d5cad672843d49b8e85d48addda18677a40f",
+        "before": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "player_impacts": [
+          [
+            "1",
+            "content:oblivion.esm:06bf42",
+            "0"
+          ]
+        ],
+        "player_health_before": 64.48082733154297,
+        "player_health_after": 64.48082733154297,
+        "arrows_before": 23,
+        "arrows_after": 23,
+        "bow_condition_before": 89.5199966430664,
+        "bow_condition_after": 89.5199966430664
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_marksman_use_observe.json",
+        "sha256": "b2f68a032c429241b4a132a16888ac77c594d6ce1b4f1a11550ca43939fab561"
+      },
+      "process": {
+        "path": "build/oblivion-compat/marksman-use/normal-marksman-miss-01/process-epoch.json",
+        "sha256": "d3d323ac2e0b45b432aaf39285fde7b42468cbb7189b46600b7776fccc8f94b7"
+      }
+    },
+    "normal-marksman-npc-01": {
+      "path": "build/oblivion-compat/marksman-use/normal-marksman-npc-01/marksman-audit.json",
+      "sha256": "24722123d42592465617e71a00a267d59b2ddc55b212244eaa4c224f48dc7853",
+      "result": {
+        "passed": true,
+        "phase": "npc",
+        "sanitized": false,
+        "source_sha256": "e4de56f429143ca4fb162de0b9468eb661970e4cc9496aa8f093fbc00b0a3918",
+        "save_sha256": "df6747123211c25c94b78690b0f95e79fc0868ebfaa60ddfbf23336c9d5936c1",
+        "binary_sha256": "9e37a32fe9a497a02ec501a30277d5cad672843d49b8e85d48addda18677a40f",
+        "before": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "player_impacts": [],
+        "player_health_before": 110.0,
+        "player_health_after": 99.38224792480469,
+        "arrows_before": 18,
+        "arrows_after": 18,
+        "bow_condition_before": 86.63997650146484,
+        "bow_condition_after": 86.63997650146484
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_marksman_use_observe.json",
+        "sha256": "b2f68a032c429241b4a132a16888ac77c594d6ce1b4f1a11550ca43939fab561"
+      },
+      "process": {
+        "path": "build/oblivion-compat/marksman-use/normal-marksman-npc-01/process-epoch.json",
+        "sha256": "2e6c957302cd9bde6afc72bcbd7c98d5e685a7cc5967520f4d184ffbd6a3a015"
+      }
+    },
+    "sanitized-marksman-hit-01": {
+      "path": "build/oblivion-compat/marksman-use/sanitized-marksman-hit-01/marksman-audit.json",
+      "sha256": "2613030978d351d92a420bd1f0356b7fa1af42800dd05fee94ae894a114047a8",
+      "result": {
+        "passed": true,
+        "phase": "hit",
+        "sanitized": true,
+        "source_sha256": "876264955b89026ec1d1a2436377e072d176dc9a364b7caebf19d8aa7cc8731f",
+        "save_sha256": "9d04da8ae53fbf8c4453ee7dbaf08f071e107d485210dafb94b9c714e8c56776",
+        "binary_sha256": "a3589a6c3b7d57b360ca2f18fab38c8910af8de8ad5194dd441714dbcab722c1",
+        "before": {
+          "base": 5.0,
+          "experience": 0.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.800000011920929,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "player_impacts": [
+          [
+            "4",
+            "content:oblivion.esm:06bfc2",
+            "1.83773"
+          ]
+        ],
+        "player_health_before": 64.48082733154297,
+        "player_health_after": 64.48082733154297,
+        "arrows_before": 21,
+        "arrows_after": 20,
+        "bow_condition_before": 88.55998992919922,
+        "bow_condition_after": 88.07998657226562
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_marksman_use_hit_sanitized.json",
+        "sha256": "777b71d1b623e5e5d423015587ae24ef54ae6c212c8bc4b0884aff954688f22a"
+      },
+      "process": {
+        "path": "build/oblivion-compat/marksman-use/sanitized-marksman-hit-01/process-epoch.json",
+        "sha256": "096e1ebbad2a8b66ec83d530ff09dc184c7cb8d44dd1f2007816179c16ea012c"
+      }
+    },
+    "sanitized-marksman-restart-01": {
+      "path": "build/oblivion-compat/marksman-use/sanitized-marksman-restart-01/marksman-audit.json",
+      "sha256": "f4e33dc34cffbb7db44c433b93756143d25e5b62dc020d6357f9e0fc08663cad",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "9d04da8ae53fbf8c4453ee7dbaf08f071e107d485210dafb94b9c714e8c56776",
+        "save_sha256": "028d1da8a613c82e6ec2a64e004c99be37c4a011c172a63e1191994d09b382ae",
+        "binary_sha256": "a3589a6c3b7d57b360ca2f18fab38c8910af8de8ad5194dd441714dbcab722c1",
+        "before": {
+          "base": 5.0,
+          "experience": 0.800000011920929,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after": {
+          "base": 5.0,
+          "experience": 0.800000011920929,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            0,
+            0
+          ]
+        },
+        "player_impacts": [],
+        "player_health_before": 64.48082733154297,
+        "player_health_after": 64.48082733154297,
+        "arrows_before": 20,
+        "arrows_after": 20,
+        "bow_condition_before": 88.07998657226562,
+        "bow_condition_after": 88.07998657226562
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_marksman_use_observe_sanitized.json",
+        "sha256": "ee24dc37aecefeb7ea4001de9b2fc91b7a14059284cf6703dc04e002eca1310b"
+      },
+      "process": {
+        "path": "build/oblivion-compat/marksman-use/sanitized-marksman-restart-01/process-epoch.json",
+        "sha256": "c0dfe22178eb3d2543c24f3574f187c55f13690cbd90c1f868c7a71ac8a5c5c8"
+      }
+    }
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/marksman-use/normal-marksman-hit-baseline-01/marksman-audit.json",
+    "sha256": "2b439419483c9358c09177e785318b5e32beba37ff43436bc6ed1f0cc677508a",
+    "result": {
+      "passed": true,
+      "phase": "baseline",
+      "sanitized": false,
+      "source_sha256": "876264955b89026ec1d1a2436377e072d176dc9a364b7caebf19d8aa7cc8731f",
+      "save_sha256": "7bedaf5ebb6c3028a0d35222d5ed5464758a7b9cb7e15b758be9817f91117727",
+      "binary_sha256": "8227bd0b43b9f244467c69cc91fb5aa898fdbd82add7d1971ac879fccbf08a87",
+      "before": {
+        "base": 5.0,
+        "experience": 0.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          0,
+          0
+        ]
+      },
+      "after": {
+        "base": 5.0,
+        "experience": 0.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          0,
+          0
+        ]
+      },
+      "player_impacts": [
+        [
+          "4",
+          "content:oblivion.esm:06bfc2",
+          "1.84273"
+        ]
+      ],
+      "player_health_before": 64.48082733154297,
+      "player_health_after": 64.48082733154297,
+      "arrows_before": 21,
+      "arrows_after": 20,
+      "bow_condition_before": 88.55998992919922,
+      "bow_condition_after": 88.07998657226562
+    }
+  },
+  "production_source": {
+    "path": "apps/openmw/mwworld/oblivionbow.cpp",
+    "sha256": "98fcd2c96e1d6d9b7243651c3f6db25943a568a5a0971a01f29dce482ef8872d"
+  },
+  "auditor": {
+    "path": "scripts/verify_marksman_use.py",
+    "sha256": "d6df2b6042adf987c9ac472f3ef17adb7e13ebdff6a350ce6cff7c91dd0729cc"
+  },
+  "source_scope": "Focused and full engine gates test unchanged production C++; later manifest/audit/receipt corrections do not change it. Actual final manifest bytes match the captured inputs. Generic skill training retains prior Security provenance.",
+  "validation_layers": {
+    "structural": "Six successful scenario admissions with editable manifests and original master only; no generated game plugin or stat/inventory grant.",
+    "compiler_world": "14 focused arrow cases and full2278 in each build; Python612. Original record identities/primary0.8 and18 original dispatcher cases audited independently.",
+    "semantic": "Exact native payload roundtrip, live/save equality, legacy PLAY skill23 experience/base/counters, native AV28 projection/modifiers, arrows/counts/wear and actual damage logs.",
+    "runtime": "Two ordinary Player hits in separate builds each grant0.8; two fresh-process reloads retain it. A genuine saved-flight static miss and two incoming Skeleton arrows grant no Player Marksman."
+  },
+  "sanitizer_scope": "Full engine gates detect_leaks=1/halt_on_error=1 and UBSan halt_on_error=1; rendered courses detect_leaks=0. Rendered sessions are not leak coverage.",
+  "visual_review": "All8 accepted primary images plus2 baseline images inspected.",
+  "retained_diagnostics": {
+    "path": "build/oblivion-compat/marksman-use/retained-diagnostics.json",
+    "sha256": "5e7e1256a52b4dd43c2f497e2fd1055adac00963798a1a734a7a930feee48631"
+  },
+  "limits": [
+    "Zero-damage/immune/fully blocked and corpse-hit experience policy is deferred; this hook awards damaging accepted contacts only.",
+    "Original Player use dispatcher and SKIL amount are independently checked; original projectile hit-versus-miss caller policy is not instruction-certified.",
+    "Positive delayed actor impact from a saved airborne Player arrow and a Marksman level crossing are separate runtime cases; existing generic progression and physical-flight evidence retain their provenance."
+  ],
+  "outgoing": {
+    "marksman_owned": "normal-marksman-restart-01",
+    "player_wound_source": "normal-marksman-npc-01",
+    "player_wound_health": 99.38224792480469,
+    "broader_expedition": "BONE-RESISTANCES-VERIFICATION.json retains the separate fresh innate-owned secret-wall branch."
+  }
+}

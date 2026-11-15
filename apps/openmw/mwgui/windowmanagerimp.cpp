@@ -1,4 +1,6 @@
 #include "windowmanagerimp.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
+#include <components/esm4/loadbook.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -26,6 +28,7 @@
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
+#include <components/esm4/loadspel.hpp>
 
 #include <components/fontloader/fontloader.hpp>
 
@@ -692,7 +695,13 @@ namespace MWGui
         requireMutableRuntime();
         if (newgame)
         {
-            disallowAll();
+            // Morrowind's chargen scripts unlock these windows individually.
+            // Oblivion's tutorial uses player controls instead and never issues
+            // those menu-unlock commands.
+            if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+                allow(GW_ALL);
+            else
+                disallowAll();
 
             mRuntime->mStatsWatcher->removeListener(mRuntime->mCharGen.get());
             mRuntime->mCharGen = std::make_unique<CharacterCreation>(mViewer->getSceneData()->asGroup(), mResourceSystem);
@@ -1692,13 +1701,29 @@ namespace MWGui
         mRuntime->mSelectedEnchantItem = MWWorld::Ptr();
         mRuntime->mHud->setSelectedSpell(spellId, successChancePercent);
 
-        const ESM::Spell* spell = mStore->get<ESM::Spell>().find(spellId);
-
-        mRuntime->mSpellWindow->setTitle(spell->mName);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            mRuntime->mSpellWindow->setTitle(mStore->get<ESM4::Spell>().find(spellId)->mFullName);
+        else
+            mRuntime->mSpellWindow->setTitle(mStore->get<ESM::Spell>().find(spellId)->mName);
     }
 
     void WindowManager::setSelectedEnchantItem(const MWWorld::Ptr& item)
     {
+        auto world = MWBase::Environment::get().getWorld();
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto* book = item.isEmpty() ? nullptr
+                : mStore->get<ESM4::Book>().search(item.getCellRef().getRefId());
+            if (!book || (!MWWorld::resolveOblivionScrollDamage(*mStore, *book)
+                && !MWWorld::resolveOblivionScrollChameleon(*mStore, *book)))
+                throw std::invalid_argument("unsupported native selected magic item");
+            mRuntime->mSelectedEnchantItem = item;
+            mRuntime->mSelectedSpell = {};
+            mRuntime->mHud->setSelectedEnchantItem(item, 100);
+            mRuntime->mSpellWindow->setTitle(item.getClass().getName(item));
+            return;
+        }
+
         mRuntime->mSelectedEnchantItem = item;
         mRuntime->mSelectedSpell = ESM::RefId();
         const ESM::Enchantment* ench = mStore->get<ESM::Enchantment>().find(item.getClass().getEnchantment(item));
@@ -1952,9 +1977,11 @@ namespace MWGui
 
     bool WindowManager::getRestEnabled()
     {
-        // Enable rest dialogue if character creation finished
+        // TES4 uses the native control and wait-eligibility gates. Its
+        // character creation does not set the TES3 chargenstate global.
         if (mRuntime->mRestAllowed == false
-            && MWBase::Environment::get().getWorld()->getGlobalFloat(MWWorld::Globals::sCharGenState) == -1)
+            && (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                || MWBase::Environment::get().getWorld()->getGlobalFloat(MWWorld::Globals::sCharGenState) == -1))
             mRuntime->mRestAllowed = true;
         return mRuntime->mRestAllowed;
     }
@@ -2216,7 +2243,8 @@ namespace MWGui
         {
             reader.getSubNameIs("ID__");
             ESM::RefId spell = reader.getRefId();
-            if (mStore->get<ESM::Spell>().search(spell))
+            if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                ? mStore->get<ESM4::Spell>().search(spell) != nullptr : mStore->get<ESM::Spell>().search(spell) != nullptr)
                 mRuntime->mSelectedSpell = spell;
         }
         else if (type == ESM::REC_MARK)

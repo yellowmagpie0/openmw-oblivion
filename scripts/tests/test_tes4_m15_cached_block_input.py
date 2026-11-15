@@ -46,12 +46,17 @@ class CachedBlockInputTests(unittest.TestCase):
             actual['script_instances'][0]['unit'] = recipe['old_unit']
             for actor in before['native_actor_values']: actor.setdefault('process_alerted', None)
             runtime._upgrade_bound_ownership(before)
+            runtime._upgrade_inventory_scripts(before)
             for item in before['player']['inventory']:
                 item['extra_scale'] = None
             for key, value in before.items():
                 self.assertEqual(actual[key], value, key)
             self.assertEqual(actual.get('native_loose_weapons'), [])
             self.assertEqual(actual.get('native_animated_references'), [])
+            self.assertEqual(actual.get('native_trap_contacts'), [])
+            self.assertEqual(actual.get('native_spell_casts'), [])
+            self.assertEqual(actual.get('native_magic_projectiles'), [])
+            self.assertEqual(actual.get('next_magic_projectile'), 1)
             self.assertEqual(actual.get('disposition_modifiers'), [])
             self.assertEqual(actual.get('faction_reactions'), [])
             self.assertIn('native_movement', actual)

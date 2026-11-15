@@ -1,0 +1,350 @@
+{
+  "status": "Accepted bounded ordinary Player Blade use on original placed Iron Claymore",
+  "full_milestone_complete": false,
+  "contract": "BLADE-USE-CONTRACT.json",
+  "original_oracle": "BLADE-USE-ORACLE.json",
+  "cases": {
+    "normal_baseline": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/normal-claymore-hit-baseline-03/blade-use-audit.json",
+        "sha256": "cb260a488d19af422a340cad1a1ba1a83d7dd032954ed9844f0abf22b7dd3300"
+      },
+      "source_sha256": "65e2ca320122619dbc0db470b96ceb5c21a55362a7f1e7a555f53d4c127d6b2f",
+      "save_sha256": "3cf8c95a2858c5aaa125b415bb1a4da7c5c7a8933b4f4e0e29d5dd2382ecd653",
+      "binary_sha256": "40e70141bafc4c599ac61b8b7ec67ebc8623e468e83675cca92aba915e634d5f",
+      "blade_before": {
+        "base": 35.0,
+        "experience": 0.0
+      },
+      "blade_after": {
+        "base": 35.0,
+        "experience": 0.0
+      },
+      "positive_contacts": 1,
+      "misses": 0
+    },
+    "normal_hit": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/normal-blade-hit-01/blade-use-audit.json",
+        "sha256": "74739cbb34be1f3e6016d86970e078437775c02056fb504aa7528016831b786b"
+      },
+      "source_sha256": "65e2ca320122619dbc0db470b96ceb5c21a55362a7f1e7a555f53d4c127d6b2f",
+      "save_sha256": "e05eabe887868d29f7043cb1125416cfa1d22fcb12d5a0e50bfe7ffd4f1046c1",
+      "binary_sha256": "2432f656181d20694b5f9d9e8af111649634d2785420a4e173a611268da8a9ef",
+      "blade_before": {
+        "base": 35.0,
+        "experience": 0.0
+      },
+      "blade_after": {
+        "base": 35.0,
+        "experience": 0.5
+      },
+      "positive_contacts": 1,
+      "misses": 0
+    },
+    "normal_miss": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/normal-blade-miss-01/blade-use-audit.json",
+        "sha256": "14fe4700ba0946afc550e8c3ab020515418a515d4d2215d5f0b318bf9ddd9f8a"
+      },
+      "source_sha256": "65e2ca320122619dbc0db470b96ceb5c21a55362a7f1e7a555f53d4c127d6b2f",
+      "save_sha256": "1a9d239721441ec153adbe27c2af75318e50b8fc1162e106d5b368655a70baa3",
+      "binary_sha256": "2432f656181d20694b5f9d9e8af111649634d2785420a4e173a611268da8a9ef",
+      "blade_before": {
+        "base": 35.0,
+        "experience": 0.0
+      },
+      "blade_after": {
+        "base": 35.0,
+        "experience": 0.0
+      },
+      "positive_contacts": 0,
+      "misses": 1
+    },
+    "normal_restart": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/normal-blade-restart-01/blade-use-audit.json",
+        "sha256": "9570c964ba4cb7a6356939eb80dcb4d74034bf01cffdf83e7ff99278a057d7fe"
+      },
+      "source_sha256": "e05eabe887868d29f7043cb1125416cfa1d22fcb12d5a0e50bfe7ffd4f1046c1",
+      "save_sha256": "c0424880f85c83b54ad6f857cb252446487fc9d260acb90f443ee2ae50871909",
+      "binary_sha256": "2432f656181d20694b5f9d9e8af111649634d2785420a4e173a611268da8a9ef",
+      "blade_before": {
+        "base": 35.0,
+        "experience": 0.5
+      },
+      "blade_after": {
+        "base": 35.0,
+        "experience": 0.5
+      },
+      "positive_contacts": 0,
+      "misses": 0
+    },
+    "sanitized_hit": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/sanitized-blade-hit-02/blade-use-audit.json",
+        "sha256": "d6eeeea1d281cb0ea84f04544e4608dc680552d175348bf6f612efb53ad6cd80"
+      },
+      "source_sha256": "65e2ca320122619dbc0db470b96ceb5c21a55362a7f1e7a555f53d4c127d6b2f",
+      "save_sha256": "b22fb5b18ae52b0d399ba02f3240f3e8dcd8451165cead37705490dd0d7f51fd",
+      "binary_sha256": "ed8bba327f9aebff0d60b8134e33a656520211047be38f0e386863d1a0fc06be",
+      "blade_before": {
+        "base": 35.0,
+        "experience": 0.0
+      },
+      "blade_after": {
+        "base": 35.0,
+        "experience": 0.5
+      },
+      "positive_contacts": 1,
+      "misses": 0
+    },
+    "sanitized_miss": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/sanitized-blade-miss-01/blade-use-audit.json",
+        "sha256": "35f157e3f5d21150964d6af525ded0b623292117be622cc948023f823cd4edb0"
+      },
+      "source_sha256": "65e2ca320122619dbc0db470b96ceb5c21a55362a7f1e7a555f53d4c127d6b2f",
+      "save_sha256": "bd9c8052a9b9dfb06fbee88d99d7889c6fe5c997c7ac9013e451215538682c69",
+      "binary_sha256": "ed8bba327f9aebff0d60b8134e33a656520211047be38f0e386863d1a0fc06be",
+      "blade_before": {
+        "base": 35.0,
+        "experience": 0.0
+      },
+      "blade_after": {
+        "base": 35.0,
+        "experience": 0.0
+      },
+      "positive_contacts": 0,
+      "misses": 1
+    },
+    "sanitized_restart": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/sanitized-blade-restart-01/blade-use-audit.json",
+        "sha256": "a3ad0f496b04c5f5a2d847d64805417e2d08b1663f64c99550d1f01f91c5d0bf"
+      },
+      "source_sha256": "b22fb5b18ae52b0d399ba02f3240f3e8dcd8451165cead37705490dd0d7f51fd",
+      "save_sha256": "aaf419b719f0f4a3d36809f8a4b8e3952abc7c6ec71a843bce7361fa180b0f44",
+      "binary_sha256": "ed8bba327f9aebff0d60b8134e33a656520211047be38f0e386863d1a0fc06be",
+      "blade_before": {
+        "base": 35.0,
+        "experience": 0.5
+      },
+      "blade_after": {
+        "base": 35.0,
+        "experience": 0.5
+      },
+      "positive_contacts": 0,
+      "misses": 0
+    }
+  },
+  "gates": {
+    "focused-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/focused-normal-01/verification.json",
+        "sha256": "65c7aef788351dea8bfd3ff82b1edc28deaa9d0b27637f19819e5f3d30a81faf"
+      },
+      "source": {
+        "head": "84d6cced1045fc56a3917f00a9bf9c9f80671c0e",
+        "source_fingerprint": "4f13ae1812635230ac0e649aed39bdbf46fbdf4f1a00843c53f062c3a98b5321"
+      },
+      "result": {
+        "executed": 9,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionWorldTest.*Skill*:OblivionWorldTest.*Unarmed*Block*:OblivionWorldTest.CreatureArmedContactConsumesOrdinaryAndPowerWindowsOnceWithNativeFatigueCost:OblivionDialogueTest.*Committed*Hit*",
+        "binary_sha256": "3870b3595cf46d0d89ce79acca93162226d625a63f9a659d32d122acafd52bf6",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "fce5f706b117e8246a7365f01f542c08ad9f1748a241268c678db35a0ebec691",
+        "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "focused-sanitized-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/focused-sanitized-01/verification.json",
+        "sha256": "197a9b3cc60ccd1b1f6b00da3714c8d55036fca22c706746823cfd045b94ff1c"
+      },
+      "source": {
+        "head": "84d6cced1045fc56a3917f00a9bf9c9f80671c0e",
+        "source_fingerprint": "0e76a42519368f204cba3d54b1940aea4db6956b5fd7130cd7e09b40d91e7559"
+      },
+      "result": {
+        "executed": 9,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionWorldTest.*Skill*:OblivionWorldTest.*Unarmed*Block*:OblivionWorldTest.CreatureArmedContactConsumesOrdinaryAndPowerWindowsOnceWithNativeFatigueCost:OblivionDialogueTest.*Committed*Hit*",
+        "binary_sha256": "c867abc3a3c2fe07f4070ec157cc4073c77d8c1ef16a5e773ea1582b2d59490b",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "d0bc8aaf214a11e95da5ad7cb6950bbe8727258aa013d72db05ff048761c310d",
+        "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "full-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/full-normal-01/verification.json",
+        "sha256": "91373bac4b304720cb8c79c416182dc3ad09f5858d23a378a6985c31811c7d40"
+      },
+      "source": {
+        "head": "84d6cced1045fc56a3917f00a9bf9c9f80671c0e",
+        "source_fingerprint": "0e76a42519368f204cba3d54b1940aea4db6956b5fd7130cd7e09b40d91e7559"
+      },
+      "result": {
+        "executed": 2284,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "3870b3595cf46d0d89ce79acca93162226d625a63f9a659d32d122acafd52bf6",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "2ecfc7962c43ec71fdf4d3036cb687045faa92ac5a77a52f62c4de288078d6f2",
+        "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "full-sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/sanitized-inventory-union.json",
+        "sha256": "f9ee7f1049e907b9e293b2714fb6620d78e1ef57b75255193541c13a4026da40"
+      },
+      "source": {
+        "head": "84d6cced1045fc56a3917f00a9bf9c9f80671c0e",
+        "source_fingerprint": "0e76a42519368f204cba3d54b1940aea4db6956b5fd7130cd7e09b40d91e7559"
+      },
+      "executed": 2284,
+      "duplicates": 0,
+      "missing": 0,
+      "skipped": 0,
+      "leak_detection": true
+    }
+  },
+  "captures_reviewed": [
+    {
+      "path": "build/oblivion-compat/blade-use/normal-blade-hit-01/original-claymore-after-hit.png",
+      "sha256": "6cd4042695a808edcca978654a506a9eed259e491449bb86749d22715a79a7a3"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/normal-blade-hit-01/original-claymore-before-hit.png",
+      "sha256": "d8c2a8058c335038a74ecb9a4a50c1f210c841cb3de90d59a1a331eee8eb8b11"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/normal-blade-miss-01/original-claymore-before-miss.png",
+      "sha256": "315433fbc965056d9b06d9c02881e9b3c20ab74267d2c67d8bf2f62552c9806e"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/normal-blade-miss-01/original-claymore-miss.png",
+      "sha256": "3352e3ee3cf027c4b0517354656bb96fc5886c1f787f7e1dd47c89b392348105"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/normal-blade-restart-01/original-claymore-restart.png",
+      "sha256": "79e940b91b6a537fbbbad3003d0e5959856a6bd6656700e429b25654e917b80e"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/sanitized-blade-hit-02/original-claymore-after-hit.png",
+      "sha256": "95f31c2c0b904c1e5816af21d8c4fb341a3b21a4f54b789ce6f7d7fc2b8e0dec"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/sanitized-blade-hit-02/original-claymore-before-hit.png",
+      "sha256": "4c9e79bb43150575ba3e6699bb039125c1dbf76833c3f7ac05cb68318fed52bf"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/sanitized-blade-miss-01/original-claymore-before-miss.png",
+      "sha256": "56616c4ce6e1ea8ff2a1a14837ace0922fbba4f258edde61f5b3a1481a75696b"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/sanitized-blade-miss-01/original-claymore-miss.png",
+      "sha256": "c45e1d2f89ab86a1d892369230eb7420444cb084e8c73320f53010c7b9ccb212"
+    },
+    {
+      "path": "build/oblivion-compat/blade-use/sanitized-blade-restart-01/original-claymore-restart.png",
+      "sha256": "633a74cb2146511ebddee7db3f19f4bb433ae2b850ced5117fa28d7f39dad80a"
+    }
+  ],
+  "source_chain": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/normal-claymore-approach-01/driver-process.json",
+        "sha256": "f0002ca512124e616ac0932ea5c4dbcf23d4215cf38d31028b31bba9151cb65a"
+      },
+      "input_sha256": "85e7f595386586eeed29b02d4cb3328370a7322c84f05f4e9a35b65c9afcddd7",
+      "source_manifest": {
+        "path": "build/oblivion-compat/blade-use/normal-claymore-approach-01/captured-input-manifest.json",
+        "sha256": "f8f3cb2848c920e4d698ebb7d2bc13992ffbbe80b73ad5fc53ddfe638bee3ebe"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/normal-claymore-pickup-01/driver-process.json",
+        "sha256": "0e11da81fbd3f19e95b39d90ff67af00bff03bbf648c1f16238207be4be36c9e"
+      },
+      "input_sha256": "3d749ab5b61f3413b1683b50c76a6983bca0d9da8a575ad18d705c771bd7dde6",
+      "source_manifest": {
+        "path": "build/oblivion-compat/blade-use/normal-claymore-pickup-01/captured-input-manifest.json",
+        "sha256": "ae01d27cc72652dbbed62652952ddf4ebe5a577625d43fbbc2fa7f59bdf1b24f"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/blade-use/normal-claymore-equip-08/driver-process.json",
+        "sha256": "a4b5e2b1aa1c9f283b727a326239804ad03ac6a40f39e4a1de7376e6517eb16c"
+      },
+      "input_sha256": "21b9653d8882ed2fc810a572d3acd4d1b9b65665ff03c354331a660b251e42ea",
+      "source_manifest": {
+        "path": "build/oblivion-compat/blade-use/normal-claymore-equip-08/captured-input-manifest.json",
+        "sha256": "71ad0c3e490a52dca0cb3d478e08ebadd0b54254f22fe176557a59884b81ef5b"
+      }
+    }
+  ],
+  "source_chain_note": "Genuine food-sack continuation, ordinary path walking/Space pickup/inventory drag to avatar/Escape close/readied weapon. Pointer helper receipts retain process epochs and exact delivered X11 pointer positions. No generated plugin, stat setter, healing, seed, owner repair or save editing. Initial approach predates this course event observer; it is staging provenance, not the final gameplay acceptance.",
+  "semantic_audit": "Raw PLAY Blade index5/base35, native AV14, +0.5 per actual committed positive contact, unique source-pending/new action IDs. Damage, weapon wear, target and Player health debit match pre-save contacts. Incoming dagger hits legitimately train Heavy Armor and may cross40 to41. One equipped original claymore, source deleted/taken/count0, unchanged inventory totals; exact schema101 payload and process-bound live/save equality. Cold load has no new Player contact or experience replay. Blunt and Hand progress unchanged.",
+  "retained_failures": [
+    {
+      "case": "normal-claymore-equip-01 through07",
+      "reason": "Input preparation attempts: X11 menus ineffective; focus_window missing name; unsupported SDL command preflight; GUI screenshot deferred; Ctrl click began drag; Tab did not close. Final08 uses actual SDL drag-to-avatar and Escape with read-only X11 pointer receipts."
+    },
+    {
+      "case": "normal-claymore-hit-baseline-01",
+      "reason": "Observer incorrectly queried skills.blade instead of public longblade; no accepted gameplay. Ordinary SDL quit retained after failed observer wait."
+    },
+    {
+      "case": "normal-claymore-hit-baseline-02",
+      "reason": "Single input fell within real incoming-hit stagger recovery, so no Player strike admitted. Final baseline03 uses bounded ordinary short-click retries."
+    },
+    {
+      "case": "sanitized-blade-hit-01",
+      "reason": "Moving target/third-person camera failed narrow facing convergence before any attack. Final02 uses yaw0.10/pitch0.15-radian input tolerance; actual damage/wear/XP assertions unchanged."
+    }
+  ],
+  "reused_unchanged_checks": {
+    "receipt": "ARMOR-USE-VERIFICATION.json",
+    "scope": "Original book provenance3294 normal components,1115 native sanitizer components,616 Python codec checks. Components/codec unchanged; engine inventories and actual rendered normal/instrumented courses fresh."
+  },
+  "limits": [
+    "Ordinary positive-health-damage Blade course only; no zero-damage/immune/fully blocked, power-specific, mastery or Blade level-crossing acceptance.",
+    "Original dispatcher18 cases use declared lookup/base/sink boundaries. No original live Blade contact or complete caller proof.",
+    "Taken source cold-load visual/picking ghost remains a separately recorded follow-up; inventory/save deletion is correct.",
+    "Runtime sanitizer courses disable leak detection; engine inventory gates enable it. Broad sanitizer inventory is an audited disjoint union avoiding cumulative Bullet worker counters."
+  ],
+  "post_gate_changes": "Final acceptance documentation and widened sanitized input-observer facing tolerance only. Production C++ and semantic verifier unchanged; instrumented gameplay records exact private manifest hash, identical to the published corrected recipe."
+}

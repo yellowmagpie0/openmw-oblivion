@@ -1,0 +1,46 @@
+{
+  "status": "Bounded original Rice repeated-world-save, second-cold pickup and final inventory reload complete in normal and instrumented processes. Fresh Nirnroot regression, focused12 engine/Python617 and full2291 normal/instrumented engine gates pass. No full milestone or stack claim.",
+  "milestone": "M16 bounded plain-ingredient inventory/world persistence",
+  "source": {
+    "path": "build/oblivion-compat/nirnroot-drop/normal-inventory-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "c05743f6dcbc781de8c6d8802fb61631d962c28276a0ce0a001e43593979fa07",
+    "boundary": "Nirnroot continuation of the separate Wine branch; do not merge Cairn progress."
+  },
+  "content": {
+    "base": "content:oblivion.esm:033690",
+    "name": "Rice",
+    "count": 1,
+    "script": null,
+    "food_flags": 3,
+    "weight": 0.20000000298023224
+  },
+  "original_audit": {
+    "path": "build/oblivion-compat/ingredient-drop/winning-original-ingredients.json",
+    "sha256": "fb9b6f2e2b769509308fb910d423e327204bfaef1ad0de7709ba72f2da189210",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "plan": [
+    "Completed: baseline drop/save, first cold load/re-save, then second cold load proved disappearance before pickup.",
+    "Implemented: prepare a typed native world reference for a scriptless ingredient singleton; optional transfer retains the existing scripted Nirnroot path.",
+    "Run drop/save, first cold world load/re-save, second cold world inspection/pickup/save, and final cold inventory save in normal and instrumented processes."
+  ],
+  "acceptance": [
+    "One original Rice moves inventory to a typed native world reference, survives two consecutive cold world loads separated by a real save, and keeps exact metadata without any script instance.",
+    "Cold-world load snapshot proves one item exists before ordinary pickup; pickup returns exactly one scriptless inventory item and retires the world count.",
+    "Final cold inventory load remains stable. Preserve the carried Nirnroot owner4/Found1, MS39 stage10/counters2, Health110, all earned skills, passives, unrelated items and33 credited deaths.",
+    "Focused lifetime checks, appropriate full engine/regression gates, independent winning-record provenance and actual normal-input runtime evidence."
+  ],
+  "limits": [
+    "No Rice consumption, new ingredient effect, arbitrary spawn roots, dynamic bounce, general container/scripted-event or full milestone acceptance claim.",
+    "Initial real course is the existing singleton. Stack behavior needs separately justified acceptance before being called complete.",
+    "No fork grants, stat/time/position/seed setters or edited source saves. Existing coastal rendering and expensive instrumented loads remain adjacent gaps."
+  ],
+  "baseline": {
+    "drop": "normal-rice-drop-baseline-01",
+    "first_cold": "normal-rice-cold-baseline-01",
+    "second_cold_failed_pickup": "normal-rice-pickup-baseline-01",
+    "root": "build/oblivion-compat/ingredient-drop",
+    "observation": "First cold load shows the same Rice at nearby id@0x225eab; after its re-save, second cold load has inventory0 and no nearby Rice before pickup input. Neither save has a native dynamic Rice reference; allocator remains5."
+  },
+  "retained_implementation_attempt": "normal-rice-drop-01 and normal-rice-world-cold-01 still used legacy admission because a FormId pointer borrowed a temporary RefId. Fixed by retaining the RefId locally; accepted normal-rice-drop-02 has native world key5. Initial verifier expected an empty script owner as a string instead of JSON null; corrected."
+}

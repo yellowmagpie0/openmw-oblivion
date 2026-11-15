@@ -1,4 +1,5 @@
 #include "oblivionmelee.hpp"
+#include "oblivionplayerhostility.hpp"
 
 #include "oblivioncombat.hpp"
 #include "oblivionai.hpp"
@@ -7,6 +8,7 @@
 #include "steering.hpp"
 #include "../mwworld/oblivioncombatdata.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/environment.hpp"
@@ -25,6 +27,7 @@
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadammo.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/loadmgef.hpp>
 #include <components/esm4/loadspel.hpp>
@@ -41,6 +44,7 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <cstdlib>
 #include <limits>
 #include <set>
 #include <stdexcept>
@@ -84,10 +88,88 @@ namespace MWMechanics
             return selected;
         }
 
+        // Bounded visible-target ranged policy for native weapon-capable
+        // creatures. The directed controller owns its target and the bow
+        // controller owns playback; no parallel melee intent is published.
+        bool updateOwnedCreatureBow(MWWorld::World& world, const MWWorld::Ptr& actor,
+            const MWWorld::Ptr& target, OblivionCombatService& combat,
+            OblivionAiService& ai, const ESM4::CombatStyleStandard& style, float duration)
+        {
+            if (actor.getType() != ESM::REC_CREA4
+                || !(actor.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_WeapAndShield))
+                return false;
+            const auto key = actor.getCellRef().getFormKey();
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            const auto bowDefinition = [&](const MWWorld::Ptr& item) -> const ESM4::Weapon* {
+                if (item.getType() != ESM::REC_WEAP || item.getCellRef().getCount() <= 0) return nullptr;
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item.getCellRef().getRefId());
+                const auto* weapon = world.getStore().get<ESM4::Weapon>().search(id);
+                return weapon && !(weapon->mFlags & ESM4::Rec_Deleted) && weapon->mData.type == 5
+                    && !(weapon->mData.flags & 1u) && weapon->mEnchantment.isZeroOrUnset()
+                    && item.getCellRef().getItemCondition(weapon->mData.health) > 0 ? weapon : nullptr;
+            };
+            const auto current = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            if (current != inventory.end() && !bowDefinition(*current)) return false;
+            MWWorld::Ptr bow = current == inventory.end() ? MWWorld::Ptr{} : *current;
+            if (bow.isEmpty())
+                for (auto item = inventory.begin(); item != inventory.end(); ++item)
+                    if (const auto* candidate = bowDefinition(*item);
+                        candidate && (bow.isEmpty() || candidate->mData.damage > bowDefinition(bow)->mData.damage))
+                        bow = *item;
+            if (bow.isEmpty()) return false;
+            MWWorld::Ptr ammo;
+            for (auto item = inventory.begin(); item != inventory.end(); ++item)
+            {
+                if (item->getCellRef().getCount() <= 0) continue;
+                // Inventory AMMO uses a shared WEAP facade; resolve the native
+                // identity before asking its winning ammunition definition.
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item->getCellRef().getRefId());
+                const auto* definition = world.getStore().get<ESM4::Ammunition>().search(id);
+                if (definition && !(definition->mFlags & ESM4::Rec_Deleted) && !definition->mData.mFlags
+                    && definition->mEnchantment.isZeroOrUnset() && definition->mAmmoEffects.empty())
+                { ammo = *item; break; }
+            }
+            if (ammo.isEmpty()) return false;
+            if (const auto* melee = combat.findMeleeState(key); melee && (melee->mStrike || melee->mReaction))
+                return false;
+            combat.clearMeleeAiIntent(key);
+            if (current == inventory.end())
+            {
+                inventory.equip(MWWorld::InventoryStore::Slot_CarriedRight, std::find(inventory.begin(), inventory.end(), bow));
+                Log(Debug::Info) << "M15 creature bow equipped: actor=" << key.serialize();
+            }
+            const auto selectedAmmo = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+            if (selectedAmmo == inventory.end() || *selectedAmmo != ammo)
+                inventory.equip(MWWorld::InventoryStore::Slot_Ammunition, std::find(inventory.begin(), inventory.end(), ammo));
+            const auto targetKey = target == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                : target.getCellRef().getFormKey();
+            if (world.getOblivionCombatTarget(key) != targetKey) return true;
+            combat.engage(key, targetKey);
+            auto& stats = actor.getClass().getCreatureStats(actor);
+            stats.setDrawState(DrawState::Weapon);
+            auto delta = target.getRefData().getPosition().asVec3() - actor.getRefData().getPosition().asVec3();
+            const bool facing = zTurn(actor, std::atan2(delta.x(), delta.y()));
+            const float horizontal = std::hypot(delta.x(), delta.y());
+            const bool pitched = smoothTurn(actor, -std::atan2(delta.z(), horizontal), 0);
+            // Use the authored ranged switch distance for this bounded policy.
+            // Exact standoff/retreat, leading and probabilistic tactics remain open.
+            const float range = style.mSwitchDistances ? (*style.mSwitchDistances)[1] : 1000.f;
+            const bool visible = world.getLOS(actor, target);
+            if (visible && delta.length() <= range)
+            {
+                ai.clearCombatRoute(actor);
+                stats.setAttackingOrSpell(facing && pitched && style.mAttackChance != 0);
+            }
+            else ai.approachCombatTarget(actor, target, duration);
+            return true;
+        }
+
         void equipOwnedMeleeWeapon(MWWorld::World& world, const MWWorld::Ptr& actor,
             OblivionCombatService& combat)
         {
-            if (actor.getType() != ESM::REC_NPC_4) return;
+            const bool weaponCreature = actor.getType() == ESM::REC_CREA4
+                && (actor.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_WeapAndShield);
+            if (actor.getType() != ESM::REC_NPC_4 && !weaponCreature) return;
             auto& inventory = actor.getClass().getInventoryStore(actor);
             if (inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight) != inventory.end()) return;
             const auto selected = selectUsablePhysicalWeapon(world, actor, {}, 3);
@@ -240,6 +322,8 @@ namespace MWMechanics
         if (!nativeActor(attacker))
             return std::nullopt;
         const auto source = actorKey(attacker);
+        const char* traceActor = std::getenv("OPENMW_OBLIVION_MELEE_TRACE");
+        const bool trace = traceActor && source.serialize() == traceActor;
         if (actionId && !service->isActionPending(*actionId, source))
             return std::nullopt;
         const auto* life = service->findActorLife(source);
@@ -303,12 +387,25 @@ namespace MWMechanics
                     std::atan2(dx, dy), acquisition.mConeDegrees);
                 candidate.mFacingDegrees = facing.mDegrees;
                 candidate.mInsideCone = facing.mInside;
+                if (trace)
+                    Log(Debug::Verbose) << "M15 melee geometry: actor=" << source.serialize()
+                        << " target=" << actorKey(target).serialize() << " reach=" << reach
+                        << " raw_distance=" << rawDistance << " distance=" << candidate.mDistance
+                        << " eligible=" << candidate.mEligible << " inside_cone=" << candidate.mInsideCone
+                        << " source_scale=" << sourceGeometry.mScale << " target_scale=" << geometry.mScale
+                        << " source_max_y=" << sourceGeometry.mMaximumY << " target_max_y=" << geometry.mMaximumY
+                        << " source_z=" << a[2] << " target_z=" << b[2];
             }
             candidates.push_back(candidate);
         }
         const auto selected = ESM4::selectMeleeContact(candidates, reach,
             selectedTarget.isEmpty() ? std::nullopt : std::optional<std::size_t>{0});
-        if (!selected || !world.getLOS(attacker, actors[*selected]))
+        const bool visible = selected && world.getLOS(attacker, actors[*selected]);
+        if (trace)
+            Log(Debug::Verbose) << "M15 melee acquisition: actor=" << source.serialize()
+                << " selected=" << (selected ? actorKey(actors[*selected]).serialize() : "none")
+                << " visible=" << visible;
+        if (!visible)
             return MWWorld::Ptr{};
         return actors[*selected];
     }
@@ -328,7 +425,41 @@ namespace MWMechanics
         return result && *result == target;
     }
 
-    bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor)
+    static std::optional<std::int32_t> oblivionFightScore(
+        MWWorld::World& world, const MWWorld::Ptr& actor, const MWWorld::Ptr& target)
+    {
+        auto* combat = world.getOblivionCombatService();
+        if (world.getGameProfile() != ESM::GameProfile::Oblivion || !combat
+            || actor.isEmpty() || target.isEmpty() || actor == target
+            || (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
+            return std::nullopt;
+        const auto key = actor.getCellRef().getFormKey();
+        if (!combat->findActorValues(key)) return std::nullopt;
+        const auto aggression = combat->getNonPlayerIntegerValue(actor, 33);
+        if (aggression <= 0)
+            return 0;
+        const auto targetKey = target == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : target.getCellRef().getFormKey();
+        const auto disposition = world.getOblivionDisposition(key, targetKey);
+        if (!disposition)
+            return std::nullopt;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+        const auto distance = (actor.getRefData().getPosition().asVec3()
+            - target.getRefData().getPosition().asVec3()).length();
+        // Original 524AD4/5EA187 only admit positive 546190 fight scores.
+        // Ordinary hostility has no ally incident/friend term.
+        // Detection and target selection belong to the acquisition caller.
+        const ESM4::FightScoreInput input{*disposition, 0, aggression, distance,
+            false, false, combat->getNonPlayerIntegerValue(actor, 36)};
+        return ESM4::fightScore(input, ESM4::buildFightScoreSettings(settings));
+    }
+
+    bool acquireOblivionCombat(MWBase::World& world, const MWWorld::Ptr& actor,
+        std::span<const MWWorld::Ptr> candidates)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
@@ -337,50 +468,69 @@ namespace MWMechanics
         if (!combat || !ai || actor.isEmpty()
             || (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
             return false;
-        const auto player = world.getPlayerPtr();
-        if (player.isEmpty() || actor == player || !actor.isInCell() || !player.isInCell()
-            || !actor.getRefData().isEnabled() || !player.getRefData().isEnabled()
-            || (actor.getCell() != player.getCell()
-                && (!actor.getCell()->isExterior() || !player.getCell()->isExterior())))
+        if (!actor.isInCell() || !actor.getRefData().isEnabled() || actor.getBase()->isDeleted()
+            || actor == world.getPlayerPtr())
             return false;
         const auto key = actor.getCellRef().getFormKey();
         if (nativeWorld->hasOblivionCombatController(key).value_or(false))
             return false;
         const auto* values = combat->findActorValues(key);
         const auto* life = combat->findActorLife(key);
-        const auto* playerLife = combat->findActorLife(ESM::FormKey::dynamic("player", 1));
         if (!values || values->mProcess != ESM4::ActorValueProcess::Active
             || !life || life->mPhase != ESM4::ActorLifePhase::Alive
-            || !playerLife || playerLife->mPhase != ESM4::ActorLifePhase::Alive
             || ai->isRestrained(actor) || ai->isRidingHorse(actor)
             || oblivionParalyzed(world, actor) || oblivionKnockedState(world, actor) != 0)
             return false;
         if (const auto* state = ai->state(actor); state && state->mPackageType == ESM4::AIPackageType::Sleep
             && (state->mPhase == ESM4::PackagePhase::Act || state->mPhase == ESM4::PackagePhase::Wait))
             return false;
-        const auto aggression = combat->getNonPlayerIntegerValue(actor, 33);
-        if (aggression <= 0)
-            return false;
-        const auto disposition = nativeWorld->getOblivionDisposition(key, ESM::FormKey::dynamic("player", 1));
-        if (!disposition)
-            return false;
-        std::vector<const ESM4::GameSetting*> settings;
-        std::set<ESM::FormId> seen;
-        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
-            if (seen.insert(setting.mId).second)
-                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
-        const auto distance = (actor.getRefData().getPosition().asVec3()
-            - player.getRefData().getPosition().asVec3()).length();
-        // Original 524AD4/5EA187 only admit positive 546190 fight scores.
-        // This ordinary Player encounter has no ally incident/friend term.
-        // Use the existing detector; exact native scan cadence and general
-        // multi-target/ally selection are separate from this admission path.
-        const ESM4::FightScoreInput input{*disposition, 0, aggression, distance,
-            false, false, combat->getNonPlayerIntegerValue(actor, 36)};
-        if (ESM4::fightScore(input, ESM4::buildFightScoreSettings(settings)) <= 0
-            || !ai->detection(actor, player).mDetected)
-            return false;
-        return nativeWorld->executeOblivionStartCombat(actor, player);
+        const auto player = world.getPlayerPtr();
+        const auto candidateKey = [&](const MWWorld::Ptr& candidate) {
+            return candidate == player ? ESM::FormKey::dynamic("player", 1)
+                : candidate.getCellRef().getFormKey();
+        };
+        MWWorld::Ptr selected;
+        float nearest = std::numeric_limits<float>::infinity();
+        for (const auto& target : candidates)
+        {
+            if (target.isEmpty() || target == actor || !target.isInCell()
+                || !target.getRefData().isEnabled() || target.getBase()->isDeleted()
+                || (target != player && target.getType() != ESM::REC_NPC_4 && target.getType() != ESM::REC_CREA4)
+                || (actor.getCell() != target.getCell()
+                    && (!actor.getCell()->isExterior() || !target.getCell()->isExterior())))
+                continue;
+            const auto targetKey = candidateKey(target);
+            const auto* targetValues = combat->findActorValues(targetKey);
+            const auto* targetLife = combat->findActorLife(targetKey);
+            if (!targetValues || targetValues->mProcess != ESM4::ActorValueProcess::Active
+                || !targetLife || targetLife->mPhase != ESM4::ActorLifePhase::Alive)
+                continue;
+            const float distance = (actor.getRefData().getPosition().asVec3()
+                - target.getRefData().getPosition().asVec3()).length2();
+            if (distance > nearest || (distance == nearest && !selected.isEmpty()
+                    && !(targetKey < candidateKey(selected))))
+                continue;
+            const auto score = oblivionFightScore(*nativeWorld, actor, target);
+            if (!score || *score <= 0 || !ai->detection(actor, target).mDetected)
+                continue;
+            selected = target;
+            nearest = distance;
+        }
+        // Practical nearest detected hostile policy, not original target ranking.
+        // Publish only the selected controller; rejected candidates consume no RNG.
+        return !selected.isEmpty() && nativeWorld->executeOblivionStartCombat(actor, selected);
+    }
+
+    std::optional<std::int32_t> oblivionPlayerFightScore(
+        MWWorld::World& world, const MWWorld::Ptr& actor)
+    {
+        return oblivionFightScore(world, actor, world.getPlayerPtr());
+    }
+
+    bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        const std::array candidates{world.getPlayerPtr()};
+        return acquireOblivionCombat(world, actor, candidates);
     }
 
     bool updateOblivionMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled, float duration)
@@ -448,7 +598,52 @@ namespace MWMechanics
             return true; // Lost collision residence cannot turn into a substituted hit or cost.
         }
         const auto* priorMelee = combat->findMeleeState(key);
-        if (!priorMelee || !priorMelee->mStrike)
+        auto& staffInventory = actor.getClass().getInventoryStore(actor);
+        auto staffItem = staffInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto staffInputs = [&](const MWWorld::Ptr& item) -> std::optional<MWWorld::OblivionStaffCastInputs> {
+            if (item.getType() != ESM::REC_WEAP) return {};
+            const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item.getCellRef().getRefId());
+            const auto* weapon = world.getStore().get<ESM4::Weapon>().search(id);
+            if (!weapon || item.getCellRef().getItemCondition(weapon->mData.health) <= 0) return {};
+            return MWWorld::resolveOblivionStaffCastInputs(world.getStore(), *weapon);
+        };
+        if (staffItem == staffInventory.end() && !combat->findSpellCast(key)
+            && (!priorMelee || (!priorMelee->mStrike && !priorMelee->mReaction)))
+            for (auto item = staffInventory.begin(); item != staffInventory.end(); ++item)
+                if (const auto inputs = staffInputs(*item))
+                {
+                    const float charge = item->getCellRef().getEnchantmentCharge();
+                    if ((charge < 0 ? inputs->mMaximumCharge : charge) < inputs->mAuthoredChargeCost) continue;
+                    staffInventory.equip(MWWorld::InventoryStore::Slot_CarriedRight, item);
+                    staffItem = staffInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                    Log(Debug::Info) << "M16 staff equipped: actor=" << key.serialize();
+                    break;
+                }
+        if (staffItem != staffInventory.end())
+            if (const auto inputs = staffInputs(*staffItem))
+            {
+                const float charge = staffItem->getCellRef().getEnchantmentCharge();
+                if ((charge < 0 ? inputs->mMaximumCharge : charge) >= inputs->mAuthoredChargeCost
+                    || combat->findSpellCast(key))
+                {
+                    if (nativeWorld->getOblivionCombatTarget(key) != currentTarget) return true;
+                    combat->engage(key, *currentTarget);
+                    combat->clearMeleeAiIntent(key);
+                    stats.setDrawState(DrawState::Weapon);
+                    const auto delta = target.getRefData().getPosition().asVec3()
+                        - actor.getRefData().getPosition().asVec3();
+                    static_cast<void>(zTurn(actor, std::atan2(delta.x(), delta.y())));
+                    const bool visible = world.getLOS(actor, target);
+                    if (visible) ai->clearCombatRoute(actor);
+                    else ai->approachCombatTarget(actor, target, duration);
+                    stats.setAttackingOrSpell(visible && style.mAttackChance != 0);
+                    return true;
+                }
+                // An exhausted staff cannot be treated as an ordinary melee weapon.
+                staffInventory.unequipSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            }
+        if (updateOwnedCreatureBow(*nativeWorld, actor, target, *combat, *ai, style, duration)) return true;
+        if (const auto* afterEquipment = combat->findMeleeState(key); !afterEquipment || !afterEquipment->mStrike)
             equipOwnedMeleeWeapon(*nativeWorld, actor, *combat);
         // Equipment observers can stop combat or replace its target.
         if (nativeWorld->getOblivionCombatTarget(key) != currentTarget)
@@ -776,8 +971,32 @@ namespace MWMechanics
             const MWWorld::Ptr& victim)
         {
             if (victim.isEmpty()) return;
+            bool provokedIdleCreature = false;
+            if (auto* combat = world.getOblivionCombatService(); combat && attacker == world.getPlayerPtr()
+                && victim.getType() == ESM::REC_CREA4 && victim.getRefData().isEnabled()
+                && attacker.getRefData().isEnabled() && victim.getCellRef().getCount() > 0)
+            {
+                const auto source = ESM::FormKey::dynamic("player", 1);
+                const auto target = ESM4::runtimeReferenceKey(victim.getCellRef().getFormKey());
+                const auto* sourceLife = combat->findActorLife(source);
+                const auto* targetLife = combat->findActorLife(target);
+                if (sourceLife && targetLife && sourceLife->mPhase == ESM4::ActorLifePhase::Alive
+                    && targetLife->mPhase == ESM4::ActorLifePhase::Alive
+                    && !world.hasOblivionCombatController(target).value_or(false)
+                    && combat->getNonPlayerIntegerValue(victim, 34) > 0)
+                {
+                    // An idle defender needs a controller before OnHit so an
+                    // authored StopCombat or redirect can override provocation.
+                    provokedIdleCreature = world.executeOblivionStartCombat(victim, attacker)
+                        && world.isOblivionCombatTarget(target, source).value_or(false);
+                    if (provokedIdleCreature)
+                        Log(Debug::Info) << "M15 idle Creature provoked: actor=" << target.serialize()
+                                         << " target=" << source.serialize();
+                }
+            }
             if (auto* scripts = world.getOblivionScriptManager())
                 scripts->dispatchObjectEvent(victim, "onhit", attacker);
+            if (provokedIdleCreature) return; // Keep the script's resulting controller state.
 
             // A committed attack on the controller's intended opponent is a
             // hostile act. Let a surviving native defender acquire that actor
@@ -1027,6 +1246,12 @@ namespace MWMechanics
                 position[i] = static_cast<float>((double(from.pos[i]) + to.pos[i]) * .5);
             result.mHitSoundPosition = position;
         }
+        // Original armor-use tail runs for selected ARMO in the general-hit
+        // sound path. Earlier weapon/shield block dispatch skips that tail,
+        // even when the same contact still wears body armor.
+        const int trainedArmor = !contact->isEmpty() && *contact == playerContact && !result.mHitSounds
+                && hitArmorClass >= 0
+            ? (hitArmorClass == 1 ? 18 : 27) : -1;
         deltas.mVictimHealth = -result.mDamage.mHealth;
         if (!contact->isEmpty() && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4
                 || contact->getType() == ESM::REC_CREA4)
@@ -1097,7 +1322,24 @@ namespace MWMechanics
         const bool attackerRecoil = blockHit && requestsAttackerRecoil
             && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4
                 || attacker.getType() == ESM::REC_CREA4);
-        const auto observeCommittedEnchantment = [&] {
+        const int trainedSkill = attacker == playerContact && deltas.mVictimHealth < 0
+                && deltas.mOrdinaryHitArguments
+                && (deltas.mOrdinaryHitArguments->mUsedSkill == 14
+                    || deltas.mOrdinaryHitArguments->mUsedSkill == 16
+                    || deltas.mOrdinaryHitArguments->mUsedSkill == 17)
+            ? deltas.mOrdinaryHitArguments->mUsedSkill : -1;
+        // Original blocking-cost caller trains positive absorption, or an
+        // accepted empty-hand block even at zero absorption. Use the cached
+        // pre-wear equipment identity; item break can change the live slots.
+        const bool trainedBlock = !contact->isEmpty() && *contact == playerContact && blockAccepted
+            && (result.mBlockAbsorbedFraction > 0 || (deltas.mOrdinaryHitArguments
+                && deltas.mOrdinaryHitArguments->mBareHandBlock));
+        const auto finishCommittedContact = [&] {
+            // Train after the strike is consumed, before an OnHit callback can
+            // save or change actors. Rejected contacts and misses grant no use.
+            if (trainedSkill >= 0) nativeWorld->useOblivionPlayerSkill(trainedSkill, 0);
+            if (trainedBlock) nativeWorld->useOblivionPlayerSkill(15, 0);
+            if (trainedArmor >= 0) nativeWorld->useOblivionPlayerSkill(trainedArmor, 0);
             if (!observeEnchantment) return;
             const bool spent = !deltas.mEnchantmentChargeChanges.empty();
             Log(Debug::Verbose) << "M15 weapon enchantment contact: actor=" << actor.serialize()
@@ -1115,7 +1357,7 @@ namespace MWMechanics
             });
             if (!draws) return std::nullopt;
             result.mRandomDraws = *draws;
-            observeCommittedEnchantment();
+            finishCommittedContact();
             // All contact continuations have published before a script can
             // Kill, change a quest, or save. The consumed strike owns once-only
             // dispatch, including after restore; misses have no struck script.
@@ -1127,7 +1369,7 @@ namespace MWMechanics
         if (!prepared || !prepared->commit())
             return std::nullopt;
         result.mRandomDraws = prepared->randomDraws();
-        observeCommittedEnchantment();
+        finishCommittedContact();
         dispatchCommittedMeleeHit(*nativeWorld, attacker, *contact);
         return result;
     }
@@ -1992,6 +2234,49 @@ namespace MWMechanics
         result.mEnchantmentHealth = enchantment->mHealth;
         result.mEnchantmentChargeChange = enchantment->mCharge;
         result.mEnchantedSound = enchantment->mActive;
+        return result;
+    }
+
+    std::optional<OblivionWeaponContactDamage> resolveOblivionArrowContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        float launchDamage, float normalizedDifficulty)
+    {
+        auto* native = dynamic_cast<MWWorld::World*>(&world);
+        auto* service = native ? native->getOblivionCombatService() : nullptr;
+        if (!service || !std::isfinite(launchDamage) || launchDamage < 0)
+            throw std::invalid_argument("native arrow contact requires finite launch damage and authority");
+        const auto player = world.getPlayerPtr();
+        const auto resistance = victim == player ? service->getPlayerValue(65) : service->getNonPlayerValue(victim, 65);
+        const auto resisted = ESM4::resistNormalWeapon(launchDamage, resistance, false);
+        OblivionWeaponContactDamage result{};
+        if (resisted.mImmune) { result.mImmune = true; return result; }
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const float incoming = resisted.mHealthDamage;
+        const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
+            ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
+        const auto block = prepareOrdinaryBlock(world, *service, attacker, victim, armor.mHealthDamage, 5, settings, false);
+        if (!block) return {};
+        const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
+            : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
+        const auto damage = ESM4::physicalContactDamage({incoming, 0}, block->mRemaining,
+            normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
+        auto wear = prepareOrdinaryArmorWear(world, *service, attacker, victim, incoming, armor.mAbsorbedFraction,
+            settings, block->mConditions, block->mAccepted ? std::optional<float>{ESM4::blockedArmorWear(
+                ESM4::armorWear(incoming, armor.mAbsorbedFraction, ESM4::buildDurabilitySettings(settings)),
+                block->mFraction, block->mUnarmed)} : std::nullopt);
+        if (!wear) return {};
+        result.mHealth = damage.mHealth;
+        result.mVictimConditionChanges = std::move(wear->mConditions);
+        result.mRandomTransition = wear->mRandom;
+        result.mPreArmorDamage = incoming;
+        result.mBlockFatigueDebit = block->mDebit;
+        result.mBlockAbsorbedFraction = block->mFraction;
+        result.mBlockAccepted = block->mAccepted;
+        result.mHitArmorClass = wear->mHitArmorClass;
         return result;
     }
 

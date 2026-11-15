@@ -1,0 +1,99 @@
+{
+  "scope": "Friendly authored Ambush force greetings with positive aggression; original Baurus stage86 approach/dialogue and first linked responses.",
+  "full_escape_complete": false,
+  "implementation": "Player combat acquisition and force greeting share a read-only native fight-score query. Nonpositive scores admit friendly greetings; positive scores leave hostile acquisition to its existing controller/detection path. Missing process/disposition does not mean friendly. Existing life, control, range, LOS and UI guards remain. No actor-ID or aggression5 special case.",
+  "checks": {
+    "friendly-ambush-greeting-focused-03": {
+      "path": "build/oblivion-compat/sewer-escape/friendly-ambush-greeting-focused-03/verification.json",
+      "source": {
+        "head": "4e7158f84ee793cb4f33a9eb6a7c89739c3df43f",
+        "source_fingerprint": "ffb915986b0fad42db8b0bf2c36ebaadb602436e9ac5206fdd1973dc502f4198"
+      },
+      "results": {
+        "engine": {
+          "executed": 2,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionTutorialGreeting.*:OblivionWorldTest.AutonomousPlayerCombatRequiresHostilityResidenceAndDetection",
+          "binary_sha256": "43b14091a836f136b4ffd48e1589e52ea0cb632f718ff24d2c626511f203a11e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "44ed605c337adde6e6c93b56b09ff75867d6fa00b5e8866e46300f3db42dbce8",
+          "inventory_sha256": "c461fd9c42474bcfe5a44d78ccc126353682540c23727729b1e4b1694158af9e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "friendly-ambush-greeting-normal-integration-01": {
+      "path": "build/oblivion-compat/sewer-escape/friendly-ambush-greeting-normal-integration-01/verification.json",
+      "source": {
+        "head": "4e7158f84ee793cb4f33a9eb6a7c89739c3df43f",
+        "source_fingerprint": "ffb915986b0fad42db8b0bf2c36ebaadb602436e9ac5206fdd1973dc502f4198"
+      },
+      "results": {
+        "engine": {
+          "executed": 2197,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "43b14091a836f136b4ffd48e1589e52ea0cb632f718ff24d2c626511f203a11e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "853988200b345fffcf1ed2998e8a2d5e5aa369cfdafc67b07ffad308f92f35c1",
+          "inventory_sha256": "c461fd9c42474bcfe5a44d78ccc126353682540c23727729b1e4b1694158af9e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime_executable_sha256": "771af2f0a70b6d335788ee7a46f6d63c45bee82d4909e987b8bab97b124f00d7",
+  "course": {
+    "path": "build/oblivion-compat/sewer-escape/baurus-class-greeting-01/scenario.json",
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/final-victory-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "entry_restore": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/final-victory-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "da75b253a4c09430dae9aa92b0c34ba61466d8e85b6a1dcb6525e146ce6ddf0e",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "result": "Original package01e8e4 approaches Player and opens native Baurus greeting01e8dd at86 without manual activation; aggression remains5.",
+    "image": "build/oblivion-compat/sewer-escape/baurus-class-greeting-01/baurus-class-greeting.png"
+  },
+  "linked_response": {
+    "path": "build/oblivion-compat/sewer-escape/baurus-response-1-02/scenario.json",
+    "passed": true,
+    "result": "Ordinary D-pad/A selects The Emperor gave it to me; original response01e8e6 displayed.",
+    "image": "build/oblivion-compat/sewer-escape/baurus-response-1-02/baurus-response-1.png"
+  },
+  "next_observed_blocker": {
+    "path": "build/oblivion-compat/sewer-escape/baurus-class-menu-01/scenario.json",
+    "passed": false,
+    "result": "Original responses01e8e6/e7/e8 run, then outgoing sewer/class recommendation selection rejects unsupported native condition GetIsClassDefault, function228, first candidate01e8ea. Stage87/class selection remains unaccepted.",
+    "conditions": "build/oblivion-compat/sewer-escape/baurus-class-conditions.json",
+    "links": "build/oblivion-compat/sewer-escape/baurus-class-links.json",
+    "note": "Branch selects among the21 standard class responses; do not substitute an always-false condition or a default branch."
+  },
+  "retained_failures": {
+    "friendly-ambush-greeting-focused-01": "Test-only missing oblivionactorstats.hpp include.",
+    "friendly-ambush-greeting-focused-02": "Headless fixture lacked canonical Player constructor input. Added explicit synthetic Player form to fixture, no production workaround. Existing autonomous hostile-acquisition case passed.",
+    "baurus-response-1-01": "Driver used invalid hat_y axis; corrected to supported dpad_y with ordinary press/release settling. No game defect."
+  },
+  "persistence_scope": "Source86 whole state restores exactly. These inspection courses terminate while dialogue is open; they do not produce a new main checkpoint. Clean accepted input remains final-victory-reload01.",
+  "remaining": "Implement/verify GetIsClassDefault, complete original class choice and exit88, outdoor reload, shaman victory and continuous full course. Accumulated sanitizer integration remains required; prior cancelled build is not a pass.",
+  "source_note": "C++ unchanged after full2197 normal engine gate; later changes are docs and reusable JSON courses."
+}

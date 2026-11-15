@@ -1,0 +1,49 @@
+{
+  "scope": "Normal six casts of saved Heal Minor Wounds after joined Zombie victory; no menu reselection or health/stat write. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "passed": true,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-post-zombie-healing-01/scenario.json",
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-substructure-runners-zombie-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "aeee3cd92463a4f269ca52dbeef061a63e7bea0b9c083d1649dd4822446dd781",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "source_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-substructure-runners-zombie-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "aeee3cd92463a4f269ca52dbeef061a63e7bea0b9c083d1649dd4822446dd781"
+  },
+  "output_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-post-zombie-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "136a99cc274e873991796a836cf5099b27d03c6db225d535de646615a92739bf",
+    "cell": "content:oblivion.esm:022ff6",
+    "position": [
+      727.3505249023438,
+      2191.29443359375,
+      -66.6024169921875,
+      -0.02578113041818142,
+      0.0,
+      -1.287405014038086
+    ],
+    "health": 80,
+    "magicka": 38.682281494140625
+  },
+  "actual_releases": [
+    "[20:38:46.478 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=45.44 magicka=61",
+    "[20:38:58.988 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=52.48 magicka=54.2952",
+    "[20:39:11.528 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=59.52 magicka=47.4284",
+    "[20:39:23.957 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=66.56 magicka=40.4615",
+    "[20:39:36.433 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=73.6 magicka=33.5842",
+    "[20:39:48.901 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=26.6451"
+  ],
+  "inventory_unchanged": true,
+  "death_history_unchanged": true,
+  "pending_deaths": [],
+  "physical_action_owners": [],
+  "native_combat_engagements": [],
+  "capture_inspected": "build/oblivion-compat/sewer-escape/joined-post-zombie-healing-01/joined-zombie-healed.png",
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "next": "Physical north passage, northern/western encounters and original Natural Caverns transition, followed by shaman and late escape. Full single-process course/outdoor reload still required."
+}

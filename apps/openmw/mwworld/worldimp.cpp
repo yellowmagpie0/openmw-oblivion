@@ -1,6 +1,8 @@
 #include <stdexcept>
 
 #include <components/esm4/referenceflags.hpp>
+#include <components/esm4/playermiscstats.hpp>
+#include <components/esm4/playermurderstate.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadgmst.hpp>
@@ -13,11 +15,15 @@
 #include <components/esm4/nativesequencedeactivation.hpp>
 #include <components/resource/niffilemanager.hpp>
 #include "../mwclass/esm4npc.hpp"
+#include "../mwclass/light4.hpp"
+#include "customdata.hpp"
 #include "oblivionweapondrop.hpp"
 #include "oblivionownership.hpp"
 #include "oblivioncharactergen.hpp"
 #include "obliviondooranimation.hpp"
 #include "oblivionbounditems.hpp"
+#include "oblivionlevelled.hpp"
+#include <components/esm4/loadlvlc.hpp>
 #include <components/esm4/loadclas.hpp>
 #include "oblivioncombatdata.hpp"
 #include "savedreference.hpp"
@@ -71,6 +77,7 @@
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadingr.hpp>
 #include <components/esm4/loadkeym.hpp>
+#include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadrace.hpp>
@@ -142,6 +149,7 @@
 #include "../mwmechanics/oblivionmagiccaster.hpp"
 #include "oblivioncombatmagic.hpp"
 #include "oblivionactorstats.hpp"
+#include "oblivionskilltraining.hpp"
 #include "../mwmechanics/levelledlist.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/oblivionai.hpp"
@@ -246,6 +254,23 @@ namespace MWWorld
 
     namespace
     {
+        constexpr std::string_view lightUsageKey = "native.light.remaining_usage_time";
+
+        std::optional<float> savedNativeLightUsageTime(
+            const ESMStore& store, const ESM4::RuntimeReferenceState& reference)
+        {
+            const auto found = reference.mCustomState.find(lightUsageKey);
+            if (found == reference.mCustomState.end()) return std::nullopt;
+            const auto* value = std::get_if<double>(&found->second);
+            const auto* light = store.get<ESM4::Light>().search(reference.mBase);
+            constexpr int required = ESM4::Light::Carryable | ESM4::Light::OffDefault;
+            if (!value || !light || (light->mData.flags & required) != required || light->mData.time <= 0
+                || !std::isfinite(*value) || *value <= 0 || *value > double(light->mData.time)
+                || static_cast<float>(*value) <= 0)
+                throw std::invalid_argument("Native light lifetime disagrees with its winning base");
+            return static_cast<float>(*value);
+        }
+
         std::string getUpResourceHash(std::string_view bytes)
         {
             constexpr char digits[] = "0123456789abcdef";
@@ -1631,15 +1656,25 @@ namespace MWWorld
 
     std::unique_ptr<InventoryStore> World::prepareOblivionSavedActorInventory(const Ptr& actor) const
     {
-        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || actor.isEmpty())
+        if (mGameProfile != ESM::GameProfile::Oblivion || actor.isEmpty())
             return nullptr;
         const auto base = nativeActorBase(actor);
         if (base.isNull())
             return nullptr;
         const auto key = actor.getCellRef().getFormKey();
-        const auto saved = std::find_if(mOblivionRuntimeState->mReferences.begin(),
-            mOblivionRuntimeState->mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
-        if (saved == mOblivionRuntimeState->mReferences.end())
+        const ESM4::RuntimeState* snapshot = mOblivionRuntimeState.get();
+        if (mPendingOblivionRuntimeState)
+            for (const auto& reference : mPendingOblivionRuntimeState->mReferences)
+                if (reference.mKey == key && reference.mCustomState.contains("native.levelled_actor.level"))
+                {
+                    snapshot = mPendingOblivionRuntimeState.get();
+                    break;
+                }
+        if (!snapshot) return nullptr;
+        const auto saved = std::find_if(snapshot->mReferences.begin(),
+            snapshot->mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
+        if (saved == snapshot->mReferences.end()
+            || saved->mCustomState.contains("native.levelled_actor.inventory_pending"))
             return nullptr;
         const auto* npc = mStore.search<ESM4::Npc>(saved->mBase);
         const auto* creature = mStore.search<ESM4::Creature>(saved->mBase);
@@ -1653,13 +1688,13 @@ namespace MWWorld
         // or invoking live add/equip observers during lazy reconstruction.
         const ESM::FormKeyResolver resolver(mContentFiles);
         auto inventory = saved->mInventory;
-        if (mOblivionRuntimeState->mVersion < 4)
+        if (snapshot->mVersion < 4)
             migrateLegacyActorEquipment(inventory, mStore, resolver);
         return OblivionProfileServices::stageActorInventory(
             OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
     }
 
-    std::vector<ESM4::RuntimeInventoryItem> World::captureOblivionActorInventory(const Ptr& owner) const
+    std::vector<ESM4::RuntimeInventoryItem> World::captureOblivionInventory(const Ptr& owner) const
     {
         std::vector<ESM4::RuntimeInventoryItem> result;
         const ESM::FormKey ownerKey = owner.isEmpty() ? ESM::FormKey{} : owner.getCellRef().getFormKey();
@@ -1671,7 +1706,9 @@ namespace MWWorld
                 return result;
             const bool player = mPlayer && owner == mPlayer->getPlayer();
             const unsigned ownerType = owner.getClass().getType();
-            if (!player && ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4)
+            const bool container = ownerType == ESM::REC_CONT4;
+            if (container ? !owner.getRefData().getCustomData()
+                          : (!player && ownerType != ESM::REC_NPC_4 && ownerType != ESM::REC_CREA4))
                 return result;
             // Hotkeys have no shared-store field. Join the existing Player
             // assignment once per base, just as full world capture does.
@@ -1681,7 +1718,8 @@ namespace MWWorld
                     if (item.mHotkey >= 0)
                         previousHotkeys.emplace(item.mBase, item.mHotkey);
             const ESM::FormKeyResolver inventoryResolver(mContentFiles);
-            InventoryStore& inventory = owner.getClass().getInventoryStore(owner);
+            ContainerStore& inventory = owner.getClass().getContainerStore(owner);
+            auto* equipment = container ? nullptr : &owner.getClass().getInventoryStore(owner);
             for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
             {
                 const Ptr itemPtr = *iterator;
@@ -1713,8 +1751,8 @@ namespace MWWorld
                         throw std::runtime_error("remaining usage time for item " + item.mBase.serialize()
                             + ": " + std::string(error.what()));
                     }
-                    if (inventory.isEquipped(itemPtr))
-                        item.mEquippedSlots = getNativeEquippedSlots(inventory, itemPtr, *definition);
+                    if (equipment && equipment->isEquipped(itemPtr))
+                        item.mEquippedSlots = getNativeEquippedSlots(*equipment, itemPtr, *definition);
                 }
                 if (generatedKey)
                 {
@@ -1725,10 +1763,10 @@ namespace MWWorld
                         : -1.f;
                     item.mCharge = itemPtr.getCellRef().getEnchantmentCharge();
                     item.mRemainingUsageTime = itemClass.getRemainingUsageTime(itemPtr);
-                    if (inventory.isEquipped(itemPtr))
+                    if (equipment && equipment->isEquipped(itemPtr))
                         for (int slot = 0; slot != InventoryStore::Slots; ++slot)
                         {
-                            const auto equipped = inventory.getSlot(slot);
+                            const auto equipped = equipment->getSlot(slot);
                             if (equipped != inventory.end() && *equipped == itemPtr)
                             {
                                 item.mEquippedSlots = OblivionInventory::slotMask(
@@ -1742,6 +1780,7 @@ namespace MWWorld
                     item.mOwner = inventoryResolver.toFormKey(*ownerId);
                 item.mExtraScale = itemPtr.getCellRef().getNativeItemScale();
                 item.mBoundSource = itemPtr.getCellRef().getNativeBoundSource();
+                item.mScriptOwner = itemPtr.getCellRef().getNativeScriptOwner();
                 item.mOwnershipRank = itemPtr.getCellRef().getNativeOwnershipRank();
                 item.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
                     mStore, inventoryResolver, itemPtr.getCellRef());
@@ -1757,7 +1796,7 @@ namespace MWWorld
         }
         catch (const std::exception& error)
         {
-            throw std::runtime_error("TES4 runtime-state actor inventory " + ownerKey.serialize()
+            throw std::runtime_error("TES4 runtime-state inventory " + ownerKey.serialize()
                 + " capture failed: " + std::string(error.what()));
         }
     }
@@ -1953,7 +1992,9 @@ namespace MWWorld
                 snapshot.mState.mStandingOn = snapshot.mStandingOn == player ? ESM::FormKey::dynamic("player", 1)
                     : snapshot.mStandingOn.getCellRef().getFormKey();
                 if (snapshot.mState.mStandingOn.isNull())
-                    throw std::runtime_error("native movement capture has an unidentified standing reference");
+                    throw std::runtime_error("native movement capture has an unidentified standing reference: base="
+                        + snapshot.mStandingOn.getCellRef().getRefId().toDebugString()
+                        + " type=" + std::to_string(snapshot.mStandingOn.getType()));
             }
             if (!movement.mActors.emplace(key, std::move(snapshot.mState)).second)
                 throw std::runtime_error("native movement capture has duplicate actor ownership");
@@ -2019,9 +2060,15 @@ namespace MWWorld
         if (mOblivionRuntimeState)
         {
             state.mIgnoreFriendlyHits = mOblivionRuntimeState->mIgnoreFriendlyHits;
+            state.mPlayer.mAwardedSkillBooks = mOblivionRuntimeState->mPlayer.mAwardedSkillBooks;
             state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
             state.mFactionReactions = mOblivionRuntimeState->mFactionReactions;
             state.mNativeBoundAbilities = mOblivionRuntimeState->mNativeBoundAbilities;
+            state.mNativeTrapContacts = mOblivionRuntimeState->mNativeTrapContacts;
+            state.mNativeMagicProjectiles = mOblivionRuntimeState->mNativeMagicProjectiles;
+            state.mNextMagicProjectile = mOblivionRuntimeState->mNextMagicProjectile;
+            state.mNativeArrowProjectiles = mOblivionRuntimeState->mNativeArrowProjectiles;
+            state.mNextArrowProjectile = mOblivionRuntimeState->mNextArrowProjectile;
             state.mFriendHitCounters = mOblivionRuntimeState->mFriendHitCounters;
             state.mCombatControllers = mOblivionRuntimeState->mCombatControllers;
         }
@@ -2119,7 +2166,7 @@ namespace MWWorld
 
         // Player and native actor transactions serialize the same live
         // metadata; preserve Player-only hotkey assignments in that adapter.
-        state.mPlayer.mInventory = captureOblivionActorInventory(player);
+        state.mPlayer.mInventory = captureOblivionInventory(player);
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
             if (Misc::StringUtils::ciEqual(nativeName, "GameDaysPassed"))
@@ -2209,10 +2256,28 @@ namespace MWWorld
                         }
                     }
 
+                    // ONAM supplies an initial final pose, not an activation or unlock.
+                    // Persist it through the same owner as subsequent script animations.
+                    const auto seedDoorPose = [&] {
+                        if (type != ESM::REC_DOOR4
+                            || reference.mCustomState.contains("obscript.animation_group")) return;
+                        const auto& poses = ptr.getRefData().getAnimationState().mScriptedAnims;
+                        if (poses.empty()) return;
+                        const auto& pose = poses.front();
+                        reference.mCustomState["obscript.animation_group"] = pose.mGroup;
+                        reference.mCustomState["obscript.animation_mode"] = std::int64_t(1);
+                        reference.mCustomState["obscript.animation_playing"] = false;
+                        reference.mCustomState["obscript.animation_scripted"] = true;
+                        reference.mCustomState["obscript.animation_progress"] = double(pose.mTime);
+                        reference.mCustomState["obscript.animation_loop_count"] = std::int64_t(pose.mLoopCount);
+                        reference.mCustomState["obscript.animation_absolute"] = pose.mAbsolute;
+                    };
+                    seedDoorPose();
                     if (const auto previous = previousReferences.find(key); previous != previousReferences.end())
                     {
                         reference.mInventory = previous->second->mInventory;
                         reference.mCustomState = previous->second->mCustomState;
+                        seedDoorPose();
                         reference.mActorDrawState = previous->second->mActorDrawState;
                         if (mOblivionRuntimeState->mVersion < 4
                             && (ptr.getClass().getType() == ESM::REC_NPC_4
@@ -2321,14 +2386,27 @@ namespace MWWorld
                     }
                     if (actorReference)
                     {
-                        reference.mInventory = captureOblivionActorInventory(mutablePtr);
+                        reference.mInventory = captureOblivionInventory(mutablePtr);
                         reference.mActorDrawState = captureOblivionActorDrawState(mutablePtr);
                     }
+                    else if (ptr.getType() == ESM::REC_CONT4 && ptr.getRefData().getCustomData())
+                        reference.mInventory = captureOblivionInventory(mutablePtr);
                     reference.mCustomState["count"]
                         = static_cast<std::int64_t>(ptr.getCellRef().getCount(false));
                     reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
                     reference.mCustomState["record_type"]
                         = static_cast<std::int64_t>(ptr.getClass().getType());
+                    if (type == ESM::REC_LIGH4)
+                    {
+                        reference.mCustomState.erase(std::string(lightUsageKey));
+                        const auto& light = ptr.get<ESM4::Light>()->mBase->mData;
+                        const float remaining = ptr.getClass().getRemainingUsageTime(ptr);
+                        if (remaining >= 0 && remaining != float(light.time))
+                        {
+                            reference.mCustomState[std::string(lightUsageKey)] = double(remaining);
+                            savedNativeLightUsageTime(mStore, reference);
+                        }
+                    }
                     if (!actorReference)
                     {
                         try
@@ -2364,7 +2442,11 @@ namespace MWWorld
             for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
                 captured.insert(reference.mKey);
             for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
-                if (reference.mKey.isDynamic() && !captured.contains(reference.mKey))
+                if ((reference.mKey.isDynamic() || reference.mCustomState.contains("native.fire.spell")
+                        || reference.mCustomState.contains("native.charm.spell")
+                        || reference.mCustomState.contains("native.package.lock_projection_pending")
+                        || reference.mCustomState.contains("native.levelled_actor.level"))
+                    && !captured.contains(reference.mKey))
                     state.mReferences.push_back(reference);
         }
         std::sort(state.mReferences.begin(), state.mReferences.end(), [](const auto& left, const auto& right) {
@@ -2377,6 +2459,7 @@ namespace MWWorld
         if (mOblivionRuntimeState)
             for (const auto& [name, value] : mOblivionRuntimeState->mPlayer.mActorValues)
                 state.mPlayer.mActorValues.try_emplace(name, value);
+        state.mPlayer.mActorValues.try_emplace(std::string(ESM4::PlayerMurdererKey), 0.0);
         if (mOblivionCombat)
         {
             if (mOblivionCombat->playerReputation())
@@ -2473,6 +2556,26 @@ namespace MWWorld
             legacy.erase(found);
         }
         mOblivionCombat->publishPlayerReputation(*mPlayer, ESM4::modifyPlayerInfamy(reputation, delta),
+            resolveOblivionPlayerDynamicBaseSettings(mStore));
+        if (mOblivionRuntimeState)
+            mOblivionRuntimeState->mPlayer.mActorValues.swap(legacy);
+        return true;
+    }
+
+    bool World::modifyOblivionPlayerFame(std::int32_t delta)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPlayer || getPlayerPtr().isEmpty()
+            || !mOblivionCombat->findActorValues(ESM::FormKey::dynamic("player", 1)))
+            return false;
+        const auto owned = mOblivionCombat->playerReputation();
+        const auto reputation = owned ? *owned : legacyPlayerReputation(getPlayerPtr(), mOblivionRuntimeState.get());
+        auto legacy = mOblivionRuntimeState ? mOblivionRuntimeState->mPlayer.mActorValues : decltype(ESM4::RuntimePlayerState::mActorValues){};
+        if (const auto found = legacy.find("infamy"); found != legacy.end())
+        {
+            legacy.try_emplace("legacy.infamy", found->second);
+            legacy.erase(found);
+        }
+        mOblivionCombat->publishPlayerReputation(*mPlayer, ESM4::modifyPlayerFame(reputation, delta),
             resolveOblivionPlayerDynamicBaseSettings(mStore));
         if (mOblivionRuntimeState)
             mOblivionRuntimeState->mPlayer.mActorValues.swap(legacy);
@@ -2723,23 +2826,8 @@ namespace MWWorld
             if (const auto* to = race(destination, targetNpc))
                 if (const auto value = from->mDisposition.find(to->mId); value != from->mDisposition.end())
                     raceReaction = value->second;
-        const auto nativeFactions = [](const auto& authored) {
-            std::vector<ESM4::ActorFaction> result;
-            // NPC SNAM loading calls 4675E0: new membership at the head,
-            // existing membership updates in place; rank -1 removes it only
-            // when it already exists. Keep the editable record order intact.
-            for (const auto& entry : authored)
-            {
-                if (ESM::FormId::fromUint32(entry.faction).isZeroOrUnset()) continue;
-                const auto found = std::ranges::find(result, entry.faction, &ESM4::ActorFaction::faction);
-                if (found == result.end()) result.insert(result.begin(), entry);
-                else if (entry.rank == -1) result.erase(found);
-                else found->rank = entry.rank;
-            }
-            return result;
-        };
-        const auto sourceFactions = nativeFactions(sourceNpc ? sourceNpc->mFactions : sourceCreature->mFactions);
-        const auto targetFactions = nativeFactions(targetNpc ? targetNpc->mFactions : targetCreature->mFactions);
+        const auto sourceFactions = getOblivionActorFactions(*sourceBase);
+        const auto targetFactions = getOblivionActorFactions(*targetBase);
         std::int32_t sameReaction = 0, otherReaction = 10000, sameRank = -1, otherRank = -1;
         for (const auto& from : sourceFactions)
         {
@@ -2777,9 +2865,12 @@ namespace MWWorld
         for (const auto& record : mStore.get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(mStore.get<ESM4::GameSetting>().search(record.mId));
+        const auto charm = mOblivionRuntimeState ? oblivionCharmModifier(*mOblivionRuntimeState, source, destination) : 0;
+        const auto totalModifier = std::clamp<std::int64_t>(std::int64_t(modifierOverride.value_or(modifier)) + charm,
+            std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max());
         const ESM4::DispositionInput input{integerValue(source, 6), integerValue(destination, 6), integerValue(source, 36),
             reputation ? reputation->mFame : 0, reputation ? reputation->mInfamy : 0, bounty,
-            raceReaction, factionReaction, rank, *drawn == ESM4::ActorDrawState::Weapon, false, modifierOverride.value_or(modifier),
+            raceReaction, factionReaction, rank, *drawn == ESM4::ActorDrawState::Weapon, false, static_cast<std::int32_t>(totalModifier),
             sourceCreature != nullptr};
         return std::clamp(ESM4::dispositionScore(input, ESM4::buildDispositionSettings(settings),
             ESM4::ActorValueConversionMode::Sse), 0, 100);
@@ -2964,6 +3055,58 @@ namespace MWWorld
         return true;
     }
 
+    bool World::executeOblivionStopCombatAlarmOnActor(const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty()) return false;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        const auto player = ESM::FormKey::dynamic("player", 1);
+        const auto subject = actor == getPlayerPtr() ? player
+            : ESM4::runtimeReferenceKey(actor.getCellRef().getFormKey());
+        if (!mOblivionCombat->findActorValues(subject) || !mOblivionCombat->findActorLife(subject))
+            throw std::invalid_argument("native combat alarm stop requires initialized actor");
+        if (!mOblivionRuntimeState) return true;
+        auto controllers = mOblivionRuntimeState->mCombatControllers;
+        std::vector<ESM::FormKey> cancelled, stopped;
+        // Original501D80 ->675D50 visits all process lists. Active actors
+        // receive a target-specific stop; Low actors reset their base package.
+        // Player +340 is a no-op, including its hidden base combat package.
+        // Alarm packages (native type15) have no producer in this profile yet;
+        // process Alert and committed crime history are separate state owners.
+        for (auto it = controllers.begin(); it != controllers.end();)
+        {
+            const auto owner = it->first;
+            if (owner == player) { ++it; continue; }
+            const auto* values = mOblivionCombat->findActorValues(owner);
+            const auto* life = mOblivionCombat->findActorLife(owner);
+            if (!values || !life) throw std::logic_error("combat controller has no actor authority");
+            const bool full = owner == subject || values->mProcess == ESM4::ActorValueProcess::Low;
+            const auto count = it->second.size();
+            if (full) it->second.clear();
+            else std::erase_if(it->second, [&](const auto& target) { return target.mTarget == subject; });
+            if (full || it->second.size() != count) cancelled.push_back(owner);
+            if (full || (count && it->second.empty()))
+            {
+                stopped.push_back(owner);
+                if (values->mProcess == ESM4::ActorValueProcess::Low
+                    || life->mPhase == ESM4::ActorLifePhase::Alive)
+                { it = controllers.erase(it); continue; }
+            }
+            ++it;
+        }
+        // All preparation precedes publication. Released projectiles retain
+        // their independent flight ownership when the caster stops combat.
+        mOblivionRuntimeState->mCombatControllers.swap(controllers);
+        for (const auto& owner : cancelled)
+        {
+            mOblivionCombat->cancelActorActions(owner);
+            mOblivionCombat->clearMeleeAiIntent(owner);
+        }
+        for (const auto& owner : stopped) mOblivionCombat->stopCombat(owner);
+        mOblivionCombat->stopCombat(subject);
+        return true;
+    }
+
     std::optional<std::uint16_t> World::getOblivionFriendHit(
         const ESM::FormKey& actor, const ESM::FormKey& target) const
     {
@@ -2983,6 +3126,86 @@ namespace MWWorld
                 for (const auto& entry : found->second)
                     if (entry.mTarget == other) return entry.mCount;
         return 0;
+    }
+
+    std::vector<ESM4::ActorFaction> World::getOblivionActorFactions(const ESM::FormKey& base) const
+    {
+        std::vector<ESM4::ActorFaction> result;
+        if (mGameProfile != ESM::GameProfile::Oblivion) return result;
+        const std::vector<ESM4::RuntimeActorFaction>* factions = nullptr;
+        if (mPendingOblivionRuntimeState)
+        {
+            const auto& bases = mPendingOblivionRuntimeState->mNativeActorBases;
+            const auto found = std::ranges::find(bases, base, &ESM4::RuntimeActorBaseOverride::mBase);
+            if (found != bases.end() && found->mFactions) factions = &*found->mFactions;
+        }
+        else if (mOblivionCombat) factions = mOblivionCombat->getBaseFactions(base);
+        if (factions)
+        {
+            ESM::FormKeyResolver resolver(mContentFiles);
+            for (const auto& membership : *factions)
+            {
+                const auto id = resolver.toFormId(membership.mFaction);
+                if (!id) throw std::runtime_error("Saved native faction has no content identity");
+                result.push_back({id->toUint32(), membership.mRank, 0, 0, 0});
+            }
+            return result;
+        }
+        const auto* npc = mStore.search<ESM4::Npc>(base);
+        const auto* creature = mStore.search<ESM4::Creature>(base);
+        const auto authored = npc ? std::span<const ESM4::ActorFaction>(npc->mFactions)
+            : creature ? std::span<const ESM4::ActorFaction>(creature->mFactions)
+                       : std::span<const ESM4::ActorFaction>{};
+        // Native SNAM construction uses the same list setter as the command:
+        // insert at head, update in place, remove existing entries at rank -1.
+        for (const auto& entry : authored)
+        {
+            if (ESM::FormId::fromUint32(entry.faction).isZeroOrUnset()) continue;
+            const auto found = std::ranges::find(result, entry.faction, &ESM4::ActorFaction::faction);
+            if (found == result.end()) result.insert(result.begin(), entry);
+            else if (entry.rank == -1) result.erase(found);
+            else found->rank = entry.rank;
+        }
+        return result;
+    }
+
+    std::int8_t World::getOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction) const
+    {
+        const auto base = getOblivionReferenceBaseKey(actor);
+        const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(faction);
+        if (!base || !id || !mStore.search<ESM4::Faction>(faction)) return -1;
+        const auto entries = getOblivionActorFactions(*base);
+        const auto found = std::ranges::find(entries, id->toUint32(), &ESM4::ActorFaction::faction);
+        return found == entries.end() ? -1 : found->rank;
+    }
+
+    bool World::setOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction, std::int32_t rank)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat) return false;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        const auto base = getOblivionReferenceBaseKey(actor);
+        const auto* definition = mStore.search<ESM4::Faction>(faction);
+        if (!base || !definition || (definition->mFlags & ESM4::Rec_Deleted)) return false;
+        const auto* npc = mStore.search<ESM4::Npc>(*base);
+        const auto* creature = mStore.search<ESM4::Creature>(*base);
+        if ((!npc && !creature) || (npc && (npc->mFlags & ESM4::Rec_Deleted))
+            || (creature && (creature->mFlags & ESM4::Rec_Deleted))) return false;
+        ESM::FormKeyResolver resolver(mContentFiles);
+        const auto id = resolver.toFormId(faction);
+        if (!id) return false;
+        auto entries = getOblivionActorFactions(*base);
+        const auto found = std::ranges::find(entries, id->toUint32(), &ESM4::ActorFaction::faction);
+        const auto stored = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(rank));
+        if (found == entries.end()) entries.insert(entries.begin(), {id->toUint32(), stored, 0, 0, 0});
+        else if (stored == -1) entries.erase(found);
+        else found->rank = stored;
+        std::vector<ESM4::RuntimeActorFaction> replacement;
+        for (const auto& entry : entries)
+            replacement.push_back({resolver.toFormKey(ESM::FormId::fromUint32(entry.faction)), entry.rank});
+        mOblivionCombat->setBaseFactions(*base,
+            creature ? ESM4::ActorBaseKind::Creature : ESM4::ActorBaseKind::Npc, std::move(replacement));
+        return true;
     }
 
     std::optional<bool> World::getOblivionEssentialOverride(const ESM::FormKey& base) const
@@ -3598,12 +3821,11 @@ namespace MWWorld
                                                : actor.getCellRef().getFormKey();
         const auto* values = service.findActorValues(key); const auto* life = service.findActorLife(key);
         if (!values || !life || values->mProcess == ESM4::ActorValueProcess::Low) return false;
-        if (life->mPhase == ESM4::ActorLifePhase::Dead)
+        const bool dead = life->mPhase == ESM4::ActorLifePhase::Dead;
+        const auto previousGraph = dead ? service.getUpPlayback(key) : std::nullopt;
+        if (previousGraph && (!previousGraph->mResources.empty() || !previousGraph->mPendingRequests.empty()
+                || previousGraph->mPhysicalHit))
         {
-            const auto previousGraph = service.getUpPlayback(key);
-            if (!previousGraph || (previousGraph->mResources.empty() && previousGraph->mPendingRequests.empty()
-                    && !previousGraph->mPhysicalHit))
-                return false;
             MWMechanics::OblivionCombatService::GetUpPlaybackUpdate stopped;
             stopped.mPlayback.mNextIdentity = previousGraph->mNextIdentity;
             stopped.mKnockedState = 0; stopped.mAction = -1;
@@ -3625,7 +3847,8 @@ namespace MWWorld
             }
             if (!state->commit() || !scene->commit()) throw std::logic_error("recovery death cleanup publication changed");
             mOblivionGetUpResources = std::move(resources);
-            return false;
+            values = service.findActorValues(key); life = service.findActorLife(key);
+            if (!values || !life) throw std::logic_error("death cleanup lost actor authority");
         }
         const auto fatigue = actor == getPlayerPtr() ? service.getPlayerValue(10) : service.getNonPlayerValue(actor, 10);
         const auto paralysis = service.getProcessParalysis(key);
@@ -3633,16 +3856,16 @@ namespace MWWorld
         const auto hitGraph = service.getUpPlayback(key);
         const bool physicalHit = hitGraph && hitGraph->mPhysicalHit;
         const bool pendingHit = physicalHit && !hitGraph->mPhysicalHit->mApplied;
-        if ((raw == 1 || raw == 2) && !physicalHit) return false;
+        if (!dead && (raw == 1 || raw == 2) && !physicalHit) return false;
         // Initial restore is observational. A pending contact must retain its
         // exact saved owner until the first advancing frame applies the force.
         if (pendingHit && duration == 0) return true;
-        const bool incapacitated = ESM4::requiresIncapacitation(fatigue, paralysis != 0,
+        const bool incapacitated = dead || ESM4::requiresIncapacitation(fatigue, paralysis != 0,
             life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious);
         if (!raw && !incapacitated) return false;
         const auto previous = service.actorRagdoll(key);
-        if (duration == 0 && !raw && !previous) return false;
-        if (!animation.hasPhysicalPose() && (previous || pendingHit || (raw == 0 && incapacitated)))
+        if (duration == 0 && !previous && (dead || !raw)) return false;
+        if (!animation.hasPhysicalPose() && (previous || pendingHit || dead || (raw == 0 && incapacitated)))
         {
             if (!mPhysics) throw std::invalid_argument("recovery requires World physics");
             auto model = previous ? VFS::Path::Normalized(previous->mModel) : actor.getClass().getCorrectedModel(actor);
@@ -3652,6 +3875,7 @@ namespace MWWorld
                     Misc::ResourceHelpers::correctMeshPath(actor.get<ESM::NPC>()->mBase->mModel.getNormalized()),
                     mResourceSystem->getVFS());
             const auto source = animation.captureNativePhysicalSource(model);
+            if (dead && !source) return false; // Retain legacy death handling for models without physical bodies.
             if (!source || source->definition()->mBodies.empty())
                 throw std::invalid_argument("recovery requires the rendered actor's physical NIF");
             const auto placement = oblivionRecoveryPlacement(actor);
@@ -3788,19 +4012,24 @@ namespace MWWorld
             entering.mAction = previous && !pendingHit ? values->mProcessAction : std::optional<std::int16_t>(-1);
             entering.mResetCombat = true;
             const auto random = service.combatRandomState(); entering.mRandom = {random, random, 0};
-            auto state = service.prepareGetUpPlayback(key, std::move(entering));
+            auto state = dead ? nullptr : service.prepareGetUpPlayback(key, std::move(entering));
             auto* peer = animation.getPlaybackPeer();
             auto first = peer ? peer->prepareNativeSequenceLayers({}) : nullptr;
-            if (!state || !state->isValid() || !cache || !cache->isValid()
+            if ((!dead && (!state || !state->isValid())) || !cache || !cache->isValid()
                 || !renderer->isValid() || !bodies->isValid() || (peer && (!first || !first->isValid())))
                 throw std::invalid_argument("recovery body changed during preparation");
-            if (!bodies->commit() || !animation.commitNativeScene(*renderer) || !cache->commit() || !state->commit())
+            if (!bodies->commit() || !animation.commitNativeScene(*renderer) || !cache->commit()
+                || (!dead && !state->commit()))
                 throw std::logic_error("recovery body publication changed");
             if (first && !first->commit()) throw std::logic_error("recovery first-person reset changed");
             raw = service.getProcessKnockedState(key);
-            Log(Debug::Verbose) << "M15 recovery body admitted: actor=" << key.serialize()
+            Log(Debug::Verbose) << (dead ? "M15 death body admitted: actor=" : "M15 recovery body admitted: actor=")
+                                << key.serialize()
                                 << " state=" << unsigned(raw) << " restored=" << bool(previous);
         }
+        // A corpse keeps its physical owner and saved blend state, without a
+        // recovery graph or any route back into GetUp selection.
+        if (dead) return false;
         if (pendingHit && !service.getUpPlayback(key)->mPhysicalHit->mApplied)
         {
             // A recovered actor can retain its physical renderer/body. Reuse
@@ -6274,6 +6503,74 @@ namespace MWWorld
         return true;
     }
 
+    bool World::resurrectOblivionActor(const Ptr& actor, bool preserveState)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const auto key = actor.getCellRef().getFormKey();
+        const auto* values = mOblivionCombat->findActorValues(key);
+        if (!values || !mOblivionCombat->findActorLife(key))
+            return false;
+        if (actor == getPlayerPtr())
+            throw std::invalid_argument("native Player resurrection world reset is not implemented");
+        if (!values->mMeleeParalysis.empty())
+            throw std::invalid_argument("native resurrection with owned paralysis requires effect reset support");
+        const bool attached = actor.getRefData().getBaseNode() != nullptr && actor.isInCell()
+            && mWorldScene && mWorldScene->isCellActive(*actor.getCell());
+        // Original5F6020 only preserves the process when all three predicates
+        // (body, cell, attached cell) hold. Inactive Resurrect1 is a full reset.
+        if (preserveState && attached)
+            throw std::invalid_argument("native attached preserve-state resurrection is not implemented");
+
+        const auto* npc = mStore.search<ESM4::Npc>(values->mBase);
+        const auto* creature = mStore.search<ESM4::Creature>(values->mBase);
+        if ((npc != nullptr) == (creature != nullptr))
+            throw std::invalid_argument("native resurrection requires an unambiguous actor base");
+        const auto& baseInventory = npc ? npc->mInventory : creature->mInventory;
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        std::vector<ESM4::RuntimeInventoryItem> inventory;
+        for (const auto& entry : baseInventory)
+        {
+            if (!entry.count) continue;
+            ESM4::RuntimeInventoryItem item;
+            item.mBase = resolver.toFormKey(ESM::FormId::fromUint32(entry.item));
+            item.mCount = ESM4::inventoryItemCount(entry);
+            inventory.push_back(std::move(item));
+        }
+        // Preflight all definitions before changing inventory or lifecycle.
+        auto contents = OblivionProfileServices::stageActorInventory(
+            OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
+        OblivionProfileServices::equipNativeApparel(*contents, mStore);
+        auto& target = actor.getClass().getInventoryStore(actor);
+        std::vector<Ptr> removed, inserted;
+        for (const auto& item : target)
+            if (item.mRef->mWorldModel) removed.push_back(item);
+        for (Ptr item : *contents)
+        {
+            item.setContainerStore(&target);
+            inserted.push_back(item);
+        }
+        auto registry = mWorldModel.preparePtrReplacement(removed, inserted);
+        if (!registry.isValid())
+            throw std::logic_error("native resurrection inventory preparation is stale");
+        // Remove/capture the old scene before discarding its authoritative pose.
+        // Ordinary cell loading will create fresh animation/physics if inactive.
+        if (attached) mWorldScene->removeObjectFromScene(actor);
+        auto adoption = mOblivionCombat->guardLifeAdoption(actor, nullptr);
+        auto* reference = adoptOblivionActorLife(actor);
+        mOblivionCombat->resetNonPlayerForResurrection(actor);
+        registry.commit();
+        target.swapPreparedContents(*contents);
+        target.setPtr(actor);
+        if (reference) reference->mCustomState.erase("obscript.dead");
+        adoption.commit();
+        if (mOblivionAi) mOblivionAi->clearCombatRoute(actor);
+        actor.getClass().getCreatureStats(actor).setAttackingOrSpell(false);
+        if (attached) mWorldScene->addObjectToScene(actor);
+        target.notifyPreparedEquipmentChange();
+        return true;
+    }
+
     bool World::executeOblivionActorValueCommand(const ESM::FormKey& actor, std::uint8_t value,
         ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested)
     {
@@ -6429,6 +6726,8 @@ namespace MWWorld
             if (const auto* winner = mStore.getFormKeyIndex().winner(*identity);
                 winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
                 return false;
+        if (consumeOblivionPotionAttributes(*this, item, actor)) return true;
+        if (consumeOblivionPotionLight(*this, item, actor, *potion)) return true;
         const auto amounts = resolveOblivionPotionRestoration(mStore, *potion);
         if (!amounts) return false;
         const bool player = actor == getPlayerPtr();
@@ -6564,10 +6863,10 @@ namespace MWWorld
         };
         if (player)
             mOblivionCombat->updatePlayerFrameResourcesFromClock(
-                *mPlayer, movement, false, settings, prepareParalysis, processEffects);
+                *mPlayer, movement, mOblivionCombat->findSpellCast(key) != nullptr, settings, prepareParalysis, processEffects);
         else
             mOblivionCombat->updateNonPlayerFrameResourcesFromClock(
-                actor, movement, false, settings, prepareParalysis, processEffects);
+                actor, movement, mOblivionCombat->findSpellCast(key) != nullptr, settings, prepareParalysis, processEffects);
         if (friendHits)
             mOblivionRuntimeState->mFriendHitCounters.at(key).swap(*friendHits);
         // Terminal targets cannot keep a living native actor in its interrupted
@@ -6704,7 +7003,8 @@ namespace MWWorld
             const auto relationActorTarget = [&](const ESM::FormKey& key) {
                 if (key == state.mPlayer.mReference) return true;
                 if (key.isContent() && !store.get<ESM4::ActorCharacter>().search(key)
-                    && !store.get<ESM4::ActorCreature>().search(key)) return false;
+                    && !store.get<ESM4::ActorCreature>().search(key)
+                    && !oblivionLevelledActorContains(store, key, relationBase(key))) return false;
                 return relationActor(relationBase(key));
             };
             const auto relationItemTarget = [&](const ESM::FormKey& key) {
@@ -6964,6 +7264,8 @@ namespace MWWorld
             std::optional<float> mScale;
             std::optional<ESM::AnimationState> mAnimation;
             std::optional<CellRef> mItemCellRef;
+            std::unique_ptr<CustomData> mLightUsage;
+            bool mReplaceLightUsage = false;
         };
         std::optional<CellRef> preparedPlayerDropRelations;
         if (state.mVersion >= 47)
@@ -6993,9 +7295,11 @@ namespace MWWorld
         for (const auto& reference : state.mReferences)
         {
             if (reference.mKey == state.mPlayer.mReference) continue;
+            const bool levelled = validateOblivionLevelledActor(mStore, reference);
+            if (levelled && std::get<bool>(reference.mCustomState.at("native.levelled_actor.empty"))) continue;
             auto found = references.find(reference.mKey);
-            if (found == references.end() && reference.mKey.isDynamic()
-                && reference.mKey.mNamespace == "native-reference")
+            if (found == references.end() && (levelled || (reference.mKey.isDynamic()
+                && reference.mKey.mNamespace == "native-reference")))
             {
                 const auto base = resolver.toFormId(reference.mBase);
                 if (!base)
@@ -7003,6 +7307,7 @@ namespace MWWorld
                 const auto cellId = resolver.toFormId(reference.mCell);
                 CellStore& cell = mWorldModel.getCell(ESM::RefId(*cellId));
                 ESM4::Reference placed{};
+                if (levelled) placed = *mStore.get<ESM4::Reference>().search(reference.mKey);
                 placed.mFormKey = reference.mKey;
                 placed.mParent = ESM::RefId(*cellId);
                 placed.mParentKey = reference.mCell;
@@ -7026,6 +7331,8 @@ namespace MWWorld
             if (reference.mActorDrawState)
                 savedActorDrawState(mStore, found->second, state); // Validate incoming state, not the accepted cache.
             std::optional<CellRef> itemCellRef;
+            const auto lightUsage = savedNativeLightUsageTime(mStore, reference);
+            auto lightData = lightUsage ? MWClass::ESM4Light::prepareRemainingUsageTime(*lightUsage) : nullptr;
             const bool hasItemExtras = reference.mItemCondition || reference.mItemCharge;
             const auto& itemClass = found->second.getClass();
             if (hasItemExtras && !itemClass.isItem(found->second))
@@ -7140,7 +7447,8 @@ namespace MWWorld
             const auto cellId = resolver.toFormId(reference.mCell);
             preparedReferences.push_back({&reference, found->second,
                 &mWorldModel.getCell(ESM::RefId(*cellId)), owner, locked, scale,
-                std::move(animationState), std::move(itemCellRef)});
+                std::move(animationState), std::move(itemCellRef), std::move(lightData),
+                itemClass.getType() == ESM::REC_LIGH4});
         }
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
@@ -7449,6 +7757,8 @@ namespace MWWorld
         {
             const auto& reference = *binding.mState;
             Ptr ptr = binding.mReference;
+            if (binding.mReplaceLightUsage)
+                ptr.getRefData().setCustomData(std::move(binding.mLightUsage));
             if (binding.mItemCellRef)
             {
                 static_assert(std::is_nothrow_swappable_v<CellRef>);
@@ -7468,6 +7778,8 @@ namespace MWWorld
             }
             if (binding.mLocked)
                 ptr.getCellRef().setLocked(*binding.mLocked);
+            if (mOblivionAi && reference.mCustomState.contains("native.package.lock_projection_pending"))
+                mOblivionAi->applyPendingDoorLockProjection(ptr);
             int count = reference.mDeleted ? 0 : 1;
             if (const auto savedCount = reference.mCustomState.find("count");
                 savedCount != reference.mCustomState.end())
@@ -7486,6 +7798,11 @@ namespace MWWorld
                 ptr.getClass().getInventoryStore(ptr).setPtr(ptr);
                 if (ptr.getClass().getType() == ESM::REC_NPC_4)
                     MWClass::ESM4Npc::refreshNativeEquipment(ptr);
+            }
+            else if (ptr.getType() == ESM::REC_CONT4)
+            {
+                // The restored native stock is authoritative on the next access.
+                ptr.getRefData().setCustomData(nullptr);
             }
 
             if (binding.mAnimation)
@@ -7600,6 +7917,27 @@ namespace MWWorld
                 throw std::runtime_error("movement restore has multiple resident reference owners");
         }
         const auto& saved = *mOblivionRuntimeState->mNativeMovement;
+        std::vector<CellStore*> movementCells;
+        for (const auto& [key, movement] : saved.mActors)
+        {
+            const auto actor = references.find(key);
+            const auto* values = mOblivionCombat->findActorValues(key);
+            if (actor == references.end() || !values || values->mBase != movement.mBase
+                || (key != playerKey && nativeActorBase(actor->second) != movement.mBase))
+                throw std::runtime_error("movement restore has an unbound actor/base owner: " + key.serialize());
+            movementCells.push_back(actor->second.getCell());
+            if (!movement.mStandingOn.isNull())
+            {
+                const auto standing = references.find(movement.mStandingOn);
+                if (standing == references.end())
+                    throw std::runtime_error("movement restore has an unresolved standing reference");
+                movementCells.push_back(standing->second.getCell());
+            }
+        }
+        // The live grid can retain its previous center after the Player crosses
+        // a cell boundary. Recenter only as needed to admit the complete saved
+        // footprint; keep the strict mechanics/physics ownership checks below.
+        if (mWorldScene) mWorldScene->restoreExteriorMovementGrid(movementCells);
         const auto* mechanics = dynamic_cast<const MWMechanics::MechanicsManager*>(
             MWBase::Environment::get().getMechanicsManagerOrNull());
         std::vector<MWPhysics::ActorMovementSnapshot> snapshots;
@@ -7613,7 +7951,7 @@ namespace MWWorld
                 throw std::runtime_error("movement restore has an unbound actor/base owner");
             if (movement.mPositionAdjusted
                 && (!mechanics || !mechanics->getActors().positionAdjusted(found->second).has_value()))
-                throw std::runtime_error("movement restore has an unresolved mechanics actor");
+                throw std::runtime_error("movement restore has an unresolved mechanics actor: " + key.serialize());
             Ptr standingOn;
             if (!movement.mStandingOn.isNull())
             {
@@ -7715,6 +8053,18 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
+        ESM4::validatePlayerMiscStats(state.mPlayer.mActorValues);
+        if (const auto flag = state.mPlayer.mActorValues.find(std::string(ESM4::PlayerMurdererKey));
+            flag != state.mPlayer.mActorValues.end())
+            ESM4::playerMurdererValue(flag->second);
+        validateOblivionMagicProjectiles(state);
+        validateOblivionArrowProjectiles(state);
+        validateOblivionEnvironmentalFire(state);
+        validateOblivionIngredientRestoration(mStore, state);
+        validateOblivionAwardedSkillBooks(mStore, state);
+        validateOblivionScrollChameleon(mStore, state);
+        validateOblivionPotionAttributes(mStore, state);
+        validateOblivionPotionLight(mStore, state);
         auto getupResources = prepareOblivionGetUpResources(state, incoming);
         if (prepared) prepared->mGetUpResources = std::move(getupResources);
         for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)
@@ -7871,6 +8221,9 @@ namespace MWWorld
         for (const auto& reference : state.mReferences)
         {
             validateCell(reference.mCell);
+            const bool levelled = validateOblivionLevelledActor(mStore, reference);
+            const bool levelledActor = levelled
+                && !std::get<bool>(reference.mCustomState.at("native.levelled_actor.empty"));
             if (reference.mKey.isDynamic() && reference.mKey.mNamespace == "native-reference"
                 && reference.mKey.mValue >= state.mNextDynamicSerial)
                 throw std::invalid_argument("native reference serial would reuse a saved identity");
@@ -7909,10 +8262,18 @@ namespace MWWorld
                     throw std::runtime_error("TES4 runtime-state owner cannot be resolved: "
                         + reference.mOwner->serialize());
             }
-            for (const auto name : {"obscript.dead", "locked", "obscript.animation_scripted"})
+            for (const auto name : {"obscript.dead", "locked", "obscript.animation_scripted",
+                     "native.dialogue.talked_to_player"})
                 if (const auto value = reference.mCustomState.find(name); value != reference.mCustomState.end()
                     && !std::holds_alternative<bool>(value->second))
                     throw std::invalid_argument("TES4 runtime-state " + std::string(name) + " is not boolean");
+            if (reference.mCustomState.contains("native.dialogue.talked_to_player"))
+            {
+                const auto& definitions = incoming && reference.mBase.isDynamic() ? *incoming : mStore;
+                if (!definitions.search<ESM4::Npc>(reference.mBase)
+                    && !definitions.search<ESM4::Creature>(reference.mBase))
+                    throw std::invalid_argument("Native dialogue history requires an actor reference");
+            }
             if (const auto scale = reference.mCustomState.find("scale"); scale != reference.mCustomState.end())
                 if (const auto* value = std::get_if<double>(&scale->second))
                     validateFloat(*value, "reference scale");
@@ -7942,6 +8303,7 @@ namespace MWWorld
                     || (reference.mItemCharge && item->mMaxCharge < 0.f))
                     throw std::invalid_argument("TES4 loose item extras disagree with the winning item category");
             }
+            savedNativeLightUsageTime(incoming && reference.mBase.isDynamic() ? *incoming : mStore, reference);
             if (reference.mKey.isDynamic())
                 continue; // Dynamic references are reconstructed from shared save records.
             const auto* npc = mStore.get<ESM4::ActorCharacter>().search(reference.mKey);
@@ -7951,18 +8313,18 @@ namespace MWWorld
                 : object ? &object->mBaseKey : nullptr;
             if (!base)
                 throw std::runtime_error("TES4 runtime-state reference is not present: " + reference.mKey.serialize());
-            if (*base != reference.mBase)
+            if (*base != reference.mBase && !levelledActor)
                 throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
             if ((npc && !mStore.get<ESM4::Npc>().search(*base))
                 || (creature && !mStore.get<ESM4::Creature>().search(*base)))
                 throw std::runtime_error("TES4 runtime-state actor base is not present: " + base->serialize());
-            if (reference.mActorDrawState && !npc && !creature)
+            if (reference.mActorDrawState && !npc && !creature && !levelledActor)
                 throw std::runtime_error("TES4 runtime-state actor draw state requires an actor reference");
-            if (reference.mDropRelations.mItems && !npc && !creature)
+            if (reference.mDropRelations.mItems && !npc && !creature && !levelledActor)
                 throw std::invalid_argument("Native dropped-list owner requires ACHR/ACRE");
             if (reference.mDropRelations.mDropper && !object)
                 throw std::invalid_argument("Native dropper extra requires REFR");
-            if ((npc || creature) && reference.mOwnershipRank)
+            if ((npc || creature || levelledActor) && reference.mOwnershipRank)
                 throw std::invalid_argument("Native actor reference cannot own a REFR rank extra");
         }
         // Exercise the same detached preparations used by restore. Admission
@@ -9048,6 +9410,10 @@ namespace MWWorld
         mPhysics->moveActors();
         synchronizeLooseWeaponPoses(*this,*mPhysics);
         synchronizeOblivionAnimatedReferencePoses();
+        processOblivionTrapContacts();
+        updateOblivionMagicProjectiles(duration);
+        updateOblivionArrowProjectiles(duration);
+        updateOblivionEnvironmentalFire(duration);
     }
 
     void World::updateNavigator()
@@ -9227,8 +9593,100 @@ namespace MWWorld
         }
     }
 
+    void World::updateOblivionLevelledActors()
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || mPendingOblivionRuntimeState
+            || !mPlayer || !mWorldScene || !mOblivionCombat || getPlayerPtr().isEmpty()) return;
+        const int level = getPlayerPtr().getClass().getCreatureStats(getPlayerPtr()).getLevel();
+        for (CellStore* cell : mWorldScene->getActiveCells())
+        {
+            const auto* cellId = cell->getCell()->getId().getIf<ESM::FormId>();
+            if (!cellId) continue;
+            for (const auto* original : mStore.get<ESM4::Reference>().getByCell(*cellId))
+            {
+                const auto* list = mStore.get<ESM4::LevelledCreature>().search(original->mBaseObj);
+                if (!list || (original->mFlags & (ESM4::Rec_Deleted | ESM4::Rec_Disabled))) continue;
+                // Scripted lists and enable-parent activation require their own
+                // lifecycle integration. The original Vilverin placements have neither.
+                if (!list->mScriptId.isZeroOrUnset() || !list->mTemplate.isZeroOrUnset()
+                    || !original->mEsp.parent.isZeroOrUnset()) continue;
+                const auto finishInventory = [&](ESM4::RuntimeReferenceState& saved, const Ptr& actor) {
+                    // A fresh choice is already durable in the cache, but its
+                    // inventory is not a saved empty store. Retry construction
+                    // after a failure without rolling another actor or list.
+                    actor.getClass().getInventoryStore(actor);
+                    saved.mInventory = captureOblivionInventory(actor);
+                    saved.mCustomState.erase("native.levelled_actor.inventory_pending");
+                };
+                if (mOblivionRuntimeState)
+                {
+                    const auto found = std::lower_bound(mOblivionRuntimeState->mReferences.begin(),
+                        mOblivionRuntimeState->mReferences.end(), original->mFormKey,
+                        [](const auto& ref, const auto& key) { return ref.mKey < key; });
+                    if (found != mOblivionRuntimeState->mReferences.end() && found->mKey == original->mFormKey)
+                    {
+                        if (found->mCustomState.contains("native.levelled_actor.inventory_pending"))
+                        {
+                            const Ptr actor = mWorldModel.getPtr(original->mId);
+                            finishInventory(*found, actor);
+                            mWorldScene->addObjectToScene(actor);
+                        }
+                        continue;
+                    }
+                }
+                if (!supportsOblivionLevelledActor(mStore, original->mBaseKey, level)) continue;
+                auto random = getPrng();
+                const auto selected = selectOblivionLevelledActor(mStore, original->mBaseKey, level, random);
+                ESM4::RuntimeReferenceState saved;
+                saved.mKey = original->mFormKey;
+                saved.mBase = original->mBaseKey;
+                saved.mCell = original->mParentKey;
+                saved.mPosition = original->mPos;
+                saved.mEnabled = true;
+                saved.mCustomState["native.levelled_actor.level"] = std::int64_t(level);
+                saved.mCustomState["native.levelled_actor.empty"] = !selected;
+                std::unique_ptr<PreparedSavedNativeReference> prepared;
+                if (selected)
+                {
+                    ESM4::Reference placed = *original;
+                    placed.mBaseObj = *selected;
+                    placed.mBaseKey = ESM::FormKeyResolver(mContentFiles).toFormKey(*selected);
+                    saved.mBase = placed.mBaseKey;
+                    saved.mCustomState["native.levelled_actor.inventory_pending"] = true;
+                    prepared = prepareSavedNativeReference(mStore, *cell, placed);
+                }
+                if (!mOblivionRuntimeState) mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>();
+                mOblivionRuntimeState->mReferences.reserve(mOblivionRuntimeState->mReferences.size() + 1);
+                if (prepared)
+                {
+                    const std::array<Ptr, 1> inserted{prepared->get()};
+                    auto registry = mWorldModel.preparePtrReplacement({}, inserted);
+                    if (!prepared->isValid() || !registry.isValid())
+                        throw std::logic_error("stale native leveled placement preparation");
+                    prepared->commit();
+                    registry.commit();
+                }
+                auto& references = mOblivionRuntimeState->mReferences;
+                const auto inserted = references.insert(std::lower_bound(references.begin(), references.end(),
+                    saved.mKey, [](const auto& ref, const auto& key) { return ref.mKey < key; }), std::move(saved));
+                getPrng() = random;
+                if (prepared)
+                {
+                    const Ptr actor = prepared->get();
+                    finishInventory(*inserted, actor);
+                    mWorldScene->addObjectToScene(actor);
+                    Log(Debug::Info) << "Native leveled placement " << original->mFormKey.serialize()
+                        << " selected " << actor.getCellRef().getRefId() << " at Player level " << level;
+                }
+                else Log(Debug::Info) << "Native leveled placement " << original->mFormKey.serialize()
+                    << " selected none at Player level " << level;
+            }
+        }
+    }
+
     void World::update(float duration, bool paused)
     {
+        if (!paused && duration > 0.f) updateOblivionLevelledActors();
         if (!dispatchOblivionEquipmentNotifications()) return;
         if (mGameProfile == ESM::GameProfile::Oblivion && mRendering && mRendering->getWorkQueue())
             updateOblivionPendingGetUpLoads(*mRendering->getWorkQueue());
@@ -9435,7 +9893,10 @@ namespace MWWorld
             {
                 cell->forEach(
                     [&](const Ptr& candidate) {
-                        if (!candidate.getRefData().isEnabled() || !candidate.getClass().hasToolTip(candidate))
+                        // Deleted content references remain script-accessible,
+                        // but must not regain a world interaction label.
+                        if (candidate.mRef->isDeleted() || !candidate.getRefData().isEnabled()
+                            || !candidate.getClass().hasToolTip(candidate))
                             return true;
                         const osg::Vec3f delta
                             = candidate.getRefData().getPosition().asVec3() - cameraPosition;
@@ -10046,6 +10507,9 @@ namespace MWWorld
         if (!currentCell->getCell()->noSleep() && !player.getClass().getNpcStats(player).isWerewolf())
             result |= Rest_CanSleep;
 
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            Log(Debug::Info) << "M16 native wait eligibility: flags=" << result
+                << " solid_ground=" << mPhysics->isOnSolidGround(player) << " fall_height=" << fallHeight;
         return result;
     }
 
@@ -11181,6 +11645,12 @@ namespace MWWorld
                 updates.push_back(std::move(update));
         }
         mOblivionCombat->restoreResourceBatch(*mPlayer, updates, projections, settings, nextManagerTime);
+        // Each admitted Charm lasts30 simulation seconds; a completed ordinary
+        // hour expires it without touching permanent script disposition changes.
+        if (mOblivionRuntimeState)
+            for (auto& reference : mOblivionRuntimeState->mReferences)
+                std::erase_if(reference.mCustomState,
+                    [](const auto& entry) { return entry.first.starts_with("native.charm."); });
         advanceTime(1);
         if (mOblivionAi && MWBase::Environment::get().getMechanicsManager()->isAIActive())
             mOblivionAi->fastForward(1.f);

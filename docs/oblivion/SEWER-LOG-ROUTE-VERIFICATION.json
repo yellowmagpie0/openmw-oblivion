@@ -1,0 +1,157 @@
+{
+  "scope": "Normal route around optional bonfire and native rolling-log or Player-melee victory; full sewer escape remains incomplete",
+  "passed": true,
+  "runtime_sha256": "eddf9a70e18fdb54b1706ded01b53dc8ba119ca433a4205527d2b4684774177d",
+  "full_course_luajit_compile": {
+    "segments": 67,
+    "actions": 11548,
+    "passed": true
+  },
+  "focused_python": {
+    "cases": 18,
+    "passed": true,
+    "log": "build/oblivion-compat/sewer-escape/cavern-log-trap-outcome-python-focused-01.log"
+  },
+  "courses": [
+    {
+      "course": "cavern-fire-bypass-01",
+      "raw_scenario_passed": false,
+      "raw_missing_expected_log": [
+        "M15 melee hit committed: actor=dynamic:player:0000000000000001"
+      ],
+      "all_actions_completed": true,
+      "input_bytes_delivered": true,
+      "whole_entry_differences": 0,
+      "fire_casts": 0,
+      "actual_retained_saves": [
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/cavern-fire-bypass-01/retained-saves/3-0003-Quicksave.omwsave",
+          "save_sha256": "c19fe781a2e5e900d8b2b5d3957d6b3e281aec8b87b85f02a37e45bcbed078f0",
+          "native_sha256": "614bb56b891312e92205a33ec25af471d4352b8d0272d8ff46cf8c23603aaa6b",
+          "health": 80.0,
+          "parsed_save_equals_native": true
+        },
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/cavern-fire-bypass-01/retained-saves/3-0004-Quicksave.omwsave",
+          "save_sha256": "126d20c36916ae60e27703078fd907cb931ccb9a77749ed4bfd385910b06145e",
+          "native_sha256": "9a4198f9cbdb0e49b61a3a5fc4a268d19b0a7733682fc6e18e10a0d5123e2ce9",
+          "health": 80.0,
+          "parsed_save_equals_native": true
+        },
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/cavern-fire-bypass-01/retained-saves/3-0005-Quicksave.omwsave",
+          "save_sha256": "e442dd96ef89a3ee7136b73f733b60764b5590c2c5792b568cf47c305fc1a47f",
+          "native_sha256": "1c100d0d2296c024257efa88ad9175533dda5944f4bbbd6189144941243497c3",
+          "health": 80.0,
+          "parsed_save_equals_native": true
+        },
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/cavern-fire-bypass-01/retained-saves/3-0006-Quicksave.omwsave",
+          "save_sha256": "c1db290dc1a913e3875354a87448cdc5a32a55cb87d1e8c00bde9b0b1d68a47e",
+          "native_sha256": "199b5369ea66226487c4528458bcfb7b763413cd8e9a73ac913e7ba38e12a9c6",
+          "health": 80.0,
+          "parsed_save_equals_native": true
+        },
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/cavern-fire-bypass-01/retained-saves/3-0007-Quicksave.omwsave",
+          "save_sha256": "380d0478bc4a616e562c43d630bf4cc5e22606c86ac4a70693f38eaa4592b319",
+          "native_sha256": "fa9623f2f7f23a218792b78a7b0bab8dd8d5b321b02dfbf936e0e48b08a53750",
+          "health": 80.0,
+          "parsed_save_equals_native": true
+        },
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/cavern-fire-bypass-01/retained-saves/3-0008-Quicksave.omwsave",
+          "save_sha256": "088caf7ce3c26598921199fc51caecf8b2a27f7584191c1d290833b2b9b722da",
+          "native_sha256": "bf885e5bc97d3db06532bd8443e3a56018ef8292e49794f294deb5bd29475a24",
+          "health": 80.0,
+          "parsed_save_equals_native": true
+        },
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/cavern-fire-bypass-01/retained-saves/3-0009-Quicksave.omwsave",
+          "save_sha256": "ceef2282e67c8a53073bba64da2a87d2ef781ca32f2e555a2f3446d7b871b163",
+          "native_sha256": "61fbc76f8c952b31afbdaf271ec7f3d4dbb4033cc002c9bcd670a7bff61f78e7",
+          "health": 80.0,
+          "parsed_save_equals_native": true
+        }
+      ],
+      "earlier_overwritten_snapshots_are_not_retained_saves": true,
+      "native_goblin_deaths": [
+        {
+          "actor": "content:oblivion.esm:03b518",
+          "base": "content:oblivion.esm:03b51d",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:03b51a",
+          "base": "content:oblivion.esm:0c9ffc",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        }
+      ],
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 280035,
+        "sequence": 10,
+        "tick": 2672,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 9,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    },
+    {
+      "course": "cavern-log-trap-outcome-01",
+      "raw_scenario_passed": true,
+      "raw_missing_expected_log": [],
+      "all_actions_completed": true,
+      "input_bytes_delivered": true,
+      "whole_entry_differences": 0,
+      "fire_casts": 0,
+      "actual_retained_saves": [
+        {
+          "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/cavern-log-trap-outcome-01/retained-saves/3-0008-Quicksave.omwsave",
+          "save_sha256": "d95eb16c5129d3770a76c1f73eb4c0ab019af1df2fd9f6ac10e71ede3e705d01",
+          "native_sha256": "46706628d9c8b0276bee5ab3582632199a2a5fa96615c6751d4bbb0cc3efd2a0",
+          "health": 10.569984436035156,
+          "parsed_save_equals_native": true
+        }
+      ],
+      "earlier_overwritten_snapshots_are_not_retained_saves": true,
+      "native_goblin_deaths": [
+        {
+          "actor": "content:oblivion.esm:03b518",
+          "base": "content:oblivion.esm:03b51d",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:03b51a",
+          "base": "content:oblivion.esm:0c9ffc",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ],
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 280286,
+        "sequence": 9,
+        "tick": 1042,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 8,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    }
+  ],
+  "rendered_inspection": "Normal final melee capture inspected: Player axe/HUD and defeated goblin visible; upright corpse remains a known presentation limitation.",
+  "unchanged_engine_evidence": "SEWER-ENVIRONMENTAL-FIRE-VERIFICATION.json: 2216 normal +2216 ASan/UBSan engine and578 Python; original fingerprints preserved, not rerun for data-only correction."
+}

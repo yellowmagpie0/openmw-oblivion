@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "scope": "Genuine uncommitted saved checkpoints. Never synthesize or edit world state; preserve source hash/provenance. Failed parent courses may supply genuine earlier F5s, never continuous acceptance.",
+  "checks": {
+    "floor": {
+      "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-16/retained-saves/3-0028-Quicksave.omwsave",
+      "sha256": "a42a1a04f0a544517b5217046901170a3a520cc86c950690f9ca8a5730b37787",
+      "segments": [
+        11,
+        12
+      ],
+      "regenerate_stop_after": 10,
+      "purpose": "Supporting-floor/lateral recovery, original corridor runners, Player zombie victory and ordinary healing",
+      "provenance": "docs/oblivion/SEWER-DESCENDING-RECOVERY-VERIFICATION.json"
+    },
+    "combat": {
+      "path": "build/oblivion-compat/sewer-escape/full-escape-continuous-21/retained-saves/3-0086-Quicksave.omwsave",
+      "sha256": "230901627d1a4c1c8ec9023e62600324d3f891aa794e9772cea4441114072cae",
+      "segments": [
+        41,
+        45
+      ],
+      "regenerate_stop_after": 40,
+      "purpose": "Patrol/nearby reinforcements, cover, combat/healing and full resource recovery",
+      "provenance": "docs/oblivion/SEWER-CONTINUOUS-21-FAILURE.json"
+    },
+    "story": {
+      "path": "build/oblivion-compat/sewer-escape/story-ownership-runtime-01/retained-saves/3-0004-Quicksave.omwsave",
+      "sha256": "51950003614f967c1aac1025dd0ae19540f0649e101269870caa95a967d4a8e0",
+      "segments": [
+        59,
+        62
+      ],
+      "regenerate_stop_after": 58,
+      "purpose": "Original Sanctum/Amulet/Emperor/final-assassin/class story and shared-base faction persistence",
+      "provenance": "docs/oblivion/SEWER-SETFACTIONRANK-VERIFICATION.json",
+      "reload": "scripts/data/oblivion_compat/oblivion_sewer_baurus_class_reload.json"
+    },
+    "exit": {
+      "path": "build/oblivion-compat/sewer-escape/manhole-visible-target-01/retained-saves/3-0003-Quicksave.omwsave",
+      "sha256": "70eb26795543648ee6e07c0adee722c37597ef661a834388492d0335c4ed5a6c",
+      "segments": [
+        65,
+        67
+      ],
+      "regenerate_stop_after": 64,
+      "purpose": "Actual western-rat fight, final sewer traversal, exterior door and own outdoor save/reload",
+      "provenance": "docs/oblivion/SEWER-WESTERN-RAT-EXIT-VERIFICATION.json",
+      "reload": "scripts/data/oblivion_compat/oblivion_sewer_joined_outdoor_reload.json"
+    }
+  },
+  "reused_evidence": [
+    "docs/oblivion/SEWER-DESCENDING-RECOVERY-VERIFICATION.json",
+    "docs/oblivion/SEWER-SETFACTIONRANK-VERIFICATION.json",
+    "docs/oblivion/SEWER-REINFORCEMENT-DEFENSE-VERIFICATION.json"
+  ]
+}

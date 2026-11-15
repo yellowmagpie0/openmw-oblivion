@@ -1,0 +1,40 @@
+{
+  "status": "Independent original record identity and expected-state contract verified by completed bounded fork course. No new numerical mechanic or Rice-specific original-executable probe claimed.",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "load_order": [
+    "Oblivion.esm"
+  ],
+  "raw_audit": {
+    "path": "build/oblivion-compat/ingredient-drop/winning-original-ingredients.json",
+    "sha256": "fb9b6f2e2b769509308fb910d423e327204bfaef1ad0de7709ba72f2da189210"
+  },
+  "record": {
+    "type": "INGR",
+    "id": "033690",
+    "name": "Rice",
+    "editor_id": "Rice",
+    "script": "",
+    "value_and_flags": [
+      1,
+      3
+    ],
+    "weight": 0.20000000298023224,
+    "payload_sha256": "a5732f8a68893a9d0b71bf308cc624ac25633ccc6aebbca1552b5a943aa47c53"
+  },
+  "content_conclusion": "Original Rice033690 has no SCRI subrecord. Its inventory/world movement must not invent or migrate script locals. ENIT food flags3, value1, weight0.2 are metadata here; ingestion is outside this course.",
+  "expected_state": "One carried original Rice persists through ordinary drop, repeated world save/cold-load boundaries and ordinary pickup, retaining exact metadata. The existing unrelated Nirnroot script owner4/Found1 and quest counters2 remain unchanged.",
+  "reused_original_ui": {
+    "path": "docs/oblivion/NIRNROOT-DROP-ORACLE.json",
+    "sha256": "66bda0176f3591c9bec0473b604ff91fba6c57d06eb9f1eeb766f12be61e28b9",
+    "scope": "Previously verified original UI drop/pickup controls and ownership route only; not a new Rice consumption or arithmetic oracle."
+  },
+  "fork_baseline": {
+    "path": "build/oblivion-compat/ingredient-drop/repeated-save-baseline-audit.json",
+    "sha256": "c85bed19bbc5e01d14bb52688283d7d6b072a8cb1ef66e6832552c047c8d2500",
+    "observation": "Actual UI drop saved and survived first cold load. After that world was re-saved, second cold load lost the Rice before attempted pickup. No native dynamic Rice reference existed; allocator remained5."
+  },
+  "limits": [
+    "No eating potency, rounding, original random sequence, dynamic bounce or general stack-transfer rule inferred.",
+    "All proprietary payloads and screenshots remain in ignored evidence directories."
+  ]
+}

@@ -2,7 +2,9 @@
 #include "actorragdollphysics.hpp"
 
 #include <cmath>
+#include <algorithm>
 #include <limits>
+#include <map>
 #include <stdexcept>
 #include <type_traits>
 #include <typeinfo>
@@ -12,6 +14,7 @@
 #include <components/nif/node.hpp>
 #include <components/nif/controller.hpp>
 #include <components/nif/physics.hpp>
+#include <components/nif/data.hpp>
 #include <components/misc/strings/algorithm.hpp>
 
 namespace NifBullet
@@ -41,6 +44,106 @@ namespace NifBullet
             require(std::isfinite(value) && value > 0, "invalid positive coefficient");
         }
         constexpr std::size_t MaxShapeDepth = 128, MaxShapeNodes = 4096;
+
+        RagdollShape loadConvexStrips(const Nif::bhkNiTriStripsShape& shape,
+            const std::unordered_set<const Nif::Record*>& members)
+        {
+            // Small closed convex proxies (including the original Lockpick)
+            // can use the existing convex-body solver. Never fill the cavities
+            // of a general triangle mesh by silently taking its convex hull.
+            require(shape.mData.size() == 1 && !shape.mData.front().empty()
+                && members.contains(shape.mData.front().getPtr()), "convex strips require one owned geometry");
+            require(shape.mScale.x() == 1 && shape.mScale.y() == 1 && shape.mScale.z() == 1,
+                "unsupported convex strip scale");
+            require(shape.mHavokFilters.empty() || shape.mHavokFilters.size() == 1,
+                "invalid convex strip filters");
+            nonnegative(shape.mRadius);
+            const auto& data = shape.mData.front().get();
+            require(!data.mVertices.empty() && data.mVertices.size() <= 1024,
+                "convex strip vertex budget exceeded");
+            std::map<std::array<float, 3>, std::size_t> unique;
+            std::vector<osg::Vec3d> vertices;
+            std::vector<std::size_t> indices;
+            for (const auto& point : data.mVertices)
+            {
+                const auto value = xyz(point);
+                const auto [entry, inserted] = unique.emplace(
+                    std::array{value.x(), value.y(), value.z()}, vertices.size());
+                if (inserted) vertices.emplace_back(value);
+                indices.push_back(entry->second);
+            }
+            require(vertices.size() >= 4 && vertices.size() <= 256, "invalid convex strip vertex count");
+            auto low = vertices.front(), high = low;
+            osg::Vec3d center;
+            for (const auto& point : vertices)
+            {
+                center += point;
+                for (unsigned axis = 0; axis < 3; ++axis)
+                {
+                    low[axis] = std::min(low[axis], point[axis]);
+                    high[axis] = std::max(high[axis], point[axis]);
+                }
+            }
+            center /= double(vertices.size());
+            const double epsilon = std::max(1e-7, (high - low).length() * 1e-6);
+            std::vector<std::array<std::size_t, 3>> triangles;
+            std::size_t stripIndices = 0;
+            for (const auto& strip : data.mStrips)
+            {
+                require(strip.size() <= MaxShapeNodes - stripIndices, "convex strip index budget exceeded");
+                stripIndices += strip.size();
+                for (auto index : strip) require(index < indices.size(), "convex strip index outside geometry");
+                for (std::size_t i = 2; i < strip.size(); ++i)
+                {
+                    std::array triangle{indices[strip[i - 2]], indices[strip[i - 1]], indices[strip[i]]};
+                    if (i & 1) std::swap(triangle[1], triangle[2]);
+                    const auto normal = (vertices[triangle[1]] - vertices[triangle[0]])
+                        ^ (vertices[triangle[2]] - vertices[triangle[0]]);
+                    // Strip connectors repeat vertices and have no surface.
+                    if (normal.length2() <= epsilon * epsilon * epsilon * epsilon) continue;
+                    require(triangles.size() < 512, "convex strip triangle budget exceeded");
+                    triangles.push_back(triangle);
+                }
+            }
+            require(triangles.size() >= 4, "convex strip has no closed volume");
+            std::map<std::pair<std::size_t, std::size_t>, std::array<int, 2>> edges;
+            double volume = 0;
+            for (const auto& triangle : triangles)
+            {
+                const auto& a = vertices[triangle[0]];
+                const auto& b = vertices[triangle[1]];
+                const auto& c = vertices[triangle[2]];
+                auto normal = (b - a) ^ (c - a);
+                normal.normalize();
+                double minimum = 0, maximum = 0;
+                for (const auto& point : vertices)
+                {
+                    const double side = normal * (point - a);
+                    minimum = std::min(minimum, side);
+                    maximum = std::max(maximum, side);
+                }
+                require(minimum >= -epsilon || maximum <= epsilon, "nonconvex triangle strip proxy");
+                volume += (a - center) * ((b - center) ^ (c - center));
+                for (unsigned i = 0; i < 3; ++i)
+                {
+                    const auto from = triangle[i], to = triangle[(i + 1) % 3];
+                    auto& edge = edges[{std::min(from, to), std::max(from, to)}];
+                    ++edge[0]; edge[1] += from < to ? 1 : -1;
+                }
+            }
+            for (const auto& [key, edge] : edges)
+                require(edge[0] == 2 && edge[1] == 0, "open or inconsistently wound convex strip proxy");
+            require(std::isfinite(volume) && std::abs(volume) > epsilon * epsilon * epsilon,
+                "convex strip has no finite volume");
+            RagdollHull hull{{}, shape.mRadius};
+            // NiTriStripsData stores NetImmerse coordinates; ordinary Havok
+            // hull vertices and the rigid body's COM use native length units.
+            for (const auto& point : vertices)
+                hull.mVertices.push_back(ragdollWorldToNativePosition(osg::Vec3f(point)));
+            if (shape.mHavokFilters.empty()) return hull;
+            const auto& filter = shape.mHavokFilters.front();
+            return RagdollList{{RagdollShape{std::move(hull)}}, {{filter.mLayer, filter.mFlags, filter.mGroup}}};
+        }
 
         void shapeBudget(const RagdollShape& source)
         {
@@ -82,6 +185,26 @@ namespace NifBullet
                     require(value, "invalid sphere record"); positive(value->mRadius);
                     result = RagdollSphere{value->mRadius};
                 }
+                else if (const auto* spheres = dynamic_cast<const Nif::bhkMultiSphereShape*>(shape))
+                {
+                    // Native multi-spheres are a compound of individual spheres,
+                    // not the convex envelope produced by Bullet's multi-sphere.
+                    require(!spheres->mSpheres.empty() && depth + 2 <= MaxShapeDepth
+                        && spheres->mSpheres.size() <= (MaxShapeNodes - nodes) / 2,
+                        "invalid multi-sphere children or hierarchy limits");
+                    RagdollList output;
+                    for (const auto& sphere : spheres->mSpheres)
+                    {
+                        const auto& center = sphere.center();
+                        for (unsigned axis = 0; axis < 3; ++axis)
+                            require(std::isfinite(center[axis]), "nonfinite sphere center");
+                        positive(sphere.radius());
+                        output.mChildren.emplace_back(RagdollTransform{
+                            osg::Matrixf::translate(center), 0, {RagdollSphere{sphere.radius()}}});
+                        nodes += 2;
+                    }
+                    result = std::move(output);
+                }
                 else if (const auto* capsule = dynamic_cast<const Nif::bhkCapsuleShape*>(shape))
                 {
                     positive(capsule->mRadius1); positive(capsule->mRadius2);
@@ -102,6 +225,8 @@ namespace NifBullet
                             && double(extents[axis]) + box->mRadius > 0, "invalid box half extents");
                     nonnegative(box->mRadius); result = RagdollBox{extents, box->mRadius};
                 }
+                else if (const auto* strips = dynamic_cast<const Nif::bhkNiTriStripsShape*>(shape))
+                    result = loadConvexStrips(*strips, members);
                 else if (const auto* list = dynamic_cast<const Nif::bhkListShape*>(shape))
                 {
                     require(!list->mSubshapes.empty() && list->mSubshapes.size() <= MaxShapeNodes - nodes
@@ -191,9 +316,10 @@ namespace NifBullet
         // shared authored definitions survive rejected and successful scaling.
         shapeBudget(source.mShape);
         RagdollBodyDefinition result = source;
-        positive(source.mMass);
+        if (source.mFixed) nonnegative(source.mMass);
+        else positive(source.mMass);
         result.mMass = multiply(source.mMass, scale);
-        positive(result.mMass);
+        if (!source.mFixed) positive(result.mMass);
         result.mCenter = vector(source.mCenter);
         for (std::size_t i = 0; i < result.mInertia.size(); ++i)
             result.mInertia[i] = multiply(source.mInertia[i], inertiaScale);
@@ -308,8 +434,13 @@ namespace NifBullet
             require(joint.mBodyA < result.mBodies.size() && joint.mBodyB < result.mBodies.size()
                 && joint.mBodyA != joint.mBodyB, "invalid scaled joint endpoints");
             std::visit([&](auto& value) {
-                value.mA.mPivot = vector(value.mA.mPivot);
-                value.mB.mPivot = vector(value.mB.mPivot);
+                if constexpr (std::is_same_v<std::decay_t<decltype(value)>, RagdollLockedJoint>)
+                    value.mFrameB.setTrans(vector(value.mFrameB.getTrans()));
+                else
+                {
+                    value.mA.mPivot = vector(value.mA.mPivot);
+                    value.mB.mPivot = vector(value.mB.mPivot);
+                }
                 // Native cone/hinge copy preserves directions, angular limits
                 // and friction. Malleable copy dispatches the same nested
                 // operation, retaining its separate tau/damping coefficients.
@@ -494,7 +625,10 @@ namespace NifBullet
     static ActorRagdollDefinition loadRagdollDefinition(
         Nif::FileView file, bool referencePlacement, bool weapon = false)
     {
-        require((file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)
+        // Stock Oblivion CTrapLogs01 uses 10.2.0.0. The NIF reader already
+        // decodes its rigid bodies and convex hulls into the same typed data.
+        const bool olderReference = referencePlacement && file.getVersion() == 0x0a020000;
+        require((olderReference || file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)
             && file.getBethVersion() <= 16, "unsupported NIF version");
         ActorRagdollDefinition result;
         result.mSourceHash = file.getHash();
@@ -650,7 +784,9 @@ namespace NifBullet
                     require(std::isfinite(entry), "nonfinite inertia tensor");
                     value.mInertia[row * 3 + col] = entry;
                 }
-            positive(info.mMass);
+            value.mFixed = referencePlacement && info.mMotionType == Nif::HkMotionType::Motion_Fixed;
+            if (value.mFixed) nonnegative(info.mMass);
+            else positive(info.mMass);
             nonnegative(info.mLinearDamping);
             nonnegative(info.mAngularDamping);
             nonnegative(info.mFriction);
@@ -706,6 +842,29 @@ namespace NifBullet
                 value.mJoint = cone(ragdoll->mConstraint);
             else if (const auto* limited = dynamic_cast<const Nif::bhkLimitedHingeConstraint*>(joint))
                 value.mJoint = hinge(limited->mConstraint);
+            else if (const auto* prismatic = dynamic_cast<const Nif::bhkPrismaticConstraint*>(joint))
+            {
+                const auto& constraint = prismatic->mConstraint;
+                require(constraint.mMinDistance == 0.f && constraint.mMaxDistance == 0.f,
+                    "nonzero-travel prismatic joint is unsupported");
+                nonnegative(constraint.mFriction);
+                // With translation and all rotations locked, the anchor choice
+                // cannot change the relative pose. Preserve the identified
+                // asset's body bind relation instead of inventing a slider axis
+                // from redundant Oblivion export direction fields.
+                const auto& bodyA = result.mBodies[value.mBodyA];
+                const auto& bodyB = result.mBodies[value.mBodyB];
+                const auto bindA = ragdollBoneWorldFromNativePose(
+                    ragdollNativeSceneBodyTargetPose(bodyA.mBoneBind, bodyA));
+                const auto bindB = ragdollBoneWorldFromNativePose(
+                    ragdollNativeSceneBodyTargetPose(bodyB.mBoneBind, bodyB));
+                osg::Matrixf inverse;
+                require(inverse.invert(bindB), "noninvertible locked joint bind");
+                auto frameB = bindA * inverse;
+                (void)ragdollNativeSceneTargetPose(frameB);
+                frameB.setTrans(frameB.getTrans() / RagdollNativeLengthScale);
+                value.mJoint = RagdollLockedJoint{frameB};
+            }
             else if (const auto* malleable = dynamic_cast<const Nif::bhkMalleableConstraint*>(joint))
             {
                 const auto& wrapped = malleable->mConstraint;

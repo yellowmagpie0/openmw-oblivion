@@ -146,6 +146,7 @@ namespace NifBullet
     {
         Dynamic = 1,
         Keyframed = 6,
+        Fixed = 7,
     };
 
     struct RagdollNativeMotionRequest

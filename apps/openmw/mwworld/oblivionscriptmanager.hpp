@@ -64,9 +64,41 @@ namespace MWWorld
         bool dispatchObjectEvent(const ESM::FormKey& self, std::string_view event,
             const ESM::FormKey& actionReference = {});
         bool dispatchActivation(const Ptr& self, const Ptr& actionReference);
+        bool dispatchInventoryEquip(const Ptr& actor, const Ptr& item);
+        bool hasInventoryAddEvent(const ESM::FormKey& base) const;
+        bool hasStatelessInventoryEvents(const ESM::FormKey& base) const;
+        bool dispatchInventoryAdd(const Ptr& actor, const Ptr& item);
+        bool canRetireConsumedInventoryOwner() const { return !mDepth && !mRetainedRuntime; }
+        // Caller validates idle admission before publishing its inventory debit.
+        void retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept;
+        // Move existing item locals between inventory and native world identity.
+        // Preparation allocates; publication neither dispatches nor allocates.
+        // Explicit initialization admits only stateless OnAdd/OnEquip programs
+        // and requires a null source; other transfers require an existing owner.
+        class PreparedItemScriptTransfer
+        {
+            friend class OblivionScriptManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedItemScriptTransfer(std::unique_ptr<Data> data);
+        public:
+            ~PreparedItemScriptTransfer();
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        std::unique_ptr<PreparedItemScriptTransfer> prepareItemScriptTransfer(
+            const ESM::FormKey& base, const ESM::FormKey& from, const ESM::FormKey& to,
+            bool initializeStateless = false);
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
+        bool hasTalkedToPlayer(const ESM::FormKey& actor) const;
+        void markTalkedToPlayer(const ESM::FormKey& actor);
+        std::uint32_t playerMiscStat(std::int64_t index) const;
+        bool playerIsMurderer() const;
+        std::int64_t playerInfamy() const;
+        // Admission/classification belongs to the caller, as at Original600949.
+        void notifyPlayerMurder();
         void dispatchDialogueResponseResult(const ESM::FormKey& info, const Ptr& actor);
         // Shared native conditions/order/history selection for speech and
         // interactive menus. Selection alone does not execute a response.
@@ -104,6 +136,7 @@ namespace MWWorld
 
         const ESM4::RuntimeQuestState* findQuestState(const ESM::FormKey& quest) const;
         std::optional<double> scriptVariable(const ESM::FormKey& target, std::int32_t index) const;
+        std::optional<double> scriptVariable(const Ptr& target, std::string_view name) const;
         std::optional<double> questVariable(const ESM::FormKey& quest, std::int32_t index) const;
         // nullopt permits normal head tracking; an empty Ptr retains an
         // explicit Look whose target is currently unavailable.
@@ -178,7 +211,11 @@ namespace MWWorld
         std::map<ESM::FormKey, std::vector<std::shared_ptr<const ObScript::Program>>> mQuestResults;
         std::map<ESM::FormKey, ESM::FormKey> mQuestScripts;
         std::map<InstanceKey, Instance> mInstances;
+        std::shared_ptr<const char> mItemTransferIdentity;
         std::map<ESM::FormKey, ESM4::RuntimeQuestState> mQuests;
+        // Interactive UI is not saveable; retain its polling identity across
+        // temporary runtime detachment and clear it on game restore/reset.
+        ESM::FormKey mMessageBoxOwner;
         std::set<ESM::FormKey> mSpokenDialogueInfos;
         std::vector<ObScript::RuntimeDiagnostic> mDiagnostics;
         std::vector<std::string> mTrace;
@@ -208,6 +245,7 @@ namespace MWWorld
         std::shared_ptr<const ObScript::Program> scriptFor(const ESM::FormKey& key);
         bool dispatchBaseEvent(const ESM::FormKey& base, std::string_view event,
             const ESM::FormKey& actionReference);
+        bool dispatchInventoryEvent(const Ptr& actor, const Ptr& item, std::string_view event);
         Ptr ptrFor(const ESM::FormKey& key);
         ESM::FormKey keyFor(const Ptr& ptr) const;
         std::optional<ESM::FormKey> keyFromValue(const ObScript::Value& value) const;

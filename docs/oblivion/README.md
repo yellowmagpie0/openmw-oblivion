@@ -114,6 +114,10 @@ and version-3 player save state. See
 keyboard, physical-gamepad, tutorial, exterior, visual, save/load, official
 script, and Morrowind evidence.
 
+A later [Security-use extension](SECURITY-USE-VERIFICATION.json) exercises real
+Canosel gates, fractional experience, native advancement and cold loads.
+Its bounded acceptance does not certify general skill progression or leveling.
+
 M13 is accepted with 5,436 native base-master item definitions, live inventory
 and container stacks, equipment slots and visuals, eight quick keys, condition,
 charge, ammunition, ownership, locks and lockpicks, harvesting, and native

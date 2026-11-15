@@ -34,12 +34,27 @@
 
 void ESM4::Ingredient::load(ESM4::Reader& reader)
 {
+    *this = {};
+    const bool tes4 = !reader.hasFormVersion() && (reader.esmVersionF() == .8f || reader.esmVersionF() == 1.f);
+    RawRecord magic;
     mId = reader.getFormIdFromHeader();
     mFlags = reader.hdr().record.flags;
 
     while (reader.getSubRecordHeader())
     {
         const ESM4::SubRecordHeader& subHdr = reader.subRecordHeader();
+        if (tes4 && (subHdr.typeId == ESM::fourCC("EFID") || subHdr.typeId == ESM::fourCC("EFIT")
+                || subHdr.typeId == ESM::fourCC("SCIT") || subHdr.typeId == ESM::fourCC("FULL")))
+        {
+            RawSubRecord sub;
+            sub.mType = subHdr.typeId;
+            sub.mData.resize(subHdr.dataSize);
+            if (!sub.mData.empty() && !reader.get(sub.mData.data(), sub.mData.size()))
+                reader.fail("INGR has a truncated magic effect subrecord");
+            reader.recordCurrentSubRecordFormIds(std::span<const std::uint8_t>(sub.mData));
+            magic.mSubRecords.push_back(std::move(sub));
+            continue;
+        }
         switch (subHdr.typeId)
         {
             case ESM::fourCC("EDID"):
@@ -124,6 +139,12 @@ void ESM4::Ingredient::load(ESM4::Reader& reader)
             default:
                 throw std::runtime_error("ESM4::INGR::load - Unknown subrecord " + ESM::printName(subHdr.typeId));
         }
+    }
+    if (tes4)
+    {
+        decodeMagicItemEffects(reader, magic, mEffects);
+        mFullName = std::move(magic.mFullName);
+        mData.value = mEnchantment.value; // TES4 value is ENIT; DATA contains weight only.
     }
 }
 

@@ -1,0 +1,146 @@
+{
+  "passed": true,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "command": "SetCrimeGold",
+  "opcode": "0x1075",
+  "execute": "0x50b4a0",
+  "instruction_range": [
+    "0x50b51d",
+    "0x50b55d"
+  ],
+  "scope": "Original arithmetic and actor/realm routing after argument extraction and bounty query; not complete wrapper or live game acceptance",
+  "boundaries": [
+    "Entry stack supplies parsed int32 amount and queried float bounty",
+    "Normal ExtraDataList modifier at0x4269e0 captures increment and receiver; its storage update is not emulated",
+    "Player global and alternate-realm flag supplied as fixture data"
+  ],
+  "cases": [
+    {
+      "Player": false,
+      "alternate_realm": false,
+      "requested": 10,
+      "raw_bucket": 0.25,
+      "queried_bounty": 1.0,
+      "normal_extra_delta": [
+        9.0
+      ],
+      "alternate_bucket_after": 0.25
+    },
+    {
+      "Player": false,
+      "alternate_realm": false,
+      "requested": 0,
+      "raw_bucket": 12.5,
+      "queried_bounty": 12.5,
+      "normal_extra_delta": [
+        -12.5
+      ],
+      "alternate_bucket_after": 12.5
+    },
+    {
+      "Player": false,
+      "alternate_realm": false,
+      "requested": -5,
+      "raw_bucket": 2.0,
+      "queried_bounty": 2.0,
+      "normal_extra_delta": [
+        -7.0
+      ],
+      "alternate_bucket_after": 2.0
+    },
+    {
+      "Player": false,
+      "alternate_realm": true,
+      "requested": 10,
+      "raw_bucket": 0.25,
+      "queried_bounty": 1.0,
+      "normal_extra_delta": [
+        9.0
+      ],
+      "alternate_bucket_after": 0.25
+    },
+    {
+      "Player": false,
+      "alternate_realm": true,
+      "requested": 0,
+      "raw_bucket": 12.5,
+      "queried_bounty": 12.5,
+      "normal_extra_delta": [
+        -12.5
+      ],
+      "alternate_bucket_after": 12.5
+    },
+    {
+      "Player": false,
+      "alternate_realm": true,
+      "requested": -5,
+      "raw_bucket": 2.0,
+      "queried_bounty": 2.0,
+      "normal_extra_delta": [
+        -7.0
+      ],
+      "alternate_bucket_after": 2.0
+    },
+    {
+      "Player": true,
+      "alternate_realm": false,
+      "requested": 10,
+      "raw_bucket": 0.25,
+      "queried_bounty": 1.0,
+      "normal_extra_delta": [
+        9.0
+      ],
+      "alternate_bucket_after": 0.25
+    },
+    {
+      "Player": true,
+      "alternate_realm": false,
+      "requested": 0,
+      "raw_bucket": 12.5,
+      "queried_bounty": 12.5,
+      "normal_extra_delta": [
+        -12.5
+      ],
+      "alternate_bucket_after": 12.5
+    },
+    {
+      "Player": true,
+      "alternate_realm": false,
+      "requested": -5,
+      "raw_bucket": 2.0,
+      "queried_bounty": 2.0,
+      "normal_extra_delta": [
+        -7.0
+      ],
+      "alternate_bucket_after": 2.0
+    },
+    {
+      "Player": true,
+      "alternate_realm": true,
+      "requested": 10,
+      "raw_bucket": 0.25,
+      "queried_bounty": 1.0,
+      "normal_extra_delta": [],
+      "alternate_bucket_after": 9.25
+    },
+    {
+      "Player": true,
+      "alternate_realm": true,
+      "requested": 0,
+      "raw_bucket": 12.5,
+      "queried_bounty": 12.5,
+      "normal_extra_delta": [],
+      "alternate_bucket_after": 0.0
+    },
+    {
+      "Player": true,
+      "alternate_realm": true,
+      "requested": -5,
+      "raw_bucket": 2.0,
+      "queried_bounty": 2.0,
+      "normal_extra_delta": [],
+      "alternate_bucket_after": -5.0
+    }
+  ],
+  "conclusion": "Requested minus queried bounty is a float delta; Player alternate realm adds directly to alternate raw bucket, every other actor routes delta through its normal ExtraDataList."
+}

@@ -24,6 +24,7 @@
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
 #include <BulletCollision/BroadphaseCollision/btOverlappingPairCache.h>
 #include <BulletDynamics/ConstraintSolver/btHingeConstraint.h>
+#include <BulletDynamics/ConstraintSolver/btFixedConstraint.h>
 #include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -342,6 +343,7 @@ namespace NifBullet
             btScalar mDynamicMass = 0;
             btVector3 mDynamicInertia{0, 0, 0};
             RagdollNativeMotion mMotion = RagdollNativeMotion::Dynamic;
+            bool mFixed = false;
             float mNativeLinearW = 0.f, mNativeAngularW = 0.f;
             float currentNativeLinearDamping() const
             {
@@ -467,7 +469,15 @@ namespace NifBullet
             auto& body = *owned.mBody;
             const int flags = body.getCollisionFlags()
                 & ~(btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_KINEMATIC_OBJECT);
-            if (motion == RagdollNativeMotion::Keyframed)
+            if (motion == RagdollNativeMotion::Fixed)
+            {
+                body.setMassProps(0, btVector3(0, 0, 0));
+                body.setCollisionFlags(flags | btCollisionObject::CF_STATIC_OBJECT);
+                body.setLinearVelocity(btVector3(0, 0, 0));
+                body.setAngularVelocity(btVector3(0, 0, 0));
+                body.forceActivationState(ISLAND_SLEEPING);
+            }
+            else if (motion == RagdollNativeMotion::Keyframed)
             {
                 body.setMassProps(0, btVector3(0, 0, 0));
                 body.setCollisionFlags(flags | btCollisionObject::CF_KINEMATIC_OBJECT);
@@ -1189,7 +1199,7 @@ namespace NifBullet
             validatePose(bodyPoses[i]);
             if (input.mUsesRigidBodyTransform)
                 bodyTLocalRotation(input);
-            require(std::isfinite(input.mMass) && input.mMass > 0, "invalid mass");
+            require(std::isfinite(input.mMass) && (input.mFixed ? input.mMass >= 0 : input.mMass > 0), "invalid mass");
             coefficient(input.mLinearDamping);
             coefficient(input.mAngularDamping);
             const auto limits = ragdollLoadedMotionLimits(input.mLinearDamping, input.mAngularDamping,
@@ -1211,12 +1221,14 @@ namespace NifBullet
             btMatrix3x3 principal;
             inertia.diagonalize(principal, btScalar(1e-12), 32);
             const btVector3 diagonal(inertia[0][0], inertia[1][1], inertia[2][2]);
-            require(finite(diagonal) && diagonal.x() > 0 && diagonal.y() > 0 && diagonal.z() > 0,
+            require(finite(diagonal) && (input.mFixed
+                    ? diagonal.x() >= 0 && diagonal.y() >= 0 && diagonal.z() >= 0
+                    : diagonal.x() > 0 && diagonal.y() > 0 && diagonal.z() > 0),
                 "nonpositive inertia");
             const btTransform centerFrame(principal, vector(input.mCenter) * scale);
             auto compound = std::make_unique<btCompoundShape>();
             compound->addChildShape(centerFrame.inverse(), shape.get());
-            btRigidBody::btRigidBodyConstructionInfo info(input.mMass, nullptr, compound.get(), diagonal);
+            btRigidBody::btRigidBodyConstructionInfo info(input.mFixed ? 0.f : input.mMass, nullptr, compound.get(), diagonal);
             info.m_startWorldTransform = bodyPoses[i] * centerFrame;
             info.m_friction = input.mFriction;
             info.m_restitution = input.mRestitution;
@@ -1231,11 +1243,13 @@ namespace NifBullet
             mImpl->mBodies.push_back({input.mRecord, input.mNodeRecord, centerFrame, input.mLinearDamping,
                 input.mAngularDamping, limits, std::move(body)});
             auto& owned = mImpl->mBodies.back();
+            owned.mFixed = input.mFixed;
             owned.mSceneOffset.mUsesRigidBodyTransform = input.mUsesRigidBodyTransform;
             owned.mSceneOffset.mTranslation = input.mTranslation;
             owned.mSceneOffset.mRotation = input.mRotation;
             mImpl->mBodies.back().mDynamicMass = input.mMass;
             mImpl->mBodies.back().mDynamicInertia = diagonal;
+            if (input.mFixed) mImpl->setMotion(owned, RagdollNativeMotion::Fixed);
         }
         for (const auto& input : definition.mJoints)
         {
@@ -1255,6 +1269,18 @@ namespace NifBullet
                 coefficient(cone->mFriction);
                 mImpl->mConstraints.push_back(std::make_unique<NativeConeConstraint>(*a.mBody, *b.mBody,
                     *cone, a.mCenterFrame, b.mCenterFrame, lengthScale, input));
+                continue;
+            }
+            if (const auto* locked = std::get_if<RagdollLockedJoint>(&input.mJoint))
+            {
+                require(!input.mMalleable, "malleable locked joint is unsupported");
+                const auto& matrix = locked->mFrameB;
+                btTransform frameB(btMatrix3x3(matrix(0,0), matrix(1,0), matrix(2,0),
+                    matrix(0,1), matrix(1,1), matrix(2,1), matrix(0,2), matrix(1,2), matrix(2,2)),
+                    vector(matrix.getTrans()) * lengthScale);
+                validatePose(frameB);
+                mImpl->mConstraints.push_back(std::make_unique<btFixedConstraint>(*a.mBody, *b.mBody,
+                    a.mCenterFrame.inverse(), b.mCenterFrame.inverse() * frameB));
                 continue;
             }
             const auto* hinge = std::get_if<RagdollHingeJoint>(&input.mJoint);
@@ -2019,8 +2045,11 @@ namespace NifBullet
         for (std::size_t i = 0; i < motions.size(); ++i)
         {
             require(motions[i].mRecord == mImpl->mBodies[i].mRecord, "prepared pose motion identity");
-            require(motions[i].mMotion == RagdollNativeMotion::Dynamic
-                || motions[i].mMotion == RagdollNativeMotion::Keyframed, "invalid prepared pose motion");
+            require(mImpl->mBodies[i].mFixed
+                    ? motions[i].mMotion == RagdollNativeMotion::Fixed
+                    : motions[i].mMotion == RagdollNativeMotion::Dynamic
+                        || motions[i].mMotion == RagdollNativeMotion::Keyframed,
+                "invalid prepared pose motion");
         }
         auto prepared = prepareRestore(states, packedVelocities);
         prepared->mData->mMotions.emplace(motions.begin(), motions.end());
@@ -2358,11 +2387,14 @@ namespace NifBullet
         for (const auto& request : requests)
         {
             require(request.mMotion == RagdollNativeMotion::Dynamic
-                || request.mMotion == RagdollNativeMotion::Keyframed, "invalid native body motion request");
+                || request.mMotion == RagdollNativeMotion::Keyframed
+                || request.mMotion == RagdollNativeMotion::Fixed, "invalid native body motion request");
             require(selected.insert(request.mRecord).second, "duplicate native body motion identity");
             const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
                 [&](const auto& body) { return body.mRecord == request.mRecord; });
             require(found != mImpl->mBodies.end(), "unknown native body motion identity");
+            require(found->mFixed == (request.mMotion == RagdollNativeMotion::Fixed),
+                "cannot change fixed anchor motion");
             if (found->mMotion != request.mMotion)
                 pending.push_back({&*found, request.mMotion});
         }

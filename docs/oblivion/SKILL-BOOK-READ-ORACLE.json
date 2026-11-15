@@ -1,0 +1,101 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "class_form": "023787",
+  "first": {
+    "base_before": 35,
+    "base_after": 36,
+    "xp_before": 0,
+    "xp_after": 0,
+    "skill_advances_delta": 1,
+    "major_advances_delta": 1,
+    "misc_delta": {
+      "2": 1,
+      "17": 1,
+      "18": 1
+    },
+    "teaches_skill_before": 5,
+    "teaches_skill_after": 255
+  },
+  "repeat": {
+    "skill_delta": 0,
+    "skill_advances_delta": 0,
+    "major_advances_delta": 0,
+    "misc_delta": {
+      "2": 0,
+      "17": 1,
+      "18": 0
+    }
+  },
+  "nonzero_xp": {
+    "base_before": 37,
+    "effective_before": 36,
+    "base_after": 38,
+    "effective_after": 37,
+    "experience_before": 0.6000000238418579,
+    "experience_after": 0.6000000238418579,
+    "preserved_modifier": -1
+  },
+  "cap": {
+    "base": 100,
+    "skill_delta": 0,
+    "teaches_skill_after": 5,
+    "skill_book_stat_delta": 0,
+    "ordinary_book_stat_delta": 1
+  },
+  "below_cap": {
+    "base_before": 99,
+    "base_after": 100,
+    "experience_preserved": true,
+    "teaches_skill_after": 255
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "scope": "Independent controlled original-game normal-input book reads plus read-only process inspection; no original save overwritten. Docs and Plugins inputs restored, not whole prefix.",
+  "probe_plan": {
+    "question": "Original skill-book base increment, once-per-base behavior across copies, XP handling, major/attribute bookkeeping and skill100 boundary",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "content": {
+      "placed_reference": "066cc1",
+      "first_book": "0243fc",
+      "second_book": "0243fd",
+      "cap_book": "0243fe",
+      "book_skill_index": 5,
+      "actor_value": 17
+    },
+    "controls": [
+      "Master only, named pristine copy, isolated testinghall console setup",
+      "Warrior023787, base/effective Hand-to-Hand35, read back before use",
+      "Actual ordinary inventory read; copies are not consumed; record delta before/after native arrays",
+      "Use native AdvSkill to produce a nonzero-XP input before the second different book; do not write process memory",
+      "No F5 or overwrite of pristine original save; restore full Documents tree and Plugins.txt"
+    ],
+    "tolerances": {
+      "skill_absolute": 0,
+      "experience_absolute": 0.001,
+      "advance_counts": 0
+    },
+    "read_only_layout": {
+      "source_revision": "f64a8fa0481e24b3e159d276b29b721a548876bf",
+      "PlayerCharacter_skillExp": "0x130 + skill_index*4",
+      "majorSkillAdvances": "0x184",
+      "skillAdv": "0x188 + skill_index*4"
+    },
+    "boundary": "Controlled independent original-game rule probe; console setup does not supply fork runtime acceptance."
+  },
+  "setup_corrections": {
+    "unsupported_readback": "Vanilla getPCMajorSkillUps console command was not found; use read-only original Player majorSkillAdvances with hash-identified xOBSE layout instead.",
+    "rejected_nonzero_xp_input": "player.advskill handtohand 1 raised the skill from36 to37 and advancement counters from1 to2, with XP still0; it did not create the intended partial XP input.",
+    "correction": "Native modav -1 restored effective36, while GetBaseAV remained37. The nonzero-XP book case explicitly uses base37/effective36 with this -1 modifier; it ends base38/effective37. New counter baseline is2 before that book. Partial0.6 XP comes from one ordinary unarmed hit on a controlled original Rat, not memory writes.",
+    "scope": "Controlled original-game setup only; no fork acceptance input is edited."
+  },
+  "artifact_root": "build/oblivion-compat/skill-book/original-01",
+  "native_book_layout": {
+    "source_revision": "f64a8fa0481e24b3e159d276b29b721a548876bf",
+    "teaches_skill": "TESObjectBOOK+0x89",
+    "player_class": "TESObjectREFR+0x1c -> TESNPC+0x104"
+  }
+}

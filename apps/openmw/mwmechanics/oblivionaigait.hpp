@@ -31,11 +31,20 @@ namespace MWMechanics
         return targetInDifferentCell || (targetDistanceSquared && *targetDistanceSquared > distance * distance);
     }
 
-    inline bool oblivionActorCanProactivelyYield(const ESM4::RuntimeActorAiState& state)
+    inline bool oblivionActorCanProactivelyYield(const ESM4::RuntimeActorAiState& state,
+        bool escortRecipient = false)
     {
         if (state.mRestrained || state.mActionReserved)
             return false;
-        return state.mPhase == ESM4::PackagePhase::Complete
+        // A peaceful escort recipient can be holding in its Travel Path phase.
+        // Its actual stationary input is checked by the collision coordinator.
+        const bool waitingFollower = state.mPhase == ESM4::PackagePhase::Wait
+            && (state.mPackageType == ESM4::AIPackageType::Follow
+                || state.mPackageType == ESM4::AIPackageType::Accompany);
+        // Follow waits within its target spacing without completing the
+        // package. A stationary follower must still leave room for passing
+        // actors; actual movement and combat are checked by the coordinator.
+        return escortRecipient || waitingFollower || state.mPhase == ESM4::PackagePhase::Complete
             || (state.mPhase == ESM4::PackagePhase::Wait && state.mPackage.isNull());
     }
 

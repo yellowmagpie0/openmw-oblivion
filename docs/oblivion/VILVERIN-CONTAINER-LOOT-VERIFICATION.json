@@ -1,0 +1,826 @@
+{
+  "status": "accepted",
+  "scope": "Same genuine post-mudcrab-loot character enters original Vilverin, reaches original first-area food sack06c2ad and receives concrete original food items from its four independent LVLI draws; F5/fresh processes and repeat activation retain actual Player transfer and empty source without replay.",
+  "implementation_commit": "d095f713456005d1cab7bcff1a0a77f970a77b35",
+  "cpp_source": {
+    "path": "apps/openmw/mwworld/oblivioninteraction.cpp",
+    "sha256": "9d4040e7534a94a3dfee331b4eb7fa2441657dff8c418ca741132fdcb7915252"
+  },
+  "tested_source": {
+    "head": "9ee1764b5ee2cb11f04a8d15db3daac371c80d25",
+    "fingerprint": "72ac805d1355738987b4ebe9e5028a1c68911bc6220a4484baeb38ec0105b6a2",
+    "note": "Both complete engine gates and the32/79 focused checks use this unchanged dirty source. The committed interaction.cpp matches the recorded source SHA. Later closure changes only fixtures/docs."
+  },
+  "implementation": "On actual container activation, expand only remaining LVLI stock through the accepted native resolver using the genuine Player level and shared PRNG. Preserve runtime item metadata, publish concrete stock once including a chance-none outcome, then use the existing native transfer path. Saved emptied containers never refill from their base.",
+  "baseline": {
+    "run": "build/oblivion-compat/vilverin-containers/food-sack-baseline-03",
+    "semantic_verification": "build/oblivion-compat/vilverin-containers/food-sack-baseline-semantic-verification.json",
+    "save_sha256": "218395f5a6c90ffb8f0bbb30398aff35c229bb230687c4eeebcfa2460128a7b8",
+    "result": "Real normal-input activation clears original053f26 count4 and marks opened; Player inventory exactly unchanged."
+  },
+  "observed_normal_food": {
+    "content:oblivion.esm:033681": 2,
+    "content:oblivion.esm:033690": 1
+  },
+  "observed_instrumented_food": {
+    "content:oblivion.esm:033680": 1,
+    "content:oblivion.esm:03368b": 1,
+    "content:oblivion.esm:03368c": 1,
+    "content:oblivion.esm:033690": 1
+  },
+  "independent_rules": {
+    "records": "build/oblivion-compat/vilverin-containers/inspection-01/original-food-sack-tree.json",
+    "instructions": "build/oblivion-compat/vilverin-containers/inspection-01/native-food-sack-oracle.json",
+    "cases": 28,
+    "typed_audit": "build/oblivion-compat/vilverin-containers/inspection-01/typed-original-food-sack-verification.json",
+    "typed_records": 2,
+    "entries": 11,
+    "scope": "Actual count4,25-percent chance-none boundary, every concrete original food and partial/mixed independent draws through original executable instructions."
+  },
+  "rule_artifacts": [
+    {
+      "path": "build/oblivion-compat/vilverin-containers/inspection-01/original-food-sack-tree.json",
+      "sha256": "fb608332e24580acc03829262b8b8031147229b8f3e1b2a6c3fc44df13921c0a"
+    },
+    {
+      "path": "build/oblivion-compat/vilverin-containers/inspection-01/native-food-sack-oracle.json",
+      "sha256": "b60fd41c8e39db63c3ee70f65e2fa9b1a0a03dfe2461d8cd18032f7b403f2239"
+    },
+    {
+      "path": "build/oblivion-compat/vilverin-containers/inspection-01/typed-original-food-sack-verification.json",
+      "sha256": "b3708c0bc482baeaa92c714313e3c1c4ac4d845b5ecc89604f0261f8a858efb9"
+    }
+  ],
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "semantic_checks": {
+    "executed": 145,
+    "receipt": {
+      "path": "build/oblivion-compat/vilverin-containers/container-loot-semantic-verification.json",
+      "sha256": "976e8f06266a16e805f33653ffbcf9ebaa513cca2434ee2b4cdc3fd90651c50b"
+    }
+  },
+  "engine_gates": {
+    "container-inventory-focused-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/vilverin-containers/container-inventory-focused-01/verification.json",
+        "sha256": "84d626024053c85a5ae2068aa74f9874734444eda6aaf87be8e463bf03cbfd55"
+      },
+      "source": {
+        "head": "9ee1764b5ee2cb11f04a8d15db3daac371c80d25",
+        "source_fingerprint": "72ac805d1355738987b4ebe9e5028a1c68911bc6220a4484baeb38ec0105b6a2"
+      },
+      "result": {
+        "executed": 32,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionWorldTest.Native*Inventory*:OblivionWorldTest.NativeSemanticAdmission*:OblivionProfileServicesTest.*",
+        "binary_sha256": "7ca5f590f328208ff8703776dac85e8ef34716755aa2c679e5913a7face18be0",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "08ae10e9511f754baddf082b328890f44523315457bcb4ea6f0602252d69c049",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "owned_server_launch": null
+    },
+    "container-normal-engine-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/vilverin-containers/container-normal-engine-01/verification.json",
+        "sha256": "93cf2babfad15fb14dea93a7efa0e0d4ba6e33ee3acaa3135927e4b0766801f3"
+      },
+      "source": {
+        "head": "9ee1764b5ee2cb11f04a8d15db3daac371c80d25",
+        "source_fingerprint": "72ac805d1355738987b4ebe9e5028a1c68911bc6220a4484baeb38ec0105b6a2"
+      },
+      "result": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "7ca5f590f328208ff8703776dac85e8ef34716755aa2c679e5913a7face18be0",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "d1ae771aae03aa889fa70c9432e56d3f0992be34b813050d5651941db9c40a7c",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "owned_server_launch": null
+    },
+    "container-sanitized-display-focused-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/vilverin-containers/container-sanitized-display-focused-01/verification.json",
+        "sha256": "6b4a370fa453b535480b151bc06dc0894db8ad79547a623fc8f8e98d27808c0a"
+      },
+      "source": {
+        "head": "9ee1764b5ee2cb11f04a8d15db3daac371c80d25",
+        "source_fingerprint": "72ac805d1355738987b4ebe9e5028a1c68911bc6220a4484baeb38ec0105b6a2"
+      },
+      "result": {
+        "executed": 79,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "InputRuntimeFacade.SwitchesAndControllerModesRestoreAcrossMoveAndScope:InputRuntimeFacade.NativeClockSeesWindowEventsBeforeDurationDependentControls:InputRuntimeFacade.SplitControlsPreserveDisableStateFromNestedLoadingEvents:InputRuntimeFacade.CommitAndOwnerDeathReleaseArchives:InputRuntimeFacade.SelectionRejectsInsideInputCallbacksAndRecoversAfterUnwind:InputRuntimeFacade.WrapperRestoresWishesAndFractionalWheelAgainstCurrentWindow:LocalMapCoordinatesTest.ActualInteriorMapRetainsCoordinateRoundTripAndFogExploration:ShadowRuntimeTest.DetachedManagersPreserveSelectionAndDisposalClearsOnlySelectedOwner:OblivionWorldTest.NativeWeaponFactoryPublishesBoundNifSourceWearIdentityRelationsAndDeferredObservers:OblivionWorldTest.CreatureArmedContactConsumesOrdinaryAndPowerWindowsOnceWithNativeFatigueCost:OblivionWorldTest.CreatureWeaponFactoryUsesSharedAttachmentAndAtomicallyPublishesOrRejectsBreak:OblivionWorldTest.NativeWeaponFactoryRejectsLateSourcesAndRollsBackSceneBeforeAnyDebit:OblivionWorldTest.NativeWeaponFactoryTransfersExplicitOwnerAndAppliesWinningCellClaimWithoutExtraScaleOnReference:OblivionWorldTest.NativeWeaponFactoryCancellationAndErasedWinningRecordsRetireBorrowedInputs:OblivionWorldTest.NativeWeaponFactoryBuildsTwoBoundDropsUnderOneSerialAndRegistryPublication:OblivionWorldTest.NativeWeaponFactoryPrependsRelationsAndRespectsRawQuestHeaderPredicate:OblivionWorldTest.NativeWeaponFactoryPreparationOutlivesWorldInventoryAnimationAndResourceOwnersSafely:OblivionWorldTest.NativeWeaponFactoryCommitsContactWearAndResourcesTogetherAndRejectsStaleContact:OblivionWorldTest.NativeWeaponFactoryPreservesLegacyFractionalConditionAndRejectsLateLegacyWear:OblivionWorldTest.NativeWeaponFactoryQueuesLuaSceneAdmissionWithPublication:OblivionWorldTest.NativeWeaponFactoryNewReferenceAcceptsPersistentScriptCommandsBeforePickup:OblivionWorldTest.NativeWeaponFactoryLuaAdmissionRejectsQueueMutationAndRestoresRetainedSelection:OblivionWorldTest.PreparedLuaSceneGroupAttachesAutostartAndDeliversActivationAfterRegistryPublication:OblivionWorldTest.PreparedLuaAutostartCancellationAndManagerDeathReleaseUnpublishedScriptPayloads:OblivionWorldTest.NativeWeaponFactoryFallingBodyPublishesSceneAndReferencePoseWithoutPhysicsFeedback:OblivionWorldTest.NativeWeaponFactoryPhysicalRotationAndInvalidScaleGuardPreserveRigidAuthority:OblivionWorldTest.NativeWeaponFactoryOwnsPhysicalNodeBindingSeparateFromCarriedAndCachedModels:OblivionWorldTest.NativeWeaponFactoryRetainsRotatedFileRootBelowPrivateReferenceWrapper:OblivionWorldTest.NativeWeaponFactoryDetachesScabbardSubtreeFromFoldedAndRetainedModels:OblivionWorldTest.NativeWeaponFactoryReplacesRootWithoutDiscardingPhysicalChildPose:OblivionWorldTest.NativeWeaponFactoryRelocatedCollisionFollowsRootWhileChildGeometryKeepsItsPose:OblivionWorldTest.NativeWeaponFactorySmallRootMotionKeepsReferenceAndAdvancesLocalBeforeCachedWorld:OblivionWorldTest.NativeWeaponFactoryAuthoredInactiveRootKeepsSceneWhileItsBodyFallsAndVisibleScaleChanges:OblivionWorldTest.NativeWeaponFactoryRootRotationMaskPreservesStoredPosition:OblivionWorldTest.NativeWeaponFactoryVisibleScaleRetainsAdmittedPhysicsAndChildLocalPose:OblivionWorldTest.NativeWeaponFactoryRelocatedSourceRemainsGuardedBeforePublication:OblivionWorldTest.NativeWeaponFactoryRejectsChangedPreparedPhysicalNodesBeforeWearOrPublication:OblivionWorldTest.NativeWeaponFactoryPassiveBindingPreservesEmbeddedControllerTraversal:OblivionWorldTest.NativeWeaponFactorySceneLinkLeasesTheExactPublishedAnimation:OblivionWorldTest.NativeWeaponFactorySceneLinkRetiresDespiteHeldAnimationCheckpointAndHandle:OblivionWorldTest.NativeWeaponFactoryCancelledPreparedSceneLinkInvalidatesDetachedPhysicalAdmission:OblivionWorldTest.NativeWeaponFactorySceneLinkNeverFollowsAReplacementModel:OblivionWorldTest.NativeWeaponFactoryLinkedPhysicsWaitsForScenePublicationWithoutConsumingPreparation:OblivionWorldTest.DefaultMeleeAiUsesPhysicalReachAndReleasesControlsOnDisabledProcessing:OblivionWorldTest.NativeContactDisarmPreservesIntactConditionAndConsumesOwnedStrikeAtomically:OblivionWorldTest.CounterContactPreparationOwnsTheMasterRollAndPublishesNoDamage:OblivionWorldTest.CounterPhysicalMissAcquiresAndConsumesWithoutOrdinaryAttackFatigue:OblivionWorldTest.NativeContactDisarmWithdrawsWeaponBlockUnlessShieldRemains:OblivionWorldTest.NativeContactDisarmRollsBackSceneFailuresAndRejectsStaleEquipment:OblivionWorldTest.NativeContactDisarmRejectsConflictingAndUnmatchedDropRequests:OblivionWorldTest.NativeContactOwnsWeaponDropAdmissionAndRollsBackBeforeResourcePublication:OblivionWorldTest.NativeContactCombinesDropAndRetainedBreakBeforeThrowingEquipmentObservers:OblivionWorldTest.NativeContactDropRejectsMismatchedContextsAndRetiredOwnersWithoutSpending:OblivionWorldTest.NativeLooseWeaponSnapshotsRestoreOwnedModelBodyAndScabbardPolicy:OblivionWorldTest.NativeLooseWeaponLoadRollsBackRejectedOrReentrantScenePublication:OblivionWorldTest.LegacyNativeDropsBootstrapPhysicalModelsWithoutInventingLostVelocityHistory:OblivionWorldTest.NativeLooseWeaponSavePreservesSubthresholdReferenceAndCachedRootIndependently:OblivionWorldTest.BlockingNpcWeaponBreakOwnsPhysicalDropAndRollsBackWithdrawnPostureOnSceneFailure:OblivionWorldTest.NativeShieldFactoryUsesForearmAndOwnerWorldBodyAndPreservesRightWeapon:OblivionWorldTest.NativeShieldFactoryRejectsWorldRoleOwnerSourceAndSceneChangesWithoutPublication:OblivionWorldTest.NativeLooseShieldSnapshotReadmitsOwnerWorldBodyAndPackedVelocityWithoutReplay:OblivionWorldTest.BlockingNpcShieldBreakPublishesOneContactDropAndPostureOrRollsBackEverything:OblivionWorldTest.LaterSelectedNpcShieldBreakPublishesOneBodyAndRollsBackMergedWearAndRandomOnFailure:OblivionWorldTest.DisarmAtomicallyFadesSteadyHeldResetsWindupAndPreservesCounterHeldHistory:OblivionWorldTest.MasterComputedDisarmPublishesFinalWearDropReactionsAndRandomAtomically:OblivionWorldTest.BrokenIncomingWeaponSkipsMasterRollAndPublishesRecoilWithOneZeroConditionDrop:OblivionWorldTest.PlayerDefaultDisarmCentersOwnedDropAndRollsBackFailures:OblivionWorldTest.ImmuneMeleeContactConsumesOncePreservesDefenderAndPublishesOnlyPlayerMessage:OblivionWorldTest.LowerUnarmedUnsupportedNpcPairLeavesActualContactPending:OblivionWorldTest.AdvancedUnarmedFullDamageJoinsMasterDisarmAndOwnedReactionsAtomically:OblivionWorldTest.AdvancedUnarmedOrdinaryDispatcherKeepsFullHitSoundsWithoutGeneralHitForce:OblivionWorldTest.SavedMovementBindsResidentContactsAndRestoresDiscardOnlyAfterSuccessfulBatch:OblivionWorldTest.StagedStaggerCounterMissStillPublishesMasterDropAndAttackerRecoil:OblivionWorldTest.AutonomousPlayerCombatRequiresHostilityResidenceAndDetection:OblivionWorldTest.AutonomousCombatAcquiresNearestDetectedHostileNpcWithoutReplacingController:OblivionWorldTest.SidePowerAutomaticDisarmOwnsDamageDropAndReplayBoundary:OblivionWorldTest.SidePowerSpareReplacementPublishesDropStackAndEquipmentAtomically:OblivionWorldTest.PhasedSidePowerDropGrantsExactlyOnePostSpeechReactionTail:OblivionWorldTest.MeleeAiEquipsTheExactUsableOwnedStackWithoutRepairOrRepeatedWrites",
+        "binary_sha256": "f42560ee3362a9db1705efa154d0e67071b09d5ad53fdffa5e8b9374ac92c2c4",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "c441e4e0c4319c5155120fa6258b14a108758195fd134b83219640567c379b02",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "owned_server_launch": {
+        "path": "build/oblivion-compat/vilverin-containers/container-sanitized-display-focused-01-launch.json",
+        "sha256": "31c9570fa7defd781fcbc741ca03fd638d5b7989a0b886d1e9210738f58b85e8"
+      }
+    },
+    "container-sanitized-engine-02": {
+      "receipt": {
+        "path": "build/oblivion-compat/vilverin-containers/container-sanitized-engine-02/verification.json",
+        "sha256": "bec2fdbc28b1ad862a8ad84d2f55e37a41cda5c1531c2d327662b991718aa0fe"
+      },
+      "source": {
+        "head": "9ee1764b5ee2cb11f04a8d15db3daac371c80d25",
+        "source_fingerprint": "72ac805d1355738987b4ebe9e5028a1c68911bc6220a4484baeb38ec0105b6a2"
+      },
+      "result": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "f42560ee3362a9db1705efa154d0e67071b09d5ad53fdffa5e8b9374ac92c2c4",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "52a6b112802f4126c217bd07e84afcf2c4f002b2c4b3ca1ee19fc812183ed11a",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "owned_server_launch": {
+        "path": "build/oblivion-compat/vilverin-containers/container-sanitized-engine-02-launch.json",
+        "sha256": "f3fdde298d35ce8dc6fc5f2be6ea02ff2dfc1ad91259bd3eec0ec308ca099508"
+      }
+    }
+  },
+  "build_provenance": {
+    "path": "build/oblivion-compat/vilverin-containers/container-build-provenance.json",
+    "sha256": "5fe6c49a75d5de77559c00e5d6541a9790d3788792532fd4c9e9eb50ce281f2c"
+  },
+  "runtime": {
+    "entry-approach-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/entry-approach-01/scenario.json",
+        "sha256": "42b5b0641479572f7b448bf3dcde135af6388fda9be947847044bb865d5e66bf"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/entry-approach-01/process.log",
+        "sha256": "1d6713f65d915f98a9536205e8c620de4efd85d13b029e75764b0c9e812becc4"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/entry-approach-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "d1be662e1bcd4ab823c2eff40426132f6bfc3d34b45e720f470817d80e55ed10"
+      },
+      "process": {
+        "pid": 799039,
+        "start_ticks": 195050321,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/entry-approach-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ea01c181a0a3d0c9237fd62ddbc93e607cac7e6d6d9c104e6cfd6d7becf243bf"
+      },
+      "input": {
+        "driver_pid": 799000,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_entry_approach.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/entry-approach-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-looted-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "17efc41e67dc732ea4e3006a9b928d097bdbc9e19e53e6debf569bc2a8cee8c2",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/entry-approach-01/loaded-libraries.json",
+        "sha256": "8f8dcdf7586dcdb0d3a125979c7cef148c18130c808b2ce4ceee4331e78de477"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/entry-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "b94352a1a3af18c7693205a34a6353a5e80e2b776aa5e6e4e5c97df6cb7e6195"
+      },
+      "sanitizer_environment": null
+    },
+    "food-sack-combat-approach-02": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/scenario.json",
+        "sha256": "f280a21899028f5d0b79b34840025dd12816b26b2ca13e470648076d341b915e"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/process.log",
+        "sha256": "fd31e9527e854e63b048c75e44ec713209d484a5389f85a31e036e2bdf906bf2"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "271faaae1f6ad17b8a475e1d5f3c9ed853e80e54d954d68a6a5cdede9edd0ace"
+      },
+      "process": {
+        "pid": 800651,
+        "start_ticks": 195183194,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/entry-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ea01c181a0a3d0c9237fd62ddbc93e607cac7e6d6d9c104e6cfd6d7becf243bf"
+      },
+      "input": {
+        "driver_pid": 800637,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_food_sack_combat_approach.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/entry-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/entry-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "b94352a1a3af18c7693205a34a6353a5e80e2b776aa5e6e4e5c97df6cb7e6195",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/loaded-libraries.json",
+        "sha256": "e54d0f2dfebd37f3cf01d4e9ec14fbf9780c2bcb99fd8f00d641ad8c518a8a96"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "141f2b46384a47d3a51aabc1ce5dc7b5089c10912b0d7fe2d7fa33d01a577939"
+      },
+      "sanitizer_environment": null
+    },
+    "food-sack-clear-approach-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/scenario.json",
+        "sha256": "c304452a7f16a2d0bc19ddbce4e50c98b95b5bb4f070a7515f7003128aa7c0d8"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/process.log",
+        "sha256": "22395a38e79e5eb3696bb307b9b9093b508966ff59f44e4ec412b27de44ec24c"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "e42fbfa28b6a3b7d69e95209eed7a38ca56106083a9f7b12193b0ddaefd777ad"
+      },
+      "process": {
+        "pid": 801145,
+        "start_ticks": 195225453,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ea01c181a0a3d0c9237fd62ddbc93e607cac7e6d6d9c104e6cfd6d7becf243bf"
+      },
+      "input": {
+        "driver_pid": 801131,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_food_sack_clear_approach.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-combat-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "141f2b46384a47d3a51aabc1ce5dc7b5089c10912b0d7fe2d7fa33d01a577939",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/loaded-libraries.json",
+        "sha256": "e54d0f2dfebd37f3cf01d4e9ec14fbf9780c2bcb99fd8f00d641ad8c518a8a96"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "eab6a2452e4a707d2b5284e1552bbac6996bf80ea92e2f532a9460f60cc7a107"
+      },
+      "sanitizer_environment": null
+    },
+    "food-sack-baseline-03": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-03/scenario.json",
+        "sha256": "5426759da2b416bdb154eda40fac04e85e7da1a5a981e46f4176f60a576136bd"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-03/process.log",
+        "sha256": "4797a801735cc22e75b1b82c6b63010fe3b6d0e1c005f12ae3fc5f066d45ba25"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-03/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "19b515724bc1b1b08c0dcff105a6c131f32fc73a8337df120981d09f008de4d5"
+      },
+      "process": {
+        "pid": 801552,
+        "start_ticks": 195260094,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-baseline-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ea01c181a0a3d0c9237fd62ddbc93e607cac7e6d6d9c104e6cfd6d7becf243bf"
+      },
+      "input": {
+        "driver_pid": 801538,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_food_sack_baseline.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-baseline-03",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/creature-loot/mudcrab-normal-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "eab6a2452e4a707d2b5284e1552bbac6996bf80ea92e2f532a9460f60cc7a107",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-03/loaded-libraries.json",
+        "sha256": "90369c827ff69f0893c277332c5b680fafa3d77e7ac624cc22b11af7dbaadc64"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "218395f5a6c90ffb8f0bbb30398aff35c229bb230687c4eeebcfa2460128a7b8"
+      },
+      "sanitizer_environment": null
+    },
+    "food-sack-loot-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-loot-01/scenario.json",
+        "sha256": "13ff5237e6653183704396a986bc53d3c82242a45f6b08ec8f39cdb2c4822653"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-loot-01/process.log",
+        "sha256": "071ba0200c31f83aac6ef629d1e6b0a7849195d2d889f844fcf171ba56a024ba"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-loot-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "e332bc8fde3602cd46e723a36741829888563eb0a3745df2e395e6e330e6533c"
+      },
+      "process": {
+        "pid": 802047,
+        "start_ticks": 195287726,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-loot-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "91baef5f9aad6be9523604b2891a74422267f5ae4d601b95b0682d2425c4c116"
+      },
+      "input": {
+        "driver_pid": 801970,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_food_sack_loot.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-loot-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "eab6a2452e4a707d2b5284e1552bbac6996bf80ea92e2f532a9460f60cc7a107",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-loot-01/loaded-libraries.json",
+        "sha256": "89c0f760c73de6e61a68a12bc97ced93d324ad7c304dca7cf1c92d18380f00c6"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "090c6a6f914eb9a4536dce231abd38dbbd94d3ed70017806344a5780747f50d5"
+      },
+      "sanitizer_environment": null
+    },
+    "food-sack-restart-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-restart-01/scenario.json",
+        "sha256": "062a0be275653db7d717129ebd31359f7a001002adc431a4dedca513261aaed1"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-restart-01/process.log",
+        "sha256": "da628a92232bc9644a72be1c770d3d65318a3a47db406f904a2471a9817317b3"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-restart-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "19b515724bc1b1b08c0dcff105a6c131f32fc73a8337df120981d09f008de4d5"
+      },
+      "process": {
+        "pid": 802360,
+        "start_ticks": 195303106,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "91baef5f9aad6be9523604b2891a74422267f5ae4d601b95b0682d2425c4c116"
+      },
+      "input": {
+        "driver_pid": 802257,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_food_sack_restart.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-restart-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "090c6a6f914eb9a4536dce231abd38dbbd94d3ed70017806344a5780747f50d5",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-restart-01/loaded-libraries.json",
+        "sha256": "ccb61b20b20a414e0b2d384a6dc157928cc2609ab58ac3a863d3e2752a615c39"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "85e7f595386586eeed29b02d4cb3328370a7322c84f05f4e9a35b65c9afcddd7"
+      },
+      "sanitizer_environment": null
+    },
+    "food-sack-baseline-compatibility-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-compatibility-01/scenario.json",
+        "sha256": "acdf18ae1ff8f31686ee109fd4d61f9320766247cc4fa252b9a3f565cbcd603c"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-compatibility-01/process.log",
+        "sha256": "bb85799c66cf6cb3487abeb9fec0c17f6b4b6d4278cb6cf4d812275721db5354"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-compatibility-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "19b515724bc1b1b08c0dcff105a6c131f32fc73a8337df120981d09f008de4d5"
+      },
+      "process": {
+        "pid": 808200,
+        "start_ticks": 195319682,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-baseline-compatibility-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-baseline-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "91baef5f9aad6be9523604b2891a74422267f5ae4d601b95b0682d2425c4c116"
+      },
+      "input": {
+        "driver_pid": 807779,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_food_sack_restart.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-baseline-compatibility-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-baseline-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-baseline-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "218395f5a6c90ffb8f0bbb30398aff35c229bb230687c4eeebcfa2460128a7b8",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-compatibility-01/loaded-libraries.json",
+        "sha256": "371cc1aecfcac0f730dbb18a91fd0610ac6df62a1331596f956b3e02ed6202d6"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-baseline-compatibility-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "3f5b33d88151112e40fd2242a5593aa3a5fcde9a874ca15d70c136e1748dbb04"
+      },
+      "sanitizer_environment": null
+    },
+    "food-sack-sanitized-loot-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-loot-01/scenario.json",
+        "sha256": "6290a49fe76b585e1755b5f0c43b959da056d0a9fef0a65146e0c73b7860b57e"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-loot-01/process.log",
+        "sha256": "89e3100085c26fd4b6537a6be75be5394fe57dd85a3ef7db2bcb7e9f1d9921da"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-loot-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "e332bc8fde3602cd46e723a36741829888563eb0a3745df2e395e6e330e6533c"
+      },
+      "process": {
+        "pid": 808866,
+        "start_ticks": 195340067,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-sanitized-loot-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "faf4f91e9974b2ebcd2226fbe2f995d724dc49927c836b59a09968fc1f96b475"
+      },
+      "input": {
+        "driver_pid": 808685,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_food_sack_loot_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-sanitized-loot-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/resources",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-clear-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "eab6a2452e4a707d2b5284e1552bbac6996bf80ea92e2f532a9460f60cc7a107",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-loot-01/loaded-libraries.json",
+        "sha256": "511cce4efe8a766537c27ecd10cdf459289ff0cd0e56b80672dadb839dc2619e"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "fd00fbbf4ceb268ebe73212fb03588f6fe9a02fc59ab3f6e07172c96042c667d"
+      },
+      "sanitizer_environment": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-loot-01/observed-sanitizer-environment.json",
+        "sha256": "0aa3d7c5b172bda140aceb24e8702d81baa40105763e24fe12069e9907d060aa"
+      }
+    },
+    "food-sack-sanitized-restart-01": {
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-restart-01/scenario.json",
+        "sha256": "e9ead5d688af5b587d7aa7f243e0328ce4394150363ab685afdc514d7edceb8a"
+      },
+      "log": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-restart-01/process.log",
+        "sha256": "3df90b2ec7dd17117c87c938af48ec89d1745e227c0bc697212f5c5abf38d27b"
+      },
+      "observer": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-restart-01/test-data/scripts/tutorial_passage_observer.lua",
+        "sha256": "19b515724bc1b1b08c0dcff105a6c131f32fc73a8337df120981d09f008de4d5"
+      },
+      "process": {
+        "pid": 813695,
+        "start_ticks": 195364387,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-sanitized-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "faf4f91e9974b2ebcd2226fbe2f995d724dc49927c836b59a09968fc1f96b475"
+      },
+      "input": {
+        "driver_pid": 813647,
+        "command": [
+          "/usr/bin/python3",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+          "scenario",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_food_sack_restart_sanitized.json",
+          "--output",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-sanitized-restart-01",
+          "--variable",
+          "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+          "--variable",
+          "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--variable",
+          "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/container-sanitized-resources-01",
+          "--variable",
+          "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+          "--variable",
+          "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin-containers/food-sack-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "input_sha256": "090c6a6f914eb9a4536dce231abd38dbbd94d3ed70017806344a5780747f50d5",
+        "input_unchanged": true,
+        "captured": true
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-restart-01/loaded-libraries.json",
+        "sha256": "511cce4efe8a766537c27ecd10cdf459289ff0cd0e56b80672dadb839dc2619e"
+      },
+      "save": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "8dcb4b94662e0d12b65c1dc396b2a12f1844cef9c634a6fc9886bda6a2b16466"
+      },
+      "sanitizer_environment": {
+        "path": "build/oblivion-compat/vilverin-containers/food-sack-sanitized-restart-01/observed-sanitizer-environment.json",
+        "sha256": "c61653c9a4a26aa74e5c99d3d667839157850e1d69857a375cd7d04778a7b396"
+      }
+    }
+  },
+  "component_reuse": {
+    "provenance": {
+      "path": "build/oblivion-compat/vilverin-containers/component-reuse-provenance.json",
+      "sha256": "daa3d5e1f189f201d3ef91beae313f0e6571cea805765223fa67361091ad0c23"
+    },
+    "prior_receipt": "docs/oblivion/VILVERIN-LEVELLED-ACTORS-VERIFICATION.json",
+    "scope": "Full3272 normal and instrumented component tests remain applicable; empty component-source/test diff since accepted source9424df608d. Engine-only adapter changes; shared resolver/component implementation unchanged."
+  },
+  "display_recovery": {
+    "path": "build/oblivion-compat/vilverin-containers/display-failure-recovery.json",
+    "sha256": "b343198d40b41eb02d6c15e9944ca433912e49adebbe279ce41bc63ee7800807"
+  },
+  "validation_layers": {
+    "structural": "Editable scenario manifests validate. No master/generated-plugin changes.",
+    "compiler": "Both existing C++ configurations build; exact full2257 engine inventories verified against XML with zero skips/failures in accepted gates.",
+    "semantic": "Actual native save payloads roundtrip, preserve original placed identities, concrete item metadata, item conservation, native death and repeat-activation history.",
+    "runtime": "Genuine post-mudcrab character walks through original door, kills original ambush actor using normal Flare, reaches original sack, activates and saves with concrete food; normal and instrumented fresh processes preserve transfer and empty source."
+  },
+  "instrumented_scope": "Fresh actual four-draw container activation/F5 and a separate continuation/repeat activation of the normal2-Lettuce/1-Rice save. Rendered-game leak checking off; full engine test-process leak checking on. Normal screenshots own visual proof.",
+  "numerical_scope": "Original list rules independently checked at actual count4/Player level1. Four actual5.58 Flare hits kill the original Health20 ambush actor; no exact combat-arithmetic claim.",
+  "outside_scope": [
+    "Complete Vilverin expedition",
+    "All native container UI/drag-drop",
+    "Container/cell respawn",
+    "All Player levels and exact RNG streams",
+    "Ingredient consumption/effects",
+    "General merchant or ownership/crime matrix"
+  ],
+  "retained_attempts": [
+    {
+      "run": "chest-approach-01 /02",
+      "meaning": "Deferred restoration-chest candidate: repeated partial endpoints below/beside target; no activation claim.",
+      "contract": "build/oblivion-compat/vilverin-containers/inspection-01/deferred-restoration-contract.json"
+    },
+    {
+      "run": "route-survey-01",
+      "meaning": "Observer completed before navmesh readiness and produced no route data; not accepted as semantic route evidence. Survey02 waits for all11 original-container observations."
+    },
+    {
+      "run": "food-sack-approach-01",
+      "meaning": "Ordinary route reaches sack with critically low Health while ambush NPC pursues. Final course defeats the real NPC earlier using normal Flare."
+    },
+    {
+      "run": "food-sack-combat-approach-01",
+      "meaning": "Input-fixture action-index error, stopped; corrected by selecting walk action by its actual arrival pattern. No engine change."
+    },
+    {
+      "run": "food-sack-baseline-01",
+      "meaning": "Crosshair focused adjacent stool; no target sack activation or loot-loss claim."
+    },
+    {
+      "run": "food-sack-baseline-02",
+      "meaning": "Sack was beyond actual activation range; normal input picked up adjacent plate in this isolated attempt. No final input save modified."
+    },
+    {
+      "run": "container-sanitized-engine-01",
+      "meaning": "All79 failing cases report x11 not available. All79 pass at identical source on owned display, then full2257 pass. Retained failure and explicit owned-server provenance linked."
+    }
+  ],
+  "remaining": []
+}

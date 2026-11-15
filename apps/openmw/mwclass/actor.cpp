@@ -1,4 +1,5 @@
 #include "actor.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
 
 #include <components/esm3/loadmgef.hpp>
 
@@ -85,7 +86,11 @@ namespace MWClass
     {
         if (auto* world = MWBase::Environment::get().getWorldOrNull();
             world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            if (!consumable.isEmpty() && consumable.getClass().getType() == ESM::REC_INGR)
+                return MWWorld::consumeOblivionIngredient(*world, consumable, actor);
             return world->consumeOblivionPotion(consumable, actor);
+        }
         if (MWMechanics::rejectUnsupportedNativeMagic(actor))
             return false;
 

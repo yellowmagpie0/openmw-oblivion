@@ -1,0 +1,277 @@
+{
+  "status": "accepted bounded original Chameleon carried-scroll timed self-effect slice",
+  "full_milestone_complete": false,
+  "full_vilverin_course_complete": false,
+  "implementation_commit": "e8bbe86b2ec4daa124527d813fd24f1cc252ac90",
+  "contract": "docs/oblivion/CHAMELEON-SCROLL-CONTRACT.json",
+  "original_oracle": "docs/oblivion/CHAMELEON-SCROLL-ORACLE.json",
+  "scope": "Original BOOK084aeb / ENCH05b044: CHML25 for30 seconds on Self; real inventory/magic-menu admission, zero Magicka, delayed release, explicit source ownership, native visibility/detection and natural expiry across fresh processes.",
+  "validation_layers": {
+    "structural": "Full component, engine and Python inventories, normal and instrumented C++ builds; no structural-only completion claim.",
+    "semantic": "Actual game saves independently decoded and checked for source identity, elapsed lifetime, one-shot debit, unchanged other inventory/resources and wire roundtrip.",
+    "runtime": "Ordinary keyboard/mouse in original Oblivion.esm and continued character; cast windup, pending reload, active reload through expiry and expired reload. Actual living original NPC observers consume native25; no claim that this guarantees stealth.",
+    "independent": "Separate original game controls establish early debit, delayed25 application, same-source refresh, raw25 at armored88% effectiveness and expiry. Original files remain unchanged."
+  },
+  "checks": {
+    "normal-full-cpp-01": {
+      "evidence": "build/oblivion-compat/chameleon-scroll/normal-full-cpp-01/verification.json",
+      "source": {
+        "head": "fc94c81dbc9dd710139ab4b42ab8e15679267eb9",
+        "source_fingerprint": "6def5f6d528743bf66c3e3e9b5933d40127655e6f71b8fb129dc830b8594dec0"
+      },
+      "results": {
+        "components": {
+          "executed": 3278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "b410651bc1e1acc94c0b2e025ec1275027172a39874583c067712906286b5427",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "2dbc2e423ab785639c07e13c061c921dfba570b4a4bf61ce6d7a8552f5f9c6f9",
+          "inventory_sha256": "de995c3578291f4786d7848234bf380f73f21cb00d04650019511ed97cebc1d8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 602,
+          "passed": true,
+          "log_sha256": "643e7e24ed49519134da947a8790df8c6088f70e4c32fed78a11eaa1c2bcde20"
+        },
+        "engine": {
+          "executed": 2264,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "244b6d45caff431fedb28702cf93f53dec7eeb7524ecde13d193de9bf1a8a0b7",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "43b5e014b883f2dd86667acde6ba78001f14bbe6fe9f0d7fbdb60bfbefc41054",
+          "inventory_sha256": "fdca200258cb1beb1f5cfe1e015be8c40546224d2a6c4451317b5be9c2195c35",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-full-components-01": {
+      "evidence": "build/oblivion-compat/chameleon-scroll/sanitized-full-components-01/verification.json",
+      "source": {
+        "head": "fc94c81dbc9dd710139ab4b42ab8e15679267eb9",
+        "source_fingerprint": "af23b1d8846cb694e6287ccea968d553a4a938e16aa3954f1cf111900dec4942"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 3278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "cd7a418d3e1cc098b3592fb9b09331a49ad57eac8f48b6203b641b4365440f6d",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "a4f7d6bca144d690ff9447d2b6fedb8d1c5921fff1ed928bb8e576347cfc27c3",
+          "inventory_sha256": "797efa7c13d2f1db92d3c174ea5bcf1784f5637b3cb3d06b6a3b1bf86d98865a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-full-engine-01": {
+      "evidence": "build/oblivion-compat/chameleon-scroll/sanitized-full-engine-01/verification.json",
+      "source": {
+        "head": "fc94c81dbc9dd710139ab4b42ab8e15679267eb9",
+        "source_fingerprint": "6def5f6d528743bf66c3e3e9b5933d40127655e6f71b8fb129dc830b8594dec0"
+      },
+      "results": {
+        "engine": {
+          "executed": 2264,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "2d7f4d38fd35a32a5601b98e029068af1c9ae6206b69e16d684047ceb7499db8",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "9dce5dc005b4af6ae3d951da82c80648b7fa53a96e06ca1f1c3c6beaa38934e4",
+          "inventory_sha256": "fdca200258cb1beb1f5cfe1e015be8c40546224d2a6c4451317b5be9c2195c35",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "component_source_reuse": {
+    "evidence": "build/oblivion-compat/chameleon-scroll/component-source-reuse.json",
+    "explanation": "Independent fingerprint reconstruction matches the earlier sanitizer component source exactly after removing only four later expected-log assertions for actual detection. No C++ or Python difference."
+  },
+  "normal": {
+    "semantics": "build/oblivion-compat/chameleon-scroll/normal-development-01-semantic-verification.json",
+    "count": 90,
+    "pending": {
+      "actor": "dynamic:player:0000000000000001",
+      "spell": "content:oblivion.esm:084aeb",
+      "animation_group": "onehandcastself",
+      "cost": 0.0,
+      "elapsed": 0.1720000058412552,
+      "release_time": 0.36666667461395264,
+      "duration": 1.2999999523162842,
+      "released": false
+    },
+    "active": {
+      "scroll": "content:oblivion.esm:084aeb",
+      "enchantment": "content:oblivion.esm:05b044",
+      "magnitude": 25.0,
+      "elapsed": 1.5693359375
+    },
+    "provenance": "build/oblivion-compat/chameleon-scroll/normal-final-provenance.json",
+    "game_sha256": "c774c7b2a8001144deb8d8fe397662a24414de783d2f737a112f6b28e4021713",
+    "provenance_sha256": "d82579760706fea8c8f7980facc7c8bfddce8bec7e9935052f2fbc8cc93de9db",
+    "actual_saves": [
+      {
+        "case": "chameleon-use-01",
+        "save_sha256": "b21cd24fde8ec6c9082e99b3f1a020531b37d92d1d4c3b7a134f1a5164471096",
+        "manifest_sha256": "3f6477305a6b28f9c6204c28f416e193fbd61e57355a1e022fe481ed905706ff"
+      },
+      {
+        "case": "chameleon-pending-restart-01",
+        "save_sha256": "f41649e72fb4e0ce3700287025ea012665311b4dbd057fd2330bd8964baf0f02",
+        "manifest_sha256": "f1eab71c8c9a1b07f3014a3e4be6540b049f7ef9c516ea7f88c66567abb389d0"
+      },
+      {
+        "case": "chameleon-active-restart-01",
+        "save_sha256": "d32e063c817fa022f0de70210b2ad6b6e63a87b6f17ae89dcbfca38b2a772b51",
+        "manifest_sha256": "6a5e287b9e41d9b1deaae69e2bc02c4ed8bb22c5cdb4cc961124c7b06fd1c6d1"
+      },
+      {
+        "case": "chameleon-expired-restart-01",
+        "save_sha256": "41b8e537b995738176c9568aeedd57a3e9a0044d44deae5e5c63f7ad18b041f4",
+        "manifest_sha256": "b1914efbc810c15e386d2eb53ac30289cffdd72bf077e91ad0036150390bbe3a"
+      }
+    ]
+  },
+  "sanitized": {
+    "semantics": "build/oblivion-compat/chameleon-scroll/sanitized-development-01-semantic-verification.json",
+    "count": 90,
+    "pending": {
+      "actor": "dynamic:player:0000000000000001",
+      "spell": "content:oblivion.esm:084aeb",
+      "animation_group": "onehandcastself",
+      "cost": 0.0,
+      "elapsed": 0.16600000858306885,
+      "release_time": 0.36666667461395264,
+      "duration": 1.2999999523162842,
+      "released": false
+    },
+    "active": {
+      "scroll": "content:oblivion.esm:084aeb",
+      "enchantment": "content:oblivion.esm:05b044",
+      "magnitude": 25.0,
+      "elapsed": 5.810546875
+    },
+    "provenance": "build/oblivion-compat/chameleon-scroll/sanitized-final-provenance.json",
+    "runtime_asan": "detect_leaks=0:halt_on_error=1",
+    "runtime_ubsan": "halt_on_error=1:print_stacktrace=1",
+    "full_engine_leak_detection": true,
+    "game_sha256": "fac0860ef6d572e63723961088c83b29bd37d6f3173c2149896ff4b910394ad2",
+    "provenance_sha256": "07dc7b93738e6c7d5349e1a67090a510649dbe5cfac2aef78961b79c08b31cfd",
+    "actual_saves": [
+      {
+        "case": "chameleon-sanitized-use-01",
+        "save_sha256": "5498e1f0893228201820a10909b4936357696d57004bd2cedc099ebd0110747d",
+        "manifest_sha256": "30265b9e36fc3aba169dde5bdb0b7066be23a4ddcfa733a63d2ddd6efe9366c9"
+      },
+      {
+        "case": "chameleon-sanitized-pending-restart-01",
+        "save_sha256": "215b422d1ad15ff9cb61d55ac00d11dedb74b5a3de917d76b38a389ce20d12b3",
+        "manifest_sha256": "7ae5d5171d16271d3c81c24285514be981af806f49d4f9d6afd961a1e076820a"
+      },
+      {
+        "case": "chameleon-sanitized-active-restart-01",
+        "save_sha256": "36f985059ae9348f13b6950b3610acb1f939c0bd2ccd300dc5a7d37325d03925",
+        "manifest_sha256": "c612ff9e2e7c6f34bd11b446c424599f9812d9d20a01696917b8d34715afa790"
+      },
+      {
+        "case": "chameleon-sanitized-expired-restart-01",
+        "save_sha256": "f8756a3213d2c148c93391dac779871779f55d9e16ac327c80e164982ae8816a",
+        "manifest_sha256": "eb47884edb8c8f164818e51c03b89febdee20a4219855f5bb278e276f22e4919"
+      }
+    ]
+  },
+  "regression": {
+    "evidence": "build/oblivion-compat/chameleon-scroll/flash-regression-normal-01-semantic-verification.json",
+    "checks": 65,
+    "scope": "Same real Flash Bolt windup/pending reload/committed death reload with schema93; source checkpoints retain their original provenance."
+  },
+  "source_ownership": "Schema93 stores original BOOK/ENCH, resolved25 and elapsed time independently of consumed inventory. Same ENCH refreshes with zero added magnitude. Expiry/death removes only its Maximum modifier contribution. Legacy92 AV46 without owned source is preserved, with no inferred timer.",
+  "rendering": "Existing approximate alpha0.75 uses pure nativeAV46 lookup. Native NPC detection also reads AV46. Exact original refraction and complete detection outcome parity are outside this slice.",
+  "outgoing_checkpoint": {
+    "save": "build/oblivion-compat/chameleon-scroll/chameleon-expired-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "41b8e537b995738176c9568aeedd57a3e9a0044d44deae5e5c63f7ad18b041f4",
+    "cell": "content:oblivion.esm:01663a",
+    "health": 67.67945861816406,
+    "magicka": 80.0,
+    "flash_bolt": 0,
+    "chameleon": 0,
+    "native_chameleon": 0,
+    "owned_timers": [],
+    "pending_casts": [],
+    "pending_projectiles": [],
+    "next_projectile": 19
+  },
+  "retained_development_failures": {
+    "component_compile": "Initial canonical formatter referenced an out-of-scope helper; corrected before focused/full passes. Initial evidence retained.",
+    "python_test": "New test initially assumed Player at sorted actor index0; corrected to explicit owner lookup before full602 passes."
+  },
+  "outside_scope": [
+    "General effect interpreter, arbitrary other buff/scroll profiles, cross-enchantment stacking parity and NPC self casting",
+    "Automatic previous-learned-spell fallback after scroll use; selection is cleared",
+    "General learned-spell mastery/XP, including previously recorded AV20/22 target gate issue",
+    "Exact original shader/refraction or frame scheduling",
+    "Full M16 and full Vilverin expedition/return"
+  ],
+  "visual_review": {
+    "normal": [
+      {
+        "path": "build/oblivion-compat/chameleon-scroll/chameleon-use-01/chameleon-tooltip-before.png",
+        "sha256": "dd89d8d28ada6a5b7a225154943c0ea1610c2ef377513088806e391ab82065a8"
+      },
+      {
+        "path": "build/oblivion-compat/chameleon-scroll/chameleon-pending-restart-01/active-player-after-pending-restart.png",
+        "sha256": "d0cd79492d99c3455e2f3ec7aa27c743f4f57975e536b1c5e31d706508c35900"
+      },
+      {
+        "path": "build/oblivion-compat/chameleon-scroll/chameleon-expired-restart-01/opaque-player-after-expired-restart.png",
+        "sha256": "e2bf08d663a55c58f01b40ba641f21ee39631b8810c33aeccb2983355ec70cc0"
+      }
+    ],
+    "sanitized": [
+      {
+        "path": "build/oblivion-compat/chameleon-scroll/chameleon-sanitized-pending-restart-01/active-player-after-pending-restart.png",
+        "sha256": "2479ae764178e911a62015a0b1517e80ad7e674c0ac5fb631bb4767555b8a03a"
+      },
+      {
+        "path": "build/oblivion-compat/chameleon-scroll/chameleon-sanitized-expired-restart-01/opaque-player-after-expired-restart.png",
+        "sha256": "03cbb8eac7150a5927c4cf19fcda16389c19cd053e332cfd18aa1bd167036743"
+      }
+    ]
+  },
+  "source_note": "C++ and Python match the passing dirty-source hashes. Final contract/handoff and this receipt were updated after all frozen-source checks; no game-code change followed testing."
+}

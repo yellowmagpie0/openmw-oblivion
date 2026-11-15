@@ -13,17 +13,21 @@ file(GLOB UNITTEST_SRC_FILES
 
     mwworld/teststore.cpp
     mwworld/testduration.cpp
+    mwworld/testfailedaction.cpp
     mwworld/testoblivionactorstats.cpp
     mwworld/testoblivionworld.cpp
     mwworld/oblivionworldfixture.cpp
     mwworld/testoblivionparalysis.cpp
+    mwworld/testoblivionskilltraining.cpp
     mwworld/testoblivionlooseweapon.cpp
     mwworld/testoblivioncombatdata.cpp
     mwworld/testoblivionmagicrecords.cpp
     mwworld/testoblivioncombatmagic.cpp
+    mwworld/testoblivionarrowrecovery.cpp
     mwworld/testoblivionnativeidle.cpp
     mwworld/testoblivioncombat.cpp
     mwworld/testoblivionai.cpp
+    mwworld/testoblivionownership.cpp
     mwworld/testobliviondialogue.cpp
     mwworld/testoblivionpathgridstore.cpp
     mwworld/testoblivionprofileservices.cpp

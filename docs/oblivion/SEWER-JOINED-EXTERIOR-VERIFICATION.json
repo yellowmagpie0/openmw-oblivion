@@ -1,0 +1,186 @@
+{
+  "scope": "Connected prison-origin checkpoint chain through genuine physical exterior and fresh outdoor reload; uninterrupted new-game course still outstanding",
+  "full_escape_complete": false,
+  "courses": {
+    "joined-final-exterior-exit-01": {
+      "passed": true,
+      "scenario": "build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/scenario.json",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-final-upper-tunnel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "ef49290499d6a085f0bf341a62007c070621fae99e677d04186ca001a1be823e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+      "player": {
+        "cell": "content:oblivion.esm:005e3d",
+        "position": [
+          47073.23046875,
+          82958.0859375,
+          297.8280334472656,
+          0.0,
+          0.0,
+          0.7853981852531433
+        ],
+        "class": "content:oblivion.esm:023787",
+        "birthsign": "content:oblivion.esm:01fd9d",
+        "character_generation": {
+          "tracking": false,
+          "skill_uses": null,
+          "recommended_class": "content:oblivion.esm:02378b"
+        }
+      },
+      "health": 84.51138305664062,
+      "mq01": {
+        "quest": "content:oblivion.esm:01e723",
+        "stage": 88,
+        "running": true,
+        "completed_stages": [
+          5,
+          10,
+          15,
+          18,
+          20,
+          24,
+          28,
+          34,
+          52,
+          72,
+          73,
+          74,
+          76,
+          80,
+          88
+        ]
+      },
+      "inventory_and_death_counts_unchanged": true,
+      "no_combat_or_pending_death_action": true,
+      "sewer_creature_lives": [
+        {
+          "actor": "content:oblivion.esm:0666a7",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:0666da",
+          "base": "content:oblivion.esm:066a05",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:066a04",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ]
+    },
+    "joined-final-outdoor-reload-01": {
+      "passed": true,
+      "scenario": "build/oblivion-compat/sewer-escape/joined-final-outdoor-reload-01/scenario.json",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-final-outdoor-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "745f6aab685a2136775d1bfccfb2e1eef58a66db26e81fbdb7b81b3726231f27",
+      "player": {
+        "cell": "content:oblivion.esm:005e3d",
+        "position": [
+          47073.23046875,
+          82958.0859375,
+          297.8280334472656,
+          0.0,
+          0.0,
+          0.7853981852531433
+        ],
+        "class": "content:oblivion.esm:023787",
+        "birthsign": "content:oblivion.esm:01fd9d",
+        "character_generation": {
+          "tracking": false,
+          "skill_uses": null,
+          "recommended_class": "content:oblivion.esm:02378b"
+        }
+      },
+      "health": 84.51138305664062,
+      "mq01": {
+        "quest": "content:oblivion.esm:01e723",
+        "stage": 100,
+        "running": false,
+        "completed_stages": [
+          5,
+          10,
+          15,
+          18,
+          20,
+          24,
+          28,
+          34,
+          52,
+          72,
+          73,
+          74,
+          76,
+          80,
+          88,
+          90,
+          100
+        ]
+      },
+      "inventory_and_death_counts_unchanged": true,
+      "no_combat_or_pending_death_action": true,
+      "sewer_creature_lives": [
+        {
+          "actor": "content:oblivion.esm:0666a7",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:0666da",
+          "base": "content:oblivion.esm:066a05",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:066a04",
+          "base": "content:oblivion.esm:02509b",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ]
+    }
+  },
+  "authored_outdoor_completion": {
+    "original_record_audit": "build/oblivion-compat/sewer-escape/original-mq01-outdoor-progression.json",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "rule": "Original88 sets chargen off and5-second timer/next stage90. Original timer runs90, whose result runs100 and stops MQ01/CharacterGen. Exit save88; fresh outdoor continuation legitimately reaches100. Stage88 remains completed, no exit activation replay."
+  },
+  "physical_exit_teleport_count": 1,
+  "original_exit_review": "Actual Space at04bed7, four-button original menu, ordinary gamepad selection of Finished",
+  "captures_inspected": [
+    "sewer-exit-review.png",
+    "exit-finished-selected.png",
+    "first-daylight.png",
+    "outdoor-reload.png"
+  ],
+  "runtime_sha256": "b2a22b98ba3baf33ef21323ca03b518773ffa3c0686fe44a2618b12a3d4640d1",
+  "remaining": [
+    "Rendered sanitizer recipient hold/yield course",
+    "Single-process original new-game prison to physical exterior course; current proof is a connected genuine-F5 composite"
+  ]
+}

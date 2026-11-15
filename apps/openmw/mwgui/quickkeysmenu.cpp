@@ -364,6 +364,13 @@ namespace MWGui
     void QuickKeysMenu::onAssignMagic(const ESM::RefId& spellId)
     {
         assert(mSelected);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            // Native spell hotkey ownership is not yet persisted by the inventory hotkey service.
+            MWBase::Environment::get().getWindowManager()->messageBox(
+                "Spell hotkeys are not available yet. Select this spell from the magic menu.");
+            return;
+        }
         while (mSelected->button->getChildCount()) // Destroy number label
             MyGUI::Gui::getInstance().destroyWidget(mSelected->button->getChildAt(0));
 

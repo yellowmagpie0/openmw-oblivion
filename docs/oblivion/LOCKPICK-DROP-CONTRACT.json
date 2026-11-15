@@ -1,0 +1,62 @@
+{
+  "status": "Accepted bounded original8 Lockpick native MISC stack course in normal and instrumented games; broader M15/M18 remain open.",
+  "milestones": [
+    "M18 native MISC stack transfer and shared Lockpick projection",
+    "M15 physical ownership for small closed convex triangle-strip proxies"
+  ],
+  "content": {
+    "base": "content:oblivion.esm:00000a",
+    "name": "Lockpick",
+    "source_quantity": 8,
+    "dropped_quantity": 8,
+    "remaining_quantity": 0,
+    "weight": 0,
+    "script": null
+  },
+  "source": {
+    "path": "build/oblivion-compat/ammo-stack-drop/normal-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "6cc32234c8a81a2f12f32e84c3005b818a29e401ce45b3b7c7fb60453d72885f",
+    "next_dynamic_serial": 5,
+    "branch": "Separate Cairn/Wellspring Cave continuation, HP70.480003/110 End55,33 credits; Iron Arrow24, Pants1/Bone1, Club equipped, MS39stage0/Nirnroot absent; prior keys3/4 retired."
+  },
+  "acceptance": [
+    "Ordinary Shift-click8->0 and one native MISC key5/count8/allocator6, original model and body5/mass0.2/convex proxy.",
+    "Cold world load/re-save -> visible Space pickup0->8 -> final cold inventory in normal and instrumented games. Retire key5/count0 and its body exactly once; earlier retired keys3/4 preserved.",
+    "All other inventory/equipment/metadata,27 skills/book progress, Health/passives/life/death/quests/counters/script owners preserved; zero weight means no encumbrance change.",
+    "Tick-zero complete physical snapshot preserved, schema103 unchanged. Drop save waits three unpaused simulation seconds.",
+    "Focused/broad normal and sanitizer checks appropriate to shared shape code, actual original asset diagnostics and unchanged content regressions."
+  ],
+  "shape_scope": "One unit-scale NiTriStripsData; bounded closed consistently wound convex triangle surface with finite volume, exact-coordinate vertex deduplication and degenerate strip connectors skipped. Convert its NetImmerse vertices to native length, retain radius and collection filter metadata in the existing hull/list representation. No general concave/open mesh or arbitrary shape-scale support.",
+  "tolerances": {
+    "loaded_snapshot_absolute": 0.0001,
+    "loaded_snapshot_relative": 1e-06,
+    "near_player_reference_units": 150,
+    "near_player_body_units": 200,
+    "encumbrance_absolute": 0.0001
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-stack-baseline-01",
+    "result": "Ordinary full-stack legacy drop/save8->0 passed; no native Lockpick reference/body/key allocation. Source shared projection is REC_LOCK, not REC_MISC; old native graph parser rejects this original triangle-strip shape. No disappearance claim."
+  },
+  "oracle": "LOCKPICK-DROP-ORACLE.json",
+  "limits": [
+    "Ordinary unequipped unscripted/unenchanted MISC only; other native non-AMMO/non-MISC drops remain singleton-only.",
+    "Original8 Lockpicks only; no all-assets/quantities, lockpicking mechanic changes, broad milestone or legacy migration claim."
+  ],
+  "verification": "LOCKPICK-DROP-VERIFICATION.json",
+  "regressions": [
+    "Fresh ordinary Control-click one Lockpick from8:7 inventory plus one native world item, exact metadata and quantity conserved.",
+    "Fresh original Pants articulated cold world, Bone singleton drop and relaxed-state whole24 ammunition cold world passed. Two moving/residual-strain ammunition attempts retained with unchanged old tolerances."
+  ],
+  "post_gate_recipe_correction": "Instrumented pickup omits an inherited unnecessary forward step after visible focus already126.7 inside native150 activation range. Corrected pickup02 and final cold inventory passed; C++/auditor unchanged.",
+  "normal_continuation": {
+    "path": "build/oblivion-compat/lockpick-drop/normal-lockpick-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "cd8dad6581ce16122b9c2b1ba23e0737a1081483e543062452bdae7f21325f13",
+    "next_dynamic_serial": 6
+  },
+  "sanitized_continuation": {
+    "path": "build/oblivion-compat/lockpick-drop/sanitized-lockpick-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "613d960e416292a922dcaf5055bf44ef09f18145c2fb3697318eb4a864b48c14",
+    "next_dynamic_serial": 6
+  }
+}

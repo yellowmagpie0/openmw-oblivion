@@ -1,0 +1,45 @@
+{
+  "scope": "Connected final sewer descent and genuine Player western rat victory F5; raw runner interrupted during post-course shutdown, not a whole-scenario pass",
+  "passed_checkpoint": true,
+  "raw_status": "Interrupted SIGINT/-2; no scenario.json generated, launcher traceback retained",
+  "save": "build/oblivion-compat/sewer-escape/joined-final-western-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "save_sha256": "7d1973eccfa40fad8a38b401614be13b1535018b730e1f96701ab7311b1629b6",
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-final-sewers-entry-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "a1291d1fd258b56dd3374742d24068dfdd71951234901692b84b9555b5c57e9b",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "player_position": [
+    -1007.0447998046875,
+    343.368896484375,
+    6543.0791015625,
+    0.29960954189300537,
+    0.0,
+    0.06346964836120605
+  ],
+  "health_unchanged": 101.97138214111328,
+  "rat": {
+    "actor": "content:oblivion.esm:0666a7",
+    "base": "content:oblivion.esm:02509b",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "dynamic:player:0000000000000001"
+  },
+  "health_damage": [
+    1.13626,
+    3.37034
+  ],
+  "death_count_delta": {
+    "02509b": 1
+  },
+  "inventory_change": "Axe090613 condition decreases0.6; all other inventory fields identical",
+  "input_receipts_identical": true,
+  "no_combat_pending_death_action": true,
+  "capture_inspected": "joined-western-rat-victory.png",
+  "timing_evidence": "Final waypoint04:03:06, actual contacts04:03:17/18, victoryF5 04:03:19; SIGINT during shutdown04:03:26. Approach distance observation preceded real rat acquisition/approach. No injected state.",
+  "remaining": "Upper sewer route/encounters, MQ01 exit88, physical exterior/fresh reload, uninterrupted new-game course.",
+  "runtime_sha256": "b2a22b98ba3baf33ef21323ca03b518773ffa3c0686fe44a2618b12a3d4640d1"
+}

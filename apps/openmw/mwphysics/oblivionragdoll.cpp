@@ -95,6 +95,8 @@ namespace MWPhysics
                         body.mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic; break;
                     case NifBullet::RagdollNativeMotion::Keyframed:
                         body.mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed; break;
+                    case NifBullet::RagdollNativeMotion::Fixed:
+                        body.mNativeMotion = ESM4::RuntimeRagdollMotion::Fixed; break;
                     default: throw std::invalid_argument("unsupported native motion snapshot mode");
                 }
             }
@@ -201,8 +203,9 @@ namespace MWPhysics
         for (const auto& target : definition.mBodies)
         {
             const auto motion = *bodies.at(target.mRecord)->mNativeMotion;
-            result.push_back({target.mRecord, motion == ESM4::RuntimeRagdollMotion::Dynamic
-                ? NifBullet::RagdollNativeMotion::Dynamic : NifBullet::RagdollNativeMotion::Keyframed});
+            if (target.mFixed != (motion == ESM4::RuntimeRagdollMotion::Fixed))
+                throw std::invalid_argument("saved fixed anchor motion disagrees with asset");
+            result.push_back({target.mRecord, static_cast<NifBullet::RagdollNativeMotion>(motion)});
         }
         return result;
     }

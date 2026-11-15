@@ -1,0 +1,616 @@
+{
+  "status": "accepted bounded original Welkynd Stone use; full M16 and expedition remain open",
+  "implementation_commit": "a7e2994f2f0437b17bd8b0eb8f2eca31b6c4516d",
+  "contract": "docs/oblivion/WELKYND-STONE-CONTRACT.json",
+  "original_oracle": "docs/oblivion/WELKYND-STONE-ORACLE.json",
+  "tested_source_files": {
+    "head": "0e18776ca5c5e552bf0f7ee4cd6a413036376658",
+    "files": {
+      "apps/openmw/CMakeLists.txt": "8ccf1cf0cd8d819bc29b1b0918a4cab91c3be6a3719e2a6823af0f414ce87acc",
+      "apps/openmw/mwclass/misc.cpp": "8e482e417282a1951609535ece03f84e33c7f350fb621b267b5c318d0d68a87e",
+      "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "f4ee992c604ef466d5f2a8e282eb14fcd33c706d658bdd67308cec6e87c1ffc3",
+      "docs/oblivion/VILVERIN-HANDOFF.md": "db183ed9aa8231bb7137e9a921302886390aea6a5716b2e88383018b92937ce3",
+      "docs/oblivion/WELKYND-STONE-CONTRACT.json": "07e711cad7a600ceb4f5dddff0c9d187f40a1785305b17338702f9e7fd8c8d74",
+      "apps/openmw/mwworld/oblivionmiscconsumables.cpp": "9b6f22690d095449434185e9a1b33949dab8302cbf319826f1d7b2843f176a06",
+      "apps/openmw/mwworld/oblivionmiscconsumables.hpp": "3568bea3775c5a9951cf6f4df6c31ff7787a28b3f410021c016a4e973338c39e",
+      "docs/oblivion/WELKYND-STONE-ORACLE.json": "4d6ccfc353b49f854828c79cbe8f48e254afe1de940785c0d306438810420fde",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_acquire.json": "0a97bde9a524bedbe5df78947f4aeda625818041e9a4919c486999a5c4a1faed",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_completed_restart.json": "14bdac5155e4074af6bafadd26f29baac7b204ed3a8fb36d79f8264e6e2d9b8c",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_completed_restart_sanitized.json": "e67f3ce1720d15640cbe679c7b306dc2e611c5e9dcb8d7d11d262e725edd1944",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_inventory_inspect.json": "3ba5f3435c9be36e4f29f9962040aa51c8cc812807db6b83e542433f1c2b7489",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_navigation_inspect.json": "91cac2cba5aa673ad5b2845571d7e53b9bfd1d1f6e768c42439befbeeca9a63c",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_path_acquire.json": "4faebb637e78d4f8489890fc6143ed9fe5d1d140623b496a1c5835129e60b789",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_room_approach.json": "9bad011bdec4f54130d4e06929a1dcbce007f03d2128f683a2c7092bedfd6fdb",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_south_approach.json": "30fe78413fb2b43225007c068ed6d8c6b6fe79e489e42cb31ad4788f85297788",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_south_wall.json": "e2c24822daa40478f036c795e0f4576e7b6ca04dbd0b8c2d6a7b0dad0e99606f",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_use.json": "16644ba86caa2dd91e9fcb21f407d6036bb5a7e18d06964caca03785278a53cb",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_use_baseline.json": "96ef0f9a51532f94aa634e02266cc0057389eed809a8c18538b91885a30c4a7c",
+      "scripts/data/oblivion_compat/oblivion_vilverin_welkynd_use_sanitized.json": "587bd71ad7f73d7d0c79ac4627b45f3f72862f444c15fc2b4cc8d126fac7228b"
+    },
+    "source": {
+      "head": "0e18776ca5c5e552bf0f7ee4cd6a413036376658",
+      "source_fingerprint": "0a77135eed2631c7e5cf8654d96baca61f7afa496896e46c4fb4eba0b41b8dc4"
+    }
+  },
+  "source_note": "Implementation, tests and canonical recipes retain the recorded full-gate hashes. Final closure edits are documentation only. Reused component/Python reports keep their original provenance.",
+  "content": {
+    "reference": "content:oblivion.esm:04929e",
+    "base": "content:oblivion.esm:000191",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "acquisition": "Ordinary starter healing and actual movement/activation around the original room partition; no fork-side grants.",
+    "raw": {
+      "path": "build/oblivion-compat/welkynd-stone/original-records.json",
+      "sha256": "b36c422eca75b244b6d2422cc2fe282db6efbbd1ded2c8490ea5010e63faa753"
+    },
+    "typed": {
+      "path": "build/oblivion-compat/welkynd-stone/typed-original-provenance.json",
+      "sha256": "662443edcf2c55815c584ff685e02056c781c70e286741eca144f48a63fcf92d"
+    },
+    "typed_scope": "Existing esmtool prints MISC identity/flags/model/icon but not numeric DATA; raw bytes and actual tooltip corroborate value50/weight1."
+  },
+  "behavior": "At full native Magicka, preserve the selected stone and report rejection. An admitted original stone restores toward the current native maximum through existing immutable resource rules and atomically debits exactly that inventory instance. Schema94 unchanged; no new timer or replay ownership inferred. Original built-in identity survives ordinary presentation overrides; unrelated names/local IDs and unsupported scripted profiles do not acquire the role.",
+  "validation_layers": {
+    "acquisition": {
+      "path": "build/oblivion-compat/welkynd-stone/acquisition-semantic-verification.json",
+      "sha256": "4ec3ba3e27544d99083813d7ce3541cfe671bfd91bdea9f21ea6855754bf88f3"
+    },
+    "unsupported_baseline": {
+      "path": "build/oblivion-compat/welkynd-stone/baseline-semantic-verification.json",
+      "sha256": "1decc601f6d259f1bd0bff1763c2f574d3a9cc2f1cc38000e294f137580d343d"
+    },
+    "fresh_engine_gates": {
+      "normal-full-engine-01": {
+        "path": "build/oblivion-compat/welkynd-stone/normal-full-engine-01/verification.json",
+        "sha256": "794ed9b3d742f5ced2f6feac96ca6e56ad0fdcdedf7da092ecd62215bb8d64ca",
+        "results": {
+          "engine": {
+            "executed": 2269,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "6f145a24478c4eb3beb53d27adac1da323d7c304dcc5788142a7b52ca3d80338",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "a30a4e216c5ef3d2754e21a3986e4f3674437d8bb67cb80bb176caa8322802e0",
+            "inventory_sha256": "ce2f6ba25cdee68a62129e16130c5cf9160cbbcc28e9114b109d8bb2c84ba752",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "tested_source": {
+          "head": "0e18776ca5c5e552bf0f7ee4cd6a413036376658",
+          "source_fingerprint": "0a77135eed2631c7e5cf8654d96baca61f7afa496896e46c4fb4eba0b41b8dc4"
+        }
+      },
+      "sanitized-full-engine-01": {
+        "path": "build/oblivion-compat/welkynd-stone/sanitized-full-engine-01/verification.json",
+        "sha256": "43c3c4b2f9621a5862cde9d96cfb658adddf755ddc44dd156e567d350ac12661",
+        "results": {
+          "engine": {
+            "executed": 2269,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "3017ab7e69a7a3a6c7b8486a93ccf0e187b32ddb16b4fe51d06eee20e7f6faf8",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "88fc7200e3ab540cb5075a52d4cebc32664c85207686d9a12b4c8a36c3ebe2c5",
+            "inventory_sha256": "ce2f6ba25cdee68a62129e16130c5cf9160cbbcc28e9114b109d8bb2c84ba752",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "tested_source": {
+          "head": "0e18776ca5c5e552bf0f7ee4cd6a413036376658",
+          "source_fingerprint": "0a77135eed2631c7e5cf8654d96baca61f7afa496896e46c4fb4eba0b41b8dc4"
+        }
+      },
+      "normal-focused-engine-01": {
+        "path": "build/oblivion-compat/welkynd-stone/normal-focused-engine-01/verification.json",
+        "sha256": "d14902f7c0eb3197972b9a01e3b91d46ac3eb0aa3d4dcb01039791c40b50adba",
+        "results": {
+          "engine": {
+            "executed": 20,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "OblivionMiscConsumableStore.*:OblivionCombatMagicStore.*",
+            "binary_sha256": "6f145a24478c4eb3beb53d27adac1da323d7c304dcc5788142a7b52ca3d80338",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "a00e8f8630245d7300daa0c5b2fe5110910d265a601c843777159a97889c059a",
+            "inventory_sha256": "ce2f6ba25cdee68a62129e16130c5cf9160cbbcc28e9114b109d8bb2c84ba752",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "tested_source": {
+          "head": "0e18776ca5c5e552bf0f7ee4cd6a413036376658",
+          "source_fingerprint": "664d571b3f344fbdb7ccde70a7ca4ea60e3c41ff97d88e82886a59a7f300ab40"
+        }
+      }
+    },
+    "unchanged_component_python_reuse": {
+      "passed": true,
+      "reference_implementation_commit": "f4e70230d06354f3f3d3c51b5778eba108d48f30",
+      "unchanged_component_test_and_python_trees": true,
+      "checked_prior_changed_source_hashes": {
+        "apps/components_tests/CMakeLists.txt": "db6e2d38eb1a57c87cc4e3ecbc37ec291d51b72caa9c0d6c33e6c17f63c8caca",
+        "apps/components_tests/esm4/runtimestate.cpp": "e1183503152b71039b3341c21369d64cc00c52f57fe439f7b9d5ef08613ca4b7",
+        "components/CMakeLists.txt": "a9430179dd9109245aa10184a27a9edeb60d6f53b96f94b929efbd98bf48493b",
+        "components/esm4/runtimestate.cpp": "103bc8f1f2a2cb7c70b5415e27a58ebf0e5aeac04157bbb5605c35ae91cf16de",
+        "components/esm4/runtimestate.hpp": "27f1f9d9f69244643491ad6249811c3c4b4efcf40535555af4b1e6c24fbde7b1",
+        "scripts/tes4_m15_fixture_preflight.py": "dd5f1ef74b22ac646f47871a6fd7444697d1d56dae7030b165e2fa5f986e672e",
+        "scripts/tes4_runtime_state.py": "650ce11442474cf1e62759aba8aab3202f9aaa0b7c876ff707365ace06f13cfd",
+        "scripts/tests/test_tes4_m15_fixture_preflight.py": "8b9340bcf274afd0bb2f43575e0098f937cfda43a1c0f84a2e2abf3c0f989012",
+        "scripts/tests/test_tes4_m15_pending_getup_fixture.py": "c1ff329982c16d9603ca97fca659a2b70877c26178dbf992f5c68d978ba10661",
+        "scripts/tests/test_tes4_runtime_state.py": "2a3b2034410f821012935e9ee633f6dc508193fd100963e1f9d5e30916c9e62c",
+        "apps/components_tests/esm4/potionattributes.cpp": "c9fc47875dc0390735ecb05465ecafdb430334dbc014836668c2a9d113e31525",
+        "components/esm4/potionattributes.cpp": "78803a00d2ef035564b86d59b95ce76601f19efb48c01267573dfa8d197d853f",
+        "components/esm4/potionattributes.hpp": "488515b8780801165496d78696747da24a7c338302cd100ea311301c32ae3d74"
+      },
+      "reused_reports": [
+        "build/oblivion-compat/mead-use/normal-full-cpp-01/verification.json",
+        "build/oblivion-compat/mead-use/sanitized-full-components-01/verification.json",
+        "build/oblivion-compat/mead-use/normal-focused-components-01/verification.json"
+      ],
+      "counts": {
+        "normal_components": 3281,
+        "sanitized_components": 3281,
+        "python": 604
+      },
+      "scope": "Retain original binary/source fingerprints. Current Welkynd implementation changes app-level MISC use only; component/test and Python source trees remain identical. Current full engine gates and real gameplay are fresh."
+    }
+  },
+  "normal": {
+    "passed": true,
+    "checks": 42,
+    "cases": [
+      {
+        "case": "normal-development-01-use",
+        "save_sha256": "4c94ef61b194beb7a0683dadc45d876142fff15d896b040cc78e8b12f38978a6",
+        "health": [
+          110.0,
+          0.0,
+          0.0,
+          -50.50415802001953
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          -5289.673828125,
+          -4895.88330078125,
+          -1383.2041015625,
+          1.533203125,
+          0.0,
+          2.2968578338623047
+        ]
+      },
+      {
+        "case": "normal-development-01-restart",
+        "save_sha256": "291804bb4e836f957f1e1ea8acd24a405d8719b52371ee1e0c641aa5725f865e",
+        "health": [
+          110.0,
+          0.0,
+          0.0,
+          -50.50415802001953
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          -5289.673828125,
+          -4895.88330078125,
+          -1383.2041015625,
+          1.533203125,
+          0.0,
+          2.2968578338623047
+        ]
+      }
+    ],
+    "semantic_evidence": {
+      "path": "build/oblivion-compat/welkynd-stone/normal-development-01-semantic-verification.json",
+      "sha256": "af013b946bfeed14bf30b491644ace6aebff63c1b32e992597341726cef9d48a"
+    },
+    "actual_processes": {
+      "normal-development-01-use": {
+        "process": {
+          "pid": 1065721,
+          "start_ticks": 199426850,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/normal-development-01-use/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-path-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "b2b4f4f88fcfafbb1a5100418d820aa7443dec4914d43c5929c36792f727144a"
+        },
+        "driver": {
+          "driver_pid": 1065718,
+          "command": [
+            "/usr/bin/python3",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+            "scenario",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_welkynd_use.json",
+            "--output",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/normal-development-01-use",
+            "--variable",
+            "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+            "--variable",
+            "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--variable",
+            "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-normal-resources-01",
+            "--variable",
+            "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+            "--variable",
+            "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-path-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-path-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "input_sha256": "40057173bba971f15766bbd583c988ba7ca2f81e420a066bfc943027acbffb64",
+          "input_unchanged": true,
+          "captured": true,
+          "exit_code": 0
+        },
+        "loaded_libraries": {
+          "path": "build/oblivion-compat/welkynd-stone/normal-development-01-use/loaded-libraries.json",
+          "sha256": "9dfb784b76dc1eb9459aed8ff5318090e37747fec2c13ff90b24bf831f10760e"
+        }
+      },
+      "normal-development-01-restart": {
+        "process": {
+          "pid": 1065893,
+          "start_ticks": 199437126,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/normal-development-01-restart/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/normal-development-01-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "b2b4f4f88fcfafbb1a5100418d820aa7443dec4914d43c5929c36792f727144a"
+        },
+        "driver": {
+          "driver_pid": 1065890,
+          "command": [
+            "/usr/bin/python3",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+            "scenario",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_welkynd_completed_restart.json",
+            "--output",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/normal-development-01-restart",
+            "--variable",
+            "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+            "--variable",
+            "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--variable",
+            "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-normal-resources-01",
+            "--variable",
+            "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+            "--variable",
+            "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/normal-development-01-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/normal-development-01-use/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "input_sha256": "4c94ef61b194beb7a0683dadc45d876142fff15d896b040cc78e8b12f38978a6",
+          "input_unchanged": true,
+          "captured": true,
+          "exit_code": 0
+        },
+        "loaded_libraries": {
+          "path": "build/oblivion-compat/welkynd-stone/normal-development-01-restart/loaded-libraries.json",
+          "sha256": "66caed705f703e929ba901beaf47c5a0de266ab70a04845ed4d17625ea13a637"
+        }
+      }
+    },
+    "binary_link": {
+      "passed": true,
+      "executable": "build/openmw",
+      "executable_sha256": "b2b4f4f88fcfafbb1a5100418d820aa7443dec4914d43c5929c36792f727144a",
+      "actual_processes": {
+        "normal-development-01-use": "b2b4f4f88fcfafbb1a5100418d820aa7443dec4914d43c5929c36792f727144a",
+        "normal-development-01-restart": "b2b4f4f88fcfafbb1a5100418d820aa7443dec4914d43c5929c36792f727144a"
+      },
+      "source": {
+        "head": "0e18776ca5c5e552bf0f7ee4cd6a413036376658",
+        "source_fingerprint": "0a77135eed2631c7e5cf8654d96baca61f7afa496896e46c4fb4eba0b41b8dc4"
+      },
+      "gate": "build/oblivion-compat/welkynd-stone/normal-full-engine-01/verification.json"
+    }
+  },
+  "instrumented": {
+    "passed": true,
+    "checks": 42,
+    "cases": [
+      {
+        "case": "sanitized-development-01-use",
+        "save_sha256": "88137fa3599c9b266043c5483a37943e1abd78a7e5e7ae483d10fbf5c7a32298",
+        "health": [
+          110.0,
+          0.0,
+          0.0,
+          -50.50415802001953
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          -5289.673828125,
+          -4895.88330078125,
+          -1383.2041015625,
+          1.533203125,
+          0.0,
+          2.2968578338623047
+        ]
+      },
+      {
+        "case": "sanitized-development-01-restart",
+        "save_sha256": "03420add640ae3863d261c9528bcc5211f974bd764e816fdc86029e77a39b126",
+        "health": [
+          110.0,
+          0.0,
+          0.0,
+          -50.50415802001953
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          -5289.673828125,
+          -4895.88330078125,
+          -1383.2041015625,
+          1.533203125,
+          0.0,
+          2.2968578338623047
+        ]
+      }
+    ],
+    "semantic_evidence": {
+      "path": "build/oblivion-compat/welkynd-stone/sanitized-development-01-semantic-verification.json",
+      "sha256": "18263c9829e95d2fb42569ab38c9783d2002a8d8ae33eb4d1f346d2d2c58ec74"
+    },
+    "actual_processes": {
+      "sanitized-development-01-use": {
+        "process": {
+          "pid": 1077558,
+          "start_ticks": 199503805,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-use/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-path-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "f2503e7b40d8ef302410612a4b590515fea3aa0dd4e39608d8ff5356c98a53a7"
+        },
+        "driver": {
+          "driver_pid": 1077555,
+          "command": [
+            "/usr/bin/python3",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+            "scenario",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_welkynd_use_sanitized.json",
+            "--output",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-use",
+            "--variable",
+            "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+            "--variable",
+            "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--variable",
+            "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-sanitized-resources-01",
+            "--variable",
+            "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+            "--variable",
+            "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-path-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-path-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "input_sha256": "40057173bba971f15766bbd583c988ba7ca2f81e420a066bfc943027acbffb64",
+          "input_unchanged": true,
+          "captured": true,
+          "exit_code": 0
+        },
+        "loaded_libraries": {
+          "path": "build/oblivion-compat/welkynd-stone/sanitized-development-01-use/loaded-libraries.json",
+          "sha256": "33c2fa907e149b4232c7eb00ff67775d6311282170dc55d3cbceb00db2542fda"
+        },
+        "observed_environment": {
+          "process": {
+            "pid": 1077558,
+            "start_ticks": 199503805,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-use/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-path-acquire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "f2503e7b40d8ef302410612a4b590515fea3aa0dd4e39608d8ff5356c98a53a7"
+          },
+          "environment": {
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "SDL_VIDEODRIVER": "x11",
+            "SDL_AUDIODRIVER": "dummy",
+            "LIBGL_ALWAYS_SOFTWARE": "1",
+            "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+          }
+        }
+      },
+      "sanitized-development-01-restart": {
+        "process": {
+          "pid": 1077779,
+          "start_ticks": 199523763,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-restart/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "f2503e7b40d8ef302410612a4b590515fea3aa0dd4e39608d8ff5356c98a53a7"
+        },
+        "driver": {
+          "driver_pid": 1077776,
+          "command": [
+            "/usr/bin/python3",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/oblivion_compat.py",
+            "scenario",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/scripts/data/oblivion_compat/oblivion_vilverin_welkynd_completed_restart_sanitized.json",
+            "--output",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-restart",
+            "--variable",
+            "source=/home/maciek/openmw-oblivion/openmw-oblivion",
+            "--variable",
+            "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--variable",
+            "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/welkynd-sanitized-resources-01",
+            "--variable",
+            "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+            "--variable",
+            "input_save=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-use/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "input_sha256": "88137fa3599c9b266043c5483a37943e1abd78a7e5e7ae483d10fbf5c7a32298",
+          "input_unchanged": true,
+          "captured": true,
+          "exit_code": 0
+        },
+        "loaded_libraries": {
+          "path": "build/oblivion-compat/welkynd-stone/sanitized-development-01-restart/loaded-libraries.json",
+          "sha256": "52dc9f84e2b8fd5e4bfff3c559237150f82751bc618e6e243433aac1176a3b95"
+        },
+        "observed_environment": {
+          "process": {
+            "pid": 1077779,
+            "start_ticks": 199523763,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-restart/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/welkynd-stone/sanitized-development-01-use/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "f2503e7b40d8ef302410612a4b590515fea3aa0dd4e39608d8ff5356c98a53a7"
+          },
+          "environment": {
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "SDL_VIDEODRIVER": "x11",
+            "SDL_AUDIODRIVER": "dummy",
+            "LIBGL_ALWAYS_SOFTWARE": "1",
+            "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+          }
+        }
+      }
+    },
+    "binary_link": {
+      "passed": true,
+      "executable": "build/m15-sanitize/openmw",
+      "executable_sha256": "f2503e7b40d8ef302410612a4b590515fea3aa0dd4e39608d8ff5356c98a53a7",
+      "actual_processes": {
+        "sanitized-development-01-use": {
+          "game_sha256": "f2503e7b40d8ef302410612a4b590515fea3aa0dd4e39608d8ff5356c98a53a7",
+          "environment": {
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "SDL_VIDEODRIVER": "x11",
+            "SDL_AUDIODRIVER": "dummy",
+            "LIBGL_ALWAYS_SOFTWARE": "1",
+            "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+          },
+          "loaded_sanitizers": {
+            "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17",
+            "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f"
+          }
+        },
+        "sanitized-development-01-restart": {
+          "game_sha256": "f2503e7b40d8ef302410612a4b590515fea3aa0dd4e39608d8ff5356c98a53a7",
+          "environment": {
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "SDL_VIDEODRIVER": "x11",
+            "SDL_AUDIODRIVER": "dummy",
+            "LIBGL_ALWAYS_SOFTWARE": "1",
+            "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+          },
+          "loaded_sanitizers": {
+            "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+            "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "0e18776ca5c5e552bf0f7ee4cd6a413036376658",
+        "source_fingerprint": "0a77135eed2631c7e5cf8654d96baca61f7afa496896e46c4fb4eba0b41b8dc4"
+      }
+    }
+  },
+  "visual_reviews": [
+    "normal supported tooltip shows Welkynd Stone, Weight1/Value50",
+    "normal full-guard image shows original rejection wording and retained item",
+    "instrumented supported tooltip and full-guard message reviewed and match normal behavior"
+  ],
+  "retained_development_findings": [
+    "Direct approaches and the southern wall attempt were blocked by the actual room partition; no engine change claimed. Navigation query supplied the existing room path. Initial path attempts moved before aim converged;20 alignment steps corrected the controller and actual pickup succeeded.",
+    "The initial baseline auditor expected paused Lua samples. Simulation sampling stops in inventory; the accepted diagnostic instead proves a real healing deficit before/after the attempted use and exactly retained item/metadata. No paused equality claim."
+  ],
+  "outside_scope": [
+    "Varla Stones, Ayleid wells, arbitrary MISC use, enchantment recharge and full M16",
+    "General hotkey/menu parity, exact sound/animation and instruction-level float identity",
+    "NPC use and general scripted/mod-defined item-role behavior"
+  ],
+  "sanitizer_scope": "Rendered ASan leak detection disabled with UBSan halt; full engine gate leak detection enabled.",
+  "outgoing_checkpoint": {
+    "semantic": "build/oblivion-compat/welkynd-stone/normal-development-01-semantic-verification.json",
+    "checks": 42,
+    "outgoing_save": "build/oblivion-compat/welkynd-stone/normal-development-01-restart/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "291804bb4e836f957f1e1ea8acd24a405d8719b52371ee1e0c641aa5725f865e",
+    "health": 59.49584197998047,
+    "magicka": 80,
+    "stone_count": 0
+  }
+}

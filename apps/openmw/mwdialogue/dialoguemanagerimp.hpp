@@ -88,6 +88,8 @@ namespace MWDialogue
         std::vector<std::pair<std::string, int>> mChoices;
 
         bool mNativeDialogue = false;
+        // Scoped to the synchronous GUI opening; consumed by startDialogue.
+        std::optional<std::pair<MWWorld::Ptr, ESM::FormKey>> mScriptedStart;
         // IDs are never reused within a live UI runtime, so a stale choice
         // callback cannot select the next response or replay its result.
         int mNativeChoiceSerial = 0;
@@ -123,6 +125,7 @@ namespace MWDialogue
         bool isInChoice() const override;
 
         bool startDialogue(const MWWorld::Ptr& actor, ResponseCallback* callback) override;
+        bool startScriptedDialogue(const MWWorld::Ptr& actor, const ESM::FormKey& topic) override;
 
         std::list<std::string> getAvailableTopics() override;
         int getTopicFlag(const ESM::RefId& topicId) const override;

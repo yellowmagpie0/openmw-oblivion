@@ -1,3 +1,7 @@
+#include "apps/openmw/mwworld/oblivionactorstats.hpp"
+#include "apps/openmw/mwmechanics/oblivionplayerhostility.hpp"
+#include <components/esm4/loadbsgn.hpp>
+#include <utility>
 #include "oblivionworldfixture.hpp"
 #include "inventorywindowmanager.hpp"
 
@@ -15,6 +19,8 @@
 #include "apps/openmw/mwworld/manualref.hpp"
 #include "apps/openmw/mwdialogue/dialoguemanagerimp.hpp"
 #include "apps/openmw/mwmechanics/oblivionai.hpp"
+#include "apps/openmw/mwmechanics/mechanicsmanagerimp.hpp"
+#include "apps/openmw/mwmechanics/movement.hpp"
 #include "apps/openmw/mwmechanics/disease.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
 #include "apps/openmw/mwmechanics/oblivionmelee.hpp"
@@ -22,6 +28,14 @@
 #include "apps/openmw/mwworld/cellstore.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivionscriptmanager.hpp"
+#include "apps/openmw/mwworld/globals.hpp"
+#include "apps/openmw/mwstate/statemanagerimp.hpp"
+#include <components/settings/values.hpp>
+#include <components/esm3/dialoguestate.hpp>
+#include <components/esm3/esmreader.hpp>
+#include <components/esm3/esmwriter.hpp>
+#include <components/loadinglistener/loadinglistener.hpp>
+#include <sstream>
 #include "apps/openmw/mwworld/worldmodel.hpp"
 
 #include <components/compiler/extensions.hpp>
@@ -50,6 +64,7 @@
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadachr.hpp>
 #include <components/esm4/loadinfo.hpp>
+#include <components/esm4/loaddial.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadpack.hpp>
 #include <components/esm4/loadqust.hpp>
@@ -69,6 +84,8 @@
 #include <gtest/gtest.h>
 
 #include <functional>
+#include <tuple>
+#include <cmath>
 #include <limits>
 #include <algorithm>
 #include <stdexcept>
@@ -167,6 +184,9 @@ namespace
         }
     };
 
+    struct MenuFixture;
+    void prepareSaveableMenuPlayer(MenuFixture& f);
+
     struct MenuFixture
     {
         TestingOpenMW::NativeWorldFixture mFixture;
@@ -199,12 +219,23 @@ namespace
             placed.mFormKey = key(0xa00);
             placed.mBaseObj = base->mId;
             placed.mBaseKey = key(0x800);
+            // Native history needs a real saved reference, not a draft-only Ptr.
+            ESM4::Cell nativeCell{};
+            nativeCell.mId = ESM::RefId(ESM::FormId{0xb32, base->mId.mContentFile});
+            nativeCell.mFormKey = key(0xb32);
+            nativeCell.mCellFlags = ESM4::CELL_Interior;
+            nativeCell.mEditorId = "DialogueMenuRoom";
+            world.getStore().getWritable<ESM4::Cell>().insertStatic(nativeCell, nativeCell.mFormKey);
+            placed.mParent = nativeCell.mId;
+            placed.mParentKey = nativeCell.mFormKey;
             world.getStore().getWritable<ESM4::ActorCharacter>().insertStatic(placed, placed.mFormKey);
             MWWorld::LiveCellRef<ESM4::Npc> live(placed, base);
-            auto& cell = world.getWorldModel().getDraftCell();
+            auto& cell = world.getWorldModel().getCell(nativeCell.mId);
             mActor = MWWorld::Ptr(cell.insert(&live), &cell);
             world.getWorldModel().registerPtr(mActor);
+            world.getPlayer().setCell(&cell);
             if (!world.activateOblivionActor(mActor)) throw std::runtime_error("cannot activate menu actor");
+            prepareSaveableMenuPlayer(*this);
         }
         int stage() const
         {
@@ -221,6 +252,216 @@ namespace
             return state.mScriptEventSequence;
         }
     };
+    void prepareSaveableMenuPlayer(MenuFixture& f)
+    {
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        const auto file = f.mActor.get<ESM4::Npc>()->mBase->mId.mContentFile;
+        ESM4::Class cls{};
+        cls.mId = {0xb30, file};
+        cls.mData.mFavoredAttributes = {0, 1};
+        for (std::size_t i = 0; i < 7; ++i) cls.mData.mMajorSkills[i] = 12 + i;
+        store.getWritable<ESM4::Class>().insertStatic(cls, key(0xb30));
+        ESM::Race sharedRace; sharedRace.blank(); sharedRace.mId = ESM::RefId(ESM::FormId{0x810, file});
+        store.getWritable<ESM::Race>().insertStatic(sharedRace);
+        ESM::Class sharedClass; sharedClass.blank(); sharedClass.mId = ESM::RefId(cls.mId);
+        store.getWritable<ESM::Class>().insertStatic(sharedClass);
+        auto playerBase = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        playerBase.mRace = sharedRace.mId; playerBase.mClass = sharedClass.mId;
+        auto prepared = store.preparePlayerRecord(playerBase);
+        world.getPlayer().set(prepared.commit());
+        ESM4::Cell cell{};
+        cell.mId = ESM::RefId(ESM::FormId{0xb31, file});
+        cell.mFormKey = key(0xb31);
+        cell.mEditorId = "CrimeGoldRoom";
+        cell.mCellFlags = ESM4::CELL_Interior;
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        auto& room = world.getWorldModel().getCell(cell.mId);
+        f.mActor = f.mActor.getCell()->moveTo(f.mActor, &room);
+        world.getWorldModel().registerPtr(f.mActor);
+        world.getPlayer().setCell(&room);
+        auto source = *f.mActor.get<ESM4::Npc>()->mBase;
+        source.mId = {7, file + 1}; source.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+        store.getWritable<ESM4::Npc>().insertStatic(source, source.mFormKey);
+        if (!world.initializeOblivionPlayerActor()) throw std::runtime_error("cannot initialize saveable menu Player");
+    }
+
+}
+
+TEST(OblivionDialogueMenu, ScriptSetCrimeGoldRoutesActorBountyAndPreservesFractionalDeltaAcrossSave)
+{
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        auto& combat = *world.getOblivionCombatService();
+        auto& scripts = *world.getOblivionScriptManager();
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(store);
+        for (int scenario : {0, 1, 2}) // NPC, Player normal realm, Player alternate realm.
+        {
+            SCOPED_TRACE(scenario);
+            const bool player = scenario != 0;
+            const auto actor = player ? world.getPlayerPtr() : f.mActor;
+            const auto actorKey = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+            auto values = *combat.findActorValues(actorKey);
+            values.mBounty = ESM4::CrimeBountyState{.25f, player ? .5f : 0.f};
+            values.mPlayerInShiveringIsles = scenario == 2;
+            values.mValues[37].mModifiers = {.5f, -3.25f, -.25f};
+            if (player) combat.publishPlayerValues(world.getPlayer(), values, settings);
+            else combat.publishNonPlayerValues(actor, values);
+            ObScript::RuntimeContext context; context.mSelf = actorKey;
+            scripts.call("SetCrimeGold", {}, {std::int64_t{10}}, context, {});
+            const auto* changed = combat.findActorValues(actorKey);
+            ASSERT_TRUE(changed && changed->mBounty);
+            EXPECT_EQ(changed->mValues[37].mModifiers, values.mValues[37].mModifiers);
+            EXPECT_EQ(changed->mBounty->mNormal, scenario == 2 ? .25f : 9.25f);
+            EXPECT_EQ(changed->mBounty->mShiveringIsles, scenario == 2 ? 9.5f : player ? .5f : 0.f);
+            EXPECT_DOUBLE_EQ(ObScript::asNumber(scripts.call("GetCrimeGold", {}, {}, context, {})),
+                scenario == 2 ? 9.5 : 9.25);
+            const auto snapshot = world.captureOblivionRuntimeState();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(snapshot.serializeBinary());
+            const auto saved = std::ranges::find(restored.mNativeActorValues, actorKey,
+                &ESM4::RuntimeActorValues::mActor);
+            ASSERT_NE(saved, restored.mNativeActorValues.end());
+            EXPECT_EQ(saved->mBounty, changed->mBounty);
+            scripts.call("SetCrimeGold", {}, {std::int64_t{-5}}, context, {});
+            EXPECT_EQ(combat.crimeBounty(actorKey), scenario == 2 ? -5.f : 0.f);
+            EXPECT_THROW(scripts.call("SetCrimeGold", {}, {}, context, {}), ObScript::RuntimeError);
+            EXPECT_THROW(scripts.call("SetCrimeGold", {}, {std::int64_t{1}, std::int64_t{2}}, context, {}),
+                ObScript::RuntimeError);
+        }
+    }
+}
+
+TEST(OblivionDialogueMenu, FactionRankDifferenceUsesSecondActorAndZeroForMissingMembership)
+{
+    for (const bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        const auto base = *f.mActor.get<ESM4::Npc>()->mBase;
+        ESM4::Faction faction{};
+        faction.mId = {0xd00, base.mId.mContentFile}; faction.mFormKey = key(0xd00);
+        faction.mFactionFlags = 0;
+        store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+        auto peer = base; peer.mId = {0xd01, base.mId.mContentFile}; peer.mFormKey = key(0xd01);
+        store.getWritable<ESM4::Npc>().insertStatic(peer, peer.mFormKey);
+        ESM4::ActorCharacter placed{};
+        placed.mId = {0xd03, base.mId.mContentFile}; placed.mFormKey = key(0xd03);
+        placed.mBaseObj = peer.mId; placed.mBaseKey = peer.mFormKey;
+        store.getWritable<ESM4::ActorCharacter>().insertStatic(placed, placed.mFormKey);
+        auto& scripts = *world.getOblivionScriptManager();
+        ObScript::RuntimeContext context; context.mSelf = f.mActor.getCellRef().getFormKey();
+        ESM4::PackageCondition condition{};
+        condition.mFunction = 60;
+        condition.mParameter1.mReferenceKey = faction.mFormKey;
+        condition.mParameter2.mReferenceKey = placed.mFormKey;
+        condition.mOperator = ESM4::ConditionOperator::Equal;
+        for (const auto [selfRank, peerRank, expected] : std::vector<std::tuple<int,int,int>>{
+                 {5,2,3}, {2,5,-3}, {-1,5,0}, {5,-1,0}, {-1,-1,0}, {-2,3,-5}})
+        {
+            SCOPED_TRACE(selfRank);
+            SCOPED_TRACE(peerRank);
+            ASSERT_TRUE(world.setOblivionFactionRank(context.mSelf, faction.mFormKey, selfRank));
+            ASSERT_TRUE(world.setOblivionFactionRank(placed.mFormKey, faction.mFormKey, peerRank));
+            const std::vector<ObScript::Value> args{
+                ObScript::ReferenceValue{faction.mFormKey, {}}, ObScript::ReferenceValue{placed.mFormKey, {}}};
+            EXPECT_EQ(ObScript::asInteger(scripts.call("GetFactionRankDifference", {}, args, context, {})), expected);
+            condition.mComparisonValue = expected;
+            EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(f.mActor, world.getPlayerPtr(),
+                std::span(&condition, 1)), ESM4::ConditionResult::True);
+        }
+        condition.mParameter2.mReferenceKey = key(0xdead);
+        condition.mComparisonValue = 0;
+        EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(f.mActor, world.getPlayerPtr(),
+            std::span(&condition,1)), ESM4::ConditionResult::True);
+    }
+}
+
+TEST(OblivionDialogueMenu, ScriptFactionRankSharesBaseAndRestoresMembershipWithoutEditingContent)
+{
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        auto& combat = *world.getOblivionCombatService();
+        auto& scripts = *world.getOblivionScriptManager();
+        auto base = *f.mActor.get<ESM4::Npc>()->mBase;
+        ESM4::Faction existing{};
+        existing.mId = {0xd04, base.mId.mContentFile}; existing.mFormKey = key(0xd04);
+        existing.mFactionFlags = 0;
+        store.getWritable<ESM4::Faction>().insertStatic(existing, existing.mFormKey);
+        base.mFactions = {{existing.mId.toUint32(), 2, 0, 0, 0}};
+        base.mFaction = base.mFactions.front();
+        store.getWritable<ESM4::Npc>().insertStatic(base, base.mFormKey);
+        const auto file = base.mId.mContentFile;
+        ESM4::Faction faction{};
+        faction.mId = {0xd00, file}; faction.mFormKey = key(0xd00); faction.mFactionFlags = 0;
+        store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+        auto otherBase = base; otherBase.mId = {0xd01, file}; otherBase.mFormKey = key(0xd01);
+        otherBase.mEditorId = "OtherActor";
+        store.getWritable<ESM4::Npc>().insertStatic(otherBase, otherBase.mFormKey);
+        for (unsigned id : {0xd02u, 0xd03u})
+        {
+            ESM4::ActorCharacter placed{};
+            placed.mId = {id, file}; placed.mFormKey = key(id);
+            placed.mBaseObj = id == 0xd02 ? base.mId : otherBase.mId;
+            placed.mBaseKey = id == 0xd02 ? base.mFormKey : otherBase.mFormKey;
+            store.getWritable<ESM4::ActorCharacter>().insertStatic(placed, placed.mFormKey);
+        }
+        ObScript::RuntimeContext context; context.mSelf = f.mActor.getCellRef().getFormKey();
+        const ObScript::Value fact = ObScript::ReferenceValue{faction.mFormKey, {}};
+        const auto checkRank = [&](int rank) {
+            EXPECT_EQ(world.getOblivionFactionRank(context.mSelf, faction.mFormKey), rank);
+            EXPECT_EQ(world.getOblivionFactionRank(key(0xd02), faction.mFormKey), rank);
+            EXPECT_EQ(world.getOblivionFactionRank(key(0xd03), faction.mFormKey), -1);
+            EXPECT_EQ(ObScript::asInteger(scripts.call("GetFactionRank", {}, {fact}, context, {})), rank);
+            ESM4::PackageCondition condition{};
+            condition.mFunction = 73; condition.mParameter1.mReferenceKey = faction.mFormKey;
+            condition.mOperator = ESM4::ConditionOperator::Equal; condition.mComparisonValue = rank;
+            EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(f.mActor, world.getPlayerPtr(),
+                std::span(&condition, 1)), ESM4::ConditionResult::True);
+            condition.mFunction = 71; condition.mComparisonValue = rank != -1;
+            EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(f.mActor, world.getPlayerPtr(),
+                std::span(&condition, 1)), ESM4::ConditionResult::True);
+        };
+        checkRank(-1);
+        scripts.call("SetFactionRank", {}, {fact, std::int64_t{1}}, context, {});
+        checkRank(1);
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFaction(f.mActor), ESM::RefId(faction.mId));
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFactionRank(f.mActor), 1);
+        EXPECT_EQ(world.getOblivionFactionRank(context.mSelf, existing.mFormKey), 2);
+        EXPECT_EQ(store.search<ESM4::Npc>(base.mFormKey)->mFactions.size(), base.mFactions.size());
+        const auto saved = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+        EXPECT_NO_THROW(world.prepareOblivionSaveState(saved));
+        scripts.call("SetFactionRank", {}, {fact, std::int64_t{-1}}, context, {});
+        checkRank(-1);
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFaction(f.mActor), ESM::RefId(existing.mId));
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFactionRank(f.mActor), 2);
+        ASSERT_TRUE(world.setOblivionFactionRank(context.mSelf, existing.mFormKey, -1));
+        EXPECT_TRUE(f.mActor.getClass().getPrimaryFaction(f.mActor).empty());
+        EXPECT_EQ(f.mActor.getClass().getPrimaryFactionRank(f.mActor), -1);
+        const auto empty = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+        const auto* replacement = combat.getBaseFactions(base.mFormKey);
+        ASSERT_TRUE(replacement); EXPECT_TRUE(replacement->empty());
+        combat.restore(saved, store); checkRank(1);
+        combat.restore(empty, store); checkRank(-1);
+        // Absent -1 inserts the native signed byte; a second -1 removes it.
+        scripts.call("SetFactionRank", {}, {fact, std::int64_t{-1}}, context, {});
+        ASSERT_EQ(world.getOblivionActorFactions(base.mFormKey).size(), 1);
+        scripts.call("SetFactionRank", {}, {fact, std::int64_t{257}}, context, {});
+        checkRank(1);
+        const auto before = world.captureOblivionRuntimeState().mNativeActorBases;
+        EXPECT_THROW(scripts.call("SetFactionRank", {}, {ObScript::ReferenceValue{base.mFormKey, {}},
+            std::int64_t{1}}, context, {}), ObScript::RuntimeError);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mNativeActorBases, before);
+        auto bad = saved;
+        bad.mNativeActorBases.front().mFactions->front().mFaction = base.mFormKey;
+        EXPECT_THROW(world.prepareOblivionSaveState(bad), std::exception);
+    }
 }
 
 TEST(OblivionDialogueMenu, ActualLoaderResolvesChoicesAfterResultsAndRejectsStaleCallbacks)
@@ -327,6 +568,212 @@ TEST(OblivionDialogueMenu, ImmediateAndResponseResultsExecuteAtTheirOwnPresentat
     }
 }
 
+TEST(OblivionDialogueMenu, PlayerSexConditionUsesCurrentPlayerInsteadOfSpeaker)
+{
+    MenuFixture f;
+    auto& world = f.mFixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    for (const bool male : {true, false, true})
+    {
+        auto base = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        base.setIsMale(male);
+        auto prepared = world.getStore().preparePlayerRecord(base);
+        world.getPlayer().set(prepared.commit());
+        for (const int sex : {0, 1, 2})
+        {
+            ESM4::PackageCondition condition{};
+            condition.mFunction = 131;
+            condition.mParameter1.mNumber = sex;
+            condition.mOperator = ESM4::ConditionOperator::Equal;
+            condition.mComparisonValue = 1;
+            EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, {}, std::span(&condition, 1)),
+                sex == (male ? 0 : 1) ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        }
+    }
+}
+
+TEST(OblivionDialogueMenu, SameSexUsesOppositeOrExplicitActorAndCurrentPlayerSex)
+{
+    for (const bool shifted : {false, true})
+        for (const bool female : {false, true})
+        {
+            MenuFixture f(ESM4::INFO_SayOnce, shifted);
+            auto& world = f.mFixture.mWorld;
+            auto& ai = *world.getOblivionAiService();
+            auto npc = *f.mActor.get<ESM4::Npc>()->mBase;
+            npc.mBaseConfig.tes4.flags = (npc.mBaseConfig.tes4.flags & ~ESM4::Npc::TES4_Female)
+                | (female ? ESM4::Npc::TES4_Female : 0);
+            world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+            ASSERT_EQ(f.mActor.get<ESM4::Npc>()->mBase, world.getStore().search<ESM4::Npc>(key(0x800)));
+            ESM4::PackageCondition condition{};
+            condition.mFunction = 44;
+            condition.mOperator = ESM4::ConditionOperator::Equal;
+            condition.mComparisonValue = 1;
+            condition.mParameter1.mIsFormId = true;
+            const auto query = [&](const MWWorld::Ptr& listener) {
+                return ai.evaluateDialogueConditions(f.mActor, listener, std::span(&condition, 1));
+            };
+            for (const bool playerFemale : {false, true, false})
+            {
+                auto base = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+                base.setIsMale(!playerFemale);
+                auto prepared = world.getStore().preparePlayerRecord(base);
+                world.getPlayer().set(prepared.commit());
+                const auto expected = female == playerFemale ? ESM4::ConditionResult::True
+                                                            : ESM4::ConditionResult::False;
+                for (const bool runOnTarget : {false, true})
+                {
+                    condition.mRunOnTarget = runOnTarget;
+                    condition.mParameter1.mReferenceKey = {};
+                    EXPECT_EQ(query(world.getPlayerPtr()), expected);
+                    condition.mParameter1.mReferenceKey = key(0xa00);
+                    EXPECT_EQ(query(world.getPlayerPtr()), runOnTarget ? expected : ESM4::ConditionResult::True);
+                }
+                condition.mRunOnTarget = false;
+                condition.mParameter1.mReferenceKey = {};
+                EXPECT_EQ(query({}), ESM4::ConditionResult::False);
+                condition.mParameter1.mReferenceKey = key(0xdead);
+                EXPECT_EQ(query(world.getPlayerPtr()), ESM4::ConditionResult::False);
+            }
+        }
+}
+
+TEST(OblivionDialogueMenu, SameRaceUsesCanonicalIdentityAndCurrentPlayerRace)
+{
+    for (const bool shifted : {false, true})
+        for (const bool nullRace : {false, true})
+        {
+            MenuFixture f(ESM4::INFO_SayOnce, shifted);
+            auto& world = f.mFixture.mWorld;
+            auto& ai = *world.getOblivionAiService();
+            auto& store = world.getStore();
+            auto other = *store.search<ESM4::Race>(key(0x810));
+            other.mId.mIndex = 0x811; // Same name/data, different native race identity.
+            store.getWritable<ESM4::Race>().insertStatic(other, key(0x811));
+            auto npc = *f.mActor.get<ESM4::Npc>()->mBase;
+            if (nullRace) npc.mRace = {};
+            store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+            ESM4::PackageCondition condition{};
+            condition.mFunction = 43;
+            condition.mOperator = ESM4::ConditionOperator::Equal;
+            condition.mComparisonValue = 1;
+            condition.mParameter1.mIsFormId = true;
+            for (const unsigned id : {0x810u, 0x811u, 0x810u, 0u})
+            {
+                auto base = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+                base.mRace = id ? ESM::RefId(ESM::FormId{id, npc.mId.mContentFile}) : ESM::RefId{};
+                auto prepared = store.preparePlayerRecord(base);
+                world.getPlayer().set(prepared.commit());
+                const auto expected = id == (nullRace ? 0u : 0x810u) ? ESM4::ConditionResult::True
+                                                                    : ESM4::ConditionResult::False;
+                for (const bool runOnTarget : {false, true})
+                {
+                    condition.mRunOnTarget = runOnTarget;
+                    condition.mParameter1.mReferenceKey = {};
+                    EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, world.getPlayerPtr(),
+                        std::span(&condition, 1)), expected);
+                    condition.mParameter1.mReferenceKey = key(0xa00);
+                    EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, world.getPlayerPtr(),
+                        std::span(&condition, 1)), runOnTarget ? expected : ESM4::ConditionResult::True);
+                }
+            }
+        }
+}
+
+TEST(OblivionDialogueMenu, UnloadedNpcPairConditionsReadCurrentPlayerWithoutMaterializingSpeaker)
+{
+    MenuFixture f;
+    auto& world = f.mFixture.mWorld;
+    auto& store = world.getStore();
+    auto& ai = *world.getOblivionAiService();
+    ESM4::AIPackage package{};
+    package.mId = {0xe51, f.mActor.get<ESM4::Npc>()->mBase->mId.mContentFile};
+    package.mFormKey = key(0xe51);
+    package.mPackageType = ESM4::AIPackageType::Wander;
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 44;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    condition.mComparisonValue = 1;
+    condition.mParameter1.mIsFormId = true;
+    package.mCanonicalConditions = {condition};
+    store.getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+    auto npc = *f.mActor.get<ESM4::Npc>()->mBase;
+    npc.mAIPackageKeys = {package.mFormKey};
+    store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+    ESM4::ActorCharacter cold{};
+    cold.mId = {0xe52, npc.mId.mContentFile};
+    cold.mFormKey = key(0xe52);
+    cold.mBaseObj = npc.mId;
+    cold.mBaseKey = key(0x800);
+    cold.mParent = f.mActor.getCell()->getCell()->getId();
+    cold.mParentKey = ESM::FormKeyResolver(world.getContentFiles()).toFormKey(
+        *cold.mParent.getIf<ESM::FormId>());
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(cold, cold.mFormKey);
+    auto saved = world.captureOblivionRuntimeState();
+    ESM4::RuntimeActorAiState actor;
+    actor.mActor = cold.mFormKey;
+    actor.mBase = cold.mBaseKey;
+    actor.mCell = actor.mLastValidCell = cold.mParentKey;
+    actor.mTarget = ESM::FormKey::dynamic("player", 1);
+    actor.mTier = ESM4::ProcessTier::Low;
+    saved.mActorAi = {actor};
+    const bool female = (npc.mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
+    auto other = *store.search<ESM4::Race>(key(0x810));
+    other.mId.mIndex = 0x811;
+    store.getWritable<ESM4::Race>().insertStatic(other, key(0x811));
+    for (const unsigned function : {43u, 44u})
+        for (const bool runOnTarget : {false, true})
+            for (const bool matches : {true, false, true})
+            {
+                condition.mFunction = function;
+                condition.mRunOnTarget = runOnTarget;
+                package.mCanonicalConditions = {condition};
+                store.getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+                auto base = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+                base.setIsMale(!(matches ? female : !female));
+                base.mRace = ESM::RefId(matches ? npc.mRace : other.mId);
+                auto prepared = store.preparePlayerRecord(base);
+                world.getPlayer().set(prepared.commit());
+                ASSERT_NO_THROW(ai.restore(saved));
+                ai.updateUnloaded(.5f);
+                const auto* selected = ai.state(cold.mFormKey);
+                ASSERT_TRUE(selected);
+                EXPECT_EQ(selected->mConditionResult, matches ? ESM4::ConditionResult::True
+                                                             : ESM4::ConditionResult::False);
+                EXPECT_TRUE(world.getWorldModel().getPtr(cold.mId).isEmpty());
+            }
+}
+
+TEST(OblivionDialogueMenu, PlayerBirthsignConditionTracksCurrentCanonicalChoice)
+{
+    MenuFixture f;
+    auto& world = f.mFixture.mWorld;
+    for (const unsigned id : {0x910u, 0x911u})
+    {
+        ESM4::BirthSign sign{};
+        sign.mId = {id, 0};
+        world.getStore().getWritable<ESM4::BirthSign>().insertStatic(sign, key(id));
+    }
+    const auto query = [&](unsigned expected) {
+        ESM4::PackageCondition condition{};
+        condition.mFunction = 224;
+        condition.mParameter1.mIsFormId = true;
+        condition.mParameter1.mReferenceKey = key(expected);
+        condition.mOperator = ESM4::ConditionOperator::Equal;
+        condition.mComparisonValue = 1;
+        return world.getOblivionAiService()->evaluateDialogueConditions(f.mActor, {}, std::span(&condition, 1));
+    };
+    world.getPlayer().setBirthSign({});
+    EXPECT_EQ(query(0x910), ESM4::ConditionResult::False);
+    for (const unsigned id : {0x910u, 0x911u, 0x910u})
+    {
+        world.getPlayer().setBirthSign(ESM::RefId(ESM::FormId{id, 0}));
+        EXPECT_EQ(query(id), ESM4::ConditionResult::True);
+        EXPECT_EQ(query(id == 0x910 ? 0x911 : 0x910), ESM4::ConditionResult::False);
+        EXPECT_EQ(query(0x912), ESM4::ConditionResult::False);
+    }
+}
+
 TEST(OblivionDialogueMenu, TurnArrestConditionAndCommandConsumeTheSameOneShotSignal)
 {
     MenuFixture f;
@@ -419,6 +866,258 @@ TEST(OblivionDialogueMenu, GuardConditionReadsNativeClassFlagRatherThanActorName
         EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
             f.mActor, world.getPlayerPtr(), std::span(&condition, 1)), ESM4::ConditionResult::True);
     }
+}
+
+TEST(OblivionDialogueMenu, AbsentTrespassPackageRejectsWarningGreetings)
+{
+    for (const bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        ESM4::PackageCondition condition{};
+        condition.mFunction = 144;
+        condition.mOperator = ESM4::ConditionOperator::Equal;
+        // Original warning count is owned by a transient package, not by
+        // ownership classification or the currently selected authored PACK.
+        for (const int level : {-1, 0, 1, 2})
+        {
+            condition.mComparisonValue = level;
+            EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
+                f.mActor, world.getPlayerPtr(), std::span(&condition, 1)),
+                level == -1 ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        }
+    }
+}
+
+TEST(OblivionDialogueMenu, PlayerMiscStatsShareUnsignedScriptConditionAndSavedState)
+{
+    for (const bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& scripts = *world.getOblivionScriptManager();
+        const auto read = [&](int index) {
+            return ObScript::asInteger(scripts.call("GetPCMiscStat", {}, {std::int64_t(index)}, {}, {}));
+        };
+        const auto modify = [&](int index, std::int64_t delta) {
+            scripts.call("ModPCMiscStat", {}, {std::int64_t(index), delta}, {}, {});
+        };
+        const auto initial = world.captureOblivionRuntimeState().serializeBinary();
+        EXPECT_EQ(read(13), 0);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), initial);
+        for (const int index : {0, 13, 33})
+        {
+            modify(index, -1);
+            EXPECT_EQ(read(index), 4294967295LL);
+            modify(index, 1);
+            EXPECT_EQ(read(index), 0);
+        }
+        modify(13, 3);
+        ESM4::PackageCondition condition{};
+        condition.mFunction = 312;
+        condition.mParameter1.mNumber = 13;
+        condition.mOperator = ESM4::ConditionOperator::GreaterOrEqual;
+        condition.mComparisonValue = 3;
+        EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
+            f.mActor, world.getPlayerPtr(), std::span(&condition, 1)), ESM4::ConditionResult::True);
+        const auto saved = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+        EXPECT_NO_THROW(world.prepareOblivionSaveState(saved));
+        auto invalid = saved;
+        invalid.mPlayer.mActorValues["pc_misc_stat.13"] = .5;
+        EXPECT_THROW(world.prepareOblivionSaveState(invalid), std::invalid_argument);
+        EXPECT_EQ(read(13), 3);
+        EXPECT_THROW(read(-1), std::invalid_argument);
+        EXPECT_THROW(read(34), std::invalid_argument);
+        EXPECT_THROW(modify(13, 2147483648LL), ObScript::RuntimeError);
+        modify(13, 1);
+        EXPECT_EQ(read(13), 4);
+        ESM::ESMWriter writer;
+        auto stream = std::make_unique<std::stringstream>();
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        writer.save(*stream);
+        writer.startRecord(ESM::REC_T4ST); saved.save(writer); writer.endRecord(ESM::REC_T4ST);
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "misc-stat-fixture");
+        ASSERT_EQ(reader.getRecName(), ESM::REC_T4ST); reader.getRecHeader();
+        world.readRecord(reader, ESM::REC_T4ST);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(read(13), 3);
+    }
+}
+
+TEST(OblivionDialogueMenu, MurdererFlagIsPlayerOwnedIndependentOfCounterAndRestoresFromSave)
+{
+    for (const bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& scripts = *world.getOblivionScriptManager();
+        auto& ai = *world.getOblivionAiService();
+        ESM4::PackageCondition condition{};
+        condition.mFunction = 176;
+        condition.mOperator = ESM4::ConditionOperator::Equal;
+        condition.mComparisonValue = 1;
+        const auto query = [&] {
+            for (const auto& self : {ESM::FormKey{}, key(0xa00), ESM::FormKey::dynamic("player", 1)})
+            {
+                ObScript::RuntimeContext context; context.mSelf = self;
+                EXPECT_EQ(ObScript::asInteger(scripts.call("IsPCAMurderer", {}, {}, context, {})),
+                    scripts.playerIsMurderer() ? 1 : 0);
+            }
+            for (const bool target : {false, true})
+            {
+                condition.mRunOnTarget = target;
+                const auto expected = scripts.playerIsMurderer() ? ESM4::ConditionResult::True
+                                                               : ESM4::ConditionResult::False;
+                EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, {}, std::span(&condition, 1)), expected);
+                EXPECT_EQ(ai.evaluateNativeIdleConditions(f.mActor, std::span(&condition, 1), {}), expected);
+            }
+        };
+        const auto initial = world.captureOblivionRuntimeState().serializeBinary();
+        EXPECT_FALSE(scripts.playerIsMurderer());
+        query();
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), initial);
+        scripts.call("ModPCMiscStat", {}, {std::int64_t(32), std::int64_t(-1)}, {}, {});
+        EXPECT_FALSE(scripts.playerIsMurderer()); // Modifying the counter does not notify a murder.
+        scripts.notifyPlayerMurder();
+        EXPECT_TRUE(scripts.playerIsMurderer());
+        EXPECT_EQ(scripts.playerMiscStat(32), 0u); // Original wrap does not clear Player+611.
+        query();
+        const auto saved = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+        EXPECT_NO_THROW(world.prepareOblivionSaveState(saved));
+        for (const double invalid : {-1.0, .5, 2.0, std::numeric_limits<double>::infinity(),
+                 std::numeric_limits<double>::quiet_NaN()})
+        {
+            auto bad = saved;
+            bad.mPlayer.mActorValues["crime.murderer"] = invalid;
+            if (std::isfinite(invalid))
+                EXPECT_THROW(world.prepareOblivionSaveState(bad), std::invalid_argument);
+            else
+                EXPECT_THROW(world.prepareOblivionSaveState(bad), std::runtime_error);
+            EXPECT_TRUE(scripts.playerIsMurderer());
+        }
+        const auto load = [&](const ESM4::RuntimeState& state) {
+            ESM::ESMWriter writer;
+            auto stream = std::make_unique<std::stringstream>();
+            writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+            writer.startRecord(ESM::REC_T4ST); state.save(writer); writer.endRecord(ESM::REC_T4ST);
+            ESM::ESMReader reader; reader.open(std::move(stream), "murderer-state-fixture");
+            ASSERT_EQ(reader.getRecName(), ESM::REC_T4ST); reader.getRecHeader();
+            world.readRecord(reader, ESM::REC_T4ST);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        };
+        auto legacy = saved;
+        legacy.mPlayer.mActorValues.erase("crime.murderer");
+        load(legacy);
+        EXPECT_FALSE(scripts.playerIsMurderer());
+        query();
+        load(saved);
+        EXPECT_TRUE(scripts.playerIsMurderer());
+        EXPECT_EQ(scripts.playerMiscStat(32), 0u);
+        query();
+        auto clean = saved;
+        clean.mPlayer.mActorValues["crime.murderer"] = 0;
+        load(clean);
+        EXPECT_FALSE(scripts.playerIsMurderer());
+        query();
+    }
+}
+
+TEST(OblivionDialogueMenu, InfamyConditionSharesReadOnlyPlayerAuthorityWithScriptQuery)
+{
+    MenuFixture f;
+    auto& world = f.mFixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    auto& ai = *world.getOblivionAiService();
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 251;
+    condition.mOperator = ESM4::ConditionOperator::GreaterOrEqual;
+    condition.mComparisonValue = 50;
+    for (const int infamy : {0, 75, 25})
+    {
+        if (infamy) ASSERT_TRUE(world.modifyOblivionPlayerInfamy(infamy - scripts.playerInfamy()));
+        EXPECT_EQ(scripts.playerInfamy(), infamy);
+        ObScript::RuntimeContext context; context.mSelf = key(0xa00);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetPCInfamy", {}, {}, context, {})), infamy);
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        for (const bool target : {false, true})
+        {
+            condition.mRunOnTarget = target;
+            const auto expected = infamy >= 50 ? ESM4::ConditionResult::True : ESM4::ConditionResult::False;
+            EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, {}, std::span(&condition, 1)), expected);
+            EXPECT_EQ(ai.evaluateNativeIdleConditions(f.mActor, std::span(&condition, 1), {}), expected);
+        }
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    }
+}
+
+TEST(OblivionDialogueMenu, DispositionConditionUsesOppositeActorAndHonorsExplicitOverride)
+{
+    MenuFixture f;
+    auto& world = f.mFixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    const auto actor = f.mActor.getCellRef().getFormKey();
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    ASSERT_TRUE(world.modifyOblivionPlayerInfamy(0));
+    ASSERT_TRUE(world.modifyOblivionDisposition(actor, player, 20));
+    const auto forward = world.getOblivionScriptDisposition(actor, player);
+    ASSERT_TRUE(forward);
+    ASSERT_GT(*forward, 0);
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 76;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    condition.mComparisonValue = *forward;
+    condition.mParameter1.mIsFormId = true;
+    EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, world.getPlayerPtr(), std::span(&condition, 1)),
+        ESM4::ConditionResult::True);
+    condition.mParameter1.mReferenceKey = player;
+    EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, world.getPlayerPtr(), std::span(&condition, 1)),
+        ESM4::ConditionResult::True);
+    const auto reverse = world.getOblivionScriptDisposition(player, actor);
+    ASSERT_TRUE(reverse);
+    condition.mRunOnTarget = true;
+    condition.mParameter1.mReferenceKey = {};
+    condition.mComparisonValue = *reverse;
+    EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, world.getPlayerPtr(), std::span(&condition, 1)),
+        ESM4::ConditionResult::True);
+    condition.mRunOnTarget = false;
+    condition.mParameter1.mReferenceKey = key(0xdead);
+    condition.mComparisonValue = 0;
+    EXPECT_EQ(ai.evaluateDialogueConditions(f.mActor, world.getPlayerPtr(), std::span(&condition, 1)),
+        ESM4::ConditionResult::True);
+
+    // Exercise the low-process adapter with the same owned inputs/cache.
+    ESM4::AIPackage package{};
+    package.mId = {0xe54, f.mActor.get<ESM4::Npc>()->mBase->mId.mContentFile};
+    package.mFormKey = key(0xe54);
+    package.mPackageType = ESM4::AIPackageType::Wander;
+    condition.mParameter1.mReferenceKey = {};
+    condition.mComparisonValue = *forward;
+    package.mCanonicalConditions = {condition};
+    world.getStore().getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+    auto npc = *f.mActor.get<ESM4::Npc>()->mBase;
+    npc.mAIPackageKeys = {package.mFormKey};
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+    auto saved = world.captureOblivionRuntimeState();
+    ESM4::RuntimeActorAiState cold{};
+    cold.mActor = actor; cold.mBase = key(0x800);
+    cold.mCell = cold.mLastValidCell = ESM::FormKeyResolver(world.getContentFiles()).toFormKey(
+        *f.mActor.getCell()->getCell()->getId().getIf<ESM::FormId>());
+    cold.mTarget = player;
+    cold.mTier = ESM4::ProcessTier::Low;
+    saved.mActorAi = {cold};
+    const auto actorId = ESM::FormKeyResolver(world.getContentFiles()).toFormId(actor);
+    ASSERT_TRUE(actorId);
+    ASSERT_EQ(world.getWorldModel().getPtr(*actorId), f.mActor);
+    world.getWorldModel().deregisterLiveCellRef(*f.mActor.getBase());
+    EXPECT_TRUE(world.getWorldModel().getPtr(*actorId).isEmpty());
+    ASSERT_NO_THROW(ai.restore(saved));
+    ai.updateUnloaded(.5f);
+    const auto* selected = ai.state(actor);
+    ASSERT_TRUE(selected);
+    EXPECT_EQ(selected->mConditionResult, ESM4::ConditionResult::True);
+    EXPECT_TRUE(world.getWorldModel().getPtr(*actorId).isEmpty());
+    world.getWorldModel().registerPtr(f.mActor);
 }
 
 TEST(OblivionDialogueMenu, EmptyOwnedCrimeLedgerRejectsCrimeGreeting)
@@ -643,16 +1342,39 @@ TEST(OblivionDialogueMenu, ClassDefaultQueryTracksUsesAndRetainsRealClassIdentit
         context.mSelf = f.mActor.getCellRef().getFormKey();
         const std::vector<ObScript::Value> enabled{std::int64_t(1)};
         scripts->call("SetInCharGen", {}, enabled, context, {});
+        EXPECT_TRUE(MWWorld::oblivionIsClassDefault(world, key(0x821)));
         EXPECT_EQ(MWWorld::oblivionClassDefaultMatch(world), 0u);
         ASSERT_TRUE(world.getPlayer().getOblivionCharacterGenerationState());
         EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationState()->mRecommendedClass, key(0x821));
         MWWorld::recordOblivionCharacterGenerationSkillUse(world.getPlayerPtr(), ESM::Skill::HandToHand, 0, 3.f);
         EXPECT_EQ((*world.getPlayer().getOblivionCharacterGenerationState()->mSkillUses)[5], 3);
+        EXPECT_TRUE(MWWorld::oblivionIsClassDefault(world, key(0x822)));
         EXPECT_EQ(MWWorld::oblivionClassDefaultMatch(world), 1u);
         EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationState()->mRecommendedClass, key(0x822));
         selectClass(0x822);
         EXPECT_EQ(ObScript::asInteger(scripts->call("GetClassDefaultMatch", {}, {}, context, {})), 2);
         selectClass(0x823);
+        // The current class differs but shares specialization with the recommendation.
+        // Identity condition228 must use the recommendation and ignore its actor subject.
+        EXPECT_TRUE(MWWorld::oblivionIsClassDefault(world, key(0x822)));
+        EXPECT_FALSE(MWWorld::oblivionIsClassDefault(world, key(0x823)));
+        EXPECT_FALSE(MWWorld::oblivionIsClassDefault(world, key(0x800)));
+        const std::vector<ObScript::Value> classArgument{ObScript::ReferenceValue{key(0x822), {}}};
+        EXPECT_EQ(ObScript::asInteger(scripts->call("GetIsClassDefault", {}, classArgument, context, {})), 1);
+        ESM4::PackageCondition identity{};
+        identity.mFunction = 228;
+        identity.mParameter1.mReferenceKey = key(0x822);
+        identity.mOperator = ESM4::ConditionOperator::Equal;
+        identity.mComparisonValue = 1;
+        for (const bool target : {false, true})
+        {
+            identity.mRunOnTarget = target;
+            EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
+                f.mActor, world.getPlayerPtr(), std::span(&identity, 1)), ESM4::ConditionResult::True);
+        }
+        identity.mParameter1.mReferenceKey = key(0x823);
+        EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
+            f.mActor, world.getPlayerPtr(), std::span(&identity, 1)), ESM4::ConditionResult::False);
         ESM4::PackageCondition condition{};
         condition.mFunction = 229;
         condition.mOperator = ESM4::ConditionOperator::Equal;
@@ -671,6 +1393,348 @@ TEST(OblivionDialogueMenu, ClassDefaultQueryTracksUsesAndRetainsRealClassIdentit
     }
 }
 
+TEST(OblivionDialogueMenu, LearnedNativeTopicsUseConditionsAndPersistAcrossContentRemapping)
+{
+    std::string savedTopics;
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(0, shifted);
+        f.mFixture.mEnvironment.setDialogueManager(f.mMenu);
+        auto& store = f.mFixture.mWorld.getStore();
+        auto greeting = *store.search<ESM4::DialogInfo>(key(0x902));
+        greeting.mChoiceTopics.clear();
+        store.getWritable<ESM4::DialogInfo>().insertStatic(greeting, key(0x902));
+        Callback callback;
+        ASSERT_TRUE(f.mMenu.startDialogue(f.mActor, &callback));
+        EXPECT_FALSE(f.mMenu.isInChoice());
+        EXPECT_FALSE(f.mMenu.isGoodbye());
+        EXPECT_TRUE(f.mMenu.getChoices().empty());
+        EXPECT_TRUE(f.mMenu.getAvailableTopics().empty());
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        if (!shifted)
+        {
+            for (auto id : {0x903u, 0x905u, 0x903u})
+                scripts.call("AddTopic", {}, {ObScript::ReferenceValue{key(id), {}}}, context, {});
+            EXPECT_THROW(scripts.call("AddTopic", {}, {ObScript::ReferenceValue{key(0x800), {}}}, context, {}),
+                ObScript::RuntimeError);
+            ESM::ESMWriter writer;
+            std::stringstream stream;
+            writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+            writer.save(stream);
+            Loading::Listener listener;
+            f.mMenu.write(writer, listener);
+            writer.close();
+            savedTopics = stream.str();
+        }
+        auto stream = std::make_unique<std::stringstream>(savedTopics);
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "native-learned-topics");
+        const auto file = store.search<ESM4::Dialogue>(key(0x903))->mId.mContentFile;
+        std::map<int, int> mapping{{0, file}};
+        reader.setContentFileMapping(&mapping);
+        ASSERT_EQ(reader.getRecName(), ESM::REC_DIAS);
+        reader.getRecHeader();
+        f.mMenu.readRecord(reader, ESM::REC_DIAS);
+        EXPECT_EQ(f.mMenu.getAvailableTopics(), (std::list<std::string>{"Continue through the passage"}));
+
+        // Prepared restoration must retain native IDs too, and duplicates must
+        // remain one learned topic after actual serialization/remapping.
+        ESM::DialogueState state;
+        state.mKnownTopics = {ESM::RefId(ESM::FormId{0x903, file}), ESM::RefId(ESM::FormId{0x905, file})};
+        auto restore = f.mMenu.prepareDialogueState(std::move(state), store);
+        f.mMenu.clear();
+        ASSERT_TRUE(restore());
+        ASSERT_TRUE(f.mMenu.startDialogue(f.mActor, &callback));
+        EXPECT_EQ(f.mMenu.getAvailableTopics(), (std::list<std::string>{"Continue through the passage"}));
+        const auto responses = callback.mResponses.size();
+        f.mMenu.keywordSelected("This question must stay hidden", &callback);
+        EXPECT_EQ(callback.mResponses.size(), responses); // Learned, but its stage99 condition fails.
+        f.mMenu.keywordSelected("CONTINUE THROUGH THE PASSAGE", &callback);
+        EXPECT_EQ(f.stage(), 30);
+        EXPECT_EQ(callback.mResponses.size(), responses + 1);
+        EXPECT_TRUE(f.mMenu.isGoodbye());
+        EXPECT_TRUE(f.mMenu.getAvailableTopics().empty());
+    }
+}
+
+TEST(OblivionDialogueMenu, ScriptedPlayerConversationUsesGreetingResultsAndActorHistory)
+{
+    struct Windows : TestingOpenMW::InventoryWindowManager
+    {
+        std::function<void(const MWWorld::Ptr&)> mOpen;
+        unsigned mCalls = 0;
+        void pushGuiMode(MWGui::GuiMode mode, const MWWorld::Ptr& actor) override
+        {
+            EXPECT_EQ(mode, MWGui::GM_Dialogue);
+            ++mCalls;
+            mOpen(actor);
+        }
+    };
+    for (const bool shifted : {false, true})
+    {
+        Windows windows;
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        f.mFixture.mEnvironment.setWindowManager(windows);
+        f.mFixture.mEnvironment.setDialogueManager(f.mMenu);
+        Callback callback;
+        windows.mOpen = [&](const MWWorld::Ptr& actor) {
+            EXPECT_EQ(actor, f.mActor);
+            EXPECT_TRUE(f.mMenu.startDialogue(actor, &callback));
+        };
+        auto& scripts = *world.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        const ObScript::Value player = ObScript::ReferenceValue{ESM::FormKey::dynamic("player", 1), {}};
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetTalkedToPC", {}, {}, context, {})), 0);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("StartConversation", {}, {player}, context, {})), 1);
+        EXPECT_EQ(windows.mCalls, 1u);
+        EXPECT_EQ(callback.mResponses, (std::vector<std::string>{"First response", "Second response"}));
+        EXPECT_EQ(f.stage(), 20);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetTalkedToPC", {}, {}, context, {})), 1);
+        EXPECT_FALSE(world.getPlayerPtr().getClass().getCreatureStats(world.getPlayerPtr()).hasTalkedToPlayer());
+        // An explicit topic uses its own condition/result, not GREETING.
+        EXPECT_EQ(ObScript::asInteger(scripts.call("StartConversation", {},
+            {player, ObScript::ReferenceValue{key(0x903), {}}}, context, {})), 1);
+        EXPECT_EQ(windows.mCalls, 2u);
+        EXPECT_EQ(f.stage(), 30);
+        f.mActor.getRefData().disable();
+        EXPECT_EQ(ObScript::asInteger(scripts.call("StartConversation", {}, {player}, context, {})), 0);
+        EXPECT_EQ(windows.mCalls, 2u);
+    }
+}
+
+TEST(OblivionDialogueMenu, ScriptedPlayerTopicBypassesGreetingAndUsesOriginalResults)
+{
+    struct Windows : TestingOpenMW::InventoryWindowManager
+    {
+        std::function<void(const MWWorld::Ptr&)> mOpen;
+        unsigned mCalls = 0;
+        void pushGuiMode(MWGui::GuiMode mode, const MWWorld::Ptr& actor) override
+        {
+            EXPECT_EQ(mode, MWGui::GM_Dialogue);
+            ++mCalls;
+            mOpen(actor);
+        }
+    };
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        Windows windows;
+        MenuFixture f(ESM4::INFO_Goodbye, shifted);
+        f.mFixture.mEnvironment.setWindowManager(windows);
+        f.mFixture.mEnvironment.setDialogueManager(f.mMenu);
+        Callback callback;
+        windows.mOpen = [&](const auto& actor) { EXPECT_TRUE(f.mMenu.startDialogue(actor, &callback)); };
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        const ObScript::Value player = ObScript::ReferenceValue{ESM::FormKey::dynamic("player", 1), {}};
+        const auto start = [&](const ESM::FormKey& topic) {
+            return ObScript::asInteger(scripts.call("StartConversation", {},
+                {player, ObScript::ReferenceValue{topic, {}}}, context, {}));
+        };
+        // No eligible response must neither open the UI nor leave a pending root.
+        EXPECT_EQ(start(key(0x905)), 0);
+        EXPECT_EQ(start(key(0xdead)), 0);
+        EXPECT_EQ(windows.mCalls, 0u);
+        EXPECT_TRUE(callback.mResponses.empty());
+        EXPECT_EQ(f.stage(), 0);
+        // The explicit response requires stage20; it ends at30. GREETING has
+        // two different responses and would set stage20 again.
+        scripts.call("SetStage", {}, {ObScript::ReferenceValue{key(0x900), {}}, std::int64_t(20)}, context, {});
+        EXPECT_EQ(start(key(0x903)), 1);
+        EXPECT_EQ(windows.mCalls, 1u);
+        EXPECT_EQ(callback.mResponses, (std::vector<std::string>{"First response"}));
+        EXPECT_TRUE(f.mMenu.isGoodbye());
+        EXPECT_EQ(f.stage(), 30);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetTalkedToPC", {}, {}, context, {})), 1);
+        ESM4::RuntimeState state;
+        scripts.capture(state);
+        EXPECT_NE(std::find(state.mSpokenDialogueInfos.begin(), state.mSpokenDialogueInfos.end(), key(0x904)),
+            state.mSpokenDialogueInfos.end());
+        EXPECT_EQ(std::find(state.mSpokenDialogueInfos.begin(), state.mSpokenDialogueInfos.end(), key(0x902)),
+            state.mSpokenDialogueInfos.end());
+        // The override is consumed: an ordinary subsequent opening uses GREETING.
+        callback.mResponses.clear();
+        EXPECT_TRUE(f.mMenu.startDialogue(f.mActor, &callback));
+        EXPECT_EQ(callback.mResponses, (std::vector<std::string>{"First response", "Second response"}));
+        EXPECT_EQ(f.stage(), 30); // A lower stage result does not undo original quest progress.
+        windows.mOpen = [](const auto&) { throw std::runtime_error("UI opening failed"); };
+        EXPECT_THROW(start(key(0x901)), std::runtime_error);
+        callback.mResponses.clear();
+        EXPECT_TRUE(f.mMenu.startDialogue(f.mActor, &callback));
+        EXPECT_EQ(callback.mResponses.size(), 2u);
+    }
+}
+
+TEST(OblivionDialogueMenu, NativeMessageBoxRetainsButtonsAfterFormatArgumentsAndReadsUiSelection)
+{
+    struct Windows : TestingOpenMW::InventoryWindowManager
+    {
+        std::string mText;
+        std::vector<std::string> mButtons;
+        bool mBlock = true;
+        int mChoice = -1;
+        void interactiveMessageBox(std::string_view text, const std::vector<std::string>& buttons,
+            bool block, int) override
+        {
+            mText = text;
+            mButtons = buttons;
+            mBlock = block;
+        }
+        int readPressedButton() override { return std::exchange(mChoice, -1); }
+    };
+    for (bool shifted : {false, true})
+    {
+        Windows windows;
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        f.mFixture.mEnvironment.setWindowManager(windows);
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> exit{
+            std::string("Before exiting the sewers, you may revise your character."),
+            std::string("Edit Race"), std::string("Edit Birthsign"), std::string("Edit Class"),
+            std::string("Finished - Exit Sewers")};
+        scripts.call("MessageBox", {}, exit, context, {});
+        EXPECT_EQ(windows.mText, std::get<std::string>(exit[0]));
+        EXPECT_EQ(windows.mButtons, (std::vector<std::string>{"Edit Race", "Edit Birthsign", "Edit Class",
+            "Finished - Exit Sewers"}));
+        EXPECT_FALSE(windows.mBlock);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, context, {})), -1);
+        windows.mChoice = 3;
+        auto unrelated = context;
+        unrelated.mSelf = ESM::FormKey::dynamic("player", 1);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, unrelated, {})), -1);
+        EXPECT_EQ(windows.mChoice, 3);
+        auto retained = scripts.retainRuntime();
+        ASSERT_TRUE(retained.detach());
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, context, {})), -1);
+        EXPECT_EQ(windows.mChoice, 3);
+        ASSERT_TRUE(retained.restore());
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, context, {})), 3);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, context, {})), -1);
+
+        // Quest/global calls without a reference use script identity, rather
+        // than letting an unrelated quest's unconditional poll steal a result.
+        auto global = context;
+        global.mSelf = key(0x9000);
+        global.mUnit.mOwner = key(0x9001);
+        scripts.call("MessageBox", {}, exit, global, {});
+        windows.mChoice = 2;
+        auto otherGlobal = global;
+        otherGlobal.mUnit.mOwner = key(0x9002);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, otherGlobal, {})), -1);
+        EXPECT_EQ(windows.mChoice, 2);
+        auto sameScript = global;
+        sameScript.mSelf = key(0x9003);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, sameScript, {})), 2);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetButtonPressed", {}, {}, global, {})), -1);
+
+        const std::vector<ObScript::Value> formatted{std::string("%s: %.0f / %03d (100%%)"),
+            std::string("Score"), 2.25, std::int64_t(7), std::string("Continue"), std::string("Cancel")};
+        scripts.call("MessageBox", {}, formatted, context, {});
+        EXPECT_EQ(windows.mText, "Score: 2 / 007 (100%)");
+        EXPECT_EQ(windows.mButtons, (std::vector<std::string>{"Continue", "Cancel"}));
+        std::string toast;
+        windows.mMessageCallback = [&](std::string_view text, MWGui::ShowInDialogueMode) { toast = text; };
+        scripts.call("MessageBox", {}, {std::string("Button = %.0f"), std::int64_t(3)}, context, {});
+        EXPECT_EQ(toast, "Button = 3");
+        scripts.call("Message", {}, {std::string("Value %d"), std::int64_t(4)}, context, {});
+        EXPECT_EQ(toast, "Value 4");
+        EXPECT_THROW(scripts.call("MessageBox", {}, {std::string("Value %g")}, context, {}), ObScript::RuntimeError);
+        EXPECT_THROW(scripts.call("MessageBox", {}, {std::string("Text"), std::int64_t(4)}, context, {}),
+            ObScript::RuntimeError);
+    }
+}
+
+TEST(OblivionDialogueMenu, NativeWeekdayUsesElapsedDaysAndPcAchievementHasNoSideEffects)
+{
+    for (bool shifted : {false, true})
+    {
+        MenuFixture f(ESM4::INFO_SayOnce, shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& scripts = *world.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        for (const auto [days, expected] : std::vector<std::pair<int, int>>{
+                 {0, 0}, {1, 1}, {6, 6}, {7, 0}, {8, 1}, {12, 5}, {365, 1}, {10000, 4}})
+        {
+            world.setGlobalInt(MWWorld::Globals::sDaysPassed, days);
+            EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), expected);
+        }
+        // A changed counter is read immediately, without a cached weekday.
+        world.setGlobalInt(MWWorld::Globals::sDaysPassed, 7);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), 0);
+        // PC AddAchievement must not alter inventory, quests or character state.
+        const auto inventory = world.captureOblivionInventory(world.getPlayerPtr());
+        const auto stage = f.stage();
+        const auto sequence = f.sequence();
+        EXPECT_NO_THROW(scripts.call("AddAchievement", {}, {std::int64_t(1)}, context, {}));
+        EXPECT_EQ(world.captureOblivionInventory(world.getPlayerPtr()), inventory);
+        EXPECT_EQ(f.stage(), stage);
+        EXPECT_EQ(f.sequence(), sequence);
+        EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), 0);
+    }
+}
+
+TEST(OblivionDialogueMenu, ScriptAutosaveWaitsForSaveableUiAndRetainsTheOwningGame)
+{
+    struct Windows : TestingOpenMW::InventoryWindowManager
+    {
+        bool mAllowed = false;
+        bool isSavingAllowed() const override { return mAllowed; }
+    } windows;
+    MenuFixture f;
+    f.mFixture.mEnvironment.setWindowManager(windows);
+    struct Saver : MWState::StateManager
+    {
+        using MWState::StateManager::StateManager;
+        std::vector<std::string> mSaves;
+        void quickSave(std::string name) override { mSaves.push_back(std::move(name)); }
+    } saver(f.mFixture.mDirectory / "autosave-test", {"headless.esm"});
+    f.mFixture.mEnvironment.setStateManager(saver);
+    auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+    ObScript::RuntimeContext context;
+    saver.resumeGame();
+    scripts.call("Autosave", {}, {}, context, {});
+    scripts.call("Autosave", {}, {}, context, {});
+    saver.update(0);
+    EXPECT_TRUE(saver.mSaves.empty());
+    auto retained = saver.retainRuntime();
+    ASSERT_TRUE(retained.detach());
+    windows.mAllowed = true;
+    saver.update(0);
+    EXPECT_TRUE(saver.mSaves.empty());
+    ASSERT_TRUE(retained.restore());
+    saver.update(0);
+    EXPECT_EQ(saver.mSaves, (std::vector<std::string>{"Autosave"}));
+    saver.update(0);
+    EXPECT_EQ(saver.mSaves.size(), 1u);
+
+    // A request from an incoming game cannot appear in the retained original.
+    auto incoming = saver.retainRuntime();
+    ASSERT_TRUE(incoming.detach());
+    saver.resumeGame();
+    saver.requestAutosave();
+    ASSERT_TRUE(incoming.restore());
+    saver.update(0);
+    EXPECT_EQ(saver.mSaves.size(), 1u);
+
+    struct RestoreSetting
+    {
+        bool mValue = Settings::saves().mAutosave;
+        ~RestoreSetting() { Settings::saves().mAutosave.set(mValue); }
+    } restoreSetting;
+    Settings::saves().mAutosave.set(false);
+    saver.requestAutosave();
+    saver.update(0);
+    EXPECT_EQ(saver.mSaves.size(), 1u);
+}
+
 TEST(OblivionDialogueMenu, CharacterGenerationHistoryClearsWithPlayer)
 {
     MenuFixture f;
@@ -685,7 +1749,7 @@ TEST(OblivionDialogueMenu, CharacterGenerationHistoryClearsWithPlayer)
 
 namespace
 {
-    std::string switchRecords(bool enableParents = false)
+    std::string switchRecords(bool enableParents = false, const std::string& switchScript = {})
     {
         const std::array<std::uint32_t, 6> local{1, 0, 0, 0, 1, 0};
         const std::array<float, 6> position{};
@@ -711,8 +1775,8 @@ namespace
                 + sub(ESM::fourCC("SCRI"), bytes(0xb01u)))
             + record(ESM4::REC_SCPT, 0xb01, sub(ESM::fourCC("EDID"), std::string("TestSwitchScript\0", 17))
                 + sub(ESM::fourCC("SLSD"), bytes(local)) + sub(ESM::fourCC("SCVR"), std::string("calls\0", 6))
-                + sub(ESM::fourCC("SCTX"), "scn TestSwitchScript\nshort calls\nbegin onActivate\n"
-                    "if IsActionRef TutorialUserRef == 1\nset calls to calls + 1\nendif\nend\n"))
+                + sub(ESM::fourCC("SCTX"), switchScript.empty() ? "scn TestSwitchScript\nshort calls\nbegin onActivate\n"
+                    "if IsActionRef TutorialUserRef == 1\nset calls to calls + 1\nendif\nend\n" : switchScript))
             + children(0, record(ESM4::REC_CELL, 0xb04, sub(ESM::fourCC("EDID"), std::string("SwitchTestRoom\0", 15))
                 + sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior})))
             + children(6, children(9, switchRef + extras
@@ -731,8 +1795,8 @@ namespace
         MWWorld::Ptr mActor, mSwitch;
         explicit SwitchFixture(bool shifted = false, bool enableParents = false,
             const std::string& extraRecords = {}, unsigned extraCount = 0, bool selectPackage = true,
-            const std::string& actorScript = {})
-            : mFixture(shifted, false, !actorScript.empty(), actorScript, {}, switchRecords(enableParents) + extraRecords,
+            const std::string& actorScript = {}, const std::string& switchScript = {})
+            : mFixture(shifted, false, !actorScript.empty(), actorScript, {}, switchRecords(enableParents, switchScript) + extraRecords,
                 (enableParents ? 8 : 6) + extraCount)
         {
             auto& world = mFixture.mWorld;
@@ -807,6 +1871,115 @@ namespace
     };
 }
 
+TEST(OblivionTutorialAction, FreshOffscreenActorsSpreadWorkAndRestoreTheirDeadlines)
+{
+    const auto group = [](unsigned kind, unsigned label, const std::string& data) {
+        return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
+            + bytes(label) + bytes(kind) + bytes(0u) + data;
+    };
+    std::string actors;
+    for (unsigned id = 0xe00; id < 0xe20; ++id)
+        actors += record(ESM4::REC_ACHR, id, sub(ESM::fourCC("NAME"), bytes(0x800u))
+            + sub(ESM::fourCC("DATA"), bytes(std::array<float, 6>{})));
+    const auto extra = group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xe40,
+        sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior}))))
+        + group(6, 0xe40, group(9, 0xe40, actors));
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted, false, extra, 33, false);
+        auto& ai = *f.mFixture.mWorld.getOblivionAiService();
+        ai.updateUnloaded(.016f);
+        unsigned selected = 0;
+        for (unsigned id = 0xe00; id < 0xe20; ++id)
+        {
+            ASSERT_NE(ai.state(key(id)), nullptr);
+            selected += ai.state(key(id))->mSelectionGeneration != 0;
+        }
+        EXPECT_GT(selected, 0u);
+        EXPECT_LT(selected, 32u); // Startup work must not share one frame.
+        ai.updateUnloaded(.25f);
+        std::map<ESM::FormKey, float> deadlines;
+        for (unsigned id = 0xe00; id < 0xe20; ++id)
+        {
+            EXPECT_NE(ai.state(key(id))->mSelectionGeneration, 0u); // No starvation.
+            deadlines.emplace(key(id), ai.state(key(id))->mNextLowProcessTick);
+        }
+        const auto saved = ESM4::RuntimeState::deserializeBinary(f.capture().serializeBinary());
+        ai.clear();
+        ai.restore(saved);
+        for (const auto& [actor, deadline] : deadlines)
+            EXPECT_EQ(ai.state(actor)->mNextLowProcessTick, deadline);
+    }
+}
+
+TEST(OblivionTutorialAction, ScriptedActivationHonorsActivatorAndRunScriptArguments)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted, false, {}, 0, false);
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = key(0xb02);
+        context.mActionReference = ESM::FormKey::dynamic("player", 1);
+        const ObScript::ReferenceValue actor{key(0xa00), "user"};
+        // Explicit reference overrides the callback's Player action reference.
+        scripts.call("Activate", {}, {actor, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        scripts.call("Activate", {}, {actor, std::int64_t(0)}, context, {});
+        scripts.call("Activate", {}, {actor}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        context.mActionReference = key(0xa00);
+        scripts.call("Activate", {}, {ObScript::ReferenceValue{{}, "null"}, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 2);
+        scripts.call("Activate", ObScript::ReferenceValue{{}, "null"}, {actor, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 2); // A null parent ends the chain instead of targeting self.
+    }
+}
+
+TEST(OblivionTutorialAction, ScriptedTrapActivatorCanBeANonActorAndDefaultActivationDoesNotRecurse)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted, false, {}, 0, false, {},
+            "scn TestSwitchScript\nshort calls\nbegin onActivate\n"
+            "if IsActionRef TestSwitchRef == 1\nset calls to calls + 1\nendif\n"
+            "Activate\nend\n");
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = key(0xa00);
+        context.mActionReference = ESM::FormKey::dynamic("player", 1);
+        const ObScript::ReferenceValue wire{key(0xb02), "wire"};
+        scripts.call("Activate", wire, {wire, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        scripts.call("Activate", wire, {wire, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 2);
+    }
+}
+
+TEST(OblivionTutorialAction, DefaultPlayerActivationInsideOnActivateDoesNotReenterScript)
+{
+    for (bool shifted : {false, true})
+    {
+        TestingOpenMW::InventoryWindowManager windows;
+        int defaultActions = 0;
+        windows.mMessageCallback = [&](std::string_view, MWGui::ShowInDialogueMode) { ++defaultActions; };
+        SwitchFixture f(shifted, false, {}, 0, false, {},
+            "scn TestSwitchScript\nshort calls\nbegin onActivate\n"
+            "set calls to calls + 1\nActivate\nend\n");
+        f.mFixture.mEnvironment.setWindowManager(windows);
+        f.mFixture.mWorld.initializePhysics(new osg::Group);
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = key(0xb02);
+        const ObScript::ReferenceValue player{ESM::FormKey::dynamic("player", 1), "player"};
+        scripts.call("Activate", {}, {player, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        scripts.call("Activate", {}, {player, std::int64_t(0)}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        EXPECT_EQ(defaultActions, 2);
+    }
+}
+
 TEST(OblivionTutorialAction, PlacedSwitchUsesActualActorAndCommitsOnceAfterIteration)
 {
     SwitchFixture f;
@@ -873,6 +2046,86 @@ TEST(OblivionTutorialAction, RestoreResumesNeverSelectedActors)
                 EXPECT_EQ(ai.state(f.mActor)->mSource, ESM4::PackageSource::Base);
                 EXPECT_GT(ai.state(f.mActor)->mSelectionGeneration, 0u);
             }
+}
+
+TEST(OblivionTutorialAction, FollowHoldsWithinAuthoredRangeAndRoutesToTheLeader)
+{
+    for (const bool shifted : {false, true})
+        for (const bool high : {false, true})
+        {
+            SCOPED_TRACE(shifted);
+            SCOPED_TRACE(high);
+            const auto follow = record(ESM4::REC_PACK, 0xd60,
+                sub(ESM::fourCC("PKDT"), bytes(0u) + std::string{char(1), char(0xff), char(0), char(20)})
+                + sub(ESM::fourCC("PSDT"), std::string{char(0xff), char(0xff), char(0), char(0xff)} + bytes(0u))
+                + sub(ESM::fourCC("PTDT"), bytes(0u) + bytes(0x14u) + bytes(350u)));
+            SwitchFixture f(shifted, false, follow, 1, false);
+            auto& world = f.mFixture.mWorld;
+            MWMechanics::MechanicsManager mechanics;
+            f.mFixture.mEnvironment.setMechanicsManager(mechanics);
+            world.initializePhysics(new osg::Group);
+            auto pack = *world.getStore().search<ESM4::AIPackage>(key(0xd60));
+            // Only Oblivion.esm:14 is a native Player alias; this fixture
+            // is headless.esm, so bind its target to the runtime identity.
+            pack.mTargetData.mReferenceKey = ESM::FormKey::dynamic("player", 1);
+            world.getStore().getWritable<ESM4::AIPackage>().insertStatic(pack, key(0xd60));
+            auto& ai = *world.getOblivionAiService();
+            const auto initial = f.mActor.getRefData().getPosition().asVec3();
+            ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd60)));
+            EXPECT_EQ(ai.state(f.mActor)->mDestinationPosition.asVec3(), initial);
+            for (int n = 0; n < 8; ++n) ai.update(f.mActor, .25f, high);
+            EXPECT_EQ(ai.state(f.mActor)->mPhase, ESM4::PackagePhase::Wait);
+            EXPECT_EQ(f.mActor.getRefData().getPosition().asVec3(), initial);
+            auto position = world.getPlayerPtr().getRefData().getPosition();
+            position.pos[0] = 1000;
+            world.getPlayerPtr().getRefData().setPosition(position);
+            for (int n = 0; n < 8; ++n) ai.update(f.mActor, .25f, high);
+            EXPECT_EQ(ai.state(f.mActor)->mDestinationPosition.asVec3(), position.asVec3());
+            EXPECT_EQ(ai.state(f.mActor)->mTarget, ESM::FormKey::dynamic("player",1));
+            EXPECT_EQ(ai.state(f.mActor)->mPackage, key(0xd60));
+        }
+}
+
+TEST(OblivionTutorialAction, RemoveScriptPackageResumesAuthoredListAndContinuesOriginalResult)
+{
+    for (const bool shifted : {false, true})
+        for (const bool hasBase : {false, true})
+        {
+            SCOPED_TRACE(shifted);
+            SCOPED_TRACE(hasBase);
+            const auto pack = [&](unsigned id, unsigned flags, char type) {
+                return record(ESM4::REC_PACK, id,
+                    sub(ESM::fourCC("PKDT"), bytes(flags) + std::string{type, char(0xff), char(0), char(20)})
+                    + sub(ESM::fourCC("PSDT"), std::string{char(0xff), char(0xff), char(0), char(0xff)} + bytes(0u))
+                    + sub(ESM::fourCC("PLDT"), bytes(0u) + bytes(0xb02u) + bytes(0u)));
+            };
+            SwitchFixture f(shifted, false, pack(0xd60, 4, 9) + pack(0xd61, 0, 6), 2, false,
+                "scn ActivationReceiver\nshort calls\nbegin onActivate\n"
+                "RemoveScriptPackage\nEvaluatePackage\nset calls to calls + 1\nend\n");
+            auto& world = f.mFixture.mWorld;
+            auto npc = *world.getStore().search<ESM4::Npc>(key(0x800));
+            npc.mAIPackageKeys = hasBase ? std::vector{key(0xd61)} : std::vector<ESM::FormKey>{};
+            world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+            auto& ai = *world.getOblivionAiService();
+            ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd60)));
+            ASSERT_EQ(ai.state(f.mActor)->mScriptPackage, key(0xd60));
+            auto saved = f.capture();
+            ai.restore(saved); // An override restored from a save is removable too.
+            auto& scripts = *world.getOblivionScriptManager();
+            ASSERT_TRUE(scripts.dispatchObjectEvent(f.mActor, "onactivate"));
+            EXPECT_EQ(scripts.scriptVariable(f.mActor.getCellRef().getFormKey(), 1), 1.f);
+            ASSERT_TRUE(ai.state(f.mActor)->mScriptPackage.isNull());
+            EXPECT_EQ(ai.state(f.mActor)->mPackage, hasBase ? key(0xd61) : ESM::FormKey{});
+            const auto generation = ai.state(f.mActor)->mSelectionGeneration;
+            ObScript::RuntimeContext context;
+            context.mSelf = f.mActor.getCellRef().getFormKey();
+            EXPECT_EQ(ObScript::asInteger(scripts.call("RemoveScriptPackage", {}, {}, context, {})), 0);
+            EXPECT_EQ(ai.state(f.mActor)->mSelectionGeneration, generation);
+            saved = f.capture();
+            ai.restore(saved);
+            EXPECT_TRUE(ai.state(f.mActor)->mScriptPackage.isNull());
+            EXPECT_EQ(ai.state(f.mActor)->mPackage, hasBase ? key(0xd61) : ESM::FormKey{});
+        }
 }
 
 TEST(OblivionTutorialAction, WaitingWanderReevaluatesHigherPriorityConditionalPackage)
@@ -1009,7 +2262,7 @@ namespace
     struct AnimatedDoorFixture : SwitchFixture
     {
         MWWorld::Ptr mDoor;
-        AnimatedDoorFixture()
+        explicit AnimatedDoorFixture(bool openByDefault = false)
         {
             auto& world = mFixture.mWorld;
             auto& store = world.getStore();
@@ -1019,6 +2272,9 @@ namespace
             base.mId = {0xc00, file};
             store.getWritable<ESM4::Door>().insertStatic(base, key(0xc00));
             ESM4::Reference ref{};
+            ref.mOpenByDefault = openByDefault;
+            ref.mIsLocked = true;
+            ref.mLockLevel = 100;
             ref.mId = {0xc01, file};
             ref.mFormKey = key(0xc01);
             ref.mBaseObj = base.mId;
@@ -1202,6 +2458,30 @@ TEST(OblivionEnableParent, NativeBitZeroOverridesOwnFlagAndCyclesAreExplicit)
     }
 }
 
+TEST(OblivionEnableParent, GetParentRefReturnsImmediateEnableParentRatherThanOwningCell)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted, true);
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        const auto query = [&](unsigned reference) {
+            ObScript::RuntimeContext context;
+            context.mSelf = key(reference);
+            return std::get<ObScript::ReferenceValue>(scripts.call("GetParentRef", {}, {}, context, {})).mKey;
+        };
+        EXPECT_EQ(query(0xb02), key(0xa00));
+        EXPECT_EQ(query(0xb06), key(0xa00)); // Inversion does not change parent identity.
+        EXPECT_EQ(query(0xb07), key(0xb06)); // Return the immediate parent, not the root.
+        EXPECT_TRUE(query(0xa00).isNull()); // Owning CELL is not an enable parent.
+        EXPECT_TRUE(query(0xdead).isNull());
+
+        ObScript::RuntimeContext context;
+        context.mSelf = key(0xb02);
+        const auto parent = scripts.call("GetParentRef", {}, {}, context, {});
+        EXPECT_NO_THROW(scripts.call("EvaluatePackage", parent, {}, context, {}));
+    }
+}
+
 TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChanges)
 {
     for (bool shifted : {false, true})
@@ -1245,6 +2525,11 @@ TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChange
         ObScript::RuntimeContext root; root.mSelf = f.mActor.getCellRef().getFormKey();
         world.getOblivionScriptManager()->call("Disable", {}, {}, root, {});
         check(false);
+        // Original GameMode scripts repeat the same command on every frame.
+        // No-op writes must retain root/child/inverted-child saved flags.
+        for (int repeat = 0; repeat < 3; ++repeat)
+            world.getOblivionScriptManager()->call("Disable", {}, {}, root, {});
+        check(false);
         auto& ai = *world.getOblivionAiService();
         world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
         ASSERT_NE(ai.state(root.mSelf), nullptr);
@@ -1255,6 +2540,9 @@ TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChange
         EXPECT_EQ(after.mSelectionGeneration, before.mSelectionGeneration);
         EXPECT_EQ(after.mActionTimer, before.mActionTimer);
         world.getOblivionScriptManager()->call("Enable", {}, {}, root, {});
+        check(true);
+        for (int repeat = 0; repeat < 3; ++repeat)
+            world.getOblivionScriptManager()->call("Enable", {}, {}, root, {});
         check(true);
     }
 }
@@ -1362,7 +2650,8 @@ namespace
 {
     struct BoundDefinitionFixture : SwitchFixture
     {
-        explicit BoundDefinitionFixture(bool shifted) : SwitchFixture(shifted)
+        explicit BoundDefinitionFixture(bool shifted, std::uint32_t weaponEffect = ESM4::EFI_BWMA)
+            : SwitchFixture(shifted)
         {
             auto& store = mFixture.mWorld.getStore();
             auto npc = *store.search<ESM4::Npc>(key(0x800));
@@ -1373,7 +2662,7 @@ namespace
             store.getWritable<ESM4::Armor>().insertStatic(armor,key(0xe11));
             ESM4::Weapon weapon{}; weapon.mId = {0xe12,file}; weapon.mData.health = 4200;
             store.getWritable<ESM4::Weapon>().insertStatic(weapon,key(0xe12));
-            const std::array<std::uint32_t,3> codes{ESM4::EFI_MYTH,ESM4::EFI_MYHL,ESM4::EFI_BWMA};
+            const std::array<std::uint32_t,3> codes{ESM4::EFI_MYTH,ESM4::EFI_MYHL,weaponEffect};
             ESM4::Spell spell{}; spell.mId = {0xe00,file}; spell.mFormKey = key(0xe00);
             spell.mData = ESM4::SpellData{4,0,0,1,{}};
             for (unsigned i=0;i<3;++i)
@@ -1423,8 +2712,9 @@ namespace
 TEST(OblivionBoundItems, AbilityDefinitionsResolveItemsAndSlotsWithoutVmodOrDurationReinterpretation)
 {
     for (bool shifted : {false,true})
+    for (const auto weaponEffect : {ESM4::EFI_BWMA, ESM4::EFI_BWDA})
     {
-        BoundDefinitionFixture f(shifted); auto& store = f.mFixture.mWorld.getStore();
+        BoundDefinitionFixture f(shifted, weaponEffect); auto& store = f.mFixture.mWorld.getStore();
         const auto inputs = MWWorld::resolveOblivionNpcBoundAbilityInputs(store,key(0x800));
         ASSERT_EQ(inputs.size(),1u); EXPECT_EQ(inputs.front().mSpell,key(0xe00));
         ASSERT_EQ(inputs.front().mEffects.size(),3u);
@@ -1484,18 +2774,18 @@ TEST(OblivionBoundItems, InitialGrantWaitsForPlayerPlacementAndPublishesOnceOnRe
         auto* cell = world.getPlayerPtr().getCell();
         ASSERT_NE(cell, nullptr);
         world.getPlayer().setCell(nullptr);
-        const auto before = world.captureOblivionActorInventory(f.mActor);
+        const auto before = world.captureOblivionInventory(f.mActor);
         EXPECT_NO_THROW(world.activateOblivionActor(f.mActor));
-        EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), before);
+        EXPECT_EQ(world.captureOblivionInventory(f.mActor), before);
         world.getPlayer().setCell(cell);
         world.updateOblivionBoundEquipment(f.mActor);
-        const auto granted = world.captureOblivionActorInventory(f.mActor);
+        const auto granted = world.captureOblivionInventory(f.mActor);
         ASSERT_EQ(granted.size(), 3u);
         const auto saved = world.captureOblivionRuntimeState();
         ASSERT_EQ(saved.mNativeBoundAbilities.at(f.mActor.getCellRef().getFormKey()).size(), 1u);
         EXPECT_NO_THROW(saved.serializeBinary());
         world.updateOblivionBoundEquipment(f.mActor);
-        EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), granted);
+        EXPECT_EQ(world.captureOblivionInventory(f.mActor), granted);
         EXPECT_EQ(world.captureOblivionRuntimeState().mNativeBoundAbilities, saved.mNativeBoundAbilities);
     }
 }
@@ -1509,7 +2799,7 @@ TEST(OblivionBoundItems, LiveGrantPublishesOwnershipInventoryCacheAndEquipmentOb
         auto& world = f.mFixture.mWorld;
         // An ordinary item with the same base must remain separate from the
         // effect's new instance, including its original fractional condition.
-        ASSERT_EQ(world.oblivionAddActorItem(f.mActor, key(0xe10), 1), 1);
+        ASSERT_EQ(world.oblivionAddNativeInventoryItem(f.mActor, key(0xe10), 1), 1);
         ASSERT_TRUE(world.oblivionEquipActorItem(f.mActor, key(0xe10), true));
         auto& inventory = f.mActor.getClass().getInventoryStore(f.mActor);
         inventory.getSlot(MWWorld::InventoryStore::Slot_Cuirass)->getCellRef().setNativeItemCondition(121.5f);
@@ -1539,7 +2829,7 @@ TEST(OblivionBoundItems, LiveGrantPublishesOwnershipInventoryCacheAndEquipmentOb
         ASSERT_EQ(owned.size(), 1u);
         ASSERT_EQ(owned[0].mDisplacedEquipment.size(), 1u);
         EXPECT_EQ(owned[0].mDisplacedEquipment[0].mCondition, 121.5);
-        const auto snapshot = world.captureOblivionActorInventory(f.mActor);
+        const auto snapshot = world.captureOblivionInventory(f.mActor);
         ASSERT_EQ(snapshot.size(), 4u);
         EXPECT_EQ(ESM4::inventoryCount(snapshot, key(0xe10)), 2);
         for (auto it = inventory.begin(); it != inventory.end(); ++it)
@@ -1548,9 +2838,9 @@ TEST(OblivionBoundItems, LiveGrantPublishesOwnershipInventoryCacheAndEquipmentOb
             EXPECT_EQ(it->getContainerStore(), &inventory);
         }
         inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight)->getCellRef().setNativeItemCondition(4190.5f);
-        const auto worn = world.captureOblivionActorInventory(f.mActor);
+        const auto worn = world.captureOblivionInventory(f.mActor);
         world.updateOblivionBoundEquipment(f.mActor);
-        EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), worn);
+        EXPECT_EQ(world.captureOblivionInventory(f.mActor), worn);
         EXPECT_EQ(observer.mCalls, 1u); // No repeat publication or repair.
         inventory.setInvListener(nullptr);
         const ESM::FormKeyResolver resolver(world.getContentFiles());
@@ -1575,14 +2865,14 @@ TEST(OblivionBoundItems, TerminalDeathRemovesGearButEssentialKnockoutRetainsIt)
         LiveBoundFixture f(false);
         auto& world = f.mFixture.mWorld;
         auto& combat = *world.getOblivionCombatService();
-        ASSERT_EQ(world.oblivionAddActorItem(f.mActor, key(0xe10), 1), 1);
+        ASSERT_EQ(world.oblivionAddNativeInventoryItem(f.mActor, key(0xe10), 1), 1);
         ASSERT_TRUE(world.oblivionEquipActorItem(f.mActor, key(0xe10), true));
         world.updateOblivionBoundEquipment(f.mActor);
-        const auto before = world.captureOblivionActorInventory(f.mActor);
+        const auto before = world.captureOblivionInventory(f.mActor);
         ASSERT_EQ(before.size(), 4u);
         ASSERT_TRUE(combat.killNonPlayer(f.mActor, ESM::FormKey::dynamic("player", 1), essential, {}));
         world.removeOblivionDeadBoundEquipment();
-        const auto after = world.captureOblivionActorInventory(f.mActor);
+        const auto after = world.captureOblivionInventory(f.mActor);
         if (essential)
         {
             EXPECT_EQ(after, before);
@@ -1597,8 +2887,54 @@ TEST(OblivionBoundItems, TerminalDeathRemovesGearButEssentialKnockoutRetainsIt)
             EXPECT_TRUE(world.captureOblivionRuntimeState().mNativeBoundAbilities.empty());
             EXPECT_EQ(MWClass::ESM4Npc::getEquippedArmor(f.mActor).size(), 1u);
             world.updateOblivionBoundEquipment(f.mActor);
-            EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), after);
+            EXPECT_EQ(world.captureOblivionInventory(f.mActor), after);
         }
+    }
+}
+
+TEST(OblivionBoundItems, DeathCleanupIncludesDispositionActorsRegisteredAfterTheGrant)
+{
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        LiveBoundFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        world.updateOblivionBoundEquipment(f.mActor);
+        ASSERT_FALSE(world.captureOblivionRuntimeState().mNativeBoundAbilities.empty());
+
+        // The prison dialogue changes a newly encountered NPC's disposition
+        // after the assassins' bound gear has already been granted.
+        auto npc = *store.search<ESM4::Npc>(key(0x800));
+        npc.mId.mIndex = 0xe30;
+        npc.mFormKey = key(0xe30);
+        npc.mSpell.clear();
+        store.getWritable<ESM4::Npc>().insertStatic(npc, key(0xe30));
+        const auto* base = store.search<ESM4::Npc>(key(0xe30));
+        ESM4::ActorCharacter placed{};
+        placed.mId = {0xa02, base->mId.mContentFile};
+        placed.mFormKey = key(0xa02);
+        placed.mBaseObj = base->mId;
+        placed.mBaseKey = key(0xe30);
+        store.getWritable<ESM4::ActorCharacter>().insertStatic(placed, placed.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(placed, base);
+        auto& cell = *f.mActor.getCell();
+        const MWWorld::Ptr lateActor(cell.insert(&live), &cell);
+        world.getWorldModel().registerPtr(lateActor);
+        ASSERT_TRUE(world.activateOblivionActor(lateActor));
+        const auto lateKey = lateActor.getCellRef().getFormKey();
+        ASSERT_TRUE(world.modifyOblivionDisposition(lateKey, lateKey, 20));
+        const auto before = world.captureOblivionRuntimeState();
+        EXPECT_NO_THROW(before.serializeBinary());
+        ASSERT_TRUE(world.getOblivionCombatService()->killNonPlayer(f.mActor, lateKey, false, {}));
+        ASSERT_NO_THROW(world.removeOblivionDeadBoundEquipment());
+        const auto after = world.captureOblivionRuntimeState();
+        EXPECT_TRUE(after.mNativeBoundAbilities.empty());
+        EXPECT_EQ(after.mDispositionModifiers, before.mDispositionModifiers);
+        EXPECT_FALSE(after.mPendingDeathEvents.empty());
+        EXPECT_NO_THROW(after.serializeBinary());
+        for (const auto& item : world.captureOblivionInventory(f.mActor))
+            EXPECT_FALSE(item.mBoundSource);
     }
 }
 
@@ -1606,17 +2942,17 @@ TEST(OblivionBoundItems, SourceRemovalRestoresOrdinaryItemAndGenericRemovalRejec
 {
     LiveBoundFixture f(false);
     auto& world = f.mFixture.mWorld;
-    ASSERT_EQ(world.oblivionAddActorItem(f.mActor, key(0xe10), 1), 1);
+    ASSERT_EQ(world.oblivionAddNativeInventoryItem(f.mActor, key(0xe10), 1), 1);
     ASSERT_TRUE(world.oblivionEquipActorItem(f.mActor, key(0xe10), true));
     world.updateOblivionBoundEquipment(f.mActor);
-    const auto before = world.captureOblivionActorInventory(f.mActor);
-    EXPECT_THROW(world.oblivionRemoveActorItem(f.mActor, key(0xe12), 1), std::invalid_argument);
-    EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), before);
+    const auto before = world.captureOblivionInventory(f.mActor);
+    EXPECT_THROW(world.oblivionRemoveNativeInventoryItem(f.mActor, key(0xe12), 1), std::invalid_argument);
+    EXPECT_EQ(world.captureOblivionInventory(f.mActor), before);
     auto npc = *world.getStore().search<ESM4::Npc>(key(0x800));
     npc.mSpell.clear();
     world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
     world.updateOblivionBoundEquipment(f.mActor);
-    const auto after = world.captureOblivionActorInventory(f.mActor);
+    const auto after = world.captureOblivionInventory(f.mActor);
     ASSERT_EQ(after.size(), 1u);
     EXPECT_EQ(after[0].mBase, key(0xe10));
     EXPECT_EQ(after[0].mEquippedSlots, 0x3cu);
@@ -1680,6 +3016,11 @@ TEST(OblivionMeleeScripts, AcquiredHitPublishesDamageBeforeFilteredCallbackAndCa
         const auto npcSource = attacker;
         if (playerHit)
         {
+            // A committed Player punch now consults its winning native SKIL.
+            ESM4::Skill hand{};
+            hand.mId = {0xb31, base->mId.mContentFile}; hand.mIndex = 17;
+            hand.mData = ESM4::SkillData{17, 0, 0, {.6f, 1.f}};
+            store.getWritable<ESM4::Skill>().insertStatic(hand, key(0xb31));
             auto playerSource = *base;
             playerSource.mId = {7,base->mId.mContentFile + 1};
             playerSource.mFormKey = ESM::FormKey::content("Oblivion.esm",7);
@@ -1814,6 +3155,68 @@ TEST(OblivionMeleeScripts, AcquiredHitPublishesDamageBeforeFilteredCallbackAndCa
         EXPECT_FALSE(MWMechanics::commitOblivionMeleeContact(world, strike, attacker, f.mActor, 200, 0, 0, false));
         EXPECT_EQ(combat.getNonPlayerValue(f.mActor, 8), after);
         EXPECT_EQ(scripts.scriptVariable(victim, 1), expected);
+    }
+}
+
+TEST(OblivionTutorialAction, NativeResurrectionRestoresBaseInventoryAndPreservesPositionAndDeathHistory)
+{
+    for (const bool shifted : {false, true})
+    {
+        const auto gold = record(ESM4::REC_MISC, 0xf,
+            sub(ESM::fourCC("EDID"), std::string("Gold001\0", 8))
+            + sub(ESM::fourCC("DATA"), bytes(1u) + bytes(0.f)));
+        SwitchFixture f(shifted, false, gold, 1, false);
+        auto& world = f.mFixture.mWorld;
+        auto& combat = *world.getOblivionCombatService();
+        auto& scripts = *world.getOblivionScriptManager();
+        auto& store = world.getStore();
+        MWClass::Miscellaneous::registerSelf();
+        auto npc = *store.search<ESM4::Npc>(key(0x800));
+        const auto goldId = ESM::FormId{0xf, npc.mId.mContentFile}.toUint32();
+        npc.mInventory = {{goldId, 3}};
+        store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+        auto& target = f.mActor.getClass().getInventoryStore(f.mActor);
+        MWWorld::ManualRef goldStack(store, MWWorld::ContainerStore::sGoldId, 17);
+        target.clear();
+        target.add(goldStack.getPtr(), 17, false);
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        scripts.call("SetEssential", {}, {ObScript::ReferenceValue{key(0x800), {}}, std::int64_t(0)}, context, {});
+        const auto health = combat.getNonPlayerValue(f.mActor, 8);
+        auto position = f.mActor.getRefData().getPosition();
+        position.pos[0] = 1100;
+        f.mActor.getRefData().setPosition(position);
+        const auto count = [&] { return target.count(MWWorld::ContainerStore::sGoldId); };
+        ASSERT_EQ(count(), 17);
+        for (const bool preserve : {false, true})
+        {
+            ASSERT_TRUE(combat.setProcessAlerted(context.mSelf, true));
+            ASSERT_TRUE(world.killOblivionActor(f.mActor, ESM::FormKey::dynamic("player", 1)));
+            const auto deaths = combat.getDeadCount(key(0x800));
+            const auto queued = world.captureOblivionRuntimeState().mPendingDeathEvents;
+            ASSERT_TRUE(f.mActor.getClass().getCreatureStats(f.mActor).isDead());
+            // A later unresolved base item must reject before publishing any reset.
+            npc.mInventory.push_back({ESM::FormId{0xdead, npc.mId.mContentFile}.toUint32(), 1});
+            store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+            EXPECT_THROW(scripts.call("Resurrect", {}, {}, context, {}), ObScript::RuntimeError);
+            EXPECT_TRUE(f.mActor.getClass().getCreatureStats(f.mActor).isDead());
+            EXPECT_EQ(combat.getDeadCount(key(0x800)), deaths);
+            EXPECT_EQ(count(), preserve ? 3 : 17);
+            npc.mInventory.pop_back();
+            store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+            // With no attached body, argument1 follows the original full-reset fallback.
+            ASSERT_NO_THROW(scripts.call("Resurrect", {}, {std::int64_t(preserve)}, context, {}));
+            EXPECT_FALSE(f.mActor.getClass().getCreatureStats(f.mActor).isDead());
+            EXPECT_EQ(combat.getNonPlayerValue(f.mActor, 8), health);
+            EXPECT_EQ(count(), 3);
+            EXPECT_EQ(f.mActor.getRefData().getPosition().pos[0], 1100);
+            EXPECT_EQ(combat.getDeadCount(key(0x800)), deaths);
+            EXPECT_EQ(world.captureOblivionRuntimeState().mPendingDeathEvents, queued);
+            EXPECT_EQ(combat.findActorValues(context.mSelf)->mProcess, ESM4::ActorValueProcess::Low);
+            EXPECT_FALSE(combat.getProcessAlerted(context.mSelf));
+            EXPECT_FALSE(combat.findMeleeState(context.mSelf));
+            EXPECT_FALSE(combat.actorRagdoll(context.mSelf));
+        }
     }
 }
 
@@ -2016,7 +3419,6 @@ TEST(OblivionConversation, LinkedNpcResponsesUseSpeakerTargetConditionsResultsAn
             return ObScript::asInteger(scripts->call("StartConversation",{},args,context,{}));
         };
         EXPECT_EQ(start(key(0xa00)),0); // Self is not a conversation partner.
-        EXPECT_EQ(start(ESM::FormKey::dynamic("player",1)),0);
         EXPECT_EQ(start(listener.getCellRef().getFormKey()),3);
         auto saved = f.mFixture.mWorld.captureOblivionRuntimeState();
         const auto quest = std::ranges::find(saved.mQuests,key(0xd10),&ESM4::RuntimeQuestState::mQuest);
@@ -2362,5 +3764,565 @@ TEST(OblivionTutorialAction, PackageDoneActorValueNameDoesNotResolveDialogueTopi
         ASSERT_TRUE(scripts.dispatchObjectEvent(f.mActor, "onpackagedone"));
         EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(f.mActor, 34), 50.f);
         EXPECT_EQ(scripts.scriptVariable(f.mActor.getCellRef().getFormKey(), 1), 50.f);
+    }
+}
+
+TEST(OblivionBoundItems, BoundDaggerRequiresWeaponAssociation)
+{
+    BoundDefinitionFixture f(false, ESM4::EFI_BWDA);
+    auto& store = f.mFixture.mWorld.getStore();
+    const auto inputs = MWWorld::resolveOblivionNpcBoundAbilityInputs(store, key(0x800));
+    ASSERT_EQ(inputs.size(), 1u);
+    ASSERT_EQ(inputs.front().mEffects.size(), 3u);
+    EXPECT_EQ(inputs.front().mEffects.back().mEffectCode, ESM4::EFI_BWDA);
+    EXPECT_EQ(inputs.front().mEffects.back().mItem.mEquippedSlots, ESM4::InventorySlotWeapon);
+    auto effect = *store.get<ESM4::EffectSetting>().searchStatic(key(0xe22));
+    effect.mData->mFlags = 0x22112; // An armor association cannot supply a dagger.
+    store.getWritable<ESM4::EffectSetting>().insertStatic(effect, key(0xe22));
+    EXPECT_THROW(MWWorld::resolveOblivionNpcBoundAbilityInputs(store, key(0x800)), std::invalid_argument);
+}
+
+TEST(OblivionBoundItems, LaterWeaponAbilityWinsWithoutDroppingEarlierArmorOrSourceIndices)
+{
+    for (const bool daggerLast : {false, true})
+    {
+        SCOPED_TRACE(daggerLast);
+        BoundDefinitionFixture f(false);
+        auto& store = f.mFixture.mWorld.getStore();
+        auto daggerEffect = *store.get<ESM4::EffectSetting>().searchStatic(key(0xe22));
+        daggerEffect.mId = {0xe30, daggerEffect.mId.mContentFile};
+        daggerEffect.mFormKey = key(0xe30);
+        daggerEffect.mEffectCode = ESM4::EFI_BWDA;
+        store.getWritable<ESM4::EffectSetting>().insertStatic(daggerEffect, key(0xe30));
+        auto daggerSpell = *store.get<ESM4::Spell>().searchStatic(key(0xe00));
+        daggerSpell.mId = {0xe01, daggerSpell.mId.mContentFile};
+        daggerSpell.mFormKey = key(0xe01);
+        daggerSpell.mEffects = {daggerSpell.mEffects.back()};
+        daggerSpell.mEffects.front().mId = ESM4::EFI_BWDA;
+        store.getWritable<ESM4::Spell>().insertStatic(daggerSpell, key(0xe01));
+        auto npc = *store.search<ESM4::Npc>(key(0x800));
+        const auto mace = store.get<ESM4::Spell>().searchStatic(key(0xe00))->mId;
+        npc.mSpell = daggerLast ? std::vector<ESM::FormId>{mace, daggerSpell.mId}
+                               : std::vector<ESM::FormId>{daggerSpell.mId, mace};
+        store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+        const auto inputs = MWWorld::resolveOblivionNpcBoundAbilityInputs(store, key(0x800));
+        ASSERT_EQ(inputs.size(), daggerLast ? 2u : 1u);
+        ASSERT_GE(inputs.front().mEffects.size(), 2u);
+        EXPECT_EQ(inputs.front().mEffects[0].mEffectCode, ESM4::EFI_MYTH);
+        EXPECT_EQ(inputs.front().mEffects[1].mEffectCode, ESM4::EFI_MYHL);
+        unsigned weapons = 0;
+        for (const auto& ability : inputs)
+            for (const auto& effect : ability.mEffects)
+                if (effect.mItem.mEquippedSlots == ESM4::InventorySlotWeapon)
+                {
+                    ++weapons;
+                    EXPECT_EQ(effect.mItem.mBoundSource, (ESM4::BoundItemSource{
+                        key(daggerLast ? 0xe01 : 0xe00), daggerLast ? 0u : 2u}));
+                }
+        EXPECT_EQ(weapons, 1u);
+    }
+}
+
+TEST(OblivionTutorialDoor, DefaultOpenPoseRetainsLockAndSavedCloseOverridesAuthoredOpen)
+{
+    AnimatedDoorFixture f(true);
+    auto& world = f.mFixture.mWorld;
+    EXPECT_EQ(f.query(), 1);
+    EXPECT_TRUE(f.mDoor.getCellRef().isLocked());
+    auto snapshot = world.captureOblivionRuntimeState();
+    const auto findDoor = [](auto& state) -> auto& {
+        return *std::find_if(state.mReferences.begin(), state.mReferences.end(),
+            [](const auto& ref) { return ref.mKey == key(0xc01); });
+    };
+    const auto& captured = findDoor(snapshot);
+    EXPECT_EQ(std::get<std::string>(captured.mCustomState.at("obscript.animation_group")), "open");
+    EXPECT_EQ(std::get<double>(captured.mCustomState.at("obscript.animation_progress")), 1.0);
+    EXPECT_EQ(captured.mLockLevel, 100);
+    EXPECT_NO_THROW(world.prepareOblivionSaveState(
+        ESM4::RuntimeState::deserializeBinary(snapshot.serializeBinary())));
+    // The same animation owner used by scripts replaces the initial pose.
+    auto& pose = f.mDoor.getRefData().getAnimationState().mScriptedAnims.front();
+    pose.mGroup = "close";
+    pose.mTime = 1.f;
+    world.getOblivionScriptManager()->persistAnimationState(key(0xc01), "close", 1, false, true);
+    EXPECT_EQ(f.query(), 3);
+    snapshot = world.captureOblivionRuntimeState();
+    EXPECT_EQ(std::get<std::string>(findDoor(snapshot).mCustomState.at("obscript.animation_group")), "close");
+    EXPECT_TRUE(f.mDoor.getCellRef().isLocked());
+}
+
+TEST(OblivionTutorialGreeting, NativeFightScoreDistinguishesFriendlyPositiveAggressionWithoutStartingCombat)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& combat = *world.getOblivionCombatService();
+        // The headless fixture's Player form is800; supply the canonical
+        // constructor input explicitly, as the native actor-stats fixtures do.
+        ESM4::Npc playerForm{};
+        playerForm.mId = {7, 0};
+        playerForm.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+        playerForm.mIsTES4 = true;
+        playerForm.mData.attribs = {40,40,40,40,40,40,40,40};
+        playerForm.mData.health = 100;
+        playerForm.mBaseConfig.tes4.baseSpell = 80;
+        playerForm.mBaseConfig.tes4.fatigue = 160;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(playerForm, playerForm.mFormKey);
+        combat.initializePlayerActor(world.getPlayer(), world.getStore());
+        auto values = *combat.findActorValues(ESM::FormKey::dynamic("player", 1));
+        values.mBounty.emplace();
+        values.mReputation.emplace();
+        combat.publishPlayerValues(world.getPlayer(), values,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        const std::array<MWWorld::Ptr, 1> residents{f.mActor};
+        const auto random = combat.combatRandomState();
+        for (int aggression : {0, 5, 100})
+        {
+            combat.setNonPlayerBaseValue(f.mActor, 33, aggression, residents);
+            const auto score = MWMechanics::oblivionPlayerFightScore(world, f.mActor);
+            ASSERT_TRUE(score);
+            if (aggression == 100) EXPECT_GT(*score, 0);
+            else EXPECT_LE(*score, 0);
+            EXPECT_FALSE(world.hasOblivionCombatController(f.mActor.getCellRef().getFormKey()).value_or(false));
+            EXPECT_EQ(combat.combatRandomState(), random);
+        }
+        EXPECT_FALSE(MWMechanics::oblivionPlayerFightScore(world, {}));
+    }
+}
+
+TEST(OblivionTutorialAction, PackageWaitPersistsAndStopWaitingResumesWithoutReplacingSelection)
+{
+    for (const bool shifted : {false, true})
+        for (const bool high : {false, true})
+        {
+            SCOPED_TRACE(shifted);
+            SCOPED_TRACE(high);
+            const auto makePack = [](unsigned id, unsigned flags, char type) {
+                return record(ESM4::REC_PACK, id,
+                    sub(ESM::fourCC("PKDT"), bytes(flags) + std::string{type, char(0xff), char(0), char(20)})
+                    + sub(ESM::fourCC("PSDT"), std::string{char(0xff), char(0xff), char(0), char(0xff)} + bytes(0u))
+                    + sub(ESM::fourCC("PTDT"), bytes(0u) + bytes(0x14u) + bytes(350u)));
+            };
+            SwitchFixture f(shifted, false, makePack(0xd60, 0x10000, 1) + makePack(0xd61, 0, 1)
+                + makePack(0xd62, 0, 5), 3, false);
+            auto& world = f.mFixture.mWorld;
+            MWMechanics::MechanicsManager mechanics;
+            f.mFixture.mEnvironment.setMechanicsManager(mechanics);
+            world.initializePhysics(new osg::Group);
+            auto pack = *world.getStore().search<ESM4::AIPackage>(key(0xd60));
+            pack.mTargetData.mReferenceKey = ESM::FormKey::dynamic("player", 1);
+            world.getStore().getWritable<ESM4::AIPackage>().insertStatic(pack, key(0xd60));
+            auto& ai = *world.getOblivionAiService();
+            auto& scripts = *world.getOblivionScriptManager();
+            ObScript::RuntimeContext context; context.mSelf = f.mActor.getCellRef().getFormKey();
+            const auto command = [&](const char* name, unsigned id) {
+                return ObScript::asInteger(scripts.call(name, {}, {ObScript::ReferenceValue{key(id), {}}}, context, {}));
+            };
+            ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd60)));
+            ASSERT_TRUE(ai.isPackageWaiting(key(0xd60))); // Authored true.
+            const auto generation = ai.state(f.mActor)->mSelectionGeneration;
+            EXPECT_EQ(command("StopWaiting", 0xd61), 0); // Original second command is a no-op.
+            EXPECT_TRUE(ai.isPackageWaiting(key(0xd60)));
+            EXPECT_EQ(command("Wait", 0xd62), 0); // Wrong package type.
+            auto playerPosition = world.getPlayerPtr().getRefData().getPosition();
+            playerPosition.pos[0] = 1000;
+            world.getPlayerPtr().getRefData().setPosition(playerPosition);
+            const auto initial = f.mActor.getRefData().getPosition().asVec3();
+            for (int n = 0; n < 8; ++n) ai.update(f.mActor, .25f, high);
+            EXPECT_EQ(ai.state(f.mActor)->mPhase, ESM4::PackagePhase::Wait);
+            EXPECT_EQ(f.mActor.getRefData().getPosition().asVec3(), initial);
+            EXPECT_EQ(command("Wait", 0xd60), 1);
+            auto saved = f.capture();
+            ASSERT_TRUE(saved.mPackageWaiting.at(key(0xd60)));
+            ai.clear(); ai.restore(saved);
+            EXPECT_TRUE(ai.isPackageWaiting(key(0xd60)));
+            EXPECT_EQ(command("StopWaiting", 0xd60), 1);
+            EXPECT_FALSE(ai.isPackageWaiting(key(0xd60)));
+            EXPECT_EQ(command("StopWaiting", 0xd61), 0);
+            saved = f.capture();
+            EXPECT_FALSE(saved.mPackageWaiting.at(key(0xd60)));
+            ai.restore(saved);
+            EXPECT_FALSE(ai.isPackageWaiting(key(0xd60))); // False shadows authored true after restore.
+            for (int n = 0; n < 8; ++n) ai.update(f.mActor, .25f, high);
+            EXPECT_EQ(ai.state(f.mActor)->mDestinationPosition.asVec3(), playerPosition.asVec3());
+            EXPECT_EQ(ai.state(f.mActor)->mPackage, key(0xd60));
+            EXPECT_EQ(ai.state(f.mActor)->mSelectionGeneration, generation);
+            saved = f.capture(); saved.mPackageWaiting[key(0xd62)] = true;
+            EXPECT_THROW(ai.prepareRestore(saved), std::invalid_argument);
+            EXPECT_FALSE(ai.isPackageWaiting(key(0xd60)));
+            auto retained = ai.retainRuntime();
+            ASSERT_TRUE(retained.detach());
+            EXPECT_TRUE(ai.isPackageWaiting(key(0xd60))); // Detached graph sees content default.
+            ASSERT_TRUE(retained.restore());
+            EXPECT_FALSE(ai.isPackageWaiting(key(0xd60)));
+        }
+}
+
+TEST(OblivionTutorialAction, EnableQueryDiscardsBorrowedIndexAfterBackingStorageIsReleased)
+{
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        SwitchFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        std::vector<ESM4::RuntimeReferenceState> references(1);
+        references.front().mKey = key(0xa00);
+        references.front().mEnabled = false;
+        const MWMechanics::OblivionSavedReferenceIndex borrowed(references);
+        // Model a package action reallocating the World's saved reference
+        // vector before another actor queries enable-parent state. ASan must
+        // see no access to the old index's freed FormKeys.
+        references.clear();
+        references.shrink_to_fit();
+        EXPECT_EQ(world.getOblivionReferenceEnabled(key(0xa00), &borrowed), true);
+        f.mActor.getRefData().disable();
+        EXPECT_EQ(world.getOblivionReferenceEnabled(key(0xa00), &borrowed), false);
+    }
+}
+
+TEST(OblivionTutorialAction, FollowCellContextReevaluatesAndRestoredStaleRouteKeepsMandatoryPackage)
+{
+    MWClass::ESM4Door::registerSelf();
+    for (const bool shifted : {false, true})
+        for (const bool mandatory : {false, true})
+            for (const auto restoredPhase : {std::optional<ESM4::PackagePhase>{},
+                     std::optional{ESM4::PackagePhase::Path}, std::optional{ESM4::PackagePhase::Stalled}})
+                for (const bool high : {false, true})
+                {
+                    SCOPED_TRACE(shifted);
+                    SCOPED_TRACE(mandatory);
+                    SCOPED_TRACE(restoredPhase ? static_cast<unsigned>(*restoredPhase) : 999u);
+                    SCOPED_TRACE(high);
+                    const auto follow = [](unsigned id, unsigned flags, unsigned cell) {
+                        ESM4::AIPackage::CTDA condition{};
+                        condition.fnIndex = 67; // GetInCell
+                        condition.param1 = cell;
+                        condition.compValue = 1.f;
+                        return record(ESM4::REC_PACK, id,
+                            sub(ESM::fourCC("PKDT"), bytes(flags)
+                                + std::string{char(1), char(0xff), char(0), char(20)})
+                            + sub(ESM::fourCC("PSDT"),
+                                std::string{char(0xff), char(0xff), char(0), char(0xff)} + bytes(0u))
+                            + sub(ESM::fourCC("PTDT"), bytes(0u) + bytes(0x14u) + bytes(350u))
+                            + sub(ESM::fourCC("CTDA"), bytes(condition)));
+                    };
+                    SwitchFixture f(shifted, false, sameCellTeleportRecords(true, true)
+                        + follow(0xd60, mandatory ? 4 : 0, 0xb04) + follow(0xd61, 0, 0xd06), 10, false);
+                    auto& world = f.mFixture.mWorld;
+                    MWMechanics::MechanicsManager mechanics;
+                    f.mFixture.mEnvironment.setMechanicsManager(mechanics);
+                    world.initializePhysics(new osg::Group);
+                    auto& store = world.getStore();
+                    auto npc = *store.search<ESM4::Npc>(key(0x800));
+                    npc.mAIPackageKeys = {key(0xd60), key(0xd61)};
+                    store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+                    for (unsigned id : {0xd60u, 0xd61u})
+                    {
+                        auto pack = *store.search<ESM4::AIPackage>(key(id));
+                        pack.mTargetData.mReferenceKey = ESM::FormKey::dynamic("player", 1);
+                        store.getWritable<ESM4::AIPackage>().insertStatic(pack, key(id));
+                    }
+                    auto& ai = *world.getOblivionAiService();
+                    ASSERT_TRUE(ai.evaluatePackage(f.mActor));
+                    for (int n = 0; n < 8; ++n) ai.update(f.mActor, .25f, high);
+                    ASSERT_EQ(ai.state(f.mActor)->mPackage, key(0xd60));
+                    const auto generation = ai.state(f.mActor)->mSelectionGeneration;
+                    const auto file = f.mActor.get<ESM4::Npc>()->mBase->mId.mContentFile;
+                    auto& destination = world.getWorldModel().getCell(ESM::RefId(ESM::FormId{0xd06, file}));
+                    destination.load();
+                    // Use real CellStore/WorldModel transfer without a renderer.
+                    f.mActor = f.mActor.getCell()->moveTo(f.mActor, &destination);
+                    auto position = f.mActor.getRefData().getPosition();
+                    position.pos[0] = 1024;
+                    f.mActor.getRefData().setPosition(position);
+                    world.getPlayer().setCell(&destination);
+                    world.getPlayerPtr().getRefData().setPosition(position);
+                    if (restoredPhase)
+                    {
+                        auto saved = f.capture();
+                        auto& row = *std::find_if(saved.mActorAi.begin(), saved.mActorAi.end(),
+                            [](const auto& value) { return value.mActor == key(0xa00); });
+                        row.mCell = row.mLastValidCell = key(0xd06);
+                        row.mLastValidPosition = position;
+                        row.mPathgrid = key(0xd04); // Previous cell's consumed corridor.
+                        row.mPathNode = 1;
+                        row.mPhase = *restoredPhase;
+                        row.mRepathAttempts = *restoredPhase == ESM4::PackagePhase::Stalled ? 8 : 0;
+                        row.mInterruptionReason = *restoredPhase == ESM4::PackagePhase::Stalled
+                            ? "bounded-repath-exhausted" : "";
+                        ai.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+                    }
+                    for (int n = 0; n < 8; ++n) ai.update(f.mActor, .25f, high);
+                    const auto* after = ai.state(f.mActor);
+                    ASSERT_NE(after, nullptr);
+                    EXPECT_EQ(after->mCell, key(0xd06));
+                    EXPECT_EQ(after->mPackage, mandatory ? key(0xd60) : key(0xd61));
+                    EXPECT_TRUE(after->mScriptPackage.isNull());
+                    EXPECT_EQ(after->mTarget, ESM::FormKey::dynamic("player", 1));
+                    EXPECT_NE(after->mPhase, ESM4::PackagePhase::Stalled);
+                    EXPECT_TRUE(after->mInterruptionReason.empty());
+                    if (mandatory) EXPECT_EQ(after->mSelectionGeneration, generation);
+                    else EXPECT_GT(after->mSelectionGeneration, generation);
+                }
+}
+
+TEST(OblivionTutorialDoor, UnavailableForeignRouteNeverDrivesTowardInteriorCoordinates)
+{
+    MWClass::ESM4Door::registerSelf();
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        auto records = sameCellTeleportRecords(true, true, true);
+        const auto oldOwner = sub(ESM::fourCC("XOWN"), bytes(0x800u));
+        const auto ownerAt = records.find(oldOwner);
+        ASSERT_NE(ownerAt, std::string::npos);
+        records.replace(ownerAt, oldOwner.size(), sub(ESM::fourCC("XOWN"), bytes(0xd70u)));
+        records += record(ESM4::REC_NPC_, 0xd70,
+            sub(ESM::fourCC("EDID"), std::string("OtherDoorOwner\0",15)));
+        const std::array<float,6> oldGoal{1280,0,0,0,0,0};
+        const std::array<float,6> newGoal{0,1280,0,0,0,0};
+        const auto oldGoalSub = sub(ESM::fourCC("DATA"), bytes(oldGoal));
+        const auto goalAt = records.find(oldGoalSub);
+        ASSERT_NE(goalAt, std::string::npos);
+        records.replace(goalAt, oldGoalSub.size(), sub(ESM::fourCC("DATA"), bytes(newGoal)));
+        SwitchFixture f(shifted, false, records, 9, false);
+        auto& world = f.mFixture.mWorld;
+        MWMechanics::MechanicsManager mechanics;
+        f.mFixture.mEnvironment.setMechanicsManager(mechanics);
+        world.initializePhysics(new osg::Group);
+        auto& ai = *world.getOblivionAiService();
+        ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd05)));
+        for (int n = 0; n < 8; ++n) ai.update(f.mActor, .25f, true);
+        const auto* state = ai.state(f.mActor);
+        ASSERT_NE(state, nullptr);
+        EXPECT_EQ(state->mCell, key(0xb04));
+        EXPECT_EQ(state->mDestinationCell, key(0xd06));
+        EXPECT_NE(state->mPhase, ESM4::PackagePhase::Complete);
+        const auto& movement = f.mActor.getClass().getMovementSettings(f.mActor);
+        EXPECT_FLOAT_EQ(movement.mPosition[0], 0.f);
+        EXPECT_FLOAT_EQ(movement.mPosition[1], 0.f);
+        EXPECT_FLOAT_EQ(movement.mPosition[2], 0.f);
+        EXPECT_EQ(f.mActor.getRefData().getPosition().asVec3(), osg::Vec3f());
+    }
+}
+
+TEST(OblivionTutorialDoor, DoorChainIncludesDirectedExteriorStreetBetweenTeleports)
+{
+    MWClass::ESM4Door::registerSelf();
+    for (const bool shifted : {false, true})
+        for (const bool connected : {false, true})
+        {
+            SCOPED_TRACE(shifted);
+            SCOPED_TRACE(connected);
+            const auto group = [](unsigned kind, unsigned label, const std::string& data) {
+                return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
+                    + bytes(label) + bytes(kind) + bytes(0u) + data;
+            };
+            const auto placed = [](unsigned id, unsigned base, float x, unsigned target = 0, float landing = 0) {
+                auto data = sub(ESM::fourCC("NAME"), bytes(base))
+                    + sub(ESM::fourCC("DATA"), bytes(std::array<float,6>{x,0,0,0,0,0}));
+                if (target) data += sub(ESM::fourCC("XTEL"), bytes(target)
+                    + bytes(std::array<float,6>{landing,0,0,0,0,0}));
+                return record(ESM4::REC_REFR, id, data);
+            };
+            auto extra = sameCellTeleportRecords(true, true);
+            extra += group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xd08,
+                sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior}))));
+            extra += group(6, 0xd08, group(9, 0xd08,
+                placed(0xd10,0xd00,4096,0xd11,8192)
+                + placed(0xd12,0xd00,5000,0xd11,8192)));
+            extra += group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xd16,
+                sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior}))));
+            extra += group(6, 0xd16, group(9, 0xd16,
+                placed(0xd11,0xd00,8192,0xd10,4096) + placed(0xd13,0xb00,8256)));
+            SwitchFixture f(shifted, false, extra, 14, false);
+            auto& world = f.mFixture.mWorld;
+            auto& store = world.getStore();
+            for (unsigned id : {0xd06u, 0xd08u})
+            {
+                auto cell = *store.search<ESM4::Cell>(key(id));
+                cell.mCellFlags = 0;
+                cell.mParent = ESM::RefId(ESM::FormId{0xd80, f.mActor.get<ESM4::Npc>()->mBase->mId.mContentFile});
+                store.getWritable<ESM4::Cell>().insertStatic(cell, key(id));
+            }
+            auto package = *store.search<ESM4::AIPackage>(key(0xd05));
+            package.mLocationData.mReferenceKey = key(0xd13);
+            store.getWritable<ESM4::AIPackage>().insertStatic(package, key(0xd05));
+            auto& paths = store.getOblivionPathgridService();
+            auto first = *store.search<ESM4::Pathgrid>(key(0xd07));
+            if (connected) first.mForeign.push_back({1,0,4096,0,0});
+            // A reverse-only link must not make the outward journey valid.
+            ESM4::Pathgrid second{};
+            second.mFormKey = key(0xd09); second.mData = 1;
+            second.mNodes = {{4096,0,0,0,0,0}};
+            second.mForeign = {{0,0,1280,0,0}};
+            ESM4::Pathgrid shop{};
+            shop.mFormKey = key(0xd17); shop.mData = 2;
+            shop.mNodes = {{8192,0,0,1,0,0},{8256,0,0,1,0,0}};
+            shop.mLinks = {{0,1},{1,0}};
+            paths.registerPathgrid(first,key(0xd06));
+            paths.registerPathgrid(second,key(0xd08));
+            paths.registerPathgrid(shop,key(0xd16));
+            paths.resolveForeignLinks(1.f);
+            auto& ai = *world.getOblivionAiService();
+            ASSERT_TRUE(ai.addScriptPackage(f.mActor,key(0xd05)));
+            world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+            for (int i=0; i<8 && ai.state(key(0xa00))->mDoor.isNull(); ++i) ai.updateUnloaded(.25f);
+            const auto* state = ai.state(key(0xa00));
+            ASSERT_NE(state,nullptr);
+            EXPECT_EQ(state->mDoor, connected ? key(0xd01) : ESM::FormKey{});
+            EXPECT_EQ(state->mCell,key(0xb04));
+            EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+            if (connected)
+                for (bool enabled : {false, true})
+                {
+                    SCOPED_TRACE(enabled);
+                    // Reuse the same service after caching the street index.
+                    // Node overlays must remove and restore its directed edge.
+                    ASSERT_TRUE(ai.setPathPoint(key(0xd07), 1, enabled));
+                    world.getWorldModel().registerPtr(f.mActor);
+                    ASSERT_TRUE(ai.addScriptPackage(f.mActor,key(0xd05)));
+                    world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+                    for (int i=0; i<8 && ai.state(key(0xa00))->mDoor.isNull(); ++i) ai.updateUnloaded(.25f);
+                    EXPECT_EQ(ai.state(key(0xa00))->mDoor, enabled ? key(0xd01) : ESM::FormKey{});
+                    EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+                }
+            if (connected)
+            {
+                // After the first teleport, the shop door is in another
+                // exterior cell. Compare both exits there and actually finish
+                // the journey, including the more distant equal-hop candidate.
+                for (int i = 0; i < 512 && ai.state(key(0xa00))->mCell != key(0xd16); ++i)
+                    ai.updateUnloaded(.25f);
+                EXPECT_EQ(ai.state(key(0xa00))->mCell, key(0xd16));
+                EXPECT_EQ(ai.state(key(0xa00))->mLastTransitionDoor, key(0xd10));
+            }
+        }
+}
+
+TEST(OblivionTutorialDoor, AbstractHandoffRetriesPhysicalStallWithoutReplacingIntentOrBypassingLockedDoor)
+{
+    MWClass::ESM4Door::registerSelf();
+    for (bool shifted : {false, true})
+        for (bool locked : {false, true})
+            for (bool physical : {false, true})
+            {
+                SCOPED_TRACE(shifted);
+                SCOPED_TRACE(locked);
+                SCOPED_TRACE(physical);
+                auto records = sameCellTeleportRecords(true, true, locked);
+                if (locked)
+                {
+                    const auto owner = sub(ESM::fourCC("XOWN"), bytes(0x800u));
+                    const auto at = records.find(owner);
+                    ASSERT_NE(at, std::string::npos);
+                    records.replace(at, owner.size(), sub(ESM::fourCC("XOWN"), bytes(0xd70u)));
+                    records += record(ESM4::REC_NPC_, 0xd70,
+                        sub(ESM::fourCC("EDID"), std::string("OtherDoorOwner\0",15)));
+                }
+                SwitchFixture f(shifted, false, records, locked ? 9 : 8, false);
+                auto& world = f.mFixture.mWorld;
+                auto& ai = *world.getOblivionAiService();
+                ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd05)));
+                auto saved = f.capture();
+                auto& row = *std::find_if(saved.mActorAi.begin(), saved.mActorAi.end(),
+                    [](const auto& value) { return value.mActor == key(0xa00); });
+                const auto generation = row.mSelectionGeneration;
+                row.mPhase = ESM4::PackagePhase::Stalled;
+                row.mPathgrid = key(0xd04);
+                row.mPathNode = 0;
+                row.mRouteGeneration = world.getStore().getOblivionPathgridService().generation(key(0xd04));
+                row.mNoProgressSeconds = 30.f;
+                row.mInterruptionReason = physical ? "bounded-repath-exhausted" : "route-unavailable";
+                ai.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+                world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+                for (int n = 0; n < 4; ++n) ai.updateUnloaded(.25f);
+                const auto* after = ai.state(key(0xa00));
+                ASSERT_NE(after, nullptr);
+                EXPECT_EQ(after->mSelectionGeneration, generation);
+                EXPECT_EQ(after->mPackage, key(0xd05));
+                EXPECT_EQ(after->mScriptPackage, key(0xd05));
+                EXPECT_EQ(after->mCell, key(0xb04));
+                EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+                if (!physical || locked)
+                {
+                    EXPECT_EQ(after->mPhase, ESM4::PackagePhase::Stalled);
+                    EXPECT_EQ(after->mLastValidPosition.asVec3(), osg::Vec3f());
+                    EXPECT_EQ(after->mInterruptionReason, "route-unavailable");
+                }
+                else
+                {
+                    EXPECT_NE(after->mPhase, ESM4::PackagePhase::Stalled);
+                    EXPECT_EQ(after->mDoor, key(0xd01));
+                    for (int n = 0; n < 160 && f.capture().mPendingPackageDone.empty(); ++n)
+                        ai.updateUnloaded(.25f);
+                    EXPECT_EQ(ai.state(key(0xa00))->mCell, key(0xd06));
+                    EXPECT_EQ(ai.state(key(0xa00))->mSelectionGeneration, generation);
+                    EXPECT_EQ(f.capture().mPendingPackageDone.size(), 1u);
+                }
+            }
+}
+
+TEST(OblivionTutorialDoor, OriginalDoorLandingIsValidatedBeforeDeferredResidentPromotion)
+{
+    MWClass::ESM4Door::registerSelf();
+    for (bool shifted : {false, true})
+        for (int variant = 0; variant < 4; ++variant)
+        {
+            SCOPED_TRACE(shifted);
+            SCOPED_TRACE(variant);
+            SwitchFixture f(shifted, false, sameCellTeleportRecords(true, true), 8, false);
+            auto& world = f.mFixture.mWorld;
+            MWMechanics::MechanicsManager mechanics;
+            f.mFixture.mEnvironment.setMechanicsManager(mechanics);
+            world.initializePhysics(new osg::Group);
+            auto& ai = *world.getOblivionAiService();
+            ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd05)));
+            world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+            for (int n = 0; n < 80 && ai.state(key(0xa00))->mLastTransitionDoor.isNull(); ++n)
+                ai.updateUnloaded(.25f);
+            ASSERT_EQ(ai.state(key(0xa00))->mLastTransitionDoor, key(0xd01));
+            ASSERT_EQ(ai.state(key(0xa00))->mCell, key(0xd06));
+            auto saved = f.capture();
+            auto& row = *std::find_if(saved.mActorAi.begin(), saved.mActorAi.end(),
+                [](const auto& value) { return value.mActor == key(0xa00); });
+            const auto generation = row.mSelectionGeneration;
+            const auto landing = row.mLastValidPosition.asVec3();
+            if (variant == 1) row.mDoorCooldown = 0.f;
+            if (variant == 2) row.mLastTransitionDoor = key(0xd02); // Reverse edge lands in the other cell.
+            if (variant == 3) row.mLastValidPosition.pos[0] += 5000.f;
+            world.getWorldModel().registerPtr(f.mActor); // Resident Ptr still belongs to the old room.
+            ai.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+            ai.update(f.mActor, .05f, true);
+            const auto* after = ai.state(key(0xa00));
+            ASSERT_NE(after, nullptr);
+            EXPECT_EQ(after->mPackage, key(0xd05));
+            EXPECT_EQ(after->mSelectionGeneration, generation);
+            EXPECT_EQ(after->mCell, variant == 0 ? key(0xd06) : key(0xb04));
+            EXPECT_EQ(after->mLastValidPosition.asVec3(), variant == 0 ? landing : osg::Vec3f());
+            // Promotion is staged until the world can safely transfer CellStores.
+            EXPECT_EQ(f.mActor.getRefData().getPosition().asVec3(), osg::Vec3f());
+        }
+}
+
+TEST(OblivionTutorialAction, UnavailableCombatTargetResetCanBeFollowedByOrdinaryCombatCleanup)
+{
+    for (bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        SwitchFixture f(shifted);
+        auto& ai = *f.mFixture.mWorld.getOblivionAiService();
+        const auto before = *ai.state(f.mActor);
+        // The optimized conditional reset used to leave the first route's
+        // empty FormKey string with a null data pointer. The next ordinary
+        // melee cleanup then crashed even though the actor was not fighting.
+        for (int n = 0; n < 32; ++n)
+        {
+            ai.approachCombatTarget(f.mActor, {}, 1.f / 30.f);
+            ai.clearCombatRoute(f.mActor);
+        }
+        EXPECT_EQ(*ai.state(f.mActor), before);
+        EXPECT_NO_THROW(ESM4::RuntimeState::deserializeBinary(f.capture().serializeBinary()));
     }
 }

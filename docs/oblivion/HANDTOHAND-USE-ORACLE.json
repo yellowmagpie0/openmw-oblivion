@@ -1,0 +1,81 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "winning_skill": {
+    "form": "000042",
+    "actor_value": 17,
+    "attribute": 0,
+    "specialization": 0,
+    "primary": 0.6000000238418579,
+    "secondary": 1.0,
+    "data_hex": "1100000000000000000000009a99193f0000803f"
+  },
+  "original_hit": {
+    "path": "build/oblivion-compat/skill-book/original-01/partial-xp-after-hit.json",
+    "sha256": "d3fb475ca1b4b13c979cdf57cd94b9917d97a0227007bbaa417d5378825da4f7",
+    "observation": {
+      "read_only": true,
+      "pid": 306768,
+      "wall_time_ns": 1794545574920686171,
+      "player": "0x18828de8",
+      "class_form": "023787",
+      "skill_index": 5,
+      "experience": 0.6000000238418579,
+      "required_experience": 26.21363067626953,
+      "major_advances": 2,
+      "skill_advances": 2,
+      "all_skill_advances": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "misc_stats": {
+        "2": 1,
+        "17": 2,
+        "18": 1
+      },
+      "books": {
+        "0243fc": {
+          "flags": 0,
+          "teaches_skill": 255
+        },
+        "0243fd": {
+          "flags": 0,
+          "teaches_skill": 5
+        },
+        "0243fe": {
+          "flags": 0,
+          "teaches_skill": 5
+        }
+      }
+    }
+  },
+  "source": "SKILL-BOOK-READ-ORACLE.json: actual ordinary Player/Rat unarmed hit provides0.6 partialXP, classWarrior, hash-identified original executable and read-only arrays. No new original launch needed.",
+  "scope": "Reuse caller/slot evidence; damaging-only fork policy remains bounded like accepted Blunt. No cap/blocked/immune or tutorial recommendation-history claim.",
+  "provenance": {
+    "path": "docs/oblivion/SKILL-BOOK-READ-ORACLE.json",
+    "sha256": "ce19680e5ef731c8fda580d6b7d96f92d152428563d48c5ab8e37f427ed10063",
+    "note": "Original executable identity, probe setup, actual Rat hit and restored Documents/Plugins are recorded by the accepted skill-book oracle. Reuse the ordinary-use observation only; the book-award experiment is separate."
+  },
+  "limits": [
+    "Original ordinary hit certifies0.6 XP, not the full original melee caller or Hand level crossing. The original probe base37/effective36 included a skill modifier from its earlier book experiment; do not relabel it as a clean base36 course.",
+    "Fork damaging-only policy remains a practical scoped acceptance rule."
+  ]
+}

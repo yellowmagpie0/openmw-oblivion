@@ -1,0 +1,123 @@
+{
+  "scope": "Clean connected resource recovery before shaman: ordinary remaining potion uses,11 real Heal Minor Wounds casts gated on observed19MP, natural regeneration to80health/80magicka. Full escape incomplete.",
+  "full_escape_complete": false,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-cavern-full-recovery-course-01/scenario.json",
+  "passed": true,
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-engaged-eastern-fight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "d80cf0d5af5b6cd3bcf22dce8222d1d359b2163065f9252dbb8b75438a0fa66e",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": []
+  },
+  "save": "build/oblivion-compat/sewer-escape/joined-cavern-full-recovery-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "sha256": "956aa885e045187db724bd31eff2cc07f841d97bd9a5a94ddf95e5491a5fd490",
+  "position": [
+    4715.5166015625,
+    3051.5341796875,
+    -438.5722351074219,
+    0.13496091961860657,
+    0.0,
+    -1.1953285932540894
+  ],
+  "initial_health": 4.239990234375,
+  "final_health": 80,
+  "final_magicka": 80,
+  "heal_releases": [
+    {
+      "health": 11.28,
+      "magicka": 61.0
+    },
+    {
+      "health": 18.32,
+      "magicka": 42.795
+    },
+    {
+      "health": 25.36,
+      "magicka": 24.6179
+    },
+    {
+      "health": 32.4,
+      "magicka": 6.49144
+    },
+    {
+      "health": 39.44,
+      "magicka": 0.358398
+    },
+    {
+      "health": 46.48,
+      "magicka": 0.21962
+    },
+    {
+      "health": 53.52,
+      "magicka": 0.260391
+    },
+    {
+      "health": 60.56,
+      "magicka": 0.291443
+    },
+    {
+      "health": 67.6,
+      "magicka": 0.205399
+    },
+    {
+      "health": 74.64,
+      "magicka": 0.333984
+    },
+    {
+      "health": 80.0,
+      "magicka": 0.387718
+    }
+  ],
+  "inventory_changes": {
+    "content:oblivion.esm:00931a": -1,
+    "content:oblivion.esm:00930e": -1
+  },
+  "original_potion_record_audit": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "potions": [
+      {
+        "form": "0x931a",
+        "EDID": "PotionRestoreMagickaW",
+        "FULL": "Weak Potion of Sorcery",
+        "effects": [
+          [
+            1347634514,
+            50,
+            0,
+            0,
+            0,
+            9
+          ]
+        ]
+      },
+      {
+        "form": "0x930e",
+        "EDID": "PotionRestoreFatigueW",
+        "FULL": "Weak Potion of Respite",
+        "effects": [
+          [
+            1095124306,
+            20,
+            0,
+            0,
+            0,
+            10
+          ]
+        ]
+      }
+    ]
+  },
+  "life_and_death_counts_unchanged": true,
+  "no_active_combat_cast_or_pending_action_death": true,
+  "FIRS": 1,
+  "capture_inspected": true,
+  "implementation_unchanged": true,
+  "limits": [
+    "Potion magicka clamps at maximum; no over-cap50 gain claimed.",
+    "Respite consumed at regenerated fatigue; no unobserved fatigue increase claimed.",
+    "Full uninterrupted new-game escape and main-route shaman victory remain outstanding.",
+    "Prior engine/sanitizer gates retain original provenance; data-only runtime recipes."
+  ]
+}

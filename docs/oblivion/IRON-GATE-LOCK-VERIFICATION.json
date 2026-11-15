@@ -1,0 +1,1179 @@
+{
+  "status": "verified for the bounded unowned keyless Canosel gate course; full M13 remains open",
+  "contract": "IRON-GATE-LOCK-CONTRACT.json",
+  "oracle": "IRON-GATE-LOCK-ORACLE.json",
+  "parent_revision": "df3cbe11887c5bbf6a734939cce466e0a3687c59",
+  "tested_source": {
+    "head": "df3cbe11887c5bbf6a734939cce466e0a3687c59",
+    "source_fingerprint": "31f6393483f2a2fab06a9aa36ab21f92a7eef32f92035147bc3ed8d04dc93313"
+  },
+  "production_source_sha256": {
+    "apps/openmw/mwworld/failedaction.hpp": "05be6ed9cbe372b35be407404985ee2fe907b08a89b291ba0cd8b0c1666a29ed",
+    "apps/openmw/mwworld/oblivioninteraction.cpp": "91dafcf75d845072bb9ba8601509b942101da943e3f8412ac2bb8283597731e2",
+    "apps/openmw_tests/CMakeLists.txt": "62626d0c01aeed3f1d88764bfb19a98b4b54b9fdbd47530b4651d613fd1ffed0",
+    "apps/openmw_tests/mwworld/testfailedaction.cpp": "364c1d9358a9b062a7598384b4be7e3023f7cfb2af5371a0865ebb38ee6a9419",
+    "scripts/verify_ayleid_gate_lock.py": "892d6f2796c547f1611e76c32f12ab738378225d6b294a73f7b42679faf01bc7",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_attempt.json": "a20ea1b7cc469feffc043904a6e01b7b294c688704d205391806580d89ae15fb",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_attempt_sanitized.json": "ca83bc57812ac9b5f883dbe10203b1cca8b2feb225cb690b36a8386d19ba610f",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_cancel.json": "4c902b2cb525c34f0055eff6463055a56622954516132a4d0b65d4a6b5d3d45f",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_cancel_restart.json": "1de03c3b39da4a08b440c03dc24b17401d9fb5c682286ca9836f70beef6be94d",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_cancel_restart_sanitized.json": "38c1a8daf64ae667ea1ed09be7984d335db6e47678e48bd2651c71d17e7d45e9",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_open_restart_passage.json": "bf350a04cf5b623d1329890d1ae4b91e987605e83ca4d3ed651132b0409363e3",
+    "scripts/data/oblivion_compat/oblivion_ayleid_gate_lock_open_restart_passage_sanitized.json": "ca07492cc02899e287402cca5c2e1733dc7a9785080631080cbe8da5d6e8f195"
+  },
+  "content_audit": {
+    "path": "build/oblivion-compat/iron-gate/original-gate-content-audit.json",
+    "sha256": "8ba1fe0510b912cf3ef4906bdbcffe56e758e0fad7cd74cae4ad8b121fead8fc",
+    "report": {
+      "passed": true,
+      "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "esmtool_sha256": "ec53c9d423189d00659f10ce4499821547fd4e020a17791303456905c326d699",
+      "reference": {
+        "key": "content:oblivion.esm:049bbd",
+        "base": "content:oblivion.esm:0228c8",
+        "cell": "content:oblivion.esm:0463f5",
+        "temporary_cell_child": true,
+        "owner": null,
+        "XLOC": "0761095d0000000004000000",
+        "lock_seed": 7,
+        "lock_flags": 4,
+        "key_formid": 0,
+        "position": [
+          -5312.0,
+          -10496.0,
+          -2624.0,
+          0.0,
+          -0.0,
+          1.570798397064209
+        ]
+      },
+      "base": {
+        "EDID": "ARGateDoor01",
+        "FULL": "Gate",
+        "MODL": "Dungeons\\AyleidRuins\\Interior\\ARGateDoor01.NIF"
+      },
+      "cell": {
+        "EDID": "Vilverin02",
+        "FULL": "Vilverin Canosel"
+      },
+      "typed_fields_match": true,
+      "typed_dump_sha256": "2bb897541c3805eb741087faaa83c367cd9833283bc6184da4d2857ec5d0a193"
+    }
+  },
+  "integration": {
+    "normal-focused-02": {
+      "path": "build/oblivion-compat/iron-gate/normal-focused-02/verification.json",
+      "sha256": "562f05cb3b331bc98c1c46bf3314ca3b6acebc6ef047f11f70942d3037d6c4fe",
+      "source": {
+        "head": "df3cbe11887c5bbf6a734939cce466e0a3687c59",
+        "source_fingerprint": "7b414b70459b0f9597b6dc66ad6eb2999c3fd826a1c455c14f6a29e885082321"
+      },
+      "results": {
+        "engine": {
+          "executed": 23,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Door*:*Lockpick*:*Trespass*:FailedActionTest.*",
+          "binary_sha256": "f72823c5c7df6d9b102491a06b35515805499427b658902ad83827851117fc3f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "12d7f11a09bcf1da40ad082c93a29961fdfb5e3182af244fb8b2df86f89d18a5",
+          "inventory_sha256": "bbf9a8e814ea2c5f89070bc1f79cd5f3199e6fffb6d80307fa5a09ab634698f7",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-focused-01": {
+      "path": "build/oblivion-compat/iron-gate/sanitized-focused-01/verification.json",
+      "sha256": "5584c090e70dd3a9f30b6a3bea9a04d01b9768f33cc53dfde644370c97c2ca85",
+      "source": {
+        "head": "df3cbe11887c5bbf6a734939cce466e0a3687c59",
+        "source_fingerprint": "31f6393483f2a2fab06a9aa36ab21f92a7eef32f92035147bc3ed8d04dc93313"
+      },
+      "results": {
+        "engine": {
+          "executed": 23,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Door*:*Lockpick*:*Trespass*:FailedActionTest.*",
+          "binary_sha256": "a3c8f4b5961c350406b5726e36f371489e02be9440c31e2475e330ab01e1c91f",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "b8235e341b6874ef87a4e4865eb076caa9baf849752bf023f3c0e05fa11d763b",
+          "inventory_sha256": "bbf9a8e814ea2c5f89070bc1f79cd5f3199e6fffb6d80307fa5a09ab634698f7",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal-integration-01": {
+      "path": "build/oblivion-compat/iron-gate/normal-integration-01/verification.json",
+      "sha256": "560e8fbb87bfad06d53fea28aa9ea3990ae89bd497c753430630a7f6613c35d9",
+      "source": {
+        "head": "df3cbe11887c5bbf6a734939cce466e0a3687c59",
+        "source_fingerprint": "31f6393483f2a2fab06a9aa36ab21f92a7eef32f92035147bc3ed8d04dc93313"
+      },
+      "results": {
+        "engine": {
+          "executed": 2277,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f72823c5c7df6d9b102491a06b35515805499427b658902ad83827851117fc3f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "36a7dd36e0ed8e01172e7b7cceed747a052249d37aeb1d2624736768b11bc357",
+          "inventory_sha256": "bbf9a8e814ea2c5f89070bc1f79cd5f3199e6fffb6d80307fa5a09ab634698f7",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 611,
+          "passed": true,
+          "log_sha256": "bbbb51b92842cb7ea100c10a0b8bff64940cd0fd72535a989097ccbf476dcda1"
+        }
+      }
+    },
+    "sanitized-integration-01": {
+      "path": "build/oblivion-compat/iron-gate/sanitized-integration-01/verification.json",
+      "sha256": "7ca8de0859815d384f6f14a9e48ba4487333aeec931473c92bf8d0bbcefe4319",
+      "source": {
+        "head": "df3cbe11887c5bbf6a734939cce466e0a3687c59",
+        "source_fingerprint": "31f6393483f2a2fab06a9aa36ab21f92a7eef32f92035147bc3ed8d04dc93313"
+      },
+      "results": {
+        "engine": {
+          "executed": 2277,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a3c8f4b5961c350406b5726e36f371489e02be9440c31e2475e330ab01e1c91f",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "d0f04110698bec233c807f633f780aa1c52e2b4d603554172a93f44082e004e4",
+          "inventory_sha256": "bbf9a8e814ea2c5f89070bc1f79cd5f3199e6fffb6d80307fa5a09ab634698f7",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "final_gameplay": {
+    "normal-final-gate-cancel-01": {
+      "phase": "cancel",
+      "process": {
+        "pid": 1526397,
+        "start_ticks": 211884372,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-final-gate-cancel-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-locked-gate-cancel-06/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "3d0fd31c3f38192616feb6e28998b3c911ed62e3f333a38c613ae0210ddc54b2"
+      },
+      "source_sha256": "f94680109843ed9074d91f03e6cf1667fe4ed6ea3e6565a3e5834ebd0dcdab1b",
+      "save_sha256": "0c8510794b721c8817ed725f9bd2bc52fd44b63e388d774c422f07f43d2d86c1",
+      "picks_before": 7,
+      "picks_after": 7,
+      "failed_attempts": 0,
+      "health": 53.00106430053711,
+      "position_before": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "position_after": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "gate_after": {
+        "key": "content:oblivion.esm:049bbd",
+        "base": "content:oblivion.esm:0228c8",
+        "cell": "content:oblivion.esm:0463f5",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          -5312.0,
+          -10496.0,
+          -2624.0,
+          0.0,
+          -0.0,
+          1.570798397064209
+        ],
+        "owner": null,
+        "lock_level": 7,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "lock_checked": true,
+          "locked": true,
+          "record_type": 1389317956,
+          "scale": 1.0
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "artifacts": {
+        "lock-audit.json": "86af03e2e98af1a61bb28e6dc1e0d0031751ca98fdf914bcc1d9482eb515bd18",
+        "scenario.json": "a7a8484953372232aa5dd85092f98a1e6d9d57cb85772e9722d135de11301bad",
+        "driver-process.json": "4ef38429e286ed869e07fc45863205632d186caee38d3adffde79a765ed5795c",
+        "process-epoch.json": "16ee3ba1965656d233945968f7a389221a95eedfed49c7a881b2ea14e60b346e",
+        "captured-input-manifest.json": "1de03c3b39da4a08b440c03dc24b17401d9fb5c682286ca9836f70beef6be94d",
+        "events.jsonl": "3eba6d48c820849a368e86572217e9ec9c790a2c77b18f9b53dd8c7cb24b8fea",
+        "loaded-libraries.json": "93ce209b2a5b53e260e46ffca4e01491fe1a342b320729608bc4f3aa10a82d9d",
+        "process.log": "9931f52ec2507e01dd8ef5492c5ef4eefc7940b2eb808a3186542cb120c34e3a",
+        "sdl-input-provenance.json": "2e71e250a60685084ee342031ea3b86e0d7fc6246ffcda6b141ed199ff8c9ae8",
+        "paused-original-cask-lock.png": "0511a7bbf5ded5cb4e6b4334c3ec64db69d2a361a8d6dc34813d5ef68f523344"
+      }
+    },
+    "normal-final-gate-attempt-01": {
+      "phase": "attempt",
+      "process": {
+        "pid": 1526972,
+        "start_ticks": 211891757,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-final-gate-attempt-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-final-gate-cancel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "3d0fd31c3f38192616feb6e28998b3c911ed62e3f333a38c613ae0210ddc54b2"
+      },
+      "source_sha256": "0c8510794b721c8817ed725f9bd2bc52fd44b63e388d774c422f07f43d2d86c1",
+      "save_sha256": "3278e93b0730264990d18c5d366badb7c92372adda04cb6abb991149e9966267",
+      "picks_before": 7,
+      "picks_after": 7,
+      "failed_attempts": 0,
+      "health": 53.00106430053711,
+      "position_before": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "position_after": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "gate_after": {
+        "key": "content:oblivion.esm:049bbd",
+        "base": "content:oblivion.esm:0228c8",
+        "cell": "content:oblivion.esm:0463f5",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          -5312.0,
+          -10496.0,
+          -2624.0,
+          0.0,
+          -0.0,
+          1.570798397064209
+        ],
+        "owner": null,
+        "lock_level": 0,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "lock_checked": true,
+          "locked": false,
+          "lockpick_auto_attempts": 1,
+          "lockpick_auto_chance": 47.900001525878906,
+          "obscript.animation_absolute": false,
+          "obscript.animation_group": "open",
+          "obscript.animation_loop_count": 0,
+          "obscript.animation_mode": 1,
+          "obscript.animation_playing": true,
+          "obscript.animation_progress": 1.0,
+          "obscript.animation_scripted": true,
+          "record_type": 1389317956,
+          "scale": 1.0,
+          "unlocked_with_lockpick": true
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "artifacts": {
+        "lock-audit.json": "c84778f4937615b47896437be95a3807e6c2f0426350e9abe9e1de7eb1d56383",
+        "scenario.json": "139649ddad7f75285efb452a86b344f08b43729586d3017df2632275828bfdfc",
+        "driver-process.json": "ee33e3d0aeeb676000a11e0b5e38ee4509b56e62ff01b2885cb4965f4bbbdbec",
+        "process-epoch.json": "053f296507be6f8bf84aacf00c5c0545f64e44bca8e21f60886b93600357a9bc",
+        "captured-input-manifest.json": "a20ea1b7cc469feffc043904a6e01b7b294c688704d205391806580d89ae15fb",
+        "events.jsonl": "848ba12b8d0efc68b9e28d45af28e044b6af93945d37c16720cbadb171816045",
+        "loaded-libraries.json": "3a9e4a42e9d17c4e669e0695ba918403a9eb5ef7551cb7c6d3e3ab38e1a4019c",
+        "process.log": "7e282826f87bdda025f0698ddbd695df64c05c7b68272d1313942ea077eceedc",
+        "sdl-input-provenance.json": "9911af2166e3409adfcbc60db57d45d430e67d4bf9f46bdfc7068e53dbe8627b",
+        "original-gate-after-auto-attempt.png": "4af31a760402cad7e804ab760df8838ef970a1d82c0df8dd7c3b44a2227484bb",
+        "paused-original-cask-lock.png": "eab796a522c015a6146667798a6ec756c1e5ad4003aad49bef2d6282fd2553e8"
+      }
+    },
+    "normal-final-gate-passage-01": {
+      "phase": "passage",
+      "process": {
+        "pid": 1527088,
+        "start_ticks": 211899482,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-final-gate-passage-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-final-gate-attempt-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "3d0fd31c3f38192616feb6e28998b3c911ed62e3f333a38c613ae0210ddc54b2"
+      },
+      "source_sha256": "3278e93b0730264990d18c5d366badb7c92372adda04cb6abb991149e9966267",
+      "save_sha256": "7ecd4febfef2c4a1011501a1a65679fc460eed82fe3b9c804f8834b5ff17daa1",
+      "picks_before": 7,
+      "picks_after": 7,
+      "failed_attempts": 0,
+      "health": 53.00106430053711,
+      "position_before": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "position_after": [
+        -5305.17919921875,
+        -10544.9921875,
+        -2662.20947265625,
+        0.07178175449371338,
+        0.0,
+        2.6381349563598633
+      ],
+      "gate_after": {
+        "key": "content:oblivion.esm:049bbd",
+        "base": "content:oblivion.esm:0228c8",
+        "cell": "content:oblivion.esm:0463f5",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          -5312.0,
+          -10496.0,
+          -2624.0,
+          0.0,
+          -0.0,
+          1.570798397064209
+        ],
+        "owner": null,
+        "lock_level": 0,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "lock_checked": true,
+          "locked": false,
+          "lockpick_auto_attempts": 1,
+          "lockpick_auto_chance": 47.900001525878906,
+          "obscript.animation_absolute": false,
+          "obscript.animation_group": "open",
+          "obscript.animation_loop_count": 0,
+          "obscript.animation_mode": 1,
+          "obscript.animation_playing": true,
+          "obscript.animation_progress": 1.0,
+          "obscript.animation_scripted": true,
+          "record_type": 1389317956,
+          "scale": 1.0,
+          "unlocked_with_lockpick": true
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "artifacts": {
+        "lock-audit.json": "0c09b6daaff55cfd63891afdcd45aa347cfb334db3702a38027a8e2c6981914a",
+        "scenario.json": "b8d3ca261b2b250ab2fa23ffdb6273b8f3d2ab980bdae712c86d7831818d2553",
+        "driver-process.json": "036687ba14b1bb2f8f9c6d27949dc62cbf68049e753b3a1e5b730a3ca42feefe",
+        "process-epoch.json": "40a10f3592fa717b6ba72186d626c0ee4f6ab13ba2014debc8f13093ab8b71d4",
+        "captured-input-manifest.json": "bf350a04cf5b623d1329890d1ae4b91e987605e83ca4d3ed651132b0409363e3",
+        "events.jsonl": "4f1c05cd04d5984d4dd6749f51ee1abe2322282bfc2921443c71b10b32374804",
+        "loaded-libraries.json": "c8d2f20d57def11e0aa0d208b5bd611fad2ca6ed8e632f234aba04f37957f132",
+        "process.log": "c62796f4068311613da4ac282c662afcd2daa5ded40a4c744421b2382e4405dc",
+        "sdl-input-provenance.json": "77a0988457398853b70edb7d77449952857a221b7a94bc37dfea696ec592133d",
+        "cold-loaded-open-gate.png": "9767ff4b8d2377b10c14a8669261fda8203ade01f41104555053afcceca06c86",
+        "passed-open-native-gate.png": "444df241d1943ac4f7b05efedb1c4161791ec793ef50f7182512545e8933a282"
+      }
+    },
+    "sanitized-final-gate-cancel-01": {
+      "phase": "cancel",
+      "process": {
+        "pid": 1532232,
+        "start_ticks": 211919017,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/sanitized-final-gate-cancel-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-locked-gate-cancel-06/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "e3f17b89cb59a59869920169f0e0a9c050df11926e85da6d4fcf09a5d073dd23"
+      },
+      "source_sha256": "f94680109843ed9074d91f03e6cf1667fe4ed6ea3e6565a3e5834ebd0dcdab1b",
+      "save_sha256": "97c6d495d3e3501ff030bbf1595a17ca9e03e7aa5f0ac29b2f9006584aa4bf78",
+      "picks_before": 7,
+      "picks_after": 7,
+      "failed_attempts": 0,
+      "health": 53.00106430053711,
+      "position_before": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "position_after": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "gate_after": {
+        "key": "content:oblivion.esm:049bbd",
+        "base": "content:oblivion.esm:0228c8",
+        "cell": "content:oblivion.esm:0463f5",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          -5312.0,
+          -10496.0,
+          -2624.0,
+          0.0,
+          -0.0,
+          1.570798397064209
+        ],
+        "owner": null,
+        "lock_level": 7,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "lock_checked": true,
+          "locked": true,
+          "record_type": 1389317956,
+          "scale": 1.0
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "artifacts": {
+        "lock-audit.json": "c6c66615537db6e6093e6fa4c0bef102b7abc82b5dc94b27124b30465f976d2f",
+        "scenario.json": "9f547c6c0d4b3efb54956d7178061475ef462ac3fb807530f165bc7a5769daae",
+        "driver-process.json": "4484243384e2e20f85c14e83e465145fb5b81456d9cac86b14688d35b3ff3776",
+        "process-epoch.json": "650721d634c8d998a8100f212bd5091d01bc4e34b7bf687977c6ff6e7f7c39ea",
+        "captured-input-manifest.json": "38c1a8daf64ae667ea1ed09be7984d335db6e47678e48bd2651c71d17e7d45e9",
+        "events.jsonl": "df6e0b20a0bc98cdc9bbd66724fc64f5aaaf178ca3e5c10aad8b3037aa146063",
+        "loaded-libraries.json": "b200e4cd3e410c3dc9383c07c54d944d06aa2034226944b6fd982d8680587541",
+        "process.log": "39d70096fac3adebfc16681c117c4033008d0846ffa93d63156deab4c6fcd57b",
+        "sdl-input-provenance.json": "79e39d6ccb52426d4f9e99794dfb82c5aa56eb4e59d55807e82b83892b5479e9",
+        "paused-original-cask-lock.png": "cdf1f66f90cdb93cab6110cee4bf2b959456151b5262c9cb36941ee3f4715759",
+        "observed-sanitizer-environment.json": "55715e8301d53e0f757fa597f25a32a273c6a562d80a9214f052aa8bb9acb2a5"
+      }
+    },
+    "sanitized-final-gate-attempt-01": {
+      "phase": "attempt",
+      "process": {
+        "pid": 1532463,
+        "start_ticks": 211948453,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/sanitized-final-gate-attempt-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/sanitized-final-gate-cancel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "e3f17b89cb59a59869920169f0e0a9c050df11926e85da6d4fcf09a5d073dd23"
+      },
+      "source_sha256": "97c6d495d3e3501ff030bbf1595a17ca9e03e7aa5f0ac29b2f9006584aa4bf78",
+      "save_sha256": "b5e28a42304ac15be918df74ec88e038fddfa5edb621ebc19eb8655af9d442db",
+      "picks_before": 7,
+      "picks_after": 7,
+      "failed_attempts": 0,
+      "health": 53.00106430053711,
+      "position_before": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "position_after": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "gate_after": {
+        "key": "content:oblivion.esm:049bbd",
+        "base": "content:oblivion.esm:0228c8",
+        "cell": "content:oblivion.esm:0463f5",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          -5312.0,
+          -10496.0,
+          -2624.0,
+          0.0,
+          -0.0,
+          1.570798397064209
+        ],
+        "owner": null,
+        "lock_level": 0,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "lock_checked": true,
+          "locked": false,
+          "lockpick_auto_attempts": 1,
+          "lockpick_auto_chance": 47.900001525878906,
+          "obscript.animation_absolute": false,
+          "obscript.animation_group": "open",
+          "obscript.animation_loop_count": 0,
+          "obscript.animation_mode": 1,
+          "obscript.animation_playing": true,
+          "obscript.animation_progress": 1.0,
+          "obscript.animation_scripted": true,
+          "record_type": 1389317956,
+          "scale": 1.0,
+          "unlocked_with_lockpick": true
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "artifacts": {
+        "lock-audit.json": "d2cc6819e198f10998974a0cf06e1b4b0bacf44ee5253177f527580b33248655",
+        "scenario.json": "09c598ee1ac752de483bf19d8b6447d685cc3285b8ef4b1a5c6d3f507aafe237",
+        "driver-process.json": "bed32b3a7bdd2fd1df1fa270a3dc56cdc5a64f7a46bc19c5db338bca20b7f93b",
+        "process-epoch.json": "e1315d9597d25fb35c59a283f8470ee334bd811b292b4254af38f533fb919efe",
+        "captured-input-manifest.json": "ca83bc57812ac9b5f883dbe10203b1cca8b2feb225cb690b36a8386d19ba610f",
+        "events.jsonl": "9e57ef88d4464ad4c248401aeb6b628f1b247bc2d8545fb8f054e248e7bc9018",
+        "loaded-libraries.json": "6d2ca96c88ed24e92f4c3cce16fc0833ff7cd041e00b06bc3673503c9f99ce4d",
+        "process.log": "e23b5a685009e915c552d7f7a7544a650d439bc4dac9c85903af26ac64da13a6",
+        "sdl-input-provenance.json": "367ae9ae9cd6f63b1132827150a8c01b304d376548cf02961d6ba37e014d6c89",
+        "original-gate-after-auto-attempt.png": "5f1e9b3b9c03c2f1ba2a6f008db99fdb07a3f235b3cfeaca408a5bb76365f8d9",
+        "paused-original-cask-lock.png": "cdf1f66f90cdb93cab6110cee4bf2b959456151b5262c9cb36941ee3f4715759",
+        "observed-sanitizer-environment.json": "922af6fc557fd0da77d5a0a52580ac2a8a2ac7c91e5d7b9e96d1038412db9686"
+      }
+    },
+    "sanitized-final-gate-passage-01": {
+      "phase": "passage",
+      "process": {
+        "pid": 1532643,
+        "start_ticks": 211977427,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/sanitized-final-gate-passage-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/sanitized-final-gate-attempt-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "e3f17b89cb59a59869920169f0e0a9c050df11926e85da6d4fcf09a5d073dd23"
+      },
+      "source_sha256": "b5e28a42304ac15be918df74ec88e038fddfa5edb621ebc19eb8655af9d442db",
+      "save_sha256": "84e06bdcc449c3f2d89dc19c289a403267803acbcd242ed3096f287e2479f317",
+      "picks_before": 7,
+      "picks_after": 7,
+      "failed_attempts": 0,
+      "health": 53.00106430053711,
+      "position_before": [
+        -5387.732421875,
+        -10416.9013671875,
+        -2662.566162109375,
+        0.6577192544937134,
+        0.0,
+        2.6068849563598633
+      ],
+      "position_after": [
+        -5305.2666015625,
+        -10544.7109375,
+        -2662.20947265625,
+        0.07178175449371338,
+        0.0,
+        2.6381349563598633
+      ],
+      "gate_after": {
+        "key": "content:oblivion.esm:049bbd",
+        "base": "content:oblivion.esm:0228c8",
+        "cell": "content:oblivion.esm:0463f5",
+        "enabled": true,
+        "deleted": false,
+        "position": [
+          -5312.0,
+          -10496.0,
+          -2624.0,
+          0.0,
+          -0.0,
+          1.570798397064209
+        ],
+        "owner": null,
+        "lock_level": 0,
+        "inventory": [],
+        "custom_state": {
+          "count": 1,
+          "lock_checked": true,
+          "locked": false,
+          "lockpick_auto_attempts": 1,
+          "lockpick_auto_chance": 47.900001525878906,
+          "obscript.animation_absolute": false,
+          "obscript.animation_group": "open",
+          "obscript.animation_loop_count": 0,
+          "obscript.animation_mode": 1,
+          "obscript.animation_playing": true,
+          "obscript.animation_progress": 1.0,
+          "obscript.animation_scripted": true,
+          "record_type": 1389317956,
+          "scale": 1.0,
+          "unlocked_with_lockpick": true
+        },
+        "actor_draw_state": null,
+        "item_condition": null,
+        "item_charge": null,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "dropper": null,
+        "dropped_items": null
+      },
+      "artifacts": {
+        "lock-audit.json": "7b26489d3898d2e9ab33d7ee697a203006adfed62445e5c73b5ed210ede8e087",
+        "scenario.json": "3620e965341edcbf2693e30189b3bf4011cdcbee82421efb0ae7501a3621974b",
+        "driver-process.json": "254435c0820092229abdb35d288a12483483578ceb3c538db3fb8ed828840044",
+        "process-epoch.json": "3b2c477ca378765d3a853d0821b4dd19e89ee3d9bde5bf4d7c40aa426434dad4",
+        "captured-input-manifest.json": "ca07492cc02899e287402cca5c2e1733dc7a9785080631080cbe8da5d6e8f195",
+        "events.jsonl": "4a49ae1cfe3f973bd760c0df5bfcd6dc44b7b4ba0f3d068cfef03d0bcb39be07",
+        "loaded-libraries.json": "ff40338441aca2860f68bb83fdb9fcdb951b8faee3ee225c137c2188e27aa5e8",
+        "process.log": "17c4ec695995206409f0d3da8ab2d2d94cf2de0f04fe51ba15e1a6ecc78d6a94",
+        "sdl-input-provenance.json": "984675f29161b0b44bd56d314b44ca09be53f6c3d0203f81b27884962a5f9ed0",
+        "cold-loaded-open-gate.png": "9767ff4b8d2377b10c14a8669261fda8203ade01f41104555053afcceca06c86",
+        "passed-open-native-gate.png": "4f87f627ae2ced5a5f874e525330d120079be32975d7d4f23b4635dc624f894b",
+        "observed-sanitizer-environment.json": "c790b2fddec7ca7f770b2a7d8502f9dc2116e29adeb98674497d0bd4a3d74235"
+      }
+    }
+  },
+  "reused_early_gameplay": {
+    "normal-locked-gate-cancel-06": {
+      "audit": {
+        "passed": true,
+        "phase": "cancel",
+        "sanitized": false,
+        "process": {
+          "pid": 1486458,
+          "start_ticks": 211460682,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-locked-gate-cancel-06/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/container-window/normal-empty-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2b9fe358f19532f2a2a31fd33f26365eb81f2fb3b560229cf02eb44405557885"
+        },
+        "source_sha256": "b23acab4f165351d71e81185fd985fa4bedca5c15120ca825eac78de2db78637",
+        "save_sha256": "f94680109843ed9074d91f03e6cf1667fe4ed6ea3e6565a3e5834ebd0dcdab1b",
+        "gate_before": {
+          "key": "content:oblivion.esm:049bbd",
+          "base": "content:oblivion.esm:0228c8",
+          "cell": "content:oblivion.esm:0463f5",
+          "enabled": true,
+          "deleted": false,
+          "position": [
+            -5312.0,
+            -10496.0,
+            -2624.0,
+            0.0,
+            -0.0,
+            1.570798397064209
+          ],
+          "owner": null,
+          "lock_level": 7,
+          "inventory": [],
+          "custom_state": {
+            "count": 1,
+            "locked": true,
+            "record_type": 1389317956,
+            "scale": 1.0
+          },
+          "actor_draw_state": null,
+          "item_condition": null,
+          "item_charge": null,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "dropper": null,
+          "dropped_items": null
+        },
+        "gate_after": {
+          "key": "content:oblivion.esm:049bbd",
+          "base": "content:oblivion.esm:0228c8",
+          "cell": "content:oblivion.esm:0463f5",
+          "enabled": true,
+          "deleted": false,
+          "position": [
+            -5312.0,
+            -10496.0,
+            -2624.0,
+            0.0,
+            -0.0,
+            1.570798397064209
+          ],
+          "owner": null,
+          "lock_level": 7,
+          "inventory": [],
+          "custom_state": {
+            "count": 1,
+            "lock_checked": true,
+            "locked": true,
+            "record_type": 1389317956,
+            "scale": 1.0
+          },
+          "actor_draw_state": null,
+          "item_condition": null,
+          "item_charge": null,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "dropper": null,
+          "dropped_items": null
+        },
+        "picks_before": 7,
+        "picks_after": 7,
+        "failed_attempts": 0,
+        "health": 53.00106430053711,
+        "position_before": [
+          -5299.40380859375,
+          -10120.689453125,
+          -2663.945556640625,
+          0.6167036294937134,
+          0.0,
+          0.0170590877532959
+        ],
+        "position_after": [
+          -5387.732421875,
+          -10416.9013671875,
+          -2662.566162109375,
+          0.6577192544937134,
+          0.0,
+          2.6068849563598633
+        ],
+        "verifier_sha256": "892d6f2796c547f1611e76c32f12ab738378225d6b294a73f7b42679faf01bc7"
+      },
+      "artifacts": {
+        "lock-audit.json": "0cd1717498ca33bcb155378b610f12308a2766d6c5eb4ad63b75229e065c1e86",
+        "driver-process.json": "e6f13b556be073f78f289ab006d97674a54337be9b42805099789e05679d1d21",
+        "captured-input-manifest.json": "4c902b2cb525c34f0055eff6463055a56622954516132a4d0b65d4a6b5d3d45f",
+        "process-epoch.json": "d5abf055f152822772fbc5658bf207e6772ed1b87e75b8c24b998a1ec2badc39",
+        "process.log": "0bf1981b55c695f022b88bb4d6d7ae8d44664d921b5748a7d753ee35e21211c8",
+        "original-locked-iron-gate-approach.png": "b4c90f996f5b2d93afdede553705e439765afc6628a11356843316fd0b82091d",
+        "paused-original-cask-lock.png": "d91a1050ee72617dd2bf81a2b5c16cab1e83847227558c9df2cdae09f6e21cfe"
+      }
+    },
+    "normal-gate-auto-attempt-01": {
+      "audit": {
+        "passed": true,
+        "phase": "attempt",
+        "sanitized": false,
+        "process": {
+          "pid": 1496011,
+          "start_ticks": 211515556,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-gate-auto-attempt-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-locked-gate-cancel-06/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2b9fe358f19532f2a2a31fd33f26365eb81f2fb3b560229cf02eb44405557885"
+        },
+        "source_sha256": "f94680109843ed9074d91f03e6cf1667fe4ed6ea3e6565a3e5834ebd0dcdab1b",
+        "save_sha256": "70e3a0d9ff6e734b4255fbbd7fd4c22e36248ca0458f89381eaf5ed252620326",
+        "gate_before": {
+          "key": "content:oblivion.esm:049bbd",
+          "base": "content:oblivion.esm:0228c8",
+          "cell": "content:oblivion.esm:0463f5",
+          "enabled": true,
+          "deleted": false,
+          "position": [
+            -5312.0,
+            -10496.0,
+            -2624.0,
+            0.0,
+            -0.0,
+            1.570798397064209
+          ],
+          "owner": null,
+          "lock_level": 7,
+          "inventory": [],
+          "custom_state": {
+            "count": 1,
+            "lock_checked": true,
+            "locked": true,
+            "record_type": 1389317956,
+            "scale": 1.0
+          },
+          "actor_draw_state": null,
+          "item_condition": null,
+          "item_charge": null,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "dropper": null,
+          "dropped_items": null
+        },
+        "gate_after": {
+          "key": "content:oblivion.esm:049bbd",
+          "base": "content:oblivion.esm:0228c8",
+          "cell": "content:oblivion.esm:0463f5",
+          "enabled": true,
+          "deleted": false,
+          "position": [
+            -5312.0,
+            -10496.0,
+            -2624.0,
+            0.0,
+            -0.0,
+            1.570798397064209
+          ],
+          "owner": null,
+          "lock_level": 0,
+          "inventory": [],
+          "custom_state": {
+            "count": 1,
+            "lock_checked": true,
+            "locked": false,
+            "lockpick_auto_attempts": 5,
+            "lockpick_auto_chance": 47.900001525878906,
+            "lockpick_broken": true,
+            "obscript.animation_absolute": false,
+            "obscript.animation_group": "open",
+            "obscript.animation_loop_count": 0,
+            "obscript.animation_mode": 1,
+            "obscript.animation_playing": true,
+            "obscript.animation_progress": 1.0,
+            "obscript.animation_scripted": true,
+            "record_type": 1389317956,
+            "scale": 1.0,
+            "unlocked_with_lockpick": true
+          },
+          "actor_draw_state": null,
+          "item_condition": null,
+          "item_charge": null,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "dropper": null,
+          "dropped_items": null
+        },
+        "picks_before": 7,
+        "picks_after": 3,
+        "failed_attempts": 4,
+        "health": 53.00106430053711,
+        "position_before": [
+          -5387.732421875,
+          -10416.9013671875,
+          -2662.566162109375,
+          0.6577192544937134,
+          0.0,
+          2.6068849563598633
+        ],
+        "position_after": [
+          -5387.732421875,
+          -10416.9013671875,
+          -2662.566162109375,
+          0.6577192544937134,
+          0.0,
+          2.6068849563598633
+        ],
+        "verifier_sha256": "892d6f2796c547f1611e76c32f12ab738378225d6b294a73f7b42679faf01bc7"
+      },
+      "artifacts": {
+        "lock-audit.json": "3706468a96c2a88c44342f8540f8d76ee0c3786988daee481fb4856a7ae6e82f",
+        "driver-process.json": "27a676c22c92ebbad3128b4add6f360534a1c6bb18a1e0e3d14cfb57f6bd85a7",
+        "captured-input-manifest.json": "a20ea1b7cc469feffc043904a6e01b7b294c688704d205391806580d89ae15fb",
+        "process-epoch.json": "aa955208888b9491b154143e1a48081d33c9e048acf8fc64a584318e4c4b7c63",
+        "process.log": "d548e0f04e28a62494db0f61160421e2fe33d300d7fac1d32873bc08276c57f2",
+        "original-gate-after-auto-attempt.png": "c56731cab6ce0eaa9208ea3237603260945691670e36c842eb77b07c098f4b8a",
+        "paused-gate-after-failed-attempt.png": "48d5ff0af042022fd197b0fa9e4694e2b4ce1879d096c00f17cc5a86ac9af116",
+        "paused-original-cask-lock.png": "c1d3bedf77813f7433f546d5e77a21c7a2905b4b34e0d92734e3559ddfebd8b5"
+      }
+    },
+    "normal-gate-open-restart-passage-01": {
+      "audit": {
+        "passed": true,
+        "phase": "passage",
+        "sanitized": false,
+        "process": {
+          "pid": 1506170,
+          "start_ticks": 211559273,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-gate-open-restart-passage-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-gate-auto-attempt-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2b9fe358f19532f2a2a31fd33f26365eb81f2fb3b560229cf02eb44405557885"
+        },
+        "source_sha256": "70e3a0d9ff6e734b4255fbbd7fd4c22e36248ca0458f89381eaf5ed252620326",
+        "save_sha256": "fa6a09857a5c314441c8b41039ecac4ca7a205ba6d9bdca579b45a7cbffb8bba",
+        "gate_before": {
+          "key": "content:oblivion.esm:049bbd",
+          "base": "content:oblivion.esm:0228c8",
+          "cell": "content:oblivion.esm:0463f5",
+          "enabled": true,
+          "deleted": false,
+          "position": [
+            -5312.0,
+            -10496.0,
+            -2624.0,
+            0.0,
+            -0.0,
+            1.570798397064209
+          ],
+          "owner": null,
+          "lock_level": 0,
+          "inventory": [],
+          "custom_state": {
+            "count": 1,
+            "lock_checked": true,
+            "locked": false,
+            "lockpick_auto_attempts": 5,
+            "lockpick_auto_chance": 47.900001525878906,
+            "lockpick_broken": true,
+            "obscript.animation_absolute": false,
+            "obscript.animation_group": "open",
+            "obscript.animation_loop_count": 0,
+            "obscript.animation_mode": 1,
+            "obscript.animation_playing": true,
+            "obscript.animation_progress": 1.0,
+            "obscript.animation_scripted": true,
+            "record_type": 1389317956,
+            "scale": 1.0,
+            "unlocked_with_lockpick": true
+          },
+          "actor_draw_state": null,
+          "item_condition": null,
+          "item_charge": null,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "dropper": null,
+          "dropped_items": null
+        },
+        "gate_after": {
+          "key": "content:oblivion.esm:049bbd",
+          "base": "content:oblivion.esm:0228c8",
+          "cell": "content:oblivion.esm:0463f5",
+          "enabled": true,
+          "deleted": false,
+          "position": [
+            -5312.0,
+            -10496.0,
+            -2624.0,
+            0.0,
+            -0.0,
+            1.570798397064209
+          ],
+          "owner": null,
+          "lock_level": 0,
+          "inventory": [],
+          "custom_state": {
+            "count": 1,
+            "lock_checked": true,
+            "locked": false,
+            "lockpick_auto_attempts": 5,
+            "lockpick_auto_chance": 47.900001525878906,
+            "lockpick_broken": true,
+            "obscript.animation_absolute": false,
+            "obscript.animation_group": "open",
+            "obscript.animation_loop_count": 0,
+            "obscript.animation_mode": 1,
+            "obscript.animation_playing": true,
+            "obscript.animation_progress": 1.0,
+            "obscript.animation_scripted": true,
+            "record_type": 1389317956,
+            "scale": 1.0,
+            "unlocked_with_lockpick": true
+          },
+          "actor_draw_state": null,
+          "item_condition": null,
+          "item_charge": null,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "dropper": null,
+          "dropped_items": null
+        },
+        "picks_before": 3,
+        "picks_after": 3,
+        "failed_attempts": 0,
+        "health": 53.00106430053711,
+        "position_before": [
+          -5387.732421875,
+          -10416.9013671875,
+          -2662.566162109375,
+          0.6577192544937134,
+          0.0,
+          2.6068849563598633
+        ],
+        "position_after": [
+          -5305.0185546875,
+          -10545.28125,
+          -2662.20947265625,
+          0.07178175449371338,
+          0.0,
+          2.6381349563598633
+        ],
+        "verifier_sha256": "892d6f2796c547f1611e76c32f12ab738378225d6b294a73f7b42679faf01bc7"
+      },
+      "artifacts": {
+        "lock-audit.json": "4db296cb3d2ced8c847eca0e4dc4f02f4479402cd03780b803404e27d7f9d190",
+        "driver-process.json": "d72859de18f990fcaea373079c1ec62a03c1454c15ee25d896ad508d746bc5cc",
+        "captured-input-manifest.json": "bf350a04cf5b623d1329890d1ae4b91e987605e83ca4d3ed651132b0409363e3",
+        "process-epoch.json": "e2fa60c63ca0a575625d92cc902a3cd761faceda482ceed6a31d0dc2ce5328eb",
+        "process.log": "fc8a717eb3fa71a6867e2055f29c11c13041045cd437b0a67ad0271dbe8d1902",
+        "cold-loaded-open-gate.png": "9767ff4b8d2377b10c14a8669261fda8203ade01f41104555053afcceca06c86",
+        "passed-open-native-gate.png": "9095b8ed210c3ffec5a3219d2a2b11bba7199d7b717ddf663288d90d3cdd729e"
+      }
+    }
+  },
+  "reuse_scope": "Early acquisition, four failed attempts and depleted-stock cold passage use normal executable2b9fe358 before the FailedAction ownership fix. Their gate interaction code is unchanged. Failed Auto Attempt displays its message synchronously; the ownership fix changes deferred FailedAction text storage. Final six courses use the final owned-message normal/instrumented binaries and each succeeds on its first Auto Attempt. No fresh instrumented failure branch is claimed.",
+  "baseline": {
+    "path": "build/oblivion-compat/iron-gate/sanitized-locked-gate-baseline-03/baseline-observations.json",
+    "sha256": "b85579d10e96bb024614d86a1b1f4f5fadc89b97aca1236ad52777cae88cc6a7",
+    "status": "Pre-change binary reported Locked7, then ASan diagnosed a borrowed temporary message. This is intentionally retained failing evidence, not a passing baseline/save course."
+  },
+  "rendered_images_reviewed": [
+    "build/oblivion-compat/iron-gate/normal-final-gate-cancel-01/paused-original-cask-lock.png",
+    "build/oblivion-compat/iron-gate/normal-final-gate-attempt-01/original-gate-after-auto-attempt.png",
+    "build/oblivion-compat/iron-gate/normal-final-gate-attempt-01/paused-original-cask-lock.png",
+    "build/oblivion-compat/iron-gate/normal-final-gate-passage-01/cold-loaded-open-gate.png",
+    "build/oblivion-compat/iron-gate/normal-final-gate-passage-01/passed-open-native-gate.png",
+    "build/oblivion-compat/iron-gate/sanitized-final-gate-cancel-01/paused-original-cask-lock.png",
+    "build/oblivion-compat/iron-gate/sanitized-final-gate-attempt-01/original-gate-after-auto-attempt.png",
+    "build/oblivion-compat/iron-gate/sanitized-final-gate-attempt-01/paused-original-cask-lock.png",
+    "build/oblivion-compat/iron-gate/sanitized-final-gate-passage-01/cold-loaded-open-gate.png",
+    "build/oblivion-compat/iron-gate/sanitized-final-gate-passage-01/passed-open-native-gate.png"
+  ],
+  "verification_layers": {
+    "structural": "Seven validated editable input manifests; embedded observers compile with LuaJIT. Real save payloads round-trip and equal actual saved live state.",
+    "compiler_and_regression": "Full normal and instrumented engine inventories match XML; Python611 passes. The targeted lifetime regression passes normal and ASan/UBSan execution.",
+    "semantic": "Independent actual-master record/group/typed-door audit and native saved-reference, inventory, animation and position reinspection.",
+    "runtime": "Ordinary Space, explicit lock choice, failures, opening, cold restart and physical traversal through actual Gate049bbd; exact process executable, libraries and input/save provenance captured.",
+    "independent_original": "Original executable menu, Close and five failed Auto Attempts observed in an isolated fixture; no original successful-attempt or probability certification."
+  },
+  "limitations": [
+    "Auto-chance remains approximate; original observed leveled lock8 vs fork7 is retained as adjacent work.",
+    "Manual tumblers, Skeleton Key, Security experience and full M13 remain open. Original Security5\u21927 during failed attempts is recorded for a later chunk.",
+    "Actual runtime course covers an unowned keyless Player gate. Existing key/NPC/exit delegation is preserved in source, with door/ownership regressions; no full actor/key/ownership runtime matrix is claimed.",
+    "Rendered instrumented courses disable leak detection; instrumented engine tests enable it.",
+    "The baseline exposed a lifetime bug fixed by owned FailedAction text; the original baseline failure is retained.",
+    "Only documentation metadata is updated after the guarded integration snapshot."
+  ],
+  "retained_attempts": [
+    "normal-locked-gate-baseline-01: aggressive camera gain failed to align to actual door.",
+    "normal-locked-gate-baseline-02: reached gate; center-screen ray hit the dead Skeleton, so no door activation occurred. Neither attempt proves the locked-door runtime baseline.",
+    "normal-locked-gate-cancel-01 and sanitized-locked-gate-baseline-01: upper aim at reference pivot did not activate the actual door.",
+    "normal-locked-gate-cancel-02: read-only physical ray hit static frame049bb9, not Gate049bbd. Next approach targets the actual rendered bounding-box center.",
+    "normal-locked-gate-cancel-03: exact gate bounds center aimed correctly, but ray hit Skeleton06c2e6 at approximately6 units. Retry04 uses an ordinary lateral step and requires the physical ray to identify Gate049bbd before activation.",
+    "normal-locked-gate-cancel-04: one-second lateral step still hit Skeleton with physical ray. Actual activation uses rendering ray; retry05 observes rendering identity/range, lower gate panel and a larger ordinary sidestep.",
+    "normal-locked-gate-cancel-05: rendering ray confirmed Gate049bbd at approximately120 units and actual lock prompt showed seven picks. Native screenshot action inside blocking modal timed out before explicit Cancel. External modal capture retained; retry06 uses that existing read-only capture and omits the deferred native screenshot.",
+    "sanitized-locked-gate-baseline-02: process exit9 during loading, no sanitizer diagnostic; no baseline claim. Retry alone after original-game cleanup.",
+    "sanitized-locked-gate-baseline-03: actual Gate049bbd activation reported Locked7, then ASan heap-use-after-free before save. Actual process303085f1 and full diagnostic retained; not a passing runtime/save course."
+  ],
+  "continuation": {
+    "path": "build/oblivion-compat/iron-gate/normal-final-gate-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7ecd4febfef2c4a1011501a1a65679fc460eed82fe3b9c804f8834b5ff17daa1",
+    "health": 53.00106430053711,
+    "picks": 7
+  },
+  "provenance_correction": {
+    "scope": "Oracle note only: fork Security is5, not15. Production code, observed47.9 chance, runtime recordings and test results are unchanged.",
+    "evidence": "build/oblivion-compat/iron-gate/security-value-correction.json",
+    "sha256": "9ff7dce1fa29e3cc6fdd92b92fe45fea9201659477b09f52ecd07c35ca268948"
+  }
+}

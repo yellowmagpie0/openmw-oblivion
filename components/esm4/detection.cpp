@@ -114,6 +114,15 @@ namespace ESM4
         return {bootWeight, moving, running};
     }
 
+    bool nativeGetDetected(const DetectionResult& result)
+    {
+        if (!result.mValid)
+            return false;
+        if (!std::isfinite(result.mLevel) || result.mLevel < 0 || result.mLevel > 100)
+            throw std::invalid_argument("invalid normalized native detection score");
+        return result.mLevel > 50;
+    }
+
     DetectionResult calculateDetection(const DetectionInput& input)
     {
         if (!finite(input) || input.mMaximumDistance <= 0.0 || input.mViewConeRadians <= 0.0)

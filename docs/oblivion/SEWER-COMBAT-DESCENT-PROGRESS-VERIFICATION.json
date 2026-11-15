@@ -1,0 +1,371 @@
+{
+  "scope": "Preserve an exhausted authored fall approach across timer-only combat replanning; real instrumented descent, third NPC death and original escort54. Full uninterrupted escape remains outstanding.",
+  "full_escape_complete": false,
+  "policy": "Target/cell changes and >64unit destination changes still replan. A consumed/empty route can keep its already permitted visible downward movement while the ordinary replan timer expires. Losing visibility, AllowFalls permission or downward separation restores normal replanning. Movement/gravity/contact/death ownership and save schema unchanged.",
+  "red_counterexample": {
+    "scope": "Standalone C++ counterexample linked against actual pre-fix inline policy, not an engine inventory gate",
+    "expected_failure_observed": true,
+    "returncode": 1,
+    "output": "FAIL: timer-only repath restarts the consumed platform prefix during allowed descent\n",
+    "compiler_argv": [
+      "c++",
+      "-std=c++20",
+      "-I.",
+      "build/oblivion-compat/sewer-escape/completed-descent-red-01/probe.cpp",
+      "-o",
+      "build/oblivion-compat/sewer-escape/completed-descent-red-01/probe"
+    ],
+    "probe_source_sha256": "744d6b3608ee869c329e43750b052c5d9cad3acd3779d57a9779b569b7225612",
+    "binary_sha256": "c231b066c8184da5d4f724dca2a34053872352c8d856a001f50503ae7f9ad3f8",
+    "source_sha256": {
+      "apps/openmw/mwmechanics/oblivionaidestination.hpp": "3309d5f7336e83c4c70d502a37543588db5de40b9a4bfd2aca1d1055294b5a53",
+      "apps/openmw/mwmechanics/oblivionai.cpp": "c79b7797f113c7d4f3d778dcec7e214023a8f06a3cd44b6409679e738ccc6c21",
+      "apps/openmw_tests/mwworld/testoblivionai.cpp": "2dbb66f05ba49e716701922da72beba85d62603ebd41370dbe50a93692080df8"
+    },
+    "gdb_evidence": "build/oblivion-compat/sewer-escape/platform-navigation-gdb-02.log"
+  },
+  "gdb_evidence": "build/oblivion-compat/sewer-escape/platform-navigation-gdb-02.log",
+  "tests": {
+    "completed-descent-focused-normal-01": {
+      "passed": true,
+      "source_before": {
+        "head": "ef2c3ef348d86d6ae3a3ec917237bbc3d5ce8f22",
+        "source_fingerprint": "758ba7c3cfdae2aab9bfb84de68d93378924cbc1726d47eab160152f7f6e7e36"
+      },
+      "source_after": {
+        "head": "ef2c3ef348d86d6ae3a3ec917237bbc3d5ce8f22",
+        "source_fingerprint": "758ba7c3cfdae2aab9bfb84de68d93378924cbc1726d47eab160152f7f6e7e36"
+      },
+      "results": {
+        "engine": {
+          "executed": 2,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.AllowFallsPursuesBelowAnIsolatedPlatformWithoutNavigationPoints:OblivionAiTest.AllowedDescentPreservesCompletedPartialRouteAcrossRepathTimer",
+          "binary_sha256": "9e2b1a28ee0be5e25742009b24edc7479603657ee634a1ebfccdb704c965e517",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6b23330eb0edeb79d2d1c1680211401d9f4080f37d503b8aca09063396c732d9",
+          "inventory_sha256": "b95f5897999bf73f9881c0db2f9e3c8702d5492a2f187db64956c9571083c603",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/completed-descent-focused-normal-01/verification.json"
+    },
+    "completed-descent-focused-sanitized-01": {
+      "passed": true,
+      "source_before": {
+        "head": "ef2c3ef348d86d6ae3a3ec917237bbc3d5ce8f22",
+        "source_fingerprint": "758ba7c3cfdae2aab9bfb84de68d93378924cbc1726d47eab160152f7f6e7e36"
+      },
+      "source_after": {
+        "head": "ef2c3ef348d86d6ae3a3ec917237bbc3d5ce8f22",
+        "source_fingerprint": "758ba7c3cfdae2aab9bfb84de68d93378924cbc1726d47eab160152f7f6e7e36"
+      },
+      "results": {
+        "engine": {
+          "executed": 2,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.AllowFallsPursuesBelowAnIsolatedPlatformWithoutNavigationPoints:OblivionAiTest.AllowedDescentPreservesCompletedPartialRouteAcrossRepathTimer",
+          "binary_sha256": "b9326bd6f2eddfb28621d41e0b0af8ba4c8e2f5ce9860255b74c00efa039e7c7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "06f0cee49b9a6bd5194a633bd1ca2b30817de147f32ba63250e61b6d494331d6",
+          "inventory_sha256": "b95f5897999bf73f9881c0db2f9e3c8702d5492a2f187db64956c9571083c603",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/completed-descent-focused-sanitized-01/verification.json"
+    },
+    "completed-descent-engine-integration-01": {
+      "passed": true,
+      "source_before": {
+        "head": "ef2c3ef348d86d6ae3a3ec917237bbc3d5ce8f22",
+        "source_fingerprint": "3b72cefbf913f7189b5f9d9844799cfc21509435247a2999dbbd29161f9e5910"
+      },
+      "source_after": {
+        "head": "ef2c3ef348d86d6ae3a3ec917237bbc3d5ce8f22",
+        "source_fingerprint": "3b72cefbf913f7189b5f9d9844799cfc21509435247a2999dbbd29161f9e5910"
+      },
+      "results": {
+        "engine": {
+          "executed": 2208,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c540bcaa01e548aa7782b9039d48afa12e403a612fa9bfea211d4e35669a2e82",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ee795521843dc040aac193ab86ab531facf3671d1c5b79a58922efd61fb55d79",
+          "inventory_sha256": "b95f5897999bf73f9881c0db2f9e3c8702d5492a2f187db64956c9571083c603",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/completed-descent-engine-integration-01/verification.json"
+    },
+    "completed-descent-sanitizer-integration-01": {
+      "passed": true,
+      "source_before": {
+        "head": "ef2c3ef348d86d6ae3a3ec917237bbc3d5ce8f22",
+        "source_fingerprint": "3b72cefbf913f7189b5f9d9844799cfc21509435247a2999dbbd29161f9e5910"
+      },
+      "source_after": {
+        "head": "ef2c3ef348d86d6ae3a3ec917237bbc3d5ce8f22",
+        "source_fingerprint": "3b72cefbf913f7189b5f9d9844799cfc21509435247a2999dbbd29161f9e5910"
+      },
+      "results": {
+        "engine": {
+          "executed": 2208,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6023b8265df72e4cf7b2074332cdd432baac0f21f5680db868374ae76aae1767",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "294f8dcd023846f38a7a656985f57554e8aea97d433048552f821d3bd4822373",
+          "inventory_sha256": "b95f5897999bf73f9881c0db2f9e3c8702d5492a2f187db64956c9571083c603",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/completed-descent-sanitizer-integration-01/verification.json"
+    }
+  },
+  "rendered_sanitizer": {
+    "scenario": "build/oblivion-compat/sewer-escape/completed-descent-rendered-sanitized-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-recipient-rendered-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "612ff511cbe7cf81312ec9fb35d7b7d4230ce0b2cf379554969b60a2800f5ad0",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "source_save": "build/oblivion-compat/sewer-escape/joined-recipient-rendered-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "612ff511cbe7cf81312ec9fb35d7b7d4230ce0b2cf379554969b60a2800f5ad0",
+    "save": "build/oblivion-compat/sewer-escape/completed-descent-rendered-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "save_sha256": "a894179e45e4902c5e04bd0c2e3da90db6193b5e564e91d0e7ea936eb057cbbf",
+    "assassin_before": [
+      3050.499755859375,
+      6786.9638671875,
+      -991.9993896484375,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "assassin_after": [
+      2992.20361328125,
+      6734.22802734375,
+      -1179.851318359375,
+      0.0,
+      0.0,
+      0.4858180582523346
+    ],
+    "life": {
+      "actor": "content:oblivion.esm:01774a",
+      "base": "content:oblivion.esm:0176db",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "content:oblivion.esm:032a18"
+    },
+    "new_assassin_base_death_count": 1,
+    "all_escorts_alive": true,
+    "original_quest": {
+      "quest": "content:oblivion.esm:02466e",
+      "stage": 54,
+      "running": true,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        34,
+        36,
+        40,
+        42,
+        43,
+        44,
+        45,
+        50,
+        52,
+        54
+      ]
+    },
+    "player_health": 100,
+    "player_inventory_unchanged": true,
+    "player_combat_input": "None; ordinary measured120-unit side clearance only, then passive original gameplay",
+    "no_combat_pending_death_action": true,
+    "source_initial_kills": "Original failed sanitizer route kills2 other assassins through real Glenroy contacts. This exact fresh source preserves them; only third death is new. Raw failure stays failed.",
+    "native_descent_samples": [
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=1 cursor=0 points=0",
+        "game_hour": 8.10346127,
+        "diagnostic_count": 1
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=1 cursor=0 points=0",
+        "game_hour": 8.11453152,
+        "diagnostic_count": 2
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=0 cursor=0 points=2",
+        "game_hour": 8.1159153,
+        "diagnostic_count": 1
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=1 cursor=0 points=2",
+        "game_hour": 8.11729908,
+        "diagnostic_count": 1
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=0 cursor=0 points=2",
+        "game_hour": 8.11868286,
+        "diagnostic_count": 2
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=1 cursor=0 points=2",
+        "game_hour": 8.12006664,
+        "diagnostic_count": 2
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=0 cursor=0 points=2",
+        "game_hour": 8.12421799,
+        "diagnostic_count": 4
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=1 cursor=1 points=2",
+        "game_hour": 8.12560177,
+        "diagnostic_count": 1
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=0 cursor=2 points=2",
+        "game_hour": 8.12698555,
+        "diagnostic_count": 1
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=0 cursor=2 points=2",
+        "game_hour": 8.12836933,
+        "diagnostic_count": 2
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=0 cursor=2 points=2",
+        "game_hour": 8.13113689,
+        "diagnostic_count": 4
+      },
+      {
+        "event": "combat-descent",
+        "actor": "content:oblivion.esm:01774a",
+        "package": "content:oblivion.esm:017d81",
+        "phase": 7,
+        "tier": 0,
+        "reason": "visible=1 repath=1 cursor=0 points=0",
+        "game_hour": 8.14774227,
+        "diagnostic_count": 4
+      }
+    ],
+    "input_receipts_identical": true,
+    "capture_inspected": "isolated-platform-escort54.png",
+    "binary_sha256": "e70d0ed1c2329c7e657349d40a368c67e607d478136ee6894022f44f8497a2ff",
+    "leak_scope": "Rendered ASan/UBSan halt-on-error, leak checking disabled; full engine integration separately enables leak checks."
+  },
+  "prior_empty_route_proof": "docs/oblivion/SEWER-EMPTY-COMBAT-ROUTE-FALLS-VERIFICATION.json",
+  "remaining": "Run prepared67-segment original new-game course through physical exterior and fresh outdoor save/load; current main composite already proves exterior/reload. No full escape acceptance yet."
+}

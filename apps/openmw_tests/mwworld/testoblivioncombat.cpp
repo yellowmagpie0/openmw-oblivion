@@ -1453,3 +1453,67 @@ TEST(OblivionCombatService, BlockingDodgePreservesAndAdvancesRetiringHeldHistory
     EXPECT_TRUE(service.findMeleeState(actor)->mFirstPerson->mHeldBlocks[0].mInactive);
     EXPECT_TRUE(service.isActionConsumed(service.findMeleeState(actor)->mDodge->mActionId));
 }
+
+TEST(OblivionCombatService, NativeSpellCastOwnershipSurvivesRestoreAndCancelsWithActorActions)
+{
+    auto state = bowServiceState();
+    const auto actor = state.mPlayer.mReference;
+    state.mNativeActorValues[0].mValues[9].mBase = 80;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    const ESM4::SpellCastState cast{ESM::FormKey::content("Oblivion.esm", 0x136),
+        "onehandcastself", 19.f, 0.f, .36666667f, 1.3f, false};
+    ASSERT_TRUE(service.beginSpellCast(actor, cast));
+    EXPECT_FALSE(service.beginSpellCast(actor, cast));
+    EXPECT_THROW(service.beginMeleeStrike(actor, ESM4::MeleeStrikeKind::Left, "attackleft"), std::invalid_argument);
+    service.capture(state);
+    MWMechanics::OblivionCombatService restored;
+    restored.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NE(restored.findSpellCast(actor), nullptr);
+    EXPECT_EQ(*restored.findSpellCast(actor), cast);
+    restored.cancelActorActions(actor);
+    EXPECT_EQ(restored.findSpellCast(actor), nullptr);
+    EXPECT_FLOAT_EQ(restored.getPlayerValue(9), 80.f);
+    auto expensive = cast; expensive.mCost = 81;
+    EXPECT_FALSE(restored.beginSpellCast(actor, expensive));
+    restored.capture(state);
+    EXPECT_TRUE(state.mNativeSpellCasts.empty());
+}
+
+TEST(OblivionCombatService, StaffReleaseIgnoresMagickaAndDoesNotReplayAcrossRestore)
+{
+    auto state = bowServiceState();
+    const auto actor = state.mPlayer.mReference;
+    state.mNativeActorValues[0].mValues[9].mBase = 0;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    const ESM4::SpellCastState cast{ESM::FormKey::content("Oblivion.esm", 0x66c42),
+        "staffattackright", 13.f, 0.f, .7f, .9333334f, false};
+    EXPECT_FALSE(service.beginSpellCast(actor, cast));
+    ASSERT_TRUE(service.beginSpellCast(actor, cast, false));
+    unsigned releases = 0;
+    const auto release = [&] { ++releases; return true; };
+    ASSERT_TRUE(service.advanceItemCast(actor, .3f, release));
+    EXPECT_EQ(releases, 0u);
+    const auto pending = *service.findSpellCast(actor);
+    EXPECT_THROW(service.advanceItemCast(actor, .5f, []() -> bool { throw std::runtime_error("preparation failed"); }),
+        std::runtime_error);
+    EXPECT_EQ(*service.findSpellCast(actor), pending);
+    const auto result = service.advanceItemCast(actor, .5f, release);
+    ASSERT_TRUE(result); EXPECT_TRUE(result->mReleased); EXPECT_TRUE(result->mApplied);
+    EXPECT_EQ(releases, 1u);
+    service.capture(state);
+    MWMechanics::OblivionCombatService restored;
+    restored.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    const auto finish = restored.advanceItemCast(actor, 1, release);
+    ASSERT_TRUE(finish); EXPECT_TRUE(finish->mFinished); EXPECT_FALSE(finish->mReleased);
+    EXPECT_EQ(releases, 1u); EXPECT_FLOAT_EQ(restored.getPlayerValue(9), 0);
+    EXPECT_EQ(restored.findSpellCast(actor), nullptr);
+    ASSERT_TRUE(restored.beginSpellCast(actor, cast, false));
+    const auto failed = restored.advanceItemCast(actor, .8f, [] { return false; });
+    ASSERT_TRUE(failed); EXPECT_TRUE(failed->mReleased); EXPECT_FALSE(failed->mApplied);
+    restored.advanceItemCast(actor, 1, release);
+    EXPECT_EQ(releases, 1u);
+    ASSERT_TRUE(restored.beginSpellCast(actor, cast, false));
+    restored.cancelActorActions(actor);
+    EXPECT_FALSE(restored.advanceItemCast(actor, 1, release));
+    EXPECT_EQ(releases, 1u);
+}

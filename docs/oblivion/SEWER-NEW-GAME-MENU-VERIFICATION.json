@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T19:36:04.078728+00:00",
+  "scope": "Oblivion original-new-game inventory/magic menu admission; native healing and room traversal from genuine failed-course save",
+  "status": "Bounded fix verified; full uninterrupted sewer escape remains incomplete",
+  "parent_commit": "f6e2b906ede5a31e98122c4a5348e81b0ff49ef9",
+  "source_files": {
+    "apps/openmw/mwgui/windowmanagerimp.cpp": "0b35c1e7a0fc91779dd94a3e0957c7c89c0f133422051401b8aae09023bd7cb4",
+    "scripts/data/oblivion_compat/oblivion_sewer_new_game_menu.json": "df9be3d02ce955c64519d57241cedf95ea9aef2637b136f7701474fc58cd569d"
+  },
+  "behavior": "Oblivion new games allow GW_ALL; Morrowind retains disallowAll. Both profiles retain CharacterCreation/StatsWatcher new-game reset. Existing load behavior unchanged.",
+  "original_failure": {
+    "proof": "build/oblivion-compat/sewer-escape/full-escape-continuous-07-failure-verification.json",
+    "sha256": "2cb99e22bfbc362a850d284dc2335f056ceff4ad64dbd42f65c014391b56757e",
+    "result": "Original prison/ambush/escort30, three actual Player rat kills and wall exit pass; healing menu never opens; no releases and health36/magicka80 unchanged; segment5 recovery fails"
+  },
+  "runtime_baseline": {
+    "course": "build/oblivion-compat/sewer-escape/new-game-menu-red-01",
+    "scenario_sha256": "407f0c7bbad5cc8a9e16bb9289b544649cc454f53f67d82345b4f0bf34f97d5d",
+    "passed": false,
+    "exit_code": 0,
+    "findings": 0,
+    "input_receipts_match": true,
+    "run_end": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 222076,
+      "sequence": 8,
+      "tick": 148,
+      "event": "run-end",
+      "error_count": 0,
+      "event_count": 7,
+      "pending_count": 0,
+      "unsupported_count": 5
+    }
+  },
+  "normal_cold_new_game": {
+    "course": "build/oblivion-compat/sewer-escape/new-game-menu-green-01",
+    "scenario_sha256": "c14fb48de44a8549b13e051d5000c4f57db7eb11387362cc1e21d755d5831507",
+    "passed": true,
+    "exit_code": 0,
+    "findings": 0,
+    "input_receipts_match": true,
+    "run_end": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 222584,
+      "sequence": 7,
+      "tick": 7,
+      "event": "run-end",
+      "error_count": 0,
+      "event_count": 6,
+      "pending_count": 0,
+      "unsupported_count": 5
+    }
+  },
+  "instrumented_cold_new_game": {
+    "course": "build/oblivion-compat/sewer-escape/new-game-menu-instrumented-02",
+    "scenario_sha256": "65bc182b985253c86d655bcc76d40428fa8cd26105085956bebaab43a5cb56ef",
+    "passed": true,
+    "exit_code": 0,
+    "findings": 0,
+    "input_receipts_match": true,
+    "run_end": {
+      "run_id": "tutorial-player-intervention",
+      "epoch": 3,
+      "pid": 229114,
+      "sequence": 7,
+      "tick": 6,
+      "event": "run-end",
+      "error_count": 0,
+      "event_count": 6,
+      "pending_count": 0,
+      "unsupported_count": 5
+    }
+  },
+  "rendered_captures_inspected": [
+    "new-game-menu-red-01/cold-new-game-menu.png",
+    "new-game-menu-green-01/cold-new-game-menu.png",
+    "new-game-menu-instrumented-02/cold-new-game-menu.png",
+    "menu-admission-healing-and-room-01/segment01-heal-selected.png",
+    "menu-admission-healing-and-room-01/segment02-joined-room-rat-victory.png"
+  ],
+  "loaded_healing": {
+    "runtime": {
+      "course": "build/oblivion-compat/sewer-escape/menu-admission-healing-and-room-01",
+      "scenario_sha256": "75ff43e3209d0cc38f516a544940f2a9b5ec3d63bc84b2dd952a19fb1adbd936",
+      "passed": true,
+      "exit_code": 0,
+      "findings": 0,
+      "input_receipts_match": true,
+      "run_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 222690,
+        "sequence": 5,
+        "tick": 795,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 4,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    },
+    "proof": "build/oblivion-compat/sewer-escape/menu-admission-healing-and-room-01/native-healing-verification.json",
+    "sha256": "9525127ffc94fbeef396e0769df260ff5c52eb5c9d2c989d7775f65acc4192ca",
+    "initial_health": 36,
+    "final_health": 60,
+    "three_native_heal_releases": true,
+    "inventory_unchanged": true,
+    "three_rat_Player_kills_retained": true,
+    "room_x": 1695.6129150390625,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-07/retained-saves/3-0023-Quicksave.omwsave",
+      "source_save_sha256": "0e90362ea958ec2e580810915916f6bd6a854372a929e73194fedcf6187b3491",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": [
+        [
+          "/native_animated_references/0/bodies/6/linear_velocity/1",
+          0.00015992736734915525,
+          0.00015992738190107048
+        ],
+        [
+          "/native_animated_references/0/bodies/6/linear_velocity/2",
+          0.00047385296784341335,
+          0.0004738529969472438
+        ]
+      ]
+    },
+    "native_save_exact": true,
+    "clear_queues": {
+      "native_combat_engagements": 0,
+      "pending_death_events": 0,
+      "physical_action_owners": 0,
+      "native_spell_casts": 0,
+      "native_magic_projectiles": 0
+    }
+  },
+  "gates": {
+    "focused": {
+      "proof": "build/oblivion-compat/sewer-escape/new-game-menu-build-01/verification.json",
+      "sha256": "150a139fb15c1d4509f817e925574622a09aba5469c29b716f4faebe6dc8eec9",
+      "source": {
+        "head": "f6e2b906ede5a31e98122c4a5348e81b0ff49ef9",
+        "source_fingerprint": "0adedd4e621927cddf43eaeb54765149ce2f6e1c0c7d411b2d188171553380ed"
+      },
+      "result": {
+        "executed": 9,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionCombatMagicStore.*",
+        "binary_sha256": "d92c72b3e815daa364ed5c6ef2275ef66471d3c9699a012fef02edeccb939476",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "b212e4d00a733f2eddc7b3ca91098d364b0d2d044158116bbad3d22c7ad43ab5",
+        "inventory_sha256": "eb22d0e99bfe17c3fc1a7e94a3890bd30adc08294c8b425e31bf880383a05ef3",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "normal_engine": {
+      "proof": "build/oblivion-compat/sewer-escape/new-game-menu-engine-integration-01/verification.json",
+      "sha256": "f656f6c354b64f00112281cd7709f20466cd0289d0a3d4a797c1c942e4e7cc69",
+      "source": {
+        "head": "f6e2b906ede5a31e98122c4a5348e81b0ff49ef9",
+        "source_fingerprint": "62b4806b5d1178b2f68d6a69ecd0fb66135943c59471025163b125ea3d44979a"
+      },
+      "result": {
+        "executed": 2210,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "d92c72b3e815daa364ed5c6ef2275ef66471d3c9699a012fef02edeccb939476",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "f80f82de0cbe044c94e13d30d98c5c5a5cdacc42fd4a173ba60191f1c17a34c7",
+        "inventory_sha256": "eb22d0e99bfe17c3fc1a7e94a3890bd30adc08294c8b425e31bf880383a05ef3",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitizer_engine": {
+      "proof": "build/oblivion-compat/sewer-escape/new-game-menu-sanitizer-integration-01/verification.json",
+      "sha256": "b3bbc6ddf27ae09f89bec5f52f7a8685a2090a062c487c8c85d7a9af03107afc",
+      "source": {
+        "head": "f6e2b906ede5a31e98122c4a5348e81b0ff49ef9",
+        "source_fingerprint": "62b4806b5d1178b2f68d6a69ecd0fb66135943c59471025163b125ea3d44979a"
+      },
+      "result": {
+        "executed": 2210,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "d99f278f2d33df3ebb445909060839017f89eac01aa0875dee7e9b2df17c72c9",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "11fba26d84f3bfe2cd14517812c758e972cfa677e1d255bb5c585365cb5ec553",
+        "inventory_sha256": "eb22d0e99bfe17c3fc1a7e94a3890bd30adc08294c8b425e31bf880383a05ef3",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "executables": {
+    "build/openmw": "a5073d8a47049971cdcdf07c70e5613ecceefc243c261d583a532e3190b79503",
+    "build/m15-sanitize/openmw": "79fcbadea4426c4907a0841bdfb2535dd7bac1c247b375bba71600dc6a1062d5"
+  },
+  "gui_libraries": {
+    "build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54",
+    "build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
+  },
+  "sanitizer_engine_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "instrumented_runtime_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "retained_failed_instrumented_attempt": {
+    "course": "new-game-menu-instrumented-01",
+    "result": "Startup wait120seconds failed before intro; game0/no engine findings; retained unchanged. Attempt02 changes only startup/overall allowance600/900seconds."
+  },
+  "limits": [
+    "Cold probes include only the five previously audited distant Peryite startup deferrals; no general unsupported-command acceptance.",
+    "Loaded healing/room evidence is a checkpoint continuation, not whole-course acceptance.",
+    "Runtime leak detection disabled; full engine leak gate enabled.",
+    "Full original-new-game prison to physical exterior and fresh reload of that run own outdoor save remain due."
+  ]
+}

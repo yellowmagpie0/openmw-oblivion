@@ -5,6 +5,8 @@
 
 #include "esm4base.hpp"
 
+namespace MWWorld { class CustomData; }
+
 namespace MWClass
 {
     class ESM4Light : public MWWorld::RegisteredClass<ESM4Light, ESM4Base<ESM4::Light>>
@@ -16,6 +18,9 @@ namespace MWClass
     public:
         std::string_view getName(const MWWorld::ConstPtr& ptr) const override;
         bool isItem(const MWWorld::ConstPtr& ptr) const override;
+        float getRemainingUsageTime(const MWWorld::ConstPtr& ptr) const override;
+        void setRemainingUsageTime(const MWWorld::Ptr& ptr, float duration) const override;
+        static std::unique_ptr<MWWorld::CustomData> prepareRemainingUsageTime(float duration);
         bool hasToolTip(const MWWorld::ConstPtr& ptr) const override;
         MWGui::ToolTipInfo getToolTipInfo(const MWWorld::ConstPtr& ptr, int count) const override;
         std::unique_ptr<MWWorld::Action> activate(

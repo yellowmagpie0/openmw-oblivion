@@ -1,0 +1,120 @@
+{
+  "status": "independent original evidence accepted for the declared bounded decisions; actual fork runtime receipt linked separately",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_gameplay": {
+    "source": "IRON-GATE-LOCK-ORACLE.json",
+    "observation": "Five failed original Auto Attempts, Security5 to7, gate still locked; original fixture grants and position changes are declared in that receipt, never used in fork acceptance.",
+    "scope": "Supports awarding Security experience on failed Auto Attempts; no exact use-slot, probability or fractional-XP certification."
+  },
+  "authored_security": {
+    "passed": true,
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "reader": "Raw TES4 group/record/subrecord walk; no production C++ or synthetic record builder",
+    "records": {
+      "fSkillUseFactor": {
+        "formid": 32332,
+        "value": 0.3499999940395355,
+        "data_hex": "3333b33e"
+      },
+      "fSkillUseExp": {
+        "formid": 20897,
+        "value": 1.5,
+        "data_hex": "0000c03f"
+      },
+      "Security": {
+        "formid": 79,
+        "editor_id": "SkillSecurity",
+        "actor_value": 30,
+        "governing_attribute": 3,
+        "specialization": 2,
+        "use_values": [
+          1.5,
+          1.0
+        ],
+        "data_hex": "1e00000003000000020000000000c03f0000803f"
+      }
+    },
+    "absent_settings": [
+      "fSkillUseMajorMult",
+      "fSkillUseMinorMult",
+      "fSkillUseSpecMult",
+      "iClassCharactergenClass"
+    ],
+    "scope": "Installed master only; absent multipliers reuse existing native training compiled defaults, not authored master values."
+  },
+  "compiled_tooltip_defaults": {
+    "passed": true,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "method": "Fresh hash check and PE-mapped static constructor argument/name/storage/call-target checks; no production C++ used",
+    "settings": [
+      {
+        "name": "iLevelUp01Mult",
+        "value": 2,
+        "storage": "0xb37620",
+        "constructor": "0x9eb967"
+      },
+      {
+        "name": "iLevelUp02Mult",
+        "value": 2,
+        "storage": "0xb37628",
+        "constructor": "0x9eb987"
+      },
+      {
+        "name": "iLevelUp03Mult",
+        "value": 2,
+        "storage": "0xb37630",
+        "constructor": "0x9eb9a7"
+      },
+      {
+        "name": "iLevelUp04Mult",
+        "value": 2,
+        "storage": "0xb37638",
+        "constructor": "0x9eb9c7"
+      },
+      {
+        "name": "iLevelUp05Mult",
+        "value": 3,
+        "storage": "0xb37640",
+        "constructor": "0x9eb9e7"
+      },
+      {
+        "name": "iLevelUp06Mult",
+        "value": 3,
+        "storage": "0xb37648",
+        "constructor": "0x9eba07"
+      },
+      {
+        "name": "iLevelUp07Mult",
+        "value": 3,
+        "storage": "0xb37650",
+        "constructor": "0x9eba27"
+      },
+      {
+        "name": "iLevelUp08Mult",
+        "value": 4,
+        "storage": "0xb37658",
+        "constructor": "0x9eba47"
+      },
+      {
+        "name": "iLevelUp09Mult",
+        "value": 4,
+        "storage": "0xb37660",
+        "constructor": "0x9eba67"
+      },
+      {
+        "name": "iLevelUp10Mult",
+        "value": 5,
+        "storage": "0xb37668",
+        "constructor": "0x9eba87"
+      }
+    ],
+    "scope": "Compiled default values for the existing shared attribute-advancement tooltip; does not certify full level-up gameplay"
+  },
+  "fidelity": "Use slot0 supplies a reasonable 1.5XP award per explicit attempt, successful or failed. Exact native action scaling remains uncertified; skill cap, native/shared ownership and save/load correctness are required.",
+  "content_audits": [
+    "build/oblivion-compat/security-use/original-gate-content-audit.json",
+    "build/oblivion-compat/security-use/original-level-gate-content-audit.json"
+  ],
+  "runtime_verification": "SECURITY-USE-VERIFICATION.json"
+}

@@ -8,6 +8,7 @@
 #include <osg/UserDataContainer>
 
 #include <components/esm/gameprofile.hpp>
+#include <components/esm4/loadligh.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/misc/resourcehelpers.hpp>
@@ -92,6 +93,12 @@ namespace MWRender
             throw std::invalid_argument("prepared native model has no valid world bound");
         return mData->mInsert->getBound().center();
     }
+    float Objects::PreparedModel::worldBoundRadius() const
+    {
+        if (!hasLiveOwner() || !mData->mInsert->getBound().valid())
+            throw std::invalid_argument("prepared native model has no valid world bound");
+        return mData->mInsert->getBound().radius();
+    }
     std::shared_ptr<const LooseObjectSceneBinding> Objects::PreparedModel::looseSceneBinding() const noexcept
     { return mData ? mData->mSceneBinding : nullptr; }
 
@@ -158,8 +165,10 @@ namespace MWRender
             throw std::invalid_argument("prepared model reference retired during source loading");
         // Build the actual animation/model on its detached parent, without
         // changing the live reference's base node.
+        const bool allowLight = ptr.getType() != ESM::REC_LIGH4
+            || !(ptr.get<ESM4::Light>()->mBase->mData.flags & ESM4::Light::OffDefault);
         osg::ref_ptr<ObjectAnimation> animation = new ObjectAnimation(ptr, osg::ref_ptr<osg::Group>(data->mInsert),
-            model, mResourceSystem, false, true);
+            model, mResourceSystem, false, allowLight);
         data->mAnimation = animation;
         if (physicalDefinition)
         {

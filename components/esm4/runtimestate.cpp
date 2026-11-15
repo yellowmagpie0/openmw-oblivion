@@ -1,4 +1,5 @@
 #include "runtimestate.hpp"
+#include "ingredientuse.hpp"
 
 #include "ability.hpp"
 #include "nativeidle.hpp"
@@ -835,6 +836,11 @@ namespace ESM4
                             writer.integer(item.mBoundSource->mEffectIndex);
                         }
                     }
+                    if (version >= 97)
+                    {
+                        writer.integer<std::uint8_t>(!item.mScriptOwner.isNull());
+                        if (!item.mScriptOwner.isNull()) writeKey(writer, item.mScriptOwner);
+                    }
                 }
             }
         }
@@ -870,6 +876,12 @@ namespace ESM4
                         const auto present = reader.integer<std::uint8_t>();
                         if (present > 1) throw std::runtime_error("Invalid bound item source presence");
                         if (present) item.mBoundSource = BoundItemSource{readKey(reader), reader.integer<std::uint32_t>()};
+                    }
+                    if (version >= 97)
+                    {
+                        const auto present = reader.integer<std::uint8_t>();
+                        if (present > 1) throw std::runtime_error("Invalid inventory script identity presence");
+                        if (present) item.mScriptOwner = readKey(reader);
                     }
                 }
                 result.push_back(std::move(item));
@@ -914,6 +926,12 @@ namespace ESM4
                         if (!item.mBoundSource) stream << "null";
                         else stream << "{\"spell\":\"" << escapeJson(item.mBoundSource->mSpell.serialize())
                             << "\",\"effect_index\":" << item.mBoundSource->mEffectIndex << '}';
+                    }
+                    if (version >= 97)
+                    {
+                        stream << ",\"script_owner\":";
+                        if (item.mScriptOwner.isNull()) stream << "null";
+                        else stream << '"' << escapeJson(item.mScriptOwner.serialize()) << '"';
                     }
                 }
                 stream << '}';
@@ -1118,6 +1136,64 @@ namespace ESM4
                     throw std::runtime_error("Duplicate TES4 passive ability ownership");
             }
         }
+        if (mIngredientRestoration.size() > sMaximumCollectionSize
+            || (!mIngredientRestoration.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 ingredient restoration ownership");
+        for (const auto& effect : mIngredientRestoration)
+        {
+            if (!effect.mIngredient.isContent()
+                || ESM::FormKey::deserialize(effect.mIngredient.serialize()) != effect.mIngredient)
+                throw std::runtime_error("Invalid TES4 consumed ingredient identity");
+            if (effect.mActorValue == 8)
+            {
+                if (effect.mMagnitude == NoviceIngredientHealthRestoration.mMagnitude
+                    && effect.mDuration == NoviceIngredientHealthRestoration.mDuration)
+                    advanceIngredientHealthRestoration(effect.mElapsed, 0.f);
+                else if (effect.mMagnitude != -5.f || effect.mDuration != 1.f
+                    || !std::isfinite(effect.mElapsed) || effect.mElapsed < 0 || effect.mElapsed >= 1.f)
+                    throw std::runtime_error("Invalid TES4 ingredient Health drain");
+            }
+            else if (effect.mActorValue == 10 || (effect.mActorValue == 5
+                && effect.mMagnitude == 5.f && effect.mDuration == 1.f))
+                advanceIngredientFatigue(effect.mElapsed, 0.f, {effect.mMagnitude, effect.mDuration});
+            else throw std::runtime_error("Unsupported TES4 ingredient actor value");
+        }
+        if (mScrollChameleon.size() > sMaximumCollectionSize
+            || (!mScrollChameleon.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 scroll Chameleon ownership");
+        std::set<ESM::FormKey> chameleonSources;
+        for (const auto& effect : mScrollChameleon)
+        {
+            effect.validate();
+            if (!chameleonSources.insert(effect.mEnchantment).second)
+                throw std::runtime_error("Duplicate TES4 Chameleon enchantment source");
+        }
+        if (mUsedPowers.size() > sMaximumCollectionSize
+            || (!mUsedPowers.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 greater-power ownership");
+        std::set<ESM::FormKey> powers;
+        for (const auto& power : mUsedPowers)
+        {
+            power.validate();
+            if (!powers.insert(power.mSpell).second)
+                throw std::runtime_error("Duplicate TES4 greater-power use history");
+        }
+        if (mPotionAttributeEffects.size() > sMaximumCollectionSize
+            || (!mPotionAttributeEffects.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 potion attribute ownership");
+        for (const auto& effect : mPotionAttributeEffects)
+            effect.validate();
+        if (mPotionLightEffects.size() > sMaximumCollectionSize
+            || (!mPotionLightEffects.empty() && mOwner != ActorValueOwner::Player))
+            throw std::runtime_error("Invalid TES4 potion Light ownership");
+        for (const auto& effect : mPotionLightEffects)
+            if (!effect.mPotion.isContent() || !effect.mLight.isContent()
+                || ESM::FormKey::deserialize(effect.mPotion.serialize()) != effect.mPotion
+                || ESM::FormKey::deserialize(effect.mLight.serialize()) != effect.mLight
+                || !std::isfinite(effect.mMagnitude) || effect.mMagnitude <= 0
+                || !std::isfinite(effect.mDuration) || effect.mDuration <= 0
+                || !std::isfinite(effect.mElapsed) || effect.mElapsed < 0 || effect.mElapsed >= effect.mDuration)
+                throw std::runtime_error("Invalid TES4 potion Light source or lifetime");
         if (mMeleeParalysis.size() > sMaximumCollectionSize)
             throw std::runtime_error("TES4 melee paralysis list exceeds the size limit");
         std::set<std::uint64_t> paralysisCauses;
@@ -1152,10 +1228,19 @@ namespace ESM4
 
     void RuntimeActorBaseOverride::validate() const
     {
-        if (mBase.isNull() || (mValues.empty() && !mEssential) || mValues.size() > 72
+        if (mBase.isNull() || (mValues.empty() && !mEssential && !mFactions) || mValues.size() > 72
             || (mKind != ActorBaseKind::Npc && mKind != ActorBaseKind::Creature))
             throw std::runtime_error("Invalid TES4 native actor base override");
         std::set<std::uint8_t> seen;
+        if (mFactions)
+        {
+            if (mFactions->size() > sMaximumCollectionSize)
+                throw std::runtime_error("TES4 actor base faction list exceeds limit");
+            std::set<ESM::FormKey> factions;
+            for (const auto& faction : *mFactions)
+                if (!faction.mFaction.isContent() || !factions.insert(faction.mFaction).second)
+                    throw std::runtime_error("Invalid or duplicate TES4 actor base faction");
+        }
         try
         {
             for (const auto& value : mValues)
@@ -1216,7 +1301,8 @@ namespace ESM4
                     throw std::runtime_error("Incomplete TES4 ragdoll motion snapshot");
                 if (body.mNativeMotion && (!body.mNativePackedVelocity
                     || (*body.mNativeMotion != RuntimeRagdollMotion::Dynamic
-                        && *body.mNativeMotion != RuntimeRagdollMotion::Keyframed)))
+                        && *body.mNativeMotion != RuntimeRagdollMotion::Keyframed
+                        && *body.mNativeMotion != RuntimeRagdollMotion::Fixed)))
                     throw std::runtime_error("Invalid TES4 logical ragdoll motion snapshot");
                 if (body.mNativePackedVelocity)
                     for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
@@ -1258,10 +1344,14 @@ namespace ESM4
 
     void RuntimeLooseWeapon::validate() const
     {
-        validatePhysicalBodies(mBase, mModel, mAssetHash, {mBody});
-        if (!mBody.mNativePackedVelocity || mBody.mNativeMotion != RuntimeRagdollMotion::Dynamic
-            || !std::isfinite(mPhysicalScale) || mPhysicalScale <= 0)
-            throw std::runtime_error("Incomplete or invalid TES4 loose weapon physics");
+        std::vector<RuntimeRagdollBody> bodies{mBody};
+        bodies.insert(bodies.end(), mAdditionalBodies.begin(), mAdditionalBodies.end());
+        validatePhysicalBodies(mBase, mModel, mAssetHash, bodies);
+        for (const auto& body : bodies)
+            if (!body.mNativePackedVelocity || body.mNativeMotion != RuntimeRagdollMotion::Dynamic)
+                throw std::runtime_error("Incomplete or invalid TES4 loose item body physics");
+        if (!std::isfinite(mPhysicalScale) || mPhysicalScale <= 0)
+            throw std::runtime_error("Invalid TES4 loose item physical scale");
         if (mRootLocal)
         {
             RuntimeRagdollBody root;
@@ -2004,7 +2094,16 @@ namespace ESM4
         for (const auto& info : mSpokenDialogueInfos)
             if (info.isNull() || ESM::FormKey::deserialize(info.serialize()) != info)
                 throw std::runtime_error("Invalid spoken dialogue INFO identity");
+        checkSize(mPackageWaiting.size(), "package waiting overrides");
+        if (mVersion < 91 && !mPackageWaiting.empty())
+            throw std::runtime_error("Package waiting overrides require runtime schema91");
+        for (const auto& [key, waiting] : mPackageWaiting)
+            if (!key.isContent() || ESM::FormKey::deserialize(key.serialize()) != key)
+                throw std::runtime_error("Invalid package waiting identity");
         checkSize(mActorAi.size(), "actor AI list");
+        checkSize(mDailyPackageCompletions.size(), "daily package completion list");
+        if (mVersion < 89 && !mDailyPackageCompletions.empty())
+            throw std::runtime_error("Daily package completions require runtime schema89");
         checkSize(mPathPoints.size(), "path-point overlay list");
         checkSize(mCompanions.size(), "companion relation list");
         checkSize(mMounts.size(), "mount relation list");
@@ -2025,6 +2124,8 @@ namespace ESM4
             base.validate();
             if (mVersion < 84 && base.mEssential)
                 throw std::runtime_error("Essential base overrides require runtime-state version84");
+            if (mVersion < 90 && base.mFactions)
+                throw std::runtime_error("Faction base overrides require runtime-state version90");
             if (!overriddenBases.insert(base.mBase).second)
                 throw std::runtime_error("Duplicate TES4 native actor base override");
         }
@@ -2048,6 +2149,28 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 99 && !actor.mPotionLightEffects.empty())
+                throw std::runtime_error("TES4 potion Light requires schema99");
+            if (mVersion < 95 && !actor.mUsedPowers.empty())
+                throw std::runtime_error("TES4 greater-power history requires runtime-state version95");
+            if (mVersion < 94 && !actor.mPotionAttributeEffects.empty())
+                throw std::runtime_error("TES4 potion attributes require schema94");
+            if (mVersion < 93 && !actor.mScrollChameleon.empty())
+                throw std::runtime_error("TES4 scroll Chameleon requires schema93");
+            if (mVersion < 102)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mActorValue == 5)
+                        throw std::runtime_error("TES4 ingredient Endurance restoration requires schema102");
+            if (mVersion < 100)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mActorValue != 10)
+                        throw std::runtime_error("TES4 ingredient Health drain requires schema100");
+            if (mVersion < 98)
+                for (const auto& effect : actor.mIngredientRestoration)
+                    if (effect.mMagnitude != 5.f || effect.mDuration != 1.f)
+                        throw std::runtime_error("TES4 resolved ingredient potency requires schema98");
+            if (mVersion < 92 && !actor.mIngredientRestoration.empty())
+                throw std::runtime_error("TES4 ingredient restoration requires schema92");
             if (mVersion < 70 && !actor.mMeleeParalysis.empty())
                 throw std::runtime_error("TES4 melee paralysis ownership requires schema70");
             for (const auto& effect : actor.mMeleeParalysis)
@@ -2276,6 +2399,8 @@ namespace ESM4
         for (const auto& [reference, weapon] : mNativeLooseWeapons)
         {
             weapon.validate();
+            if (mVersion < 103 && !weapon.mAdditionalBodies.empty())
+                throw std::runtime_error("Articulated loose item physics requires runtime-state version103");
             const auto owner = actorBases.find(reference);
             if (reference.isNull() || owner == actorBases.end() || owner->second != weapon.mBase
                 || nativeActors.contains(reference) || reference == mPlayer.mReference)
@@ -2344,11 +2469,31 @@ namespace ESM4
                 throw std::runtime_error("Dangling, conflicting or mismatched animated reference owner");
         }
         checkSize(mNativeActorRagdolls.size(), "native actor ragdoll list");
+        checkSize(mNativeTrapContacts.size(), "native trap contact list");
+        if (mVersion < 86 && !mNativeTrapContacts.empty())
+            throw std::runtime_error("Trap contacts require runtime-state version86");
+        for (const auto& contact : mNativeTrapContacts)
+        {
+            const auto graph = mNativeAnimatedReferences.find(contact.mReference);
+            if (graph == mNativeAnimatedReferences.end() || contact.mActor.isNull()
+                || (contact.mActor != mPlayer.mReference && !nativeActors.contains(contact.mActor)))
+                throw std::runtime_error("Dangling trap contact owner or actor");
+            const auto& bodies = graph->second.mBodies;
+            const auto body = std::find_if(bodies.begin(), bodies.end(), [&](const auto& candidate) {
+                return candidate.mRecord == contact.mBodyRecord;
+            });
+            if (body == bodies.end() || body->mNativeMotion == RuntimeRagdollMotion::Fixed)
+                throw std::runtime_error("Trap contact has no movable body");
+        }
         if (mVersion < 31 && !mNativeActorRagdolls.empty())
             throw std::runtime_error("TES4 actor ragdolls require runtime-state version31");
         for (const auto& [actor, pose] : mNativeActorRagdolls)
         {
             pose.validate();
+            if (std::any_of(pose.mBodies.begin(), pose.mBodies.end(), [](const auto& body) {
+                    return body.mNativeMotion == RuntimeRagdollMotion::Fixed;
+                }))
+                throw std::runtime_error("Fixed anchors are only supported for animated scenery");
             if (mVersion < 32 && pose.mBodies.front().mNativePackedVelocity)
                 throw std::runtime_error("TES4 packed ragdoll velocities require runtime-state version32");
             if (mVersion < 33 && pose.mBodies.front().mNativeMotion)
@@ -2540,6 +2685,40 @@ namespace ESM4
                     throw std::runtime_error("Invalid, duplicate or replaying TES4 melee action identity");
             }
         }
+        checkSize(mNativeMagicProjectiles.size(), "native magic projectile list");
+        checkSize(mNativeArrowProjectiles.size(), "native arrow projectile list");
+        if (!mNextArrowProjectile || (mVersion < 96 && (!mNativeArrowProjectiles.empty() || mNextArrowProjectile != 1)))
+            throw std::runtime_error("Native arrow flight requires runtime-state version96");
+        for (const auto& [id, projectile] : mNativeArrowProjectiles)
+        {
+            projectile.validate();
+            if (!id || id >= mNextArrowProjectile || !nativeActors.contains(projectile.mCaster))
+                throw std::runtime_error("Dangling native arrow caster or serial");
+        }
+        if (!mNextMagicProjectile || (mVersion < 88 && (!mNativeMagicProjectiles.empty() || mNextMagicProjectile != 1)))
+            throw std::runtime_error("Invalid native magic projectile serial or state version");
+        for (const auto& [id, projectile] : mNativeMagicProjectiles)
+        {
+            projectile.validate();
+            if (!id || id >= mNextMagicProjectile || !nativeActors.contains(projectile.mCaster))
+                throw std::runtime_error("Dangling native magic projectile caster or serial");
+        }
+        checkSize(mNativeSpellCasts.size(), "native spell cast list");
+        if (mVersion < 87 && !mNativeSpellCasts.empty())
+            throw std::runtime_error("Native spell casts require runtime-state version87");
+        for (const auto& [actor, cast] : mNativeSpellCasts)
+        {
+            cast.validate();
+            const auto life = lives.find(actor);
+            const auto melee = mNativeMeleeStates.find(actor);
+            if (!nativeActors.contains(actor) || life == lives.end() || life->second->mPhase != ActorLifePhase::Alive
+                || mNativeBowStates.contains(actor)
+                || (melee != mNativeMeleeStates.end() && (melee->second.mStrike || melee->second.mReaction
+                    || melee->second.mDodge || melee->second.mPassiveSequence
+                    || (melee->second.mFirstPerson && (melee->second.mFirstPerson->mStrike
+                        || melee->second.mFirstPerson->mReaction || melee->second.mFirstPerson->mPassiveSequence)))))
+                throw std::runtime_error("Dangling, dead or conflicting native spell caster");
+        }
         if (mVersion < 38 && !mNativeBowStates.empty())
             throw std::runtime_error("TES4 owned bow playback requires runtime-state version38");
         for (const auto& [actor, bow] : mNativeBowStates)
@@ -2577,6 +2756,12 @@ namespace ESM4
         if (mVersion >= 3
             && (mPlayer.mName.size() > 1024 || mPlayer.mRace.isNull() || mPlayer.mClass.isNull()))
             throw std::runtime_error("Invalid TES4 runtime-state character-generation state");
+        if (mPlayer.mAwardedSkillBooks.size() > sMaximumCollectionSize
+            || (mVersion < 101 && !mPlayer.mAwardedSkillBooks.empty()))
+            throw std::runtime_error("Invalid TES4 awarded skill-book history/version");
+        for (const auto& book : mPlayer.mAwardedSkillBooks)
+            if (!book.isContent() || ESM::FormKey::deserialize(book.serialize()) != book)
+                throw std::runtime_error("Invalid TES4 awarded skill-book base");
         if (mPlayer.mCharacterGeneration)
         {
             if (mVersion < 80)
@@ -2605,6 +2790,7 @@ namespace ESM4
             if (name.empty() || !std::isfinite(value))
                 throw std::runtime_error("Invalid TES4 runtime-state player actor value");
         }
+        std::set<ESM::FormKey> inventoryScriptOwners;
         const auto validateInventory = [&](const std::vector<RuntimeInventoryItem>& inventory,
                                            std::string_view label, bool actorInventory) {
             std::uint32_t occupiedSlots = 0;
@@ -2612,6 +2798,15 @@ namespace ESM4
             for (const RuntimeInventoryItem& item : inventory)
             {
                 validateOwnershipExtras(item.mOwnershipRank, item.mOwnershipGlobal, mVersion);
+                if (!item.mScriptOwner.isNull())
+                {
+                    const auto& key = item.mScriptOwner;
+                    if (mVersion < 97 || !key.isDynamic() || key.mNamespace != "inventory-script"
+                        || !key.mValue || key.mValue >= mNextDynamicSerial || item.mCount != 1
+                        || ESM::FormKey::deserialize(key.serialize()) != key
+                        || !inventoryScriptOwners.insert(key).second)
+                        throw std::runtime_error("Invalid or duplicate inventory script identity");
+                }
                 if (item.mBoundSource && (mVersion < 83 || !item.mBoundSource->mSpell.isContent()
                     || ESM::FormKey::deserialize(item.mBoundSource->mSpell.serialize()) != item.mBoundSource->mSpell
                     || item.mCount != 1 || item.mHotkey != -1))
@@ -2753,6 +2948,9 @@ namespace ESM4
         std::set<std::pair<std::string, ESM::FormKey>> scriptKeys;
         for (const RuntimeScriptInstance& script : mScriptInstances)
         {
+            if (script.mContext.isDynamic() && script.mContext.mNamespace == "inventory-script"
+                && !inventoryScriptOwners.contains(script.mContext))
+                throw std::runtime_error("Dangling inventory script instance");
             if (script.mUnit.empty() || script.mContext.isNull())
                 throw std::runtime_error("TES4 runtime-state script instance has a null identity");
             if (!scriptKeys.emplace(script.mUnit, script.mContext).second)
@@ -2846,6 +3044,12 @@ namespace ESM4
                     || static_cast<std::uint8_t>(actor.mBoundary) > static_cast<std::uint8_t>(PhaseBoundary::ReadyForDialogue))
                     throw std::runtime_error("Invalid TES4 actor AI enum value");
             }
+
+            for (const auto& [pair, day] : mDailyPackageCompletions)
+                if (!actorKeys.contains(pair.first) || !pair.second.isContent()
+                    || ESM::FormKey::deserialize(pair.second.serialize()) != pair.second
+                    || !validCalendar(day) || day.mHour != 0.0)
+                    throw std::runtime_error("Invalid daily package completion identity or day");
 
             std::set<std::pair<ESM::FormKey, std::uint32_t>> pathPoints;
             for (const RuntimePathPointState& point : mPathPoints)
@@ -3004,6 +3208,11 @@ namespace ESM4
             }
         }
 
+        if (mVersion >= 101)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mPlayer.mAwardedSkillBooks.size()));
+            for (const auto& book : mPlayer.mAwardedSkillBooks) writeKey(writer, book);
+        }
         writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mGlobals.size()));
         for (const auto& [key, value] : mGlobals)
         {
@@ -3347,6 +3556,69 @@ namespace ESM4
                             | (effect.mState.mTerminated << 1) | (effect.mState.mRemoved << 2));
                     }
                 }
+                if (mVersion >= 92)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mIngredientRestoration.size()));
+                    for (const auto& effect : actor.mIngredientRestoration)
+                    {
+                        writeKey(writer, effect.mIngredient);
+                        writer.floating(effect.mElapsed);
+                        if (mVersion >= 98)
+                        {
+                            writer.floating(effect.mMagnitude);
+                            writer.floating(effect.mDuration);
+                        }
+                        if (mVersion >= 100) writer.integer(effect.mActorValue);
+                    }
+                }
+                if (mVersion >= 93)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mScrollChameleon.size()));
+                    for (const auto& effect : actor.mScrollChameleon)
+                    {
+                        writeKey(writer, effect.mScroll);
+                        writeKey(writer, effect.mEnchantment);
+                        writer.floating(effect.mMagnitude);
+                        writer.floating(effect.mElapsed);
+                    }
+                }
+                if (mVersion >= 94)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mPotionAttributeEffects.size()));
+                    for (const auto& effect : actor.mPotionAttributeEffects)
+                    {
+                        writeKey(writer, effect.mPotion);
+                        writer.floating(effect.mDuration);
+                        writer.floating(effect.mElapsed);
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(effect.mModifiers.size()));
+                        for (const auto& modifier : effect.mModifiers)
+                        {
+                            writer.integer<std::uint8_t>(modifier.mAttribute);
+                            writer.floating(modifier.mDelta);
+                        }
+                    }
+                }
+                if (mVersion >= 95)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mUsedPowers.size()));
+                    for (const auto& power : actor.mUsedPowers)
+                    {
+                        writeKey(writer, power.mSpell);
+                        writer.floating(power.mUsedAt);
+                    }
+                }
+                if (mVersion >= 99)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mPotionLightEffects.size()));
+                    for (const auto& effect : actor.mPotionLightEffects)
+                    {
+                        writeKey(writer, effect.mPotion);
+                        writeKey(writer, effect.mLight);
+                        writer.floating(effect.mMagnitude);
+                        writer.floating(effect.mDuration);
+                        writer.floating(effect.mElapsed);
+                    }
+                }
             }
         }
         if (mVersion >= 11)
@@ -3372,6 +3644,19 @@ namespace ESM4
                 }
                 if (mVersion >= 84)
                     writer.integer<std::uint8_t>(base.mEssential ? (*base.mEssential ? 2 : 1) : 0);
+                if (mVersion >= 90)
+                {
+                    writer.integer<std::uint8_t>(base.mFactions.has_value());
+                    if (base.mFactions)
+                    {
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(base.mFactions->size()));
+                        for (const auto& faction : *base.mFactions)
+                        {
+                            writeKey(writer, faction.mFaction);
+                            writer.integer(faction.mRank);
+                        }
+                    }
+                }
             }
         }
         if (mVersion >= 12)
@@ -3809,21 +4094,28 @@ namespace ESM4
                 writer.string(weapon.mAssetHash);
                 writer.floating(weapon.mPhysicalScale);
                 writer.integer(weapon.mSceneCollisionFlags);
-                const auto& body = weapon.mBody;
-                writer.integer(body.mRecord);
-                writer.integer(body.mNodeRecord);
-                for (float value : body.mRotation) writer.floating(value);
-                for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
-                    for (float value : vector) writer.floating(value);
-                for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
-                    for (float value : vector) writer.floating(value);
-                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*body.mNativeMotion));
+                const auto writeBody = [&](const RuntimeRagdollBody& body) {
+                    writer.integer(body.mRecord);
+                    writer.integer(body.mNodeRecord);
+                    for (float value : body.mRotation) writer.floating(value);
+                    for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
+                        for (float value : vector) writer.floating(value);
+                    for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
+                        for (float value : vector) writer.floating(value);
+                    writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*body.mNativeMotion));
+                };
+                writeBody(weapon.mBody);
                 writer.integer<std::uint8_t>(weapon.mRootLocal.has_value());
                 if (weapon.mRootLocal)
                 {
                     for (float value : weapon.mRootLocal->mRotation) writer.floating(value);
                     for (float value : weapon.mRootLocal->mPosition) writer.floating(value);
                     writer.floating(weapon.mRootLocal->mScale);
+                }
+                if (mVersion >= 103)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(weapon.mAdditionalBodies.size()));
+                    for (const auto& body : weapon.mAdditionalBodies) writeBody(body);
                 }
             }
         }
@@ -3935,8 +4227,79 @@ namespace ESM4
                 for (const auto& ability : abilities)
                 {
                     writeKey(writer, ability.mSpell);
-                    writeInventory(writer, ability.mDisplacedEquipment, 82);
+                    writeInventory(writer, ability.mDisplacedEquipment, mVersion >= 97 ? mVersion : 82);
                 }
+            }
+        }
+        if (mVersion >= 86)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeTrapContacts.size()));
+            for (const auto& contact : mNativeTrapContacts)
+            {
+                writeKey(writer, contact.mReference);
+                writer.integer(contact.mBodyRecord);
+                writeKey(writer, contact.mActor);
+            }
+        }
+        if (mVersion >= 87)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeSpellCasts.size()));
+            for (const auto& [actor, cast] : mNativeSpellCasts)
+            {
+                writeKey(writer, actor); writeKey(writer, cast.mSpell);
+                writer.string(cast.mAnimationGroup);
+                writer.floating(cast.mCost); writer.floating(cast.mElapsed);
+                writer.floating(cast.mReleaseTime); writer.floating(cast.mDuration);
+                writer.integer<std::uint8_t>(cast.mReleased);
+            }
+        }
+        if (mVersion >= 88)
+        {
+            writer.integer(mNextMagicProjectile);
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeMagicProjectiles.size()));
+            for (const auto& [id, projectile] : mNativeMagicProjectiles)
+            {
+                writer.integer(id);
+                writeKey(writer, projectile.mCaster); writeKey(writer, projectile.mSource); writeKey(writer, projectile.mCell);
+                writer.integer(projectile.mEffectCode); writer.floating(projectile.mMagnitude);
+                for (float value : projectile.mPosition) writer.floating(value);
+                for (float value : projectile.mVelocity) writer.floating(value);
+                writer.floating(projectile.mDistance); writer.floating(projectile.mMaximumDistance);
+                writer.string(projectile.mModel);
+            }
+        }
+        if (mVersion >= 89)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mDailyPackageCompletions.size()));
+            for (const auto& [pair, day] : mDailyPackageCompletions)
+            {
+                writeKey(writer, pair.first); writeKey(writer, pair.second);
+                writeCalendar(writer, day);
+            }
+        }
+        if (mVersion >= 91)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mPackageWaiting.size()));
+            for (const auto& [key, waiting] : mPackageWaiting)
+            {
+                writeKey(writer, key);
+                writer.integer<std::uint8_t>(waiting ? 1 : 0);
+            }
+        }
+        if (mVersion >= 96)
+        {
+            writer.integer(mNextArrowProjectile);
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeArrowProjectiles.size()));
+            for (const auto& [id, arrow] : mNativeArrowProjectiles)
+            {
+                writer.integer(id);
+                writeKey(writer, arrow.mCaster); writeKey(writer, arrow.mBow);
+                writeKey(writer, arrow.mAmmunition); writeKey(writer, arrow.mCell);
+                for (float value : arrow.mPosition) writer.floating(value);
+                for (float value : arrow.mVelocity) writer.floating(value);
+                writer.floating(arrow.mDamage); writer.floating(arrow.mGravityFactor);
+                writer.floating(arrow.mDistance); writer.floating(arrow.mMaximumDistance);
+                writer.string(arrow.mModel);
             }
         }
         std::vector<std::uint8_t> result = writer.take();
@@ -4016,6 +4379,13 @@ namespace ESM4
             }
         }
 
+        if (result.mVersion >= 101)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+                if (!result.mPlayer.mAwardedSkillBooks.insert(readKey(reader)).second)
+                    throw std::runtime_error("Duplicate TES4 awarded skill-book base");
+        }
         const std::uint32_t globalCount = reader.count();
         for (std::uint32_t i = 0; i < globalCount; ++i)
         {
@@ -4467,6 +4837,54 @@ namespace ESM4
                         actor.mMeleeParalysis.push_back(effect);
                     }
                 }
+                if (result.mVersion >= 92)
+                {
+                    const auto effectCount = reader.count();
+                    for (std::uint32_t j = 0; j < effectCount; ++j)
+                    {
+                        RuntimeIngredientRestoration effect{nativeKey(), reader.float32()};
+                        if (result.mVersion >= 98)
+                        {
+                            effect.mMagnitude = reader.float32();
+                            effect.mDuration = reader.float32();
+                        }
+                        if (result.mVersion >= 100) effect.mActorValue = reader.integer<std::uint8_t>();
+                        actor.mIngredientRestoration.push_back(effect);
+                    }
+                }
+                if (result.mVersion >= 93)
+                {
+                    const auto effectCount = reader.count();
+                    for (std::uint32_t j = 0; j < effectCount; ++j)
+                        actor.mScrollChameleon.push_back({nativeKey(), nativeKey(), reader.float32(), reader.float32()});
+                }
+                if (result.mVersion >= 94)
+                {
+                    const auto effectCount = reader.count();
+                    for (std::uint32_t j = 0; j < effectCount; ++j)
+                    {
+                        PotionAttributeState effect{nativeKey(), reader.float32(), reader.float32(), {}};
+                        const auto modifierCount = reader.count();
+                        if (modifierCount > 8)
+                            throw std::runtime_error("TES4 potion attribute list exceeds the size limit");
+                        for (std::uint32_t k = 0; k < modifierCount; ++k)
+                            effect.mModifiers.push_back({reader.integer<std::uint8_t>(), reader.float32()});
+                        actor.mPotionAttributeEffects.push_back(std::move(effect));
+                    }
+                }
+                if (result.mVersion >= 95)
+                {
+                    const auto powerCount = reader.count();
+                    for (std::uint32_t j = 0; j < powerCount; ++j)
+                        actor.mUsedPowers.push_back({nativeKey(), reader.float64()});
+                }
+                if (result.mVersion >= 99)
+                {
+                    const auto count = reader.count();
+                    for (std::uint32_t j = 0; j < count; ++j)
+                        actor.mPotionLightEffects.push_back(
+                            {nativeKey(), nativeKey(), reader.float32(), reader.float32(), reader.float32()});
+                }
                 result.mNativeActorValues.push_back(std::move(actor));
             }
         }
@@ -4510,6 +4928,24 @@ namespace ESM4
                     if (essential > 2)
                         throw std::runtime_error("Invalid TES4 essential base flag");
                     if (essential) base.mEssential = essential == 2;
+                }
+                if (result.mVersion >= 90)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1) throw std::runtime_error("Invalid TES4 base faction presence");
+                    if (present)
+                    {
+                        base.mFactions.emplace();
+                        const auto factionCount = reader.count();
+                        for (std::uint32_t j = 0; j < factionCount; ++j)
+                        {
+                            const auto text = reader.string();
+                            const auto faction = ESM::FormKey::deserialize(text);
+                            if (!faction.isContent() || faction.serialize() != text)
+                                throw std::runtime_error("Invalid or noncanonical TES4 base faction identity");
+                            base.mFactions->push_back({faction, reader.integer<std::int8_t>()});
+                        }
+                    }
                 }
                 result.mNativeActorBases.push_back(std::move(base));
             }
@@ -5085,16 +5521,18 @@ namespace ESM4
                 weapon.mAssetHash = reader.string();
                 weapon.mPhysicalScale = reader.float32();
                 weapon.mSceneCollisionFlags = reader.integer<std::uint16_t>();
-                auto& body = weapon.mBody;
-                body.mRecord = reader.integer<std::uint32_t>();
-                body.mNodeRecord = reader.integer<std::uint32_t>();
-                for (float& value : body.mRotation) value = reader.float32();
-                for (auto* vector : {&body.mPosition, &body.mLinearVelocity, &body.mAngularVelocity})
-                    for (float& value : *vector) value = reader.float32();
-                body.mNativePackedVelocity.emplace();
-                for (auto* vector : {&body.mNativePackedVelocity->mLinear, &body.mNativePackedVelocity->mAngular})
-                    for (float& value : *vector) value = reader.float32();
-                body.mNativeMotion = static_cast<RuntimeRagdollMotion>(reader.integer<std::uint8_t>());
+                const auto readBody = [&](RuntimeRagdollBody& body) {
+                    body.mRecord = reader.integer<std::uint32_t>();
+                    body.mNodeRecord = reader.integer<std::uint32_t>();
+                    for (float& value : body.mRotation) value = reader.float32();
+                    for (auto* vector : {&body.mPosition, &body.mLinearVelocity, &body.mAngularVelocity})
+                        for (float& value : *vector) value = reader.float32();
+                    body.mNativePackedVelocity.emplace();
+                    for (auto* vector : {&body.mNativePackedVelocity->mLinear, &body.mNativePackedVelocity->mAngular})
+                        for (float& value : *vector) value = reader.float32();
+                    body.mNativeMotion = static_cast<RuntimeRagdollMotion>(reader.integer<std::uint8_t>());
+                };
+                readBody(weapon.mBody);
                 const auto root = reader.integer<std::uint8_t>();
                 if (root > 1) throw std::runtime_error("Invalid TES4 loose weapon root marker");
                 if (root)
@@ -5103,6 +5541,12 @@ namespace ESM4
                     for (float& value : weapon.mRootLocal->mRotation) value = reader.float32();
                     for (float& value : weapon.mRootLocal->mPosition) value = reader.float32();
                     weapon.mRootLocal->mScale = reader.float32();
+                }
+                if (result.mVersion >= 103)
+                {
+                    const auto extraCount = reader.count();
+                    weapon.mAdditionalBodies.resize(extraCount);
+                    for (auto& body : weapon.mAdditionalBodies) readBody(body);
                 }
                 if (!result.mNativeLooseWeapons.emplace(std::move(reference), std::move(weapon)).second)
                     throw std::runtime_error("Duplicate TES4 loose weapon reference");
@@ -5282,9 +5726,112 @@ namespace ESM4
                 for (std::uint32_t j = 0; j < size; ++j)
                 {
                     const auto spell = readKey(reader);
-                    abilities.push_back({spell, readInventory(reader, 82)});
+                    abilities.push_back({spell, readInventory(reader, result.mVersion >= 97 ? result.mVersion : 82)});
                 }
                 result.mNativeBoundAbilities.emplace(actor, std::move(abilities));
+            }
+        }
+        if (result.mVersion >= 86)
+        {
+            const auto count = reader.count();
+            std::optional<RuntimeTrapContact> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                RuntimeTrapContact contact{readKey(reader), reader.integer<std::uint32_t>(), readKey(reader)};
+                if (previous && !(*previous < contact))
+                    throw std::runtime_error("Noncanonical trap contact list");
+                previous = contact;
+                result.mNativeTrapContacts.insert(std::move(contact));
+            }
+        }
+        if (result.mVersion >= 87)
+        {
+            const auto count = reader.count();
+            std::optional<ESM::FormKey> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto actor = readKey(reader);
+                if (previous && !(*previous < actor))
+                    throw std::runtime_error("Noncanonical native spell cast owners");
+                previous = actor;
+                SpellCastState cast;
+                cast.mSpell = readKey(reader); cast.mAnimationGroup = reader.string();
+                cast.mCost = reader.float32(); cast.mElapsed = reader.float32();
+                cast.mReleaseTime = reader.float32(); cast.mDuration = reader.float32();
+                const auto released = reader.integer<std::uint8_t>();
+                if (released > 1) throw std::runtime_error("Invalid native spell release flag");
+                cast.mReleased = released;
+                result.mNativeSpellCasts.emplace(std::move(actor), std::move(cast));
+            }
+        }
+        if (result.mVersion >= 88)
+        {
+            result.mNextMagicProjectile = reader.integer<std::uint64_t>();
+            const auto count = reader.count();
+            std::uint64_t previous = 0;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto id = reader.integer<std::uint64_t>();
+                if (id <= previous) throw std::runtime_error("Noncanonical native magic projectile serials");
+                previous = id;
+                MagicProjectileState projectile;
+                projectile.mCaster = readKey(reader); projectile.mSource = readKey(reader); projectile.mCell = readKey(reader);
+                projectile.mEffectCode = reader.integer<std::uint32_t>(); projectile.mMagnitude = reader.float32();
+                for (float& value : projectile.mPosition) value = reader.float32();
+                for (float& value : projectile.mVelocity) value = reader.float32();
+                projectile.mDistance = reader.float32(); projectile.mMaximumDistance = reader.float32();
+                projectile.mModel = reader.string();
+                result.mNativeMagicProjectiles.emplace(id, std::move(projectile));
+            }
+        }
+        if (result.mVersion >= 89)
+        {
+            std::pair<ESM::FormKey, ESM::FormKey> previous;
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto actor = readKey(reader);
+                const auto package = readKey(reader);
+                const auto pair = std::make_pair(actor, package);
+                if (i && !(previous < pair))
+                    throw std::runtime_error("Noncanonical daily package completion identities");
+                previous = pair;
+                result.mDailyPackageCompletions.emplace(pair, readCalendar(reader));
+            }
+        }
+        if (result.mVersion >= 91)
+        {
+            ESM::FormKey previous;
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto key = readKey(reader);
+                const auto waiting = reader.integer<std::uint8_t>();
+                if ((i && !(previous < key)) || waiting > 1)
+                    throw std::runtime_error("Noncanonical package waiting overrides");
+                previous = key;
+                result.mPackageWaiting.emplace(key, waiting != 0);
+            }
+        }
+        if (result.mVersion >= 96)
+        {
+            result.mNextArrowProjectile = reader.integer<std::uint64_t>();
+            const auto count = reader.count();
+            std::uint64_t previous = 0;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto id = reader.integer<std::uint64_t>();
+                if (id <= previous) throw std::runtime_error("Noncanonical native arrow serials");
+                previous = id;
+                ArrowProjectileState arrow;
+                arrow.mCaster = readKey(reader); arrow.mBow = readKey(reader);
+                arrow.mAmmunition = readKey(reader); arrow.mCell = readKey(reader);
+                for (float& value : arrow.mPosition) value = reader.float32();
+                for (float& value : arrow.mVelocity) value = reader.float32();
+                arrow.mDamage = reader.float32(); arrow.mGravityFactor = reader.float32();
+                arrow.mDistance = reader.float32(); arrow.mMaximumDistance = reader.float32();
+                arrow.mModel = reader.string();
+                result.mNativeArrowProjectiles.emplace(id, std::move(arrow));
             }
         }
         if (!reader.eof())
@@ -5411,6 +5958,18 @@ namespace ESM4
                 stream << ']';
             }
             stream << ",\"recommended_class\":\"" << escapeJson(generation.mRecommendedClass.serialize()) << "\"}";
+        }
+        if (!mPlayer.mAwardedSkillBooks.empty())
+        {
+            stream << ",\"awarded_skill_books\":[";
+            bool first = true;
+            for (const auto& book : mPlayer.mAwardedSkillBooks)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << '"' << escapeJson(book.serialize()) << '"';
+            }
+            stream << ']';
         }
         stream << "},\"globals\":{";
         index = 0;
@@ -5759,6 +6318,96 @@ namespace ESM4
                     }
                     stream << ']';
                 }
+                if (mVersion >= 92 && !actor.mIngredientRestoration.empty())
+                {
+                    stream << ",\"ingredient_restoration\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mIngredientRestoration)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"ingredient\":";
+                        stream << '"' << escapeJson(effect.mIngredient.serialize()) << '"';
+                        stream << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed;
+                        if (mVersion >= 98 && (effect.mMagnitude != 5.f || effect.mDuration != 1.f))
+                            stream << ",\"magnitude\":" << effect.mMagnitude << ",\"duration\":" << effect.mDuration;
+                        if (mVersion >= 100 && effect.mActorValue != 10)
+                            stream << ",\"actor_value\":" << unsigned(effect.mActorValue);
+                        stream << '}';
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 93 && !actor.mScrollChameleon.empty())
+                {
+                    stream << ",\"scroll_chameleon\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mScrollChameleon)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"scroll\":\"" << escapeJson(effect.mScroll.serialize())
+                            << "\",\"enchantment\":\"" << escapeJson(effect.mEnchantment.serialize())
+                            << "\",\"magnitude\":";
+                        stream << std::setprecision(17) << effect.mMagnitude;
+                        stream << ",\"elapsed\":";
+                        stream << std::setprecision(17) << effect.mElapsed;
+                        stream << '}';
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 95 && !actor.mUsedPowers.empty())
+                {
+                    stream << ",\"used_powers\":[";
+                    bool first = true;
+                    for (const auto& power : actor.mUsedPowers)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"spell\":\"" << escapeJson(power.mSpell.serialize())
+                            << "\",\"used_at\":" << std::setprecision(17) << power.mUsedAt << '}';
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 94 && !actor.mPotionAttributeEffects.empty())
+                {
+                    stream << ",\"potion_attribute_effects\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mPotionAttributeEffects)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"potion\":\"" << escapeJson(effect.mPotion.serialize())
+                            << "\",\"duration\":" << std::setprecision(17) << effect.mDuration
+                            << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed
+                            << ",\"modifiers\":[";
+                        bool firstModifier = true;
+                        for (const auto& modifier : effect.mModifiers)
+                        {
+                            if (!firstModifier) stream << ',';
+                            firstModifier = false;
+                            stream << "{\"attribute\":" << static_cast<unsigned>(modifier.mAttribute)
+                                << ",\"delta\":" << std::setprecision(17) << modifier.mDelta << '}';
+                        }
+                        stream << "]}";
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 99 && !actor.mPotionLightEffects.empty())
+                {
+                    stream << ",\"potion_light_effects\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mPotionLightEffects)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"potion\":\"" << escapeJson(effect.mPotion.serialize())
+                            << "\",\"light\":\"" << escapeJson(effect.mLight.serialize())
+                            << "\",\"magnitude\":" << std::setprecision(17) << effect.mMagnitude
+                            << ",\"duration\":" << effect.mDuration
+                            << ",\"elapsed\":" << effect.mElapsed << '}';
+                    }
+                    stream << ']';
+                }
                 if (mVersion >= 82)
                 {
                     stream << ",\"process_alerted\":";
@@ -5908,6 +6557,23 @@ namespace ESM4
                 stream << ']';
                 if (mVersion >= 84)
                     stream << ",\"essential\":" << (base.mEssential ? (*base.mEssential ? "true" : "false") : "null");
+                if (mVersion >= 90)
+                {
+                    stream << ",\"factions\":";
+                    if (!base.mFactions) stream << "null";
+                    else
+                    {
+                        stream << '[';
+                        for (std::size_t j = 0; j < base.mFactions->size(); ++j)
+                        {
+                            if (j) stream << ',';
+                            const auto& faction = (*base.mFactions)[j];
+                            stream << "[\"" << escapeJson(faction.mFaction.serialize()) << "\","
+                                   << static_cast<int>(faction.mRank) << ']';
+                        }
+                        stream << ']';
+                    }
+                }
                 stream << '}';
             }
             stream << ']';
@@ -6634,15 +7300,25 @@ namespace ESM4
                     << "\",\"asset_hash\":\"" << weapon.mAssetHash << "\",\"physical_scale\":";
                 scalar(weapon.mPhysicalScale);
                 stream << ",\"scene_collision_flags\":" << weapon.mSceneCollisionFlags;
-                const auto& body = weapon.mBody;
-                stream << ",\"body\":{\"record\":" << body.mRecord << ",\"node_record\":" << body.mNodeRecord
-                    << ",\"rotation\":"; vector(body.mRotation);
-                stream << ",\"position\":"; vector(body.mPosition);
-                stream << ",\"linear_velocity\":"; vector(body.mLinearVelocity);
-                stream << ",\"angular_velocity\":"; vector(body.mAngularVelocity);
-                stream << ",\"native_packed_velocity\":{\"linear\":"; vector(body.mNativePackedVelocity->mLinear);
-                stream << ",\"angular\":"; vector(body.mNativePackedVelocity->mAngular);
-                stream << "},\"native_motion\":" << static_cast<unsigned>(*body.mNativeMotion) << '}';
+                const auto writeBody = [&](const RuntimeRagdollBody& body) {
+                    stream << "{\"record\":" << body.mRecord << ",\"node_record\":" << body.mNodeRecord
+                        << ",\"rotation\":"; vector(body.mRotation);
+                    stream << ",\"position\":"; vector(body.mPosition);
+                    stream << ",\"linear_velocity\":"; vector(body.mLinearVelocity);
+                    stream << ",\"angular_velocity\":"; vector(body.mAngularVelocity);
+                    stream << ",\"native_packed_velocity\":{\"linear\":"; vector(body.mNativePackedVelocity->mLinear);
+                    stream << ",\"angular\":"; vector(body.mNativePackedVelocity->mAngular);
+                    stream << "},\"native_motion\":" << static_cast<unsigned>(*body.mNativeMotion) << '}';
+                };
+                stream << ",\"body\":"; writeBody(weapon.mBody);
+                if (mVersion >= 103 && !weapon.mAdditionalBodies.empty())
+                {
+                    stream << ",\"additional_bodies\":[";
+                    bool firstBody = true;
+                    for (const auto& body : weapon.mAdditionalBodies)
+                    { if (!firstBody) stream << ','; firstBody = false; writeBody(body); }
+                    stream << ']';
+                }
                 if (weapon.mRootLocal)
                 {
                     stream << ",\"root_local\":{\"rotation\":"; vector(weapon.mRootLocal->mRotation);
@@ -6771,10 +7447,24 @@ namespace ESM4
                     if (i) stream << ',';
                     stream << "{\"spell\":\"" << escapeJson(abilities[i].mSpell.serialize())
                         << "\",\"displaced_inventory\":";
-                    writeJsonInventory(stream, abilities[i].mDisplacedEquipment, 82);
+                    writeJsonInventory(stream, abilities[i].mDisplacedEquipment, mVersion >= 97 ? mVersion : 82);
                     stream << '}';
                 }
                 stream << "]}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 86)
+        {
+            stream << ",\"native_trap_contacts\":[";
+            bool first = true;
+            for (const auto& contact : mNativeTrapContacts)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"reference\":\"" << escapeJson(contact.mReference.serialize())
+                    << "\",\"body_record\":" << contact.mBodyRecord << ",\"actor\":\""
+                    << escapeJson(contact.mActor.serialize()) << "\"}";
             }
             stream << ']';
         }
@@ -6829,6 +7519,110 @@ namespace ESM4
                 stream << ']';
             }
             stream << '}';
+        }
+        if (mVersion >= 87)
+        {
+            stream << ",\"native_spell_casts\":[";
+            bool first = true;
+            for (const auto& [actor, cast] : mNativeSpellCasts)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize())
+                    << "\",\"spell\":\"" << escapeJson(cast.mSpell.serialize())
+                    << "\",\"animation_group\":\"" << escapeJson(cast.mAnimationGroup)
+                    << "\",\"cost\":";
+                const auto number = [&](float value) {
+                    if (value == 0 && std::signbit(value)) stream << "-0.0";
+                    else stream << std::setprecision(17) << value;
+                };
+                number(cast.mCost); stream << ",\"elapsed\":"; number(cast.mElapsed);
+                stream << ",\"release_time\":"; number(cast.mReleaseTime);
+                stream << ",\"duration\":"; number(cast.mDuration);
+                stream << ",\"released\":" << (cast.mReleased ? "true" : "false") << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 88)
+        {
+            stream << ",\"next_magic_projectile\":" << mNextMagicProjectile << ",\"native_magic_projectiles\":[";
+            bool first = true;
+            const auto number = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
+            for (const auto& [id, projectile] : mNativeMagicProjectiles)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"id\":" << id << ",\"caster\":\"" << escapeJson(projectile.mCaster.serialize())
+                    << "\",\"source\":\"" << escapeJson(projectile.mSource.serialize())
+                    << "\",\"cell\":\"" << escapeJson(projectile.mCell.serialize())
+                    << "\",\"effect_code\":" << projectile.mEffectCode << ",\"magnitude\":";
+                number(projectile.mMagnitude);
+                stream << ",\"position\":[";
+                for (std::size_t i = 0; i < 3; ++i) { if (i) stream << ','; number(projectile.mPosition[i]); }
+                stream << "],\"velocity\":[";
+                for (std::size_t i = 0; i < 3; ++i) { if (i) stream << ','; number(projectile.mVelocity[i]); }
+                stream << "],\"distance\":"; number(projectile.mDistance);
+                stream << ",\"maximum_distance\":"; number(projectile.mMaximumDistance);
+                stream << ",\"model\":\"" << escapeJson(projectile.mModel) << "\"}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 96)
+        {
+            stream << ",\"next_arrow_projectile\":" << mNextArrowProjectile << ",\"native_arrow_projectiles\":[";
+            bool first = true;
+            const auto number = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
+            for (const auto& [id, arrow] : mNativeArrowProjectiles)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"id\":" << id << ",\"caster\":\"" << escapeJson(arrow.mCaster.serialize())
+                    << "\",\"bow\":\"" << escapeJson(arrow.mBow.serialize())
+                    << "\",\"ammunition\":\"" << escapeJson(arrow.mAmmunition.serialize())
+                    << "\",\"cell\":\"" << escapeJson(arrow.mCell.serialize()) << "\",\"position\":[";
+                for (std::size_t i = 0; i < 3; ++i) { if (i) stream << ','; number(arrow.mPosition[i]); }
+                stream << "],\"velocity\":[";
+                for (std::size_t i = 0; i < 3; ++i) { if (i) stream << ','; number(arrow.mVelocity[i]); }
+                stream << "],\"damage\":"; number(arrow.mDamage);
+                stream << ",\"gravity_factor\":"; number(arrow.mGravityFactor);
+                stream << ",\"distance\":"; number(arrow.mDistance);
+                stream << ",\"maximum_distance\":"; number(arrow.mMaximumDistance);
+                stream << ",\"model\":\"" << escapeJson(arrow.mModel) << "\"}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 89)
+        {
+            stream << ",\"daily_package_completions\":[";
+            bool first = true;
+            for (const auto& [pair, day] : mDailyPackageCompletions)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(pair.first.serialize())
+                    << "\",\"package\":\"" << escapeJson(pair.second.serialize())
+                    << "\",\"day\":[" << day.mYear << ',' << day.mMonth << ',' << day.mDay << ",0]}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 91)
+        {
+            stream << ",\"package_waiting\":[";
+            bool first = true;
+            for (const auto& [key, waiting] : mPackageWaiting)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"package\":\"" << escapeJson(key.serialize())
+                    << "\",\"waiting\":" << (waiting ? "true" : "false") << '}';
+            }
+            stream << ']';
         }
         stream << "}";
         return stream.str();

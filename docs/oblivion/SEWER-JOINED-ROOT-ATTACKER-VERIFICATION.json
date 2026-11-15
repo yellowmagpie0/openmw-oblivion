@@ -1,0 +1,98 @@
+{
+  "scope": "Original upper-stair four-waypoint prefix and exact fresh continuation defeating actual root-area attacker159838. Raw wrong-target failure remains failed; full sewer escape incomplete.",
+  "full_escape_complete": false,
+  "reviewed_stair_prefix": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-upper-stairs-rat-course-01/scenario.json",
+    "raw_passed": false,
+    "independent_prefix_accepted": true,
+    "all_prefix_actions_pass": true,
+    "successful_actions": 141,
+    "source": {
+      "path": "build/oblivion-compat/sewer-escape/joined-west-rat-38175-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "e11e8fbaf0030de025e6de283e4106d20c5300903f8eab3f38d87f9bf825edf4",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -2200.98095703125,
+        4629.91845703125,
+        -386.8568115234375,
+        0.04804698005318642,
+        0.0,
+        -2.7245142459869385
+      ],
+      "health": 59.31999969482422
+    },
+    "actual_F5_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-upper-stairs-rat-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "4d04f72d06dbd3b7443e9c7ad6cd4e812fa727141e7254caf859e2520de2b1a4",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -2708.547119140625,
+        4518.95263671875,
+        -253.99072265625,
+        0.1228516548871994,
+        0.0,
+        -1.9866236448287964
+      ],
+      "health": 59.31999969482422
+    },
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-west-rat-38175-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "e11e8fbaf0030de025e6de283e4106d20c5300903f8eab3f38d87f9bf825edf4",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "corrected_editable_recipe": "scripts/data/oblivion_compat/oblivion_sewer_joined_upper_stairs_prefix.json",
+    "corrected_recipe_actions_match_prefix": true,
+    "corrected_recipe_rerun_as_whole": false,
+    "later_failure": "Target038818 remains beyond a wall while actual159838 attacks. Fixed-direction approach fails proximity gate; Player remains alive, raw scenario fails. Earlier actual F5 preserves healthy59.32HP stair checkpoint."
+  },
+  "fresh_actual_attacker": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-actual-root-attacker-01/scenario.json",
+    "passed": true,
+    "all_actions_complete": true,
+    "exit_code": 0,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-upper-stairs-rat-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "4d04f72d06dbd3b7443e9c7ad6cd4e812fa727141e7254caf859e2520de2b1a4",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-actual-root-attacker-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "7377d00fbb9508855316b589b432d477f5888ec9824b6ae20247e535b3824ea1",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -2944.7685546875,
+        4206.29638671875,
+        -256.8033447265625,
+        -0.07207021862268448,
+        0.0,
+        -2.5713894367218018
+      ],
+      "health": 46.040000915527344
+    },
+    "rat": {
+      "actor": "content:oblivion.esm:159838",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "native_death_count": 7,
+    "only_expected_counter_increment": true,
+    "pending_deaths": [],
+    "physical_action_owners": [],
+    "combat_engagements": []
+  },
+  "control_change": "Ordinary short W segments, repeated fresh actual camera aim, and read-only segment stop/release observations handle moving attacker159838. Local segment elapsed time/phase change never writes world state. No engine/input-helper change.",
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/joined-upper-stairs-rat-course-01/phase1-joined-west-upper-stairs-four.png",
+    "build/oblivion-compat/sewer-escape/joined-actual-root-attacker-01/joined-actual-root-attacker-victory.png"
+  ],
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "next": "Normal recovery, return along actually traversed path to proven corridor, then physical root/lower route and original Natural Caverns door. Shaman/late escape/full uninterrupted course/outdoor reload remain required."
+}

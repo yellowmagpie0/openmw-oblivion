@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "scope": "Active controller page query and ordinary-input equipment selection for the sewer course. Full uninterrupted escape remains incomplete.",
+  "problem": "Full new-game run09 looted the Club and Key but equipment opened on remembered Magic after healing; Inventory was wrongly assumed. Visibility is not active-page identity because inactive pages remain visible off-screen.",
+  "change": [
+    "Expose the existing active controller window ID through private Lua UI binding.",
+    "Cycle ordinary controller triggers with fresh frame-delayed active-page observations and verify Inventory before selecting Club.",
+    "Correct focused-course expected logs to include their actual inner Key phase prefixes."
+  ],
+  "tested_files_sha256": {
+    "apps/openmw/mwlua/uibindings.cpp": "9f98212c06a186926f4e85db910d5f4b1264bc07894d1a4bab0556c92e04a0fb",
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_key_loot_door.json": "ddbc8f4ad274dcb0414a81a93354c94907e3d5112b87725d191ac894973f2d23",
+    "scripts/data/oblivion_compat/oblivion_sewer_continuous_selection.json": "dcfa784866ecde1c0a08d316cb1d21a2a75f4381e4e10e8daaa804ade27eacc1"
+  },
+  "gates": {
+    "normal": {
+      "verification": "build/oblivion-compat/sewer-escape/equipment-active-page-engine-normal-01/verification.json",
+      "tested_source": {
+        "head": "9eaf82e9ad5b699479b6089cb296022296fd6b36",
+        "source_fingerprint": "29778055c26331fc223f6225231ac4292987dc44fe90b05a143a376a3ce1c939"
+      },
+      "tests": 2210,
+      "inventory_matches": true,
+      "failures": 0,
+      "skips": 0
+    },
+    "asan_ubsan": {
+      "verification": "build/oblivion-compat/sewer-escape/equipment-active-page-engine-sanitize-01/verification.json",
+      "tested_source": {
+        "head": "9eaf82e9ad5b699479b6089cb296022296fd6b36",
+        "source_fingerprint": "29778055c26331fc223f6225231ac4292987dc44fe90b05a143a376a3ce1c939"
+      },
+      "tests": 2210,
+      "inventory_matches": true,
+      "failures": 0,
+      "skips": 0
+    }
+  },
+  "python": {
+    "log": "build/oblivion-compat/sewer-escape/equipment-active-page-python-focused-01.log",
+    "tests": 18,
+    "failures": 0,
+    "skips": 0,
+    "scope": "Assembly/repeat harness focused tests; no changed Python implementation."
+  },
+  "runtime": {
+    "scope": "Focused genuine pre-equipment checkpoint only; full original-new-game escape remains unproven. Exploratory visibility candidate remains failed.",
+    "passed": true,
+    "courses": [
+      {
+        "course": "build/oblivion-compat/sewer-escape/equipment-active-page-magic-01",
+        "scenario_passed": true,
+        "native_final_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/equipment-active-page-magic-01/retained-saves/3-0003-Quicksave.omwsave",
+        "save_sha256": "6f5b972e30092523bdcadc0d7cbd2df3f877d6ef97cc02d4a15cbc747484768c",
+        "native_snapshot_sha256": "c06b57355f2df01d9a758a0c4de6e3892107508e6db658bcaa6caad548109010",
+        "parsed_save_equals_snapshot": true,
+        "health": 70,
+        "key_count": 1,
+        "club_count": 1,
+        "club_equipped_slots": 65536,
+        "cell": "content:oblivion.esm:022ff6",
+        "all_ordinary_inputs_delivered": true,
+        "page_cycle_iterations": 1,
+        "no_simultaneous_inventory_magic_sample": true,
+        "whole_entry_state": {
+          "passed": true,
+          "source_save": "build/oblivion-compat/sewer-escape/equipment-panel-magic-01/retained-saves/3-0003-Quicksave.omwsave",
+          "source_save_sha256": "01723382a9025d4cdecd59505afbe3f06fdfe3c7082bb0dfb932d1066eb56b2c",
+          "whole_state_restore": true,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": [
+            [
+              "/native_animated_references/0/bodies/0/linear_velocity/0",
+              8.927273302106187e-05,
+              8.927274029701948e-05
+            ],
+            [
+              "/native_animated_references/0/bodies/0/linear_velocity/2",
+              -3.078980626014527e-08,
+              -3.078980981285895e-08
+            ],
+            [
+              "/native_animated_references/0/bodies/5/linear_velocity/1",
+              -0.008652446791529655,
+              -0.00865244586020708
+            ],
+            [
+              "/native_animated_references/0/bodies/5/linear_velocity/2",
+              -0.005694762337952852,
+              -0.0056947628036141396
+            ],
+            [
+              "/native_animated_references/0/bodies/6/linear_velocity/0",
+              -0.0010713357478380203,
+              -0.0010713358642533422
+            ],
+            [
+              "/native_animated_references/0/bodies/10/linear_velocity/1",
+              0.0007573904003947973,
+              0.0007573903421871364
+            ],
+            [
+              "/native_animated_references/0/bodies/12/linear_velocity/0",
+              -0.0024519958533346653,
+              -0.0024519956205040216
+            ]
+          ]
+        }
+      },
+      {
+        "course": "build/oblivion-compat/sewer-escape/equipment-active-page-inventory-sanitize-03",
+        "scenario_passed": true,
+        "native_final_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/equipment-active-page-inventory-sanitize-03/retained-saves/3-0003-Quicksave.omwsave",
+        "save_sha256": "e6a2b4a3b7fa144915c896fdbf42d1f04012c1c4edbdc36e9b163c102d7b9442",
+        "native_snapshot_sha256": "babd4d51598feb2af55b17511e2c5a4aa9c705176860f6a6c2d369a7b31e683a",
+        "parsed_save_equals_snapshot": true,
+        "health": 70,
+        "key_count": 1,
+        "club_count": 1,
+        "club_equipped_slots": 65536,
+        "cell": "content:oblivion.esm:022ff6",
+        "all_ordinary_inputs_delivered": true,
+        "page_cycle_iterations": 4,
+        "no_simultaneous_inventory_magic_sample": true,
+        "whole_entry_state": {
+          "passed": true,
+          "source_save": "build/oblivion-compat/sewer-escape/equipment-panel-magic-01/retained-saves/3-0003-Quicksave.omwsave",
+          "source_save_sha256": "01723382a9025d4cdecd59505afbe3f06fdfe3c7082bb0dfb932d1066eb56b2c",
+          "whole_state_restore": true,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": [
+            [
+              "/native_animated_references/0/bodies/0/linear_velocity/0",
+              8.927273302106187e-05,
+              8.927274029701948e-05
+            ],
+            [
+              "/native_animated_references/0/bodies/0/linear_velocity/2",
+              -3.078980626014527e-08,
+              -3.078980981285895e-08
+            ],
+            [
+              "/native_animated_references/0/bodies/5/linear_velocity/1",
+              -0.008652446791529655,
+              -0.00865244586020708
+            ],
+            [
+              "/native_animated_references/0/bodies/5/linear_velocity/2",
+              -0.005694762337952852,
+              -0.0056947628036141396
+            ],
+            [
+              "/native_animated_references/0/bodies/6/linear_velocity/0",
+              -0.0010713357478380203,
+              -0.0010713358642533422
+            ],
+            [
+              "/native_animated_references/0/bodies/10/linear_velocity/1",
+              0.0007573904003947973,
+              0.0007573903421871364
+            ],
+            [
+              "/native_animated_references/0/bodies/12/linear_velocity/0",
+              -0.0024519958533346653,
+              -0.0024519956205040216
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "runtime_artifacts": {
+    "normal_openmw_sha256": "ff12ce922fa13e8500ab613cb6a1c7745f808da5563eba56c9243a26451c7f6d",
+    "sanitized_openmw_sha256": "1f4982432fa4a71ba24f95b0d289a0c8ff656d3a9548c58e3079328f7ff8c57b",
+    "normal_mygui_sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54",
+    "sanitized_mygui_sha256": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
+  },
+  "sanitizer": {
+    "engine": "ASAN_OPTIONS=detect_leaks=1:halt_on_error=1; UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1; explicit X11/Mesa environment from M15 recovery receipt",
+    "runtime": "ASAN_OPTIONS=detect_leaks=0:halt_on_error=1; UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1; actual ELF /usr/lib64/libasan.so.8.0.0 preload",
+    "leak_scope": "Engine test leak checking only; no rendered runtime leak claim."
+  },
+  "rendered_inspection": [
+    "build/oblivion-compat/sewer-escape/equipment-active-page-magic-01/rendered-inspection-notes.json",
+    "build/oblivion-compat/sewer-escape/equipment-active-page-inventory-sanitize-03/rendered-inspection-notes.json"
+  ],
+  "preserved_failures": [
+    {
+      "course": "build/oblivion-compat/sewer-escape/full-escape-continuous-09",
+      "reason": "Club-equipped wait while Magic active; no supplemental inputs delivered."
+    },
+    {
+      "course": "build/oblivion-compat/sewer-escape/equipment-panel-magic-01",
+      "reason": "Expected-log prefix mismatch; visibility oracle rejected. Genuine native pre-equipment save3 supplies focused input."
+    },
+    {
+      "course": "build/oblivion-compat/sewer-escape/equipment-active-page-inventory-sanitize-01",
+      "reason": "Initial SDL focus delivery exceeded default10sec; no gameplay inputs delivered."
+    },
+    {
+      "course": "build/oblivion-compat/sewer-escape/equipment-active-page-inventory-sanitize-02",
+      "reason": "Loop120sec expired after3 healthy40sec cycles; no engine/sanitizer findings. Successful03 retains all assertions/input, receipt90sec and waits3x."
+    }
+  ],
+  "assembly": {
+    "path": "build/oblivion-compat/sewer-escape/equipment-active-page-full-assembly-01/full-escape.json",
+    "segments": 67,
+    "top_level_actions": 11559,
+    "luajit_compile": "build/oblivion-compat/sewer-escape/equipment-active-page-full-assembly-01/luajit-syntax-verification.json",
+    "full_course_acceptance": false
+  },
+  "remaining": "Commit bounded fix; run original-new-game10 continuously through all67 segments and fresh-load its own outdoor save. No loaded focused course or composite chain substitutes."
+}

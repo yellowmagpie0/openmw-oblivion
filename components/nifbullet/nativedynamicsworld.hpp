@@ -54,6 +54,7 @@ namespace NifBullet
         const std::shared_ptr<Lifetime> mLifetime = std::make_shared<Lifetime>();
         std::vector<Owner> mNativeOwners;
         const void* mNativeSceneOwner = nullptr;
+        std::function<void(float)> mNativeBeforeSolve;
         std::vector<std::weak_ptr<PreparedRegistrationBatch::Data>> mRegistrationBatches;
         std::vector<std::pair<btRigidBody*, btTransform>> mCompoundSweepStarts;
 
@@ -69,6 +70,13 @@ namespace NifBullet
         }
 
     protected:
+        void solveConstraints(btContactSolverInfo& info) override
+        {
+            if (mNativeBeforeSolve)
+                mNativeBeforeSolve(static_cast<float>(info.m_timeStep));
+            btDiscreteDynamicsWorld::solveConstraints(info);
+        }
+
         void createPredictiveContacts(btScalar timeStep) override;
         void integrateTransforms(btScalar timeStep) override;
 
@@ -124,17 +132,21 @@ namespace NifBullet
 
         // Engine wrapper binding, analogous to original889BB0's World+2B0
         // backreference. This is ownership presence, not simulation enablement.
-        void bindNativeSceneOwner(const void* identity)
+        void bindNativeSceneOwner(const void* identity, std::function<void(float)> beforeSolve = {})
         {
             if (!identity || mNativeSceneOwner)
                 throw std::invalid_argument("Invalid native scene World owner binding");
             mNativeSceneOwner = identity;
+            mNativeBeforeSolve = std::move(beforeSolve);
         }
 
         void unbindNativeSceneOwner(const void* identity) noexcept
         {
             if (identity && mNativeSceneOwner == identity)
+            {
                 mNativeSceneOwner = nullptr;
+                mNativeBeforeSolve = {};
+            }
         }
 
         bool hasNativeSceneOwner(const void* identity) const noexcept

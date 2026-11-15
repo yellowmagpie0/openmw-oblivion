@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <functional>
 #include <limits>
 #include <mutex>
@@ -562,6 +563,7 @@ namespace MWPhysics
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        discardAnimatedReferenceContacts(ptr);
         const auto found = mAnimatedReferenceBodies.find(ptr.mRef);
         if (found == mAnimatedReferenceBodies.end()) return;
         for (auto* object : found->second->mPhysics.collisionObjects()) mCollisionObjects.erase(object);
@@ -594,6 +596,7 @@ namespace MWPhysics
 
     void PhysicsTaskScheduler::clearAnimatedReferenceBodies()
     {
+        mAnimatedReferenceContacts.clear();
         for (auto& [_, reference] : mAnimatedReferenceBodies)
             for (auto* object : reference->mPhysics.collisionObjects()) mCollisionObjects.erase(object);
         mAnimatedReferenceBodies.clear();
@@ -606,6 +609,76 @@ namespace MWPhysics
         std::vector<MWWorld::Ptr> result;
         for (const auto& [_, reference] : mAnimatedReferenceBodies) result.push_back(reference->getPtr());
         return result;
+    }
+
+    void PhysicsTaskScheduler::observeAnimatedReferenceContacts(float duration)
+    {
+        // Called under the simulation's collision-world barrier, after narrow
+        // phase and before impulses change the incoming body velocity. Keep a
+        // separate overlap set for each substep, including empty sets.
+        AnimatedReferenceContactStep step{duration, {}};
+        auto* dispatcher = mCollisionWorld->getDispatcher();
+        for (const auto& [_, owner] : mAnimatedReferenceBodies)
+        {
+            const auto bodies = owner->mPhysics.collisionObjects();
+            for (std::size_t index = 0; index < bodies.size(); ++index)
+            {
+                const auto& definition = owner->mDefinition.mBodies.at(index);
+                const auto layer = definition.mInfoFilter.mLayer & 0x3f;
+                if (definition.mFixed || (layer != 14 && layer != 16)) continue;
+                const auto* body = btRigidBody::upcast(bodies[index]);
+                for (int i = 0; i < dispatcher->getNumManifolds(); ++i)
+                {
+                    const auto* manifold = dispatcher->getManifoldByIndexInternal(i);
+                    const bool first = manifold->getBody0() == body;
+                    if (!first && manifold->getBody1() != body) continue;
+                    const auto* other = first ? manifold->getBody1() : manifold->getBody0();
+                    const auto* holder = static_cast<const PtrHolder*>(other->getUserPointer());
+                    if (!holder) continue;
+                    const auto actor = holder->getPtr();
+                    if (actor.isEmpty() || !actor.getClass().isActor()) continue;
+                    for (int j = 0; j < manifold->getNumContacts(); ++j)
+                    {
+                        const auto& point = manifold->getContactPoint(j);
+                        if (point.getDistance() > manifold->getContactBreakingThreshold()) continue;
+                        const auto duplicate = std::find_if(step.mContacts.begin(), step.mContacts.end(),
+                            [&](const auto& contact) {
+                                return contact.mReference == owner->getPtr() && contact.mActor == actor
+                                    && contact.mBodyRecord == definition.mRecord;
+                            });
+                        if (duplicate == step.mContacts.end())
+                            step.mContacts.push_back({owner->getPtr(), actor, definition.mRecord,
+                                static_cast<std::uint8_t>(layer),
+                                point.getDistance() <= 0,
+                                Misc::Convert::toOsg(first ? point.getPositionWorldOnA() : point.getPositionWorldOnB()),
+                                Misc::Convert::toOsg(body->getLinearVelocity())});
+                        else if (point.getDistance() <= 0 && !duplicate->mTouching)
+                        {
+                            duplicate->mTouching = true;
+                            duplicate->mPoint = Misc::Convert::toOsg(
+                                first ? point.getPositionWorldOnA() : point.getPositionWorldOnB());
+                        }
+                        if (point.getDistance() <= 0) break;
+                    }
+                }
+            }
+        }
+        mAnimatedReferenceContacts.push_back(std::move(step));
+    }
+
+    std::vector<AnimatedReferenceContactStep> PhysicsTaskScheduler::takeAnimatedReferenceContacts()
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return std::exchange(mAnimatedReferenceContacts, {});
+    }
+
+    void PhysicsTaskScheduler::discardAnimatedReferenceContacts(const MWWorld::Ptr& ptr)
+    {
+        for (auto& step : mAnimatedReferenceContacts)
+            std::erase_if(step.mContacts, [&](const auto& contact) {
+                return contact.mReference == ptr || contact.mActor == ptr;
+            });
     }
 
     std::vector<NifBullet::RagdollBodyState> PhysicsTaskScheduler::captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr)
@@ -717,12 +790,12 @@ namespace MWPhysics
             return result;
         }
 
-        Nif::NiTransform targetPose() const
+        Nif::NiTransform targetPose(std::size_t index = 0) const
         {
             if (mLengthScale != NifBullet::RagdollNativeLengthScale)
                 throw std::invalid_argument("loose native scene target requires the native length scale");
-            const auto& body = mDefinition.mBodies.front();
-            const auto pose = mPhysics.capture().front().mPose;
+            const auto& body = mDefinition.mBodies.at(index);
+            const auto pose = mPhysics.capture().at(index).mPose;
             const auto& origin = pose.getOrigin();
             const auto rotation = pose.getRotation();
             NifBullet::RagdollNativeTargetPose physical{
@@ -783,11 +856,12 @@ namespace MWPhysics
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
         if (!world || ptr.isEmpty() || ptr.getClass().isActor() || ptr.getContainerStore()
-            || ptr.getCellRef().getCount() <= 0 || definition.mBodies.size() != 1
-            || !definition.mJoints.empty() || definition.mBodies[0].mBlend
-            || definition.mBodies[0].mBlendController
+            || ptr.getCellRef().getCount() <= 0 || definition.mBodies.empty()
+            || std::any_of(definition.mBodies.begin(), definition.mBodies.end(), [](const auto& body) {
+                return body.mBlend || body.mBlendController || body.mFixed;
+            })
             || mLooseObjects.contains(ptr.mRef) || mActorRagdolls.contains(ptr.mRef) || mAnimatedReferenceBodies.contains(ptr.mRef))
-            throw std::invalid_argument("loose physics requires one live non-actor body in a native World");
+            throw std::invalid_argument("loose physics requires a live dynamic non-actor graph in a native World");
         if (sceneInitialization != LooseObjectSceneInitialization::SuppliedPhysicalPose
             && sceneInitialization != LooseObjectSceneInitialization::PendingReference)
             throw std::invalid_argument("unknown loose scene initialization");
@@ -831,6 +905,7 @@ namespace MWPhysics
             result.mModel = snapshot.mModel;
             result.mAssetHash = snapshot.mAssetHash;
             result.mBodies = {snapshot.mBody};
+            result.mBodies.insert(result.mBodies.end(), snapshot.mAdditionalBodies.begin(), snapshot.mAdditionalBodies.end());
             return result;
         }
     }
@@ -841,7 +916,7 @@ namespace MWPhysics
         int group, int mask, std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding)
     {
         snapshot.validate();
-        if (definition.mBodies.size() != 1
+        if (definition.mBodies.size() != 1 + snapshot.mAdditionalBodies.size()
             || (snapshot.mRootLocal && definition.mReferenceRoot != definition.mBodies.front().mNodeRecord)
             || ((snapshot.mSceneCollisionFlags ^ definition.mBodies.front().mCollisionFlags) & ~0x4cu))
             throw std::invalid_argument("loose snapshot scene flags do not match the native asset");
@@ -894,6 +969,7 @@ namespace MWPhysics
         result.mModel = physical.mModel;
         result.mAssetHash = physical.mAssetHash;
         result.mBody = physical.mBodies.front();
+        result.mAdditionalBodies.assign(physical.mBodies.begin() + 1, physical.mBodies.end());
         result.mPhysicalScale = object.mReferenceScale;
         result.mSceneCollisionFlags = object.mSceneCollisionFlags;
         if (object.mRootLocal)
@@ -941,19 +1017,25 @@ namespace MWPhysics
         // Preparation may precede its scene dependency. Physical publication
         // requires that exact model to have been published successfully.
         if (!owned.validSceneBinding(true)) return false;
-        auto* body = owned.mPhysics.collisionObjects()[0];
-        // Complete routing allocation before the final fallible physics write.
-        const auto [entry, inserted] = mCollisionObjects.insert(body);
-        if (!inserted) return false;
+        // Register every child for collision routing before publishing any of
+        // the graph. Allocation or World admission failure retires the prefix.
+        std::vector<btCollisionObject*> inserted;
+        inserted.reserve(owned.mPhysics.collisionObjects().size());
         try
         {
+            for (auto* body : owned.mPhysics.collisionObjects())
+            {
+                if (!mCollisionObjects.insert(body).second)
+                    throw std::invalid_argument("loose physics collision identity already registered");
+                inserted.push_back(body);
+            }
             auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
             if (!world || !owned.mPhysics.publish(*world))
                 throw std::invalid_argument("loose physics graph publication rejected");
         }
         catch (...)
         {
-            mCollisionObjects.erase(entry);
+            for (auto* body : inserted) mCollisionObjects.erase(body);
             throw;
         }
         // Prepared map node insertion allocates nothing; all duplicate/owner
@@ -1079,6 +1161,25 @@ namespace MWPhysics
         if (found == mLooseObjects.end())
             throw std::invalid_argument("reference has no loose physics");
         return found->second->rootPose(ptr.getCellRef().getScale());
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> PhysicsTaskScheduler::captureLooseObjectWorldBones(
+        const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
+        const auto& object = *found->second;
+        if (!object.validSceneBinding(true))
+            throw std::invalid_argument("loose physics scene binding is retired or replaced");
+        std::vector<NifBullet::RagdollBoneWorldPose> result;
+        // Single-body references retain their existing root publication path.
+        if (object.mDefinition.mBodies.size() == 1) return result;
+        result.reserve(object.mDefinition.mBodies.size());
+        for (std::size_t i = 0; i < object.mDefinition.mBodies.size(); ++i)
+            result.push_back({object.mDefinition.mBodies[i].mNodeRecord, object.targetPose(i).toMatrix()});
+        return result;
     }
 
     NifBullet::RagdollBonePoseWriteback PhysicsTaskScheduler::captureLooseObjectRootFrame(
@@ -1300,11 +1401,11 @@ namespace MWPhysics
         NifBullet::NativeDynamicsWorld* mWorld;
         const void* mIdentity;
     public:
-        NativeSceneBinding(btCollisionWorld* world, const void* identity)
+        NativeSceneBinding(btCollisionWorld* world, const void* identity, std::function<void(float)> beforeSolve)
             : mWorld(dynamic_cast<NifBullet::NativeDynamicsWorld*>(world)), mIdentity(identity)
         {
             if (mWorld)
-                mWorld->bindNativeSceneOwner(mIdentity);
+                mWorld->bindNativeSceneOwner(mIdentity, std::move(beforeSolve));
         }
         ~NativeSceneBinding()
         {
@@ -1342,7 +1443,8 @@ namespace MWPhysics
         , mFrameStart(0)
         , mWorkersSync(mNumThreads >= 1 ? std::make_unique<WorkersSync>() : nullptr)
     {
-        mNativeSceneBinding = std::make_unique<NativeSceneBinding>(mCollisionWorld, this);
+        mNativeSceneBinding = std::make_unique<NativeSceneBinding>(mCollisionWorld, this,
+            [this](float duration) { observeAnimatedReferenceContacts(duration); });
         if (mNumThreads >= 1)
         {
             Log(Debug::Info) << "Using " << mNumThreads << " async physics threads";
@@ -1473,6 +1575,7 @@ namespace MWPhysics
         MaybeExclusiveLock lock(mSimulationMutex, mLockingPolicy);
 
         auto timeStart = mTimer->tick();
+        mAnimatedReferenceContacts.clear();
 
         // start by finishing previous background computation
         if (mNumThreads != 0)
@@ -1990,6 +2093,7 @@ namespace MWPhysics
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        discardAnimatedReferenceContacts(ptr);
         const auto found = mActorRagdolls.find(ptr.mRef);
         if (found == mActorRagdolls.end())
             return;
@@ -2422,6 +2526,8 @@ namespace MWPhysics
     void PhysicsTaskScheduler::removeCollisionObject(btCollisionObject* collisionObject)
     {
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        if (const auto* holder = static_cast<const PtrHolder*>(collisionObject->getUserPointer()))
+            discardAnimatedReferenceContacts(holder->getPtr());
         mCollisionObjects.erase(collisionObject);
         mCollisionWorld->removeCollisionObject(collisionObject);
     }
@@ -2621,6 +2727,69 @@ namespace MWPhysics
         {
             --mRemainingSteps;
             updateActorsPositions();
+            if (mWorldFrameData->mNativeCharacterPushes && !mAnimatedReferenceBodies.empty())
+                for (auto& simulation : *mSimulations)
+                {
+                    auto* actorSimulation = std::get_if<ActorSimulation>(&simulation);
+                    if (!actorSimulation) continue;
+                    auto actor = actorSimulation->lock();
+                    if (!actor || actor->second.get().mBodyPushes.empty()) continue;
+                    // Retain the Actor before taking this lock: releasing its
+                    // last shared owner may itself remove collision objects.
+                    MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+                    auto& pushes = actor->second.get().mBodyPushes;
+                    // A reference mass and a short response time approximate
+                    // character contact, rather than claiming the original
+                    // controller's exact force policy. Bound the total impulse
+                    // by one character weight over this substep.
+                    constexpr float characterMass = 80.f;
+                    float budget = characterMass * -NifBullet::RagdollNativeDefaultGravityZ
+                        * NifBullet::RagdollNativeLengthScale * mPhysicsDt;
+                    for (const auto& push : pushes)
+                    {
+                        if (!mCollisionObjects.contains(push.mBody)) continue;
+                        const auto target = std::find_if(mAnimatedReferenceBodies.begin(),
+                            mAnimatedReferenceBodies.end(), [&](const auto& entry) {
+                                const auto bodies = entry.second->mPhysics.collisionObjects();
+                                return std::find(bodies.begin(), bodies.end(), push.mBody) != bodies.end();
+                            });
+                        if (target == mAnimatedReferenceBodies.end()) continue;
+                        auto* body = btRigidBody::upcast(const_cast<btCollisionObject*>(push.mBody));
+                        if (!body || body->isStaticOrKinematicObject() || !body->hasContactResponse()) continue;
+                        auto direction = -Misc::Convert::toBullet(push.mNormal);
+                        if (direction.length2() < SIMD_EPSILON) continue;
+                        direction.normalize();
+                        const auto point = Misc::Convert::toBullet(push.mPoint);
+                        const auto relativePoint = point - body->getCenterOfMassPosition();
+                        const auto pointVelocity = body->getVelocityInLocalPoint(relativePoint);
+                        // Incoming hazards retain their contact/impact response.
+                        // Voluntary pushing handles settled or receding props;
+                        // tolerate only sub-unit settling noise toward the actor.
+                        if (body->getLinearVelocity().dot(direction) < -1 || pointVelocity.dot(direction) < -1)
+                            continue;
+                        const auto closing = (Misc::Convert::toBullet(push.mVelocity) - pointVelocity).dot(direction);
+                        if (closing <= 0) continue;
+                        const auto denominator = body->computeImpulseDenominator(point, direction) + 1.f / characterMass;
+                        const auto impulse = std::min(budget,
+                            float(closing / denominator) * std::min(1.f, 10.f * mPhysicsDt));
+                        if (!(impulse > 0)) continue;
+                        const auto bodies = target->second->mPhysics.collisionObjects();
+                        const auto index = std::find(bodies.begin(), bodies.end(), body) - bodies.begin();
+                        target->second->mPhysics.applyImpulse(index, direction * impulse, point);
+                        budget -= impulse;
+                        if (std::getenv("OPENMW_TRACE_CHARACTER_PUSH"))
+                        {
+                            static std::atomic<unsigned> traced{0};
+                            if (traced.fetch_add(1, std::memory_order_relaxed) < 160)
+                                Log(Debug::Info) << "Native character push: actor="
+                                    << (actor->second.get().mIsPlayer ? ESM::FormKey::dynamic("player", 1)
+                                        : actor->first->getPtr().getCellRef().getFormKey()).serialize()
+                                    << " reference=" << target->second->getPtr().getCellRef().getFormKey().serialize()
+                                    << " impulse=" << impulse;
+                        }
+                    }
+                    pushes.clear();
+                }
             if (!mActorRagdolls.empty() || !mLooseObjects.empty() || !mAnimatedReferenceBodies.empty())
             {
                 // The barrier completion runs once, after every movement job.

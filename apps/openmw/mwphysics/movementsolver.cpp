@@ -3,6 +3,7 @@
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 #include <BulletCollision/CollisionShapes/btConvexShape.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
 
 #include <components/esm3/loadgmst.hpp>
 #include <components/misc/convert.hpp>
@@ -133,6 +134,7 @@ namespace MWPhysics
     {
         // Reset per-frame data
         actor.mWalkingOnWater = false;
+        actor.mBodyPushes.clear();
         // Anything to collide with?
         if (actor.mSkipCollisionDetection)
         {
@@ -256,6 +258,16 @@ namespace MWPhysics
 
             bool seenGround = !actor.mFlying && !underwater
                 && ((actor.mIsOnGround && !actor.mIsOnSlope) || isWalkableSlope(tracer.mPlaneNormal));
+
+            if (worldData.mNativeCharacterPushes && !actor.mInert
+                && origVelocity * tracer.mPlaneNormal < -0.001f)
+            {
+                const auto* body = btRigidBody::upcast(tracer.mHitObject);
+                if (body && !body->isStaticOrKinematicObject() && body->hasContactResponse()
+                    && std::none_of(actor.mBodyPushes.begin(), actor.mBodyPushes.end(),
+                        [&](const auto& push) { return push.mBody == body; }))
+                    actor.mBodyPushes.push_back({body, tracer.mHitPoint, tracer.mPlaneNormal, origVelocity});
+            }
 
             // We hit something. Check if we can step up.
             float hitHeight = tracer.mHitPoint.z() - tracer.mEndPos.z() + actor.mHalfExtentsZ;
@@ -561,6 +573,26 @@ namespace MWPhysics
 
         auto gatherContacts = [&](btVector3 newOffset) -> ContactCollectionCallback {
             goodPosition = refPosition + Misc::Convert::toOsg(addMarginToDelta(newOffset));
+            if (newOffset.z() < 0)
+            {
+                // Downward recovery must not cross a supporting floor, even
+                // when that would reduce penetration with an overhead lip.
+                // Retain contact-based lateral/upward separation: sweeping
+                // those paths from an already overlapping hull can reject
+                // legitimate recovery against another initial contact.
+                newTransform.setOrigin(Misc::Convert::toBullet(refPosition));
+                actor.mCollisionObject->setWorldTransform(newTransform);
+                ActorTracer recovery;
+                recovery.doTrace(actor.mCollisionObject, refPosition, goodPosition, collisionWorld);
+                if (recovery.mFraction < 1.f)
+                {
+                    auto displacement = recovery.mEndPos - refPosition;
+                    const float distance = displacement.length();
+                    goodPosition = distance > sCollisionMargin
+                        ? recovery.mEndPos - displacement * (sCollisionMargin / distance)
+                        : refPosition;
+                }
+            }
             newTransform.setOrigin(Misc::Convert::toBullet(goodPosition));
             actor.mCollisionObject->setWorldTransform(newTransform);
 
@@ -585,6 +617,13 @@ namespace MWPhysics
                 positionDelta *= contactCallback.mMaxY / std::abs(positionDelta.y());
             if (std::abs(positionDelta.z()) > contactCallback.mMaxZ)
                 positionDelta *= contactCallback.mMaxZ / std::abs(positionDelta.z());
+
+            // A smaller overlap is not necessarily a safe destination: a stair
+            // lip can reject a grounded hull down through its supporting floor.
+            // Let movement/stepping handle descents; overlap recovery may move
+            // grounded actors sideways or up, but must not lower their feet.
+            if (actor.mIsOnGround && positionDelta.z() < 0)
+                positionDelta.setZ(0);
 
             auto contactCallback2 = gatherContacts(positionDelta);
             // successfully moved further out from contact (does not have to be in open space, just less inside of

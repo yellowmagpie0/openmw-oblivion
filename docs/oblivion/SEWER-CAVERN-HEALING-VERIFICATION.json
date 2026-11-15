@@ -1,0 +1,121 @@
+{
+  "scope": "Natural Caverns healing chest, potion consumption, fresh-process persistence and northern patrol approach and ordinary melee against patrol/reinforcement",
+  "implementation_commit": "2b3538c09b",
+  "game_sha256": "3e3ebda7cf46c2e2e2e8cda877c95b78695059bf43e10ad8efc1a4b264a5eea6",
+  "loot_healing_audit": {
+    "cavern-healing-approach-01": {
+      "sha256": "d428dd117f1eb4514a7b5d20798006f16818e9d5c57cb5bd95de92dfa28c9feb",
+      "health": 12.159996032714844,
+      "potions": {}
+    },
+    "cavern-healing-loot-02": {
+      "sha256": "b5d10fc41efed62ee7886ea4054bebdde4e40d06ad8382043fa5affb27f43c3b",
+      "health": 12.159996032714844,
+      "potions": {
+        "content:oblivion.esm:00930e": 1,
+        "content:oblivion.esm:009310": 3
+      }
+    },
+    "cavern-healing-use-01": {
+      "sha256": "37853a5a4ec79a123cf1b3515337794a3241fb8e8c4828c1bb401caad1af787a",
+      "health": 52.159996032714844,
+      "potions": {
+        "content:oblivion.esm:00930e": 1,
+        "content:oblivion.esm:009310": 1
+      }
+    },
+    "checks": {
+      "chest_emptied": true,
+      "three_healing_transferred": true,
+      "one_respite_transferred": true,
+      "two_healing_consumed": true,
+      "forty_health_restored": true,
+      "life_unchanged": true
+    },
+    "passed": true
+  },
+  "fresh_process_audit": {
+    "passed": true,
+    "checks": {
+      "player_exact": true,
+      "chest_exact": true,
+      "actor_life_exact": true,
+      "script_instances_exact": true
+    },
+    "input": "cavern-healing-use-01",
+    "fresh_process_snapshot": "cavern-patrol-approach-01/live-3-2.json"
+  },
+  "courses": {
+    "cavern-healing-loot-02": {
+      "passed": true,
+      "captures_inspected": true,
+      "unreviewed_errors": []
+    },
+    "cavern-healing-use-01": {
+      "passed": true,
+      "captures_inspected": true,
+      "unreviewed_errors": []
+    },
+    "cavern-patrol-approach-01": {
+      "passed": true,
+      "captures_inspected": true,
+      "unreviewed_errors": []
+    },
+    "cavern-patrol-fight-01": {
+      "passed": true,
+      "capture_inspected": true,
+      "save_sha256": "689f6af6851a453d6ac26239496b7821390a303e233f076901b0daf919bc1ba3",
+      "health": 29.56999969482422,
+      "player_position": [
+        4468.86279296875,
+        2756.061767578125,
+        -481.38800048828125,
+        9.322166442871094e-05,
+        0.0,
+        -0.06894464790821075
+      ],
+      "unreviewed_errors": []
+    },
+    "cavern-arena-fight-01": {
+      "passed": true,
+      "capture_inspected": true,
+      "save_sha256": "bd016069aa8a8b0331917358352ca2402cf10609524100a7348bbdd4aacfc0cd",
+      "health": 29.620010375976562,
+      "player_position": [
+        4468.25341796875,
+        2764.885986328125,
+        -481.25811767578125,
+        9.322166442871094e-05,
+        0.0,
+        0.8570318222045898
+      ],
+      "unreviewed_errors": []
+    }
+  },
+  "retained_failure": {
+    "cavern-healing-loot-01": "Read-only observer tried Container.content on a TES4 container, whose Lua projection has no legacy container store. Normal Space activation transferred the loot. Replayed from pristine save using Player inventory observer plus independent saved source inventory audit."
+  },
+  "known_limitations": [
+    "TES4 container activation currently transfers all contents and displays a loot notification; it does not open the selective container menu.",
+    "Container.content Lua projection for TES4 containers is unavailable.",
+    "Goblin corpses remain upright; full sewer course remains incomplete."
+  ],
+  "tests": "Runtime-only courses; no C++/Python implementation changes. Reuse loader and hazard checks with original provenance.",
+  "final_deaths": [
+    {
+      "actor": "content:oblivion.esm:03b541",
+      "base": "content:oblivion.esm:03b531",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    {
+      "actor": "content:oblivion.esm:03b543",
+      "base": "content:oblivion.esm:03b542",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    }
+  ],
+  "healing_potions_remaining": 0
+}

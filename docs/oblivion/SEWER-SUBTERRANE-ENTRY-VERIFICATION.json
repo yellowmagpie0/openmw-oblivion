@@ -1,0 +1,98 @@
+{
+  "scope": "Cavern door combat cleanup and normal Subterrane traversal to original second-ambush stage34",
+  "full_escape_complete": false,
+  "command_limits": "Target-specific active combat and Low package cleanup implemented. Native alarm packages have no producer in this fork; process alert and crime history remain separate. No general crime/alarm acceptance claimed.",
+  "focused_checks": {
+    "schema_version": 1,
+    "passed": true,
+    "commands": [
+      {
+        "argv": [
+          "cmake",
+          "--build",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+          "--target",
+          "openmw-tests",
+          "openmw",
+          "esmtool",
+          "-j",
+          "4"
+        ],
+        "log": "engine-build.log",
+        "returncode": 0,
+        "seconds": 426.248
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+          "--gtest_list_tests"
+        ],
+        "log": "engine-inventory.txt",
+        "returncode": 0,
+        "seconds": 0.216
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+          "--gtest_filter=OblivionWorldTest.combatAlarmStopRemovesSubjectAndPreservesOtherActiveFights:OblivionWorldTest.scriptCombatCommands*",
+          "--gtest_repeat=1",
+          "--gtest_shuffle=0",
+          "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/combat-alarm-stop-focused-02/engine.xml"
+        ],
+        "log": "engine.log",
+        "returncode": 0,
+        "seconds": 0.215
+      }
+    ],
+    "results": {
+      "engine": {
+        "executed": 2,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionWorldTest.combatAlarmStopRemovesSubjectAndPreservesOtherActiveFights:OblivionWorldTest.scriptCombatCommands*",
+        "binary_sha256": "268c8b5541ee501833aa80bd0beeda9ee87b16591e869e0db30d8a8619e3b1b9",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "dcc3e2171e545d74f17ca5193f5a3fcba6b5f30875cbcd2a2eae74943608f49a",
+        "inventory_sha256": "61192dce6c924fb6d92cda1d755ca7b18bfa065744c3eb0eac6e53b9fc6fe0e7",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "source_before": {
+      "head": "8b5cd3aa715c230d47fa9a7ca1cae08ba37a5da1",
+      "source_fingerprint": "080c1e0f575baa03967b83241622a56156e0df1a43dc33c1e8b2fcddda1e717f"
+    },
+    "source_after": {
+      "head": "8b5cd3aa715c230d47fa9a7ca1cae08ba37a5da1",
+      "source_fingerprint": "080c1e0f575baa03967b83241622a56156e0df1a43dc33c1e8b2fcddda1e717f"
+    }
+  },
+  "original_instruction_evidence": "build/oblivion-compat/sewer-escape/stop-combat-alarm-oracle-02/verification.json",
+  "original_instruction_cases": 256,
+  "runtime": {
+    "cavern-subterrane-door-activation-01": {
+      "path": "build/oblivion-compat/sewer-escape/cavern-subterrane-door-activation-01",
+      "passed": true,
+      "save_sha256": "865c2c9495d3be42d916e98f0214f2378a26705607f751974556e9f19c2230bf"
+    },
+    "subterrane-ambush-approach-01": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-ambush-approach-01",
+      "passed": true,
+      "save_sha256": "5857865b7b9947040404065999b19b33705d632b22e38065c753f13207cf7242"
+    },
+    "subterrane-second-ambush-start-01": {
+      "path": "build/oblivion-compat/sewer-escape/subterrane-second-ambush-start-01",
+      "passed": true,
+      "save_sha256": "8046c1eaccf99f7f5eaee1f7480b7bcdebae80aa02533de0434ba5f1b12b3738"
+    }
+  },
+  "restart": "Door entry to approach and approach to stage34 restore whole state exactly; entry-state-differences.json and entry-state-verification.json in respective runtime directories.",
+  "retained_failure": "focused01 test fixture snapshot omitted three initialized actor references; fixed fixture02 passes both selected tests. Production unchanged.",
+  "next_action": "Continue ordinary movement across authored ledges into second ambush room, resolve original combat and stage36, then reunion/birthsign. Passive stage36 course still running; not acceptance."
+}

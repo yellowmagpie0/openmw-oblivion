@@ -79,6 +79,33 @@ TEST(NativeRecoveryCameraTest, ResetDiscardsOutgoingRecoveryAndFreshSavedViewRec
     EXPECT_EQ(camera.getMode(), MWRender::Camera::Mode::FirstPerson);
 }
 
+TEST(NativeRecoveryCameraTest, IdleAndPreviewViewsSaveTheSelectedPreference)
+{
+    using Mode = MWRender::Camera::Mode;
+    for (const auto preferred : {Mode::FirstPerson, Mode::ThirdPerson})
+        for (const auto temporary : {Mode::Vanity, Mode::Preview})
+        {
+            osg::ref_ptr<osg::Camera> view = new osg::Camera;
+            MWRender::Camera camera(view);
+            camera.setMode(preferred);
+            camera.setMode(temporary);
+            ASSERT_EQ(camera.getMode(), temporary);
+
+            // World stores CAM_/FIRS as this boolean. Temporary views must
+            // not turn the user's first-person choice into third person.
+            const bool firstPersonOnDisk = camera.getModeForSave() == Mode::FirstPerson;
+            EXPECT_EQ(firstPersonOnDisk, preferred == Mode::FirstPerson);
+            osg::ref_ptr<osg::Camera> restoredView = new osg::Camera;
+            MWRender::Camera restored(restoredView);
+            restored.setMode(firstPersonOnDisk ? Mode::FirstPerson : Mode::ThirdPerson);
+            EXPECT_EQ(restored.getMode(), preferred);
+
+            camera.toggleViewMode(true);
+            const auto changed = preferred == Mode::FirstPerson ? Mode::ThirdPerson : Mode::FirstPerson;
+            EXPECT_EQ(camera.getModeForSave(), changed);
+        }
+}
+
 namespace
 {
     template <class T> std::string bytes(const T& value)

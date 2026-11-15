@@ -1,0 +1,483 @@
+{
+  "status": "accepted bounded ordinary Iron Arrow static-surface recovery, pickup/restart and settled expiry; complete M15 S5 and expedition remain open",
+  "implementation_commit": "26b3a45d8b6760497d8e3c8859fe9099dae454dc",
+  "contract": "docs/oblivion/IRON-ARROW-RECOVERY-CONTRACT.json",
+  "oracle": "docs/oblivion/IRON-ARROW-RECOVERY-ORACLE.json",
+  "content": {
+    "ammunition": "content:oblivion.esm:017829",
+    "bow": "content:oblivion.esm:047aca",
+    "surface": "content:oblivion.esm:049be8",
+    "surface_base": "content:oblivion.esm:02d59c",
+    "cell": "content:oblivion.esm:0463f5"
+  },
+  "behavior": {
+    "conservation": "Actual original shot:19 inventory arrows become18 plus1 retained world arrow. A fresh process walks/aims/Activates and receives exactly1, restoring19; repeated Activate and another fresh process retain19 with a taken tombstone. Independent untaken expiry leaves18 and a deleted opacity-zero owner.",
+    "ownership": "Prepared native-reference2, actual AMMO/model/collision/cell/registry/Lua admission, then callback-free impact publication. One retained reference consumes one flight; projectile serial6, bow/caster/surface and settled age/opacity/fade persist through existing schema97. No source grants, scripted movement or forged stats.",
+    "retained": "Exact wire/live/save audits; unchanged110 Player Health; prior Amulet identity/locals and bandit kill credit retained. Native dynamic serial advances once and is never reused.",
+    "limits": "Only ordinary unenchanted ammo on this original STAT stone. Settled age begins at impact; full flight aging, Havok penetration/bounce, actor recovery, NPC archery and process-budget cleanup remain open."
+  },
+  "gates": {
+    "frozen_source": {
+      "head": "f53d88816c5f0d3acea22de0dd31a39455b91a2b",
+      "source_fingerprint": "82179ceef68d564f876cb768e66f0b7cd83ee746a46d6ee2fd20a2cde0a93fab"
+    },
+    "normal": {
+      "path": "build/oblivion-compat/iron-arrow-recovery/normal-integration-01",
+      "verification_sha256": "f67e010ba35698a8c6d425f18ab78047e849ab8527ffa5225560338950dab705",
+      "counts": {
+        "components": 3288,
+        "engine": 2275
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/iron-arrow-recovery/sanitized-integration-01",
+      "verification_sha256": "d23147c9d654b1735d8250dc24d0a4814a11a82c61b5056de261f8939a07ec6d",
+      "counts": {
+        "components": 3288,
+        "engine": 2275
+      },
+      "asan": "detect_leaks=1:halt_on_error=1",
+      "ubsan": "halt_on_error=1:print_stacktrace=1",
+      "environment_proof": "build/oblivion-compat/iron-arrow-recovery/sanitized-integration-01-launch.json"
+    },
+    "python": {
+      "reused_receipt": "docs/oblivion/VOICE-EMPEROR-VERIFICATION.json",
+      "executed": 609,
+      "source_commit": "a4c71d5fa3c7b5c9fbd4ed9c959ae92825b38267",
+      "unchanged_source_files": 94,
+      "source_proof": "build/oblivion-compat/iron-arrow-recovery/reused-python-source-hashes.json",
+      "source_proof_sha256": "cad4c6e2346c28b60fe485b65f030884b5d5a35c584e6ae39eff5146ee8a6560",
+      "scope": "Existing Python sources, codec and schema are unchanged. The new read-only course auditor is exercised on all eight actual cases."
+    }
+  },
+  "post_gate_recipe_correction": {
+    "reason": "SDL input uses LD_PRELOAD. Explicit libasan preload ahead of its input library is required, matching existing instrumented SDL recipes. Initial take-final-01 failed before engine startup; retained. No C++/auditor/normal recipe changes; both broad gates reused.",
+    "changed": {
+      "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_expire_sanitized.json": {
+        "before": "07d30ab0b3f7021d1f03326b82e1effb789839ed1070c592022979e0fe656d11",
+        "after": "a474d5679dc17658d33a0adee58fadf64825141f6bdfd4fc39851afab6a1570e"
+      },
+      "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_restart_sanitized.json": {
+        "before": "541371ef4de6fe276da872d67435dd4f355abfba610c13100ae7de8c65c2d9b0",
+        "after": "98d1c58a0c934278732417f46bfc72442ff945504eb76c501924bac26a80d7f5"
+      },
+      "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_take_sanitized.json": {
+        "before": "ee9079a903123f8f9cf96ee7bb8e57bf7c23eab90e1b42ab2a3bc0fc70ebec61",
+        "after": "4a4d2b198643c060d22aab001a51d0a6b640ac66b517dc5cef641f96a353bef4"
+      }
+    },
+    "expiry_wall_budget": "Observed instrumented pickup took466.3 wall seconds including startup, for44.67 gameplay simulation seconds. Give expiry1200 wall seconds (overall2400) without changing the predeclared93-minus-saved-age simulation oracle/tolerance."
+  },
+  "frozen_code_and_recipe_hashes": {
+    "apps/openmw/CMakeLists.txt": "cadda8587a5f09dc4cb6e7b8a46014613e702468e40538cce8edf14d5fb4ceef",
+    "apps/openmw/mwworld/oblivionarrowrecovery.cpp": "c9f6ec6867eabb1d58f390de95a10e26e7615d7942c9251354bf65a4eab67f23",
+    "apps/openmw/mwworld/oblivionarrowrecovery.hpp": "ea3fafbe0cf2ae781effcb54267c485a767cc591727b717150a618270b967d05",
+    "apps/openmw/mwworld/oblivionbow.cpp": "8ffc66498bc01e3e7c1c62e0db81f11bfdf3fd1fc3b5d6470089d9b4116d70bc",
+    "apps/openmw_tests/CMakeLists.txt": "c6ee2a5143bb30c71a534cc2f2783a87f9c7463a43c85786f14375a07be0b9f6",
+    "apps/openmw_tests/mwworld/testoblivionarrowrecovery.cpp": "bfe4f26a4c6aab8a0cccca5f6e60c31f569e6d297f6b2f7aeab2d475064ef620",
+    "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_create.json": "284dce34c97d24754d711387a71a8f0fcc11702f34fd018a2e140ed7ef562d29",
+    "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_create_sanitized.json": "52959617113121abec84aeac06e576fbd6ec663327c3c26169f1bdc5312c3348",
+    "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_expire.json": "f56170b1e5456d5ca44e7854190e04f4befe70e386899ef594b8f9de2848325e",
+    "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_expire_sanitized.json": "a474d5679dc17658d33a0adee58fadf64825141f6bdfd4fc39851afab6a1570e",
+    "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_restart.json": "4e5a39f385ecc64367d11537b63620380532a1e7eea5c0a13cb8782157d4fae0",
+    "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_restart_sanitized.json": "98d1c58a0c934278732417f46bfc72442ff945504eb76c501924bac26a80d7f5",
+    "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_take.json": "8407a501dcaedc7301901f0bdc1c42cd777acceeb8bea76f855d2189793b48ba",
+    "scripts/data/oblivion_compat/oblivion_iron_arrow_recovery_take_sanitized.json": "4a4d2b198643c060d22aab001a51d0a6b640ac66b517dc5cef641f96a353bef4",
+    "scripts/verify_oblivion_iron_arrow_recovery_course.py": "716333fe9db13f005442495f67666870c037052603fc9cbd1ddf855c3e398679"
+  },
+  "cases": [
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/normal-create-final-01",
+      "phase": "create",
+      "instrumented": false,
+      "process": {
+        "pid": 1287247,
+        "start_ticks": 205360100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-create-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-expire-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "287c85aa2d0cb90b27a59864101022c7a666080548a859e744d4fe3b33f0e1f2"
+      },
+      "input_sha256": "4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41",
+      "output_sha256": "c981fe1cbfadaf1c74616532211a59f88570cd17a6aaf798b5c6d60485143ea8",
+      "audit_sha256": "250fcf36a60af387c1313f1b5b30689efba0a8c616257686bc5e5cf276c92349",
+      "ammunition_before": 19,
+      "ammunition_after": 18,
+      "elapsed_simulation_seconds": 11.612663269042969,
+      "reference_key": "dynamic:native-reference:0000000000000002",
+      "deleted": false,
+      "settled_age": 1.1330000162124634,
+      "opacity": 1.0,
+      "fading": false,
+      "libraries_sha256": "d9247d7342fb298b3d019d393b5bf37fc77a078d6ac23ae754fda868f983fcc4"
+    },
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/normal-take-final-01",
+      "phase": "take",
+      "instrumented": false,
+      "process": {
+        "pid": 1292788,
+        "start_ticks": 205373274,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-take-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-create-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "287c85aa2d0cb90b27a59864101022c7a666080548a859e744d4fe3b33f0e1f2"
+      },
+      "input_sha256": "c981fe1cbfadaf1c74616532211a59f88570cd17a6aaf798b5c6d60485143ea8",
+      "output_sha256": "3fcaa8d111443e80cab2ac63fb0e9bd2b607cb0036262ca94071f92c881f199b",
+      "audit_sha256": "ab0d02581749ca5bd5c12801f1693d0274a23fbcd879b3c3b350df72a871c6f4",
+      "ammunition_before": 18,
+      "ammunition_after": 19,
+      "elapsed_simulation_seconds": 29.7784423828125,
+      "reference_key": "dynamic:native-reference:0000000000000002",
+      "deleted": true,
+      "settled_age": 28.72000503540039,
+      "opacity": 1.0,
+      "fading": false,
+      "libraries_sha256": "102a2bbe363f430bc247dd2c3a58a59eb255690d96ce2fddbe26ebba20c8bfcf"
+    },
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/normal-restart-final-01",
+      "phase": "restart",
+      "instrumented": false,
+      "process": {
+        "pid": 1293107,
+        "start_ticks": 205389278,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-restart-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-take-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "287c85aa2d0cb90b27a59864101022c7a666080548a859e744d4fe3b33f0e1f2"
+      },
+      "input_sha256": "3fcaa8d111443e80cab2ac63fb0e9bd2b607cb0036262ca94071f92c881f199b",
+      "output_sha256": "fa710f96c3115e8f141f6fbd69ef3d8455a2d01acd926a1d1f8554e229e24002",
+      "audit_sha256": "f96cb83b075d239e5116e93dc27914efce846cbb6988c8a2564d0b7a491e86da",
+      "ammunition_before": 19,
+      "ammunition_after": 19,
+      "elapsed_simulation_seconds": 4.2597198486328125,
+      "reference_key": "dynamic:native-reference:0000000000000002",
+      "deleted": true,
+      "settled_age": 28.72000503540039,
+      "opacity": 1.0,
+      "fading": false,
+      "libraries_sha256": "a8b69bbb5a6f1a3e7da527ac4ce6a240706aa6578d0d713de57dae7ff807880d"
+    },
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/normal-expire-final-01",
+      "phase": "expire",
+      "instrumented": false,
+      "process": {
+        "pid": 1293247,
+        "start_ticks": 205403534,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-expire-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-create-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "287c85aa2d0cb90b27a59864101022c7a666080548a859e744d4fe3b33f0e1f2"
+      },
+      "input_sha256": "c981fe1cbfadaf1c74616532211a59f88570cd17a6aaf798b5c6d60485143ea8",
+      "output_sha256": "43b7c0ac407fbdb6aefa815d67a4842db32c900ba7f8b47db282f362cade598f",
+      "audit_sha256": "e77265c1eb393e526d1761e0fa85e681054d4f62b8e3ab6a84a411bc1ccfd20b",
+      "ammunition_before": 18,
+      "ammunition_after": 18,
+      "elapsed_simulation_seconds": 92.17060089111328,
+      "reference_key": "dynamic:native-reference:0000000000000002",
+      "deleted": true,
+      "settled_age": 93.04100036621094,
+      "opacity": 0.0,
+      "fading": true,
+      "libraries_sha256": "17dadb2cd6b25506eb83bbd7c63f06a2f3c65340c5b7e8fe518d5905225f29f3"
+    },
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/sanitized-create-final-01",
+      "phase": "create",
+      "instrumented": true,
+      "process": {
+        "pid": 1300280,
+        "start_ticks": 205493115,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/sanitized-create-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-expire-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "48b19f74ee21e61a94ad160e7fbccba34635c6976c38602c3edb89c9bf344aed"
+      },
+      "input_sha256": "4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41",
+      "output_sha256": "6cd363195d7384420afe29ee845e8391c4b2b46fb9e67e986bac5ecb02ef3568",
+      "audit_sha256": "354556698928a6e3b4135bbfc7d745937a4e4ec78f0c528393646826f8ecc0c1",
+      "ammunition_before": 19,
+      "ammunition_after": 18,
+      "elapsed_simulation_seconds": 9.631118774414062,
+      "reference_key": "dynamic:native-reference:0000000000000002",
+      "deleted": false,
+      "settled_age": 0.16600000858306885,
+      "opacity": 1.0,
+      "fading": false,
+      "libraries_sha256": "555357eb607eccfbc1fe372b62b29ef12f98cc2b1edab4b2cebf667fabce82bf",
+      "observed_sanitizer_environment_sha256": "359a393ae688e133457d67c0815545afcec4b7a09d6b029ce103e61db0073010"
+    },
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/sanitized-take-final-02",
+      "phase": "take",
+      "instrumented": true,
+      "process": {
+        "pid": 1300734,
+        "start_ticks": 205535762,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/sanitized-take-final-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/sanitized-create-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "48b19f74ee21e61a94ad160e7fbccba34635c6976c38602c3edb89c9bf344aed"
+      },
+      "input_sha256": "6cd363195d7384420afe29ee845e8391c4b2b46fb9e67e986bac5ecb02ef3568",
+      "output_sha256": "fdafb018318363d4936f6611526955221461acc32cfb229ea70f6092e6cf0fb5",
+      "audit_sha256": "88e46e85195f2d8329319344614463fc115745d9d84261ccf9b71b866861c9ec",
+      "ammunition_before": 18,
+      "ammunition_after": 19,
+      "elapsed_simulation_seconds": 44.66846466064453,
+      "reference_key": "dynamic:native-reference:0000000000000002",
+      "deleted": true,
+      "settled_age": 43.326072692871094,
+      "opacity": 1.0,
+      "fading": false,
+      "libraries_sha256": "1fb16556e783509e93dbdff40e97cd285d19bf772eb4e7e163aaebc191c7b041",
+      "observed_sanitizer_environment_sha256": "bf97b38a487a31e1af108846cf4427630b882ab45f32426f349a54815749365a"
+    },
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/sanitized-restart-final-01",
+      "phase": "restart",
+      "instrumented": true,
+      "process": {
+        "pid": 1301188,
+        "start_ticks": 205586647,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/sanitized-restart-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/sanitized-take-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "48b19f74ee21e61a94ad160e7fbccba34635c6976c38602c3edb89c9bf344aed"
+      },
+      "input_sha256": "fdafb018318363d4936f6611526955221461acc32cfb229ea70f6092e6cf0fb5",
+      "output_sha256": "688dc900fce33e088bf0213288ee84144dcb8007e78165878f25b43615bcd695",
+      "audit_sha256": "e8d60e0706f95bf405709547eb2a00bc10d70d567575e7b4fa1a5aca4ed2653e",
+      "ammunition_before": 19,
+      "ammunition_after": 19,
+      "elapsed_simulation_seconds": 2.1586990356445312,
+      "reference_key": "dynamic:native-reference:0000000000000002",
+      "deleted": true,
+      "settled_age": 43.326072692871094,
+      "opacity": 1.0,
+      "fading": false,
+      "libraries_sha256": "ca5a3c72ac70c0f95da60ce73b156cf6528c17ec7060c2ccc6878db15faa9848",
+      "observed_sanitizer_environment_sha256": "ab08bf81e81ad57533bacc5ff0773dd6dcbec66761f788be142568c9ca08c892"
+    },
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/sanitized-expire-final-01",
+      "phase": "expire",
+      "instrumented": true,
+      "process": {
+        "pid": 1301444,
+        "start_ticks": 205619956,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/sanitized-expire-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/sanitized-create-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "48b19f74ee21e61a94ad160e7fbccba34635c6976c38602c3edb89c9bf344aed"
+      },
+      "input_sha256": "6cd363195d7384420afe29ee845e8391c4b2b46fb9e67e986bac5ecb02ef3568",
+      "output_sha256": "37479046347a959fb9f85abc187e550ffa7d0af95406e775141bdb068b923584",
+      "audit_sha256": "183e9fd494e37559ab4831431d86eeaab5c3f7e600f3be3cdb5526195bd888db",
+      "ammunition_before": 18,
+      "ammunition_after": 18,
+      "elapsed_simulation_seconds": 93.15616607666016,
+      "reference_key": "dynamic:native-reference:0000000000000002",
+      "deleted": true,
+      "settled_age": 93.12618255615234,
+      "opacity": 0.0,
+      "fading": true,
+      "libraries_sha256": "fc605c3b2e4c47c33e74730ea6c803293acc0a274e2a66da6df7e0fd76a70dc8",
+      "observed_sanitizer_environment_sha256": "ba935143d29d0f2aee189d3d85b1cfc867cc125b3038b8ad517fcbf318d5b50b"
+    }
+  ],
+  "outgoing": {
+    "path": "build/oblivion-compat/iron-arrow-recovery/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "fa710f96c3115e8f141f6fbd69ef3d8455a2d01acd926a1d1f8554e229e24002",
+    "metadata": {
+      "cell": "content:oblivion.esm:0463f5",
+      "position": [
+        -2665.38232421875,
+        -10104.68359375,
+        -2662.20947265625,
+        1.30859375,
+        0,
+        -0.004389286041259766
+      ],
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 30,
+        "hour": 11.947450637817383,
+        "time_scale": 30
+      },
+      "health": 110,
+      "magicka": 80,
+      "fatigue": 170,
+      "next_dynamic_serial": 3,
+      "next_arrow_projectile": 7,
+      "inventory": [
+        {
+          "base": "content:oblivion.esm:0661c1",
+          "count": 1,
+          "condition": 25.815637588500977
+        },
+        {
+          "base": "content:oblivion.esm:0661c3",
+          "count": 1,
+          "condition": 106.8137435913086
+        },
+        {
+          "base": "content:oblivion.esm:0be335",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:02731a",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:027319",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:027318",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:0250a0",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:03366c",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:033681",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:033690",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:02cf9f",
+          "count": 2
+        },
+        {
+          "base": "content:oblivion.esm:00000a",
+          "count": 8
+        },
+        {
+          "base": "content:oblivion.esm:159826",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:0223a8",
+          "count": 1
+        },
+        {
+          "base": "content:oblivion.esm:159829",
+          "count": 1,
+          "condition": 61.18003845214844
+        },
+        {
+          "base": "content:oblivion.esm:090613",
+          "count": 1,
+          "condition": 22.49466323852539
+        },
+        {
+          "base": "content:oblivion.esm:047aca",
+          "count": 1,
+          "condition": 87.11997985839844
+        },
+        {
+          "base": "content:oblivion.esm:017829",
+          "count": 18
+        },
+        {
+          "base": "content:oblivion.esm:017829",
+          "count": 1
+        }
+      ],
+      "prior_state": "Amulet script identity/locals and bandit kill-credit ownership verified by final auditor; recovered native-reference2 retained as taken/count-zero tombstone."
+    }
+  },
+  "retained_development_attempts": [
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/sanitized-take-final-01",
+      "result": "SDL preloaded its input helper ahead of libasan, so engine startup failed before capture. Interrupted the waiting driver after the explicit diagnostic; corrected take/restart recipes to preload libasan first, as in existing instrumented SDL recipes. No engine code change."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/normal-iron-arrow-stone-baseline-01",
+      "result": "Actual original floor impact consumed19->18, erased flight and had no recoverable AMMO owner before implementation."
+    },
+    {
+      "path": "build/oblivion-compat/iron-arrow-recovery/normal-pickup-development-01",
+      "result": "Driver actions completed at98-unit foot distance and rendering ray hit the arrow, but native focus/take did not occur: ammo remained18. Retained semantic failure. Corrected ordinary approach to45 units; no activation-range or production-code change."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/arrow-recovery-development-build-01.log",
+      "result": "Development compile identified obsolete RefData::isDeleted API; count-based deletion path corrected."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/arrow-recovery-development-build-02.log",
+      "result": "Missing render-mask declaration include corrected before successful build and actual courses."
+    }
+  ]
+}

@@ -100,6 +100,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/pathgriddata.cpp
     esm4/firstpersonview.cpp
     esm4/physicalcombat.cpp
+    esm4/trapdamage.cpp
     esm4/nativeclampsequence.cpp
     esm4/nativeidlerequest.cpp
     esm4/animationblend.cpp
@@ -124,11 +125,13 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/combatsettings.cpp
     esm4/ability.cpp
     esm4/magiccaster.cpp
+    esm4/potionattributes.cpp
     esm4/combatmagicprofile.cpp
     esm4/combatstylepolicy.cpp
     esm4/testloadnpc.cpp
     esm4/testloadgmst.cpp
     esm4/testloadcrea.cpp
+    esm4/testloadfurn.cpp
     esm4/testloadcsty.cpp
     esm4/testloadskil.cpp
     esm4/testloadspel.cpp

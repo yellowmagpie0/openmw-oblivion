@@ -1,5 +1,6 @@
 #include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/inventory.hpp>
+#include <components/esm4/repair.hpp>
 
 #include <gtest/gtest.h>
 
@@ -11,6 +12,50 @@
 
 namespace
 {
+    TEST(ESM4Repair, OriginalAmountUsesWinningMasterInsteadOfCompiledMultiplier)
+    {
+        ESM4::RepairSettings settings;
+        EXPECT_EQ(ESM4::repairAmount(5, 40, settings), 19);
+        settings.mArmorerMultiplier = 1.f;
+        // Original 5482F0, installed master override, fixed direct inputs.
+        const std::array rows{std::array{5, 40, 9}, std::array{5, 55, 10},
+            std::array{30, 40, 34}, std::array{30, 55, 35}, std::array{74, 40, 78},
+            std::array{74, 55, 79}, std::array{100, 40, 104}, std::array{100, 55, 105}};
+        for (const auto& row : rows) EXPECT_EQ(ESM4::repairAmount(row[0], row[1], settings), row[2]);
+    }
+
+    TEST(ESM4Repair, OriginalRepairResamplesIntegerConditionAndStopsAtNormalMaximum)
+    {
+        // Original caller 5D2698 truncates current condition before adding.
+        EXPECT_EQ(ESM4::repairedCondition(43.584934f, 250, 9), 52.f);
+        EXPECT_EQ(ESM4::repairedCondition(249.75f, 250, 9), 250.f);
+        EXPECT_EQ(ESM4::repairedCondition(0.f, 250, 9), 9.f);
+        EXPECT_FALSE(ESM4::repairedCondition(250.f, 250, 9));
+        EXPECT_FALSE(ESM4::repairedCondition(43.f, 250, 0));
+    }
+
+    TEST(ESM4Repair, OriginalHammerChanceHasApprenticeReductionAndMasterImmunity)
+    {
+        const ESM4::RepairSettings settings;
+        EXPECT_FLOAT_EQ(ESM4::repairHammerBreakChance(5, 50, settings), 29.f);
+        EXPECT_FLOAT_EQ(ESM4::repairHammerBreakChance(25, 50, settings), 12.5f);
+        EXPECT_FLOAT_EQ(ESM4::repairHammerBreakChance(50, 50, settings), 10.f);
+        EXPECT_FLOAT_EQ(ESM4::repairHammerBreakChance(75, 50, settings), 7.5f);
+        EXPECT_FLOAT_EQ(ESM4::repairHammerBreakChance(100, 50, settings), 0.f);
+    }
+
+    TEST(ESM4Repair, InvalidSettingsAndConditionsRejectBeforePublication)
+    {
+        ESM4::RepairSettings settings;
+        settings.mArmorerMultiplier = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(ESM4::repairAmount(5, 40, settings), std::invalid_argument);
+        settings = {};
+        settings.mMasterMinimum = 10;
+        EXPECT_THROW(ESM4::repairHammerBreakChance(5, 50, settings), std::invalid_argument);
+        EXPECT_THROW(ESM4::repairedCondition(-1.f, 250, 9), std::invalid_argument);
+        EXPECT_THROW(ESM4::repairedCondition(43.f, 0, 9), std::invalid_argument);
+        EXPECT_THROW(ESM4::repairedCondition(std::numeric_limits<float>::quiet_NaN(), 250, 9), std::invalid_argument);
+    }
 
     TEST(ESM4InventoryMechanics, NativeQueryMagnitudePreservesWrappedMinimum)
     {
@@ -431,4 +476,40 @@ TEST(ESM4InventoryMechanics, InventoryExtraScaleSeparatesAbsentDefaultAndFiniteV
     EXPECT_EQ(items.size(),5u);
     item.mExtraScale = std::numeric_limits<float>::quiet_NaN();
     EXPECT_FALSE(ESM4::addInventoryItem(items,item));
+}
+
+TEST(ESM4InventoryMechanics, ScriptedSingletonsPreserveIndependentOwnersBesideLegacyPlainStacks)
+{
+    // Actual second Nirnroot acquisition reached two live owners, but capture
+    // merged them into one count-2 item and made the save invalid.
+    ESM4::RuntimeInventoryItem first;
+    first.mBase = ESM::FormKey::content("Oblivion.esm", 0x4e940);
+    first.mCount = 1;
+    first.mScriptOwner = ESM::FormKey::dynamic("inventory-script", 1);
+    auto second = first;
+    second.mScriptOwner = ESM::FormKey::dynamic("inventory-script", 2);
+    auto plain = first;
+    plain.mScriptOwner = {};
+    const std::array acquired{first, second, plain, plain};
+    auto stackedPlain = plain;
+    stackedPlain.mCount = 2;
+    for (bool normalize : {false, true})
+    {
+        SCOPED_TRACE(normalize);
+        std::vector<ESM4::RuntimeInventoryItem> inventory;
+        if (normalize)
+        {
+            inventory.assign(acquired.begin(), acquired.end());
+            ESM4::normalizeInventory(inventory);
+        }
+        else
+        {
+            for (const auto& item : acquired) ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+        }
+        EXPECT_EQ(ESM4::inventoryCount(inventory, first.mBase), 4);
+        ASSERT_EQ(inventory.size(), 3u);
+        EXPECT_EQ(inventory[0], first);
+        EXPECT_EQ(inventory[1], second);
+        EXPECT_EQ(inventory[2], stackedPlain);
+    }
 }

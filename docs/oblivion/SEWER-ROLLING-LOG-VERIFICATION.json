@@ -1,0 +1,168 @@
+{
+  "scope": "Original rolling-log release, environmental goblin death and fresh-process persistence; not full cavern or sewer acceptance",
+  "source": {
+    "head": "672291c766ff8786cb1b95a28094249397a89c1c",
+    "source_fingerprint": "c95f1e9097069facc6167d35fb822bcc226f4631394d9b3ae64c2a2b33584303"
+  },
+  "game_sha256": "3e3ebda7cf46c2e2e2e8cda877c95b78695059bf43e10ad8efc1a4b264a5eea6",
+  "asset": {
+    "path": "meshes/dungeons/caves/traps/ctraplogs01.nif",
+    "sha256": "87f0a3bb9ada73c62185bdf9e2a453ec17f53f948a958718e0a64254c7a4a5cd",
+    "version": "10.2.0.0",
+    "user_version": 10,
+    "bethesda_version": 9,
+    "body_records": [
+      19,
+      34,
+      43,
+      52,
+      61,
+      70
+    ]
+  },
+  "runtime": {
+    "activation": "cavern-log-activation-02",
+    "reload": "cavern-log-reload-01",
+    "audit": "cavern-log-reload-01/restart-audit-reviewed.json",
+    "goblin_killed": "content:oblivion.esm:03b51a",
+    "environmental_damage": 31.5,
+    "impact_body_record": 43,
+    "diagnostic_note": "Raw body=2b is hexadecimal 43; earlier mace body=38 is hexadecimal 56. Canonical saved body records are decimal.",
+    "captures_inspected": true,
+    "restart_audit": {
+      "passed": true,
+      "checks": {
+        "initial_player": true,
+        "initial_native_actor_life": true,
+        "initial_native_trap_contacts": true,
+        "initial_script_instances": true,
+        "initial_native_death_counts": true,
+        "resaved_health": true,
+        "resaved_life": true,
+        "resaved_six_bodies": true,
+        "resaved_dynamic": true,
+        "physics_continues": true,
+        "initial_graph_except_projected_linear_velocity_exact": true,
+        "initial_projected_velocity_within_1e-5": true
+      },
+      "input_save_sha256": "fafa2d581d056feb531f909b25dfa90bb3167f7a7a7aab0904081704386c612f",
+      "output_save_sha256": "885894bfb6b1576cccf24a08207794020bb76dd489cf356acc4bab035f761993",
+      "maximum_projected_linear_velocity_error": 1.9073486328125e-06,
+      "velocity_note": "Native packed velocities, positions, rotations, graph identities and motion modes exact. World linear velocity is reconstructed from native packed units; allow 0.00001 units/sec absolute float conversion tolerance."
+    },
+    "cavern-log-goblin-01": {
+      "passed": true,
+      "save_sha256": "d6518225e5644524d3fed8df7e956a1f8f954a37e58bb190df6dc56d181b2647",
+      "capture_inspected": true
+    },
+    "cavern-healing-approach-01": {
+      "passed": true,
+      "save_sha256": "d428dd117f1eb4514a7b5d20798006f16818e9d5c57cb5bd95de92dfa28c9feb",
+      "capture_inspected": true
+    }
+  },
+  "retained_failures": {
+    "cavern-log-activation-01": "Unsupported NIF version; preserved and not used as continuation input",
+    "log-version-focused-01": "New test initializer list mixed enum and integer types; fixed explicit uint32 array",
+    "cavern-log-reload-01/restart-audit.json": "Overstrict projected world velocity equality; reviewed audit retains exact native packed velocity and other graph fields, tolerance 1e-5 for conversion"
+  },
+  "checks": {
+    "log-version-focused-02": {
+      "results": {
+        "components": {
+          "executed": 2,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollTest.OlderOblivionLogVersionIsReferenceOnly:ActorRagdollTest.AdmitsStockOblivionVersionAndRejectsLaterStreamLayout:AnimatedReferenceAsset.*",
+          "binary_sha256": "8b2d5cd6c825c0c0239f1b2cee99ff9fd126c70057a28bbe7d64ea797d6dea3e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "b7451e0604abdc00dabf11455e11fbf04c5974f1d885c43345005ad6286ea05a",
+          "inventory_sha256": "ad7ede59107cead7f2e18ae292d39e98a35597c83becacaed00f8a93d8b5c899",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollTest.OlderOblivionLogVersionIsReferenceOnly:ActorRagdollTest.AdmitsStockOblivionVersionAndRejectsLaterStreamLayout:AnimatedReferenceAsset.*",
+          "binary_sha256": "64c7235086ec2907c76725b3bd9414eede87c12645e1befe85b7ef9bff7143c8",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "05b9a0d105124a03f59a29099273c8849c4ba549ca75331ebb980a249ed60f87",
+          "inventory_sha256": "d86db91ec71d6d2da3ce5745c6f66eedf43253c947c421fd8a7cda6c5e7c752b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "672291c766ff8786cb1b95a28094249397a89c1c",
+        "source_fingerprint": "c95f1e9097069facc6167d35fb822bcc226f4631394d9b3ae64c2a2b33584303"
+      }
+    },
+    "log-loader-suite-01": {
+      "results": {
+        "components": {
+          "executed": 61,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollTest.*",
+          "binary_sha256": "8b2d5cd6c825c0c0239f1b2cee99ff9fd126c70057a28bbe7d64ea797d6dea3e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "f0a00ec04b327398e2c19418ccf13402a5e021afdf50dea24b6e678d17370f10",
+          "inventory_sha256": "1c2718666f42859b6e1df7f822f0aee8a1b41fc63f4eb6e18b656d6f015c6e54",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "672291c766ff8786cb1b95a28094249397a89c1c",
+        "source_fingerprint": "c95f1e9097069facc6167d35fb822bcc226f4631394d9b3ae64c2a2b33584303"
+      }
+    },
+    "log-loader-sanitize-01": {
+      "results": {
+        "sanitize": {
+          "executed": 61,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollTest.*",
+          "binary_sha256": "eca22ad9184d702f0a4695e74c3597a3a96aa5e74c702382fb3787a2b410f07e",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "27b577d89a7dc835991ba1b8cb84ec7a3d0fbe53eed21b9c4f099c372ff0e52b",
+          "inventory_sha256": "dc6dda58e215538224cbe75285d5f2f507455793ebf0a3a478a22081c1e23f22",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "672291c766ff8786cb1b95a28094249397a89c1c",
+        "source_fingerprint": "c95f1e9097069facc6167d35fb822bcc226f4631394d9b3ae64c2a2b33584303"
+      }
+    }
+  },
+  "sanitizer_scope": "ASan/UBSan selected component loader suite; leak detection disabled by helper. Prior hazard engine leak gate remains separate."
+}

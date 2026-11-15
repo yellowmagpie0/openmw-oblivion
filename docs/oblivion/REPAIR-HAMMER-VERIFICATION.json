@@ -1,0 +1,549 @@
+{
+  "status": "Accepted bounded original novice Repair Hammer course",
+  "full_milestone_complete": false,
+  "contract": "REPAIR-HAMMER-CONTRACT.json",
+  "oracle": "REPAIR-HAMMER-ORACLE.json",
+  "tested_head": "4dfbfab8645391cb1b71dc41823d62a4d50ec773",
+  "source_files": [
+    {
+      "path": "apps/components_tests/esm4/inventorymechanics.cpp",
+      "sha256": "159f386d2398e1ed3fd53dbeeaa9b869a79c0efb03b83360f7611440efac0b15"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/repair.cpp",
+      "sha256": "4fb57a421f09227873d0b6d35717e13c98e9060f113b572b1de31b1a9ad32d82"
+    },
+    {
+      "path": "apps/openmw/mwgui/repair.cpp",
+      "sha256": "35c81aa84bc44e1a66d79731a35df744effff7483b0fd600dabc854bfe83066b"
+    },
+    {
+      "path": "apps/openmw/mwclass/repair.cpp",
+      "sha256": "f0a633d08ed6bef9b6cdc67c73b6f13c4ad33c0237c85a3ed03b773b8571a0d5"
+    },
+    {
+      "path": "components/esm4/repair.hpp",
+      "sha256": "342383edc6de1c64175533d810fbf9c8e21db0bde671c39b27d9a68ad0fbc228"
+    },
+    {
+      "path": "scripts/verify_repair_hammer.py",
+      "sha256": "cbe6a0e02f97e9afe65d63d8e9224bb650b907a936f781ca59ba1ed2f30fbc46"
+    }
+  ],
+  "recipes": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_repair_hammer_menu.json",
+      "sha256": "aaada00fdcbe0e2ddea0e144ca7136fdd704d6ea2c76f3465e7b4d24bf7ebade"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_repair_hammer_menu_sanitized.json",
+      "sha256": "aaada00fdcbe0e2ddea0e144ca7136fdd704d6ea2c76f3465e7b4d24bf7ebade"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_repair_hammer_repair.json",
+      "sha256": "e79e00615aab5e9b77a6d4745c3c700c9453cc2bd12327ddf4aacbf87c797540"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_repair_hammer_repair_sanitized.json",
+      "sha256": "e79e00615aab5e9b77a6d4745c3c700c9453cc2bd12327ddf4aacbf87c797540"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_repair_hammer_restart.json",
+      "sha256": "076f39db7cc7b2003f7302bede9c0d028814d73fb02d4d41559717ed9bf023ff"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_repair_hammer_restart_sanitized.json",
+      "sha256": "076f39db7cc7b2003f7302bede9c0d028814d73fb02d4d41559717ed9bf023ff"
+    }
+  ],
+  "cases": [
+    {
+      "label": "normal-repair-06",
+      "phase": "repair",
+      "sanitized": false,
+      "audit": {
+        "path": "build/oblivion-compat/repair-hammer/normal-repair-06/repair-audit.json",
+        "sha256": "9cc2a804b7feaeb36d51496814d7e1f9db25b921e21723ca13a0c1ac2c073d04"
+      },
+      "result": {
+        "passed": true,
+        "phase": "repair",
+        "sanitized": false,
+        "source_sha256": "5d7eb7b59975204488aecd48f3de65bc853d3fbda968334c78508e0f8bf730d9",
+        "save_sha256": "4ad1b015a8926a3494087b86678efc35a524beb2e585aaa42c2002c1a53a68df",
+        "binary_sha256": "75c8c5b70ea84dc8f32bc1c902adf58f7af7dc27244c10e32b76074ea74746cf",
+        "condition_before": 43.58493423461914,
+        "condition_after": 52.0,
+        "armorer_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "armorer_after": {
+          "base": 5.0,
+          "experience": 1.5
+        },
+        "hammer_before": 1,
+        "hammer_after": 1,
+        "commits": [
+          [
+            "43.5849",
+            "52",
+            "9",
+            "71",
+            "29",
+            "0",
+            "1.5"
+          ]
+        ],
+        "health": 80,
+        "security_retained": {
+          "base": 6.0,
+          "experience": 1.6062092781066895
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        }
+      }
+    },
+    {
+      "label": "normal-menu-06",
+      "phase": "menu",
+      "sanitized": false,
+      "audit": {
+        "path": "build/oblivion-compat/repair-hammer/normal-menu-06/repair-audit.json",
+        "sha256": "6c1e5ccb4e37bb2fc091d8927504e0050a0c969e8a6e3155f27199f542245e24"
+      },
+      "result": {
+        "passed": true,
+        "phase": "menu",
+        "sanitized": false,
+        "source_sha256": "5d7eb7b59975204488aecd48f3de65bc853d3fbda968334c78508e0f8bf730d9",
+        "save_sha256": "36a56d6037531e359b7f749c593a259b95ecc04f75c42140240ee954bb12ed22",
+        "binary_sha256": "75c8c5b70ea84dc8f32bc1c902adf58f7af7dc27244c10e32b76074ea74746cf",
+        "condition_before": 43.58493423461914,
+        "condition_after": 43.58493423461914,
+        "armorer_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "armorer_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "hammer_before": 1,
+        "hammer_after": 1,
+        "commits": [],
+        "health": 80,
+        "security_retained": {
+          "base": 6.0,
+          "experience": 1.6062092781066895
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        }
+      }
+    },
+    {
+      "label": "normal-restart-06",
+      "phase": "restart",
+      "sanitized": false,
+      "audit": {
+        "path": "build/oblivion-compat/repair-hammer/normal-restart-06/repair-audit.json",
+        "sha256": "dbd99fad278230cc15bb53962f80b8abf909e039c7a083eb8b680f60c7b53b66"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "4ad1b015a8926a3494087b86678efc35a524beb2e585aaa42c2002c1a53a68df",
+        "save_sha256": "3e0a7cecdfc70acbd758527f8e4f2f43ac35147c71369d853502599ad87dc258",
+        "binary_sha256": "75c8c5b70ea84dc8f32bc1c902adf58f7af7dc27244c10e32b76074ea74746cf",
+        "condition_before": 52.0,
+        "condition_after": 52.0,
+        "armorer_before": {
+          "base": 5.0,
+          "experience": 1.5
+        },
+        "armorer_after": {
+          "base": 5.0,
+          "experience": 1.5
+        },
+        "hammer_before": 1,
+        "hammer_after": 1,
+        "commits": [],
+        "health": 80,
+        "security_retained": {
+          "base": 6.0,
+          "experience": 1.6062092781066895
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        }
+      }
+    },
+    {
+      "label": "sanitized-repair-06",
+      "phase": "repair",
+      "sanitized": true,
+      "audit": {
+        "path": "build/oblivion-compat/repair-hammer/sanitized-repair-06/repair-audit.json",
+        "sha256": "4e4b68d04cc67f44315e777b1ad7f0f50560536ba07877f20e9b8c2d56d7519f"
+      },
+      "result": {
+        "passed": true,
+        "phase": "repair",
+        "sanitized": true,
+        "source_sha256": "5d7eb7b59975204488aecd48f3de65bc853d3fbda968334c78508e0f8bf730d9",
+        "save_sha256": "0156e4d8135feb2500612a94720de76833dfc7b61aa16dd90e6b4c2a15e167ae",
+        "binary_sha256": "c44aef0f7716a862054d99e31b1972f00c71219d47a99a51369a78a647e207a0",
+        "condition_before": 43.58493423461914,
+        "condition_after": 52.0,
+        "armorer_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "armorer_after": {
+          "base": 5.0,
+          "experience": 1.5
+        },
+        "hammer_before": 1,
+        "hammer_after": 0,
+        "commits": [
+          [
+            "43.5849",
+            "52",
+            "9",
+            "11",
+            "29",
+            "1",
+            "1.5"
+          ]
+        ],
+        "health": 80,
+        "security_retained": {
+          "base": 6.0,
+          "experience": 1.6062092781066895
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        }
+      }
+    },
+    {
+      "label": "sanitized-menu-05",
+      "phase": "menu",
+      "sanitized": true,
+      "audit": {
+        "path": "build/oblivion-compat/repair-hammer/sanitized-menu-05/repair-audit.json",
+        "sha256": "805c6d67939da640e055b40ed71c40acf9891bdeab9128b27444f36f8be003f4"
+      },
+      "result": {
+        "passed": true,
+        "phase": "menu",
+        "sanitized": true,
+        "source_sha256": "5d7eb7b59975204488aecd48f3de65bc853d3fbda968334c78508e0f8bf730d9",
+        "save_sha256": "70ecf12f4fbd216b1cf9a18a7031cfcaf053f142ab327ce1486e45b6a1f628c4",
+        "binary_sha256": "02239a8e731b504ead5cd955e885a740641731c1729a5904dcb2bdec094c82e4",
+        "condition_before": 43.58493423461914,
+        "condition_after": 43.58493423461914,
+        "armorer_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "armorer_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "hammer_before": 1,
+        "hammer_after": 1,
+        "commits": [],
+        "health": 80,
+        "security_retained": {
+          "base": 6.0,
+          "experience": 1.6062092781066895
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        }
+      }
+    },
+    {
+      "label": "sanitized-restart-06",
+      "phase": "restart",
+      "sanitized": true,
+      "audit": {
+        "path": "build/oblivion-compat/repair-hammer/sanitized-restart-06/repair-audit.json",
+        "sha256": "3e3ea50b9b9d2a253d41ee88329ff2834a204b239762017952482699866ea674"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "0156e4d8135feb2500612a94720de76833dfc7b61aa16dd90e6b4c2a15e167ae",
+        "save_sha256": "ead621fefd0a5e208b9561ec810ce309d456a219041733e5edc15b36f9b89a2f",
+        "binary_sha256": "c44aef0f7716a862054d99e31b1972f00c71219d47a99a51369a78a647e207a0",
+        "condition_before": 52.0,
+        "condition_after": 52.0,
+        "armorer_before": {
+          "base": 5.0,
+          "experience": 1.5
+        },
+        "armorer_after": {
+          "base": 5.0,
+          "experience": 1.5
+        },
+        "hammer_before": 0,
+        "hammer_after": 0,
+        "commits": [],
+        "health": 80,
+        "security_retained": {
+          "base": 6.0,
+          "experience": 1.6062092781066895
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        }
+      }
+    }
+  ],
+  "gates": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/repair-hammer/focused-normal-06/verification.json",
+        "sha256": "41c6924b9a9c695d462b3be407461f4ad6e8f0434b4b46d6f6fe9327d0bf0d33"
+      },
+      "source": {
+        "head": "4dfbfab8645391cb1b71dc41823d62a4d50ec773",
+        "source_fingerprint": "aa872ccbdaa3c9bf50c9ad687992f49717c7329e7e3af5b8e6f36ef5f51622a0"
+      },
+      "results": {
+        "components": {
+          "executed": 4,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4Repair.*:OblivionSkillTraining.*:OblivionInventory*:OblivionMiscConsumableStore.*:OblivionWorldTest.*Inventory*",
+          "binary_sha256": "1eb89f1535a542d59c43a0669b4361b4353054e53e0ab1caab0b0b998e233479",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6ed625afa399510fd4decb3b14418664c27e9804c3aba6c6ad09a37abd021330",
+          "inventory_sha256": "304e29da2a1b16a154d51e78b4250f09e24d5830a081d2222b91559b1220eca3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 69,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4Repair.*:OblivionSkillTraining.*:OblivionInventory*:OblivionMiscConsumableStore.*:OblivionWorldTest.*Inventory*",
+          "binary_sha256": "78406f251c3ae3ee991d8beea9c010517a050ea9a9961f6467713b032e325022",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "65229288269d948219a0fe6e0c12476933fd2ab4b831631d6194c2a92e45f7b2",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/repair-hammer/focused-sanitized-06/verification.json",
+        "sha256": "6c2ac34a05b42a8caf13fa4967ba060a6367dae7c0f2bfeb4af0b249c6c06054"
+      },
+      "source": {
+        "head": "4dfbfab8645391cb1b71dc41823d62a4d50ec773",
+        "source_fingerprint": "aa872ccbdaa3c9bf50c9ad687992f49717c7329e7e3af5b8e6f36ef5f51622a0"
+      },
+      "results": {
+        "components": {
+          "executed": 4,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4Repair.*:OblivionSkillTraining.*:OblivionInventory*:OblivionMiscConsumableStore.*:OblivionWorldTest.*Inventory*",
+          "binary_sha256": "cd285569fd4ccb401555a6f888125efd2c58dbf37a984ea018de621bb0e356d4",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "3ea8ab1d5671b323eddd6eba6f2f0613ec668cd96f5b86e3b1831053f3683557",
+          "inventory_sha256": "14d6339c1d79710019f6168e5462f881306640f4594b2d4afaa1438ccd4a7f36",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 69,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4Repair.*:OblivionSkillTraining.*:OblivionInventory*:OblivionMiscConsumableStore.*:OblivionWorldTest.*Inventory*",
+          "binary_sha256": "95a3a0c1e37a9a959116ffd9f41ce22337a00c546e81011a6e7a46fd49febd90",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "bc8807dee25cff493b05da84265fa68e0309cb54fda1176a75fb4791e3a589fe",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/repair-hammer/integration-normal-01/verification.json",
+        "sha256": "320438f7b7f1b2f207604e68a17dc9601ad5bf5ef59b6af4e9ca2d1367bafe3b"
+      },
+      "source": {
+        "head": "4dfbfab8645391cb1b71dc41823d62a4d50ec773",
+        "source_fingerprint": "65c760fb11ecdf7549f36bcaa98d5929233463ea53f1f29a481cb71ed01a72a7"
+      },
+      "results": {
+        "components": {
+          "executed": 3298,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1eb89f1535a542d59c43a0669b4361b4353054e53e0ab1caab0b0b998e233479",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "0a27a28435c7374d9677c971e6cc849aadd8d97a249ab2b3015b21eb0cb35391",
+          "inventory_sha256": "0e0424325539e7a1a323d0bd7af2ad55756d40e49e3c02e3a82d2e9b057e4ba1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2284,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "78406f251c3ae3ee991d8beea9c010517a050ea9a9961f6467713b032e325022",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "46aad86b8ee6826b6a9b54503b133c8a06f4116a710109675b855ec5fb738f60",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 616,
+          "passed": true,
+          "log_sha256": "9063e4e64bacec0159ada6ba6519f60531f6abfcfbbdc49399a8bd89f9dea88a"
+        }
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/repair-hammer/integration-sanitized-01/verification.json",
+        "sha256": "7e9d1eb2b15e67d46693ce85c6bd389dce5b056d3b475bcf00c56b16c65fe47c"
+      },
+      "source": {
+        "head": "4dfbfab8645391cb1b71dc41823d62a4d50ec773",
+        "source_fingerprint": "65c760fb11ecdf7549f36bcaa98d5929233463ea53f1f29a481cb71ed01a72a7"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 1119,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "cd285569fd4ccb401555a6f888125efd2c58dbf37a984ea018de621bb0e356d4",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "e8c9de91c70e37eac707db51182e7e4684629cdca66e8debfdf57d5a62fabcd2",
+          "inventory_sha256": "c4e50dd3bbb08df0ccee78351969349097de2d2ee3fe652977997311d9837796",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/repair-hammer/sanitized-inventory-union.json",
+        "sha256": "3d55fb0ec6eeb6a1e182d84155273e971c0e84c513578c224fcf10be4f78373b"
+      },
+      "executed": 2284,
+      "source": {
+        "head": "4dfbfab8645391cb1b71dc41823d62a4d50ec773",
+        "source_fingerprint": "65c760fb11ecdf7549f36bcaa98d5929233463ea53f1f29a481cb71ed01a72a7"
+      }
+    }
+  ],
+  "baseline": {
+    "label": "normal-repair-baseline-02",
+    "audit": {
+      "path": "build/oblivion-compat/repair-hammer/normal-repair-baseline-02/baseline-audit.json",
+      "sha256": "350143faa5b85c5834fafbb124482fcf4f8e470cfec1a8f16dd593de064d3aae"
+    },
+    "meaning": "Expected feature failure: actual item icon click raises absent legacy fRepairAmountMult; no repair/XP/debit. Earlier bar click was read-only."
+  },
+  "genuine_acquisition": [
+    {
+      "path": "build/oblivion-compat/repair-hammer/normal-original-chest-approach-06/approach-audit.json",
+      "sha256": "ca6b16ae24a786e8992e32c40bb7bb955de18ae94e24732f23f4d66c0b271a3c"
+    },
+    {
+      "path": "build/oblivion-compat/repair-hammer/normal-original-chest-open-02/open-audit.json",
+      "sha256": "3c4bcbcefa415b261627ff8ed175db66974bfcd5d5e214741682ed40c8a4b868"
+    },
+    {
+      "path": "build/oblivion-compat/repair-hammer/normal-original-hammer-acquire-03/acquire-audit.json",
+      "sha256": "375c76cee7ed1503a60558e99e75ca255e107bdca90779ac402e27d1b4c981df"
+    }
+  ],
+  "reused_menu_control": "Instrumented no-click menu05 uses the prior binary. Final repair-only correction removes a base-script rejection and leaves this unchanged UI/read-only control applicable; final normal menu06 uses the accepted binary.",
+  "visual_review": [
+    "Normal06 hammer tooltip: Weight1 Value10; no legacy quality/uses.",
+    "Normal06 and instrumented05 repair menu: titleRepair, worn cuirass44/250, actualhammerquantity1.",
+    "Normal06 and instrumented06 repaired-menu captures: cuirass52/250; instrumented broken tool disappears.",
+    "Normal06 and instrumented06 cold world capture reviewed; exact condition/XP/tool ownership established by raw/save audit, not picture alone."
+  ],
+  "retained_failures": [
+    "Original approach01/02 preflight only; approach03/04 wrong SDL aim scale; approach05 blocked at real ledge and deliberately stopped without save. Approach06 normal jump succeeds.",
+    "Original open01 expected wrong event kind; corrected02 uses loot. Acquire01/02 selected wrong visible icon/scroll;03 normal scroll locates hammer.",
+    "Repair01 lacked caller FormKeys; diagnostic02 rejected winning-definition. Development03 corrected identity and passed.",
+    "Focused04 failed RecordTypes lambda compilation;05 corrects enum type.",
+    "Final guard05 rejected original CGHeavyArmorScript on cuirass; independent master inspection found only OnAdd/OnEquip quest flags.06 preserves runtime-owner rejection and permits condition-only use. Verifier confirms original MQ01 heavyArmor/heavyArmorEquip unchanged.",
+    "Normal menu05 Xvfb failed before game launch; unchanged menu06 passes."
+  ],
+  "limits": [
+    "Normal maximum condition only; Expert125% over-repair and full-health eligibility remain open.",
+    "Unenchanted single-instance target and original hammer; bound/runtime-script-owned targets and scripted tools rejected. The real cuirass base has CGHeavyArmorScript (0661bf), whose only OnAdd/OnEquip handlers set tutorial quest flags. Condition-only repair does not transfer or equip it. General enchanted/stacked/script-owner mutation is not certified.",
+    "First-use actual novice case; other skill levels/perks have independent arithmetic coverage only. No original full repair UI/live probe, bit-identical RNG or full milestone claim."
+  ]
+}

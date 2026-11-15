@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "feature": "Player Hand-to-Hand use on committed damaging physical contact",
+  "milestone": "M15 remains open",
+  "real_content": {
+    "reference": "content:oblivion.esm:06c2ed",
+    "resolved_creature": "content:oblivion.esm:024ddb",
+    "skill": "content:oblivion.esm:000042"
+  },
+  "behavior": [
+    "Ordinary or power Player skill17 contact lowering victim Health grants winning primary-use XP once after strike consumption and before OnHit.",
+    "One genuine punch grants0.6XP; misses and completed cold loads grant none. Preserve Blunt behavior, shared progression and original ability ownership.",
+    "Schema101 unchanged."
+  ],
+  "limits": [
+    "Damaging-only practical policy, not an instruction-certified general melee caller.",
+    "No acceptance for blocked/immune contacts, level crossing, pending strike saves, Blade or defensive skills.",
+    "Mudcrab Swamp Fever selection deferred without bypassing unresolved ownership."
+  ]
+}

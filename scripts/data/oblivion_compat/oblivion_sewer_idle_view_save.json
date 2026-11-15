@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "name": "Original idle vanity save retains selected first-person preference",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\nat 0 command content:oblivion.esm:01760f GetOpenState\nat 0 command content:oblivion.esm:01760f GetLocked\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local camera=require('openmw.camera')\nlocal self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal frames=0\nlocal initial=false\nlocal vanity=false\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1\n assert(not Actor.isDead(self),'Player died in idle camera check')\n if frames>=5 and not initial then\n  initial=true\n  assert(camera.getMode()==camera.MODE.FirstPerson,'Input save must restore first person')\n  print('Idle view initial first person')\n end\n if initial and camera.getMode()==camera.MODE.Vanity and not vanity then\n  vanity=true print('Idle view vanity active')\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Idle view initial first person",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Idle view vanity active",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "idle-vanity-save.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/Quicksave.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1000,
+      "contains_ascii": [
+        "FIRS\u0001\u0000\u0000\u0000\u0001"
+      ],
+      "forbidden_ascii": [
+        "FIRS\u0001\u0000\u0000\u0000\u0000"
+      ]
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 900,
+  "expected_exit": 0,
+  "expected_log": [
+    "Idle view initial first person",
+    "Idle view vanity active",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)",
+    "activate-script ref=content:oblivion.esm:051ac[abc]",
+    "playgroup ref=content:oblivion.esm:051ac[abc]",
+    "M16 native staff rejected:",
+    "M16 native cast rejected:",
+    "Native AI package done: actor=content:oblivion.esm:032a17 package=content:oblivion.esm:04f201"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

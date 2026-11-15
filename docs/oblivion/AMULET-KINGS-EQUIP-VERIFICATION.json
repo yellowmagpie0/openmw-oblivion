@@ -1,0 +1,217 @@
+{
+  "status": "accepted bounded original Amulet of Kings OnEquip; full M7/M11 and expedition remain open",
+  "implementation_commit": "2472a807cee5e9a4bafa4e2c118767b15264cf32",
+  "contract": "docs/oblivion/AMULET-KINGS-EQUIP-CONTRACT.json",
+  "original_content_oracle": "docs/oblivion/AMULET-KINGS-EQUIP-ORACLE.json",
+  "tested_source_files": {
+    "apps/components_tests/esm4/runtimestate.cpp": "4de8196d72dc1dc71a8e024c7092e45e091b65d3485c08799d9f96cacfadb308",
+    "apps/openmw/mwworld/actionequip.cpp": "1cd303521b6bc2a2fedeec0c9c141dde2e1f37e29cbcdc972f3d2a38528c501a",
+    "apps/openmw/mwworld/cellref.hpp": "8b69071dcdc52ac0600a2052f89abd7c71d9a9af44de99d1238d7c25f4076046",
+    "apps/openmw/mwworld/containerstore.cpp": "2ac4bcb68510b8ccf5d91ca042f04f896f1782ee11fbdef8162c614086d116eb",
+    "apps/openmw/mwworld/oblivioninteraction.cpp": "f7d98f04a4c92c29e8d9ace2e68859cc67cd6792c69cdc642f21f4699933e8db",
+    "apps/openmw/mwworld/oblivionprofileservices.cpp": "5b592d391d67815d62daa55c574800ca2e8012881f9755aedfed8500fc779f84",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "b1a766239bdf8201d9c35e57a5263b0234044f38646bd234bce4060633c2941e",
+    "apps/openmw/mwworld/oblivionscriptmanager.hpp": "6fa439b8ac626fa8095de8abf802542a98577893184abe3938424913d9fd2939",
+    "apps/openmw/mwworld/worldimp.cpp": "a0de8cf5ecb832749603a86a60104e6f0feacec8de12ff9dafa32cbc32b14e26",
+    "apps/openmw/mwworld/worldimp.hpp": "e31c3f7898637a67bb9dc922a6fb336b73bc38e21c7be2ed673df70dae9d3aa5",
+    "components/esm4/runtimestate.cpp": "42bc79ac920270709210d9b5035429366483a56701c94d2200a5935a9d8fc6da",
+    "components/esm4/runtimestate.hpp": "c64166af8c168afd1466335b873b3f0ff0a2c2974bebb3ceafc6bd88e05d11f4",
+    "scripts/tes4_m15_cached_block_input.py": "f09f9f341722c4318adb77f6c8859f1a4747957d476c0e891925d35077164f0c",
+    "scripts/tes4_m15_fixture_preflight.py": "18ef3a9b6312f71d41d388632b8e504a350229a5438d3b67cc1e3d3131e851b7",
+    "scripts/tes4_m15_npc_passive_fixture.py": "16ad1ca5218f095e79bd6ac070444147170668de27cc22e992f6246b671b3136",
+    "scripts/tes4_m15_passive_slot3_fixture.py": "7a7f4a1c79e037aff81ef44884e44ce084205dfa24896c78e214560d5991f892",
+    "scripts/tes4_runtime_state.py": "89149da23b2aa65b719395b953fbe15ebe057f245f01054468fc0c380e915d5b",
+    "scripts/tests/test_tes4_m15_cached_block_input.py": "f434414711b53d0917e742bb789910b9181bf49bf9302a4f445d99220828f064",
+    "scripts/tests/test_tes4_m15_fixture_preflight.py": "8ff844ecd734a1a5fa344011c2e3f86c082e32db6b742301701e55a7b1699fee",
+    "scripts/tests/test_tes4_m15_npc_passive_fixture.py": "68e9bf9dcaec700652fe17bca76bc023810a018868db0d30873f12f8767607d3",
+    "scripts/tests/test_tes4_m15_passive_slot3_fixture.py": "3198e7bdaae4e516c101df46e3f27c578cd4ec4fafbbb057d72eaaa378cc3467",
+    "scripts/tests/test_tes4_runtime_state.py": "7e88be3c0a28babd5ea950035d1f54e16353157e089e2bb3c8cec751c0e337f2",
+    "scripts/verify_oblivion_amulet_kings_course.py": "1f3da8772834accca3b62d54598ec169da5ea221d7aafc0b8bc67f4c0480fbfe"
+  },
+  "tested_editable_manifests": {
+    "scripts/data/oblivion_compat/m15_cached_block_input.json": "e13c6760bda16d6388888ae1d38cd4e48f9e030bc2745f3a857c6db20d43b74f",
+    "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json": "58824ea7c969a03db835b42a2a0e608fe3be708ece37607cbf38ace4d2688398",
+    "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json": "55b8cef7119429fbc0fed7c3710c719b77ecdc123b28d10721e8132894cea8ce",
+    "scripts/data/oblivion_compat/oblivion_amulet_kings_equip.json": "8063063c986fae597b8c3c0fe1e2754b8ff7dfc7857ef81a1b129117f35b0171",
+    "scripts/data/oblivion_compat/oblivion_amulet_kings_equip_sanitized.json": "3a7e8799bb752b6aef08c7f84245e73cb6ee80e8673a8754338b3c7db6ad5b70",
+    "scripts/data/oblivion_compat/oblivion_amulet_kings_restart.json": "b592a1bdfff819f47cf493813db80d0df9d08d94a354ee6dd3a2e4d4b13d8b84",
+    "scripts/data/oblivion_compat/oblivion_amulet_kings_restart_sanitized.json": "fe54b24a8b8fdc0eae44868c2a6d29a29f175ec96c0c2e5ff0a7168aedf746c2"
+  },
+  "source_note": "Integration reports retain exact parent73a6ee32a4 dirty-source fingerprints. The Python pass predates only the C++ nested JSON layout repair, instrumented startup recipes and documentation changes; its Python modules are unchanged. C++/Python source and final runtime verifier hashes are retained here and checked against the implementation commit. Subsequent receipt/handoff documentation does not change compiled behavior.",
+  "behavior": [
+    "An ordinary avatar equip of the actually carried Amulet0250a0 dispatches winning original027589 OnEquip with the item as self and Player as action reference.",
+    "The original message appears. GetContainer resolves the real containing Player inventory; the script unequips its Amulet without losing it. No Amulet-specific rejection is hardcoded.",
+    "Schema97 retains independent inventory-instance identity and script locals. Duplicate/unallocated identities, stacked scripted instances, dangling contexts and mismatched winning-program bindings are rejected. Legacy inventories receive no invented event history.",
+    "Actual fresh-process restart preserves item identity/Player reference local and does not replay OnEquip. Another ordinary equip attempt uses the same identity and executes one event.",
+    "Unrelated stock and equipment metadata remain exact; only the actually equipped torch ages through ordinary elapsed game time."
+  ],
+  "validation_layers": {
+    "structural": "C++/Python schema97 validation and exact actual-save binary roundtrips; live load/save boundary comparisons include bound-displaced inventories.",
+    "compiler_world": [
+      {
+        "path": "build/oblivion-compat/amulet-kings/normal-integration-01/verification.json",
+        "sha256": "5507c303982ed72833d17e8be4595fc97278ab864519d7d5a206c309ff9481ad",
+        "source": {
+          "head": "73a6ee32a493efab942ac92a008738e0933204ed",
+          "source_fingerprint": "a733936deccbaacc7aaf1f2211a17eaae411963d4c763d5b1c8cc2a17f2ccdcd"
+        },
+        "results": {
+          "components": {
+            "executed": 3285,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "4474676634cee401ca2b7dd46487d18696a1e37b993ce7dbcc2b2212d5f5b2ae",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "ef0b8c1a2e7f37b9f4c516fea10d623f28ff268f611d9cda44c2033ce286c483",
+            "inventory_sha256": "d89b58c924b2dfe419c02a4ff8954d0195feb6eef9e3449da4ca44d7b8dff505",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2271,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "ef6a78541a9d7de6fa6f5575ceac30be7b21792160dececee02242225761c78c",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "e183d78e9e8464753dd113666067cc7045ee13af7b6f329a45663190e10e4c6a",
+            "inventory_sha256": "2ff4110cf9ce550cdb8b0bb9d7d6ba1d82bf2c6822c849fa5b9a10650b52d6e0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/amulet-kings/sanitized-integration-01/verification.json",
+        "sha256": "fbb2306cd5fc43b14c103e0d8ceda3d3fadbb63c6c5150c0d6d43303076938b0",
+        "source": {
+          "head": "73a6ee32a493efab942ac92a008738e0933204ed",
+          "source_fingerprint": "a733936deccbaacc7aaf1f2211a17eaae411963d4c763d5b1c8cc2a17f2ccdcd"
+        },
+        "results": {
+          "components": {
+            "executed": 3285,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "5ee6d2a040558f89d735af092a5219a9aedcb69287471857e79c03a0766e60f4",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "5c91dc0da5df6082530464caaed1d788de388625af1981656f37de8acfea0b57",
+            "inventory_sha256": "2033c0e7c7063446ae3817ce2a74ac61a9497d2b8b580bf8e305bef6e2998a15",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2271,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "dbe9921f32c088833c98953a5e227a6f66e30a84689099c6676121433b38b4b5",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "ad3010d5b91d750da5eeaf4c9260a6cf40efa93352fd242aa68bbb8410df6ada",
+            "inventory_sha256": "2ff4110cf9ce550cdb8b0bb9d7d6ba1d82bf2c6822c849fa5b9a10650b52d6e0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/amulet-kings/python-integration-01/verification.json",
+        "sha256": "518920fd0e3c80ea1da631980953a72f236eaca041e5f05842984b2df454ce3b",
+        "source": {
+          "head": "73a6ee32a493efab942ac92a008738e0933204ed",
+          "source_fingerprint": "51e4c7a66a32e588bff98e8941d04ee281cad113722b733643e1e0557e2dd6f1"
+        },
+        "results": {
+          "python": {
+            "executed": 608,
+            "passed": true,
+            "log_sha256": "cb18cb3cbb3f823e882d24c3659a4ec91a0707b83d3a271440cda647284ee593"
+          }
+        }
+      }
+    ],
+    "semantic_and_runtime": {
+      "normal": {
+        "path": "build/oblivion-compat/amulet-kings/normal-runtime-summary.json",
+        "sha256": "67eef420287016d8e6d6fad64825f189a9b87d12e42367ec09f41a0e739fed99",
+        "cases": 3,
+        "distinct_processes": 3,
+        "game_binary_sha256": "382e1935011d55800a6d242b6e6fb2f388f058118d44ba034db828d87265b8ba"
+      },
+      "sanitized": {
+        "path": "build/oblivion-compat/amulet-kings/sanitized-runtime-summary.json",
+        "sha256": "3e3bfa63c9e48a1dad6f81b523c8e343e21e5cc28717f0d79fa8b1cb57f19c6d",
+        "cases": 3,
+        "distinct_processes": 3,
+        "game_binary_sha256": "736db957a1871f941988ad92a235ad9f024b501230afb75e18bb53c3d0ca8025"
+      }
+    },
+    "independent_expectation": "Winning original item/script source audit, retained ignored with hash. This is not an executable instruction trace or native-game live probe."
+  },
+  "outgoing": {
+    "path": "build/oblivion-compat/amulet-kings/normal-repeat-equip-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "f97573f62938c26f2230c7ba8b51f7de4065d58285c7bcc1d4b0295ab8518e9b",
+    "cell": "content:oblivion.esm:0463f5",
+    "player_health": 40.41400909423828,
+    "player_magicka": 76.33918762207031,
+    "player_fatigue": 170,
+    "amulet": {
+      "base": "content:oblivion.esm:0250a0",
+      "count": 1,
+      "condition": -1,
+      "charge": -1,
+      "equipped_slots": 0,
+      "hotkey": -1,
+      "owner": "null",
+      "remaining_usage_time": -1,
+      "ownership_rank": null,
+      "ownership_global": "null",
+      "extra_scale": null,
+      "bound_source": null,
+      "script_owner": "dynamic:inventory-script:0000000000000001"
+    }
+  },
+  "retained_failures": [
+    "normal-equip-01: item behavior passed, but strict boundary audit caught version82 JSON layout for nested bound-displaced inventory while binary used97. Production canonical JSON repaired; fresh normal-equip-02 and all later cases pass.",
+    "cpp-state-development-01: canonical inventory JSON expectation lacked new empty script_owner field. Focused adjustment and full normal/instrumented component runs pass.",
+    "python-development-all-01: one of608 checks exposed newly created legacy mutation items missing empty script_owner defaults. Focused repair and all608 pass.",
+    "normal-restart-01/audit-started-before-driver-completed.log: verifier invoked before driver completion; rerun after completion passes."
+  ],
+  "limits": [
+    "Only singleton Player inventory OnEquip is admitted here. General inventory events, stacked scripted-item splitting/identity, arbitrary transfer/drop/removal lifecycle and full M7/M11 remain open.",
+    "Rendered sanitizer runs disable leak detection; full component/engine runs enable it. Compiler warning logs remain retained; this is not warning-free or fresh multi-compiler/performance coverage.",
+    "Healing and Torch02 continuation checks exposed already working features; they are not new implementations.",
+    "Full S5/M15, campaign and expedition return remain open. Original content is unchanged. Runtime observers are read-only; ordinary UI controls, no grants, synthetic actors/items, forced deficits or teleports."
+  ],
+  "original_content_identity": {
+    "master_path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "script_audit_sha256": "9852d8f905c1f7f0c7c53e52abfeb20f1bb41594cfa16a7293e27498ef83d5e9"
+  }
+}

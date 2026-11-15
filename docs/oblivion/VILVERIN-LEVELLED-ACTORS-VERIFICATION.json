@@ -1,0 +1,644 @@
+{
+  "schema_version": 1,
+  "status": "accepted",
+  "scope": "Bounded original Vilverin single-actor LVLC placement and nested NPC LVLI gear at genuine Player level1; real travel, visible natural combat and persistent reference/inventory/movement ownership. Not full Vilverin, general spawn groups, scripted spawner lifecycle or cell respawn.",
+  "code_commits": [
+    "9424df608d",
+    "b71bb621ab"
+  ],
+  "contract": "VILVERIN-LEVELLED-ACTORS-CONTRACT.json",
+  "original_inputs": {
+    "master": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+    },
+    "genuine_exterior_exit": {
+      "path": "build/oblivion-compat/sewer-escape/joined-final-exterior-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "cb89fc17ac333a5c4cbd03c0fa1445302e41ac3fd73102111494bf1a2e55f4b8"
+    },
+    "ordinary_shore_checkpoint": {
+      "path": "build/oblivion-compat/vilverin/shore-travel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "f91d300a78a6c02e99d5ee1e5b79c2c3495df820087ab2d00eb4287a1bcb67dd"
+    },
+    "genuine_encounter_checkpoint": {
+      "path": "build/oblivion-compat/vilverin/levelled-camp-approach-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "cde38df830a31467b8af4f1ced5f91cee9ef4b5cf6175da5cbf88203adba14a0"
+    }
+  },
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "actor_course": {
+    "melee": {
+      "placed_reference": "content:oblivion.esm:06c2aa",
+      "list": "content:oblivion.esm:03407b",
+      "observed_selected_base": "content:oblivion.esm:03db2d"
+    },
+    "missile": {
+      "placed_reference": "content:oblivion.esm:06c2ab",
+      "list": "content:oblivion.esm:03407c",
+      "observed_selected_base": "content:oblivion.esm:03dc48"
+    },
+    "level": 1,
+    "instrumented_selected_bases": {
+      "melee": "content:oblivion.esm:03db34",
+      "missile": "content:oblivion.esm:03dc43",
+      "source": "levelled-sanitized-placement-02"
+    }
+  },
+  "rule_evidence": {
+    "original_instructions": {
+      "path": "build/oblivion-compat/vilverin/leveled-inspection-01/native-list-oracle.json",
+      "sha256": "54636cf52e346971c6a59d6a91a69d47ad78f099f8dc7b4173f872ed68bcf09c"
+    },
+    "production_real_pools": {
+      "path": "build/oblivion-compat/vilverin/leveled-inspection-01/production-real-pool-comparison.json",
+      "sha256": "5c859b09f4c1fbe55bbd7f191fb8ebc9d80498e04b644fdb3c7c26b7048edf53"
+    },
+    "typed_winning_records": {
+      "path": "build/oblivion-compat/vilverin/leveled-inspection-01/typed-original-lists-verification.json",
+      "sha256": "06e5b30d78c832961041e2dbc36761450a5de15b3009fe8620be7a74a50efc28"
+    },
+    "scope": "160 original instruction cases;112 production-pool comparisons;27 lists and303 independently decoded full entries. Requested Player level1. RNG, RTTI and detached container boundaries declared in source reports."
+  },
+  "component_gates": {
+    "normal": {
+      "path": "build/oblivion-compat/vilverin/levelled-normal-integration-01/verification.json",
+      "sha256": "19a1aad6a837d9f69eff3fd96023dbbb574d93b0c90e1d1006455ab1a95bf61f",
+      "source": {
+        "head": "9424df608d43ef5ff245182da877272b247f945e",
+        "source_fingerprint": "855a92a10d463a2d597e800ccc47b455969c02d551c46545a80e0351a4226064"
+      },
+      "result": {
+        "executed": 3272,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "ab32b6c2075593c3dbe0763f4ce01db5f2ca2a277e572cbcc7e720c9fe26f532",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "10d61b8baf4425a32c52085c0a1637c87c29cd19ddd7dd83273865bbb9d2602d",
+        "inventory_sha256": "9eef03d5cab061823a9edffb97874f717466b029cf911670b59542575f7b8570",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "overall_passed": false
+    },
+    "asan_ubsan": {
+      "path": "build/oblivion-compat/vilverin/levelled-asan-components-full-01/verification.json",
+      "sha256": "39fbd9d78345b8aba573b0a5b6d150e898d9502b501df0056eadc380634e54b1",
+      "source": {
+        "head": "9424df608d43ef5ff245182da877272b247f945e",
+        "source_fingerprint": "855a92a10d463a2d597e800ccc47b455969c02d551c46545a80e0351a4226064"
+      },
+      "result": {
+        "executed": 3272,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "75c8b90aacdb0f9ccbce25f458dd380b730c5e79b403ece01bf88cfe901733fc",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "813d0b42a0f7876f2eff37afe58c5a6292b834b3130c5d95d716edbf7fa46ffc",
+        "inventory_sha256": "52e7934bc1c64846c9ff2cc19b9d5c4e138c513c9340faf7701cdde584e83f28",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "overall_passed": true
+    },
+    "reuse": "The NPC-construction repair changes only engine code; no component implementation changed after9424df608d. The normal component phase passed within a retained failed engine attempt; only its verified component result is reused."
+  },
+  "engine_gates": {
+    "normal": {
+      "path": "build/oblivion-compat/vilverin/levelled-normal-engine-02/verification.json",
+      "sha256": "6c36af4149cb5a2a0156dc3183c65cc97c85ae591663d26954b6255890653b74",
+      "source": {
+        "head": "b71bb621ab2cea76fcae4b526e07f14c3b5b07aa",
+        "source_fingerprint": "d8cc1cbbe0b3d641eb22b088fda3157844c6337635da230bf9ea0fac08ca3334"
+      },
+      "result": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "4cfa92409c526a859c012752446e6f0d458ea27ea1ea9705953193872768f3b0",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "dc35dcf7ba082f3387921fff86766cb6f648d0c4da81fab471d7a51e49c4212a",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "overall_passed": true
+    },
+    "asan_ubsan": {
+      "path": "build/oblivion-compat/vilverin/levelled-asan-engine-02/verification.json",
+      "sha256": "1651f6167d62396e4731d76d9a4d9ed747232cb5abe90ef08c14eddbaa073b78",
+      "source": {
+        "head": "b71bb621ab2cea76fcae4b526e07f14c3b5b07aa",
+        "source_fingerprint": "d8cc1cbbe0b3d641eb22b088fda3157844c6337635da230bf9ea0fac08ca3334"
+      },
+      "result": {
+        "executed": 2257,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "460a37ae6f3f05e2b4d778bdd1d15ec692a17f9f53a30982203f1fb6bfc17e7e",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "0ba0fb2fbf83a466609a25b3bbec34d6144214856f30a69386a4f030ea9628c8",
+        "inventory_sha256": "dd83387214687799fb9a2dbede4bf15aab604a85f00a28cfb29ba1d42cbfd0d8",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "overall_passed": true
+    }
+  },
+  "runtime_normal": [
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-placement-03",
+      "scope": "Original single-actor camp placement and concrete gear from genuine shore checkpoint; pre-grid-fix source",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-placement-03/scenario.json",
+        "sha256": "b8534196b6bcf8ad57ec2792e9fdba7ba7ec6f7947044881b61306eaaab03003"
+      },
+      "epoch": {
+        "pid": 758366,
+        "start_ticks": 194003846,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-placement-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/shore-travel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "bc07bb5b775c019ea730c3e171e72254d10ac0d410917a0e138e836a4ef1d005"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-placement-03/loaded-libraries.json",
+        "sha256": "972b1a51a9728b583915f9847776a39f618b627b9d4301810bceefc8ef2cf7e5"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/shore-travel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "f91d300a78a6c02e99d5ee1e5b79c2c3495df820087ab2d00eb4287a1bcb67dd",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-placement-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "05450f2c3d8d90f32ee5e160de77fd3d48495baceb93afa78a9a365b43eaa175"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-placement-03/sdl-input-provenance.json",
+        "sha256": "9d63a8c8ee8304583bb3fe73d5b3640efcea8a2b2fdfcda43f34c4d3de3c6c86"
+      }
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-restart-02",
+      "scope": "Fresh shore continuation; bases, gear, stats and all chance-none choices retained; pre-grid-fix source",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-restart-02/scenario.json",
+        "sha256": "974b33caf9ef1cfbd3b7c348ba28f00881a1cadc02b20ac4532b5c47549d3eae"
+      },
+      "epoch": {
+        "pid": 758573,
+        "start_ticks": 194013230,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-restart-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-placement-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "bc07bb5b775c019ea730c3e171e72254d10ac0d410917a0e138e836a4ef1d005"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-restart-02/loaded-libraries.json",
+        "sha256": "972b1a51a9728b583915f9847776a39f618b627b9d4301810bceefc8ef2cf7e5"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-placement-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "05450f2c3d8d90f32ee5e160de77fd3d48495baceb93afa78a9a365b43eaa175",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-restart-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "cad405bbac94b3cc0654a77db54f8353e074a4ee7cd18ed2516809be2a372572"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-restart-02/sdl-input-provenance.json",
+        "sha256": "13419d9578df30231afc1019c262ee563558aad4dce95aed6e3a1c3430571b5c"
+      }
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-camp-approach-03",
+      "scope": "Ordinary navmesh-guided walk, natural pursuit/hits and visible original armed bandits; pre-grid-fix source, genuine encounter F5 for final repair",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-camp-approach-03/scenario.json",
+        "sha256": "71c75025afb49d1da622c2866188e530a5563643eac8f25c4a8594fc72430587"
+      },
+      "epoch": {
+        "pid": 759268,
+        "start_ticks": 194050422,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-camp-approach-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-restart-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "bc07bb5b775c019ea730c3e171e72254d10ac0d410917a0e138e836a4ef1d005"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-camp-approach-03/loaded-libraries.json",
+        "sha256": "8f8dcdf7586dcdb0d3a125979c7cef148c18130c808b2ce4ceee4331e78de477"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-restart-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "cad405bbac94b3cc0654a77db54f8353e074a4ee7cd18ed2516809be2a372572",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-camp-approach-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "cde38df830a31467b8af4f1ced5f91cee9ef4b5cf6175da5cbf88203adba14a0"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-camp-approach-03/sdl-input-provenance.json",
+        "sha256": "4785542d7ad0a14ef6c36955617afb087bbd74e8c02ed27f970e085c0985b689"
+      }
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-encounter-restart-02",
+      "scope": "Untouched genuine encounter restart with full movement-grid repair",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-restart-02/scenario.json",
+        "sha256": "87f6fcbb012288c26d34175f5a029fbbae0a87c2d4c22716156085ab43f56f54"
+      },
+      "epoch": {
+        "pid": 760870,
+        "start_ticks": 194162257,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-encounter-restart-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-camp-approach-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "7ef0b8549d1210a9e80fa91e5c09bfe252abe366a8d42bb0b713b3c7369e1475"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-restart-02/loaded-libraries.json",
+        "sha256": "371cc1aecfcac0f730dbb18a91fd0610ac6df62a1331596f956b3e02ed6202d6"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-camp-approach-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "cde38df830a31467b8af4f1ced5f91cee9ef4b5cf6175da5cbf88203adba14a0",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-restart-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "3065e1c66a1ee3a993ba8ccb4043a8867c33f5cfe402f72565581ddcf6378058"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-restart-02/sdl-input-provenance.json",
+        "sha256": "c2fdecf56522fa6151f3243397753e702a9d37dec55c963888c4587da17b030f"
+      }
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-encounter-restart-03",
+      "scope": "Second continuation retains all15 movement owners and worn gear",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-restart-03/scenario.json",
+        "sha256": "c99fde4eab88b744489583d092c774f0caf481d83c94ab7c9dbd08641ffe8165"
+      },
+      "epoch": {
+        "pid": 761035,
+        "start_ticks": 194169783,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-encounter-restart-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-encounter-restart-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "7ef0b8549d1210a9e80fa91e5c09bfe252abe366a8d42bb0b713b3c7369e1475"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-restart-03/loaded-libraries.json",
+        "sha256": "90369c827ff69f0893c277332c5b680fafa3d77e7ac624cc22b11af7dbaadc64"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-encounter-restart-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "3065e1c66a1ee3a993ba8ccb4043a8867c33f5cfe402f72565581ddcf6378058",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-restart-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "64512c136d76ff4162ec6c05ef353f0fd04b91b7ab967879568b87d63104d128"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-restart-03/sdl-input-provenance.json",
+        "sha256": "7cbfca8f55cb923b33dbe0b9fc14f90960fd026989afa62b839e6bf575498ea8"
+      }
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-encounter-final-normal-01",
+      "scope": "Final b71bb621ab game binary; genuine encounter damage/gear/movement ownership",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-final-normal-01/scenario.json",
+        "sha256": "935c21634b6481347e46963caeef70dde45a21f8d4642fcd7b5dfe1a256f7e3b"
+      },
+      "epoch": {
+        "pid": 774310,
+        "start_ticks": 194281925,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-encounter-final-normal-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-camp-approach-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "6958ea2e4b8fbcf7390ba7f24960d7fd9f43baa3a81cf07cb3c58d3fbf384a49"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-final-normal-01/loaded-libraries.json",
+        "sha256": "972b1a51a9728b583915f9847776a39f618b627b9d4301810bceefc8ef2cf7e5"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-camp-approach-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "cde38df830a31467b8af4f1ced5f91cee9ef4b5cf6175da5cbf88203adba14a0",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-final-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "678375555d5137d4a02a97d890699fc665d319669e20e69e2d737a9e76a0edb3"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-encounter-final-normal-01/sdl-input-provenance.json",
+        "sha256": "92b85dbf108066b4bf7c5abb85fa989afd0b41303ba747e57b458e6fa9718f40"
+      }
+    }
+  ],
+  "runtime_sanitized": [
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-sanitized-placement-02",
+      "scope": "Instrumented original camp placement; actual reference and package readiness",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-placement-02/scenario.json",
+        "sha256": "92b2b9638de1b42bd259a35e87081584a738907665b8156f2515b93ea4654120"
+      },
+      "epoch": {
+        "pid": 782297,
+        "start_ticks": 194600481,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-sanitized-placement-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/shore-travel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ed51ec7f337df78f559e7cb5f04642e9ef5b2cbd43572564a3313b58cb4f5c2a"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-placement-02/loaded-libraries.json",
+        "sha256": "f11129221bf89634f0ae302b1c903288e838aa8768961e70f0b7351ac5cc3423"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/shore-travel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "f91d300a78a6c02e99d5ee1e5b79c2c3495df820087ab2d00eb4287a1bcb67dd",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-placement-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "65b552e044d6c6d8a543babb9b4567751059dec659ace8be7ba5adbea957428b"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-placement-02/sdl-input-provenance.json",
+        "sha256": "66a00b840a1e743130d6c32c3eec60b8650f726ac87ef19aa58bcb0f80d0d77b"
+      }
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-sanitized-restart-01",
+      "scope": "Instrumented fresh placement continuation",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-restart-01/scenario.json",
+        "sha256": "baadfce9559aaedb06dc292b3499313e7828db5ca62e7ebc72c06fe3d8a2230b"
+      },
+      "epoch": {
+        "pid": 782645,
+        "start_ticks": 194655999,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-sanitized-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-sanitized-placement-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ed51ec7f337df78f559e7cb5f04642e9ef5b2cbd43572564a3313b58cb4f5c2a"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-restart-01/loaded-libraries.json",
+        "sha256": "a756dca10b9529e5d9a7f0765c9eb72fa0f13763a0b80805621a4c936c59f139"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-sanitized-placement-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "65b552e044d6c6d8a543babb9b4567751059dec659ace8be7ba5adbea957428b",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "61de31b0270103fd362d50cdd13d354f0718086b67faea2fca173f1c6ca4f05d"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-restart-01/sdl-input-provenance.json",
+        "sha256": "ff4ca7e66b34b9fb067c5b24b6789b065e48ee3ec381bb831b44ee7610d6b9c0"
+      }
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-sanitized-encounter-01",
+      "scope": "Instrumented untouched genuine encounter restart with grid repair",
+      "passed": true,
+      "scenario": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-encounter-01/scenario.json",
+        "sha256": "6a932c9d5134c416729d9272f634c630440aba52446f70c81da79c78b1e53ab7"
+      },
+      "epoch": {
+        "pid": 783009,
+        "start_ticks": 194683934,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-sanitized-encounter-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-camp-approach-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "ed51ec7f337df78f559e7cb5f04642e9ef5b2cbd43572564a3313b58cb4f5c2a"
+      },
+      "loaded_libraries": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-encounter-01/loaded-libraries.json",
+        "sha256": "511cce4efe8a766537c27ecd10cdf459289ff0cd0e56b80672dadb839dc2619e"
+      },
+      "input_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/vilverin/levelled-camp-approach-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "input_sha256": "cde38df830a31467b8af4f1ced5f91cee9ef4b5cf6175da5cbf88203adba14a0",
+      "input_unchanged": true,
+      "output_save": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-encounter-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "b870786eebb178e3b206048ffc441a40217e66d1d3219021f51b440369f9e33c"
+      },
+      "sdl_input_provenance": {
+        "path": "build/oblivion-compat/vilverin/levelled-sanitized-encounter-01/sdl-input-provenance.json",
+        "sha256": "696349b8102f7b86bd2187836a13b0dfefe6c77969e1ac2a7f72ee26cef1d880"
+      }
+    }
+  ],
+  "semantic_audits": {
+    "normal": {
+      "path": "build/oblivion-compat/vilverin/levelled-normal-semantic-verification.json",
+      "sha256": "07fb222409e4070c189d43f2f57b8b5fcc8b65fc084694cf532f4cb2cdc50a1d"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/vilverin/levelled-sanitized-semantic-verification.json",
+      "sha256": "d023b4d1c07c07db511557508fdc209c36c39057abffae4683078fdbea29e15b"
+    },
+    "read_only_manifests": {
+      "path": "build/oblivion-compat/vilverin/levelled-manifest-audit-final.json",
+      "sha256": "9a3f622267680cf12cddfee0a7be0720b83eeadf5fff583c7f07df3894f377ce"
+    },
+    "movement_source_footprint": {
+      "path": "build/oblivion-compat/vilverin/movement-grid-source-footprint.json",
+      "sha256": "98b62a8c54ed26cf2581d89c9a5c158b5e9615b8ba2b934eb38bb24627394d50"
+    }
+  },
+  "visual": {
+    "path": "build/oblivion-compat/vilverin/levelled-camp-approach-03/original-vilverin-bandit-visible.png",
+    "inspection": "Both original bandits visibly armed at the original camp, with original clothing/shield and native Bandit target label; natural Player damage observed. Earlier camera-away diagnostic is not visual acceptance."
+  },
+  "ownership": {
+    "single_actor_projection": "Selected actor uses the authored placement key; original master LVLC reference stays unchanged. Saved level/empty choice and selected base are validated against winning records. Empty draws persist without actor authority. Native scripted spawn-root/child identity behavior and multi-actor ownership are separate unaccepted slices.",
+    "movement": "Source active exterior grid12,21 differs from default fresh grid13,21 because of hysteresis. Restore admits all saved actor/standing-reference cells before strict mechanics/capsule history restore; all15 source movement owners survive both genuine continuations.",
+    "inventory": "Concrete generated items, conditions, equipment and quantities persist. Only inventories containing nonzero LVLI entries ask for Player level; direct/empty pre-Player construction stays supported."
+  },
+  "sanitizer_scope": {
+    "engine_ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "runtime_ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "preload": "Actual /usr/lib64/libasan.so.8.0.0 ELF first, SDL replay shim second; prior Flare preflight recipe reused and actual runtime provenance retained."
+  },
+  "retained_failures": [
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-placement-01",
+      "status": "failed scenario: stale copied travel-log expectations; all gameplay actions and F5 completed",
+      "exact_manifest": "source-manifest.json"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-placement-02",
+      "status": "failed scenario: unsupported wilderness group quantity caused one frame error; camp placement and F5 completed"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-camp-approach-01",
+      "status": "failed stale empty-camp forbidden assertion; genuine arrival/F5 and natural bandit damage observed; camera looked away"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-camp-approach-02",
+      "status": "interrupted faulty camera-step fixture before travel; route loop/cleanup omission corrected"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-encounter-restart-01",
+      "status": "failed engine restart: exterior grid hysteresis left saved movement actors without mechanics owners; retained genuine input for repair"
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-asan-engine-01",
+      "status": "Build attempt interrupted deliberately for memory pressure; no engine tests executed. Paused second compiler was terminated at less than2GiB available RAM while the10GiB world compiler completed and its object was retained.",
+      "reason_report": "build/oblivion-compat/vilverin/levelled-asan-engine-01/memory-pressure-recovery.json",
+      "repair": "Remaining build rerun with1job in levelled-asan-engine-02; source unchanged."
+    },
+    {
+      "run": "build/oblivion-compat/vilverin/levelled-sanitized-placement-01",
+      "status": "Instrumented fixture timed out waiting for5 simulated seconds despite real references/package selections; no sanitizer/engine error.",
+      "reason_report": "build/oblivion-compat/vilverin/levelled-sanitized-placement-01/timing-diagnostic.json",
+      "repair": "Read-only reference/package readiness replaces fixed simulation delay; actual F5/restart and semantic checks unchanged."
+    }
+  ],
+  "remaining_acceptance": [],
+  "outside_scope": [
+    "Cell respawn/reset",
+    "Scripted leveled-list/reference activation",
+    "Initially disabled or enable-parent-controlled placements",
+    "All player levels",
+    "RNG stream identity",
+    "Full Vilverin dungeon/combat completion",
+    "Lists that can produce multiple actors per original reference; saved spawn-group child ownership remains unimplemented",
+    "Full native spawn-root/child script identity semantics",
+    "Full bandit bow tactics; missile-reference actor used its backup dagger in the accepted close encounter",
+    "CREA LVLI inventories, observed as warnings on original nearby mudcrabs/slaughterfish",
+    "NPC death/respawn lifecycle acceptance; this course retains alive actor ownership and mutable combat equipment",
+    "Whole M16/campaign and all Player levels"
+  ],
+  "remaining_acceptance_gaps": [],
+  "observed_results": {
+    "previous_gap": "Ordinary camp baseline confirms both authored LVLC references absent; source master unchanged.",
+    "placement": "Both original placements now generate eligible original NPCs and concrete authored gear at Player level1.",
+    "visual": "Inspected original camp screenshot shows both armed bandits, original equipment and native target label.",
+    "combat": "Both bandits naturally pursued and struck the Player with generated weapons. Player damage and weapon wear are in genuine F5 saves. Close-range missile-reference actor used its backup dagger; bow tactics not accepted.",
+    "restart": "Original placement keys, selected bases/level, exact shore inventory metadata/stat bases and chance-none owners survive fresh processes. Genuine encounter continuations preserve all15 saved movement owners, worn gear and damage without repair/reroll.",
+    "semantic_checks": {
+      "normal": 132,
+      "instrumented": 78
+    }
+  },
+  "validation_layers": {
+    "source": "Local implementation commits9424df608d andb71bb621ab; editable input manifests retained. No master edits or generated TES4 authoring plugin.",
+    "compiler_and_regression": "Full normal and ASan/UBSan engine suites2257 each; full component suites3272 each. Exact inventory/XML verification; no failures or skips in accepted scopes.",
+    "independent_reinspection": "Hash-identified original instructions, raw/typed winning-record comparison and actual native save payload/semantic reinspection.",
+    "runtime": "Six accepted normal courses and three accepted instrumented courses, actual process epochs/binary hashes/input immutability/library provenance. Normal travel baseline and visible camp capture retained separately."
+  },
+  "source_equivalence": {
+    "final_engine_source": "b71bb621ab2cea76fcae4b526e07f14c3b5b07aa",
+    "engine_fingerprint": "d8cc1cbbe0b3d641eb22b088fda3157844c6337635da230bf9ea0fac08ca3334",
+    "components": "Component code unchanged byb71bb621ab engine-only construction repair; original9424df608d full component phases reused with provenance.",
+    "normal_runtime": "Creation/approach cases precede the movement-grid fix; selection/gear path unchanged except gating an unnecessary Player query for empty/direct inventories. Final b71 game restart plus final-source instrumented creation/continuation verify the final integration.",
+    "fixture_changes": "After final engine gates only instrumented observer timing/actions changed to actual readiness; no C++ changes. Updated manifests and final read-only audit retained."
+  },
+  "instrumented_timing": "World simulation is much slower under instrumentation. Probes wait for original references/packages, then use ordinary F5. No instrumented performance/soak or startup-fade visual acceptance claim.",
+  "focused_regressions": {
+    "movement": "build/oblivion-compat/vilverin/levelled-movement-focused-01/verification.json",
+    "construction_repair": "build/oblivion-compat/vilverin/levelled-construction-focused-01/verification.json",
+    "construction_cases": 148
+  }
+}

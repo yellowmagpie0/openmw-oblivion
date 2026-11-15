@@ -1,0 +1,85 @@
+{
+  "scope": "Genuine joined recovery-save traversal through original north passage and fresh combat continuation defeating original northern rat038173. Composite proof; full continuous escape remains incomplete.",
+  "full_escape_complete": false,
+  "passed": true,
+  "traversal": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-substructure-north-passage-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-post-zombie-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "136a99cc274e873991796a836cf5099b27d03c6db225d535de646615a92739bf",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "source_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-post-zombie-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "136a99cc274e873991796a836cf5099b27d03c6db225d535de646615a92739bf"
+    },
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-north-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "2db07e54c8a99bdd4a49e45914370bed3c9c61b8cd773b3f85342d35760f05d2",
+      "position": [
+        -160.3755645751953,
+        3281.248046875,
+        -258.60247802734375,
+        0.036132946610450745,
+        0.0,
+        -0.014943961054086685
+      ],
+      "health": 80.0
+    },
+    "combat_engagements_at_save": [
+      {
+        "first": "content:oblivion.esm:038173",
+        "second": "dynamic:player:0000000000000001"
+      }
+    ]
+  },
+  "rat_victory": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-substructure-northern-rat-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-substructure-north-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "2db07e54c8a99bdd4a49e45914370bed3c9c61b8cd773b3f85342d35760f05d2",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "source_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-north-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "2db07e54c8a99bdd4a49e45914370bed3c9c61b8cd773b3f85342d35760f05d2"
+    },
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-northern-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "315d5d24ddd2ce678f185d5c0c1c726b76ed7df216e4cdb49be2a0d48d12dc52",
+      "position": [
+        -162.2117462158203,
+        3316.626953125,
+        -258.60247802734375,
+        0.12382826209068298,
+        0.0,
+        -0.051858022809028625
+      ],
+      "health": 70.5999984741211
+    },
+    "rat": {
+      "actor": "content:oblivion.esm:038173",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "pending_combat_after": []
+  },
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/joined-substructure-north-passage-01/joined-north-passage.png",
+    "build/oblivion-compat/sewer-escape/joined-substructure-northern-rat-01/joined-northern-rat-victory.png"
+  ],
+  "observer_scope": "Read-only actual camera/actor/position observations; normal walking and axe controls. F7 only settles local observation frames. No health/quest/position writes or skipped encounter.",
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "reused_checks": "2203 normal and2203 ASan/UBSan engine cases plus rendered camera reload retain original fingerprints; no implementation change or broad repeat.",
+  "next": "Physical west loop, actual intervening encounters and original Natural Caverns exit; shaman, late escape, full new-game course and fresh outdoor reload remain required."
+}

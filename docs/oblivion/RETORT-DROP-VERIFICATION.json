@@ -1,0 +1,593 @@
+{
+  "status": "Accepted bounded original Novice Retort native APPA drop/cold world/pickup/cold inventory in normal and ASan/UBSan games; broader milestones remain open.",
+  "parent_commit": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+  "contract": "RETORT-DROP-CONTRACT.json",
+  "oracle": "RETORT-DROP-ORACLE.json",
+  "schema": 103,
+  "behavior": "Ordinary acquired Retort1 drops under native APPA key12/count1/allocator13 with its original one-hull bodyT0. Cold world retains full physical state; rendered-focus Space pickup returns1 and retires key12/body; cold inventory retains original type3/quality10/value50/weight3. Original content06efb7 remains deleted/count0/taken, other original Retort refs unchanged. No Alchemy use or XP.",
+  "layers": {
+    "structural": "Apparatus appended to existing typed cell/model/registry/body/Lua scene/inventory transaction. Singleton scriptless eligible models use native admission; unsupported graphs keep prior legacy fallback. No parser/schema/MCP or native Lua apparatus type-binding change.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/retort-drop/focused-normal-01/verification.json",
+        "sha256": "7303c1744b01a562b0e08bc420ae9ae2959c068d500b83bd9c49258c39b5420b",
+        "source": {
+          "head": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+          "source_fingerprint": "1194e88ccd1ae9e6ca80879641c08582b57aac89149b2338894bb2419cbc6833"
+        },
+        "results": {
+          "engine": {
+            "executed": 342,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*:*ScriptTransfer*",
+            "binary_sha256": "14a3125be6fc01f276f680842abfce85ab7c474de12401cea0f9c7fb33e2e53d",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "458c419b281e80642c869e9465653f739c1a1eb5653e01b2386c6603fd8e6cc3",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/retort-drop/focused-sanitized-01/verification.json",
+        "sha256": "3ca63b6fdfee1b2dd4feb963a34af348b4b2e669ea52f240078288d643504812",
+        "source": {
+          "head": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+          "source_fingerprint": "1194e88ccd1ae9e6ca80879641c08582b57aac89149b2338894bb2419cbc6833"
+        },
+        "results": {
+          "engine": {
+            "executed": 342,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*:*ScriptTransfer*",
+            "binary_sha256": "07e28671c0c9f1c93ffe62a7c3a7b3828da44a9a5a0b628ef114da5a038ef69f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "bdc1ebbd6308ae818a8a041a1c33d7b740f9414f95465be139849f1103fbc89a",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/retort-drop/python-retry-01/verification.json",
+        "sha256": "522afd7adba2f59166c69aec9bf9d92e288fa248f9e9ec4db8d2b858384a83f9",
+        "source": {
+          "head": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+          "source_fingerprint": "1194e88ccd1ae9e6ca80879641c08582b57aac89149b2338894bb2419cbc6833"
+        },
+        "results": {
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "a4bed7f60491bedc5f5a39b53bcc039cfb06bd83a7033dfa774be96fea7e9937"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/retort-drop/integration-sanitized-1/verification.json",
+        "sha256": "204a0836d4b94d328f6e78d6eccbe3f14fef2e1ce91469d54a65473fabbf04a3",
+        "source": {
+          "head": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+          "source_fingerprint": "1194e88ccd1ae9e6ca80879641c08582b57aac89149b2338894bb2419cbc6833"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "07e28671c0c9f1c93ffe62a7c3a7b3828da44a9a5a0b628ef114da5a038ef69f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "879ac7b670e06f78de15b7371f2ef35d06400e50b0e6a34a36d93c7c2eec903c",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/retort-drop/integration-sanitized-2/verification.json",
+        "sha256": "ecf8b874553ee424192dbb5cf84eec6922b7d5b6f45f1888e1e6ed7f9e9be9c8",
+        "source": {
+          "head": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+          "source_fingerprint": "1194e88ccd1ae9e6ca80879641c08582b57aac89149b2338894bb2419cbc6833"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "07e28671c0c9f1c93ffe62a7c3a7b3828da44a9a5a0b628ef114da5a038ef69f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "85522490fd46d887dfb89b8245550b8c75ce69d23829b18deaa90bc2f155af08",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/retort-drop/integration-sanitized-3/verification.json",
+        "sha256": "d8a1d20343d72429391c85eaf469ebb5d6144e1743ffe78a2b11bd2b4e044b3c",
+        "source": {
+          "head": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+          "source_fingerprint": "1194e88ccd1ae9e6ca80879641c08582b57aac89149b2338894bb2419cbc6833"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "07e28671c0c9f1c93ffe62a7c3a7b3828da44a9a5a0b628ef114da5a038ef69f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "2c89b6ac438e40631ddda5f4124332a7a4c817f157f07b823e8988df99458025",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/retort-drop/integration-sanitized-4/verification.json",
+        "sha256": "496a8c3f53d30fcb5e6b58d31e0055c3f7cea60e327a781be64d0ac85fa2353f",
+        "source": {
+          "head": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+          "source_fingerprint": "1194e88ccd1ae9e6ca80879641c08582b57aac89149b2338894bb2419cbc6833"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "07e28671c0c9f1c93ffe62a7c3a7b3828da44a9a5a0b628ef114da5a038ef69f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "a89d299669f48c9779b1a12fa2f85d3b8065cd27bc30aac24f074d6bf5e810f0",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/retort-drop/integration-normal-01/verification.json",
+        "sha256": "c5de63759ef634db70a0a7f27e5f48d9a86cd1faea3ce0afa5cad66e6f4cb46e",
+        "source": {
+          "head": "0d4596dd0956a46359c732ee299a41243c5cee9d",
+          "source_fingerprint": "1194e88ccd1ae9e6ca80879641c08582b57aac89149b2338894bb2419cbc6833"
+        },
+        "engine_result": {
+          "executed": 2292,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "14a3125be6fc01f276f680842abfce85ab7c474de12401cea0f9c7fb33e2e53d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "7864c64aa24282dc54719e0f87b2ba2f890e3d99e00fb9a0dab71302776ee1c7",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "scope": "Engine2292 passed. Combined run then failed only Python Xvfb startup; independent unchanged-source/binary proof retains engine evidence. Python retry618 passed.",
+        "proof": "build/oblivion-compat/retort-drop/normal-engine-reuse-after-python-failure.json"
+      }
+    ],
+    "source_acquisition": {
+      "route": "build/oblivion-compat/retort-drop/normal-retort-route-survey-02",
+      "ordinary_acquisition": {
+        "passed": true,
+        "source_sha256": "3f6a73c6fa99603f5980c8bcaee23d4a919ffd60e21a79c734bd456b0602b10c",
+        "save_sha256": "51ae6cf6a8c87d156524df371b1080155b4ff79287f7d6df1b885ef82cd8a7e2",
+        "inventory": [
+          {
+            "base": "content:oblivion.esm:000c4f",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 0,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null,
+            "script_owner": null
+          }
+        ],
+        "retired_original": {
+          "key": "content:oblivion.esm:06efb7",
+          "base": "content:oblivion.esm:000c4f",
+          "cell": "content:oblivion.esm:0352a9",
+          "enabled": true,
+          "deleted": true,
+          "position": [
+            -2718.8623046875,
+            -1834.8336181640625,
+            -568.68212890625,
+            -0.0007796690915711224,
+            1.9018005226190127e-10,
+            -1.2687173533976193e-10
+          ],
+          "owner": null,
+          "lock_level": 0,
+          "inventory": [],
+          "custom_state": {
+            "count": 0,
+            "locked": false,
+            "record_type": 1104171073,
+            "scale": 1.0,
+            "taken": true
+          },
+          "actor_draw_state": null,
+          "item_condition": null,
+          "item_charge": null,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "dropper": null,
+          "dropped_items": null
+        },
+        "actor_value_changes": {
+          "encumbrance": [
+            103.30000305175781,
+            106.30000305175781
+          ]
+        },
+        "player_position": [
+          -2673.708251953125,
+          -1795.45654296875,
+          -633.118896484375,
+          0.7973588705062866,
+          0.0,
+          -2.3167030811309814
+        ],
+        "allocator": 12
+      },
+      "cold_readback": {
+        "passed": true,
+        "source_sha256": "51ae6cf6a8c87d156524df371b1080155b4ff79287f7d6df1b885ef82cd8a7e2",
+        "save_sha256": "d73a48b657d397de37f152a511a719c0acfe183465fb16732526daedeedfef95",
+        "scope": "Fresh cold inventory, exact player/native values/progress/life/quests and Retort facade quality/type/value/weight readback retained. No Alchemy use."
+      }
+    },
+    "semantic": "Other inventory, spent Torch987+2fresh1000, Cuirasswear/owner9/MQ01flags1/1, health/passives/skills/books/quests/life/33deaths retained. Encumbrance changes by original weight3; authored rigid mass5 remains distinct. No native ref9; prior retired dynamic refs unchanged; new12 retires after pickup.",
+    "runtime": {
+      "normal-retort-native-drop-01": {
+        "audit": "build/oblivion-compat/retort-drop/normal-retort-native-drop-01/retort-drop-verification.json",
+        "sha256": "173ba19e3e3dbfca199591d7ea99b4268096d4c9b21b5ca16bcbabedb9d4089a",
+        "process": {
+          "pid": 993616,
+          "start_ticks": 19966064,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-inventory-survey-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cb52af0f285cd41643346c0d85d302688ae4be76eeed7fa0d2eb58bbb501b5af"
+        },
+        "input_sha256": "d73a48b657d397de37f152a511a719c0acfe183465fb16732526daedeedfef95",
+        "save_sha256": "66e0686044fd73a4bae308c661623410f1cf5c1898a565fb4ba81cb06f939ef5",
+        "allocator": 13,
+        "credited_deaths": 33
+      },
+      "normal-retort-native-world-01": {
+        "audit": "build/oblivion-compat/retort-drop/normal-retort-native-world-01/retort-drop-verification.json",
+        "sha256": "dd41530742ae8d64944296b77fdf93780af72efee4b88bcc041fec87b5026d71",
+        "process": {
+          "pid": 993974,
+          "start_ticks": 19993543,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cb52af0f285cd41643346c0d85d302688ae4be76eeed7fa0d2eb58bbb501b5af"
+        },
+        "input_sha256": "66e0686044fd73a4bae308c661623410f1cf5c1898a565fb4ba81cb06f939ef5",
+        "save_sha256": "2ba1d61e6dabb0045a19a0e72a48465ad17d22c23a377215135724ac23426a3b",
+        "allocator": 13,
+        "credited_deaths": 33
+      },
+      "normal-retort-native-pickup-01": {
+        "audit": "build/oblivion-compat/retort-drop/normal-retort-native-pickup-01/retort-drop-verification.json",
+        "sha256": "1e16ff4e42c43341e64e886b423d78923ae45e844f8d69bab92e7e42234b61a5",
+        "process": {
+          "pid": 994102,
+          "start_ticks": 20001784,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cb52af0f285cd41643346c0d85d302688ae4be76eeed7fa0d2eb58bbb501b5af"
+        },
+        "input_sha256": "2ba1d61e6dabb0045a19a0e72a48465ad17d22c23a377215135724ac23426a3b",
+        "save_sha256": "cb45713a6be0667707b714dea488cf14d1ad8c65b6d54ca6742cf85edda779fc",
+        "allocator": 13,
+        "credited_deaths": 33
+      },
+      "normal-retort-native-inventory-01": {
+        "audit": "build/oblivion-compat/retort-drop/normal-retort-native-inventory-01/retort-drop-verification.json",
+        "sha256": "00d9e50c39d1009a69b061534d6d5d1c94f9935097bebdd1beb754b62498c3b6",
+        "process": {
+          "pid": 994210,
+          "start_ticks": 20010316,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cb52af0f285cd41643346c0d85d302688ae4be76eeed7fa0d2eb58bbb501b5af"
+        },
+        "input_sha256": "cb45713a6be0667707b714dea488cf14d1ad8c65b6d54ca6742cf85edda779fc",
+        "save_sha256": "b60483351a2b63708b01d5ff3439bf03b8d4f94e26f21dc4eb55a9d9816a65ec",
+        "allocator": 13,
+        "credited_deaths": 33
+      },
+      "sanitized-retort-native-drop-01": {
+        "audit": "build/oblivion-compat/retort-drop/sanitized-retort-native-drop-01/retort-drop-verification.json",
+        "sha256": "cf636844abcc238a5af39dbabe29a8979de0ad59c592f1fd9b0ef8b27b490592",
+        "process": {
+          "pid": 994512,
+          "start_ticks": 20027883,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-retort-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-retort-inventory-survey-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "8f2ed1637528823fc2a2eda0deb6a57420cffea6ecbb455549a46b5694e6dd8d"
+        },
+        "input_sha256": "d73a48b657d397de37f152a511a719c0acfe183465fb16732526daedeedfef95",
+        "save_sha256": "ab3a765c91b8afec9800f8d18d7678e9ad48bc73b88c44d3be1a16e9e00731e0",
+        "allocator": 13,
+        "credited_deaths": 33
+      },
+      "sanitized-retort-native-world-01": {
+        "audit": "build/oblivion-compat/retort-drop/sanitized-retort-native-world-01/retort-drop-verification.json",
+        "sha256": "7b9a8f8d418439c479286f1706c217c189df2aa6477132010010364baf47c205",
+        "process": {
+          "pid": 1001685,
+          "start_ticks": 20062333,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-retort-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-retort-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "8f2ed1637528823fc2a2eda0deb6a57420cffea6ecbb455549a46b5694e6dd8d"
+        },
+        "input_sha256": "ab3a765c91b8afec9800f8d18d7678e9ad48bc73b88c44d3be1a16e9e00731e0",
+        "save_sha256": "336b24ba728c26d19f50cd3826f1b10caf8556bf113c777516aba2f024d15632",
+        "allocator": 13,
+        "credited_deaths": 33
+      },
+      "sanitized-retort-native-pickup-01": {
+        "audit": "build/oblivion-compat/retort-drop/sanitized-retort-native-pickup-01/retort-drop-verification.json",
+        "sha256": "317bb1faef8dca0b1af14a8004a8512562fafb9b71814f4cc2ccc91795114c19",
+        "process": {
+          "pid": 1002398,
+          "start_ticks": 20095336,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-retort-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-retort-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "8f2ed1637528823fc2a2eda0deb6a57420cffea6ecbb455549a46b5694e6dd8d"
+        },
+        "input_sha256": "336b24ba728c26d19f50cd3826f1b10caf8556bf113c777516aba2f024d15632",
+        "save_sha256": "9c4079abd54db0ae46d5b8f71148a5adad29493e150236cd903c3db01b4164f4",
+        "allocator": 13,
+        "credited_deaths": 33
+      },
+      "sanitized-retort-native-inventory-01": {
+        "audit": "build/oblivion-compat/retort-drop/sanitized-retort-native-inventory-01/retort-drop-verification.json",
+        "sha256": "5a78f35b0ef30b9ae4ee9b90250152f8f0f40e4b8ef6ce648ce15cce15015519",
+        "process": {
+          "pid": 1005535,
+          "start_ticks": 20130096,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-retort-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-retort-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "8f2ed1637528823fc2a2eda0deb6a57420cffea6ecbb455549a46b5694e6dd8d"
+        },
+        "input_sha256": "9c4079abd54db0ae46d5b8f71148a5adad29493e150236cd903c3db01b4164f4",
+        "save_sha256": "a340a1882b86b4db0a31a3a95edcce2f2e46be2e2228e007c370d6b6e0b37604",
+        "allocator": 13,
+        "credited_deaths": 33
+      }
+    },
+    "spent_torch_regressions": {
+      "normal-spent-torch-regression-drop-01": {
+        "audit": "build/oblivion-compat/retort-drop/normal-spent-torch-regression-drop-01/spent-torch-verification.json",
+        "sha256": "40c2d0b3cf7cff4a719a60571d60122eec175edd149e46f820063bee87861598",
+        "process": {
+          "pid": 1002816,
+          "start_ticks": 20108051,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-spent-torch-regression-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/spent-torch-drop/normal-spent-torch-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cb52af0f285cd41643346c0d85d302688ae4be76eeed7fa0d2eb58bbb501b5af"
+        },
+        "fuel": 987
+      },
+      "normal-spent-torch-regression-world-01": {
+        "audit": "build/oblivion-compat/retort-drop/normal-spent-torch-regression-world-01/spent-torch-verification.json",
+        "sha256": "f72129eba317426e47ec76dc4184cbd67e564311e8e04105e6c976f468a55fd6",
+        "process": {
+          "pid": 1002949,
+          "start_ticks": 20116483,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-spent-torch-regression-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/normal-spent-torch-regression-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "cb52af0f285cd41643346c0d85d302688ae4be76eeed7fa0d2eb58bbb501b5af"
+        },
+        "fuel": 987
+      },
+      "sanitized-spent-torch-regression-drop-01": {
+        "audit": "build/oblivion-compat/retort-drop/sanitized-spent-torch-regression-drop-01/spent-torch-verification.json",
+        "sha256": "dd603b73f3d32c851c5cafd6a933ce9162ef722168271c87b110e4b987b69239",
+        "process": {
+          "pid": 1003968,
+          "start_ticks": 20122219,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-spent-torch-regression-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/spent-torch-drop/normal-spent-torch-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "8f2ed1637528823fc2a2eda0deb6a57420cffea6ecbb455549a46b5694e6dd8d"
+        },
+        "fuel": 987
+      },
+      "sanitized-spent-torch-regression-world-01": {
+        "audit": "build/oblivion-compat/retort-drop/sanitized-spent-torch-regression-world-01/spent-torch-verification.json",
+        "sha256": "e62b53a4205b55e390d9b049a87322bf2f4a9b3a5d5b014226531b236780e71c",
+        "process": {
+          "pid": 1008039,
+          "start_ticks": 20157586,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-spent-torch-regression-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/retort-drop/sanitized-spent-torch-regression-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "8f2ed1637528823fc2a2eda0deb6a57420cffea6ecbb455549a46b5694e6dd8d"
+        },
+        "fuel": 987
+      }
+    },
+    "asset_audit": "build/oblivion-compat/retort-drop/asset-override-audit.json"
+  },
+  "source": {
+    "runtime_before": "build/oblivion-compat/retort-drop/source-final-runtime-before.json",
+    "runtime_after": "build/oblivion-compat/retort-drop/source-final-runtime-after.json",
+    "cpp_hashes": {
+      "apps/openmw/mwworld/worldmodel.hpp": "4ed5e5372bd925995b0934f6ec5f8b3c6ed42723679b493aa15120b187f316ba",
+      "apps/openmw/mwworld/oblivionlooseweapon.cpp": "b8fb839323c06ff0fc7f26d8da8a4a6dd6a37dba3df1ea20b6a33d001cc4d7c2",
+      "apps/openmw/mwworld/oblivionweapondrop.cpp": "25a9756faa3f225c798fabc3ffdecb450e0b4520d4d904ff65f3bae248a1c95a"
+    },
+    "post_verification": "This receipt and final handoff only; tested implementation, manifests and verifier unchanged."
+  },
+  "retained_failures": [
+    "Route-survey01 observer incorrectly assumed unavailable types.ESM4Apparatus; stopped before movement/save. Generic survey02 found valid route; no apparatus Lua binding added.",
+    "Initial baseline diagnostic incorrectly required no live Retorts anywhere; corrected to unchanged original refs and no new native body/serial. Baseline gameplay itself passed.",
+    "Combined normal integration passed2292 engine tests, then Python failed one Xvfb startup.150 actual isolated starts did not reproduce it; all19 SDL tests and full618 Python passed retry, no harness changes. SAN check launch held before it started, then resumed."
+  ],
+  "limits": [
+    "No Alchemy use, potion creation or numerical Alchemy formula acceptance.",
+    "No stacked, scripted, bound or unsupported/multibody apparatus profile acceptance; nearby Alembic unsupported shape deferred.",
+    "No native apparatus Lua record/type binding or TES4 MCP authoring support.",
+    "No legacy-object migration or full M13/M15/M18 completion."
+  ]
+}

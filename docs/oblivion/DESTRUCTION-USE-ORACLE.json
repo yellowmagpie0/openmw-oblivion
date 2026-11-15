@@ -1,0 +1,53 @@
+{
+  "status": "Original normal-input rule established for a positive damaging Flare hit and geometric misses; no original level-crossing claim",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "skill": {
+    "form": "000047",
+    "actor_value": 22,
+    "attribute": 2,
+    "specialization": 1,
+    "primary_use": 0.0,
+    "secondary_use": 1.2000000476837158
+  },
+  "native_miss": {
+    "experience_before": 0,
+    "experience_after": 0.0
+  },
+  "native_hit": {
+    "target": "Original Rat025314; controlled dynamicff000802",
+    "health_before": 100,
+    "health_after": 94,
+    "experience_before": 0,
+    "experience_after": 1.2000000476837158,
+    "class_form": "023787",
+    "base_effective_before_after": 5,
+    "major_advances": 0,
+    "skill_advances": 0
+  },
+  "artifact_root": "build/oblivion-compat/destruction-use/original-01",
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "method": "Explicit verified backup restoration after interrupted launcher cleanup; Docs/Plugins scope, not whole prefix.",
+    "remaining_owned_processes": []
+  },
+  "generic_training": "SECURITY-USE-ORACLE.json supplies unchanged generic training/GMST provenance; original live requirement at base5 minor/non-specialized is2.8937907.",
+  "read_only_layout": {
+    "source_revision": "f64a8fa0481e24b3e159d276b29b721a548876bf",
+    "skill_index": 10,
+    "skill_experience": "PlayerCharacter+0x130+10*4",
+    "skill_advances": "PlayerCharacter+0x188+10*4"
+  },
+  "retained_attempts": [
+    "Wrong initial menu selection cast Heal Minor Wounds; after-miss.json is not accepted Flare evidence. Corrected menu capture shows equipped Flare; after-confirmed-Flare-miss.json is accepted.",
+    "Rat AI disabled before its first update left no visible model; allowed initialization before aiming.",
+    "First aimed shot at pitch16 missed: Health100/XP0 retained. Corrected actual damaging shot at pitch14 with AI on gives100\u219294 and XP1.2.",
+    "Two attempted second-hit scripts failed their expected-XP assertions; Health remained94/XP1.2. They are not hits or level-crossing evidence. Stop after sufficient one-hit/miss rule evidence.",
+    "Launcher exited143 after ordinary qqq without restoration receipt. Explicit manual restore checked backup hashes, zero remaining owned processes and pristine67d\u2026 unchanged before/after. Cause of interruption remains unproven."
+  ],
+  "limits": [
+    "Fully resisted/absorbed/reflected contacts and general effect caller policy are uncertified.",
+    "Controlled original setup does not supply fork runtime acceptance."
+  ]
+}

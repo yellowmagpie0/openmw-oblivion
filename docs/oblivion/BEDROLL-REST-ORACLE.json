@@ -1,0 +1,34 @@
+{
+  "status": "independent original-record expectation; bounded fork acceptance in linked receipt",
+  "content_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "record_audit": {
+    "path": "build/oblivion-compat/next-content/bedroll-original-audit.json",
+    "sha256": "a6e5d38b8e6dfcf993088bb6fa86c7a52d8927da27fa7c583cde282e33ba61c4"
+  },
+  "bed": {
+    "reference": "content:oblivion.esm:06bf97",
+    "base": "content:oblivion.esm:01d5bf",
+    "name": "Bedroll",
+    "marker_flags": "0x80000001",
+    "ownership": "No placed XOWN/XRNK/XGLB."
+  },
+  "comparators": {
+    "crawl_bedroll": "01d5c0 MNAM0x80000002",
+    "stone_bench": "10f91b MNAM0x400000e0"
+  },
+  "expected_behavior": [
+    "Original sleep-marked bedroll has a default sleep/rest interaction, unlike a stone bench.",
+    "Cancelling its menu does not perform hourly restoration. Choosing the default one hour uses the existing native sleeping transition, advances one game hour and restores actual resource damage.",
+    "Fresh-process loading preserves completed recovery without replaying another hour. Item stock and unrelated equipment remain retained."
+  ],
+  "reused_backend_provenance": {
+    "path": "docs/oblivion/M15-NATURAL-RECOVERY-VERIFICATION.json",
+    "sha256": "39ea4b78b2d6bb7f4d728af422ba72f5568314e10e3e504914450dc32fd7f7fb",
+    "scope": "Existing hourly resource restoration, clock and actor dispatch authority is reused unchanged. No new formula or numeric-parity claim."
+  },
+  "limits": [
+    "The record audit is independent of production furniture activation code; it is not a new original-executable instruction trace or original-game live probe.",
+    "This actual runtime case is an unowned, unoccupied bedroll. Full owned/occupied context matrices, sleeping/seating poses and leveling remain open."
+  ],
+  "fork_runtime_receipt": "docs/oblivion/BEDROLL-REST-VERIFICATION.json"
+}

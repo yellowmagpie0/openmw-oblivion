@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T15:47:18.547602+00:00",
+  "scope": "Ordinary-input test harness: bounded nested feedback, frame camera barriers, explicit focused selections",
+  "status": "Python/preflight verified; new adaptive3-rat gameplay course still pending",
+  "source_files": {
+    "scripts/assemble_oblivion_sewer_course.py": "d91bced90bebfb1e1e3ca916b67cef708fc1699532154be52fa2680a1dcc2c23",
+    "scripts/oblivion_compat.py": "3c84d3dbfb126b7a08b9f9648fc639e6b17f750e51699dfb456ff9762e1c32b5",
+    "scripts/sdl_offscreen_replay.py": "c00acecd3bcdcda86e028d976b2e27d9a0f4ba4b51dfece801bb822f84a8891a",
+    "scripts/tests/test_oblivion_sewer_course_assembly.py": "8d57a0b06614249284825812c151f0a0115097e8ff1b1f982d80920caad68e1c",
+    "scripts/tests/test_scenario_repeat.py": "9f8f6b0268bc0b2a27c2894216774f9741aa40ede0441c766aec1fe07539d3c6"
+  },
+  "verification": {
+    "path": "build/oblivion-compat/sewer-escape/wall-frame-feedback-python-integration-02/verification.json",
+    "sha256": "25afe6cb1aea5fd17ea3cb6abd8e36cb90b42377034115fc849f2d63c78257ef",
+    "results": {
+      "python": {
+        "executed": 578,
+        "passed": true,
+        "log_sha256": "4c3d93b186bfd6cbba718d73b219269cb4528b25234961d1f0dc7d3fccbd0d7e"
+      }
+    },
+    "source_before": {
+      "head": "075042d38f67be46d9004cd675999b8218226858",
+      "source_fingerprint": "4072e1db85ac3381d6ad534ff97c484201ee1c661faf8848dc8b63fa549cdcfb"
+    },
+    "source_after": {
+      "head": "075042d38f67be46d9004cd675999b8218226858",
+      "source_fingerprint": "4072e1db85ac3381d6ad534ff97c484201ee1c661faf8848dc8b63fa549cdcfb"
+    }
+  },
+  "focused_regressions": {
+    "scenario_repeat": 12,
+    "course_assembly": 6,
+    "coverage": [
+      "Nested normal input succeeds and releases inner/outer controls",
+      "Nested loops inherit parent deadline and stop before later body actions",
+      "Nested world-changing commands, snapshots and text typing remain rejected",
+      "Cleanup may not loop; nesting depth is bounded",
+      "Observed camera motion waits for real frames",
+      "Focused checkpoint selections retain a real load and scoped completion; default remains original new-game/no load"
+    ]
+  },
+  "retained_failure": {
+    "python_run": "wall-frame-feedback-python-integration-01",
+    "status": "FAILED,575cases/oneXvfbstartuperror; isolatedcasepasses; no relabel",
+    "original_nested_preflight": "wall-frame-feedback-slow-05-launch.log: Nested repeat_until_log actions are unsupported"
+  },
+  "runtime_limit": "This is harness implementation evidence. No full escape or new adaptive group gameplay acceptance is inferred. C++ remains392bd5d472;2209 normal/sanitized gates keep their original provenance."
+}

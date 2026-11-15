@@ -1,0 +1,49 @@
+{
+  "scope": "Original new-game opening19 and actual outer-to-inner observer transition in the ongoing full escape process; no full-course/ambush/exterior acceptance inferred",
+  "full_escape_complete": false,
+  "game_pid": 171106,
+  "native_load_events": 0,
+  "original_stage19": {
+    "quest": "content:oblivion.esm:02466e",
+    "stage": 19,
+    "running": true,
+    "completed_stages": [
+      5,
+      6,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ]
+  },
+  "player_cell": "content:oblivion.esm:01fbb9",
+  "player_position": [
+    658.1903686523438,
+    319.4779968261719,
+    -128.0891876220703,
+    0,
+    0,
+    0
+  ],
+  "health": 80,
+  "native_snapshot": "build/oblivion-compat/sewer-escape/full-escape-continuous-03/live-3-13.json",
+  "native_snapshot_sha256": "70d329cebe4306463f997d662dd9997b62aabf9127d9a45963fc7d3b3035e1a0",
+  "original_F5_sha256": "a8c5f7fb51a4fc1867eb6dda0e797f63f4c053854e03221a7519da42a96cf1f5",
+  "outer_segment2_actual": true,
+  "inner_phase4_actual": true,
+  "captures_inspected": [
+    "segment01-phase2-standback-trigger.png",
+    "segment01-phase3-emperor-greeting.png",
+    "segment01-phase3-after-greeting.png"
+  ],
+  "next": "Same game entering secret passage and first ambush; inspect live process171106 before new UI",
+  "launch_provenance": "build/oblivion-compat/sewer-escape/full-escape-continuous-03/launch-provenance.json",
+  "binary_sha256": "73861667d0252ae7260ddb3c954ad2ced059e820edaa54028060d5b74cc33bf6",
+  "native_stage14_movement_fallback": "Actual original14 callback releases D, then actual F5/screenshot; no false Lua observation marker. This runtime validates corrected mixed-producer classification."
+}

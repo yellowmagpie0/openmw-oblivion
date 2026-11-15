@@ -1,0 +1,19 @@
+{
+  "scope": "Static original Activate instruction audit for explicit activator, run-script flag, and null subject. No emulator execution claim.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "command_entry": "0xb0cac8",
+  "handler": "0x507650",
+  "observations": [
+    "50765e/507666 initialize optional activator and run-script arguments to zero; 5076ad extracts both.",
+    "5076b9 skips null subject. 5076bd uses explicit activator, falling back via4d8360 when absent.",
+    "5076df branches on second argument: zero sets temporary activation flags1/2 around4dd260 then clears them; nonzero calls4dd260 without those flags.",
+    "4dd39c..4dd3de checks the suppression flag, stores activator through423eb0 and invokes the target script through4d7190."
+  ],
+  "content_case": "Original wire script03f279 invokes target.Activate mySelf 1, parent051acb; mace chain051acb->051acc->051aca.",
+  "limitations": [
+    "This patch uses current event action-reference fallback; persistent last-activator lookup outside callbacks is not established here.",
+    "Full activation semantics beyond the tested reference/script dispatch domain are not claimed."
+  ],
+  "local_inspection": "inspect_activate.py, hash-checked original executable objdump ranges507650..507734 and4dd39c..4dd406",
+  "opcode": "0x100d"
+}

@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "name": "Instrumented Resume the spent original Flash Bolt pending cast in a fresh process",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal camera=require('openmw.camera')\nlocal t=0\nreturn {{engineHandlers={{onFrame=function(dt)\n t=t+dt;if t<.2 then return end;t=0\n assert(not Actor.isDead(self),'Player died during original scroll inspection')\n local inv=Actor.inventory(self)\n local target=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x6c359))\n local th=target and target:isValid() and Actor.stats.dynamic.health(target).current or -1\n if target and target:isValid() and not core.isWorldPaused() then\n  local aim=target:getBoundingBox().center\n  local p=camera.getViewTransform():apply(aim)\n  local angle=math.atan2(p.x,-p.z)\n  local elevation=-math.atan2(p.y,math.sqrt(p.x*p.x+p.z*p.z))\n  local ray=nearby.castRenderingRay(camera.getPosition(),aim,{{ignore=self}})\n  print(string.format('ScrollUse look x=%d y=%d',math.max(-150,math.min(150,math.floor(angle*256+.5))),math.max(-100,math.min(100,math.floor(elevation*256+.5)))))\n  if math.abs(angle)<.01 and math.abs(elevation)<.01 and ray.hitObject and ray.hitObject.id==target.id then print('ScrollUse aimed original bandit') end\n end\n print('ScrollUse sample flashbolt='..inv:countOf(core.getFormId('Oblivion.esm',0x888bf))..' chameleon='..inv:countOf(core.getFormId('Oblivion.esm',0x84aeb))..' magicka='..Actor.stats.dynamic.magicka(self).current..' health='..Actor.stats.dynamic.health(self).current..' targetHealth='..th..' targetDead='..tostring(target and target:isValid() and Actor.isDead(target))..' paused='..tostring(core.isWorldPaused()))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "ScrollUse sample flashbolt=0 chameleon=1",
+      "timeout_seconds": 300,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "ScrollUse sample flashbolt=0 chameleon=1",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "targetDead=true",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    },
+    {
+      "type": "screenshot",
+      "name": "original-bandit-after-scroll-restart.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "ScrollUse sample flashbolt=0 chameleon=1",
+    "M16 native cast release: spell=content:oblivion.esm:0888bf applied=1",
+    "M16 magic projectile impact: .*actor=1 damage=20",
+    "targetDead=true",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "M16 native scroll consumed:",
+    "M16 native cast rejected:",
+    "Warning: Can't find enchantment"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}

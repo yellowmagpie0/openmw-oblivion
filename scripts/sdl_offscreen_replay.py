@@ -23,11 +23,35 @@ CONTROLLER_AXES = {name: i for i, name in enumerate((
     "left_x", "left_y", "right_x", "right_y", "left_trigger", "right_trigger"))}
 
 
+def validation_actions(actions, _depth=0):
+    """Include bounded-loop inputs in the same preflight as ordinary inputs."""
+    if _depth > 8:
+        raise ValueError('repeat_until_log nesting exceeds eight levels')
+    if not isinstance(actions, list):
+        raise ValueError('Scenario actions must be a list')
+    for action in actions:
+        yield action
+        if isinstance(action, dict) and action.get('type') == 'repeat_until_log':
+            for field in ('actions', 'cleanup_actions'):
+                nested = action.get(field, [])
+                if not isinstance(nested, list) or any(not isinstance(a, dict) for a in nested):
+                    raise ValueError(f'repeat_until_log {field} must be an action list')
+                yield from validation_actions(nested, _depth + 1)
+        if isinstance(action, dict) and action.get('type') == 'branch_on_log':
+            cases = action.get('cases')
+            if not isinstance(cases, dict) or not cases:
+                raise ValueError('branch_on_log requires nonempty cases')
+            for name, nested in cases.items():
+                if not isinstance(name, str) or not name or not isinstance(nested, list):
+                    raise ValueError('branch_on_log cases must map names to action lists')
+                yield from validation_actions(nested, _depth + 1)
+
+
 def scancode(value):
     if not isinstance(value, str) or not value:
         raise ValueError("Offscreen keys must be nonempty strings")
     aliases = {"Return": 40, "Escape": 41, "BackSpace": 42, "Tab": 43, "space": 44,
-               "grave": 53, "KP_2": 90, "Shift_L": 225, "Control_L": 224, "Alt_L": 226}
+               "grave": 53, "Left": 80, "KP_2": 90, "Shift_L": 225, "Control_L": 224, "Alt_L": 226}
     if value in aliases:
         return aliases[value]
     if len(value) == 1 and "a" <= value.lower() <= "z":
@@ -96,7 +120,7 @@ def observed_mouse_motion(action, output):
     if not path.is_relative_to(output.resolve()):
         raise ValueError('Observed motion log must be inside the scenario output')
     with path.open('rb') as stream:
-        stream.seek(max(0, path.stat().st_size - 65536))
+        stream.seek(max(0, path.stat().st_size - 1024 * 1024))
         offset = stream.tell()
         text = stream.read().decode('utf-8', errors='surrogateescape')
     complete_end = text.rfind('\n')
@@ -128,6 +152,7 @@ def mouse_hold(value):
 
 
 def validate(manifest):
+    actions = list(validation_actions(manifest.get('actions', [])))
     for flag in ('sdl_offscreen_input', 'sdl_xvfb_input'):
         if type(manifest.get(flag, False)) is not bool:
             raise ValueError(f"{flag} must be a boolean")
@@ -136,13 +161,17 @@ def validate(manifest):
         raise ValueError('SDL Xvfb input requires its own Xvfb server and no offscreen input')
     if not offscreen and not xvfb:
         if any(a.get("type") in ("keys_down", "keys_transition")
-               for a in manifest.get("actions", []) if isinstance(a, dict)):
+               for a in actions if isinstance(a, dict)):
             raise ValueError("Batched keys require SDL offscreen input")
         return
     if (offscreen and manifest.get("xvfb")) or "m14" in manifest or "m15" in manifest:
         raise ValueError("SDL offscreen controls currently support isolated diagnostic scenarios only")
     receipt_timeout(manifest.get("sdl_input_timeout_seconds", 10))
-    for action in manifest.get("actions", []):
+    for action in actions:
+        if not isinstance(action, dict):
+            raise ValueError('Scenario actions must be objects')
+        if action.get('type') in ('repeat_until_log', 'branch_on_log'):
+            continue  # The scenario validator checks loop bounds and read-only scope.
         if action.get("type") in GAMEPAD_ACTIONS:
             if not manifest.get("virtual_gamepad", False):
                 raise ValueError("Offscreen gamepad actions require virtual_gamepad=true (Linux uinput)")

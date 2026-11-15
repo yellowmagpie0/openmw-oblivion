@@ -1,0 +1,35 @@
+{
+  "status": "Accepted bounded ordinary damaging Player-arrow Marksman use; general XP and full M15/M12/expedition remain open.",
+  "scope": "One authored Marksman primary use on each accepted damaging ordinary Player arrow contact, before external contact observers; full weapon/skill progression remains open.",
+  "content": {
+    "target": "content:oblivion.esm:06bfc2",
+    "target_base": "content:oblivion.esm:03db2d",
+    "bow": "content:oblivion.esm:047aca",
+    "ammunition": "content:oblivion.esm:017829",
+    "skill": "content:oblivion.esm:00004d",
+    "actor_value": 28,
+    "authored_primary_experience": 0.8,
+    "source_class": "content:oblivion.esm:023787",
+    "class_name": "Warrior",
+    "major": false,
+    "specialized": false
+  },
+  "source": "build/oblivion-compat/player-bow/normal-bandit-shot-development-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "source_sha256": "876264955b89026ec1d1a2436377e072d176dc9a364b7caebf19d8aa7cc8731f",
+  "baseline": {
+    "course": "build/oblivion-compat/marksman-use/normal-marksman-hit-baseline-01",
+    "observation": "One actual arrow hits original living bandit20->18.1572647; legacy Player Marksman base5/experience0 remains5/0."
+  },
+  "acceptance": [
+    "Actual ordinary hit consumes one arrow and grants authored0.8 experience once; base/attribute/specialization/major counts remain unchanged when no level is crossed.",
+    "Saved state and fresh-process reload retain experience and do not repeat the impact or award.",
+    "Actual static miss and incoming nonplayer-arrow contact leave Player Marksman unchanged.",
+    "Native modifiers, equipment/wear and saved-flight ownership retain existing behavior; normal/sanitized focused/integration and actual-content courses."
+  ],
+  "limits": [
+    "Zero-damage/immune/fully blocked and corpse-hit experience policy is deferred; this hook awards damaging accepted contacts only.",
+    "Original Player use dispatcher and SKIL amount are independently checked; original projectile hit-versus-miss caller policy is not instruction-certified.",
+    "Positive delayed actor impact from a saved airborne Player arrow and a Marksman level crossing are separate runtime cases; existing generic progression and physical-flight evidence retain their provenance."
+  ],
+  "schema": 99
+}

@@ -16,6 +16,13 @@
 #include <components/esm/exteriorcelllocation.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadmisc.hpp>
+#include <components/esm4/loadclot.hpp>
+#include <components/esm4/loadammo.hpp>
+#include <components/esm4/loadkeym.hpp>
+#include <components/esm4/loadligh.hpp>
+#include <components/esm4/loadingr.hpp>
+#include <components/esm4/loadappa.hpp>
 #include <components/misc/algorithm.hpp>
 
 #include "cellstore.hpp"
@@ -179,9 +186,17 @@ namespace MWWorld
             std::span<const btTransform> poses, int collisionGroup, int collisionMask);
 
         // Borrow the caller's live inputs, as the original weapon-only API did.
-        // Native weapons and shields use the same atomic loose-object admission.
+        // Native weapons, shields and ordinary miscellaneous props share admission.
         using LooseEquipmentReference = std::variant<std::reference_wrapper<const LiveCellRef<ESM4::Weapon>>,
-            std::reference_wrapper<const LiveCellRef<ESM4::Armor>>>;
+            std::reference_wrapper<const LiveCellRef<ESM4::Armor>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::MiscItem>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Clothing>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Ammunition>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Key>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Light>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Ingredient>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Apparatus>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Book>>>;
         struct LooseWeaponAdmission
         {
             CellStore& mCell;

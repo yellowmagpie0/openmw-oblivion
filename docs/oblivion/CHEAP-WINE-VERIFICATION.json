@@ -1,0 +1,1441 @@
+{
+  "status": "Accepted bounded original Cheap Wine course",
+  "full_milestone_complete": false,
+  "contract": "CHEAP-WINE-CONTRACT.json",
+  "oracle": "CHEAP-WINE-ORACLE.json",
+  "tested_head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+  "source_files": [
+    {
+      "path": "apps/openmw/mwworld/oblivioncombatmagic.cpp",
+      "sha256": "b20eefbe53c0743f9a2af57cd5eca364887df591251d3124af54cde2b7f27d9b"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp",
+      "sha256": "cf9b04eb3d7dd18ca4b0c585c38d94fb6333e34934b163afc29557e63fbd26cb"
+    },
+    {
+      "path": "scripts/verify_cheap_wine.py",
+      "sha256": "ed1204e6b617c1d402c0e5f62c7bc27d27bf1b7c37faffe104f7e45f1a302612"
+    },
+    {
+      "path": "scripts/verify_cheap_wine_travel.py",
+      "sha256": "895d8481d9aa8163c12dedf6efe5a44910774801cade6c0d4113c4413d97af42"
+    },
+    {
+      "path": "scripts/verify_cheap_wine_mead.py",
+      "sha256": "920f9fe3b6c1f617ad9efd3973c06d5261bfecddebf5ea437b2b7121613f2d4f"
+    }
+  ],
+  "recipes": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_acquire.json",
+      "sha256": "781a119feaaae753c038348af7ae90d9dc571786144184c9587055e29aa2ea74"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_active.json",
+      "sha256": "148f277eff14b59aad869de0a0eac1932b2338b57513ca7d8b16d25d54a42af6"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_active_sanitized.json",
+      "sha256": "148f277eff14b59aad869de0a0eac1932b2338b57513ca7d8b16d25d54a42af6"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_approach.json",
+      "sha256": "5662b8a0e4b4dfbe23f1b467de9ad8acb06e45b38a6082f8201719e33917ef4e"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_bank_stage.json",
+      "sha256": "ff2e6100f56191275fcf818f37994cb17ac23a1d750ac7c7b8c32dc8e69a528f"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_baseline.json",
+      "sha256": "6ae224c5d5f844b04059d2894e8fc2eee603b68585f7840759be34ab55e9a339"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_complete.json",
+      "sha256": "957890fe81242505c4948a9625c5c6b646a89ffa9ba19a97ee27c30cd844ce60"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_complete_sanitized.json",
+      "sha256": "957890fe81242505c4948a9625c5c6b646a89ffa9ba19a97ee27c30cd844ce60"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_expiry.json",
+      "sha256": "30ae2ae86fe82fd306ae095d56116120803c9dde4563eb2a81e1f6f6fad9e539"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_expiry_sanitized.json",
+      "sha256": "e34a4bd29c2e0be980dba79860efc0878495e20167db27c28be83a4f985fc71f"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_mead_regression.json",
+      "sha256": "8d0352d6c82deaf972098d42652324c65accd07d5afd2e0dc4be47b42987e6d0"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_shore_prefix.json",
+      "sha256": "da6f49a3820549ce7d91e7ae7afd07dcb0c03418cb481570955b7e11bcd45cd6"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_use.json",
+      "sha256": "a9f5d0f7805cb5e74f31250ecec06f503f473c7ea85f992596ef468a21623ae2"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_cheap_wine_use_sanitized.json",
+      "sha256": "883987b5ebc787c8168da330f4ed0142eb38f80c4f55b6820bf3197b741cb117"
+    }
+  ],
+  "cases": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-original-wine-baseline-02/wine-audit.json",
+        "sha256": "b65d91496ec8fc4e0e9c9c3fa33c55078b805dd1cd6cf891b2dcbd0175fcddc1"
+      },
+      "result": {
+        "passed": true,
+        "phase": "baseline",
+        "sanitized": false,
+        "source_sha256": "ada38faca789e8ecdd97efd32309e838263941656c36903939fb80d8e426d871",
+        "save_sha256": "c2c0ad9cbb06011b6ee198ab7aa251e6c7305e34f8274634601cc00e73f0523e",
+        "binary_sha256": "75c8c5b70ea84dc8f32bc1c902adf58f7af7dc27244c10e32b76074ea74746cf",
+        "wine_before": 1,
+        "wine_after": 1,
+        "effects_before": [],
+        "effects_after": [],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-use-01/wine-audit.json",
+        "sha256": "1e0c5027257219306cc2a5c66aada09a701ce313f6938f065e892d5ca34dd007"
+      },
+      "result": {
+        "passed": true,
+        "phase": "use",
+        "sanitized": false,
+        "source_sha256": "ada38faca789e8ecdd97efd32309e838263941656c36903939fb80d8e426d871",
+        "save_sha256": "0369365c4d9bd340e851f74d6d34610f6f51b248bb174aa64cf28c9179737f51",
+        "binary_sha256": "aa7c08c9dd441298e7b3ac361c91b455cfa107386618c7c8d24e7d6f7129a2c4",
+        "wine_before": 1,
+        "wine_after": 0,
+        "effects_before": [],
+        "effects_after": [
+          {
+            "potion": "content:oblivion.esm:037f7f",
+            "duration": 120.0,
+            "elapsed": 0.6328125,
+            "modifiers": [
+              {
+                "attribute": 3,
+                "delta": -5.0
+              },
+              {
+                "attribute": 1,
+                "delta": -5.0
+              },
+              {
+                "attribute": 6,
+                "delta": -10.0
+              }
+            ]
+          }
+        ],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          -10.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          70.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          165.0,
+          0.0,
+          0.0,
+          -21.333984375
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-active-01/wine-audit.json",
+        "sha256": "1648a57b14ea2c111e9a6515baa5aedc15bf0fc7d0deea2ef90c74ca8cff5bbc"
+      },
+      "result": {
+        "passed": true,
+        "phase": "active",
+        "sanitized": false,
+        "source_sha256": "0369365c4d9bd340e851f74d6d34610f6f51b248bb174aa64cf28c9179737f51",
+        "save_sha256": "2e947ae27b26b7a76f89a3b4f5af3500053ad101e8e53ea6cf92ffce3a83141c",
+        "binary_sha256": "aa7c08c9dd441298e7b3ac361c91b455cfa107386618c7c8d24e7d6f7129a2c4",
+        "wine_before": 0,
+        "wine_after": 0,
+        "effects_before": [
+          {
+            "potion": "content:oblivion.esm:037f7f",
+            "duration": 120.0,
+            "elapsed": 0.6328125,
+            "modifiers": [
+              {
+                "attribute": 3,
+                "delta": -5.0
+              },
+              {
+                "attribute": 1,
+                "delta": -5.0
+              },
+              {
+                "attribute": 6,
+                "delta": -10.0
+              }
+            ]
+          }
+        ],
+        "effects_after": [
+          {
+            "potion": "content:oblivion.esm:037f7f",
+            "duration": 120.0,
+            "elapsed": 5.7939453125,
+            "modifiers": [
+              {
+                "attribute": 3,
+                "delta": -5.0
+              },
+              {
+                "attribute": 1,
+                "delta": -5.0
+              },
+              {
+                "attribute": 6,
+                "delta": -10.0
+              }
+            ]
+          }
+        ],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          -10.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          70.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          165.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-expiry-02/wine-audit.json",
+        "sha256": "0673ba29770ec18a189686c1078188c90079b397de64f5f607b79c817b1b4129"
+      },
+      "result": {
+        "passed": true,
+        "phase": "expiry",
+        "sanitized": false,
+        "source_sha256": "2e947ae27b26b7a76f89a3b4f5af3500053ad101e8e53ea6cf92ffce3a83141c",
+        "save_sha256": "30607f3c33f2f4bda2f8802528749be1db3ee56c5dcef8264da8b33d9c7d3a34",
+        "binary_sha256": "aa7c08c9dd441298e7b3ac361c91b455cfa107386618c7c8d24e7d6f7129a2c4",
+        "wine_before": 0,
+        "wine_after": 0,
+        "effects_before": [
+          {
+            "potion": "content:oblivion.esm:037f7f",
+            "duration": 120.0,
+            "elapsed": 5.7939453125,
+            "modifiers": [
+              {
+                "attribute": 3,
+                "delta": -5.0
+              },
+              {
+                "attribute": 1,
+                "delta": -5.0
+              },
+              {
+                "attribute": 6,
+                "delta": -10.0
+              }
+            ]
+          }
+        ],
+        "effects_after": [],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-complete-02/wine-audit.json",
+        "sha256": "344dd6e54d46eb34a5655b6830d0d227a976836e7fc3d7ec37afaea57d1fa9db"
+      },
+      "result": {
+        "passed": true,
+        "phase": "complete",
+        "sanitized": false,
+        "source_sha256": "30607f3c33f2f4bda2f8802528749be1db3ee56c5dcef8264da8b33d9c7d3a34",
+        "save_sha256": "10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527",
+        "binary_sha256": "aa7c08c9dd441298e7b3ac361c91b455cfa107386618c7c8d24e7d6f7129a2c4",
+        "wine_before": 0,
+        "wine_after": 0,
+        "effects_before": [],
+        "effects_after": [],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/sanitized-use-02/wine-audit.json",
+        "sha256": "043a56bc4ca6c6ad003213191ee9abc60edc51b90ff3dff97f0b32c61606cbb4"
+      },
+      "result": {
+        "passed": true,
+        "phase": "use",
+        "sanitized": true,
+        "source_sha256": "ada38faca789e8ecdd97efd32309e838263941656c36903939fb80d8e426d871",
+        "save_sha256": "5d0b6f815bbe3c71ffcad9965c053f5a44e198e57d65eb183692d608c7390ef8",
+        "binary_sha256": "af9bbecb50e47e9973201e5532948826a56e06c7ab8caadaebee502c9ee9875f",
+        "wine_before": 1,
+        "wine_after": 0,
+        "effects_before": [],
+        "effects_after": [
+          {
+            "potion": "content:oblivion.esm:037f7f",
+            "duration": 120.0,
+            "elapsed": 0.2998046875,
+            "modifiers": [
+              {
+                "attribute": 3,
+                "delta": -5.0
+              },
+              {
+                "attribute": 1,
+                "delta": -5.0
+              },
+              {
+                "attribute": 6,
+                "delta": -10.0
+              }
+            ]
+          }
+        ],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          -10.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          70.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          165.0,
+          0.0,
+          0.0,
+          -24.341796875
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/sanitized-active-02/wine-audit.json",
+        "sha256": "3b2f79d48ebf969662f01c8861cf00a6fd09a2b48eb808cf9224cc39e8f55fee"
+      },
+      "result": {
+        "passed": true,
+        "phase": "active",
+        "sanitized": true,
+        "source_sha256": "5d0b6f815bbe3c71ffcad9965c053f5a44e198e57d65eb183692d608c7390ef8",
+        "save_sha256": "fd6a8edf0156938362ce464a174dbbd5cfe04ef62cea15d59988f56b22f39723",
+        "binary_sha256": "af9bbecb50e47e9973201e5532948826a56e06c7ab8caadaebee502c9ee9875f",
+        "wine_before": 0,
+        "wine_after": 0,
+        "effects_before": [
+          {
+            "potion": "content:oblivion.esm:037f7f",
+            "duration": 120.0,
+            "elapsed": 0.2998046875,
+            "modifiers": [
+              {
+                "attribute": 3,
+                "delta": -5.0
+              },
+              {
+                "attribute": 1,
+                "delta": -5.0
+              },
+              {
+                "attribute": 6,
+                "delta": -10.0
+              }
+            ]
+          }
+        ],
+        "effects_after": [
+          {
+            "potion": "content:oblivion.esm:037f7f",
+            "duration": 120.0,
+            "elapsed": 5.6123046875,
+            "modifiers": [
+              {
+                "attribute": 3,
+                "delta": -5.0
+              },
+              {
+                "attribute": 1,
+                "delta": -5.0
+              },
+              {
+                "attribute": 6,
+                "delta": -10.0
+              }
+            ]
+          }
+        ],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          -5.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          -10.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          70.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          165.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/sanitized-expiry-03/wine-audit.json",
+        "sha256": "3e19812a8f6e74a20f33f9bbd9c693fc7c38760e5e0b53a01f0f17487677b096"
+      },
+      "result": {
+        "passed": true,
+        "phase": "expiry",
+        "sanitized": true,
+        "source_sha256": "fd6a8edf0156938362ce464a174dbbd5cfe04ef62cea15d59988f56b22f39723",
+        "save_sha256": "eee84ea20350fd4376833a07d770ff789a8d4e834a10adb0a04b21fe765dca77",
+        "binary_sha256": "af9bbecb50e47e9973201e5532948826a56e06c7ab8caadaebee502c9ee9875f",
+        "wine_before": 0,
+        "wine_after": 0,
+        "effects_before": [
+          {
+            "potion": "content:oblivion.esm:037f7f",
+            "duration": 120.0,
+            "elapsed": 5.6123046875,
+            "modifiers": [
+              {
+                "attribute": 3,
+                "delta": -5.0
+              },
+              {
+                "attribute": 1,
+                "delta": -5.0
+              },
+              {
+                "attribute": 6,
+                "delta": -10.0
+              }
+            ]
+          }
+        ],
+        "effects_after": [],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/sanitized-complete-03/wine-audit.json",
+        "sha256": "bc9f96e0efdd18f02bf881c7eaa2a01f316aba763cf343f2a2b3618b50394ef6"
+      },
+      "result": {
+        "passed": true,
+        "phase": "complete",
+        "sanitized": true,
+        "source_sha256": "eee84ea20350fd4376833a07d770ff789a8d4e834a10adb0a04b21fe765dca77",
+        "save_sha256": "6e9599c5e0a74d3561e47bce621e706a289db931148acc84b9e2e755991158de",
+        "binary_sha256": "af9bbecb50e47e9973201e5532948826a56e06c7ab8caadaebee502c9ee9875f",
+        "wine_before": 0,
+        "wine_after": 0,
+        "effects_before": [],
+        "effects_after": [],
+        "health": 110,
+        "intelligence": [
+          40.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "agility": [
+          30.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "personality": [
+          50.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "magicka": [
+          80.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "all_skills_retained": true,
+        "other_full_item_metadata_retained": true,
+        "nirnroot_quest_retained": true,
+        "player_credited_deaths_retained": 33
+      }
+    }
+  ],
+  "acquisition": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-shore-prefix-05/travel-audit.json",
+        "sha256": "5042fe91e56f8c1b9b039bf45d6983eda32d02fcd6ebb242ee694e1e78851ae3"
+      },
+      "result": {
+        "passed": true,
+        "phase": "prefix",
+        "source_sha256": "9fe07697f095bfa48f13478bd1536b4d8e832114dc2ab9491e9c909f3658b5d8",
+        "save_sha256": "1a795c6a4754509b150dde1f161b97acb738aa17b857a78be26710d9b85eb2f7",
+        "binary_sha256": "75c8c5b70ea84dc8f32bc1c902adf58f7af7dc27244c10e32b76074ea74746cf",
+        "health": 110,
+        "position": [
+          40937.328125,
+          88063.5625,
+          -117.87382507324219,
+          0.044921875,
+          0.0,
+          -1.935689926147461
+        ],
+        "wine_before": 0,
+        "wine_after": 0,
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 10.725607872009277
+        },
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "other_full_item_metadata_retained": true
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-original-wine-approach-09/travel-audit.json",
+        "sha256": "c01eb9575641f63d6ce82382a8df9636f52fdce91f470fdd92070454dbd17e23"
+      },
+      "result": {
+        "passed": true,
+        "phase": "approach",
+        "source_sha256": "1a795c6a4754509b150dde1f161b97acb738aa17b857a78be26710d9b85eb2f7",
+        "save_sha256": "f9b74c5fa0ab082296523572396bafc511e62157a2caf398a1bfb45f39796302",
+        "binary_sha256": "75c8c5b70ea84dc8f32bc1c902adf58f7af7dc27244c10e32b76074ea74746cf",
+        "health": 110,
+        "position": [
+          29174.205078125,
+          81636.4921875,
+          70.572509765625,
+          1.068359375,
+          0.0,
+          0.7049171924591064
+        ],
+        "wine_before": 0,
+        "wine_after": 0,
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 10.725607872009277
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 16.97249412536621
+        },
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "other_full_item_metadata_retained": true
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-original-wine-bank-stage-05/travel-audit.json",
+        "sha256": "a56115f10f6fe7bcf9ef687d4d51f033cfbaf6a85000f10b242f2daf3f8f2dbb"
+      },
+      "result": {
+        "passed": true,
+        "phase": "approach",
+        "source_sha256": "f9b74c5fa0ab082296523572396bafc511e62157a2caf398a1bfb45f39796302",
+        "save_sha256": "09203d6e05acc018aa6fb90a46183c409fdd81d81e8a715a23884f319afc80f1",
+        "binary_sha256": "75c8c5b70ea84dc8f32bc1c902adf58f7af7dc27244c10e32b76074ea74746cf",
+        "health": 110,
+        "position": [
+          29304.9453125,
+          81790.1484375,
+          43.88214111328125,
+          0.9848588705062866,
+          0.0,
+          -2.3966453075408936
+        ],
+        "wine_before": 0,
+        "wine_after": 0,
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 16.97249412536621
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 17.009033203125
+        },
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.6000000238418579
+        },
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "other_full_item_metadata_retained": true
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/normal-original-wine-acquire-08/travel-audit.json",
+        "sha256": "a8da905068f3833223da7d5d1a008e90139c38ad1eb7af3aafc41ee109946322"
+      },
+      "result": {
+        "passed": true,
+        "phase": "acquire",
+        "source_sha256": "09203d6e05acc018aa6fb90a46183c409fdd81d81e8a715a23884f319afc80f1",
+        "save_sha256": "ada38faca789e8ecdd97efd32309e838263941656c36903939fb80d8e426d871",
+        "binary_sha256": "75c8c5b70ea84dc8f32bc1c902adf58f7af7dc27244c10e32b76074ea74746cf",
+        "health": 110,
+        "position": [
+          29273.650390625,
+          81695.5234375,
+          2.3072509765625,
+          1.2270463705062866,
+          0.0,
+          -1.0392413139343262
+        ],
+        "wine_before": 0,
+        "wine_after": 1,
+        "athletics_before": {
+          "base": 30.0,
+          "experience": 17.009033203125
+        },
+        "athletics_after": {
+          "base": 30.0,
+          "experience": 17.009033203125
+        },
+        "acrobatics_before": {
+          "base": 5.0,
+          "experience": 0.6000000238418579
+        },
+        "acrobatics_after": {
+          "base": 5.0,
+          "experience": 0.6000000238418579
+        },
+        "fatigue": [
+          170.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "other_full_item_metadata_retained": true
+      }
+    }
+  ],
+  "mead_regression": {
+    "evidence": {
+      "path": "build/oblivion-compat/cheap-wine/normal-mead-regression-01/mead-regression-audit.json",
+      "sha256": "515d6d08abceca83bdcf447ae4999368e3ff32cb0557e866c5f14ab4f5cce4b7"
+    },
+    "result": {
+      "passed": true,
+      "source_sha256": "9ad029ea9c65bee445bf1f1e6b38101483cdb70db637e6c1f844749e0d0b1282",
+      "save_sha256": "b1b9a8f985121a2c43d7f2e94b93f770f0aef8dacdd71fbe599bc9eb377e9371",
+      "binary_sha256": "aa7c08c9dd441298e7b3ac361c91b455cfa107386618c7c8d24e7d6f7129a2c4",
+      "mead_before": 2,
+      "mead_after": 1,
+      "effects": [
+        {
+          "potion": "content:oblivion.esm:0b1201",
+          "duration": 60.0,
+          "elapsed": 0.6630859375,
+          "modifiers": [
+            {
+              "attribute": 1,
+              "delta": -1.0
+            },
+            {
+              "attribute": 2,
+              "delta": -1.0
+            }
+          ]
+        }
+      ],
+      "health": 29.73583984375,
+      "all_skills_retained": true,
+      "other_full_item_metadata_retained": true,
+      "source_schema": 93,
+      "null_default_normalization": "Old schema93 lacks script_owner; absent is compared with explicit null only, all other complete metadata remains strict."
+    }
+  },
+  "gates": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/focused-normal-01/verification.json",
+        "sha256": "027163af062f21c4f559c3809a2be60bf31b25506597f7fda6f6e47fc3576fff"
+      },
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw-tests",
+              "-j",
+              "2"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 114.229
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.165
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=OblivionCombatMagicStore.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cheap-wine/focused-normal-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 0.165
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 21,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "OblivionCombatMagicStore.*",
+            "binary_sha256": "46d71b19e33ee51e7fe4e4b539d3f63a5ba94913463a9aa8981aa12074a97e44",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "8ca1840aa5ffb2f0c537fdfe17404d52e86ef79294571bf83ad3508bee4a991d",
+            "inventory_sha256": "a61227192aa929e7b87295b0a9a53717a049ad280070b8867edcef4b455a1062",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "8465aa4de9e8324d253cab9310bba20f1ebf5bf39c7bda80fbc7a1375a5fd379"
+        },
+        "source_after": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "8465aa4de9e8324d253cab9310bba20f1ebf5bf39c7bda80fbc7a1375a5fd379"
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/focused-sanitized-01/verification.json",
+        "sha256": "09bc84378deba6b4343ba72a54bcd106e48df3bb09f7ee2347dfd49c8eea9b75"
+      },
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw-tests",
+              "-j",
+              "2"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 169.482
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.967
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=OblivionCombatMagicStore.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cheap-wine/focused-sanitized-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 0.968
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 21,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "OblivionCombatMagicStore.*",
+            "binary_sha256": "d8585f1da4103632bd674f5888b9d1e28a69d580869b2b14f6a6b05d81026312",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "fd76596690bf91d28bcc1c472f54359490065f7f5e7d84446717eb025edced23",
+            "inventory_sha256": "a61227192aa929e7b87295b0a9a53717a049ad280070b8867edcef4b455a1062",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "8465aa4de9e8324d253cab9310bba20f1ebf5bf39c7bda80fbc7a1375a5fd379"
+        },
+        "source_after": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "8465aa4de9e8324d253cab9310bba20f1ebf5bf39c7bda80fbc7a1375a5fd379"
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/integration-normal-01/verification.json",
+        "sha256": "e9d7116779dfd5384a165d4b0596c17f9180edb690bc3828f7ee2b3bbfa181f1"
+      },
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw-tests",
+              "openmw",
+              "esmtool",
+              "-j",
+              "2"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 27.387
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.216
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cheap-wine/integration-normal-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 47.439
+          },
+          {
+            "argv": [
+              "/usr/bin/python3",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "scripts/tests"
+            ],
+            "log": "python.log",
+            "returncode": 0,
+            "seconds": 85.698
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 2286,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "46d71b19e33ee51e7fe4e4b539d3f63a5ba94913463a9aa8981aa12074a97e44",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "ed6f42954bb5d313443cb669544b16691c94244b64492bdba4f31fb70047c41b",
+            "inventory_sha256": "a61227192aa929e7b87295b0a9a53717a049ad280070b8867edcef4b455a1062",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 616,
+            "passed": true,
+            "log_sha256": "f800bdb5506b9422b7f6af9eeb5375a959e3de9fde85f37fd90b9ca92258237c"
+          }
+        },
+        "source_before": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "dc8278c3d527e486311049007e1928d2a7d8092284c998be2052a1bd07b6094d"
+        },
+        "source_after": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "dc8278c3d527e486311049007e1928d2a7d8092284c998be2052a1bd07b6094d"
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/python-final-01/verification.json",
+        "sha256": "56842373353a575a22cc7cb88842b757f7423b35e2d93b5e70469605da29bd0f"
+      },
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "/usr/bin/python3",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "scripts/tests"
+            ],
+            "log": "python.log",
+            "returncode": 0,
+            "seconds": 87.565
+          }
+        ],
+        "results": {
+          "python": {
+            "executed": 616,
+            "passed": true,
+            "log_sha256": "8b6a91b78fa9b06569ddef69bc6dc0ebe5671325447669df13297f460d1b1a3e"
+          }
+        },
+        "source_before": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "2e1cf6c9d065f88a9e3c2850909b65fbed4c6d79d35e76cdc352f1a2020a4041"
+        },
+        "source_after": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "2e1cf6c9d065f88a9e3c2850909b65fbed4c6d79d35e76cdc352f1a2020a4041"
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/cheap-wine/python-final-02/verification.json",
+        "sha256": "086aadee1b42b103bd75056ee00b356d9c9cc2582b256811a197bbcc61d1f878"
+      },
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "/usr/bin/python3",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "scripts/tests"
+            ],
+            "log": "python.log",
+            "returncode": 0,
+            "seconds": 87.588
+          }
+        ],
+        "results": {
+          "python": {
+            "executed": 616,
+            "passed": true,
+            "log_sha256": "b86870f25f5dbfb0d060a0fe7994c8eb76231e8b7d157d10d5d27d484fb67282"
+          }
+        },
+        "source_before": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "a9cd9b1324530c1af565d5967cb3d111cca31783ac4e70573a1054c5671e64fe"
+        },
+        "source_after": {
+          "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+          "source_fingerprint": "a9cd9b1324530c1af565d5967cb3d111cca31783ac4e70573a1054c5671e64fe"
+        }
+      }
+    }
+  ],
+  "instrumented_full_inventory": {
+    "evidence": {
+      "path": "build/oblivion-compat/cheap-wine/sanitized-inventory-union.json",
+      "sha256": "f4a40d7275b29bb76f00cb46e67a8749e40a2e1894f881b7f9c156dfa3c39362"
+    },
+    "result": {
+      "passed": true,
+      "executed": 2286,
+      "inventory_union_matches": true,
+      "duplicates": 0,
+      "missing": 0,
+      "failed": 0,
+      "skipped": 0,
+      "source": {
+        "head": "e0a476484ed18ee492e005cf655fbd3712dbcd32",
+        "source_fingerprint": "dc8278c3d527e486311049007e1928d2a7d8092284c998be2052a1bd07b6094d"
+      },
+      "test_binary_sha256": "d8585f1da4103632bd674f5888b9d1e28a69d580869b2b14f6a6b05d81026312",
+      "parts": [
+        {
+          "path": "build/oblivion-compat/cheap-wine/sanitized-part-worker0-01/verification.json",
+          "result": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0"
+          }
+        },
+        {
+          "path": "build/oblivion-compat/cheap-wine/sanitized-part-worker1-01/verification.json",
+          "result": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1"
+          }
+        },
+        {
+          "path": "build/oblivion-compat/cheap-wine/sanitized-part-worker2-01/verification.json",
+          "result": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2"
+          }
+        },
+        {
+          "path": "build/oblivion-compat/cheap-wine/sanitized-part-rest-01/verification.json",
+          "result": {
+            "executed": 2040,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*"
+          }
+        }
+      ],
+      "sanitizer": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "method": "Fresh disjoint parameter groups plus remaining inventory, same binary and frozen source; individually verified XML inventories."
+    }
+  },
+  "instrumented_parts": [
+    {
+      "path": "build/oblivion-compat/cheap-wine/sanitized-part-worker0-01/verification.json",
+      "sha256": "768e829e22bfa1d683ccd0c7f9eb37b769004861b1ebc4435dd6c23c133b2960"
+    },
+    {
+      "path": "build/oblivion-compat/cheap-wine/sanitized-part-worker1-01/verification.json",
+      "sha256": "56bda200344d418f17cef58cfa33021feb22b952a14b86707f87a6a0c6b9c039"
+    },
+    {
+      "path": "build/oblivion-compat/cheap-wine/sanitized-part-worker2-01/verification.json",
+      "sha256": "5c1c1085a3da3e2f74937b86cad86f2a323acf03e16adf76473ba5737d0a6d1a"
+    },
+    {
+      "path": "build/oblivion-compat/cheap-wine/sanitized-part-rest-01/verification.json",
+      "sha256": "0049da56be9f997b3ef3114852d301f27c64fb80d9d2d04d7ee286ffe67aa407"
+    }
+  ],
+  "reused_component_evidence": {
+    "receipt": {
+      "path": "docs/oblivion/REPAIR-HAMMER-VERIFICATION.json",
+      "sha256": "4e24fc7ae33d4290bb684a6abdee8a036420feb6055a3716c02777119236ec24"
+    },
+    "normal": 3298,
+    "instrumented_native": 1119,
+    "scope": "Historical original provenance only. Wine changes no components, component tests or codec. Not freshly executed Wine component runs."
+  },
+  "source_reuse": "C++ unchanged since full normal/instrumented engine gates. Later changes concern probe waits/expiry forbidden patterns, metadata and quest assertions, receipts and documentation; final Python616 checks pass. Original fingerprints remain in each gate.",
+  "continuation": {
+    "path": "build/oblivion-compat/cheap-wine/normal-complete-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527",
+    "health": 110,
+    "athletics_experience": 17.009033,
+    "acrobatics_experience": 0.6,
+    "alchemy_experience": 0.5,
+    "wine_count": 0,
+    "pending_wine_effects": 0,
+    "ownership": "Original Nirnroot inventory script Found1, MS39 stage10 and counters2, all33 previously Player-credited dead actor owners retained. Separate from Repair sewer and Mead regression branches."
+  },
+  "visual_review": {
+    "reviewed": [
+      "normal-original-wine-approach-09/original-wine-approach-03.png",
+      "normal-original-wine-acquire-08/original-cheap-wine-before-pickup.png",
+      "normal-original-wine-baseline-01/original-cheap-wine-tooltip.png",
+      "normal-use-01/original-cheap-wine-tooltip.png",
+      "sanitized-use-02/original-cheap-wine-tooltip.png",
+      "normal-use-01/original-cheap-wine-after-use.png",
+      "sanitized-use-02/original-cheap-wine-after-use.png",
+      "normal-active-01/original-cheap-wine-active-world.png",
+      "sanitized-active-02/original-cheap-wine-active-world.png",
+      "normal-expiry-02/original-cheap-wine-expiry-world.png",
+      "sanitized-expiry-03/original-cheap-wine-expiry-world.png",
+      "normal-complete-02/original-cheap-wine-complete-world.png",
+      "sanitized-complete-03/original-cheap-wine-complete-world.png",
+      "normal-mead-regression-01/original-mead-tooltip.png",
+      "normal-mead-regression-01/original-mead-after-use.png"
+    ],
+    "finding": "Correct authored tooltip and inventory consumption. Existing severe exterior landscape/rock/water presentation artifacts visible; no broad graphics acceptance."
+  },
+  "retained_failures": [
+    {
+      "cases": "approach01/02; shore-prefix03/04; approach05/06/07/08",
+      "reason": "Direct slope blocked; mismatched old-game resources after test build; missing deep-water nav start polygon; partial path; held-forward turning orbit; obstructed intermediate waypoint. Final coastal prefix05/approach09 uses ordinary movement with resource version pinned and turn-before-forward steering."
+    },
+    {
+      "cases": "acquire01/02/03/04/06/07",
+      "reason": "Out of original150 camera activation range; third-person selected adjacent Ale; forward jump needed a separate bank checkpoint; stuck timer not reset during sidestep. Isolated failures and owned-process stops preserved. Genuine primary Wine06752a acquired08 at122 camera units without activation-range changes."
+    },
+    {
+      "cases": "baseline01",
+      "reason": "Actual unsupported-use save produced, but omitted event-stream environment caused driver timeout. Clean02 adds event env and unconditional save-complete wait."
+    },
+    {
+      "cases": "normal-expiry01",
+      "reason": "Actual120s expiry and restored save correct, but contradictory inherited forbidden expiry pattern caused driver failure. Corrected phase-specific recipe02 passes."
+    },
+    {
+      "cases": "sanitized-use01",
+      "reason": "Readiness180 expired during instrumented exterior loading before any input.600s readiness02 passes."
+    },
+    {
+      "cases": "sanitized-expiry02",
+      "reason": "Readiness passed after342 wall seconds.360s expiry observation then timed out with correct active state and no sanitizer findings; instrumentation runs slowly and120 simulation seconds had not elapsed. Fresh03 extends wall observation900/global1800 without changing gameplay time or expected state."
+    },
+    {
+      "cases": "mead-regression01 first audit",
+      "reason": "Old schema93 omits script_owner whereas schema101 writes null. Final verifier normalizes absent to null only, retaining every other item field; source schema and all strict metadata checks recorded."
+    }
+  ],
+  "limits": [
+    "Original Wine content independently audited, original live mechanics evidence reused from Mead with its original boundaries; no new original Wine live probe.",
+    "No arbitrary alcohol profile, repeated-Wine stacking certification, resistance scaling, Fortify Health, crafting or full M16 claim.",
+    "No fork grants, actor-position/stat/time/seed setters, edited save sources, or branch merges. Ordinary Club air miss creates Fatigue deficit and adds no XP or wear.",
+    "Rendered sanitizer runs verify actual instrumented libraries and declared options. They are distinct from engine inventories and original oracle evidence."
+  ]
+}

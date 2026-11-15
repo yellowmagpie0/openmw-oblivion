@@ -1,0 +1,66 @@
+{
+  "passed": true,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x4f6d70",
+  "stubs": [
+    "Cell virtual +D4 supplies editor-ID strings; actor cell field +40 supplied"
+  ],
+  "scope": "Full uncached GetInCell callback, original cell getter, prefix length and ASCII case-insensitive CRT comparison. No cell lookup/loading or cache invalidation tested.",
+  "cases": [
+    {
+      "cell_editor_id": "ChorrolNorthernGoodsAndTrade",
+      "parameter_editor_id": "Chorrol",
+      "result": 1.0
+    },
+    {
+      "cell_editor_id": "Chorrol",
+      "parameter_editor_id": "Chorrol",
+      "result": 1.0
+    },
+    {
+      "cell_editor_id": "chorrolShop",
+      "parameter_editor_id": "CHORROL",
+      "result": 1.0
+    },
+    {
+      "cell_editor_id": "NotChorrol",
+      "parameter_editor_id": "Chorrol",
+      "result": 0.0
+    },
+    {
+      "cell_editor_id": "Chor",
+      "parameter_editor_id": "Chorrol",
+      "result": 0.0
+    },
+    {
+      "cell_editor_id": "Chorrol",
+      "parameter_editor_id": "",
+      "result": 1.0
+    },
+    {
+      "cell_editor_id": "",
+      "parameter_editor_id": "Chorrol",
+      "result": 0.0
+    },
+    {
+      "cell_editor_id": "",
+      "parameter_editor_id": "",
+      "result": 1.0
+    },
+    {
+      "cell_editor_id": "HackdirtCaverns",
+      "parameter_editor_id": "Hackdirt",
+      "result": 1.0
+    },
+    {
+      "cell_editor_id": "ChorrolShop",
+      "parameter_editor_id": "horrol",
+      "result": 0.0
+    },
+    {
+      "cell_editor_id": "Chorrol",
+      "parameter_editor_id": "ChorrolShop",
+      "result": 0.0
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "scope": "Genuine western approach, reviewed successful six-phase prefix with three rat victories/normal healing/physical lower-room entry, then exact fresh active-combat continuation defeating remaining rat038175. Full escape remains incomplete.",
+  "full_escape_complete": false,
+  "approach": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-substructure-west-approach-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-substructure-northern-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "315d5d24ddd2ce678f185d5c0c1c726b76ed7df216e4cdb49be2a0d48d12dc52",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-west-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "9c2086d817a0541b49fb6e15f0259e644300db43b9e25ff2049a5b6c3b4114dc",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -583.6803588867188,
+        4178.98876953125,
+        -252.6288604736328,
+        0.1144532635807991,
+        0.0,
+        -1.0358424186706543
+      ],
+      "health": 70.5999984741211
+    }
+  },
+  "reviewed_prefix": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-west-encounters-course-01/scenario.json",
+    "raw_passed": false,
+    "independent_prefix_accepted": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-substructure-west-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "9c2086d817a0541b49fb6e15f0259e644300db43b9e25ff2049a5b6c3b4114dc",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "source_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-substructure-west-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "9c2086d817a0541b49fb6e15f0259e644300db43b9e25ff2049a5b6c3b4114dc",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -583.6803588867188,
+        4178.98876953125,
+        -252.6288604736328,
+        0.1144532635807991,
+        0.0,
+        -1.0358424186706543
+      ],
+      "health": 70.5999984741211
+    },
+    "actual_F5_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-west-encounters-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "3f43de766a9ee082cb08700b80f9235577c0ba2fae6c1391a8318d34c2e42929",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -2177.662841796875,
+        4682.55322265625,
+        -387.7780456542969,
+        0.09433604776859283,
+        0.0,
+        -1.5321314334869385
+      ],
+      "health": 68.72000122070312
+    },
+    "successful_prefix_actions": 442,
+    "all_prefix_actions_pass": true,
+    "three_Player_kills": [
+      {
+        "actor": "content:oblivion.esm:038171",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:038172",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      {
+        "actor": "content:oblivion.esm:038176",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    ],
+    "ordinary_healing_releases": [
+      "[20:58:30.763 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=49.44 magicka=61",
+      "[20:58:42.969 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=56.48 magicka=53.8518",
+      "[20:58:55.116 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=63.52 magicka=46.732",
+      "[20:59:07.353 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=70.56 magicka=39.565",
+      "[20:59:19.567 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=77.6 magicka=32.3709",
+      "[20:59:31.832 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=80 magicka=25.1628"
+    ],
+    "combat_engagement_at_save": [
+      {
+        "first": "content:oblivion.esm:038175",
+        "second": "dynamic:player:0000000000000001"
+      }
+    ],
+    "no_forbidden_or_unreviewed_errors_before_prefix": true,
+    "later_failure": "Phase7 backtracks toward old stair waypoints after combat already physically descended into lower room. Rat038175 attacks and Player dies; raw failure preserved. Actual preceding F5 save remains68.72HP with that living rat engaged.",
+    "corrected_editable_recipe": "scripts/data/oblivion_compat/oblivion_sewer_joined_west_encounters_prefix.json",
+    "corrected_recipe_actions_exactly_match_verified_prefix": true,
+    "corrected_recipe_rerun_as_whole": false
+  },
+  "fresh_continuation": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-west-rat-38175-01/scenario.json",
+    "passed": true,
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-west-encounters-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "3f43de766a9ee082cb08700b80f9235577c0ba2fae6c1391a8318d34c2e42929",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "output_save": {
+      "path": "build/oblivion-compat/sewer-escape/joined-west-rat-38175-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "e11e8fbaf0030de025e6de283e4106d20c5300903f8eab3f38d87f9bf825edf4",
+      "cell": "content:oblivion.esm:022ff6",
+      "position": [
+        -2200.98095703125,
+        4629.91845703125,
+        -386.8568115234375,
+        0.04804698005318642,
+        0.0,
+        -2.7245142459869385
+      ],
+      "health": 59.31999969482422
+    },
+    "rat": {
+      "actor": "content:oblivion.esm:038175",
+      "base": "content:oblivion.esm:02509b",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "dynamic:player:0000000000000001"
+    },
+    "pending_deaths": [],
+    "physical_action_owners": [],
+    "combat_engagements": []
+  },
+  "retained_initial_failure": "joined-west-pillar-course-01 kills38171 but continues walking during attacks from38172/38176 and dies; no prefix checkpoint accepted.",
+  "captures_inspected": [
+    "build/oblivion-compat/sewer-escape/joined-substructure-west-approach-01/joined-west-loop-approach.png",
+    "build/oblivion-compat/sewer-escape/joined-west-encounters-course-01/phase6-joined-northern-rat-victory.png",
+    "build/oblivion-compat/sewer-escape/joined-west-rat-38175-01/joined-northern-rat-victory.png"
+  ],
+  "observer_scope": "Read-only actual positions/health/death/camera; F7 settles local frames, F8 changes only local observer phase. All movement, fighting, healing and F5 saves use ordinary controls; no saved-state splicing or health/quest/position writes.",
+  "native_death_count_proof": {
+    "base": "content:oblivion.esm:02509b",
+    "before": 2,
+    "prefix": 5,
+    "after_fresh_victory": 6,
+    "only_expected_increments": true
+  },
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "next": "Upper stairs, actual root-room encounter and physical root/lower route to Natural Caverns. Shaman, late escape, full single-process course/outdoor reload still required."
+}

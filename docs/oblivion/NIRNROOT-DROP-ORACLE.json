@@ -1,0 +1,49 @@
+{
+  "status": "Independent original UI rule resolved and verified against the completed bounded fork course.",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "scope": "Isolated copied original-game prefix. Console setup and read-only queries are oracle-only, not fork normal-input acceptance. Pristine quicksave was never overwritten; copied relevant inputs restored and source prefix hashes unchanged.",
+  "content": {
+    "ingredient": "04e940",
+    "script": "0eed76",
+    "script_payload_sha256": "7a05828369dc71b58768fba5d288bf9dc7483520caa7f011f750b5abd5c4d71f",
+    "ingredient_payload_sha256": "1d4f5a9e238992e0cf747b6acd06d64bc91b4b3597bcd4fdc869bf7b2e09560b"
+  },
+  "observations": [
+    {
+      "action": "Controlled player.additem setup followed by player.drop command",
+      "world_found": 0,
+      "inventory_before_reacquire": 0,
+      "total_before": 1,
+      "total_after_ordinary_space_pickup": 2,
+      "scope": "Command-drop contrast; not the UI expectation."
+    },
+    {
+      "action": "Controlled new singleton setup, ordinary left-click HOLD inventory grab/drop, ordinary Space pickup",
+      "world_reference": "ff000800",
+      "world_found": 1,
+      "world_disabled": 0,
+      "inventory_dropped": 0,
+      "inventory_reacquired": 1,
+      "total_before": 3,
+      "total_after": 3,
+      "current_after": 3,
+      "expected": "UI preserves Found and does not repeat discovery credit."
+    }
+  ],
+  "evidence": {
+    "build/oblivion-compat/nirnroot-drop/original-native-drop-01/native-ui-grab-after.png": "f3ca6c970820d71954997665f1ead0fc17c8d17b7a23a98c811addcfbe4dcc2f",
+    "build/oblivion-compat/nirnroot-drop/original-native-drop-01/native-ui-grab-world-local.png": "a0c6b97be866fd94eae18742ae66d686b9e60c1bffe7b4976518cabbe9071f46",
+    "build/oblivion-compat/nirnroot-drop/original-native-drop-01/native-ui-reacquired-counters.png": "ac4f02c1a6b750ab977d9620d235765e0fa6e3eb673c6be47876ea01831359aa",
+    "build/oblivion-compat/nirnroot-drop/original-native-drop-01/input-log.jsonl": "d263bfd3f978dc3b7b5a8b2b78bb51edefb47c7214cc8097af193c57389b9e65",
+    "build/oblivion-compat/nirnroot-drop/original-native-drop-01/game-process-epoch.json": "e07074486bf79aa07c6c5f1ce48be10147b67e835d56f0d3b9b266bce40703fc",
+    "build/oblivion-compat/nirnroot-drop/original-native-drop-01/exit.json": "1718c2c7f57ad5b1ad1e3b8cf28217cc9b55157a7d28b49c402e8dbf46bd18b2",
+    "build/oblivion-compat/nirnroot-drop/original-native-drop-01/exit-verification.json": "ee4f4b264ca6f78722cde9f93ed4b14ee95d91d7060087a5228489390a15d623",
+    "build/oblivion-compat/nirnroot-drop/original-native-drop-01/xserver-cleanup.json": "1cca3db87ac6f8e806ac2d4502bf1d3741a6f792e1ae74d239e5d051d8fa7e24"
+  },
+  "limits": [
+    "Original UI rule only; no claim for general stack transfers or other scripted events.",
+    "Earlier modifier/short-click attempts did not verify a UI drop and are not accepted evidence."
+  ],
+  "cleanup": "Original game exited0, copied inputs restored/hash-verified, source prefix unchanged, dedicated probe Xvfb identity-checked and terminated. Host Steam and other displays untouched."
+}

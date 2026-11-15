@@ -439,7 +439,9 @@ namespace MWMechanics
         {
             const ESM::RefId& spell = winMgr->getSelectedSpell();
             if (!spell.empty())
-                winMgr->setSelectedSpell(spell, int(MWMechanics::getSpellSuccessChance(spell, ptr)));
+                winMgr->setSelectedSpell(spell,
+                    MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                        ? 100 : int(MWMechanics::getSpellSuccessChance(spell, ptr)));
             else
                 winMgr->unsetSelectedSpell();
         }

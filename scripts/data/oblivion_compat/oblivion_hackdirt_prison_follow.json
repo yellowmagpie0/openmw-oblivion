@@ -1,0 +1,482 @@
+{
+  "schema_version": 1,
+  "name": "Original rescued Dar-Ma leaves physical prison and follows Player toward inn ladder",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal timer=0\nlocal index=1\nlocal points={{{{1213.3433837890625,1892.8692626953125,4.0}},{{1076.7681884765625,1761.627685546875,22.0}},{{898.0115356445312,1761.0928955078125,24.0}},{{752.9625854492188,1819.8951416015625,46.0}},{{662.6249389648438,1887.8121337890625,40.0}},{{651.0755615234375,2093.658447265625,62.0}},{{632.1594848632812,2223.841064453125,66.0}}}}\nlocal initial=nil\nlocal left=false\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.1 then return end;timer=0\n assert(not Actor.isDead(self),'Player died during escort')\n local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x280fa));assert(a and a:isValid(),'Dar-Ma missing');assert(not Actor.isDead(a),'Dar-Ma died during escort')\n if not initial then initial=a.position end\n local moved=(a.position-initial):length();local distance=(a.position-self.position):length()\n if moved>150 and a.position.y<1960 then left=true;print('DarmaFollow leftPrison') end\n if left and (self.position-initial):length()>450 and distance<400 then print('DarmaFollow following') end\n print(string.format('DarmaFollow status player=%s darma=%s distance=%.2f moved=%.2f cell=%s health=%.2f',tostring(self.position),tostring(a.position),distance,moved,a.cell.name,Actor.stats.dynamic.health(a).current))\n if core.isWorldPaused() then print('DarmaFollow paused');return end\n if index>#points then print('DarmaFollow routeComplete');return end\n local tag=tostring(index);local p=points[index];local v=util.vector3(p[1],p[2],p[3])-self.position\n if math.sqrt(v.x*v.x+v.y*v.y)<20 then print('DarmaFollow reached='..tag);index=index+1;return end\n local f=self.rotation:apply(util.vector3(0,1,0));local angle=math.atan2(f.y*v.x-f.x*v.y,f.x*v.x+f.y*v.y)\n if math.abs(angle)<0.06 and math.abs(camera.getPitch())<0.04 then print('DarmaFollow ready='..tag) end\n print(string.format('DarmaFollow aim x=%d y=%d',math.max(-150,math.min(150,math.floor(angle*128+.5))),math.max(-100,math.min(100,math.floor(-camera.getPitch()*128+.5)))))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "DarmaFollow status player=",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow (?:ready|reached)=1(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow reached=1(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow (?:ready|reached)=2(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow reached=2(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow (?:ready|reached)=3(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow reached=3(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow (?:ready|reached)=4(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow reached=4(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow (?:ready|reached)=5(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow reached=5(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow (?:ready|reached)=6(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow reached=6(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow (?:ready|reached)=7(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarmaFollow reached=7(?:\\s|$)|DarmaFollow paused",
+      "maximum_iterations": 500,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "DarmaFollow aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "DarmaFollow following",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 10
+    },
+    {
+      "type": "screenshot",
+      "name": "darma-following-out-of-prison.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "DarmaFollow leftPrison",
+    "DarmaFollow following",
+    "DarmaFollow routeComplete"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "Native dialogue menu: actor=(?!content:oblivion.esm:0280fa )",
+    "info=content:oblivion.esm:02809c",
+    "DarmaFollow paused",
+    "Native dialogue menu:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt"
+  },
+  "sdl_xvfb_input": true,
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}

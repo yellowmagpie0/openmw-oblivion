@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <array>
 #include <limits>
 #include <cmath>
 #include <stdexcept>
+#include <utility>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
 
@@ -36,6 +38,23 @@ TEST(ESM4Detection, FixedVectorIsStableAndBounded)
     EXPECT_DOUBLE_EQ(result.mLevel, ESM4::calculateDetection(baseInput()).mLevel);
     EXPECT_GE(result.mLevel, 0.0);
     EXPECT_LE(result.mLevel, 100.0);
+}
+
+TEST(ESM4Detection, NativeGetDetectedUsesAwarenessWithoutAddingAVisualGate)
+{
+    // Original 1.2.0416 GetDetected Eval at 004F6400 maps the signed
+    // awareness query to true only above zero. These normalized projections
+    // include the observed reunion score 61 with visual acquisition false.
+    constexpr std::array<std::pair<double, bool>, 7> cases{{
+        {0, false}, {49, false}, {50, false}, {51, true},
+        {61, true}, {92, true}, {100, true}}};
+    for (const auto [score, expected] : cases)
+        for (const bool visual : {false, true})
+            EXPECT_EQ(ESM4::nativeGetDetected({score, visual, true}), expected);
+    EXPECT_FALSE(ESM4::nativeGetDetected({100, true, false}));
+    for (const double invalid : {-1., 101., std::numeric_limits<double>::infinity(),
+             std::numeric_limits<double>::quiet_NaN()})
+        EXPECT_THROW(ESM4::nativeGetDetected({invalid, false, true}), std::invalid_argument);
 }
 
 TEST(ESM4Detection, LineOfSightIsAHardGateAndInvalidInputsDoNotEscape)

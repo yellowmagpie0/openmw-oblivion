@@ -1,0 +1,293 @@
+{
+  "scope": "Original Player Sanctum transition, stage58 party gate, final assassin bound dagger materialization and exact fresh restart",
+  "full_escape_complete": false,
+  "checks": {
+    "sanctum-bound-dagger-focused-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-bound-dagger-focused-01/verification.json",
+      "source": {
+        "head": "b841bd36a5508f5618aa2a72fd64c53e824fb8b9",
+        "source_fingerprint": "4b784ac271d30452af5bb6a1bf9ec7fdb86d9b2ac6ac5b2cb992769f9a61fdc1"
+      },
+      "results": {
+        "engine": {
+          "executed": 7,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionBoundItems.*",
+          "binary_sha256": "69ca901f5987d2948ab897a2eea9b0f756dd9a0c0376c4c87e4e861a4bb5bcd7",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "5ba62e38fab081bcfd3f7702f23243a992fd872f2924572879873b0e405fc1d2",
+          "inventory_sha256": "f157feb8c8aaf55f7f4afd3dd6077befe31c2f3b11e89c545245f8cec0a15ea2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanctum-bound-weapon-priority-focused-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-bound-weapon-priority-focused-01/verification.json",
+      "source": {
+        "head": "b841bd36a5508f5618aa2a72fd64c53e824fb8b9",
+        "source_fingerprint": "08860059843f07ed52c6aa7eb7de6c4a3f5c2dd154a374d60d36fe85987c7b13"
+      },
+      "results": {
+        "engine": {
+          "executed": 8,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionBoundItems.*",
+          "binary_sha256": "33e377f5913cd3af63d75be2a3e9a752869f57102633bed0b938133a69340bf2",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "4e4aa13801a300b924d4a897e65182adad634bd3460b4de2836bb3858d3fdb76",
+          "inventory_sha256": "c832002b51849e8cf2ad08dcbf7baabfbf978d99c6570f41c587bd20c1aa8e1b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanctum-bound-weapon-engine-integration-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-bound-weapon-engine-integration-01/verification.json",
+      "source": {
+        "head": "b841bd36a5508f5618aa2a72fd64c53e824fb8b9",
+        "source_fingerprint": "7f08e2d7589f12ef1048520bcd243cb79601264f44128e99702c37d4e3ec9c4b"
+      },
+      "results": {
+        "engine": {
+          "executed": 2193,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c9af9cdd8bb30b9337281d6e4d0d35cd51402329fb115d91c9a200f45764fecd",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "de06e02d3bf1d98210a11f76297174201e08dd4841bdbfe28984d685d180e3ac",
+          "inventory_sha256": "c832002b51849e8cf2ad08dcbf7baabfbf978d99c6570f41c587bd20c1aa8e1b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "sanctum-door-approach-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-door-approach-01",
+      "passed": true,
+      "save_sha256": "946c8949a3cddca7e9dcdb6d1325ddb8781264890ffa5fc3b8aeeeb13c165429",
+      "stage": 56,
+      "player_cell": "content:oblivion.esm:022288",
+      "player_position": [
+        774.9574584960938,
+        6362.986328125,
+        -1183.0,
+        0.0,
+        0.0,
+        -3.131350517272949
+      ],
+      "player_health": 71.19003295898438,
+      "entry_state": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/baurus-marker-g-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "8eebf33627b20d27e428928dd167a7613c6128ec7a943decf42c376c6f4eb8c5",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    },
+    "sanctum-entry-04": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-entry-04",
+      "passed": true,
+      "save_sha256": "c4970bd3ceecc86291789f7a93ad1989b711028e9c7025ccdb95707b8381b688",
+      "stage": 58,
+      "player_cell": "content:oblivion.esm:022282",
+      "player_position": [
+        2812.340087890625,
+        7463.908203125,
+        -1183.0,
+        0.0,
+        0.0,
+        7.450581165358017e-07
+      ],
+      "player_health": 71.19003295898438,
+      "entry_state": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-door-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "946c8949a3cddca7e9dcdb6d1325ddb8781264890ffa5fc3b8aeeeb13c165429",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "final_assassin_dagger": {
+        "base": "content:oblivion.esm:02627c",
+        "count": 1,
+        "condition": 2500.0,
+        "charge": -1.0,
+        "equipped_slots": 65536,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": {
+          "spell": "content:oblivion.esm:06461c",
+          "effect_index": 2
+        }
+      },
+      "final_assassin_ability": {
+        "actor": "content:oblivion.esm:01e703",
+        "abilities": [
+          {
+            "spell": "content:oblivion.esm:06461c",
+            "displaced_inventory": [
+              {
+                "base": "content:oblivion.esm:02731a",
+                "count": 1,
+                "condition": -1.0,
+                "charge": -1.0,
+                "equipped_slots": 32,
+                "hotkey": -1,
+                "owner": "null",
+                "remaining_usage_time": -1.0,
+                "ownership_rank": null,
+                "ownership_global": "null",
+                "extra_scale": null
+              },
+              {
+                "base": "content:oblivion.esm:08d755",
+                "count": 1,
+                "condition": -1.0,
+                "charge": -1.0,
+                "equipped_slots": 2,
+                "hotkey": -1,
+                "owner": "null",
+                "remaining_usage_time": -1.0,
+                "ownership_rank": null,
+                "ownership_global": "null",
+                "extra_scale": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sanctum-reload-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-reload-01",
+      "passed": true,
+      "save_sha256": "06deb2df448a21f53b7068c6e86a2173011b97fb2aec5f58851354f7057a972d",
+      "stage": 58,
+      "player_cell": "content:oblivion.esm:022282",
+      "player_position": [
+        2812.340087890625,
+        7463.908203125,
+        -1183.0,
+        0.0,
+        0.0,
+        7.450581165358017e-07
+      ],
+      "player_health": 71.19003295898438,
+      "entry_state": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-entry-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "c4970bd3ceecc86291789f7a93ad1989b711028e9c7025ccdb95707b8381b688",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "final_assassin_dagger": {
+        "base": "content:oblivion.esm:02627c",
+        "count": 1,
+        "condition": 2500.0,
+        "charge": -1.0,
+        "equipped_slots": 65536,
+        "hotkey": -1,
+        "owner": "null",
+        "remaining_usage_time": -1.0,
+        "ownership_rank": null,
+        "ownership_global": "null",
+        "extra_scale": null,
+        "bound_source": {
+          "spell": "content:oblivion.esm:06461c",
+          "effect_index": 2
+        }
+      },
+      "final_assassin_ability": {
+        "actor": "content:oblivion.esm:01e703",
+        "abilities": [
+          {
+            "spell": "content:oblivion.esm:06461c",
+            "displaced_inventory": [
+              {
+                "base": "content:oblivion.esm:02731a",
+                "count": 1,
+                "condition": -1.0,
+                "charge": -1.0,
+                "equipped_slots": 32,
+                "hotkey": -1,
+                "owner": "null",
+                "remaining_usage_time": -1.0,
+                "ownership_rank": null,
+                "ownership_global": "null",
+                "extra_scale": null
+              },
+              {
+                "base": "content:oblivion.esm:08d755",
+                "count": 1,
+                "condition": -1.0,
+                "charge": -1.0,
+                "equipped_slots": 2,
+                "hotkey": -1,
+                "owner": "null",
+                "remaining_usage_time": -1.0,
+                "ownership_rank": null,
+                "ownership_global": "null",
+                "extra_scale": null
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "game_binary_sha256": "56b376a19957351c10a51635e674b6bce19d90595aa421a4257c5c31e3d0349c",
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "audits": [
+      "build/oblivion-compat/sewer-escape/sanctum-assassin-bound-audit.json",
+      "build/oblivion-compat/sewer-escape/sanctum-bound-dagger-association.json",
+      "build/oblivion-compat/sewer-escape/sanctum-final-assassin-reference.json",
+      "build/oblivion-compat/sewer-escape/sanctum-bound-overlap-audit.json"
+    ],
+    "final_assassin": "Placed01e703/base01e6ff owns ability06461c: MYTH,MYHL,BWDA. Winning BWDA001855 associates weapon02627c BoundDagger, condition2500, typeDagger.",
+    "existing_actor": "01770c/base017623 lists dagger-only0521ca before armor/mace03e91b. The later weapon grant remains effective and its saved ownership is unchanged."
+  },
+  "policy": [
+    "Support BWDA alongside existing bound armor/helmet/mace with the same winning-item, self-range, area, class and slot validation.",
+    "Distinct authored weapon abilities share one slot: last authored weapon ability wins; earlier armor grants and original spell/effect indices survive. This is a bounded content-order policy, not instruction-proven parity for arbitrary native effect stacking. Within-ability/armor overlaps remain rejected."
+  ],
+  "retained_failures": {
+    "sanctum-entry-01-runner.log": "Preflight rejected Space key spelling before game launch; corrected to supported lowercase space.",
+    "sanctum-entry-02": "Original58 fired and F5 succeeded, but final assassin render failed because BWDA was unsupported. Whole scenario remains failed.",
+    "sanctum-entry-03": "Admitting dagger alone exposed dual-weapon overlap during save preflight. Existing guard was preserved; winning weapon selection now resolves the known content overlap."
+  },
+  "remaining": [
+    "Original59 onward conversations, Emperor death/Amulet, class choices, sewer exit88 and outdoor restart remain unaccepted.",
+    "Shaman victory and continuous prison-to-outdoors course remain open.",
+    "New schema89/daily-package and bound-dagger sanitizer integration remains due. Older sanitizer evidence retains compiled1eb42debb1 provenance."
+  ]
+}

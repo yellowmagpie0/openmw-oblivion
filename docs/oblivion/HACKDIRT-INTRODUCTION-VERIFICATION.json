@@ -1,0 +1,113 @@
+{
+  "status": "progress_with_failed_runtime_acceptance",
+  "goal_complete": false,
+  "source": {
+    "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+    "source_fingerprint": "0b0654c122248efc6cfb6d0e33196d03bd9f19ea3e9b861de9f51d1168e9ff9f"
+  },
+  "post_test_changes": "Documentation and verification receipt only; tested implementation unchanged.",
+  "runtime_binary_sha256": "93ad1c534d8276a47520f4f2585c34e9973e346c4c889e982e4033b84fc5200f",
+  "content_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "normal_checks": {
+    "engine": {
+      "executed": 2226,
+      "failed": 0,
+      "skipped": 0,
+      "inventory_matches": true
+    },
+    "components": {
+      "executed": 3265,
+      "failed": 0,
+      "skipped": 0,
+      "inventory_matches": true
+    }
+  },
+  "normal_checks_receipt": "build/oblivion-compat/hackdirt/player-intro-normal-integration-01/verification.json",
+  "sanitizer": "Fresh coverage remains open for the current implementation batch.",
+  "implemented": [
+    "Default NPC-to-Player StartConversation opens normal GREETING UI; explicit-topic Player calls remain unsupported.",
+    "GetTrespassWarningLevel condition returns original -1 for absent transient trespass package; active trespass packages and progression remain unimplemented.",
+    "Native local-ID bindings accept duplicate aliases and select the first source declaration, matching existing compiled read/write ownership without changing saved local layout."
+  ],
+  "oracle": {
+    "expectations": "scripts/data/oblivion_compat/hackdirt_native_intro_oracle_cases.json",
+    "absent_trespass_and_count_query": {
+      "cases": 80,
+      "entry": "0x4f7ef0",
+      "stubs": [
+        "actor virtual +0x190 identity",
+        "current-package lookup 0x5e0380"
+      ]
+    },
+    "duplicate_native_id_lookup": {
+      "cases": 6,
+      "entry": "0x4fa110",
+      "stubs": [],
+      "boundary": "Preconstructed native event-variable list; definition allocation/name binding not emulated."
+    },
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+  },
+  "runtime_course": {
+    "path": "build/oblivion-compat/hackdirt/darma-intro-save-01",
+    "passed": false,
+    "exit_code": 0,
+    "actions_passed": true,
+    "original_greeting_info": "02809c",
+    "original_friendly_reply_info": "02869c",
+    "original_result_dispatched": true,
+    "introduction_timer": 1,
+    "quest_stage": 0,
+    "save_created_by_normal_F5": "build/oblivion-compat/hackdirt/darma-intro-save-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "save_sha256": "e3258c5b3369d7546ebb4a4b60cb4e15e2f81fae92254fe36c0e6a0d35c72041",
+    "native_payload_binary_roundtrip_exact": true,
+    "script_diagnostics": 0,
+    "frame_errors": 1,
+    "frame_error_info": "18d883",
+    "frame_error_function": "GetPCMiscStat",
+    "frame_error_parameter": 13,
+    "frame_error_topic": "03c159",
+    "captures_inspected": [
+      "darma-introduction.png",
+      "darma-friendly-reply.png"
+    ],
+    "capture_limit": "Original greeting and highlighted friendly choice are visible; frame error prevents accepted post-reply topic refresh.",
+    "accepted_starting_checkpoint": false,
+    "frame_error_topic_name": "Training"
+  },
+  "fresh_reload_diagnostic": {
+    "path": "build/oblivion-compat/hackdirt/darma-intro-reload-diagnostic-01",
+    "passed": false,
+    "live_epoch_recorded": true,
+    "input_save_unchanged": true,
+    "stage_preserved": 0,
+    "startDay_preserved": 1,
+    "greetPC_preserved": 1,
+    "GetTalkedToPC_expected": 1,
+    "GetTalkedToPC_observed": 0,
+    "interpretation": "Actor dialogue flag is missing after fresh reload despite preserved quest and script locals. This is not restart acceptance."
+  },
+  "retained_attempts": [
+    {
+      "path": "player-greeting-focused-01",
+      "result": "Deliberately stopped build (-15) after identifying an invalid test-fixture API call; corrected before focused-02."
+    },
+    {
+      "path": "darma-introduction-01",
+      "result": "Failed on unsupported GetTrespassWarningLevel."
+    },
+    {
+      "path": "darma-introduction-02",
+      "result": "Failed on ArenaIC native local ID 16 duplicate metadata."
+    },
+    {
+      "path": "darma-introduction-03",
+      "result": "Failed on the corresponding duplicate source declaration after metadata-only correction."
+    }
+  ],
+  "next_actions": [
+    "Persist and restore the actor-owned talked-to flag; test fresh and warm reload, preserving false as well as true.",
+    "Implement the saved Player miscellaneous-stat query required by topic refresh, then rerun an error-free original introduction and fresh reload.",
+    "Complete original timed disappearance and Seed-Neeus acceptance, overland route, investigation, combat/rescue, return/reward and quest/follower restart acceptance.",
+    "Support explicit-topic Player conversations before the rescue/escape dialogue requires them."
+  ]
+}

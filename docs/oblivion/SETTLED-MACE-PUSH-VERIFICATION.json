@@ -1,0 +1,620 @@
+{
+  "schema_version": 1,
+  "accepted": true,
+  "scope": "Original Vilverin spent mace contact: owned character pushes and retained state across normal/sanitized passage and cold load; broader milestone matrices remain open",
+  "tested_cpp": [
+    {
+      "path": "apps/openmw/mwphysics/movementsolver.cpp",
+      "sha256": "701192bd589da89c24ff00a05976bbf223032133bc398f958da7df2c42f30dfb"
+    },
+    {
+      "path": "apps/openmw/mwphysics/mtphysics.cpp",
+      "sha256": "68233b0b96dcadfe2ff4454d93bb2079fe54fba8f93a1231340c1b9eda190b90"
+    },
+    {
+      "path": "apps/openmw/mwphysics/physicssystem.cpp",
+      "sha256": "530f0d8ad9c49ccd79e41f2e4f531c8c443bb9b7c75b13140c431403ffde6136"
+    },
+    {
+      "path": "apps/openmw/mwphysics/physicssystem.hpp",
+      "sha256": "0edf371ae9d1b3a5beb1b81043cb20986517cec9154f43843404ba208c1c6599"
+    },
+    {
+      "path": "apps/openmw_tests/mwphysics/testactorbounds.cpp",
+      "sha256": "c9a4c92ce592140c65796b4ee228871682ba94a8b4da9a521b9ab8dcf1665a88"
+    }
+  ],
+  "courses": [
+    {
+      "course": "build/oblivion-compat/settled-mace-push/normal-retained-passage-02",
+      "audit": {
+        "path": "build/oblivion-compat/settled-mace-push/normal-retained-passage-02/mace-push-audit.json",
+        "sha256": "e17f3970ffc2a780069f6d075e3fff70d819d74ac906745b47a559c8eefe4762"
+      },
+      "result": {
+        "passed": true,
+        "phase": "passage",
+        "sanitized": false,
+        "source_sha256": "fec79d98e5222b121d406e9d2bc8e8ad3908914f381f9be638d7794c95945aab",
+        "save_sha256": "8c688782f4ebaa8689155d6a4eb82e5f784f932b8bddfaa8dacbe7489cc9ede6",
+        "binary_sha256": "ef575c353af4987ac832b78f562bd0b3177a64aaaf617e08295c75ce9d61f817",
+        "player_position": [
+          -4927.94775390625,
+          -1892.7587890625,
+          -1062.20947265625,
+          0.0,
+          0.0,
+          -0.0014672279357910156
+        ],
+        "player_health": 110,
+        "observed_live_head_displacement": 9.72057536667621,
+        "mace_bodies": 8,
+        "mace_constraints": 7,
+        "corpse_bodies": 17,
+        "blunt": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "restoration": {
+          "base": 6.0,
+          "experience": 1.3062093257904053,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        }
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/settled-mace-push/normal-retained-passage-02/captured-input-manifest.json",
+        "sha256": "d253f5113bc4f4a093c0088e44ca9320e1da26da8335943a04ae3b04403fb082"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/settled-mace-push/normal-retained-passage-02/process-epoch.json",
+        "sha256": "0e2ffe5c1d7ec77111df40686376c064603ba9cca7a6143d08e1fd0798d7a145"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/settled-mace-push/normal-retained-passage-02/original-spent-maces-before-push.png",
+          "sha256": "f3b590ab3c2f81533f18a7d1ddf05771dd97bb165d9a6ba56ce49e13cfe77bad"
+        },
+        {
+          "path": "build/oblivion-compat/settled-mace-push/normal-retained-passage-02/original-spent-maces-during-passage.png",
+          "sha256": "1ddc81e9148c03a9a1aa75833e245d03f40f7fedfe470f17eb8a9b4c5cb34add"
+        },
+        {
+          "path": "build/oblivion-compat/settled-mace-push/normal-retained-passage-02/original-spent-maces-passage.png",
+          "sha256": "e17b20f9bd74e8b9f7187e5ca3d6cbb6d53fd48a85d3c49a486d1f89bc10699a"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/settled-mace-push/normal-retained-restart-01",
+      "audit": {
+        "path": "build/oblivion-compat/settled-mace-push/normal-retained-restart-01/mace-push-audit.json",
+        "sha256": "ec56c322d9f94f7261bf811f146c04de3d3adc3327c3044018ff1381e5963252"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "8c688782f4ebaa8689155d6a4eb82e5f784f932b8bddfaa8dacbe7489cc9ede6",
+        "save_sha256": "04bac15a1f98c30cecc2030f03560769d1a4b61f985ede0ce5196706c5b22007",
+        "binary_sha256": "ef575c353af4987ac832b78f562bd0b3177a64aaaf617e08295c75ce9d61f817",
+        "player_position": [
+          -4927.94775390625,
+          -1892.7587890625,
+          -1062.20947265625,
+          0.0,
+          0.0,
+          3.0160930156707764
+        ],
+        "player_health": 110,
+        "observed_live_head_displacement": null,
+        "mace_bodies": 8,
+        "mace_constraints": 7,
+        "corpse_bodies": 17,
+        "blunt": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "restoration": {
+          "base": 6.0,
+          "experience": 1.3062093257904053,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        }
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/settled-mace-push/normal-retained-restart-01/captured-input-manifest.json",
+        "sha256": "cfc081b3ba3b4efbd3fa4b7de1f1d0ffe8773353187d82db85167fe28755b32d"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/settled-mace-push/normal-retained-restart-01/process-epoch.json",
+        "sha256": "4742062ca9931b8db28d36f10ae1041ed32cbdf749544f1b0182f06a438dc953"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/settled-mace-push/normal-retained-restart-01/original-spent-maces-after-reload.png",
+          "sha256": "4b3e003d7bf1fcd05a634bac3ebb38197ffdf3d94717a635f5f383683af9b16f"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/settled-mace-push/sanitized-retained-passage-03",
+      "audit": {
+        "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-passage-03/mace-push-audit.json",
+        "sha256": "87662a36270770cfb5079a41cbcf7f2c1c3c582f6af883258eb1e97dcc2b1584"
+      },
+      "result": {
+        "passed": true,
+        "phase": "passage",
+        "sanitized": true,
+        "source_sha256": "fec79d98e5222b121d406e9d2bc8e8ad3908914f381f9be638d7794c95945aab",
+        "save_sha256": "3d392c1252c10ac51d2337fe24edbd7143e48e4fa56c2c808dbd706910f384c7",
+        "binary_sha256": "a14be5feff3122640df47c4a7881e521879de5c256e1338e1a34b1b6af8b8a8a",
+        "player_position": [
+          -4928.015625,
+          -1879.2220458984375,
+          -1062.20947265625,
+          0.0,
+          0.0,
+          0.0004858970642089844
+        ],
+        "player_health": 110,
+        "observed_live_head_displacement": 6.010756676514653,
+        "mace_bodies": 8,
+        "mace_constraints": 7,
+        "corpse_bodies": 17,
+        "blunt": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "restoration": {
+          "base": 6.0,
+          "experience": 1.3062093257904053,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        }
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-passage-03/captured-input-manifest.json",
+        "sha256": "23e6c344bdf35194d468f0f90ed18accd0f89e34afb9c86eec4fced6a9777b3d"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-passage-03/process-epoch.json",
+        "sha256": "e22d39797594a4618f0399f96e43afa2f2ca47bb5e652520d824c608ef7888dd"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-passage-03/original-spent-maces-before-push.png",
+          "sha256": "53aa6564dd3b895a1e38f10617d9dcba24a7ef29e888e9a7b362ef846c7eb76c"
+        },
+        {
+          "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-passage-03/original-spent-maces-during-passage.png",
+          "sha256": "04d2d77f17f9f00467170350aea0930fb63e250ce15ae7e191bbaac53eeb6791"
+        },
+        {
+          "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-passage-03/original-spent-maces-passage.png",
+          "sha256": "89661301b98ebd489cb9aa34593a409334958b29b3fd47af9733e0b6fc0c8673"
+        }
+      ]
+    },
+    {
+      "course": "build/oblivion-compat/settled-mace-push/sanitized-retained-restart-01",
+      "audit": {
+        "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-restart-01/mace-push-audit.json",
+        "sha256": "f799dad1abbbabe0c33bb693ef9da7515fd0e269da5a10024229769e50d2d6ae"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "3d392c1252c10ac51d2337fe24edbd7143e48e4fa56c2c808dbd706910f384c7",
+        "save_sha256": "e7b0a9e9252b6276ea497b5c51fb1cdb2eee18d1596b65fb4916f280376cd401",
+        "binary_sha256": "a14be5feff3122640df47c4a7881e521879de5c256e1338e1a34b1b6af8b8a8a",
+        "player_position": [
+          -4928.015625,
+          -1879.2220458984375,
+          -1062.20947265625,
+          0.0,
+          0.0,
+          -3.0151212215423584
+        ],
+        "player_health": 110,
+        "observed_live_head_displacement": null,
+        "mace_bodies": 8,
+        "mace_constraints": 7,
+        "corpse_bodies": 17,
+        "blunt": {
+          "base": 35.0,
+          "experience": 2.0,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        },
+        "restoration": {
+          "base": 6.0,
+          "experience": 1.3062093257904053,
+          "level_progress": 0,
+          "attributes": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specializations": [
+            0,
+            1,
+            0
+          ]
+        }
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-restart-01/captured-input-manifest.json",
+        "sha256": "bb0d32af511bbd4c87870907b49760f3f818843e808791143c377a9d24a79d29"
+      },
+      "epoch": {
+        "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-restart-01/process-epoch.json",
+        "sha256": "5dcacd543be5448555cb8d9180e6d79f299b5cec2022ed3e143cdfbcddf22171"
+      },
+      "inspected_images": [
+        {
+          "path": "build/oblivion-compat/settled-mace-push/sanitized-retained-restart-01/original-spent-maces-after-reload.png",
+          "sha256": "4c1e0cf74d436eaeaa69c6453599fb0bf08e95613423378aa275aedcfc1843c8"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/settled-mace-push/focused-normal-04/verification.json",
+        "sha256": "5767375f67a81257579fb79df8212819ab6c9f6cb55d4c0dcb5189bdb83a8503"
+      },
+      "results": {
+        "engine": {
+          "executed": 262,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*ActorBounds*:*AnimatedReference*:*RagdollSchedulerTest*:*NativeTrigger*",
+          "binary_sha256": "33c9f5cb0799e974a891b35bb534918e9c658535d2f8c06cfc1b692654892b5a",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "89673ea93afe26e16a41b46e19177e5cd45a28c6176e9ce9923d28323a4fa11a",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "0edb8ec8b26d3a6527e66b2adc6b62e958a1b2a3",
+        "source_fingerprint": "d6c233aa719c5067dd29a978c09d4881094b79d79818a3dbe4e740361a16ee4a"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/settled-mace-push/integration-normal-01/verification.json",
+        "sha256": "99d415045de98d1c20b95a1eef6c287cca9a0b25197baac0f7947086ef7c7f94"
+      },
+      "results": {
+        "engine": {
+          "executed": 2279,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "33c9f5cb0799e974a891b35bb534918e9c658535d2f8c06cfc1b692654892b5a",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "4c6ef56b5015c6efa01fc087600a991acf5deeef742b97f620377f36ad05b957",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 612,
+          "passed": true,
+          "log_sha256": "1ebe15f07019721e6a34af84fd0df64b5d8f26b26e4fa651236320d55c83d94d"
+        }
+      },
+      "tested_source": {
+        "head": "0edb8ec8b26d3a6527e66b2adc6b62e958a1b2a3",
+        "source_fingerprint": "878a46f0c82913ed21df649fccf3bedea1264f4d577688bf102acc0c87bb733e"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/settled-mace-push/integration-sanitized-actorbounds-02/verification.json",
+        "sha256": "08ccae2adafcd59ce51a0e27b8650f2a82614f7cf63b4906adf983528e460410"
+      },
+      "results": {
+        "engine": {
+          "executed": 11,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*ActorBounds*",
+          "binary_sha256": "ffb93b106c0a67da2c915d5314fefe23786a1093d102b2d3945448542c7588ae",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "5e27a759b3cfc75547cfa563c2d268d37b7ae62f4c87b02f59f21bf904f71f3f",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "0edb8ec8b26d3a6527e66b2adc6b62e958a1b2a3",
+        "source_fingerprint": "878a46f0c82913ed21df649fccf3bedea1264f4d577688bf102acc0c87bb733e"
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/settled-mace-push/integration-sanitized-rest-02/verification.json",
+        "sha256": "e41ba714c278aa55bebcc9e784bd483de46b61cb3251205b1906993ba9d1297a"
+      },
+      "results": {
+        "engine": {
+          "executed": 2268,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-*ActorBounds*",
+          "binary_sha256": "ffb93b106c0a67da2c915d5314fefe23786a1093d102b2d3945448542c7588ae",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "65e1443162a49e55b5c20bd47e64189b58317ee0f8e09168bcc4e81b8e851d86",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "tested_source": {
+        "head": "0edb8ec8b26d3a6527e66b2adc6b62e958a1b2a3",
+        "source_fingerprint": "878a46f0c82913ed21df649fccf3bedea1264f4d577688bf102acc0c87bb733e"
+      }
+    }
+  ],
+  "sanitized_inventory_union": {
+    "receipt": {
+      "path": "build/oblivion-compat/settled-mace-push/sanitized-inventory-union.json",
+      "sha256": "28289336763e463f36c8be4bd8ae6846d9c4955de90aa19cc2cd37e923d3e0c4"
+    },
+    "result": {
+      "passed": true,
+      "executed": 2279,
+      "inventory_union_matches": true,
+      "duplicate_tests": 0,
+      "missing_tests": 0,
+      "failed": 0,
+      "skipped": 0,
+      "parts": [
+        {
+          "path": "build/oblivion-compat/settled-mace-push/integration-sanitized-actorbounds-02/verification.json",
+          "tests": 11,
+          "filter": "*ActorBounds*"
+        },
+        {
+          "path": "build/oblivion-compat/settled-mace-push/integration-sanitized-rest-02/verification.json",
+          "tests": 2268,
+          "filter": "*-*ActorBounds*"
+        }
+      ],
+      "source": {
+        "head": "0edb8ec8b26d3a6527e66b2adc6b62e958a1b2a3",
+        "source_fingerprint": "878a46f0c82913ed21df649fccf3bedea1264f4d577688bf102acc0c87bb733e"
+      },
+      "test_binary_sha256": "ffb93b106c0a67da2c915d5314fefe23786a1093d102b2d3945448542c7588ae",
+      "sanitizer": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "retained_failure": "integration-sanitized-01: Bullet cumulative process thread-ID limit assertion, not a successful full single-process run"
+    }
+  },
+  "oracle": {
+    "path": "docs/oblivion/SETTLED-MACE-PUSH-ORACLE.json",
+    "sha256": "31153954e093eadb1abeb34ebe942a07accda0d4f117d83df80704537ee2fc2a"
+  },
+  "normal_outside_return": {
+    "receipt": {
+      "path": "build/oblivion-compat/settled-mace-push/normal-outside-after-push-01/outside-state-audit.json",
+      "sha256": "c716e25b7a2e0fa50d024cfb08bd53d8d05f7d43a061cf1afda232099579ff14"
+    },
+    "result": {
+      "passed": true,
+      "scope": "Normal original expedition return outside with retained loot; broader milestone matrices remain open",
+      "source_sha256": "04bac15a1f98c30cecc2030f03560769d1a4b61f985ede0ce5196706c5b22007",
+      "save_sha256": "954b4ae564af4cfba777bfb4a703f7ec3c72fe88941f8e38f44ad16bd2f696fb",
+      "player_cell": "content:oblivion.esm:005e1f",
+      "position": [
+        52034.625,
+        87420.484375,
+        334.92218017578125,
+        0.0,
+        0.0,
+        -1.6269887685775757
+      ],
+      "health": 110,
+      "inventory_preserved": true,
+      "blunt": {
+        "base": 35.0,
+        "experience": 2.0,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          1,
+          0
+        ]
+      },
+      "restoration": {
+        "base": 6.0,
+        "experience": 1.3062093257904053,
+        "level_progress": 0,
+        "attributes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specializations": [
+          0,
+          1,
+          0
+        ]
+      },
+      "corpse_bodies": 17
+    }
+  },
+  "limits": [
+    "80-unit reference character mass and 0.1sec response are approximations, not original force constants.",
+    "Mace runtime snapshots audit identities/motions/anchor/registration, not a nonexistent serialized internal-filter field; retained Skeleton filters are explicitly compared.",
+    "Engine sanitizer tests use detect_leaks=1; rendered courses use detect_leaks=0.",
+    "Full sanitizer inventory passed in two processes; single-process attempt exhausted Bullet cumulative thread IDs.",
+    "Harness startup allowance and sustained W accommodate slow sanitizer frames; ownership and gameplay assertions unchanged."
+  ],
+  "retained_attempts": [
+    "focused-normal-01: movement fixture consumed initial velocity",
+    "focused-normal-02: stationary assertion accidentally applied to incoming case",
+    "normal-retained-passage-01: route reached static wall fixture066e39 after moving mace",
+    "integration-sanitized-01: Bullet cumulative process thread-ID assertion",
+    "sanitized-retained-passage-01: startup allowance expired before gameplay",
+    "sanitized-retained-passage-02: short repeated wall-time key holds failed to sustain passage"
+  ]
+}

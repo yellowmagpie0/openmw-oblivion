@@ -181,6 +181,7 @@ namespace MWClass
         std::unique_ptr<MWWorld::Action> activate(
             const MWWorld::Ptr& ptr, const MWWorld::Ptr& actor) const override;
         MWGui::ToolTipInfo getToolTipInfo(const MWWorld::ConstPtr& ptr, int count) const override;
+        MWWorld::ContainerStore& getContainerStore(const MWWorld::Ptr& ptr) const override;
 
     private:
         void ensureCustomData(const MWWorld::Ptr& ptr) const;

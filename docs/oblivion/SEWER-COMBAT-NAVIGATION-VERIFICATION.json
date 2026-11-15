@@ -1,0 +1,100 @@
+{
+  "scope": "Combat movement uses authored pathgrid links and valid partial routes; walking NPC routes include door areas",
+  "full_escape_complete": false,
+  "checks": {
+    "second-ambush-navigation-focused-01": {
+      "path": "build/oblivion-compat/sewer-escape/second-ambush-navigation-focused-01/verification.json",
+      "source": {
+        "head": "e1606c78fe6f7685e55b35fc9f548e7c9471e607",
+        "source_fingerprint": "5baa7fec257d3677ff9ab40d74fbba5fd0d26410a044268e9e6821f1861d2d1d"
+      },
+      "results": {
+        "engine": {
+          "executed": 49,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.*combat*:OblivionWorldTest.*Combat*:Oblivion*Ai*.*",
+          "binary_sha256": "fb64de0ea635785948c6d270d18bbc92ce5558e5932de460af0ec2b6a311438e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "a529d3fb2a8bf2af39febaad552cdbe35f816a9c201ac992435945ea6ffc7c87",
+          "inventory_sha256": "61192dce6c924fb6d92cda1d755ca7b18bfa065744c3eb0eac6e53b9fc6fe0e7",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "second-ambush-door-route-focused-01": {
+      "path": "build/oblivion-compat/sewer-escape/second-ambush-door-route-focused-01/verification.json",
+      "source": {
+        "head": "e1606c78fe6f7685e55b35fc9f548e7c9471e607",
+        "source_fingerprint": "0964d04ec218fdb3dac4c06a53783f2e59839c52c6ce81f14ee42b794cacec4f"
+      },
+      "results": {
+        "engine": {
+          "executed": 49,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.*combat*:OblivionWorldTest.*Combat*:Oblivion*Ai*.*",
+          "binary_sha256": "33d00a692d2b5fbf53172561f5b47e17a6aba74a89018cdb82213712149814c7",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "dcc3cd7115a81a852fa577974a2f483564375a023b0f21616ebcf627ec4ece8b",
+          "inventory_sha256": "61192dce6c924fb6d92cda1d755ca7b18bfa065744c3eb0eac6e53b9fc6fe0e7",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "second-ambush-navigation-engine-regression-01": {
+      "path": "build/oblivion-compat/sewer-escape/second-ambush-navigation-engine-regression-01/verification.json",
+      "source": {
+        "head": "e1606c78fe6f7685e55b35fc9f548e7c9471e607",
+        "source_fingerprint": "0964d04ec218fdb3dac4c06a53783f2e59839c52c6ce81f14ee42b794cacec4f"
+      },
+      "results": {
+        "engine": {
+          "executed": 2187,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "33d00a692d2b5fbf53172561f5b47e17a6aba74a89018cdb82213712149814c7",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "fc9e77d2d140def31b0d227a054196c48b4a21c9544be7d65db6d7daac356561",
+          "inventory_sha256": "61192dce6c924fb6d92cda1d755ca7b18bfa065744c3eb0eac6e53b9fc6fe0e7",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime_evidence": {
+    "before": "subterrane-open-door-combat-01: no movement",
+    "pathgrid_partial": "subterrane-open-door-combat-02: assassin05 moves870\u21921179 X; assassin06 moves5775\u21925700 Y; stage36 wait fails",
+    "door_area": "subterrane-open-door-combat-03: stage36 wait fails, actors stop near same places, no damage",
+    "player_door_crossing": "subterrane-open-door-crossing-01 passes: Player5513\u21925658 Y through open17753, unchanged health30.07003"
+  },
+  "limits": [
+    "Neither assassin has reached melee range; second ambush unresolved",
+    "Closed combat-door opening is not implemented",
+    "Door areas grant navigation permission only; physical doors/locks remain authoritative"
+  ],
+  "diagnostic_evidence": "second-ambush-combat-diagnostic-04: normal bounds29.28,29.28,66.5; initial StartPolygonNotFound becomes PartialPath after startup; authored pathgrid/door query variants produce valid prefixes. Temporary diagnostics removed.",
+  "next_action": "Inspect actual combat-route points/cursor and physical obstruction at final stops; assassin05 on upper landing, assassin06 just north of door17753. Do not claim stage36 or full escape."
+}

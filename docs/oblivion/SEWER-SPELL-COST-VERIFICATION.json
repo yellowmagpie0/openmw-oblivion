@@ -1,0 +1,204 @@
+{
+  "scope": "Spell cost arithmetic prerequisite for tutorial healing; not spell menu, casting, Magicka debit, effect application or runtime acceptance",
+  "source": {
+    "head": "4b4ec6b2c481ef42cd2f3a1acd19bf71dd81098c",
+    "source_fingerprint": "a0f7bd4ce1f50cc2e394558d01474d0b9769908c2c783549f21c36fc8f8b241b"
+  },
+  "component_checks": {
+    "components": {
+      "executed": 6,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "ESM4SpellCost.*:ESM4CombatSpellPower.*",
+      "binary_sha256": "2ac44c290c3620306de56cd9d2b5252c3b95d0df7afbd7063f1716656bb9823f",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "e404d96edfbad62baeb447335f8ca57855ca1e9db14bed060c6758a6b2f5842a",
+      "inventory_sha256": "94aee03879d03211bf3f79a81d5b04a403f871f9e63436d22f904defc135456a",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "native_oracle": {
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "settings": {
+      "iActorLuckSkillBase": {
+        "name": "iActorLuckSkillBase",
+        "value": -20,
+        "storage": "0xb37388",
+        "constructor": "0x9eaa67"
+      },
+      "fActorLuckSkillMult": {
+        "name": "fActorLuckSkillMult",
+        "value": 0.4000000059604645,
+        "storage": "0xb37390",
+        "constructor": "0x9eaa8f"
+      },
+      "fMagicAreaBaseCostMult": {
+        "name": "fMagicAreaBaseCostMult",
+        "value": 0.15000000596046448,
+        "storage": "0xb37dd0",
+        "constructor": "0x9ee2ff"
+      },
+      "fMagicDurMagBaseCostMult": {
+        "name": "fMagicDurMagBaseCostMult",
+        "value": 0.10000000149011612,
+        "storage": "0xb37dd8",
+        "constructor": "0x9ee32f"
+      },
+      "fMagicRangeTargetCostMult": {
+        "name": "fMagicRangeTargetCostMult",
+        "value": 1.5,
+        "storage": "0xb37de0",
+        "constructor": "0x9ee35f"
+      },
+      "fMagicCasterSkillCostBase": {
+        "name": "fMagicCasterSkillCostBase",
+        "value": 0.20000000298023224,
+        "storage": "0xb37de8",
+        "constructor": "0x9ee38f",
+        "master_override": "0x6c64c"
+      },
+      "fMagicCasterSkillCostMult": {
+        "name": "fMagicCasterSkillCostMult",
+        "value": 1.2000000476837158,
+        "storage": "0xb37df0",
+        "constructor": "0x9ee3bf",
+        "master_override": "0x6c64d"
+      },
+      "fMagicCostScale": {
+        "name": "fMagicCostScale",
+        "value": 1.2799999713897705,
+        "storage": "0xb38270",
+        "constructor": "0x9efdef",
+        "master_override": "0xcd320"
+      }
+    },
+    "entry": "0x41d320",
+    "boundaries": [
+      "Original SpellItem cost virtual, effect list, effect cost, math power and skill/luck adjustment execute.",
+      "Only actor integer AV virtual284 is stubbed to declared skill and luck.",
+      "Synthetic spell/effect structures reflect audited Heal Minor Wounds; live actor construction, admission, resource debit and animation are not executed."
+    ],
+    "rows": [
+      {
+        "manual": false,
+        "record_cost": 24,
+        "skill": 5,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 19.0
+      },
+      {
+        "manual": false,
+        "record_cost": 24,
+        "skill": 25,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 15.0
+      },
+      {
+        "manual": false,
+        "record_cost": 24,
+        "skill": 50,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 11.0
+      },
+      {
+        "manual": false,
+        "record_cost": 24,
+        "skill": 100,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 2.0
+      },
+      {
+        "manual": false,
+        "record_cost": 24,
+        "skill": 5,
+        "luck": 0,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 20.0
+      },
+      {
+        "manual": false,
+        "record_cost": 24,
+        "skill": 5,
+        "luck": 100,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 15.0
+      },
+      {
+        "manual": true,
+        "record_cost": 0,
+        "skill": 5,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 0.0
+      },
+      {
+        "manual": true,
+        "record_cost": 1,
+        "skill": 5,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 1.340000033378601
+      },
+      {
+        "manual": true,
+        "record_cost": 24,
+        "skill": 5,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 32.15999984741211
+      },
+      {
+        "manual": false,
+        "record_cost": 24,
+        "skill": 5,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 2,
+        "cost": 28.0
+      },
+      {
+        "manual": false,
+        "record_cost": 999,
+        "skill": 5,
+        "luck": 50,
+        "magnitude": 8,
+        "range": 0,
+        "cost": 19.0
+      }
+    ]
+  },
+  "oracle_script_sha256": "fc9d1f74239dcab7fd130bb83e902cf2ab3540f04049cd671d8b70fcbf93b5e0",
+  "retained_harness_failures": [
+    "Initial disassembler dependency unavailable; used objdump instead.",
+    "Local inspect.py shadowed Python inspect during Unicorn import; renamed locate_vtables.py.",
+    "Initial AV getter asserted Restoration24; original school mapping requested Restoration25. Fixed hook expectation, retained cost-failed-av.py."
+  ],
+  "arithmetic_policy": "Ordinary floating-point operations and 0.0001 tolerance for fractional manual costs; no bit-identical math requirement. Calculated effects floor and clamp to one; manual costs retain fractions and zero.",
+  "integration_next": [
+    "Expose typed Player spell selection using TES4 spell ownership; SpellModel, HUD, tooltips and selection currently expect ESM3::Spell.",
+    "Persist selection and a pending cast before connecting admission/resource debit to animation release; avoid double payment/effect after save/load.",
+    "Resolve winning GMSTs and MGEF cost inputs, including flag-controlled magnitude/duration/area and effect school.",
+    "Reuse validated instant restoration resource authority; apply audited spell power and Magicka eligibility at the correct cast phase.",
+    "Prove ordinary Heal Minor Wounds use and fresh-process pending/completed cast persistence before shaman staff work."
+  ]
+}

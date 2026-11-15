@@ -1,0 +1,37 @@
+{
+  "status": "Accepted bounded ordinary Player self-restoration secondary-use experience; full magic/XP/expedition remain open.",
+  "scope": "Successful ordinary Player self-restoration cast grants the original secondary use0.6 once after committed release, while preserving tutorial-use history. Full magic/XP/expedition remains open.",
+  "content": {
+    "spell": "content:oblivion.esm:000136",
+    "name": "Heal Minor Wounds",
+    "skill": "content:oblivion.esm:00004a",
+    "actor_value": 25,
+    "primary_use": 0,
+    "secondary_use": 0.6,
+    "effect": "REHE",
+    "authored_health": 8,
+    "range": "Self",
+    "source_class": "content:oblivion.esm:023787",
+    "class_name": "Warrior",
+    "major": false,
+    "specialized": false
+  },
+  "source": "build/oblivion-compat/marksman-use/normal-marksman-npc-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "source_sha256": "df6747123211c25c94b78690b0f95e79fc0868ebfaa60ddfbf23336c9d5936c1",
+  "baseline": {
+    "course": "build/oblivion-compat/restoration-use/normal-heal-baseline-01",
+    "observed": "Actual incoming arrows leave a wound. Owned spell136 spends19 Magicka, restores94.0819->101.5219, then further arrows lower Health. Restoration base5/XP0 remains5/0."
+  },
+  "acceptance": [
+    "Ordinary selection/cast on the actual wound restores Health at release and adds secondary0.6 XP once; no base or advancement count change when no level is crossed.",
+    "Cold load retains XP and never repeats the release, resource debit or award.",
+    "Selecting the owned spell and canceling its menu without casting grants no experience.",
+    "Preserve native restoration power/cost, cast ownership, saved pose and tutorial-history handling; normal/sanitized focused/integration and real-content courses."
+  ],
+  "limits": [
+    "Original experience dispatcher/slot are independently checked; full original self-cast XP caller policy is not certified.",
+    "Full-health, canceled-windup, rejected-cast, level-crossing and all other schools/effects retain separate runtime gaps.",
+    "Ongoing actual incoming arrows are permitted; verify healing at release rather than requiring final Health to exceed loaded Health."
+  ],
+  "schema": 99
+}

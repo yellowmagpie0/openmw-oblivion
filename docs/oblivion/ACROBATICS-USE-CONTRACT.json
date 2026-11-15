@@ -1,0 +1,21 @@
+{
+  "feature": "Native Player Acrobatics primary experience from actual grounded jump at original Vilverin entrance",
+  "real_content": {
+    "reference": "content:oblivion.esm:066ac8",
+    "architecture": "content:oblivion.esm:066ac9",
+    "source_sha256": "b49b0a431aadd4d34b677c6e0460e17b25cbb2ab668da457dc8ca2e478f9e2e0"
+  },
+  "behavior": [
+    "Publish winning SKIL04b/AV26 primary0.3 for a live Player grounded, non-inert, non-flying, collidable upward movement entering physics simulation. Preserve legacy notifications and fatigue debit.",
+    "Do not train from input alone or replay a completed saved jump. Existing raw PLAY Acrobatics20 owns progress; native base5 and schema101 remain unchanged."
+  ],
+  "acceptance": [
+    "Original baseline: one actual jump rises about66 units, lands alive, spends170 to140 fatigue at takeoff, but Acrobatics5/XP0.",
+    "Normal/instrumented one-jump0.3, idle0 and cold-load retained0.3 with no replay; meaningful existing checks.",
+    "Preserve already earned Athletics4.066545, other skill bases/progress, inventory/script ownership and lifecycle."
+  ],
+  "limits": [
+    "Ordinary completed ground jump only; damaged-fall secondary3, steep slopes, ceiling/cancel/in-air/flying/water/god/terminal and midair-save courses remain outside acceptance.",
+    "Existing rejected-request fatigue policy is unchanged and not certified by this jump-only chunk."
+  ]
+}

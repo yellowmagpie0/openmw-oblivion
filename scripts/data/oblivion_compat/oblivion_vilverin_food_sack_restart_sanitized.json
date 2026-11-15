@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "name": "Instrumented original Vilverin opened food-sack continuation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal camera=require('openmw.camera')\nlocal util=require('openmw.util')\nlocal done=false\nreturn {{engineHandlers={{onFrame=function(dt)\n if core.isWorldPaused() then return end\n assert(not Actor.isDead(self),'Player died at original food sack')\n local chest=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x6c2ad))\n if not chest or not chest:isValid() then return end\n if not done then\n  local inv=Actor.inventory(self)\n  for _,id in ipairs({{0x3365d,0x23d89,0x33666,0x33668,0x3366b,0x33680,0x33681,0x3368b,0x3368a,0x3368c,0x33690}}) do\n   local key=core.getFormId('Oblivion.esm',id)\n   print('VilverinSackLoot before item='..key..' count='..inv:countOf(key))\n  end\n  done=true\n end\n local aim=chest:getBoundingBox().center\n local p=camera.getViewTransform():apply(aim)\n local angle=math.atan2(p.x,-p.z)\n local elevation=-math.atan2(p.y,math.sqrt(p.x*p.x+p.z*p.z))\n local ray=nearby.castRenderingRay(camera.getPosition(),aim,{{ignore=self}})\n local range=(aim-camera.getPosition()):length()\n local limit=core.getGMST('iMaxActivateDist')+camera.getThirdPersonDistance()\n local invView=camera.getViewTransform():inverse()\n local direction=(invView:apply(util.vector3(0,0,-1))-camera.getPosition()):normalize()\n local centerRay=nearby.castRenderingRay(camera.getPosition(),camera.getPosition()+direction*limit,{{ignore=self}})\n if range<limit-20 then print('VilverinSackLoot within range') end\n if math.abs(angle)<.005 and math.abs(elevation)<.005 and ray.hitObject and ray.hitObject.id==chest.id then\n  print('VilverinSackLoot facing sack')\n  if centerRay.hitObject and centerRay.hitObject.id==chest.id then\n   print('VilverinSackLoot ready target='..tostring(chest)..' range='..range..' limit='..limit..' health='..Actor.stats.dynamic.health(self).current)\n  end\n end\n print('VilverinSackLoot center target='..tostring(centerRay.hitObject)..' range='..range..' limit='..limit)\n print(string.format('VilverinSackLoot look x=%d y=%d',math.max(-150,math.min(150,math.floor(angle*256+.5))),math.max(-100,math.min(100,math.floor(elevation*256+.5)))))\n\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinSackLoot look",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "VilverinSackLoot facing sack",
+      "maximum_iterations": 200,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "VilverinSackLoot look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.1
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "VilverinSackLoot ready",
+      "maximum_iterations": 200,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "VilverinSackLoot look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.1
+        }
+      ],
+      "after_start": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-food-sack-before-activation.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M5 interaction: kind=loot result=empty ref=content:oblivion.esm:06c2ad",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-food-sack-baseline-loot-message.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1800,
+  "expected_exit": 0,
+  "expected_log": [
+    "VilverinSackLoot ready",
+    "M5 interaction: kind=loot result=empty ref=content:oblivion.esm:06c2ad",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "Oblivion creature inventory item .* was not projected:",
+    "M13 container lists resolved: ref=content:oblivion.esm:06c2ad",
+    "ERROR: AddressSanitizer",
+    "runtime error:",
+    "LeakSanitizer"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+  },
+  "sdl_input_timeout_seconds": 300,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

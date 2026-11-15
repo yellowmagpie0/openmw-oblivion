@@ -79,12 +79,12 @@ add_openmw_dir (mwsound
 add_openmw_dir (mwworld
     refdata worldimp worldbackend scene globals class action nullaction actionteleport
     containerstore preparedinitialinventory preparedsaverecords actiontalk actiontake actionhorse manualref player cellvisitors failedaction
-    worldmodel sharedactorinitialization oblivionanimatedreference oblivionlooseweapon oblivionweapondrop obliviondynamicreference oblivionownership localscripts customdata inventorystore ptr actionopen actionread actionharvest
+    worldmodel sharedactorinitialization oblivionanimatedreference oblivionlooseweapon oblivionweapondrop oblivioningredientdrop obliviondynamicreference oblivionownership localscripts customdata inventorystore ptr actionopen actionread actionharvest
     actionequip timestamp actionalchemy cellstore actionapply actioneat
     store esmstore fallback actionrepair actionsoulgem livecellref actiondoor
     contentloader esmloader actiontrap cellreflist cellref weather projectilemanager
     cellpreloader datetimemanager groundcoverstore magiceffects cell ptrregistry
-    positioncellgrid oblivionbounditems oblivionenablestate oblivionactorstats obliviondooranimation oblivioncharactergen oblivioncombatmagic oblivioncombatdata oblivionnativeidle oblivionprofileservices oblivioninteraction oblivionphysicalpose oblivionscriptmanager worldspaceutils
+    positioncellgrid oblivionlevelled oblivionbounditems oblivionenablestate oblivionactorstats obliviondooranimation oblivioncharactergen oblivionskilltraining oblivioncombatmagic oblivionbow oblivionarrowrecovery oblivionmiscconsumables oblivioncombatdata oblivionnativeidle oblivionprofileservices oblivioninteraction oblivionphysicalpose oblivionscriptmanager worldspaceutils
     )
 
 add_openmw_dir (mwphysics
@@ -96,7 +96,7 @@ add_openmw_dir (mwphysics
 add_openmw_dir (mwclass
     classes activator creature npc weapon armor potion apparatus book clothing container door
     ingredient creaturelevlist itemlevlist light lockpick misc probe repair static actor bodypart
-    esm4base esm4interactive esm4npc light4
+    esm4base esm4furniture esm4interactive esm4npc light4
     )
 
 add_openmw_dir (mwmechanics

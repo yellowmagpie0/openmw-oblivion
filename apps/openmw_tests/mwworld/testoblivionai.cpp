@@ -13,8 +13,19 @@
 
 #include "oblivionworldfixture.hpp"
 #include "apps/openmw/mwclass/npc.hpp"
+#include "apps/openmw/mwclass/esm4npc.hpp"
+#include "apps/openmw/mwmechanics/movement.hpp"
+#include "apps/openmw/mwmechanics/mechanicsmanagerimp.hpp"
+#include "apps/openmw/mwworld/worldmodel.hpp"
+#include "apps/openmw/mwworld/cellstore.hpp"
+#include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadrace.hpp>
+#include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadachr.hpp>
+#include <components/esm4/loadpack.hpp>
 #include "apps/openmw/mwmechanics/oblivionai.hpp"
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/loadpgrd.hpp>
 
 #include <components/esm4/aipackagedata.hpp>
 #include <components/esm4/aiphase.hpp>
@@ -31,9 +42,98 @@ namespace
 {
     using namespace ESM4;
 
+    TEST(OblivionAiTest, AllowFallsPursuesBelowAnIsolatedPlatformWithoutNavigationPoints)
+    {
+        // Actual sanitized sewer standoff: assassin01774a on a disconnected
+        // upper platform, Glenroy below; original package017d81 allows falls.
+        const osg::Vec3f platform(3050.500f, 6786.964f, -991.999f);
+        const osg::Vec3f target(3045.055f, 6766.681f, -1176.099f);
+        const auto falls = ESM4::decodePackageFlags(0x81004);
+        const auto step = [&](std::span<const osg::Vec3f> route, std::size_t cursor,
+                              osg::Vec3f destination, ESM4::PackageFlags flags, bool visible) {
+            return MWMechanics::oblivionResidentTargetStep(route, cursor, platform, destination, flags, visible);
+        };
+        EXPECT_EQ(step({}, 0, target, falls, true), target);
+        const std::array route{platform};
+        EXPECT_EQ(step(route, 1, target, falls, true), target);
+        EXPECT_EQ(step(route, 0, target, {}, false), platform);
+        EXPECT_FALSE(step({}, 0, target, {}, true));
+        EXPECT_FALSE(step({}, 0, target, falls, false));
+        EXPECT_FALSE(step({}, 0, platform, falls, true));
+        EXPECT_FALSE(step({}, 0, platform + osg::Vec3f(0, 0, 100), falls, true));
+        EXPECT_FALSE(step({}, 0, platform - osg::Vec3f(0, 0, 64), falls, true));
+        EXPECT_TRUE(step({}, 0, platform - osg::Vec3f(0, 0, 65), falls, true));
+    }
+
     ESM::FormKey key(std::uint32_t id)
     {
         return ESM::FormKey::content("m14-test.esm", id);
+    }
+
+    TEST(OblivionAiTest, AllowedDescentPreservesCompletedPartialRouteAcrossRepathTimer)
+    {
+        // Live instrumented navigation: the consumed prefix is projected back
+        // onto the upper platform. Rebuilding it pulls the assassin away from
+        // Glenroy every quarter second before the physical descent can finish.
+        const osg::Vec3f position(3048.5f, 6807.65f, -990.97f);
+        const osg::Vec3f destination(3046.709f, 6766.538f, -1176.361f);
+        const std::array route{osg::Vec3f(3048.179f, 6834.f, -986.924f),
+            osg::Vec3f(3046.709f, 6834.f, -986.924f)};
+        const auto flags = ESM4::decodePackageFlags(0x81004);
+        ASSERT_TRUE(MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, destination, flags, true));
+        const auto target = key(0x32a16), cell = key(0x22288);
+        const auto repath = [&](bool descending, osg::Vec3f nextDestination,
+                                ESM::FormKey nextTarget, ESM::FormKey nextCell, float timer) {
+            return MWMechanics::oblivionResidentTargetNeedsRepath(target, nextTarget,
+                cell, nextCell, destination, nextDestination, timer, descending);
+        };
+        EXPECT_FALSE(repath(true, destination, target, cell, 0.f));
+        EXPECT_FALSE(repath(true, destination + osg::Vec3f(.7f, 0, 0), target, cell, 0.f));
+        EXPECT_TRUE(repath(false, destination, target, cell, 0.f));
+        EXPECT_FALSE(repath(false, destination, target, cell, .1f));
+        EXPECT_TRUE(repath(true, destination + osg::Vec3f(65, 0, 0), target, cell, .1f));
+        EXPECT_TRUE(repath(true, destination, key(0x32a17), cell, .1f));
+        EXPECT_TRUE(repath(true, destination, target, key(0x22282), .1f));
+    }
+
+    TEST(OblivionAiTest, CompletedPartialApproachCanFinishAnOccludedAllowedDrop)
+    {
+        // Original-new-game06: assassin0178c3 consumes this projected prefix
+        // and remains still above Glenroy. The original grid has no connected
+        // route from node274 to64; package0178e2 permits physical falls.
+        const osg::Vec3f position(-372.854248f, 3159.95801f, -638.980469f);
+        const osg::Vec3f destination(22.0826473f, 2557.44336f, -703.f);
+        const std::array route{osg::Vec3f(-372.854279f, 3159.95801f, -634.998169f),
+            osg::Vec3f(-373.f, 3156.f, -634.998169f)};
+        const auto flags = ESM4::decodePackageFlags(0x483004);
+        const auto step = MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, destination, flags, false);
+        ASSERT_TRUE(step);
+        EXPECT_EQ(*step, destination);
+        // Actual recovery01 repeatedly reaches this lower position, then
+        // rebuilds the upper prefix: only59units remain, so the waypoint's
+        // 64-unit height tolerance must not terminate the physical descent.
+        const osg::Vec3f descending(-314.632263f, 3096.581543f, -643.925293f);
+        const auto descendingStep = MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), descending, destination, flags, false);
+        ASSERT_TRUE(descendingStep);
+        EXPECT_EQ(*descendingStep, destination);
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetNeedsRepath(
+            key(0x32a16), key(0x32a16), key(0x1fbb9), key(0x1fbb9),
+            destination, destination, 0.f, descendingStep.has_value()));
+        // A reload may rebuild the same prefix. Consume real route points
+        // before the final approach; no saved visibility history is required.
+        EXPECT_EQ(MWMechanics::oblivionResidentTargetStep(
+            route, 0, position, destination, flags, false), route.front());
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetStep(
+            {}, 0, position, destination, flags, false));
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, destination, {}, false));
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, position, flags, false));
+        EXPECT_FALSE(MWMechanics::oblivionResidentTargetStep(
+            route, route.size(), position, position - osg::Vec3f(0, 0, 16), flags, false));
     }
 
     PackageCandidate candidate(std::uint32_t id, AIPackageType type, std::size_t listIndex)
@@ -456,6 +556,32 @@ namespace
         EXPECT_TRUE(MWMechanics::oblivionPackageShouldRun(AIPackageType::FleeNotCombat, {}, 0.f, std::nullopt, false));
     }
 
+    TEST(OblivionAiTest, WaitingNativeFollowersCanYieldWithoutAbandoningTheirPackage)
+    {
+        RuntimeActorAiState state;
+        state.mPackage = key(1);
+        state.mTarget = key(2);
+        state.mHasDestination = true;
+        for (const auto type : {AIPackageType::Follow, AIPackageType::Accompany})
+        {
+            state.mPackageType = type;
+            state.mPhase = PackagePhase::Wait;
+            EXPECT_TRUE(MWMechanics::oblivionActorCanProactivelyYield(state));
+            EXPECT_FALSE(MWMechanics::oblivionActorHasMovingIntent(state));
+            state.mRestrained = true;
+            EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+            state.mRestrained = false;
+            state.mActionReserved = true;
+            EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+            state.mActionReserved = false;
+            state.mPhase = PackagePhase::Path;
+            EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+        }
+        state.mPackageType = AIPackageType::Travel;
+        state.mPhase = PackagePhase::Wait;
+        EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(state));
+    }
+
     TEST(OblivionAiTest, ProactiveYieldingIsLimitedToGenuinelyIdleNativeActors)
     {
         RuntimeActorAiState state;
@@ -807,4 +933,222 @@ namespace
         EXPECT_EQ(nextPass.find(key(3))->mKey, key(3));
         EXPECT_TRUE(nextPass.find(key(1))->mInventory.empty());
     }
+}
+
+TEST(OblivionAiTest, EscortArrivalCompletesBeforeScheduleExpiryAndDispatchesOnce)
+{
+    ESM4::PackageSelection selection;
+    selection.mSource = ESM4::PackageSource::Base;
+    selection.mPackage = key(10);
+    selection.mType = ESM4::AIPackageType::Escort;
+    auto state = ESM4::beginPackagePhase(selection, key(100), key(101));
+    state.mPhase = ESM4::PackagePhase::Wait;
+    state.mDurationRemaining = 24.f;
+    ESM4::PackagePhaseInput input;
+    input.mActionCompleted = false;
+    EXPECT_EQ(ESM4::advancePackagePhase(state, input).mTo, ESM4::PackagePhase::Wait);
+    input.mActionCompleted = MWMechanics::oblivionDestinationReached(
+        key(1), osg::Vec3f(40, 0, 0), key(1), osg::Vec3f{}, 64.f, selection.mType);
+    ASSERT_TRUE(input.mActionCompleted);
+    MWMechanics::OblivionPackageDoneQueue queue;
+    for (int tick = 0; tick < 3; ++tick)
+    {
+        const auto transition = ESM4::advancePackagePhase(state, input);
+        queue.record(transition.mFrom, transition.mTo, key(100), key(10));
+    }
+    EXPECT_EQ(state.mPhase, ESM4::PackagePhase::Complete);
+    int calls = 0;
+    queue.dispatch([&](const auto& event) {
+        ++calls;
+        EXPECT_EQ(event.mActor, key(100));
+        EXPECT_EQ(event.mPackage, key(10));
+    });
+    EXPECT_EQ(calls, 1);
+    queue.dispatch([&](const auto&) { ADD_FAILURE() << "arrival callback replayed"; });
+}
+
+TEST(OblivionAiTest, SavedClosedDoorOverridesDefaultOpenWithoutChangingLock)
+{
+    MWMechanics::OblivionDoorState authored{true, true, {}, {}, true};
+    ESM4::RuntimeReferenceState saved;
+    saved.mLockLevel = 100;
+    auto resolve = [&] { return MWMechanics::resolveOblivionDoorState(authored, &saved, std::nullopt); };
+    EXPECT_TRUE(resolve().mOpen); // Legacy snapshot with no explicit animation.
+    saved.mCustomState["obscript.animation_group"] = std::string("close");
+    saved.mCustomState["obscript.animation_progress"] = 1.0;
+    EXPECT_FALSE(resolve().mOpen);
+    EXPECT_TRUE(resolve().mLocked);
+    saved.mCustomState["obscript.animation_group"] = std::string("open");
+    EXPECT_TRUE(resolve().mOpen);
+    saved.mCustomState["obscript.animation_progress"] = .5;
+    EXPECT_FALSE(resolve().mOpen);
+    saved.mCustomState["obscript.animation_progress"] = 1.0;
+    saved.mCustomState["obscript.animation_absolute"] = true;
+    EXPECT_FALSE(resolve().mOpen); // Requires the model's time interval.
+    const MWMechanics::OblivionDoorState resident{true, true, {}, {}, false};
+    EXPECT_FALSE(MWMechanics::resolveOblivionDoorState(authored, &saved, resident).mOpen);
+}
+
+
+TEST(OblivionAiTest, TargetUsesCompleteAuthoredPassageOverContinuousDetour)
+{
+    ESM4::Pathgrid grid{};
+    grid.mFormKey = key(100);
+    grid.mData = 4;
+    grid.mNodes = {{300,0,50,1,0,0}, {172,0,50,1,0,0},
+        {100,0,0,1,0,0}, {25,-100,0,0,0,0}};
+    grid.mLinks = {{0,1}, {1,2}, {2,3}};
+    ESM4::PathgridService service;
+    service.registerPathgrid(grid, key(1));
+    const osg::Vec3f start(304,0,52), destination(0,-132,1);
+    const std::array<osg::Vec3f,4> detour{
+        osg::Vec3f(550,0,0), osg::Vec3f(550,-900,0), osg::Vec3f(0,-900,0), destination};
+    const auto choose = [&] {
+        return MWMechanics::shorterOblivionPathgridApproach(
+            service,key(1),start,destination,detour);
+    };
+    const auto preferred = choose();
+    ASSERT_TRUE(preferred);
+    ASSERT_EQ(preferred->size(),5u);
+    EXPECT_EQ((*preferred)[0],osg::Vec3f(300,0,50));
+    EXPECT_EQ((*preferred)[1],osg::Vec3f(172,0,50));
+    EXPECT_EQ((*preferred)[2],osg::Vec3f(100,0,0));
+    EXPECT_EQ(preferred->back(),destination);
+    // Route planning does not require seeing the target around the corner.
+    service.setNodeEnabled({grid.mFormKey,1},false);
+    EXPECT_FALSE(choose()); // Disconnected/disabled native nodes are authoritative.
+    service.setNodeEnabled({grid.mFormKey,1},true);
+    const std::array<osg::Vec3f,1> direct{destination};
+    EXPECT_FALSE(MWMechanics::shorterOblivionPathgridApproach(
+        service,key(1),start,destination,direct));
+    EXPECT_FALSE(MWMechanics::shorterOblivionPathgridApproach(
+        service,key(2),start,destination,detour));
+    EXPECT_FALSE(MWMechanics::shorterOblivionPathgridApproach(
+        service,key(1),osg::Vec3f(3000,0,0),destination,detour));
+    EXPECT_TRUE(MWMechanics::shorterOblivionPathgridApproach(
+        service,key(1),start,destination,{}));
+}
+
+// A CurrentLocation Travel package is a holding intent while an Escort
+// supplies the recipient's actual movement. Losing that overlay must not send
+// the recipient back to the location saved before the encounter.
+TEST(OblivionAiTest, PausedEscortKeepsRecipientAtCurrentPositionWithoutAdvancingHoldingPackage)
+{
+    for (const auto paused : {ESM4::PackagePhase::Stalled, ESM4::PackagePhase::Interrupted})
+    {
+        SCOPED_TRACE(static_cast<int>(paused));
+        TestingOpenMW::NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWMechanics::MechanicsManager mechanics;
+        fixture.mEnvironment.setMechanicsManager(mechanics);
+        world.initializePhysics(new osg::Group);
+        MWClass::Npc::registerSelf(); MWClass::ESM4Npc::registerSelf();
+        world.setupPlayer();
+        const auto stable = [](unsigned id) { return ESM::FormKey::content("headless.esm", id); };
+        ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{1, 0});
+        cell.mFormKey = stable(1); cell.mCellFlags = ESM4::CELL_Interior;
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        auto& resident = world.getWorldModel().getCell(cell.mId);
+        ESM4::Race race{}; race.mId = {0x810, 0};
+        race.mAttribMale = race.mAttribFemale = {40,40,40,40,40,40,40,40};
+        store.getWritable<ESM4::Race>().insertStatic(race, stable(0x810));
+        const auto makePackage = [&](unsigned id, ESM4::AIPackageType type) {
+            ESM4::AIPackage package{}; package.mId = {id,0}; package.mFormKey = stable(id);
+            package.mPackageType = type;
+            package.mLocationData.mKind = ESM4::PackageLocationKind::CurrentLocation;
+            package.mTargetData.mDistance = 150;
+            store.getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+        };
+        makePackage(0xa00, ESM4::AIPackageType::Escort);
+        makePackage(0xa01, ESM4::AIPackageType::Travel);
+        const auto makeActor = [&](unsigned id, unsigned package, float x) {
+            auto npc = *store.search<ESM4::Npc>(stable(0x800));
+            npc.mId = {id+0x200,0}; npc.mFormKey = stable(id+0x200); npc.mRace = race.mId;
+            npc.mAIPackageKeys = {stable(package)};
+            store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+            ESM4::ActorCharacter reference{}; reference.mId = {id,0}; reference.mFormKey = stable(id);
+            reference.mBaseObj = npc.mId; reference.mBaseKey = npc.mFormKey;
+            store.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+            MWWorld::LiveCellRef<ESM4::Npc> live(reference, store.search<ESM4::Npc>(npc.mFormKey));
+            MWWorld::Ptr ptr(resident.insert(&live), &resident);
+            auto position = ptr.getRefData().getPosition(); position.pos[0] = x;
+            ptr.getRefData().setPosition(position);
+            world.getWorldModel().registerPtr(ptr);
+            EXPECT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Active));
+            return ptr;
+        };
+        const auto leader = makeActor(0x900, 0xa00, 500);
+        const auto recipient = makeActor(0x901, 0xa01, 300);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player",1);
+        saved.mPlayer.mCell = cell.mFormKey;
+        saved.mPlayer.mRace = stable(0x810);
+        saved.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class",1);
+        const auto remember = [&](const MWWorld::Ptr& actor, unsigned package,
+                                  ESM4::AIPackageType type, ESM4::PackagePhase phase) {
+            ESM4::RuntimeReferenceState reference;
+            reference.mKey = actor.getCellRef().getFormKey();
+            reference.mBase = actor.get<ESM4::Npc>()->mBase->mFormKey;
+            reference.mCell = cell.mFormKey; saved.mReferences.push_back(reference);
+            ESM4::RuntimeActorAiState state;
+            state.mActor = reference.mKey; state.mBase = reference.mBase; state.mCell = cell.mFormKey;
+            state.mPackage = stable(package); state.mPackageType = type;
+            state.mProcedure = ESM4::packageProcedure(type);
+            state.mDurationRemaining = 24; state.mConditionResult = ESM4::ConditionResult::True;
+            state.mSource = ESM4::PackageSource::Base; state.mSelectionGeneration = 1;
+            state.mPhase = phase; state.mTier = ESM4::ProcessTier::High;
+            state.mLastValidCell = cell.mFormKey; state.mLastValidPosition = actor.getRefData().getPosition();
+            state.mDestinationCell = cell.mFormKey; state.mHasDestination = true;
+            state.mDestinationPosition.pos[0] = -1000; // Old holding position.
+            if (type == ESM4::AIPackageType::Escort) state.mTarget = stable(0x901);
+            saved.mActorAi.push_back(state);
+        };
+        remember(leader, 0xa00, ESM4::AIPackageType::Escort, paused);
+        remember(recipient, 0xa01, ESM4::AIPackageType::Travel, ESM4::PackagePhase::Path);
+        auto& ai = *world.getOblivionAiService();
+        ai.restore(saved);
+        ASSERT_TRUE(ai.isEscortRecipient(recipient));
+        EXPECT_FALSE(ai.isEscortRecipient(leader));
+        const auto before = *ai.state(recipient);
+        auto& movement = recipient.getClass().getMovementSettings(recipient);
+        movement.mPosition[1] = 1; // A prior controller must be stopped.
+        for (unsigned frame = 0; frame < 5; ++frame) ai.update(recipient, 1.f/60, true);
+        const auto* after = ai.state(recipient);
+        ASSERT_NE(after, nullptr);
+        EXPECT_EQ(after->mPackage, before.mPackage);
+        EXPECT_EQ(after->mPhase, before.mPhase);
+        EXPECT_EQ(after->mRouteGeneration, before.mRouteGeneration);
+        EXPECT_EQ(after->mNoProgressSeconds, before.mNoProgressSeconds);
+        EXPECT_EQ(after->mDestinationPosition, before.mDestinationPosition);
+        EXPECT_EQ(movement.mPosition[0], 0);
+        EXPECT_EQ(movement.mPosition[1], 0);
+        EXPECT_EQ(recipient.getRefData().getPosition().pos[0], 300);
+        ESM4::RuntimeState captured; ai.capture(captured);
+        EXPECT_TRUE(captured.mPendingPackageDone.empty());
+    }
+}
+
+TEST(OblivionAiTest, StationaryEscortRecipientCanYieldWithoutChangingItsTravelPhase)
+{
+    ESM4::RuntimeActorAiState recipient;
+    recipient.mPackageType = ESM4::AIPackageType::Travel;
+    recipient.mPhase = ESM4::PackagePhase::Path;
+    recipient.mHasDestination = true;
+    EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(recipient));
+    EXPECT_TRUE(MWMechanics::oblivionActorCanProactivelyYield(recipient, true));
+    recipient.mRestrained = true;
+    EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(recipient, true));
+    recipient.mRestrained = false; recipient.mActionReserved = true;
+    EXPECT_FALSE(MWMechanics::oblivionActorCanProactivelyYield(recipient, true));
+    recipient.mActionReserved = false;
+    // Actual blocked third-ambush geometry. A step must increase clearance
+    // from the leader; it must not require replacing either package's goal.
+    const osg::Vec3f receiver(2852.0923f,6473.165f,-1171.1573f);
+    const osg::Vec3f leader(2886.1506f,6425.1045f,-1180.572f);
+    const auto direction = MWMechanics::oblivionProactiveYieldDirection(receiver, leader,
+        osg::Vec3f(901.9102f,6977.626f,-1248.f), osg::Vec3f(1496.0852f,5398.7046f,-967.9122f));
+    ASSERT_TRUE(direction);
+    EXPECT_GT((receiver + *direction * 32 - leader).length(), (receiver-leader).length());
+    EXPECT_EQ(recipient.mPhase, ESM4::PackagePhase::Path);
 }

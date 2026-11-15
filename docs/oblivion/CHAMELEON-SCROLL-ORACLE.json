@@ -1,0 +1,105 @@
+{
+  "status": "independent original-game bounded CHML lifecycle observed",
+  "scope": "Original1.2.0416 private prefix/master-only probe; separate from fork gameplay acceptance",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "native_content": {
+    "book": "084aeb",
+    "enchantment": "05b044",
+    "mgef": "00185c CHML",
+    "magnitude": 25,
+    "duration": 30,
+    "range": "Self",
+    "actor_value": 46,
+    "stored_cost": 116,
+    "raw_mgef_audit": "build/oblivion-compat/chameleon-scroll/original-chameleon-mgef.json"
+  },
+  "observations": [
+    {
+      "case": "early first normal C cast",
+      "scroll": "2 to1",
+      "chameleon": 0,
+      "magicka": 80,
+      "image": "native-chameleon-first-cast-early.png"
+    },
+    {
+      "case": "first released effect",
+      "scroll": 1,
+      "chameleon": 25,
+      "magicka": 80,
+      "image": "native-chameleon-first-applied.png"
+    },
+    {
+      "case": "explicitly reselected real second scroll",
+      "scroll": "1 to0",
+      "chameleon": 25,
+      "magicka": 62.61,
+      "regen": "Base0/Mult0",
+      "image": "native-chameleon-real-second-applied.png"
+    },
+    {
+      "case": "second application survives first lifetime",
+      "chameleon": 25,
+      "interval": "22 seconds deliberately unpaused after the second application, plus ordinary key transitions; first application also had earlier cast/control time",
+      "image": "native-chameleon-after-first-lifetime.png"
+    },
+    {
+      "case": "natural expiry",
+      "chameleon": 0,
+      "magicka": 62.61,
+      "interval": "10 more deliberately unpaused seconds plus key transitions",
+      "image": "native-chameleon-expired.png"
+    },
+    {
+      "case": "armored new use after expiry",
+      "armor": "Original Rusty Iron Cuirass0661c1 and Greaves0661c3; HeavyArmor15; menu spell effectiveness88%",
+      "scroll": "1 to0",
+      "chameleon": 25,
+      "magicka": 62.61,
+      "image": "native-chameleon-armored-applied.png",
+      "menu_image": "native-chameleon-armored-selected.png"
+    }
+  ],
+  "decisions": {
+    "application": "Spend at cast admission; apply after the early pending phase using the authored self-cast release key. No exact original release-frame assertion.",
+    "magnitude": "Authored25 applies in both unarmored and tested armored context; no learned-spell armor-effectiveness multiplier.",
+    "lifetime": "Authored30 seconds, finite and paused with console/menu; repeated same original enchantment refreshes one25-point contribution instead of adding another25.",
+    "ownership": "Retain consumed BOOK and resolved ENCH identity; removal uses the stored applied contribution. Never infer an effect from stock or an AV46 scalar.",
+    "selection": "Original selection reverts after a use even when a remaining copy exists. The fork may clear its selected scroll; previous-spell fallback remains outside this chunk."
+  },
+  "retained_setup": {
+    "wrong_repeat": "A first repeat C without explicit reselection cast Heal Minor Wounds: scroll stayed1, Chameleon25 and MP fell to62.61. This is not used as a stacking or scroll-cost result; the corrected repeat reselects the real scroll and disables regeneration.",
+    "timing": "Coarse controlled unpaused intervals, not wall-clock equality while menus/console are open. Raw EFIT30 and bounded expiry observations support duration; exact animation/shader behavior is outside scope.",
+    "armor_selection": "The armored menu has additional power/list scrolling; the post-cast count0, AV46=25 and fixed MP independently identify actual Chameleon execution. Menu effectiveness88% is directly visible."
+  },
+  "editable_probe_recipe": {
+    "start": "Private copied prefix/pristine67d927 save, only Oblivion.esm, owned1280x768 display; EnablePlayerControls, verify Illusion5/Chameleon0/MP80/count0.",
+    "initial": [
+      "player.additem 00084aeb 2",
+      "Close console, F3 select Chameleon in Scrolls, close menu.",
+      "C pulse .06s down/.06s up; promptly open console and query count/Chameleon/MP.",
+      "Unpause for2s and query again."
+    ],
+    "repeat": [
+      "Explicitly reselect the remaining scroll.",
+      "For fixed-MP control setgs fMagickaReturnBase 0 and setgs fMagickaReturnMult 0.",
+      "Cast normally, unpause2s, query count/Chameleon/MP.",
+      "Unpause22s, query; unpause10s, query."
+    ],
+    "armor": [
+      "After expiry add/equip original0661c1/0661c3, query HeavyArmor and inspect menu effectiveness.",
+      "Add one original084aeb, normally select/cast, query count/Chameleon/MP."
+    ],
+    "exit": "qqq without saving; verify source/copy pristine and original executable hashes, owned display exited."
+  },
+  "evidence_root": "build/oblivion-compat/chameleon-scroll/original-native-01",
+  "process_identity": "game-process-epoch.json",
+  "input_log": "input-log.jsonl",
+  "exit_verification": "exit-verification.json",
+  "outside_scope": [
+    "Cross-enchantment stacking and general magic effects",
+    "Exact shader/refraction and native frame timing",
+    "Original-game acceptance save from this controlled probe"
+  ]
+}

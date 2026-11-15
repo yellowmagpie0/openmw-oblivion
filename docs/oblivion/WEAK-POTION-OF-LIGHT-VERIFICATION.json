@@ -1,0 +1,705 @@
+{
+  "status": "verified",
+  "scope": "Earned original Weak Potion of Light: inventory use, authored nearby illumination, owned simulation timer, active and expired cold loads, and ordinary movement. Full M16 remains open.",
+  "contract": "WEAK-POTION-OF-LIGHT-CONTRACT.json",
+  "oracle": "WEAK-POTION-OF-LIGHT-ORACLE.json",
+  "parent_revision": "b21faea6f7aa0fef12a52891cfb8da56cd9ff0c1",
+  "production_source_sha256": {
+    "apps/esmtool/tes4.cpp": "3e656abf705c0a07f80764b4ee00e0f488801f4da3166c6e7a14b31d0042c306",
+    "apps/openmw/mwclass/potion.cpp": "b5d2086d86f9597be1e110f6828aedbee2e79363ec98bfced915e299968b9f3d",
+    "apps/openmw/mwmechanics/character.cpp": "ece804ce2b85241008dc159a3ad1038cc2bbe1eff94533a433e12ca7bec308e4",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "9774a13e41771ea29d2350161de233111ee45c290014d20e37ab8e51ea9b1062",
+    "apps/openmw/mwrender/animation.cpp": "79627da4d7a69fb47cce44ea9c048542adf66280d2b71ecb8b0c0047294b7662",
+    "apps/openmw/mwrender/animation.hpp": "bb5106a38865fd16d4e374d6dcd9f734ac4566e175bfc8ed954f213cbcf3a214",
+    "apps/openmw/mwworld/oblivioncombatmagic.cpp": "525341975a622f5d347fc34f63dba6ed1d0b96426866bf9c3b0ba5636b680e98",
+    "apps/openmw/mwworld/oblivioncombatmagic.hpp": "f1a63f320ea6f6530d0e70de07458189d333e400c0c774b69dc0e1ec5e3c412d",
+    "apps/openmw/mwworld/worldimp.cpp": "8bf754bab019c14e308c5098f7e4b07fbcd3309e9c71f61da8b42282807be52c",
+    "components/esm4/loadmgef.cpp": "f454a4b7dac0dc61a51fae9a5aa47489fcc4e320716cef3404cddb6fec5ca4f1",
+    "components/esm4/loadmgef.hpp": "422c7e75d7f497f60d4b279195fac6da3b96389eac00d5da6ed8971be4bb2403",
+    "components/esm4/runtimestate.cpp": "27bf2db593cb3e72057ca98c750fd0e5b15fef24d45d1adf373b4ce2e0e854ca",
+    "components/esm4/runtimestate.hpp": "aeedb5277cb5a0c535f853bec3658e6677acbc0b0b45ef0b986c15b60ff90a6c",
+    "scripts/tes4_m15_fixture_preflight.py": "0c3e0d9ed84f5df0a6701c91ca88de9d9868f11ad9550fdc742723cb33f7279f",
+    "scripts/tes4_potion_audit.py": "63fcb6f0ae329406a575d37e1daf2c36b0253cf2d0a8371fae367012ef23ad3a",
+    "scripts/tes4_runtime_state.py": "b3b9b505095f742c53c36df819cde600a087b7f6c582f91d6f0f2ace183f78b5",
+    "scripts/tests/test_tes4_m15_fixture_preflight.py": "c894dea9a7005f6c8bb135b7148d8580a6b24e7139b7f3a8feeab86424f1ea40",
+    "scripts/verify_weak_potion_light.py": "d31bc563efa147327a0175328bcfa565af5436cb1855d53d201ae703b00dc91e"
+  },
+  "cases": {
+    "normal-use-earned-potion-02": {
+      "audit": {
+        "passed": true,
+        "phase": "use",
+        "source_sha256": "180441056e20c9ec72bd5685e6e7890e3cee9c7be0db94fdb8b2a7a4b4b99847",
+        "save_sha256": "1d019b48ad72005c236902ee9f0e005d728bca9d8ca9d76723e87b6690edeb33",
+        "process": {
+          "pid": 1458498,
+          "start_ticks": 210016184,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-use-earned-potion-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-nearby-earned-potion-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e9f2a7650be8c7e3d05153ca22bd8f34b07fc0d92b64b591a554dc449276b2e1"
+        },
+        "effects_before": [],
+        "effects_after": [
+          {
+            "potion": "content:oblivion.esm:09847f",
+            "light": "content:oblivion.esm:0052b4",
+            "magnitude": 20.0,
+            "duration": 60.0,
+            "elapsed": 2.626953125
+          }
+        ],
+        "potion_before": 1,
+        "potion_after": 0,
+        "mean_rgb": {
+          "baseline_dark": [
+            33.536,
+            44.864,
+            43.179
+          ],
+          "active": [
+            64.492,
+            88.088,
+            70.756
+          ]
+        }
+      },
+      "artifacts": {
+        "audit.json": "f7950bb843fc0ff53d73f67065a23cf8bdc98a93dd2046b070eb7be55f78ea0d",
+        "scenario.json": "50763f2a06c93403269492496a42827219f97fee421b6cfa91896a94a3ab099a",
+        "driver-process.json": "9a8c0c5aec0cb849a7c413d0f2559910c91a9e282a6e006e9baf41a2964cae1a",
+        "captured-input-manifest.json": "6f92fc639722bd30751aca1c1d1d33878df087ce5ff4d58f55f41b6a298b2970",
+        "process-epoch.json": "21127abc9f1817d51716581b895f09211b4c004229d83ab7f635d1f76d5ac49c",
+        "loaded-libraries.json": "33a6a477fa0129bc10fb2c4b98ff3c5b32a4efb6c07a4135eeaee93d0816b826",
+        "events.jsonl": "5c790e4f12069d12ec3afadf6fc8836440d7c40908eb3d527fc67da01f27e635",
+        "process.log": "c02be35caa2128d139b129154ba1a0e1af7e5072f7f65502eb94505a6e16f05d",
+        "fixed-view-after-potion.png": "12d3de0b4aece5fe749f6c04467564e35e93ba97cf92a9c7f8e715a2d322290d",
+        "fixed-view-before-potion.png": "c3d044ece9daf5a1e2d467baec15b8c6ce1ecb86e03657d7b8f802d2b1c93a4b",
+        "original-potion-light-tooltip-before-use.png": "c2bdde995812872f831af8464efd883abd0f6cf1e0db966ab00ee2592077e0f3",
+        "original-potion-light-use-attempt.png": "61aeb560cf58b96be7c5ef7bd2283676a5bcb0b9c2ccfc31286c4f488f197bea"
+      }
+    },
+    "normal-light-restart-expire-03": {
+      "audit": {
+        "passed": true,
+        "phase": "expire",
+        "source_sha256": "1d019b48ad72005c236902ee9f0e005d728bca9d8ca9d76723e87b6690edeb33",
+        "save_sha256": "2c91eef11c91c9280963ba9d5c08bd85a69654e12bb48abe5d78ec0f04beee0d",
+        "process": {
+          "pid": 1459188,
+          "start_ticks": 210055106,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-light-restart-expire-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-use-earned-potion-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e9f2a7650be8c7e3d05153ca22bd8f34b07fc0d92b64b591a554dc449276b2e1"
+        },
+        "effects_before": [
+          {
+            "potion": "content:oblivion.esm:09847f",
+            "light": "content:oblivion.esm:0052b4",
+            "magnitude": 20.0,
+            "duration": 60.0,
+            "elapsed": 2.626953125
+          }
+        ],
+        "effects_after": [],
+        "potion_before": 0,
+        "potion_after": 0,
+        "mean_rgb": {
+          "baseline_dark": [
+            33.536,
+            44.864,
+            43.179
+          ],
+          "loaded": [
+            56.465,
+            76.859,
+            63.59
+          ],
+          "expired": [
+            33.524,
+            44.871,
+            43.203
+          ]
+        }
+      },
+      "artifacts": {
+        "audit.json": "65b2c9e7ceda4bfb1756594787f01459c2f24df341c48933b7cf7e64ba365ac4",
+        "scenario.json": "65efbebeb562d77dd55a621ebb218b0f368d11708cf5ef555bbb5e0201e2a8df",
+        "driver-process.json": "e3c4d666a542f53195d2180355bb5fe6019048ee5fc61e8b907fecd032701667",
+        "captured-input-manifest.json": "671de52797245b618d120293bb134e86e1347a89a59e72d0811003029da74549",
+        "process-epoch.json": "a4b64f806c19eff228b86d11d302f51cd8bb5feab8397da03b99660e3744fafc",
+        "loaded-libraries.json": "52dcd3a587448267d7b1ebffaaf182c4bb3061f90aca0d2205225b3323f657f6",
+        "events.jsonl": "1ebdb0ae3fd8d54732c574ebe8d1e6d1bd30b1a56832245eaac505928af3bbed",
+        "process.log": "44ded986410a755f5f0f5499936df289fd3282d70578f390ef814b25b739558f",
+        "fixed-view-after-expiry.png": "67994336fa642a8a919a8acdbde6a3457b4e581ca0a9d1aef30d72f557fcc223",
+        "fixed-view-after-load-expire.png": "208b3a1317cbcbb071addbbdc7cbef759062d431e3cfb8e7d319fc343e31b314"
+      }
+    },
+    "normal-light-restart-empty-03": {
+      "audit": {
+        "passed": true,
+        "phase": "empty",
+        "source_sha256": "2c91eef11c91c9280963ba9d5c08bd85a69654e12bb48abe5d78ec0f04beee0d",
+        "save_sha256": "3744a7a03fc57de3566a572772e966a18243825b38128e388d91768bbc07835f",
+        "process": {
+          "pid": 1459400,
+          "start_ticks": 210068459,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-light-restart-empty-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-light-restart-expire-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e9f2a7650be8c7e3d05153ca22bd8f34b07fc0d92b64b591a554dc449276b2e1"
+        },
+        "effects_before": [],
+        "effects_after": [],
+        "potion_before": 0,
+        "potion_after": 0,
+        "mean_rgb": {
+          "baseline_dark": [
+            33.536,
+            44.864,
+            43.179
+          ],
+          "loaded": [
+            33.567,
+            44.906,
+            43.216
+          ]
+        }
+      },
+      "artifacts": {
+        "audit.json": "7240087a33442dc832b7f43f431ad9ec71f62f1bfd79978c622c7f783c0870f2",
+        "scenario.json": "5b40d820ce7f59bd0aa0dcc055e0d70a28858b16d602aa6bc2fea6d835ce0209",
+        "driver-process.json": "9204f181e7e387130b3fc8995e76eac1cf828ea33c8c713a742bbd68d09f6920",
+        "captured-input-manifest.json": "7ac8bde38564387aae50544117504d84a73e884d9f697a62424f32bf576d285c",
+        "process-epoch.json": "eefdbfb9a4822dec94aa30c941deae98c8c28cd428eb5a973bf0ed2662cd163d",
+        "loaded-libraries.json": "4e6387b50d365d49faa595d43a9287358943e7f4eb9b80b17c1775c9ab417144",
+        "events.jsonl": "ca04e8a48eacd4b68825ba1e3edcf3dc66d3a434da73c3aab4e0682c5fd60101",
+        "process.log": "1720056dfeeef0ff61b464ab7c0eac0be7ca974d97c66a0484d4ad091a384e75",
+        "fixed-view-after-load-empty.png": "3c9e65a65b2d13fae4fa37e056a9a83ecca070a868af78e612cba334ed3fee6f"
+      }
+    },
+    "normal-light-movement-02": {
+      "audit": {
+        "passed": true,
+        "phase": "move",
+        "source_sha256": "1d019b48ad72005c236902ee9f0e005d728bca9d8ca9d76723e87b6690edeb33",
+        "save_sha256": "a4b88bf7e6ee3cbe1b75c7d3b94d82cf13cf6f735d8f190ad36eeacc28fd8398",
+        "process": {
+          "pid": 1459514,
+          "start_ticks": 210074717,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-light-movement-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-use-earned-potion-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "e9f2a7650be8c7e3d05153ca22bd8f34b07fc0d92b64b591a554dc449276b2e1"
+        },
+        "effects_before": [
+          {
+            "potion": "content:oblivion.esm:09847f",
+            "light": "content:oblivion.esm:0052b4",
+            "magnitude": 20.0,
+            "duration": 60.0,
+            "elapsed": 2.626953125
+          }
+        ],
+        "effects_after": [
+          {
+            "potion": "content:oblivion.esm:09847f",
+            "light": "content:oblivion.esm:0052b4",
+            "magnitude": 20.0,
+            "duration": 60.0,
+            "elapsed": 9.1591796875
+          }
+        ],
+        "potion_before": 0,
+        "potion_after": 0,
+        "mean_rgb": {
+          "baseline_dark": [
+            31.148,
+            42.412,
+            40.881
+          ],
+          "moved_dark": [
+            31.148,
+            42.412,
+            40.881
+          ],
+          "moved_active": [
+            42.678,
+            58.577,
+            51.074
+          ]
+        }
+      },
+      "artifacts": {
+        "audit.json": "79369850bf596eaeabb76c64d3e80d177622937d001ce44e927da50bff56b745",
+        "scenario.json": "9bc2c2264c0cf10a114ab638050e2a5185ec9b3085d39f7f2f2f0dd930137872",
+        "driver-process.json": "0987a7e1b1dd96129c139f1a48a438d229db444b180c15d6ff63bdfdadb25ae6",
+        "captured-input-manifest.json": "ab5d3c25e0ca8580c3c5f5fa5e69c45ef804e97915f6722fdcaba3f4f8192c1a",
+        "process-epoch.json": "26cfd2e7dc482a6d1f34f80694c3bd8f095a265f3be09ab1c823a66d0fee68e1",
+        "loaded-libraries.json": "2e20e5eaaade25924517e7a4067c1423ec5100c3b5836e9ff556acbe930559d8",
+        "events.jsonl": "85e5a80839418c870436c7ad1ecbf837733f59a76bfb13e966cd2e359c07b1bd",
+        "process.log": "10a3324156e5ef15b31650e553a96592444b9d95069be6b25162b9eca1cc921f",
+        "pool-backstep-active.png": "055768df25e45651cc4f1de7fffa0b3c4ec4a90134ac482fbeb30782fc994d33",
+        "pool-level-active.png": "995c02dd9d3be17beff7a16ee208421478e692572954ff244aeaa4a4b54ee7be",
+        "pool-surface-active.png": "54151d6c998fd0ed0f95868bb9f95189ace3ce39f8b6bf7579f241968f1f2c5c"
+      }
+    },
+    "sanitized-use-earned-potion-02": {
+      "audit": {
+        "passed": true,
+        "phase": "use",
+        "source_sha256": "180441056e20c9ec72bd5685e6e7890e3cee9c7be0db94fdb8b2a7a4b4b99847",
+        "save_sha256": "b3f17386d8d3c251304783b56ee19d632f96d0b413dc9da646eb204b175f9104",
+        "process": {
+          "pid": 1481826,
+          "start_ticks": 211059385,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/sanitized-use-earned-potion-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/normal-nearby-earned-potion-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "303085f122bd8031733235356926d83d903e19c01d3813b792dd3dc6f3adff85"
+        },
+        "effects_before": [],
+        "effects_after": [
+          {
+            "potion": "content:oblivion.esm:09847f",
+            "light": "content:oblivion.esm:0052b4",
+            "magnitude": 20.0,
+            "duration": 60.0,
+            "elapsed": 0.8212890625
+          }
+        ],
+        "potion_before": 1,
+        "potion_after": 0,
+        "mean_rgb": {
+          "baseline_dark": [
+            33.536,
+            44.864,
+            43.179
+          ],
+          "active": [
+            57.855,
+            78.842,
+            64.865
+          ]
+        }
+      },
+      "artifacts": {
+        "audit.json": "39f65441f4d8d4e4121cd3d197c314ba744487036d7ae5e56e11f06f76a097ac",
+        "scenario.json": "c325abbb9851c2f59d438a11a6c83d91108e321ac600dd98ee5ba20cc2e392b7",
+        "driver-process.json": "890e64a6e9e2630e0091ff857a0dbcd2d671976d7060878735eed43a4fd657a1",
+        "captured-input-manifest.json": "fcde88fe0b575d3f0267d7489e3d010b6e66758c2c99c530e26f37a068823abe",
+        "process-epoch.json": "8a740e914f1311799c79583c13a722e10957671b98b41e5193aac863d4ec0bcc",
+        "loaded-libraries.json": "16fd6294faa614c598ae71c5607b164bd374da4953b0508d4cc08600e90a7989",
+        "events.jsonl": "867bc72cdd66e3fe3ab0c8be89d2c969e821fde772f8fc25c34d91c2841548d4",
+        "process.log": "3c2fc0a83e5e38a42c4113919cb5bc43d5336b9f94897a34b8bab1a3bd2caee9",
+        "fixed-view-after-potion.png": "6b0a550387012ed3d575460dc77853a54f7087918e29b1e23697f1dca7e88987",
+        "fixed-view-before-potion.png": "9b0c58dd97ceaed474c5e091dd42ef192986e7395c75dafa96d501b47a6a1955",
+        "original-potion-light-tooltip-before-use.png": "43f858f2755cf39856755c8ceebce533d0c42d057fae3560793293ef82420bea",
+        "original-potion-light-use-attempt.png": "ad48d3a44e1cbe9dc3f80da61c19ac829df8f0d558e06e86e36a765ba7bbba2c",
+        "observed-sanitizer-environment.json": "d3fa87ca706482e055969b1782eddbfc41054b5ba5834a26b1874f345ec9f387"
+      }
+    },
+    "sanitized-light-restart-expire-02": {
+      "audit": {
+        "passed": true,
+        "phase": "expire",
+        "source_sha256": "b3f17386d8d3c251304783b56ee19d632f96d0b413dc9da646eb204b175f9104",
+        "save_sha256": "b9c57c016d29b94ad618cf7b08a47ba609ce8ec335a7cf4ac63163cd26158e76",
+        "process": {
+          "pid": 1482549,
+          "start_ticks": 211140656,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/sanitized-light-restart-expire-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/sanitized-use-earned-potion-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "303085f122bd8031733235356926d83d903e19c01d3813b792dd3dc6f3adff85"
+        },
+        "effects_before": [
+          {
+            "potion": "content:oblivion.esm:09847f",
+            "light": "content:oblivion.esm:0052b4",
+            "magnitude": 20.0,
+            "duration": 60.0,
+            "elapsed": 0.8212890625
+          }
+        ],
+        "effects_after": [],
+        "potion_before": 0,
+        "potion_after": 0,
+        "mean_rgb": {
+          "baseline_dark": [
+            33.536,
+            44.864,
+            43.179
+          ],
+          "loaded": [
+            56.465,
+            76.859,
+            63.591
+          ],
+          "expired": [
+            33.502,
+            44.841,
+            43.175
+          ]
+        }
+      },
+      "artifacts": {
+        "audit.json": "351e0e40566ceb7425ed686435449aaf944e25dc1faec5c1ff83270bf2cb26b5",
+        "scenario.json": "5323c810e144cdc98e0b57dcff82f7507e5c38dd2d3ade86d0032724e91dc3a7",
+        "driver-process.json": "60d6c53824f1f3e435ffacf05136e2f34ee0c0d58851d60bc6d66e93077364be",
+        "captured-input-manifest.json": "de3914777712f97d69945edd766657b8c4361441f4f21f60bf78d28c04d46bf6",
+        "process-epoch.json": "6dd466895a41d37649e8c287916ab0420231313720ffac8e18cbb505ea9d0f79",
+        "loaded-libraries.json": "f1b408de68eeeb3fff3ab8e0233b64e2ca0284d19b23ad4b28e66157104267dc",
+        "events.jsonl": "3b048f6b7a2854dd13c335c570b452e206effb4c4cfcdd5c5848cfc283181a57",
+        "process.log": "0ebae8eaf4bcd7769d26a0400c679e622bfce0aa0beaa0870fc31284fec3f77e",
+        "fixed-view-after-expiry.png": "7fe3ba91e218d1bc15d44c72574daf1a6fa82ee4f1bcad163624148363e5b01c",
+        "fixed-view-after-load-expire.png": "ec1bf54def8410bfaa1504f008a437698c50713d828dd00a525c3acebfad67cb",
+        "observed-sanitizer-environment.json": "ee76023e856c6aff1da899be7178fc42cd4b53c5d432f24e7efde9a00cfe43da"
+      }
+    },
+    "sanitized-light-restart-empty-01": {
+      "audit": {
+        "passed": true,
+        "phase": "empty",
+        "source_sha256": "b9c57c016d29b94ad618cf7b08a47ba609ce8ec335a7cf4ac63163cd26158e76",
+        "save_sha256": "1d8254b5e9f9bdb5a98be81d8d80865bddfcb8d4e4a5a9d94a0fd97b30404f43",
+        "process": {
+          "pid": 1482926,
+          "start_ticks": 211194394,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/sanitized-light-restart-empty-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/sanitized-light-restart-expire-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "303085f122bd8031733235356926d83d903e19c01d3813b792dd3dc6f3adff85"
+        },
+        "effects_before": [],
+        "effects_after": [],
+        "potion_before": 0,
+        "potion_after": 0,
+        "mean_rgb": {
+          "baseline_dark": [
+            33.536,
+            44.864,
+            43.179
+          ],
+          "loaded": [
+            33.57,
+            44.902,
+            43.214
+          ]
+        }
+      },
+      "artifacts": {
+        "audit.json": "339bfc2c75780c0071b89210a17ac1dd3a892b85158b6b7d58b414263cdf4c71",
+        "scenario.json": "84315fb6ec5ca32122119a0918706a5833c8b71a17b9650cdf7630759abfe2da",
+        "driver-process.json": "7f36c92624955fd679ba0b477d87daa036b88a063d6b2f4013d38bbf3919f36a",
+        "captured-input-manifest.json": "ba3808d3cc2ea0da41f0e33ae8f8dfcb68b17e23e2a06df37fc8099b2e15df08",
+        "process-epoch.json": "2d16edf5806c4ccd86b74e2edfeb5baac672ce252533959f52cf525951297662",
+        "loaded-libraries.json": "d8d3958f05de2ec0c27873bfc7288e5509eead4cd26087a090360a54a368255d",
+        "events.jsonl": "1739abe1fdf1624cc44ecb7ee2266b4e6f184e2bdf5be8f25748b1b89baf0499",
+        "process.log": "c78d58e8d36ab8a1b7d6e1f9cdbda07fd85ab8c8fdff3b1d8a4e94275c2a51a3",
+        "fixed-view-after-load-empty.png": "724cf549020283ce1c4812feeebb0d9904c6e26afa37dbdf08cac914b4f3dd42",
+        "observed-sanitizer-environment.json": "0d3e205b6aed873a7477f6d17298b45e64c23824c8a2b06eb58c429f44dbaaea"
+      }
+    },
+    "sanitized-light-movement-02": {
+      "audit": {
+        "passed": true,
+        "phase": "move",
+        "source_sha256": "b3f17386d8d3c251304783b56ee19d632f96d0b413dc9da646eb204b175f9104",
+        "save_sha256": "2f9108a48d4fc328c5c2e5744e64c5f281108a51b41ffa6f05ab8fe2900ac12b",
+        "process": {
+          "pid": 1483505,
+          "start_ticks": 211258364,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/sanitized-light-movement-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/potion-light/sanitized-use-earned-potion-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "303085f122bd8031733235356926d83d903e19c01d3813b792dd3dc6f3adff85"
+        },
+        "effects_before": [
+          {
+            "potion": "content:oblivion.esm:09847f",
+            "light": "content:oblivion.esm:0052b4",
+            "magnitude": 20.0,
+            "duration": 60.0,
+            "elapsed": 0.8212890625
+          }
+        ],
+        "effects_after": [
+          {
+            "potion": "content:oblivion.esm:09847f",
+            "light": "content:oblivion.esm:0052b4",
+            "magnitude": 20.0,
+            "duration": 60.0,
+            "elapsed": 7.1298828125
+          }
+        ],
+        "potion_before": 0,
+        "potion_after": 0,
+        "mean_rgb": {
+          "baseline_dark": [
+            31.148,
+            42.412,
+            40.881
+          ],
+          "moved_dark": [
+            31.148,
+            42.412,
+            40.881
+          ],
+          "moved_active": [
+            36.5,
+            49.919,
+            45.666
+          ]
+        }
+      },
+      "artifacts": {
+        "audit.json": "b2b3a729fe651600af56827a2defccab28fa37446fc7e89b727952118938f3ec",
+        "scenario.json": "2793035e6b3c3e313039355e35129109f738ffbcdafd73b771ae05512649e3c6",
+        "driver-process.json": "7dad3545b57fb76cacbe546b3ac799f6ce0eceb05b5d294fe30c92cd80b5d65d",
+        "captured-input-manifest.json": "cf82e45682b979a723c53b0ef4c5fa5d3a6c65326ac0ccebed0c42f492ac59f8",
+        "process-epoch.json": "cb6eb431f9cf77d26da3fa5f46119896b65e6989dd2f1673ef3ac53a962f39b3",
+        "loaded-libraries.json": "92b2fe99b1d0fc6b01daffac598f3c0faa524e92c168985725e6b6217b257ab6",
+        "events.jsonl": "1e2209b1b492d4d09a7056410b512c7d88459d8b0f78b83e6a90a1779ff83721",
+        "process.log": "89e7270044e8ef452b7764eb91175baa272af4f94f37f8b33b2c8d0d2dca2372",
+        "pool-backstep-active.png": "472157078affcaa370e5a8fb1aa0a0c25c365365656110c0212fbdb1dde6223a",
+        "pool-level-active.png": "cd38bbb7c74073236df553db2348e88f718973676d41943ec3dc8f249c9d1718",
+        "pool-surface-active.png": "3328fa2c29288824713200d28046e9f36f077c067561bb6b2d8490fa15768004",
+        "observed-sanitizer-environment.json": "2611bcbe0858779a9fc35979ae7e23e0b3efce4983f68cccb9090a89cfa51790"
+      }
+    }
+  },
+  "integration": {
+    "normal-integration-01": {
+      "path": "build/oblivion-compat/potion-light/normal-integration-01/verification.json",
+      "sha256": "4fadc6e89a96f5d0d480781454c9648c7e4b21d298e7123ca6781d59f1cfc57c",
+      "source": {
+        "head": "b21faea6f7aa0fef12a52891cfb8da56cd9ff0c1",
+        "source_fingerprint": "de75356f4877ed9e89d2b5f387a7a5455abd70ff37ef146ccb927d7c3480fc42"
+      },
+      "results": {
+        "engine": {
+          "executed": 2276,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "76b6c109906dfb1b67c8e5d72176288608b447090a0a5fef08838417253becbe",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3e35e828cf0b13b0a4e0b07802b2b219c532dc3be1f621b3570829028ad1fbbb",
+          "inventory_sha256": "248fcc1d75ff54cd37172cd43cf0bc3114ade4c52cd110a0ee99cfe3d26ec8bb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components": {
+          "executed": 3290,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "cac97420f6a635b2cf8eab4d9af1e22d2e4873ec53d790ca988bb73dc18e8e9e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6daa1ca1e2202ab25c671d533f56c65a5e9438aae6af3b6e1fbf74b9ad4f3e26",
+          "inventory_sha256": "2946486a2c0811e18614be8b76e67f2d106f792c04708cf4150d2c7e4251867f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 611,
+          "passed": true,
+          "log_sha256": "676dd2c9875e1abf2286490890122e53b5f8ecdb536a64cf5857ec45da87ae30"
+        }
+      }
+    },
+    "sanitized-integration-01": {
+      "path": "build/oblivion-compat/potion-light/sanitized-integration-01/verification.json",
+      "sha256": "2c9ce6d9057119dd43b9e984f9d303f7a0537b4a7e4ebc61edf8e421a10e3dcc",
+      "source": {
+        "head": "b21faea6f7aa0fef12a52891cfb8da56cd9ff0c1",
+        "source_fingerprint": "de75356f4877ed9e89d2b5f387a7a5455abd70ff37ef146ccb927d7c3480fc42"
+      },
+      "results": {
+        "engine": {
+          "executed": 2276,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "5e57c7df23867efd172f9f8ff02a74651313e89386826c8fa0e23e0e2b7f6fc8",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "05507491a7b495fa7203fcfdb1a13597935eb73dc166604f1117fa2a4c79ad55",
+          "inventory_sha256": "248fcc1d75ff54cd37172cd43cf0bc3114ade4c52cd110a0ee99cfe3d26ec8bb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "sanitize": {
+          "executed": 1111,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "46295fb4914360c28be6716af09a39072b6a120552455944625d6b0f300a46cb",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "5983b6ea8f7836f62225db79a46ced56d46ee91433f2c3f1ece38c260dbf9e93",
+          "inventory_sha256": "e35ec2b9b3d3270dfe297b5ff5bdbeea539231ba650aa6764ce30e47d4e26d8e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "actual_master_audit": {
+    "path": "build/oblivion-compat/potion-light/normal-official-potion-preflight-01/verification.json",
+    "sha256": "a38f207cd42535bb7b46a8825fd071280692222d4bc5bf67b680bf5e95409b26",
+    "report": {
+      "passed": true,
+      "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "esmtool_sha256": "ec53c9d423189d00659f10ce4499821547fd4e020a17791303456905c326d699",
+      "restoration_definitions": {
+        "REFA": {
+          "flags": 16779376,
+          "resource": 10,
+          "school": 5,
+          "resistance": -1
+        },
+        "REHE": {
+          "flags": 16779376,
+          "resource": 8,
+          "school": 5,
+          "resistance": -1
+        },
+        "RESP": {
+          "flags": 16779376,
+          "resource": 9,
+          "school": 5,
+          "resistance": -1
+        }
+      },
+      "light_definition": 21172,
+      "light_matches": true,
+      "records": 253,
+      "effects": 330,
+      "missing": [],
+      "unexpected": [],
+      "different": []
+    }
+  },
+  "integration_reuse": {
+    "path": "build/oblivion-compat/potion-light/integration-reuse-audit.json",
+    "sha256": "b83b8a93337f141b91f335650a8b6f908dba5b687c3bb063d3223f8125dc9d22"
+  },
+  "limitations": [
+    "Original-game isolated oracle supplied one authored bottle; fork acceptance consumed a bottle earned from the actual locked cask.",
+    "Illumination color/radius and duration are gameplay approximations; exact cross-engine pixels, pulse phase and arithmetic are not acceptance requirements.",
+    "Only the single earned bottle course is verified; overlapping sources, other effect types, general UI and full M16 remain open.",
+    "Rendered ASan/UBSan courses disable leak detection; they do not establish leak coverage.",
+    "Production source and binaries match integration evidence; subsequent edits change documentation, instrumented replay wall-time allowances and read-only position-driven key release."
+  ],
+  "retained_failed_attempts": [
+    "normal-build-01.log: NotNullPtr cast corrected before normal-build-03 passed.",
+    "Initial Python schema guard/fixture failures and actual-save writer error corrected before all 611 checks passed.",
+    "Initial view looked beyond authored 20-foot radius; ordinary camera input framed nearby stone.",
+    "normal-light-restart-expire-02: idle vanity camera invalidated image comparison; corrected awake input.",
+    "sanitized-use-earned-potion-01: original cell still loading at 180-second startup allowance.",
+    "sanitized-light-restart-expire-01: restored light, but 220 wall seconds insufficient to simulate remaining duration; extended instrumented wait only.",
+    "sanitized-light-movement-01: fixed three-second hold moved approximately23 units; replaced by ordinary key input released at observed100-unit distance; original80\u2013140-unit assertion retained."
+  ],
+  "acceptance": {
+    "authentic_source": "Original ALCH09847f earned from locked Cask066e79, surfaced and framed by ordinary input. Oracle records isolated original-executable fixture grant separately.",
+    "structural_and_content": "Schema99 validates and real active/expired wire payloads round-trip; actual-master audit independently compares all253 potions/330 effects and raw LGHT.DATA[24] appearance.",
+    "native_behavior": "Independent original-executable observation: consume once, green nearby light, expiration and active-save restoration.",
+    "runtime": "Eight audited normal/instrumented processes consume, restore remaining duration, expire once, retain expiry after another cold load, and illuminate after ordinary movement. Each captures exact process executable, input provenance and saved/live state.",
+    "integration": "Full normal engine/components/Python, full instrumented engine and ESM4* component scopes; exact inventory checks, no failures/skips and no guarded source drift."
+  },
+  "rendered_image_review": {
+    "normal": [
+      "normal-use-earned-potion-02",
+      "normal-light-restart-expire-03",
+      "normal-light-restart-empty-03",
+      "normal-light-movement-02"
+    ],
+    "sanitized": [
+      "sanitized-use-earned-potion-02",
+      "sanitized-light-restart-expire-02",
+      "sanitized-light-restart-empty-01",
+      "sanitized-light-movement-02"
+    ]
+  }
+}

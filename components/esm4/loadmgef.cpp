@@ -30,6 +30,7 @@ namespace ESM4
             reader.fail("MGEF semantic decoder supports TES4 only");
         *this = {};
         RawRecord::load(reader);
+        std::uint32_t lightId = 0;
         for (const auto& sub : mSubRecords)
         {
             const auto& bytes = sub.mData;
@@ -46,14 +47,18 @@ namespace ESM4
                 if (mData || bytes.size() < 24 || bytes.size() > 68 || bytes.size() % 4 != 0)
                     reader.fail("MGEF requires one 24-68 byte DATA in four-byte increments");
                 EffectSettingData data{integer(bytes), std::bit_cast<float>(integer(bytes, 4)), integer(bytes, 8),
-                    integer(bytes, 12), std::bit_cast<std::int32_t>(integer(bytes, 16)), word(bytes, 20), word(bytes, 22), {}};
+                    integer(bytes, 12), std::bit_cast<std::int32_t>(integer(bytes, 16)), word(bytes, 20), word(bytes, 22), {}, {}};
                 if (data.mFlags & ((1u << 16) | (1u << 17) | (1u << 18)))
                     data.mAssociatedForm = reader.resolveRawFormId(ESM::FormId::fromUint32(data.mAssociatedData));
+                if (bytes.size() >= 28)
+                    lightId = integer(bytes, 24);
                 mData = std::move(data);
             }
         }
         if (!(mFlags & Rec_Deleted) && (!mEffectCode || !mData))
             reader.fail("MGEF is missing required EDID or DATA");
+        if (mData && mEffectCode == ESM::fourCC("LGHT") && lightId != 0)
+            mData->mLight = reader.resolveRawFormId(ESM::FormId::fromUint32(lightId));
     }
 
     void EffectSetting::preparePassiveValueModifierDefinition(const EffectSetting* previous)

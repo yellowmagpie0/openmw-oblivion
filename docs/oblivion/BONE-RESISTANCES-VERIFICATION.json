@@ -1,0 +1,572 @@
+{
+  "schema_version": 1,
+  "parent_commit": "181851f916f798c674b24aa33347278cf6163daf",
+  "status": "Accepted bounded original Undead Bone Resistances grant/ownership and cold load; full encounter, M15/M16 and expedition remain open.",
+  "contract": "BONE-RESISTANCES-CONTRACT.json",
+  "oracle": "BONE-RESISTANCES-ORACLE.json",
+  "implementation": "Admit original RSPA fixed AV66; existing complete-ability Maximum grants apply all five effects. Fresh unsupported Creature references retain known empty ownership. Existing unknown null state is preserved. Python save inspection admits the same effect.",
+  "schema": 99,
+  "checks": {
+    "normal-focused-01": {
+      "path": "build/oblivion-compat/bone-resistances/normal-focused-01/verification.json",
+      "sha256": "a54ced76c742b8a4edf9656cb8a5f0d00e69e9c035274d06ffc2714a4f0b059c",
+      "source": {
+        "head": "181851f916f798c674b24aa33347278cf6163daf",
+        "source_fingerprint": "1dac45d654358436a35f782cb903ace126d5098c451ad76610de4bdee6ca00f9"
+      },
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.CreaturePassiveAbilitiesOwnReferenceModifiersAcrossActivationAndRestore",
+          "binary_sha256": "610da6316f7a38ff93ac6fba0b1b9b069946680d80c28955efb2e5fde35f2e6e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "39f8915ece9ff4e0b06d83eed7499178ec90f814c4a5fdabff9c756e37fc9f11",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-focused-01": {
+      "path": "build/oblivion-compat/bone-resistances/sanitized-focused-01/verification.json",
+      "sha256": "4759462c54fb9455d8d9bca7ab8953c159dbb6360f5a6126bf735a87e0721188",
+      "source": {
+        "head": "181851f916f798c674b24aa33347278cf6163daf",
+        "source_fingerprint": "1dac45d654358436a35f782cb903ace126d5098c451ad76610de4bdee6ca00f9"
+      },
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.CreaturePassiveAbilitiesOwnReferenceModifiersAcrossActivationAndRestore",
+          "binary_sha256": "76e9190cfa77bec5d8a16f9d3c95697f0df5d07ff0e7d6825949637b6c167903",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "47634d5ff141a2752392599bbd3d90c01c0dd1908c48f21c662de76b4780ae2e",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal-integration-01": {
+      "path": "build/oblivion-compat/bone-resistances/normal-integration-01/verification.json",
+      "sha256": "34185ed7a0462f27be759c68f265cae545b992fd238b59efbaf8bba524f7e36c",
+      "source": {
+        "head": "181851f916f798c674b24aa33347278cf6163daf",
+        "source_fingerprint": "1dac45d654358436a35f782cb903ace126d5098c451ad76610de4bdee6ca00f9"
+      },
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "610da6316f7a38ff93ac6fba0b1b9b069946680d80c28955efb2e5fde35f2e6e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "fd97886cfcda1dca68219118692e97e78a3f34962d5130c31567cc161ce39321",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 611,
+          "passed": true,
+          "log_sha256": "e7c7f8be2e7204a55b115ece9681b59fb18e843e1aac4ace7f7a169f67d7b303"
+        }
+      }
+    },
+    "sanitized-integration-01": {
+      "path": "build/oblivion-compat/bone-resistances/sanitized-integration-01/verification.json",
+      "sha256": "ee184054742f4ed076b748feccc9402af9530aa78f9d6883901599a08f24246d",
+      "source": {
+        "head": "181851f916f798c674b24aa33347278cf6163daf",
+        "source_fingerprint": "7b9d70ef941c1749d7e0c2966adacd51397d11cfecc50f9ecfdb535f23123e4a"
+      },
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "76e9190cfa77bec5d8a16f9d3c95697f0df5d07ff0e7d6825949637b6c167903",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "e16c26569e4705abaf4c34d0ab0512e40bf2d3c0dcd1618474420abb632ff3b0",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal-ability-02": {
+      "path": "build/oblivion-compat/bone-resistances/normal-ability-02/verification.json",
+      "sha256": "b5d04e80d8c8a2d80089ec67495a43dd53633c5efbb2d015cc86124536fcb021",
+      "source": {
+        "head": "181851f916f798c674b24aa33347278cf6163daf",
+        "source_fingerprint": "7b9d70ef941c1749d7e0c2966adacd51397d11cfecc50f9ecfdb535f23123e4a"
+      },
+      "results": {
+        "components": {
+          "executed": 20,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4AbilityInputs.*",
+          "binary_sha256": "72000d518019b53dc8503b7cdbbbb1ac4f636bc92dab0d27561c89446af2179e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "a1e191c6c73eda2d64cf11985d002e073b9070d6f911f824deb95b0c41d00c30",
+          "inventory_sha256": "ec62f9b7cc9491b1053f59e5500d235d12ea84c5e0c7af2f70fa0b7557a673b0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 612,
+          "passed": true,
+          "log_sha256": "9111b38179e7bca1fbe20c786a1eb5d61c0179d5553add6abc6fd5be3550b5c2"
+        }
+      }
+    },
+    "sanitized-ability-01": {
+      "path": "build/oblivion-compat/bone-resistances/sanitized-ability-01/verification.json",
+      "sha256": "ccad8ceaef38da60e7e920b953fe0f8459a8678b80726252fb9350ef20f7c59c",
+      "source": {
+        "head": "181851f916f798c674b24aa33347278cf6163daf",
+        "source_fingerprint": "7b9d70ef941c1749d7e0c2966adacd51397d11cfecc50f9ecfdb535f23123e4a"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 20,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4AbilityInputs.*",
+          "binary_sha256": "5c2100c772892a03b3f1e13006703ebad8a4a7ee71b991a265a3a7d8804e2993",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "00db080343e4ca5bc16f73e71da457ddc93d8930c8632f869c1663ddce0b21dd",
+          "inventory_sha256": "b7fb2a838161b9812d473a60906fc57b85263404ca2267865b09f4138db4e82f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "normal-fresh-canosel-entry-01": {
+      "path": "build/oblivion-compat/bone-resistances/normal-fresh-canosel-entry-01/bone-audit.json",
+      "sha256": "a20d10639504aee949566d33f6cd2497d3fe51f0ab1cef0e4e702ac4be53a4e1",
+      "result": {
+        "passed": true,
+        "phase": "fresh",
+        "sanitized": false,
+        "source_sha256": "2e85af01a7af40eb7fe7ab9ab3ee09487ad570ff7da5e1747e71f7543d46b56d",
+        "save_sha256": "341f30b5a99db64c4bfb89e6f68832b02a524ebcb5195e946eb2b5f54fbaeb0e",
+        "binary_sha256": "8227bd0b43b9f244467c69cc91fb5aa898fdbd82add7d1971ac879fccbf08a87",
+        "actor": "content:oblivion.esm:06c2e4",
+        "ability": [
+          {
+            "spell": "content:oblivion.esm:02b532",
+            "effects": [
+              [
+                0,
+                1229214546,
+                63,
+                100.0,
+                100.0
+              ],
+              [
+                1,
+                1330664274,
+                67,
+                100.0,
+                100.0
+              ],
+              [
+                2,
+                1380340562,
+                62,
+                70.0,
+                70.0
+              ],
+              [
+                3,
+                1380073815,
+                55,
+                1.0,
+                1.0
+              ],
+              [
+                4,
+                1095783250,
+                66,
+                100.0,
+                100.0
+              ]
+            ],
+            "spell_type": 4
+          }
+        ],
+        "player_health": 64.48082733154297,
+        "scope": "Actual original innate grant/ownership and cold-load state; no hostile Paralysis cast certified."
+      },
+      "process": {
+        "path": "build/oblivion-compat/bone-resistances/normal-fresh-canosel-entry-01/process-epoch.json",
+        "sha256": "95cb06b582b612a89fc65fe7552a561a31487a5c1ba8da089aebb5a081e8e0f8"
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_bone_resistances_entry.json",
+        "sha256": "60162eba64f27a206e648661dc511e2e967f2f3fe2b8523f352aebd79b9f729b"
+      }
+    },
+    "normal-bone-restart-01": {
+      "path": "build/oblivion-compat/bone-resistances/normal-bone-restart-01/bone-audit.json",
+      "sha256": "0519a67a176a9e314b29e2002b7b141b688c7d69b91fce731779eb758a836347",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "341f30b5a99db64c4bfb89e6f68832b02a524ebcb5195e946eb2b5f54fbaeb0e",
+        "save_sha256": "f4f0ee7f75172e5122124fd18fe8b2fc2dd88cbe0f03d0ca694ff515db4fe449",
+        "binary_sha256": "8227bd0b43b9f244467c69cc91fb5aa898fdbd82add7d1971ac879fccbf08a87",
+        "actor": "content:oblivion.esm:06c2e4",
+        "ability": [
+          {
+            "spell": "content:oblivion.esm:02b532",
+            "effects": [
+              [
+                0,
+                1229214546,
+                63,
+                100.0,
+                100.0
+              ],
+              [
+                1,
+                1330664274,
+                67,
+                100.0,
+                100.0
+              ],
+              [
+                2,
+                1380340562,
+                62,
+                70.0,
+                70.0
+              ],
+              [
+                3,
+                1380073815,
+                55,
+                1.0,
+                1.0
+              ],
+              [
+                4,
+                1095783250,
+                66,
+                100.0,
+                100.0
+              ]
+            ],
+            "spell_type": 4
+          }
+        ],
+        "player_health": 64.48082733154297,
+        "scope": "Actual original innate grant/ownership and cold-load state; no hostile Paralysis cast certified."
+      },
+      "process": {
+        "path": "build/oblivion-compat/bone-resistances/normal-bone-restart-01/process-epoch.json",
+        "sha256": "e2ce0776fbd32968b007795b974adad0faad1a9b23f98481688c0ad22f2bc185"
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_bone_resistances_restart.json",
+        "sha256": "aefe181a1bc2df995ddbc2a888fefacd4a3ed947217c5e8da47defbec110cc5e"
+      }
+    },
+    "normal-fresh-secret-wall-01": {
+      "path": "build/oblivion-compat/bone-resistances/normal-fresh-secret-wall-01/bone-audit.json",
+      "sha256": "dafabcf3a60369053f11013d6aa0ac9dec5071ac45a8d7e701f0123af73d1ac6",
+      "result": {
+        "passed": true,
+        "phase": "continuation",
+        "sanitized": false,
+        "source_sha256": "f4f0ee7f75172e5122124fd18fe8b2fc2dd88cbe0f03d0ca694ff515db4fe449",
+        "save_sha256": "2e1ff0b90fffaa1c36e550a228f8b182a5981549104c69ec18f2133f8baccc50",
+        "binary_sha256": "8227bd0b43b9f244467c69cc91fb5aa898fdbd82add7d1971ac879fccbf08a87",
+        "actor": "content:oblivion.esm:06c2e4",
+        "ability": [
+          {
+            "spell": "content:oblivion.esm:02b532",
+            "effects": [
+              [
+                0,
+                1229214546,
+                63,
+                100.0,
+                100.0
+              ],
+              [
+                1,
+                1330664274,
+                67,
+                100.0,
+                100.0
+              ],
+              [
+                2,
+                1380340562,
+                62,
+                70.0,
+                70.0
+              ],
+              [
+                3,
+                1380073815,
+                55,
+                1.0,
+                1.0
+              ],
+              [
+                4,
+                1095783250,
+                66,
+                100.0,
+                100.0
+              ]
+            ],
+            "spell_type": 4
+          }
+        ],
+        "player_health": 64.48082733154297,
+        "scope": "Actual original innate grant/ownership and cold-load state; no hostile Paralysis cast certified."
+      },
+      "process": {
+        "path": "build/oblivion-compat/bone-resistances/normal-fresh-secret-wall-01/process-epoch.json",
+        "sha256": "15eb3beabd7c751e1d4f57ae3f9a1f4682b3f0a792491ebd8a995357629d9981"
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_bone_resistances_secret_wall.json",
+        "sha256": "5570dc179ecc6fa71f97c99b1340e48d3ed573f0ffd507cad7e65b3967b3fccb"
+      }
+    },
+    "normal-legacy-unknown-01": {
+      "path": "build/oblivion-compat/bone-resistances/normal-legacy-unknown-01/bone-audit.json",
+      "sha256": "0c6f10fa1b983948ca0886fc26ed1bddcf4016ec6edb9eaf2eee785320060a1b",
+      "result": {
+        "passed": true,
+        "phase": "legacy",
+        "sanitized": false,
+        "source_sha256": "db0a894a0dbcc3e7b0a71dba3a23c0030a26eb3aca14650150e5f9e52ebd5da6",
+        "save_sha256": "4533727b987da258082c2a00c8a620ce1cd5235ec7d79f0206751502ce98d524",
+        "binary_sha256": "8227bd0b43b9f244467c69cc91fb5aa898fdbd82add7d1971ac879fccbf08a87",
+        "actor": "content:oblivion.esm:06c2e4",
+        "ability": null,
+        "player_health": 53.00106430053711,
+        "scope": "Actual original innate grant/ownership and cold-load state; no hostile Paralysis cast certified."
+      },
+      "process": {
+        "path": "build/oblivion-compat/bone-resistances/normal-legacy-unknown-01/process-epoch.json",
+        "sha256": "c38792d733e8c8a56454a248e4d568f16068c0a3cd4461a913353e939335d5cb"
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_bone_resistances_restart.json",
+        "sha256": "aefe181a1bc2df995ddbc2a888fefacd4a3ed947217c5e8da47defbec110cc5e"
+      }
+    },
+    "sanitized-fresh-canosel-entry-03": {
+      "path": "build/oblivion-compat/bone-resistances/sanitized-fresh-canosel-entry-03/bone-audit.json",
+      "sha256": "5c3c3a5e8798fd5112e90b40ba2790e9d4a113efc56aad7dd41d6821d92eebe0",
+      "result": {
+        "passed": true,
+        "phase": "fresh",
+        "sanitized": true,
+        "source_sha256": "2e85af01a7af40eb7fe7ab9ab3ee09487ad570ff7da5e1747e71f7543d46b56d",
+        "save_sha256": "096dac9aa60d0397d63a6ac71a121f2432230eacdf231ca9b819f489701d3367",
+        "binary_sha256": "98a8dcbafcca69abe3004096bedbc8492d03c30cd2d68bc8521a8ef013783eb2",
+        "actor": "content:oblivion.esm:06c2e4",
+        "ability": [
+          {
+            "spell": "content:oblivion.esm:02b532",
+            "effects": [
+              [
+                0,
+                1229214546,
+                63,
+                100.0,
+                100.0
+              ],
+              [
+                1,
+                1330664274,
+                67,
+                100.0,
+                100.0
+              ],
+              [
+                2,
+                1380340562,
+                62,
+                70.0,
+                70.0
+              ],
+              [
+                3,
+                1380073815,
+                55,
+                1.0,
+                1.0
+              ],
+              [
+                4,
+                1095783250,
+                66,
+                100.0,
+                100.0
+              ]
+            ],
+            "spell_type": 4
+          }
+        ],
+        "player_health": 64.48082733154297,
+        "scope": "Actual original innate grant/ownership and cold-load state; no hostile Paralysis cast certified."
+      },
+      "process": {
+        "path": "build/oblivion-compat/bone-resistances/sanitized-fresh-canosel-entry-03/process-epoch.json",
+        "sha256": "d48bd9d17dda55b2b3337060f91e3432ed34bec8a286c550b5e8375d73fb4183"
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_bone_resistances_entry_sanitized.json",
+        "sha256": "9edd7e66150d7e2f43ac8b3ba52544ceabb4e795e248639046c9e2a9f1bae756"
+      }
+    },
+    "sanitized-bone-restart-01": {
+      "path": "build/oblivion-compat/bone-resistances/sanitized-bone-restart-01/bone-audit.json",
+      "sha256": "51ea0f4446c064d58db1f858e1e144068115d49f662d8659406691aed4bfa8ea",
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "096dac9aa60d0397d63a6ac71a121f2432230eacdf231ca9b819f489701d3367",
+        "save_sha256": "1145d1b22044a85cae4775d3387bc76b52e50da5c10bfdf582aae3045805648f",
+        "binary_sha256": "98a8dcbafcca69abe3004096bedbc8492d03c30cd2d68bc8521a8ef013783eb2",
+        "actor": "content:oblivion.esm:06c2e4",
+        "ability": [
+          {
+            "spell": "content:oblivion.esm:02b532",
+            "effects": [
+              [
+                0,
+                1229214546,
+                63,
+                100.0,
+                100.0
+              ],
+              [
+                1,
+                1330664274,
+                67,
+                100.0,
+                100.0
+              ],
+              [
+                2,
+                1380340562,
+                62,
+                70.0,
+                70.0
+              ],
+              [
+                3,
+                1380073815,
+                55,
+                1.0,
+                1.0
+              ],
+              [
+                4,
+                1095783250,
+                66,
+                100.0,
+                100.0
+              ]
+            ],
+            "spell_type": 4
+          }
+        ],
+        "player_health": 64.48082733154297,
+        "scope": "Actual original innate grant/ownership and cold-load state; no hostile Paralysis cast certified."
+      },
+      "process": {
+        "path": "build/oblivion-compat/bone-resistances/sanitized-bone-restart-01/process-epoch.json",
+        "sha256": "6461678b863d87e6f88e22d950b42c920e1caf08cbdffb551ae28896844256b3"
+      },
+      "manifest": {
+        "path": "scripts/data/oblivion_compat/oblivion_bone_resistances_restart_sanitized.json",
+        "sha256": "9cd43fc46fc7ee817afce43fea1a1552b0f895dbd57ac324ce4dfc48522afe50"
+      }
+    }
+  },
+  "final_source_sha256": {
+    "components/esm4/ability.cpp": "233fc7232e095367f1443a10d20c1b63392d78d3221ff254410b2073b70a6ad6",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "fafa59f6787dd420576f4014998e4fc7885550ce2aada9a61454cc7c36d040b0",
+    "apps/components_tests/esm4/ability.cpp": "e2db3db925a4680fdd5e61ed6edf4ef01e8c0687b83f778a26172e8e06ecef70",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "6be2359602ae1ed5e00e52c133b0d38bab765be09caa644d06802ddc4e8c8af3",
+    "scripts/tes4_runtime_state.py": "ab4df06965550647f1c120e58ac3ae656efd4772b928a66d49422b47e3f287bd",
+    "scripts/tests/test_tes4_runtime_state.py": "d8fdbb048cf0d18fb1e03db21212cc57eb62f4778ed7abca695656128b08288a",
+    "scripts/verify_bone_resistances.py": "7535194ba036c8792533e4b84fe835f072d45bc2029a027fc0ec7c561812ae07"
+  },
+  "source_scope": "Full engine gates precede final manifest/audit/document-only corrections; production C++ is unchanged. Corrected component table passes20 cases in each build; Python612 passes after its RSPA admission change. Runtime manifests match captured input bytes.",
+  "sanitizer_scope": "Engine integration uses ASan detect_leaks=1 and halt_on_error=1 plus UBSan halt_on_error=1. Component sanitizer mode and rendered courses use detect_leaks=0; rendered courses are not leak coverage.",
+  "semantic_validation": "All six courses verify source immutability/process identity, live/save equality and exact wire roundtrip. Genuine schema95 input adds nullable script_owner during the existing upgrade; all18 inventory items otherwise identical.",
+  "retained_diagnostics": {
+    "path": "build/oblivion-compat/bone-resistances/retained-diagnostics.json",
+    "sha256": "bc8a1bcba86addc0e649bcc07f69186f3575137ec63ea8a555395e9020b54efd"
+  },
+  "visual_review": "All11 accepted primary images and the retained failed-navigation image inspected.",
+  "continuation": "normal-fresh-secret-wall-01; older crypt null-ownership branch remains unchanged and conservatively unresolved.",
+  "limits": [
+    "No hostile Paralysis casting/immunity course certified.",
+    "Ordinary physical-contact encounter completion remains a subsequent runtime gate.",
+    "General effects, skill progression, actor levels/respawn and the full expedition remain open."
+  ],
+  "legacy_equipment_regression": {
+    "path": "build/oblivion-compat/bone-resistances/normal-legacy-unknown-01/weapon-audit.json",
+    "sha256": "142bafc27f3a766bc5dfc57c2326e04d523bacc03e452da0f5e1e796de481971"
+  }
+}

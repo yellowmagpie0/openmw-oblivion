@@ -1,0 +1,5837 @@
+{
+  "schema_version": 1,
+  "name": "Original Tamriel pathgrid: ordinary overland travel from Chorrol to Hackdirt",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ChorrolNorthernGoodsAndTrade::ref=0x0280fa::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=hackdirt-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:027815 GetStage\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.omwscripts",
+      "content": "PLAYER: hackdirt-observer.lua\n"
+    },
+    {
+      "path": "test-data/hackdirt-observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal points={{{{-64645.7109375,91736.78125,14185.0}},{{-64653.15234375,91522.5234375,14185.0}},{{-64655.515625,91278.1796875,14185.0}},{{-64649.59375,91014.3828125,14185.0}},{{-64641.3125,90755.0078125,14185.0}},{{-64636.328125,90496.546875,14183.0}},{{-64768.0,90112.0,14160.0}},{{-64822.76953125,89752.0859375,14136.0}},{{-65060,89640,14140}},{{-65057.52734375,89308.109375,14164.0}},{{-65352.734375,89022.71875,14210.0}},{{-65594.25,88962.0390625,14216.0}},{{-65757.546875,88810.7890625,14216.0}},{{-65986.9765625,88648.0,14232.0}},{{-66152.921875,88685.8203125,14228.0}},{{-66560.0,88576.0,14144.0}},{{-66816.0,88320.0,14088.0}},{{-66816.0,88064.0,14104.0}},{{-66971.9296875,87825.1875,13982.0}},{{-66867.90625,87575.5234375,13916.0}},{{-67072.0,87040.0,13792.0}},{{-66816.0,86528.0,13856.0}},{{-66816.0,86272.0,13888.0}},{{-66723.8984375,85976.109375,13905.0}},{{-66816.0,85760.0,13928.0}},{{-66816.0,85248.0,13912.0}},{{-66816.0,84736.0,13784.0}},{{-66816.0,84224.0,13776.0}},{{-66816.0,83712.0,13752.0}},{{-66816.0,83200.0,13672.0}},{{-66816.0,82688.0,13608.0}},{{-66816.0,82176.0,13552.0}},{{-67072.0,81664.0,13448.0}},{{-67328.0,81408.0,13360.0}},{{-67584.0,80896.0,13200.0}},{{-67840.0,80640.0,13104.0}},{{-67840.0,80384.0,13016.0}},{{-67840.0,80128.0,12936.0}},{{-67840.0,79872.0,12872.0}},{{-67840.0,79616.0,12800.0}},{{-67840.0,79104.0,12584.0}},{{-67840.0,78592.0,12192.0}},{{-67840.0,78080.0,11840.0}},{{-67824.84375,77822.953125,11776.0}},{{-68096.0,77560.7109375,11728.0}},{{-68096.0,77312.0,11720.0}},{{-68096.0,77056.0,11728.0}},{{-68352.0,76544.0,11672.0}},{{-68352.0,76032.0,11688.0}},{{-68608.0,75520.0,11592.0}},{{-68608.0,75264.0,11472.0}},{{-68864.0,75008.0,11200.0}},{{-68864.0,74496.0,10864.0}},{{-68864.0,73984.0,10688.0}},{{-68864.0,73472.0,10440.0}},{{-68864.0,72960.0,10032.0}},{{-69120.0,72448.0,9696.0}},{{-69120.0,71936.0,9392.0}},{{-69376.0,71424.0,9288.0}},{{-69376.0,70912.0,9400.0}},{{-69376.0,70400.0,9528.0}},{{-69218.3515625,70162.265625,9538.0}},{{-69401.03125,69994.828125,9556.0}},{{-69445.5703125,69632.0234375,9484.0}},{{-69453.1875,69153.84375,9392.0}},{{-69376.0,68864.0,9312.0}},{{-68864.0,68352.0,9176.0}},{{-68608.0,68096.0,9192.0}},{{-68608.0,67840.0,9272.0}},{{-68608.0,67328.0,9456.0}},{{-68352.0,66816.0,9664.0}},{{-68352.0,66560.0,9768.0}},{{-68352.0,66304.0,9840.0}},{{-68349.9765625,66046.5859375,9854.0}},{{-68418.5390625,65691.8515625,9898.0}},{{-68254.5390625,65559.6953125,9832.0}},{{-68093.640625,65482.578125,9792.0}},{{-67922.5625,65253.20703125,9804.0}},{{-67978.765625,65107.359375,9808.0}},{{-67950.25,64910.41796875,9816.0}},{{-67879.125,64713.3515625,9830.0}},{{-67834.5625,64539.71484375,9832.0}},{{-67862.1328125,64417.76953125,9826.0}},{{-67754.078125,64186.8203125,9810.0}},{{-67656.453125,63738.76953125,9792.0}},{{-67667.9609375,63528.82421875,9792.0}},{{-67557.9375,63348.79296875,9792.0}},{{-67542.4921875,63093.62890625,9786.0}},{{-67530.6484375,62897.89453125,9788.0}},{{-67506.1484375,62804.9453125,9790.0}},{{-67449.0,62648.390625,9796.0}}}}\nlocal index=1\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<0.05 then return end;timer=0\n if index>#points then print('Overland arrived=true cell='..self.cell.name);return end\n local p=points[index];local target=util.vector3(p[1],p[2],p[3]);local d=target-self.position\n if math.sqrt(d.x*d.x+d.y*d.y)<35 then print('Overland reached='..index);index=index+1;return end\n local f=self.rotation:apply(util.vector3(0,1,0));local angle=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n if math.abs(angle)<0.04 then print('Overland ready='..index) end\n print(string.format('Overland aim x=%d y=%d step=%d pos=%.2f,%.2f,%.2f distance=%.2f cell=%s',math.max(-150,math.min(150,math.floor(angle*512+.5))),math.max(-100,math.min(100,math.floor(-camera.getPitch()*512+.5))),index,self.position.x,self.position.y,self.position.z,math.sqrt(d.x*d.x+d.y*d.y),self.cell.name))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Overland aim x=",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=1(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=1(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=2(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=2(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=3(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=3(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=4(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=4(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=5(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=5(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=6(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=6(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=7(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=7(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=8(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=8(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=9(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=9(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=10(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=10(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=11(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=11(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=12(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=12(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=13(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=13(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=14(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=14(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=15(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=15(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "overland-waypoint-15.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=16(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=16(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=17(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=17(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=18(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=18(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=19(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=19(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=20(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=20(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=21(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=21(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=22(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=22(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=23(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=23(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=24(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=24(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=25(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=25(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=26(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=26(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=27(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=27(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=28(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=28(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=29(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=29(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=30(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=30(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "overland-waypoint-30.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=31(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=31(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=32(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=32(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=33(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=33(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=34(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=34(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=35(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=35(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=36(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=36(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=37(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=37(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=38(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=38(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=39(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=39(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=40(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=40(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=41(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=41(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=42(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=42(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=43(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=43(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=44(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=44(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=45(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=45(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "overland-waypoint-45.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=46(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=46(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=47(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=47(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=48(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=48(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=49(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=49(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=50(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=50(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=51(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=51(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=52(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=52(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=53(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=53(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=54(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=54(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=55(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=55(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=56(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=56(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=57(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=57(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=58(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=58(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=59(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=59(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=60(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=60(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "overland-waypoint-60.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=61(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=61(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=62(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=62(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=63(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=63(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=64(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=64(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=65(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=65(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=66(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=66(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=67(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=67(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=68(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=68(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=69(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=69(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=70(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=70(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=71(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=71(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=72(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=72(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=73(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=73(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=74(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=74(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=75(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=75(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "overland-waypoint-75.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=76(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=76(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=77(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=77(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=78(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=78(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=79(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=79(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=80(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=80(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=81(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=81(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=82(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=82(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=83(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=83(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=84(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=84(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=85(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=85(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=86(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=86(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=87(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=87(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=88(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=88(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=89(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=89(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=90(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=90(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "overland-waypoint-90.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland ready=91(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 120,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "Overland reached=91(?:\\s|$)",
+      "maximum_iterations": 1000,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "Overland aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "abort_on_failure": true,
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        }
+      ]
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "overland-waypoint-91.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Overland arrived=true",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 2400,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "acceptance-command actor=content:oblivion.esm:027815 name=GetStage result=10",
+    "Overland arrived=true"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "conversation-player ref=content:oblivion.esm:0280fa",
+    "Native dialogue menu: actor=content:oblivion.esm:0280fa info=content:oblivion.esm:02809c",
+    "Native dialogue menu:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt"
+  },
+  "sdl_xvfb_input": true,
+  "sdl_input_timeout_seconds": 60
+}

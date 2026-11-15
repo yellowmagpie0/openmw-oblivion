@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-06T13:31:17.191400+00:00",
+  "scope": "Two early wall-rat normal-input observers use view-aware yaw gain; C++ unchanged",
+  "status": "Focused loaded courses passed; new uninterrupted course remains due",
+  "failure": {
+    "proof": "build/oblivion-compat/sewer-escape/full-escape-continuous-04-failure-verification.json",
+    "reason": "Originalnewgame04 passed30 then failed rat-facing wait before attacking; gain3 in preserved first-person view overshot alternating left/right. Whole run remains failed.",
+    "engine_findings": 0
+  },
+  "source_changes": {
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_first_wall_rat.json": {
+      "sha256": "04343751194fb4488efd9d9de261ff68522527569fbf405a66c65d1452ddd07a",
+      "only_observer_yaw_gain_changed": true,
+      "actions_unchanged": 37
+    },
+    "scripts/data/oblivion_compat/oblivion_sewer_joined_wall_rats_finish.json": {
+      "sha256": "6f9a1ef756f3370bfe396c4fd8f7af72938f8cbda11f7afb7ee5e56c94b2d584",
+      "only_observer_yaw_gain_changed": true,
+      "actions_unchanged": 129
+    }
+  },
+  "focused": {
+    "wall-rat-camera-aware-first-01": {
+      "scenario_sha256": "20cc225ab551fa934bbc75493897288fd3ef15adc8556a34f8cbeff0067155ac",
+      "passed": true,
+      "exit_code": 0,
+      "save_event": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 185907,
+        "sequence": 3,
+        "tick": 127,
+        "event": "save-complete",
+        "action_id": "observation-3",
+        "actor": "dynamic:player:0000000000000001",
+        "cause": "normal-save",
+        "deltas": {
+          "health": -14
+        },
+        "live": "live-3-3.json",
+        "live_sha256": "847924380d9f2261bdcebecf42d5462f5d161d18e0874ea8d514ed57f506ae68",
+        "result": "committed",
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/wall-rat-camera-aware-first-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "7071573b992f36d685ab93630947fffc273322028ccb9f1b05bd65ee6ff20e15",
+        "target": "dynamic:player:0000000000000001"
+      },
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/full-escape-continuous-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "524d03bd45b5aad5d0d6dabe33327d71913b72de3cf05b724173f9039418e5e1",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/0",
+            0.03902086243033409,
+            0.03902085870504379
+          ],
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/1",
+            -0.20960775017738342,
+            -0.20960776507854462
+          ],
+          [
+            "/native_animated_references/0/bodies/3/linear_velocity/1",
+            0.07819726318120956,
+            0.07819727063179016
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/1",
+            0.228310689330101,
+            0.2283107042312622
+          ],
+          [
+            "/native_animated_references/0/bodies/7/linear_velocity/0",
+            0.22449836134910583,
+            0.22449834644794464
+          ],
+          [
+            "/native_animated_references/0/bodies/7/linear_velocity/2",
+            -0.031456589698791504,
+            -0.0314565934240818
+          ]
+        ]
+      },
+      "health_before": 80,
+      "health_after": 66,
+      "position": [
+        -11.812721252441406,
+        3194.66259765625,
+        -841.104248046875,
+        -0.03457031399011612,
+        0,
+        1.320703148841858
+      ],
+      "rats": [
+        {
+          "actor": "content:oblivion.esm:037e41",
+          "base": "content:oblivion.esm:04e870",
+          "phase": 0,
+          "recovery_remaining": 0,
+          "killer": "null"
+        },
+        {
+          "actor": "content:oblivion.esm:037e42",
+          "base": "content:oblivion.esm:04e870",
+          "phase": 1,
+          "recovery_remaining": 0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ],
+      "input_receipts_match": true,
+      "input_count": 22,
+      "cleared_queues": {
+        "native_combat_engagements": 1,
+        "pending_death_events": 0,
+        "physical_action_owners": 0
+      },
+      "rendered_capture": "build/oblivion-compat/sewer-escape/wall-rat-camera-aware-first-01/first-wall-rat-camera-aware-victory.png",
+      "rendered_review": "Inspected: actual first-person fists/remaining rat after first victory; actual wall crossing/floor and HUD after second.",
+      "parsed_save_equals_native_receipt_snapshot": true
+    },
+    "wall-rat-camera-aware-finish-01": {
+      "scenario_sha256": "dc4874e24f1d7d673b204729e690b27630c5947e617ef114938f6c0b2b9f6526",
+      "passed": true,
+      "exit_code": 0,
+      "save_event": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 186067,
+        "sequence": 3,
+        "tick": 360,
+        "event": "save-complete",
+        "action_id": "observation-3",
+        "actor": "dynamic:player:0000000000000001",
+        "cause": "normal-save",
+        "deltas": {
+          "health": -30
+        },
+        "live": "live-3-3.json",
+        "live_sha256": "148c5d7324b67d5523c792f3bc29562bad740994696e5d7efc2ccccd22a2b5d9",
+        "result": "committed",
+        "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/wall-rat-camera-aware-finish-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "save_sha256": "6c786247a014170a3628174fc2678e333ba1fa30e88a748dbdc8ff090fc83c13",
+        "target": "dynamic:player:0000000000000001"
+      },
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/wall-rat-camera-aware-first-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "7071573b992f36d685ab93630947fffc273322028ccb9f1b05bd65ee6ff20e15",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": [
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/0",
+            0.0067642126232385635,
+            0.006764212157577276
+          ],
+          [
+            "/native_animated_references/0/bodies/2/linear_velocity/1",
+            -0.05633813887834549,
+            -0.05633814260363579
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/1",
+            0.322459876537323,
+            0.3224599063396454
+          ],
+          [
+            "/native_animated_references/0/bodies/5/linear_velocity/2",
+            -1.0059735774993896,
+            -1.0059734582901
+          ],
+          [
+            "/native_animated_references/0/bodies/7/linear_velocity/2",
+            -0.27572646737098694,
+            -0.2757264971733093
+          ],
+          [
+            "/native_animated_references/0/bodies/8/linear_velocity/2",
+            0.0028753236401826143,
+            0.0028753234073519707
+          ]
+        ]
+      },
+      "health_before": 66,
+      "health_after": 36,
+      "position": [
+        580.606689453125,
+        3176.16796875,
+        -852.153076171875,
+        0.7861328125,
+        0,
+        0.9513675570487976
+      ],
+      "rats": [
+        {
+          "actor": "content:oblivion.esm:037e41",
+          "base": "content:oblivion.esm:04e870",
+          "phase": 1,
+          "recovery_remaining": 0,
+          "killer": "dynamic:player:0000000000000001"
+        },
+        {
+          "actor": "content:oblivion.esm:037e42",
+          "base": "content:oblivion.esm:04e870",
+          "phase": 1,
+          "recovery_remaining": 0,
+          "killer": "dynamic:player:0000000000000001"
+        }
+      ],
+      "input_receipts_match": true,
+      "input_count": 54,
+      "cleared_queues": {
+        "native_combat_engagements": 0,
+        "pending_death_events": 0,
+        "physical_action_owners": 0
+      },
+      "rendered_capture": "build/oblivion-compat/sewer-escape/wall-rat-camera-aware-finish-01/joined-wall-crossed.png",
+      "rendered_review": "Inspected: actual first-person fists/remaining rat after first victory; actual wall crossing/floor and HUD after second.",
+      "parsed_save_equals_native_receipt_snapshot": true
+    }
+  },
+  "full_assembly": {
+    "lua_compile_passed": true,
+    "lua_sha256": "35a93a06f339304f1377947e999973ae033c5edd1a2109a1563409b8f21e8f9d",
+    "regex_gate_count": 4340,
+    "actions": 11957,
+    "manifest_sha256": "5328b68563d2f0b54de9d51a0f0ce6f217a18a6168c1c2497f0f860d4f769f1a",
+    "assembly_unit_tests": {
+      "command": "python3 -m unittest scripts.tests.test_oblivion_sewer_course_assembly",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "implementation_evidence_reused": {
+    "code_commit": "392bd5d472",
+    "normal": "bound-cleanup-engine-integration-01:2209pass,0fail/0skip",
+    "sanitizer": "bound-cleanup-sanitizer-integration-01:2209pass,0fail/0skip,leak1",
+    "runtime_sha256": "ef71da25d612636f79b97bf50d2d17643aef49549d044483d5a1a0ad36b7292a",
+    "no_fresh_cpp_claim": true
+  },
+  "limits": "Loaded first/second-rat checks close the input issue only. Full original-new-game escape and fresh outdoor reload remain unproven. Four focused assembly Python tests are not a fresh whole Python suite."
+}

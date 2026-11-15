@@ -1,0 +1,586 @@
+{
+  "status": "Accepted bounded Alchemy experience on genuine non-food ingredient use",
+  "full_milestone_complete": false,
+  "contract": "ALCHEMY-USE-CONTRACT.json",
+  "original_oracle": "ALCHEMY-USE-ORACLE.json",
+  "cases": [
+    {
+      "mode": "normal",
+      "phase": "baseline",
+      "audit": {
+        "path": "build/oblivion-compat/alchemy-use/normal-bonemeal-baseline-01/alchemy-use-audit.json",
+        "sha256": "b03da6cb6cac5baea720c46c497587cf2656482a5c8b4c6aaeb5cafcc4994897"
+      },
+      "result": {
+        "passed": true,
+        "phase": "baseline",
+        "sanitized": false,
+        "source_sha256": "603acf165c4ce24977990c727a4039b8b06c1e6ee94ed0cf361d96a936f32443",
+        "save_sha256": "889f8193f1c003934962c559fcb58961423425aa47a820801368e10923a0e3f4",
+        "binary_sha256": "1c72961f77ba20fe86056aa25e5114cb9f642361efe0a2ae4521165c2f062307",
+        "alchemy_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "alchemy_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "consumed": [
+          [
+            "content:oblivion.esm:01ebff",
+            "-1",
+            "3"
+          ]
+        ],
+        "uses": [],
+        "remaining_effects": [
+          {
+            "ingredient": "content:oblivion.esm:01ebff",
+            "elapsed": 0.3056640625,
+            "magnitude": -1.0,
+            "duration": 3.0
+          }
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "bonemeal",
+      "audit": {
+        "path": "build/oblivion-compat/alchemy-use/normal-bonemeal-01/alchemy-use-audit.json",
+        "sha256": "94046c309baf561ecd09d888f65f2af393d2f07e4d239d35c9aa4e40648b2781"
+      },
+      "result": {
+        "passed": true,
+        "phase": "bonemeal",
+        "sanitized": false,
+        "source_sha256": "603acf165c4ce24977990c727a4039b8b06c1e6ee94ed0cf361d96a936f32443",
+        "save_sha256": "acfa5236bff637e4fbc2304b4ecd89a8037d79d4e8d028e835b05659400a4fd9",
+        "binary_sha256": "b73f8fc6b389aab51a6d557b71fdb5eb21464c515d67971f82b5e0419ae41a59",
+        "alchemy_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "alchemy_after": {
+          "base": 5.0,
+          "experience": 0.5
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "consumed": [
+          [
+            "content:oblivion.esm:01ebff",
+            "-1",
+            "3"
+          ]
+        ],
+        "uses": [
+          "content:oblivion.esm:01ebff"
+        ],
+        "remaining_effects": [
+          {
+            "ingredient": "content:oblivion.esm:01ebff",
+            "elapsed": 0.2724609375,
+            "magnitude": -1.0,
+            "duration": 3.0
+          }
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "food",
+      "audit": {
+        "path": "build/oblivion-compat/alchemy-use/normal-food-02/alchemy-use-audit.json",
+        "sha256": "3c357d75e6bddd25c96a6eef3b01987d56d94f743d35af70eded429cea71379d"
+      },
+      "result": {
+        "passed": true,
+        "phase": "food",
+        "sanitized": false,
+        "source_sha256": "603acf165c4ce24977990c727a4039b8b06c1e6ee94ed0cf361d96a936f32443",
+        "save_sha256": "796c8a6f105390d314e80aece6bf30e6a29141dee34df94d3d902b0fdf3030af",
+        "binary_sha256": "b73f8fc6b389aab51a6d557b71fdb5eb21464c515d67971f82b5e0419ae41a59",
+        "alchemy_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "alchemy_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "consumed": [
+          [
+            "content:oblivion.esm:033681",
+            "5",
+            "1"
+          ]
+        ],
+        "uses": [],
+        "remaining_effects": [
+          {
+            "ingredient": "content:oblivion.esm:033681",
+            "elapsed": 0.2919921875
+          }
+        ]
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "restart",
+      "audit": {
+        "path": "build/oblivion-compat/alchemy-use/normal-restart-01/alchemy-use-audit.json",
+        "sha256": "9aac3f9f2e0900efd4a4d77ee8e7e45e3bb9f2a6fcd7ea518518535f3c276d72"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "source_sha256": "acfa5236bff637e4fbc2304b4ecd89a8037d79d4e8d028e835b05659400a4fd9",
+        "save_sha256": "9fe07697f095bfa48f13478bd1536b4d8e832114dc2ab9491e9c909f3658b5d8",
+        "binary_sha256": "b73f8fc6b389aab51a6d557b71fdb5eb21464c515d67971f82b5e0419ae41a59",
+        "alchemy_before": {
+          "base": 5.0,
+          "experience": 0.5
+        },
+        "alchemy_after": {
+          "base": 5.0,
+          "experience": 0.5
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "consumed": [],
+        "uses": [],
+        "remaining_effects": []
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "bonemeal",
+      "audit": {
+        "path": "build/oblivion-compat/alchemy-use/sanitized-bonemeal-01/alchemy-use-audit.json",
+        "sha256": "92121e57fa6c196224f0659bac7cde880e79c4b6666272f13574d494ee456d14"
+      },
+      "result": {
+        "passed": true,
+        "phase": "bonemeal",
+        "sanitized": true,
+        "source_sha256": "603acf165c4ce24977990c727a4039b8b06c1e6ee94ed0cf361d96a936f32443",
+        "save_sha256": "bc67796885e0b9a24c28a1f2699eee7d822dee6b5be094d9ac86ad20b1713287",
+        "binary_sha256": "f40c9d8cc7e0ae1f1c1268488175d0e27cc6ad51f806a479614be6c82bee932c",
+        "alchemy_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "alchemy_after": {
+          "base": 5.0,
+          "experience": 0.5
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "consumed": [
+          [
+            "content:oblivion.esm:01ebff",
+            "-1",
+            "3"
+          ]
+        ],
+        "uses": [
+          "content:oblivion.esm:01ebff"
+        ],
+        "remaining_effects": [
+          {
+            "ingredient": "content:oblivion.esm:01ebff",
+            "elapsed": 0.166015625,
+            "magnitude": -1.0,
+            "duration": 3.0
+          }
+        ]
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "food",
+      "audit": {
+        "path": "build/oblivion-compat/alchemy-use/sanitized-food-02/alchemy-use-audit.json",
+        "sha256": "9afc9507a1bbc285a2192dd4a386523325c8b8a64dd4c6bc428c6ca80eaee51b"
+      },
+      "result": {
+        "passed": true,
+        "phase": "food",
+        "sanitized": true,
+        "source_sha256": "603acf165c4ce24977990c727a4039b8b06c1e6ee94ed0cf361d96a936f32443",
+        "save_sha256": "530a457852118fbfafc7fc5d4db61ee7c6753fd3432c61058e77c53f59dd9838",
+        "binary_sha256": "f40c9d8cc7e0ae1f1c1268488175d0e27cc6ad51f806a479614be6c82bee932c",
+        "alchemy_before": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "alchemy_after": {
+          "base": 5.0,
+          "experience": 0.0
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "consumed": [
+          [
+            "content:oblivion.esm:033681",
+            "5",
+            "1"
+          ]
+        ],
+        "uses": [],
+        "remaining_effects": [
+          {
+            "ingredient": "content:oblivion.esm:033681",
+            "elapsed": 0.166015625
+          }
+        ]
+      }
+    },
+    {
+      "mode": "sanitized",
+      "phase": "restart",
+      "audit": {
+        "path": "build/oblivion-compat/alchemy-use/sanitized-restart-01/alchemy-use-audit.json",
+        "sha256": "758d35bad6bd1e23be42058e7c1822f642981d2aa52616a929fad5a3e5ecd27f"
+      },
+      "result": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "source_sha256": "bc67796885e0b9a24c28a1f2699eee7d822dee6b5be094d9ac86ad20b1713287",
+        "save_sha256": "110ecad0cdf6ac2bd9b7241de07c2dc56d394aead2d919278d4ce0658dc9b7bc",
+        "binary_sha256": "f40c9d8cc7e0ae1f1c1268488175d0e27cc6ad51f806a479614be6c82bee932c",
+        "alchemy_before": {
+          "base": 5.0,
+          "experience": 0.5
+        },
+        "alchemy_after": {
+          "base": 5.0,
+          "experience": 0.5
+        },
+        "athletics_retained": {
+          "base": 30.0,
+          "experience": 4.066545486450195
+        },
+        "acrobatics_retained": {
+          "base": 5.0,
+          "experience": 0.30000001192092896
+        },
+        "consumed": [],
+        "uses": [],
+        "remaining_effects": []
+      }
+    }
+  ],
+  "gates": {
+    "focused-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/alchemy-use/focused-normal-01/verification.json",
+        "sha256": "7bf12e39e06a83fc6a7943d5958684027ae76121ad06ea8748149432ec90dd6a"
+      },
+      "source": {
+        "head": "df2c691033b312e9414dac8008bc094a979c597a",
+        "source_fingerprint": "63decea4470364925c3ccc4f13cc7c95b579f9aa6c23783b07956d653bb0901d"
+      },
+      "result": {
+        "engine": {
+          "executed": 10,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionSkillTraining.*:OblivionMagicContent.*",
+          "binary_sha256": "51ef8a04a07344f9d2bcb99991f3c34a8d85d6ecddbba3bf7fd251d283665f7d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "955cd3d92f4867d52a1ca53b45141bc105330902df14b8ca10534e3cb8d037c9",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "focused-sanitized-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/alchemy-use/focused-sanitized-01/verification.json",
+        "sha256": "715925b460265b302b03d577772f9be41983a721db133220ab81715b96b35b82"
+      },
+      "source": {
+        "head": "df2c691033b312e9414dac8008bc094a979c597a",
+        "source_fingerprint": "63decea4470364925c3ccc4f13cc7c95b579f9aa6c23783b07956d653bb0901d"
+      },
+      "result": {
+        "engine": {
+          "executed": 10,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionSkillTraining.*:OblivionMagicContent.*",
+          "binary_sha256": "e43a04edb32ae9571d336352f1386e8d456751284358a5cffe56acbb52f07595",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "cc83f51b9c0898427c17b8190b85dea115289a88e861b05d6f53e09cd28d60fb",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "focused-normal-02": {
+      "receipt": {
+        "path": "build/oblivion-compat/alchemy-use/focused-normal-02/verification.json",
+        "sha256": "935cf678d452251667a7112fb35ffe810d1322c6a4b40828bc3d4390717dbf0a"
+      },
+      "source": {
+        "head": "df2c691033b312e9414dac8008bc094a979c597a",
+        "source_fingerprint": "63f86656aab7735d3c0e5722bc19d2a76d66d0042d68ee4c311100f01f172a55"
+      },
+      "result": {
+        "engine": {
+          "executed": 10,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionSkillTraining.*:OblivionMagicContent.*",
+          "binary_sha256": "51ef8a04a07344f9d2bcb99991f3c34a8d85d6ecddbba3bf7fd251d283665f7d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9b38af1948d54959db25ac7b2de1839160fc75ba12dbd65888299e1fb6521350",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "focused-sanitized-02": {
+      "receipt": {
+        "path": "build/oblivion-compat/alchemy-use/focused-sanitized-02/verification.json",
+        "sha256": "6a777c1291ab201c9dbb087812d876fdaec78bd770e04988942da30c152beba4"
+      },
+      "source": {
+        "head": "df2c691033b312e9414dac8008bc094a979c597a",
+        "source_fingerprint": "63f86656aab7735d3c0e5722bc19d2a76d66d0042d68ee4c311100f01f172a55"
+      },
+      "result": {
+        "engine": {
+          "executed": 10,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionSkillTraining.*:OblivionMagicContent.*",
+          "binary_sha256": "e43a04edb32ae9571d336352f1386e8d456751284358a5cffe56acbb52f07595",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f8f969fb9c93de5fd2aff13b85dd8ee19d2c4eff00fb0bd36663351ea971bb53",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "full-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/alchemy-use/full-normal-01/verification.json",
+        "sha256": "6f9f17c96cdf585e4000083ac2897e0e415768eae380a5403059ea513e31b606"
+      },
+      "source": {
+        "head": "df2c691033b312e9414dac8008bc094a979c597a",
+        "source_fingerprint": "fc7ba964c96c9ef98fed72f5a67e9608d2bf5df4d05a2afe6f6ee397a3d89156"
+      },
+      "result": {
+        "engine": {
+          "executed": 2284,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "51ef8a04a07344f9d2bcb99991f3c34a8d85d6ecddbba3bf7fd251d283665f7d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "114918640112f570f3f51158577f968db2201ea3c5dd8f8d72b80baf8fd678f3",
+          "inventory_sha256": "a44089e569c7397fc969de02ecd7ac5d144c9e61cff4d96f4a6b636221bf1b4b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "python-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/alchemy-use/python-01/verification.json",
+        "sha256": "b938cb21998fc88e785f5c7d99a072c9c91f62bc0d357a18cd856e9a0490758d"
+      },
+      "source": {
+        "head": "df2c691033b312e9414dac8008bc094a979c597a",
+        "source_fingerprint": "63f86656aab7735d3c0e5722bc19d2a76d66d0042d68ee4c311100f01f172a55"
+      },
+      "result": {
+        "python": {
+          "executed": 616,
+          "passed": true,
+          "log_sha256": "2bc8c780242d2c29de02c42d49ed14becde9d09f21ddea35fce38b62aecdcc31"
+        }
+      }
+    },
+    "full-sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/alchemy-use/sanitized-inventory-union.json",
+        "sha256": "10245e6576b5aaf97b9332154ad5c83d5af905a1e6cf5924ffa78503b1ad61ad"
+      },
+      "source": {
+        "head": "df2c691033b312e9414dac8008bc094a979c597a",
+        "source_fingerprint": "fc7ba964c96c9ef98fed72f5a67e9608d2bf5df4d05a2afe6f6ee397a3d89156"
+      },
+      "executed": 2284,
+      "duplicates": 0,
+      "missing": 0,
+      "skipped": 0,
+      "leak_detection": true
+    }
+  },
+  "captures_reviewed": [
+    {
+      "path": "build/oblivion-compat/alchemy-use/normal-bonemeal-baseline-01/earned-bonemeal-tooltip.png",
+      "sha256": "7a08dbb7b81f5365a8108c92dc477983d40252f359e5a0b118b6cf3117d815a8"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/normal-bonemeal-baseline-01/earned-bonemeal-consumed.png",
+      "sha256": "cc7e651aec462418a54debdf1680e4dcde3c0ad7bec61247cbbd65358b334fc2"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/normal-bonemeal-01/earned-bonemeal-tooltip.png",
+      "sha256": "9065e3209f1b84ccbcab08694fb427cabe75b6cae02dcb1e50d374b0212b39cb"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/normal-bonemeal-01/earned-bonemeal-consumed.png",
+      "sha256": "63d7172e3dbc860478700432cfc0fc2efe4aa2483e5b354b1a242e8548d23e35"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/normal-food-02/earned-lettuce-tooltip.png",
+      "sha256": "55a2f4e22cf22e55cfc224de494024734ec0b337de2a360612d142420c77fe5b"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/normal-food-02/earned-lettuce-consumed.png",
+      "sha256": "50a6bddd49a27fde4e18e9962abd3554ea660b9297ec62a7e55d50b063a3cc8b"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/normal-restart-01/retained-alchemy-after-cold-load.png",
+      "sha256": "945f796f7c9600bbb1d260e48c6af5a58926e286f18d7e65ffcfba85e915cbc9"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/sanitized-bonemeal-01/earned-bonemeal-tooltip.png",
+      "sha256": "843c31883cdef2bdf6334b9daa56c792fb0268f0f476f3a6364800dc5c8b4f1d"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/sanitized-bonemeal-01/earned-bonemeal-consumed.png",
+      "sha256": "25c5259801887378b2477f0d8c6c1588d3d898a4fec2c8bc739219d17cc88c3d"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/sanitized-food-02/earned-lettuce-tooltip.png",
+      "sha256": "a474c87b45f6838c68a3582e5f660c144e70987afb88aca1c14b18b9a4ee50b7"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/sanitized-food-02/earned-lettuce-consumed.png",
+      "sha256": "e188e94ae14116b20e2ed5b8748a5b57804de93868b0d0439b9d838466a50860"
+    },
+    {
+      "path": "build/oblivion-compat/alchemy-use/sanitized-restart-01/retained-alchemy-after-cold-load.png",
+      "sha256": "c30c169e9c3b6b898fea46c4daefe061ee2b772529ced7d6920ca8bba00d400c"
+    }
+  ],
+  "implementation": "Native ingredient effect and one-item debit commit first. Non-food ENIT flag2 clear then uses winning Alchemy19 secondary0.5; food flag2 bypasses. Before existing consumption callbacks. No new schema, effect timer or progression formula.",
+  "semantics": "Raw PLAY Alchemy16 base5/XP0->0.5 on exactly one earned Bonemeal; existing signed-1/duration3 effect is partially saved and finishes after a separate process waits4 simulation seconds. Cold load retains0.5 with no new consumption/use. Carried original Lettuce consumes1->0, retains default5/1 food timer and grants0XP. Other26 skill bases/progress including Athletics4.066545 and Acrobatics0.3, native values except Fatigue, passive ownership, unconsumed full item metadata and live Health110 remain. Exact schema101 payload roundtrip and process-bound live/native save export equality.",
+  "original_evidence": "Winning SKIL044 Alchemy19 Intelligence1/Magic1 primary5/secondary0.5 and original Bonemeal01ebff low flags1 versus Lettuce033681 low flags3; master/executable hashes in oracle. Original caller24 cases and full use dispatcher30 with declared type/item/success/lookup/base/publication boundaries. No full original ingestion or live original XP claim.",
+  "provenance": "Baseline game1c72961f\u2026 on healthy completed original Acrobatics save603acf16\u2026 shows actual debit/pending native effect but XP0. Fixed normalb73f8fc6\u2026 and instrumentedf40c9d8c\u2026 earn0.5. Read-only observer and ordinary inventory drag/avatar/F5; no generated content, grants, setters, console mutation, teleport, seed forcing or save edits. Final public food recipes are byte-identical to corrected captured ignored manifests.",
+  "retained_failures": [
+    {
+      "cases": [
+        "normal-food-01",
+        "sanitized-food-01"
+      ],
+      "reason": "Copied earlier inventory coordinates targeted actual Crab Meat at134/180, not Lettuce at134/222 in this carried inventory. Unsupported use timed out with no completed save. Real tooltip confirmed target; final02 input selects actual Lettuce, with no state repair."
+    },
+    {
+      "cases": [
+        "normal-bonemeal-01 initial verifier"
+      ],
+      "reason": "Verifier compared normalized Lua skill-bar progress0.1727837 to raw XP0.5. Production saved0.5 correctly. Final audit uses raw PLAY plus process-bound native export and separately checks nonzero normalized bar."
+    },
+    {
+      "case": "normal-food-02 first corrected verifier",
+      "reason": "Compact default food timer omits magnitude/duration; direct dictionary access raised KeyError. Final audit resolves declared codec defaults5/1 and retains exact wire roundtrip. Feature expectations unchanged."
+    }
+  ],
+  "source_evidence": "Full normal/SAN inventories ran on frozen C++ change before final food-coordinate and verifier-only corrections. Fresh focused02 checks10 per build and full616 Python then run on corrected harness. C++ and progression/codec unchanged between those gates; final receipt/handoff only follow final gates. No broad source-identity claim across harness corrections.",
+  "reused_unchanged_components": {
+    "receipt": "ATHLETICS-USE-VERIFICATION.json",
+    "scope": "Original book provenance3294 normal/1115 native sanitizer component inventories. Components, progression formulas and codec unchanged; engine inventories and actual normal/instrumented courses fresh."
+  },
+  "cold_processes_distinct": true,
+  "limits": [
+    "Existing supported native ingredients only; no general potency, brewing/apparatus, additional known effects, rejected-item, higher-skill/level-crossing/cap or misc-stat UI acceptance.",
+    "Original caller/dispatcher boundaries and harness failure are declared in oracle. Native exact rounding/RNG not a default requirement.",
+    "Rendered sanitizer courses disable leak detection; engine union enables it. Exterior visual/terrain/asset gaps and full milestones remain open."
+  ]
+}

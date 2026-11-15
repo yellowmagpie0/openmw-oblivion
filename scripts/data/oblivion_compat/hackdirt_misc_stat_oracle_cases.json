@@ -1,0 +1,642 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "query_entry": "0x4f8590",
+  "modify_entry": "0x50d740",
+  "stubs": [
+    "ModPCMiscStat argument extraction 0x4fae80"
+  ],
+  "boundary": "Allocated Player/counter array supplied; supported parameter IDs only. Constructor defaults, automatic counter notifications and save/load not probed.",
+  "cases": [
+    {
+      "index": 0,
+      "current": 0,
+      "delta": -2147483648,
+      "expected_read": 0.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 0,
+      "current": 0,
+      "delta": -1,
+      "expected_read": 0.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 0,
+      "current": 0,
+      "delta": 0,
+      "expected_read": 0.0,
+      "expected_after": 0
+    },
+    {
+      "index": 0,
+      "current": 0,
+      "delta": 1,
+      "expected_read": 0.0,
+      "expected_after": 1
+    },
+    {
+      "index": 0,
+      "current": 0,
+      "delta": 2147483647,
+      "expected_read": 0.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 0,
+      "current": 1,
+      "delta": -2147483648,
+      "expected_read": 1.0,
+      "expected_after": 2147483649
+    },
+    {
+      "index": 0,
+      "current": 1,
+      "delta": -1,
+      "expected_read": 1.0,
+      "expected_after": 0
+    },
+    {
+      "index": 0,
+      "current": 1,
+      "delta": 0,
+      "expected_read": 1.0,
+      "expected_after": 1
+    },
+    {
+      "index": 0,
+      "current": 1,
+      "delta": 1,
+      "expected_read": 1.0,
+      "expected_after": 2
+    },
+    {
+      "index": 0,
+      "current": 1,
+      "delta": 2147483647,
+      "expected_read": 1.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 0,
+      "current": 3,
+      "delta": -2147483648,
+      "expected_read": 3.0,
+      "expected_after": 2147483651
+    },
+    {
+      "index": 0,
+      "current": 3,
+      "delta": -1,
+      "expected_read": 3.0,
+      "expected_after": 2
+    },
+    {
+      "index": 0,
+      "current": 3,
+      "delta": 0,
+      "expected_read": 3.0,
+      "expected_after": 3
+    },
+    {
+      "index": 0,
+      "current": 3,
+      "delta": 1,
+      "expected_read": 3.0,
+      "expected_after": 4
+    },
+    {
+      "index": 0,
+      "current": 3,
+      "delta": 2147483647,
+      "expected_read": 3.0,
+      "expected_after": 2147483650
+    },
+    {
+      "index": 0,
+      "current": 2147483647,
+      "delta": -2147483648,
+      "expected_read": 2147483647.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 0,
+      "current": 2147483647,
+      "delta": -1,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483646
+    },
+    {
+      "index": 0,
+      "current": 2147483647,
+      "delta": 0,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 0,
+      "current": 2147483647,
+      "delta": 1,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 0,
+      "current": 2147483647,
+      "delta": 2147483647,
+      "expected_read": 2147483647.0,
+      "expected_after": 4294967294
+    },
+    {
+      "index": 0,
+      "current": 2147483648,
+      "delta": -2147483648,
+      "expected_read": 2147483648.0,
+      "expected_after": 0
+    },
+    {
+      "index": 0,
+      "current": 2147483648,
+      "delta": -1,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 0,
+      "current": 2147483648,
+      "delta": 0,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 0,
+      "current": 2147483648,
+      "delta": 1,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483649
+    },
+    {
+      "index": 0,
+      "current": 2147483648,
+      "delta": 2147483647,
+      "expected_read": 2147483648.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 0,
+      "current": 4294967295,
+      "delta": -2147483648,
+      "expected_read": 4294967295.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 0,
+      "current": 4294967295,
+      "delta": -1,
+      "expected_read": 4294967295.0,
+      "expected_after": 4294967294
+    },
+    {
+      "index": 0,
+      "current": 4294967295,
+      "delta": 0,
+      "expected_read": 4294967295.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 0,
+      "current": 4294967295,
+      "delta": 1,
+      "expected_read": 4294967295.0,
+      "expected_after": 0
+    },
+    {
+      "index": 0,
+      "current": 4294967295,
+      "delta": 2147483647,
+      "expected_read": 4294967295.0,
+      "expected_after": 2147483646
+    },
+    {
+      "index": 13,
+      "current": 0,
+      "delta": -2147483648,
+      "expected_read": 0.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 13,
+      "current": 0,
+      "delta": -1,
+      "expected_read": 0.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 13,
+      "current": 0,
+      "delta": 0,
+      "expected_read": 0.0,
+      "expected_after": 0
+    },
+    {
+      "index": 13,
+      "current": 0,
+      "delta": 1,
+      "expected_read": 0.0,
+      "expected_after": 1
+    },
+    {
+      "index": 13,
+      "current": 0,
+      "delta": 2147483647,
+      "expected_read": 0.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 13,
+      "current": 1,
+      "delta": -2147483648,
+      "expected_read": 1.0,
+      "expected_after": 2147483649
+    },
+    {
+      "index": 13,
+      "current": 1,
+      "delta": -1,
+      "expected_read": 1.0,
+      "expected_after": 0
+    },
+    {
+      "index": 13,
+      "current": 1,
+      "delta": 0,
+      "expected_read": 1.0,
+      "expected_after": 1
+    },
+    {
+      "index": 13,
+      "current": 1,
+      "delta": 1,
+      "expected_read": 1.0,
+      "expected_after": 2
+    },
+    {
+      "index": 13,
+      "current": 1,
+      "delta": 2147483647,
+      "expected_read": 1.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 13,
+      "current": 3,
+      "delta": -2147483648,
+      "expected_read": 3.0,
+      "expected_after": 2147483651
+    },
+    {
+      "index": 13,
+      "current": 3,
+      "delta": -1,
+      "expected_read": 3.0,
+      "expected_after": 2
+    },
+    {
+      "index": 13,
+      "current": 3,
+      "delta": 0,
+      "expected_read": 3.0,
+      "expected_after": 3
+    },
+    {
+      "index": 13,
+      "current": 3,
+      "delta": 1,
+      "expected_read": 3.0,
+      "expected_after": 4
+    },
+    {
+      "index": 13,
+      "current": 3,
+      "delta": 2147483647,
+      "expected_read": 3.0,
+      "expected_after": 2147483650
+    },
+    {
+      "index": 13,
+      "current": 2147483647,
+      "delta": -2147483648,
+      "expected_read": 2147483647.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 13,
+      "current": 2147483647,
+      "delta": -1,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483646
+    },
+    {
+      "index": 13,
+      "current": 2147483647,
+      "delta": 0,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 13,
+      "current": 2147483647,
+      "delta": 1,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 13,
+      "current": 2147483647,
+      "delta": 2147483647,
+      "expected_read": 2147483647.0,
+      "expected_after": 4294967294
+    },
+    {
+      "index": 13,
+      "current": 2147483648,
+      "delta": -2147483648,
+      "expected_read": 2147483648.0,
+      "expected_after": 0
+    },
+    {
+      "index": 13,
+      "current": 2147483648,
+      "delta": -1,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 13,
+      "current": 2147483648,
+      "delta": 0,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 13,
+      "current": 2147483648,
+      "delta": 1,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483649
+    },
+    {
+      "index": 13,
+      "current": 2147483648,
+      "delta": 2147483647,
+      "expected_read": 2147483648.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 13,
+      "current": 4294967295,
+      "delta": -2147483648,
+      "expected_read": 4294967295.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 13,
+      "current": 4294967295,
+      "delta": -1,
+      "expected_read": 4294967295.0,
+      "expected_after": 4294967294
+    },
+    {
+      "index": 13,
+      "current": 4294967295,
+      "delta": 0,
+      "expected_read": 4294967295.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 13,
+      "current": 4294967295,
+      "delta": 1,
+      "expected_read": 4294967295.0,
+      "expected_after": 0
+    },
+    {
+      "index": 13,
+      "current": 4294967295,
+      "delta": 2147483647,
+      "expected_read": 4294967295.0,
+      "expected_after": 2147483646
+    },
+    {
+      "index": 33,
+      "current": 0,
+      "delta": -2147483648,
+      "expected_read": 0.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 33,
+      "current": 0,
+      "delta": -1,
+      "expected_read": 0.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 33,
+      "current": 0,
+      "delta": 0,
+      "expected_read": 0.0,
+      "expected_after": 0
+    },
+    {
+      "index": 33,
+      "current": 0,
+      "delta": 1,
+      "expected_read": 0.0,
+      "expected_after": 1
+    },
+    {
+      "index": 33,
+      "current": 0,
+      "delta": 2147483647,
+      "expected_read": 0.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 33,
+      "current": 1,
+      "delta": -2147483648,
+      "expected_read": 1.0,
+      "expected_after": 2147483649
+    },
+    {
+      "index": 33,
+      "current": 1,
+      "delta": -1,
+      "expected_read": 1.0,
+      "expected_after": 0
+    },
+    {
+      "index": 33,
+      "current": 1,
+      "delta": 0,
+      "expected_read": 1.0,
+      "expected_after": 1
+    },
+    {
+      "index": 33,
+      "current": 1,
+      "delta": 1,
+      "expected_read": 1.0,
+      "expected_after": 2
+    },
+    {
+      "index": 33,
+      "current": 1,
+      "delta": 2147483647,
+      "expected_read": 1.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 33,
+      "current": 3,
+      "delta": -2147483648,
+      "expected_read": 3.0,
+      "expected_after": 2147483651
+    },
+    {
+      "index": 33,
+      "current": 3,
+      "delta": -1,
+      "expected_read": 3.0,
+      "expected_after": 2
+    },
+    {
+      "index": 33,
+      "current": 3,
+      "delta": 0,
+      "expected_read": 3.0,
+      "expected_after": 3
+    },
+    {
+      "index": 33,
+      "current": 3,
+      "delta": 1,
+      "expected_read": 3.0,
+      "expected_after": 4
+    },
+    {
+      "index": 33,
+      "current": 3,
+      "delta": 2147483647,
+      "expected_read": 3.0,
+      "expected_after": 2147483650
+    },
+    {
+      "index": 33,
+      "current": 2147483647,
+      "delta": -2147483648,
+      "expected_read": 2147483647.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 33,
+      "current": 2147483647,
+      "delta": -1,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483646
+    },
+    {
+      "index": 33,
+      "current": 2147483647,
+      "delta": 0,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 33,
+      "current": 2147483647,
+      "delta": 1,
+      "expected_read": 2147483647.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 33,
+      "current": 2147483647,
+      "delta": 2147483647,
+      "expected_read": 2147483647.0,
+      "expected_after": 4294967294
+    },
+    {
+      "index": 33,
+      "current": 2147483648,
+      "delta": -2147483648,
+      "expected_read": 2147483648.0,
+      "expected_after": 0
+    },
+    {
+      "index": 33,
+      "current": 2147483648,
+      "delta": -1,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 33,
+      "current": 2147483648,
+      "delta": 0,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483648
+    },
+    {
+      "index": 33,
+      "current": 2147483648,
+      "delta": 1,
+      "expected_read": 2147483648.0,
+      "expected_after": 2147483649
+    },
+    {
+      "index": 33,
+      "current": 2147483648,
+      "delta": 2147483647,
+      "expected_read": 2147483648.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 33,
+      "current": 4294967295,
+      "delta": -2147483648,
+      "expected_read": 4294967295.0,
+      "expected_after": 2147483647
+    },
+    {
+      "index": 33,
+      "current": 4294967295,
+      "delta": -1,
+      "expected_read": 4294967295.0,
+      "expected_after": 4294967294
+    },
+    {
+      "index": 33,
+      "current": 4294967295,
+      "delta": 0,
+      "expected_read": 4294967295.0,
+      "expected_after": 4294967295
+    },
+    {
+      "index": 33,
+      "current": 4294967295,
+      "delta": 1,
+      "expected_read": 4294967295.0,
+      "expected_after": 0
+    },
+    {
+      "index": 33,
+      "current": 4294967295,
+      "delta": 2147483647,
+      "expected_read": 4294967295.0,
+      "expected_after": 2147483646
+    }
+  ],
+  "scope": "Original counter read/add rules for the pending Training-topic dependency; no production misc-stat implementation is claimed."
+}

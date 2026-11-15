@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "name": "Original Vilverin Alchemy bonemeal",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal Actor=types.Actor\nlocal timer=-1\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<.2 then return end;timer=0\n assert(not Actor.isDead(self),'Player died during earned ingredient use')\n local inv=Actor.inventory(self)\n local lettuce=core.getFormId('Oblivion.esm',0x01ebff)\n local rice=core.getFormId('Oblivion.esm',0x33690)\n print('VilverinContinue ingredient sample count='..inv:countOf(lettuce)..' rice='..inv:countOf(rice)..' fatigue='..Actor.stats.dynamic.fatigue(self).current..' health='..Actor.stats.dynamic.health(self).current..' alchemy='..types.NPC.stats.skills.alchemy(self).progress..' paused='..tostring(core.isWorldPaused()))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "VilverinContinue ingredient sample count=1 rice=1",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_hold",
+      "value": "Tab",
+      "seconds": 0.6
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 260,
+      "y": 23
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "before-ingredient-filter.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 503,
+      "y": 95
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.15
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 134,
+      "y": 138
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "earned-bonemeal-tooltip.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "Control_L"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "key_up",
+      "value": "Control_L"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.5
+    },
+    {
+      "type": "screenshot",
+      "name": "one-bonemeal-dragged.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 50,
+      "y": 205
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "TES4 ingredient consumed: ingredient=content:oblivion.esm:01ebff magnitude=-1 duration=3",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "earned-bonemeal-consumed.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 250,
+      "y": 250
+    },
+    {
+      "type": "mouse_click",
+      "button": 1
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.15
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.04
+    },
+    {
+      "type": "key_hold",
+      "value": "Escape",
+      "seconds": 0.15
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.2
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key",
+      "value": "Escape"
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "VilverinContinue ingredient sample",
+    "Writing saved game",
+    "TES4 ingredient consumed: ingredient=content:oblivion.esm:01ebff"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "fWortChanceValue",
+    "Water Breathing"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-vilverin-alchemy",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}

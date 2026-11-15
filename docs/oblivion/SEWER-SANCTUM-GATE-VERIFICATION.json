@@ -1,0 +1,399 @@
+{
+  "scope": "Import native ONAM initial open pose, preserve explicit saved close and lock, and play original Sanctum59 through68 with normal Player gate passage and exact fresh restart.",
+  "full_escape_complete": false,
+  "implementation": [
+    "TES4 empty ONAM marker retained, reset on override; malformed/duplicate markers reject. Later-game handling remains skipped.",
+    "Native reference starts posed at the open endpoint without activation or unlock; initial pose is captured by existing native animation metadata.",
+    "AI may traverse an already-open physical door without replaying opening. Closed lock/key/ownership and teleport policies remain in effect.",
+    "Saved animation pose overrides the authored default, including an explicit close."
+  ],
+  "independent_original_probe": {
+    "path": "build/oblivion-compat/sewer-escape/original-sanctum-door-01/observations.json",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "setup": "Isolated master-only profile, pristine stage6 save; console coc ImperialDungeon03 and Player viewpoint positioning. No quest-stage or NPC setup. Diagnostic only, not goal-course acceptance.",
+    "gate": "01760f",
+    "initial_open_state": 1,
+    "initial_locked": true,
+    "visual_control": "Initial raised gate leaves passage clear; console SetOpenState0 lowers visible barrier and reports3. Control also unlocks gate: adjacent command behavior recorded, not implemented by this chunk.",
+    "restoration": "build/oblivion-compat/sewer-escape/original-sanctum-door-01/restoration.json",
+    "game_exit": 0,
+    "wrapper_exit": 130,
+    "wrapper_note": "Original game exited0 through qqq. Review wrapper deliberately interrupted during its post-game display-retention sleep, after exact profile restoration."
+  },
+  "installed_record_audit": {
+    "path": "build/oblivion-compat/sewer-escape/default-open-master-audit-01/verification.json",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "references": 1025617,
+    "default_open_references": 106,
+    "comparison": "Every raw ONAM marker independently decoded and compared against typed esmtool output; exact match. 105 DOOR bases and1 ACTI base."
+  },
+  "checks": {
+    "default-open-focused-02": {
+      "path": "build/oblivion-compat/sewer-escape/default-open-focused-02/verification.json",
+      "source": {
+        "head": "fa8d8819cb9492aaec1ebb5a34d5b12938c21537",
+        "source_fingerprint": "0ecd3ccab0d60fa9139ee1b29d4ee60b0a1653d0ba9e83738e8dda7a04c6db72"
+      },
+      "passed": false,
+      "results": {
+        "components": {
+          "executed": 9,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4Reference*:OblivionTutorialDoor.*:OblivionAiTest.*",
+          "binary_sha256": "273d14e06cc990282b9a142a6b9c0e72ca49d197015b14555005bc12dc51cd18",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "777d7dbf26811eaa3eefddedc0d09182b4877af296e86e2f84f13b062fc6b021",
+          "inventory_sha256": "e095491fa89a74b41313e83325635c1495d0c73f17eca0d749944a9e56d05745",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "scope": "9 component cases passed; engine build failed due to the invalid fixture-only Door::mFormKey assignment. Corrected in focused03."
+    },
+    "default-open-focused-03": {
+      "path": "build/oblivion-compat/sewer-escape/default-open-focused-03/verification.json",
+      "source": {
+        "head": "fa8d8819cb9492aaec1ebb5a34d5b12938c21537",
+        "source_fingerprint": "b1d6169c8808f22edec081b254867447c84247b098a49a7a50b7233114de2137"
+      },
+      "passed": true,
+      "results": {
+        "engine": {
+          "executed": 42,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionTutorialDoor.*:OblivionAiTest.*",
+          "binary_sha256": "61696dce23301abac8920c9c7652cf096195b6b5a1d867bed9d7a510dbd23d02",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "d2e49b5242439ea823fd2ad3df3d55153843fe45a7004c4eb4150526967cac7c",
+          "inventory_sha256": "2f2275911da1ab35c228677796902f445748b3f2efaaf098315d6a153d1a8087",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "default-open-normal-integration-01": {
+      "path": "build/oblivion-compat/sewer-escape/default-open-normal-integration-01/verification.json",
+      "source": {
+        "head": "fa8d8819cb9492aaec1ebb5a34d5b12938c21537",
+        "source_fingerprint": "b1d6169c8808f22edec081b254867447c84247b098a49a7a50b7233114de2137"
+      },
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 3262,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "273d14e06cc990282b9a142a6b9c0e72ca49d197015b14555005bc12dc51cd18",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "7e442cf5184ed729ca015de72ca7f8864da4c0e74c1dadca36665af41199b66e",
+          "inventory_sha256": "527d36a1de781c5f3538561ba1c3622fad6a32ff1903347c1bad4b812ccda2f3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2195,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "61696dce23301abac8920c9c7652cf096195b6b5a1d867bed9d7a510dbd23d02",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e84a6850e46a5b72eb5e896452e06bb0cb05f1c34062763574e24abd45b606d0",
+          "inventory_sha256": "2f2275911da1ab35c228677796902f445748b3f2efaaf098315d6a153d1a8087",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "courses": {
+    "sanctum-conversation-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-conversation-01/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "unreviewed_errors": [],
+      "forbidden_findings": [],
+      "save": "build/oblivion-compat/sewer-escape/sanctum-conversation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "c349336dcca673894303e7548a9e7738694969c37fa1f89607c9e7216a1bb12b",
+      "quest_stage": 59,
+      "player_position": [
+        2812.340087890625,
+        7463.908203125,
+        -1183.0
+      ],
+      "health": 71.19003295898438,
+      "gate_lock_level": 100,
+      "gate_locked": true,
+      "gate_animation": null,
+      "bound_daggers": [
+        {
+          "base": "content:oblivion.esm:02627c",
+          "count": 1,
+          "condition": 2500.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": {
+            "spell": "content:oblivion.esm:06461c",
+            "effect_index": 2
+          }
+        }
+      ],
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "06deb2df448a21f53b7068c6e86a2173011b97fb2aec5f58851354f7057a972d",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    },
+    "sanctum-default-open-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-default-open-01/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "unreviewed_errors": [],
+      "forbidden_findings": [],
+      "save": "build/oblivion-compat/sewer-escape/sanctum-default-open-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "6d4ae154f18b1561c441ba93dd63ed9e087116c0ca9323184bbf5f38f5fd5ba1",
+      "quest_stage": 65,
+      "player_position": [
+        2812.340087890625,
+        7463.908203125,
+        -1183.0
+      ],
+      "health": 71.19003295898438,
+      "gate_lock_level": 100,
+      "gate_locked": true,
+      "gate_animation": "open",
+      "bound_daggers": [
+        {
+          "base": "content:oblivion.esm:02627c",
+          "count": 1,
+          "condition": 2500.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": {
+            "spell": "content:oblivion.esm:06461c",
+            "effect_index": 2
+          }
+        }
+      ],
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-conversation-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "c349336dcca673894303e7548a9e7738694969c37fa1f89607c9e7216a1bb12b",
+        "comparison": "Whole runtime state, only7 initial open-pose metadata keys added on each independently verified ONAM reference. No quest, AI, inventory, health, position or lock changes.",
+        "differences": 91,
+        "default_pose_references": [
+          "content:oblivion.esm:01760f",
+          "content:oblivion.esm:03f1b5",
+          "content:oblivion.esm:0432d7",
+          "content:oblivion.esm:0432d8",
+          "content:oblivion.esm:04337a",
+          "content:oblivion.esm:049188",
+          "content:oblivion.esm:04d120",
+          "content:oblivion.esm:0769a2",
+          "content:oblivion.esm:091fcb",
+          "content:oblivion.esm:0942ae",
+          "content:oblivion.esm:0943b0",
+          "content:oblivion.esm:0943b1",
+          "content:oblivion.esm:143f22"
+        ]
+      }
+    },
+    "sanctum-player-gate-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-player-gate-01/scenario.json",
+      "passed": false,
+      "exit_code": 0,
+      "unreviewed_errors": [],
+      "forbidden_findings": [],
+      "save": "build/oblivion-compat/sewer-escape/sanctum-player-gate-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "756c16151fd173cf564415361f513f3a2dc625c51d437cd2c0e5fa28e161a232",
+      "quest_stage": 66,
+      "player_position": [
+        2812.149658203125,
+        8061.857421875,
+        -1301.4798583984375
+      ],
+      "health": 71.19003295898438,
+      "gate_lock_level": 100,
+      "gate_locked": true,
+      "gate_animation": "open",
+      "bound_daggers": [
+        {
+          "base": "content:oblivion.esm:02627c",
+          "count": 1,
+          "condition": 2500.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": {
+            "spell": "content:oblivion.esm:06461c",
+            "effect_index": 2
+          }
+        }
+      ],
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-default-open-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "6d4ae154f18b1561c441ba93dd63ed9e087116c0ca9323184bbf5f38f5fd5ba1",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    },
+    "sanctum-player-gate-02": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-player-gate-02/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "unreviewed_errors": [],
+      "forbidden_findings": [],
+      "save": "build/oblivion-compat/sewer-escape/sanctum-player-gate-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "7180d45328e12485c46257a14edb6205216dbfafee61cffc80fecbae01a98ffe",
+      "quest_stage": 66,
+      "player_position": [
+        2812.066162109375,
+        8586.212890625,
+        -1375.0
+      ],
+      "health": 71.19003295898438,
+      "gate_lock_level": 100,
+      "gate_locked": true,
+      "gate_animation": "open",
+      "bound_daggers": [
+        {
+          "base": "content:oblivion.esm:02627c",
+          "count": 1,
+          "condition": 2500.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": {
+            "spell": "content:oblivion.esm:06461c",
+            "effect_index": 2
+          }
+        }
+      ],
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-player-gate-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "756c16151fd173cf564415361f513f3a2dc625c51d437cd2c0e5fa28e161a232",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    },
+    "sanctum-gate-reload-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-gate-reload-01/scenario.json",
+      "passed": true,
+      "exit_code": 0,
+      "unreviewed_errors": [],
+      "forbidden_findings": [],
+      "save": "build/oblivion-compat/sewer-escape/sanctum-gate-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "a392058d0bf09ff4a9e52dcdede9334211727a8f92f451b8d2d0b73dd8f9f8a6",
+      "quest_stage": 68,
+      "player_position": [
+        2812.066162109375,
+        8586.212890625,
+        -1375.0
+      ],
+      "health": 71.19003295898438,
+      "gate_lock_level": 100,
+      "gate_locked": true,
+      "gate_animation": "open",
+      "bound_daggers": [
+        {
+          "base": "content:oblivion.esm:02627c",
+          "count": 1,
+          "condition": 2500.0,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null,
+          "bound_source": {
+            "spell": "content:oblivion.esm:06461c",
+            "effect_index": 2
+          }
+        }
+      ],
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sanctum-player-gate-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "7180d45328e12485c46257a14edb6205216dbfafee61cffc80fecbae01a98ffe",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      }
+    }
+  },
+  "composite_scope": "Stage59 conversation course followed by default-open progression60/62/64/65. Normal Player walk from65 advanced66; its30-second allowance expired while still approaching. Retained genuine F5 continued with90-second allowance and crossed gate. Fresh restart restores every field exactly and advances original68. No health, position, quest or completion mutation in fork courses. The complete90-second walk recipe is reusable but was not rerun from its start as one process.",
+  "inspected_images": [
+    "build/oblivion-compat/sewer-escape/original-sanctum-door-01/gate-default-physical.png",
+    "build/oblivion-compat/sewer-escape/original-sanctum-door-01/closed-query.png",
+    "build/oblivion-compat/sewer-escape/sanctum-default-open-01/sanctum-stage65.png",
+    "build/oblivion-compat/sewer-escape/sanctum-player-gate-02/sanctum-player-gate.png",
+    "build/oblivion-compat/sewer-escape/sanctum-gate-reload-01/sanctum-reload.png"
+  ],
+  "retained_failures": {
+    "default-open-focused-01": "New compressed-empty override fixture was invalid; fixed by supplying a valid NAME-only override. No production workaround.",
+    "default-open-focused-02": "Fixture-only field absent from ESM4::Door; removed. Component9 passed; engine did not run.",
+    "sanctum-stage65-01": "Before fix, Glenroy was interrupted at locked back gate; original65 wait failed.",
+    "sanctum-player-gate-01": "30-second waypoint allowance too short for observed healthy walking. Exact source restore, genuine F5, no runtime errors. Remains failed."
+  },
+  "remaining": "Final ambush/Emperor death/Amulet, class choice, exit88/outdoor reload, shaman victory and continuous prison-to-outdoors acceptance. Fresh schema89/daily-package/bound-dagger/default-open sanitizer integration remains due. Earlier1eb42 sanitized gates are not current-source coverage.",
+  "runtime_executable_sha256": "4cfd0d55d21ea0af86a9bb741a6fee314b26b9e6ebec39e9482a68e9a596ea28",
+  "source_note": "Production C++ and C++ tests unchanged after the full normal gates. Subsequent changes are evidence/docs and reusable JSON recipes."
+}

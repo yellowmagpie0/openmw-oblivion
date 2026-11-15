@@ -12,6 +12,7 @@
 #include <MyGUI_RenderManager.h>
 
 #include <stdexcept>
+#include <optional>
 
 namespace MWGui
 {
@@ -41,6 +42,9 @@ namespace MWGui
             , mCursorY(cursorY)
         {
         }
+
+        std::optional<MWWorld::Ptr> tryMoveNativeInventoryItem(
+            const MWWorld::Ptr& actor, const ItemStack& item, size_t count);
 
         ModelIndex getIndex(const ItemStack& /*item*/) override
         {

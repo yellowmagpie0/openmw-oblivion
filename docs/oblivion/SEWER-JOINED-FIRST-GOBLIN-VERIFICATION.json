@@ -1,0 +1,109 @@
+{
+  "scope": "Genuine connected main route around the first cavern rock and Player victory over goblin03b526. Composite fresh continuations; full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "runtime_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "courses": {
+    "joined-first-goblin-rock-detour-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-first-goblin-rock-detour-01/scenario.json",
+      "passed": true,
+      "actions": 141,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "6ed1818813f18d878a13e31a13a6646ccfdc05ed2b3209160a5275e50621856f",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-first-goblin-rock-detour-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "4a9eaf47effc9dd93b26cdcb1d905b8332bc34dfc125de16f41fa804f0e684cd",
+      "position": [
+        55.91769027709961,
+        937.1482543945312,
+        -285.3045654296875,
+        0.10800782591104507,
+        0.0,
+        -1.1203116178512573
+      ],
+      "health": 80,
+      "active_combat": [],
+      "pending_deaths": [],
+      "physical_action_owners": []
+    },
+    "joined-first-goblin-rock-finish-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-first-goblin-rock-finish-01/scenario.json",
+      "passed": true,
+      "actions": 107,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-first-goblin-rock-detour-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "4a9eaf47effc9dd93b26cdcb1d905b8332bc34dfc125de16f41fa804f0e684cd",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-first-goblin-rock-finish-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "8eb711aca2d39eb280013939535ff4ec9c23d61219cd559e21d7764f87a0969f",
+      "position": [
+        -320.7430725097656,
+        851.8663940429688,
+        -285.2935791015625,
+        0.11894532293081284,
+        0.0,
+        -2.9070301055908203
+      ],
+      "health": 80,
+      "active_combat": [],
+      "pending_deaths": [],
+      "physical_action_owners": []
+    },
+    "joined-first-cavern-goblin-close-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-close-01/scenario.json",
+      "passed": true,
+      "actions": 207,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-first-goblin-rock-finish-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "8eb711aca2d39eb280013939535ff4ec9c23d61219cd559e21d7764f87a0969f",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "5d064d70b0b4a00dfbedcfcf02044ff3734d4bcde0401f26ec2386b9ab5301d3",
+      "position": [
+        -349.4331359863281,
+        728.8944091796875,
+        -270.3450012207031,
+        0.15078125894069672,
+        0.0,
+        -2.9101550579071045
+      ],
+      "health": 80,
+      "active_combat": [],
+      "pending_deaths": [],
+      "physical_action_owners": []
+    }
+  },
+  "victory": {
+    "actor": "content:oblivion.esm:03b526",
+    "base": "content:oblivion.esm:03b525",
+    "phase": 1,
+    "recovery_remaining": 0.0,
+    "killer": "dynamic:player:0000000000000001"
+  },
+  "capture_inspected": "build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-close-01/joined-first-cavern-goblin-victory.png",
+  "death_count_change": {
+    "content:oblivion.esm:03b525": 1
+  },
+  "retained_failed_approach": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-course-01/scenario.json",
+    "status": "failed proximity before attacks; genuine post-approach F5 used as rock-detour source; no victory claimed from failed run",
+    "entry_state_exact": true
+  },
+  "limits": [
+    "Corpse remains upright in inspected render; native death/killer is verified.",
+    "No uninterrupted new-game-to-exterior proof yet.",
+    "No fresh broad tests: input manifests only; prior implementation gates retain original provenance."
+  ]
+}

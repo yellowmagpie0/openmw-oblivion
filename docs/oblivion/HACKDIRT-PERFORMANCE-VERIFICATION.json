@@ -1,0 +1,511 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Hackdirt launcher shop performance, normal controls and native save/restart; the full Hackdirt quest course remains open.",
+  "diagnoses": [
+    "Repeated no-op Enable/Disable commands scanned every resident cell and saved reference.",
+    "Standalone GetDisabled queries allocated/sorted an entire saved-world index.",
+    "Offscreen door planning searched thousands of unrelated cells and routed to ineligible or dominated door candidates.",
+    "Fresh offscreen actors shared the same 250 ms deadline, concentrating startup planning in one frame.",
+    "Retained debug executables in tmpfs /tmp exhausted its per-user quota and competed for RAM/swap."
+  ],
+  "implementation": [
+    "Skip enable-parent reconciliation for unchanged script writes; retain propagation for changed roots.",
+    "Use a linear parent-chain lookup for standalone enable queries; retain shared indexed batch queries and stale-storage rejection.",
+    "Bound reverse door search at validated source exits and their directed street frontiers; constrain same-cell bridges before routing.",
+    "Order candidate cells by distance within door-hop priority and conservatively reject routes whose straight-line lower bound exceeds the best validated route cost.",
+    "Distribute fresh actor deadlines across the existing 250 ms cadence, preserving saved deadlines on restore.",
+    "Keep independent retained tryouts on user storage under ~/.local/state/openmw-oblivion/tryouts."
+  ],
+  "build_test_provenance": {
+    "tested_source": {
+      "head": "20de744b02950784a69b9a9681e8f8a118d557be",
+      "source_fingerprint": "0ef42d98b0aec368317a60e898bf132f98db942bbe4add0b05cf1ef3afd3c971"
+    },
+    "implementation_patch_sha256": "c9f45c0a64c90ce59f78f43cc43ecf5e63c949799f2f5a8eda9d18f9c44d2726",
+    "implementation_files": {
+      "apps/openmw/mwmechanics/oblivionai.cpp": "45b7d8c21d9f74e5e8dcf2b32f988b665758079f1297c156400c6b9b76f2de0a",
+      "apps/openmw/mwworld/oblivionenablestate.cpp": "b1e2d4e6a5882b9c8aabff71abac39ddaea241edbc982f07cebcfe9356b7a91a",
+      "apps/openmw/mwworld/oblivionscriptmanager.cpp": "a34eb6ac51bf0d35f2a82fe9490459bc5155e043b27cb7232eb19bbfe75b101f",
+      "apps/openmw_tests/mwworld/testobliviondialogue.cpp": "69eae7427cda6603e8aaecc40b44a2a8e075ea8bf8e452fc79aed172d4788d3a"
+    },
+    "publication_note": "Only replay readiness/capture manifests and documentation were refined after these build/test fingerprints; C++ implementation is unchanged.",
+    "normal": {
+      "engine": {
+        "executed": 2254,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "0bd8c4cac4b13ccedb38ac705182088d79c1cae8b1bd3292e5c073bea2e4cc63",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "92ee1411fc413bef61f9f7f440bf6c7d3e4f4065b7eac08cdd1427722ba80b67",
+        "inventory_sha256": "2bf2845c7b4c7aaf2cbffee16406cc15a4ae30bcb3a3617e663973dea920c4c9",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "python": {
+        "executed": 598,
+        "passed": true,
+        "log_sha256": "43f8c19c495b37b596fd5fb14a61dbec3d09c1e816517887301cec292f40ce61"
+      }
+    },
+    "sanitized": {
+      "engine": {
+        "executed": 2254,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "53c8b4eddf2d52450f1a1ee82dad9d97d2625e454c67b4993757a289a0750449",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "9022b8436a36976af846db908b168f448513db99c3a1c9ba8aeca0f1e315ce43",
+        "inventory_sha256": "2bf2845c7b4c7aaf2cbffee16406cc15a4ae30bcb3a3617e663973dea920c4c9",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "normal_receipt": "build/oblivion-compat/hackdirt-performance/normal-01/verification.json",
+    "sanitized_receipt": "build/oblivion-compat/hackdirt-performance/sanitize-01/verification.json",
+    "sanitizer_environment": {
+      "SDL_VIDEODRIVER": "x11",
+      "SDL_AUDIODRIVER": "dummy",
+      "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+      "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+      "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "identities": {
+    "before_executable": {
+      "path": "/tmp/openmw-oblivion-hackdirt.Qi2Qm9QX/runtime/openmw",
+      "sha256": "840c2995e42130ac70847ac65955306fd33871c4f5b51e959481a001372b8289"
+    },
+    "after_executable": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "sha256": "7af07ebcf41d6f6e21d9c9772c8cca56dd7fc670c90766c602e2193d3974df70"
+    },
+    "launcher_executable": {
+      "path": "/home/maciek/.local/state/openmw-oblivion/tryouts/hackdirt.puyG4v4E/runtime/openmw",
+      "sha256": "7af07ebcf41d6f6e21d9c9772c8cca56dd7fc670c90766c602e2193d3974df70"
+    },
+    "content": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+    },
+    "mygui": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+      "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+    }
+  },
+  "launcher_storage": {
+    "run": "/home/maciek/.local/state/openmw-oblivion/tryouts/hackdirt.puyG4v4E",
+    "mode": "0o700",
+    "filesystem": "btrfs /home",
+    "passed": true
+  },
+  "performance": {
+    "renderer": "NVIDIA GeForce GTX 1080 Ti",
+    "resolution": [
+      1280,
+      720
+    ],
+    "frame_cap": 60,
+    "content": [
+      "Oblivion.esm"
+    ],
+    "conditions": "Original launcher-equivalent private config; sound enabled; ordinary original introduction choice, Escape, 60 seconds live shop simulation and F5. No debugger or build/test process during accepted live segments. The idle segment allows the normal vanity camera; this is not a pixel-locked GPU comparison.",
+    "selection": "OSG viewer frames with Reference time in [last Reference time - 65, last Reference time - 5], a 60-second window before the final post-save wait; startup loading and the final deliberate quicksave are outside the measured window.",
+    "runs": [
+      {
+        "path": "build/oblivion-compat/hackdirt-performance/before-desktop-04/frames.stats",
+        "window_reference_seconds": [
+          30.845100000000002,
+          90.8451
+        ],
+        "frames": 402,
+        "metrics": {
+          "Frame duration": {
+            "samples": 402,
+            "mean_ms": 138.11658706467662,
+            "median_ms": 103.088,
+            "p95_ms": 204.786,
+            "p99_ms": 235.279,
+            "max_ms": 4269.83,
+            "over_100ms": 228,
+            "over_500ms": 2
+          },
+          "script_time_taken": {
+            "samples": 402,
+            "mean_ms": 68.17208706467662,
+            "median_ms": 67.58,
+            "p95_ms": 85.392,
+            "p99_ms": 103.008,
+            "max_ms": 123.15299999999999,
+            "over_100ms": 5,
+            "over_500ms": 0
+          },
+          "mechanics_time_taken": {
+            "samples": 402,
+            "mean_ms": 60.4475895522388,
+            "median_ms": 12.365,
+            "p95_ms": 120.002,
+            "p99_ms": 155.537,
+            "max_ms": 4195.23,
+            "over_100ms": 41,
+            "over_500ms": 2
+          },
+          "physics_time_taken": {
+            "samples": 402,
+            "mean_ms": 1.5700348258706467,
+            "median_ms": 1.3110000000000002,
+            "p95_ms": 3.149,
+            "p99_ms": 3.32,
+            "max_ms": 3.636,
+            "over_100ms": 0,
+            "over_500ms": 0
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/hackdirt-performance/after-desktop-05/frames.stats",
+        "window_reference_seconds": [
+          32.010400000000004,
+          92.0104
+        ],
+        "frames": 1682,
+        "metrics": {
+          "Frame duration": {
+            "samples": 1682,
+            "mean_ms": 35.48613971462545,
+            "median_ms": 28.8,
+            "p95_ms": 73.214,
+            "p99_ms": 100.922,
+            "max_ms": 172.209,
+            "over_100ms": 20,
+            "over_500ms": 0
+          },
+          "script_time_taken": {
+            "samples": 1682,
+            "mean_ms": 2.7246504161712246,
+            "median_ms": 2.1815,
+            "p95_ms": 4.672,
+            "p99_ms": 5.155,
+            "max_ms": 5.909,
+            "over_100ms": 0,
+            "over_500ms": 0
+          },
+          "mechanics_time_taken": {
+            "samples": 1682,
+            "mean_ms": 24.986518430439954,
+            "median_ms": 16.205000000000002,
+            "p95_ms": 63.211000000000006,
+            "p99_ms": 93.02199999999999,
+            "max_ms": 159.018,
+            "over_100ms": 13,
+            "over_500ms": 0
+          },
+          "physics_time_taken": {
+            "samples": 1682,
+            "mean_ms": 1.171720570749108,
+            "median_ms": 1.0839999999999999,
+            "p95_ms": 2.781,
+            "p99_ms": 3.257,
+            "max_ms": 4.322,
+            "over_100ms": 0,
+            "over_500ms": 0
+          }
+        }
+      }
+    ],
+    "limitations": "The bounded shop replay remains CPU limited by whole-world low-process AI: average frame time 35.49 ms, median 28.8 ms, p95 73.21 ms. This does not establish steady 60 FPS or exterior performance.",
+    "replay": "scripts/data/oblivion_compat/oblivion_hackdirt_performance_desktop.json",
+    "analysis_script": "build/oblivion-compat/hackdirt-performance/analyze_frames.py",
+    "analysis_script_sha256": "b7cd5efa18e419b286f0e81ae856a7919286aba0c890fc1746ac54fb900f6fdb",
+    "baseline_confirmation": {
+      "path": "build/oblivion-compat/hackdirt-performance/before-desktop-03/frames.stats",
+      "window_reference_seconds": [
+        30.576800000000006,
+        90.5768
+      ],
+      "frames": 408,
+      "metrics": {
+        "Frame duration": {
+          "samples": 408,
+          "mean_ms": 136.43038480392156,
+          "median_ms": 102.432,
+          "p95_ms": 206.991,
+          "p99_ms": 227.145,
+          "max_ms": 4251.839999999999,
+          "over_100ms": 213,
+          "over_500ms": 2
+        },
+        "script_time_taken": {
+          "samples": 408,
+          "mean_ms": 68.14255392156862,
+          "median_ms": 69.6395,
+          "p95_ms": 89.358,
+          "p99_ms": 98.62700000000001,
+          "max_ms": 126.667,
+          "over_100ms": 3,
+          "over_500ms": 0
+        },
+        "mechanics_time_taken": {
+          "samples": 408,
+          "mean_ms": 60.3144068627451,
+          "median_ms": 12.588999999999999,
+          "p95_ms": 123.47,
+          "p99_ms": 148.15200000000002,
+          "max_ms": 4185.570000000001,
+          "over_100ms": 45,
+          "over_500ms": 2
+        },
+        "physics_time_taken": {
+          "samples": 408,
+          "mean_ms": 1.6501960784313725,
+          "median_ms": 1.1424999999999998,
+          "p95_ms": 3.1719999999999997,
+          "p99_ms": 3.722,
+          "max_ms": 6.233,
+          "over_100ms": 0,
+          "over_500ms": 0
+        }
+      }
+    }
+  },
+  "save_semantics": {
+    "runtime-01": {
+      "save": "build/oblivion-compat/hackdirt-performance/runtime-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "3489cec3f575bbf42e9fbd72aff8303af89666d1a66bfd540267c1f2124ffe4d",
+      "schema": 91,
+      "profile": "oblivion",
+      "player_cell": "content:oblivion.esm:000807",
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "darma_enabled": true,
+      "darma_deleted": false,
+      "darma_cell": "content:oblivion.esm:000807",
+      "darma_scripts": [
+        {
+          "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+          "context": "content:oblivion.esm:0280fa",
+          "on_load_fired": false,
+          "locals": [
+            {
+              "type": "number",
+              "value": 0
+            },
+            {
+              "type": "number",
+              "value": 0
+            },
+            {
+              "type": "number",
+              "value": 1
+            },
+            {
+              "type": "number",
+              "value": 0
+            },
+            {
+              "type": "number",
+              "value": 0
+            },
+            {
+              "type": "number",
+              "value": 0
+            }
+          ]
+        }
+      ],
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 27,
+        "hour": 1.4958641529083252,
+        "time_scale": 30.0
+      },
+      "darma_life": {
+        "actor": "content:oblivion.esm:0280fa",
+        "base": "content:oblivion.esm:0280c9",
+        "phase": 0,
+        "recovery_remaining": 0.0,
+        "killer": "null"
+      },
+      "valid_actor_deadlines": true
+    },
+    "restart-01": {
+      "save": "build/oblivion-compat/hackdirt-performance/restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "0bd5ee541079fafabf50e83a351300cd61295c9f4bfe8832b888f472b82dfb55",
+      "schema": 91,
+      "profile": "oblivion",
+      "player_cell": "content:oblivion.esm:000807",
+      "quest": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 0,
+        "running": true,
+        "completed_stages": []
+      },
+      "darma_enabled": true,
+      "darma_deleted": false,
+      "darma_cell": "content:oblivion.esm:000807",
+      "darma_scripts": [
+        {
+          "unit": "content:oblivion.esm:028154@oblivion.esm/object/unit=0",
+          "context": "content:oblivion.esm:0280fa",
+          "on_load_fired": false,
+          "locals": [
+            {
+              "type": "number",
+              "value": 0
+            },
+            {
+              "type": "number",
+              "value": 0
+            },
+            {
+              "type": "number",
+              "value": 1
+            },
+            {
+              "type": "number",
+              "value": 0
+            },
+            {
+              "type": "number",
+              "value": 0
+            },
+            {
+              "type": "number",
+              "value": 0
+            }
+          ]
+        }
+      ],
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 27,
+        "hour": 1.4986307621002197,
+        "time_scale": 30.0
+      },
+      "darma_life": {
+        "actor": "content:oblivion.esm:0280fa",
+        "base": "content:oblivion.esm:0280c9",
+        "phase": 0,
+        "recovery_remaining": 0.0,
+        "killer": "null"
+      },
+      "valid_actor_deadlines": true
+    }
+  },
+  "movement_semantics": {
+    "passed": true,
+    "start": [
+      401.8355407714844,
+      -11.092348098754883,
+      -207.0927276611328,
+      0.0,
+      0.0,
+      -1.570796251296997
+    ],
+    "end": [
+      301.7411193847656,
+      -11.092348098754883,
+      -223.08944702148438,
+      0.0,
+      0.0,
+      -1.570796251296997
+    ],
+    "horizontal_distance": 100.09442138671875,
+    "cell": "content:oblivion.esm:000807"
+  },
+  "retained_diagnostics": {
+    "root": "build/oblivion-compat/hackdirt-performance",
+    "notes": [
+      "Early /tmp launch/Xvfb attempts exhausted the tmpfs quota; only the new failed partial copy was removed. Existing tryout saves and executables were retained.",
+      "before-desktop-01 had an input-coordinate failure; earlier desktop captures used an unsuitable full-screen import command. before-desktop-04 is the final accepted baseline; before-desktop-03 independently confirms it. Build log timestamps place the preceding link before both measured gameplay windows.",
+      "after-noop-01, after-desktop-01/02/03 and route diagnostics are intermediate/debugger evidence, not final performance claims. after-desktop-04 ran beside sanitizer linking and is excluded from the final comparison.",
+      "movement-01/02 accepted input before enough gameplay frames had rendered; their unchanged saved position fails movement acceptance. movement-03 waits for rendered frames and proves actual movement.",
+      "Known existing compiler shadow/initializer warnings and reviewed missing optional assets remain; no warning-free claim.",
+      "runtime-01/restart-01 retain structural and saved-state evidence, but early loading-screen captures are not used for rendered-scene acceptance. runtime-02 and movement-03 wait for 30 gameplay frames."
+    ]
+  },
+  "accepted_runtime": {
+    "baseline": {
+      "receipt": "build/oblivion-compat/hackdirt-performance/before-desktop-04/scenario.json",
+      "process_log": "build/oblivion-compat/hackdirt-performance/before-desktop-04/process.log",
+      "duration_seconds": 99.565531,
+      "passed": true
+    },
+    "desktop_after": {
+      "receipt": "build/oblivion-compat/hackdirt-performance/after-desktop-05/scenario.json",
+      "process_log": "build/oblivion-compat/hackdirt-performance/after-desktop-05/process.log",
+      "duration_seconds": 100.59186,
+      "passed": true
+    },
+    "launcher": {
+      "receipt": "build/oblivion-compat/hackdirt-performance/launcher-01/scenario.json",
+      "process_log": "build/oblivion-compat/hackdirt-performance/launcher-01/process.log",
+      "duration_seconds": 46.959481,
+      "passed": true
+    },
+    "quickload_rendered": {
+      "receipt": "build/oblivion-compat/hackdirt-performance/runtime-02/scenario.json",
+      "process_log": "build/oblivion-compat/hackdirt-performance/runtime-02/process.log",
+      "duration_seconds": 113.337754,
+      "passed": true
+    },
+    "fresh_restart_movement_resave": {
+      "receipt": "build/oblivion-compat/hackdirt-performance/movement-03/scenario.json",
+      "process_log": "build/oblivion-compat/hackdirt-performance/movement-03/process.log",
+      "duration_seconds": 45.435493,
+      "passed": true
+    }
+  },
+  "final_quickload_semantics": {
+    "schema": 91,
+    "profile": "oblivion",
+    "player_cell": "content:oblivion.esm:000807",
+    "quest": {
+      "quest": "content:oblivion.esm:027815",
+      "stage": 0,
+      "running": true,
+      "completed_stages": []
+    },
+    "darma_life": {
+      "actor": "content:oblivion.esm:0280fa",
+      "base": "content:oblivion.esm:0280c9",
+      "phase": 0,
+      "recovery_remaining": 0.0,
+      "killer": "null"
+    },
+    "save_sha256": "5697979e19204d0f7c17489c8f383eba32d79d94f9293d0991c6125627f43686"
+  },
+  "reviewed_captures": [
+    "build/oblivion-compat/hackdirt-performance/after-desktop-05/live-shop.png",
+    "build/oblivion-compat/hackdirt-performance/runtime-02/reloaded-shop.png",
+    "build/oblivion-compat/hackdirt-performance/movement-03/restart-loaded.png"
+  ],
+  "readiness_replays": [
+    "scripts/data/oblivion_compat/oblivion_hackdirt_performance.json",
+    "scripts/data/oblivion_compat/oblivion_hackdirt_performance_desktop.json"
+  ]
+}

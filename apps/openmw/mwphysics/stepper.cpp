@@ -105,6 +105,19 @@ namespace MWPhysics
 
             mTracer.doTrace(mColObj, tracerPos, tracerDest, mColWorld);
             report("forward", mTracer);
+            // A full rise can run into an overhang even when a smaller rise
+            // clears the actual threshold. Retrying below that upper contact
+            // avoids ejecting the actor backwards from a traversable opening.
+            // Every candidate still sweeps forward and down against geometry.
+            for (unsigned retry = 0; retry < 4 && mTracer.mHitObject
+                 && mTracer.mPlaneNormal.z() < 0.f && upDistance > sCollisionMargin; ++retry)
+            {
+                upDistance *= .5f;
+                tracerPos = position + osg::Vec3f(0.f, 0.f, upDistance);
+                tracerDest = tracerPos + normalMove * moveDistance;
+                mTracer.doTrace(mColObj, tracerPos, tracerDest, mColWorld);
+                report("forward-lower-rise", mTracer);
+            }
             if (mTracer.mHitObject)
             {
                 // map against what we hit, minus the safety margin

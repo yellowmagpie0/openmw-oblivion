@@ -110,6 +110,11 @@ namespace MWWorld
             bool notify();
         };
         std::unique_ptr<PreparedItemRemoval> prepareItemRemoval(const ESM::RefId& item, int count);
+        // Debit precisely the selected instance, retaining other stacks' metadata.
+        std::unique_ptr<PreparedItemRemoval> prepareItemRemoval(const Ptr& item, int count);
+    private:
+        std::unique_ptr<PreparedItemRemoval> prepareItemRemovalImpl(const ESM::RefId& item, int count, const Ptr* selected);
+    public:
 
         class PreparedAmmunitionDebit
         {

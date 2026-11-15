@@ -33,6 +33,7 @@ namespace ESM4
     MeleeReachSettings buildMeleeReachSettings(std::span<const GameSetting* const> settings);
     PhysicalCombatSettings buildPhysicalCombatSettings(std::span<const GameSetting* const> settings);
     CombatSpellPowerSettings buildCombatSpellPowerSettings(std::span<const GameSetting* const> settings);
+    SpellCostSettings buildSpellCostSettings(std::span<const GameSetting* const> settings);
     ProjectileSettings buildProjectileSettings(std::span<const GameSetting* const> settings);
     ArrowLifetimeSettings buildArrowLifetimeSettings(std::span<const GameSetting* const> settings);
     ArrowRecoverySettings buildArrowRecoverySettings(std::span<const GameSetting* const> settings);

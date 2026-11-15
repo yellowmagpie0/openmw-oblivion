@@ -1,0 +1,793 @@
+{
+  "status": "independent original controls complete; fork runtime acceptance remains in progress",
+  "basis": "Original installed winning records and actual original executable C/menu controls; production C++ does not generate expectations. Diagnostic text xref searches are not presented as gameplay instruction proofs.",
+  "identity": {
+    "executable": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe",
+      "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+    },
+    "master": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+    },
+    "pristine_save": {
+      "path": "build/oblivion-compat/star-west/original-native-01/compat/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/quicksave.ess",
+      "sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    },
+    "plugin_list": [
+      "Oblivion.esm"
+    ],
+    "launch": {
+      "path": "build/oblivion-compat/star-west/original-native-01/launch.py",
+      "sha256": "e9b9cb2939348c900a39d46076866e27d41d61af87c812a8cf95b4335e8bafa3"
+    },
+    "input_driver": {
+      "path": "build/oblivion-compat/star-west/original-native-01/input.py",
+      "sha256": "ea0262c3b3c30e795edb49701da485cf0eca550542e350a2c1742a7dd2516a9a"
+    },
+    "private_prefix_provenance": {
+      "path": "build/oblivion-compat/star-west/original-native-01/prefix-provenance.json",
+      "sha256": "0d46c86f35395521e64cc3041467a986261167eb1138c5004009749b52de53cc"
+    },
+    "process": {
+      "pid": 1081744,
+      "start_ticks": 199790349,
+      "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+      "window_id": 73400323,
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "verified_wineprefix": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/star-west/original-native-01/compat/pfx/",
+      "mapped_original_exe": [
+        "00400000-00401000 r-xp 00000000 00:23 2071952                            /home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe"
+      ]
+    },
+    "game_exit": {
+      "wrapper_exit": 0,
+      "pristine_input_unchanged": true,
+      "original_installed_exe_unchanged": true
+    },
+    "services_exit": {
+      "steam_launcher_exit": 0,
+      "owned_display_exit": 0,
+      "pristine_unchanged": true,
+      "exe_unchanged": true
+    }
+  },
+  "records": {
+    "spell_audit": {
+      "path": "build/oblivion-compat/vilverin-continuation/original-owned-powers.json",
+      "sha256": "8b2b782013ade9f6b5191c0175120311259dcb55d4edbfc2980354aefc43a262"
+    },
+    "effect_audit": {
+      "path": "build/oblivion-compat/star-west/original-abfa-record.json",
+      "sha256": "0cc265d4a3690f181df884e6a10603424a81960b1744cd7e4a979267f20de368"
+    },
+    "spell": "content:oblivion.esm:047ade",
+    "type": 2,
+    "cost": 0,
+    "level": 4,
+    "flags_semantic_byte": 1,
+    "flags_upper_bytes": "bd2f0b original padding; do not require whole-word equality to1",
+    "effect": {
+      "code": "ABFA",
+      "magnitude": 100,
+      "area": 0,
+      "duration": 0,
+      "range": 1,
+      "actor_value": 10
+    },
+    "mgef": "content:oblivion.esm:0008ca",
+    "mgef_flags": "01003825",
+    "school": 5,
+    "resistance_actor_value": 64
+  },
+  "expected_bounded_behavior": {
+    "delivery": "Touch; original live fMagicDefaultTouchDistance256",
+    "target": "original NPC06c35c/base06c357, Health16, Fatigue150, observed ResistMagic0",
+    "successful_touch": "target Fatigue150\u219250; target Health16 unchanged; caster recovery toward current maximum; Magicka80 unchanged",
+    "unarmored_control": "caster79\u2192140, target150\u219250",
+    "independent_armored_control": "fresh pristine actor state; original armor0661c1/0661c3 and HeavyArmor40 yield93% menu effectiveness; ordinary two jumps yield80/140; power gives target150\u219250 and caster80\u2192140; no armor/fatigue scaling of this effect",
+    "daily_use": "ordinary23-hour wait crossing midnight rejects reuse; named save/load still rejects; one further ordinary hour admits new miss and immediately rejects the next retry",
+    "clock_observations": {
+      "after_armored_use": {
+        "day": 27,
+        "hour": 1.3953,
+        "days_passed": 1
+      },
+      "after_23_hours_and_reload": {
+        "day": 28,
+        "hour": 0.5538,
+        "fatigue": 140
+      },
+      "after_further_hour_and_miss": {
+        "day": 28,
+        "hour": 1.6336,
+        "days_passed": 2,
+        "fatigue": 139,
+        "magicka": 80
+      }
+    },
+    "miss": "A released miss spends the daily use without a target transfer.",
+    "tolerances": "Current course target delta100 within0.01; caster capped recovery within0.01. Original displayed clocks bracket the rolling-day rule with about0.25 game-hour scheduling slack; exact native timer arithmetic/cancellation timing are not required."
+  },
+  "control_setup": {
+    "scope": "Only the isolated original control uses COC/moveto, original armor grants, HeavyArmor40, AI/combat toggles, zero Fatigue regeneration and combat/alarm cleanup. Fork courses use actual inventory/actors, ordinary movement, jumping, menu selection, Cast and saves. No god mode.",
+    "state_notes": "Fresh F9 restores pristine actor state; native GMST and global AI toggles persist across those reloads. fFatigueReturnBase/Mult were explicitly set0 in earlier target-cell setup, and Base0 was re-queried before the accepted armored cast. TCAI Off and TAI Off were observed before the final independent armored setup.",
+    "gmst_setup_recipe": {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/target-cell-actions.json",
+        "sha256": "6b1c89ba7bce5ba5b969eab3dbbd92f6ddda105f0f8c9f9811dbf41f2dd7cf13"
+      },
+      "actions": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "F9"
+        },
+        {
+          "type": "sleep",
+          "seconds": 7
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "EnablePlayerControls"
+        },
+        {
+          "type": "line",
+          "value": "setGS fFatigueReturnBase 0"
+        },
+        {
+          "type": "line",
+          "value": "setGS fFatigueReturnMult 0"
+        },
+        {
+          "type": "line",
+          "value": "coc Vilverin"
+        },
+        {
+          "type": "sleep",
+          "seconds": 7
+        },
+        {
+          "type": "shot",
+          "name": "original-coc-vilverin.png"
+        }
+      ]
+    },
+    "preconditions": "Use actual observed Off flags and zero regeneration; do not blindly replay a toggle against an unknown initial flag. Inspect every wait selection before accepting its duration."
+  },
+  "editable_actual_recipes": [
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/fresh-ai-flags-actions.json",
+        "sha256": "7c920c6cfca964e94c7a7177daf0d62262c1cf07bf4c1e45d93e3d23e3914dd2"
+      },
+      "actions": [
+        {
+          "type": "click",
+          "x": 644,
+          "y": 486
+        },
+        {
+          "type": "key",
+          "value": "F9"
+        },
+        {
+          "type": "sleep",
+          "seconds": 10
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "EnablePlayerControls"
+        },
+        {
+          "type": "line",
+          "value": "tcai"
+        },
+        {
+          "type": "line",
+          "value": "tai"
+        },
+        {
+          "type": "shot",
+          "name": "original-fresh-ai-flags.png"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/independent-armored-setup-actions.json",
+        "sha256": "1083215b61f83b0010a12b2a75a1ab90c66eb725965a8324f959313089a92d32"
+      },
+      "actions": [
+        {
+          "type": "line",
+          "value": "tai"
+        },
+        {
+          "type": "line",
+          "value": "player.AddItem 000661c1 1"
+        },
+        {
+          "type": "line",
+          "value": "player.AddItem 000661c3 1"
+        },
+        {
+          "type": "line",
+          "value": "player.EquipItem 000661c1"
+        },
+        {
+          "type": "line",
+          "value": "player.EquipItem 000661c3"
+        },
+        {
+          "type": "line",
+          "value": "player.SetAV HeavyArmor 40"
+        },
+        {
+          "type": "shot",
+          "name": "original-independent-armored-setup.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "Tab"
+        },
+        {
+          "type": "click",
+          "x": 335,
+          "y": 690
+        },
+        {
+          "type": "click",
+          "x": 245,
+          "y": 212
+        },
+        {
+          "type": "shot",
+          "name": "original-independent-armored-power-menu.png"
+        },
+        {
+          "type": "key",
+          "value": "Tab"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "coc Vilverin"
+        },
+        {
+          "type": "sleep",
+          "seconds": 15
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "player.moveto 0006c35c"
+        },
+        {
+          "type": "sleep",
+          "seconds": 5
+        },
+        {
+          "type": "key",
+          "value": "s"
+        },
+        {
+          "type": "shot",
+          "name": "original-independent-armored-aim.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/independent-armored-align-actions.json",
+        "sha256": "0d008875216a5854fbea84916f0eeefcc87df806fa49317db488725a7bd02fbf"
+      },
+      "actions": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "move",
+          "x": 350,
+          "y": 30
+        },
+        {
+          "type": "shot",
+          "name": "original-independent-armored-aligned.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/independent-armored-transfer-actions.json",
+        "sha256": "ef7f75f7a8f4ef61bf59df8e38a32bb04f961122e8ac987370ae55a376eb3352"
+      },
+      "actions": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "e"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        },
+        {
+          "type": "key",
+          "value": "e"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "prid 0006c35c"
+        },
+        {
+          "type": "line",
+          "value": "GetAV Fatigue"
+        },
+        {
+          "type": "line",
+          "value": "GetAV Health"
+        },
+        {
+          "type": "line",
+          "value": "GetAV ResistMagic"
+        },
+        {
+          "type": "line",
+          "value": "player.GetAV Fatigue"
+        },
+        {
+          "type": "line",
+          "value": "player.GetAV Magicka"
+        },
+        {
+          "type": "line",
+          "value": "GetGS fFatigueReturnBase"
+        },
+        {
+          "type": "shot",
+          "name": "original-independent-armored-before.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "GetAV Fatigue"
+        },
+        {
+          "type": "line",
+          "value": "GetAV Health"
+        },
+        {
+          "type": "line",
+          "value": "player.GetAV Fatigue"
+        },
+        {
+          "type": "line",
+          "value": "player.GetAV Magicka"
+        },
+        {
+          "type": "shot",
+          "name": "original-independent-armored-result.png"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/rolling-day-setup-actions.json",
+        "sha256": "ad9fb2cb339f86cb0b97a51a2d6d1bbcc203252ddfca9c2b62baf8ad1f1b78e5"
+      },
+      "actions": [
+        {
+          "type": "line",
+          "value": "show GameHour"
+        },
+        {
+          "type": "line",
+          "value": "show GameDay"
+        },
+        {
+          "type": "line",
+          "value": "show GameDaysPassed"
+        },
+        {
+          "type": "line",
+          "value": "StopCombatAlarmOnActor"
+        },
+        {
+          "type": "line",
+          "value": "player.StopCombatAlarmOnActor"
+        },
+        {
+          "type": "shot",
+          "name": "original-power-clock-and-combat-clear.png"
+        },
+        {
+          "type": "line",
+          "value": "coc testinghall"
+        },
+        {
+          "type": "sleep",
+          "seconds": 10
+        },
+        {
+          "type": "key",
+          "value": "t"
+        },
+        {
+          "type": "shot",
+          "name": "original-rolling-day-wait-menu.png"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/wait-23-arrow-actions.json",
+        "sha256": "ce7b077a4d87b522c3a56424c2b326ef3325b87024041291868c1c935309bea1"
+      },
+      "actions": [
+        {
+          "type": "click",
+          "x": 491,
+          "y": 326
+        },
+        {
+          "type": "shot",
+          "name": "original-wait-23-actual.png"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/rolling-23-hours-actions.json",
+        "sha256": "ff85253090a4d97b0c914b17db1d747850726edace214db3d1b2c658c59c1675"
+      },
+      "actions": [
+        {
+          "type": "click",
+          "x": 672,
+          "y": 490
+        },
+        {
+          "type": "sleep",
+          "seconds": 30
+        },
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "shot",
+          "name": "original-23-hours-reuse-result.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "show GameHour"
+        },
+        {
+          "type": "line",
+          "value": "show GameDay"
+        },
+        {
+          "type": "line",
+          "value": "show GameDaysPassed"
+        },
+        {
+          "type": "line",
+          "value": "player.GetAV Fatigue"
+        },
+        {
+          "type": "line",
+          "value": "save StarWestPowerControl"
+        },
+        {
+          "type": "shot",
+          "name": "original-23-hours-clock-and-save.png"
+        },
+        {
+          "type": "line",
+          "value": "load StarWestPowerControl"
+        },
+        {
+          "type": "sleep",
+          "seconds": 10
+        },
+        {
+          "type": "shot",
+          "name": "original-power-control-reloaded.png"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/rolling-reload-one-hour-actions.json",
+        "sha256": "9a26b5a413409ee8eb004e6e1a1e38b0cb5bd7fb9bfcdc386cf677e700dcdd2e"
+      },
+      "actions": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "shot",
+          "name": "original-23-hours-reloaded-reuse.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "show GameHour"
+        },
+        {
+          "type": "line",
+          "value": "show GameDay"
+        },
+        {
+          "type": "line",
+          "value": "player.GetAV Fatigue"
+        },
+        {
+          "type": "shot",
+          "name": "original-23-hours-reloaded-clock.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "t"
+        },
+        {
+          "type": "drag",
+          "x1": 745,
+          "y1": 326,
+          "x2": 522,
+          "y2": 326
+        },
+        {
+          "type": "shot",
+          "name": "original-final-one-hour-selected.png"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/final-one-hour-arrow-actions.json",
+        "sha256": "d597cdc20f02b81fc250fb21c2c8392ebb708e48d4cdf4f85c39103d935e666d"
+      },
+      "actions": [
+        {
+          "type": "click",
+          "x": 491,
+          "y": 326
+        },
+        {
+          "type": "shot",
+          "name": "original-final-one-hour-actual.png"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/rolling-24-hours-actions.json",
+        "sha256": "8bc2349348cf976d22b827c560079313eedeaadc741a33b5a78be8c5f679ec74"
+      },
+      "actions": [
+        {
+          "type": "click",
+          "x": 672,
+          "y": 490
+        },
+        {
+          "type": "sleep",
+          "seconds": 5
+        },
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        },
+        {
+          "type": "shot",
+          "name": "original-24-hours-missed-cast.png"
+        },
+        {
+          "type": "key",
+          "value": "c"
+        },
+        {
+          "type": "shot",
+          "name": "original-24-hours-new-use-spent.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "show GameHour"
+        },
+        {
+          "type": "line",
+          "value": "show GameDay"
+        },
+        {
+          "type": "line",
+          "value": "show GameDaysPassed"
+        },
+        {
+          "type": "line",
+          "value": "player.GetAV Fatigue"
+        },
+        {
+          "type": "line",
+          "value": "player.GetAV Magicka"
+        },
+        {
+          "type": "shot",
+          "name": "original-24-hours-final-clock-resources.png"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/star-west/original-native-01/quit-actions.json",
+        "sha256": "b1026ab84d5ee62068fdd466e4802867d9471b43e82b633ca0f01ac556293484"
+      },
+      "actions": [
+        {
+          "type": "line",
+          "value": "qqq"
+        }
+      ]
+    }
+  ],
+  "reviewed_captures": [
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-missed-touch-reuse.png",
+      "sha256": "537bb7043c2a1db038f597d39a99c518ff754092bf225459ad2adb3847f11660"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-confirmed-touch-result.png",
+      "sha256": "90d25ac1c36fea8a30482843e4a4941f5467a4afdfdca6a94f41997bf71ff0f8"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-independent-armored-setup.png",
+      "sha256": "68f3ff95278c2bb4f506f73ed7f85d387d9b9ccf180e1c3ca0b95b019250ef78"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-independent-armored-power-menu.png",
+      "sha256": "4f640a5c2d609f52dcacbd4a21c2238ba020538cd2529004ff673843587e7d05"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-independent-armored-aligned.png",
+      "sha256": "879cbb5f1f143ca8a847d2b10de1af53182f09a0c2f94aae575c99ed5b42a40f"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-independent-armored-before.png",
+      "sha256": "87b8a12624df5e7ffca2320ab17c4a126d7ce30bec972d4fb606e51630dc1160"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-independent-armored-result.png",
+      "sha256": "66647d3ddb7c0c21483b6c94b1376d563ed4bf03a16911a7b42da49c30ea6b69"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-power-clock-and-combat-clear.png",
+      "sha256": "a516314c173657e6bc8270b216f866e2f7899264ef4c830975d9b4982d4f95f5"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-wait-23-actual.png",
+      "sha256": "0f97bf43341531c2b521be613a0a5d893b6f5191193e395a6a536e4b0e161de6"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-23-hours-reuse-result.png",
+      "sha256": "7f07a32b60a3fb9053d026c69d65c7b0f8e8b10deaba4fabf36e6735f4418da4"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-23-hours-clock-and-save.png",
+      "sha256": "9f6bdb3de9c46329893bec6ccccb798bfeb18f10d833be04f0e06d8e5d114c41"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-23-hours-reloaded-reuse.png",
+      "sha256": "cdff4b294ef6cc134ec1165f073140d11f22e33e2abed005f6c9c470f5f2c281"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-23-hours-reloaded-clock.png",
+      "sha256": "62d5a6b53d0074abd8a55b3f8a74a351b250f0414b4d3782e2dca1f53c22aff6"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-final-one-hour-actual.png",
+      "sha256": "63668c717a7790af099a64e20d3c4282b53bec123f58f6e295d99ed2cfd3ff5f"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-24-hours-final-clock-resources.png",
+      "sha256": "94cbcf8f96406d7b3d8ee24a6f14ba571e7fcfb766699cde9caa914b80945af9"
+    },
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/original-24-hours-new-use-spent.png",
+      "sha256": "ce2df341bd82de748aaf43928f276e48924f95074b1f1e6ffe2541779fe8c35d"
+    }
+  ],
+  "retained_failures_and_limits": [
+    "Early EquipSpell, unloaded-reference moveto and GetGameHour console attempts were invalid and are retained; menu selection and Show globals supplied the accepted controls.",
+    "Direct GameDaysPassed edit did not establish recharge and is excluded from the accepted clock experiment; the final rolling23+1 experiment starts from a pristine reload and uses ordinary waiting.",
+    "Early wait-track/drag attempts selected7,24 or2 hours despite tentative filenames; accepted durations are the visually reviewed23-hour and1-hour arrow captures.",
+    "Serial armor attempts had misses and lingering combat; final accepted armored cast is an independent first cast after pristine reload, with both AI flags controlled and aim inspected before C.",
+    "Native missed-cast Fatigue expenditure1 was observed; this bounded engine power path does not yet model that small generic casting expenditure. Exact cancellation timing, general powers, reflect/absorption and nonzero-resistance parity remain outside this receipt."
+  ],
+  "named_control_save": [
+    {
+      "path": "build/oblivion-compat/star-west/original-native-01/compat/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/StarWestPowerControl.ess",
+      "sha256": "fa3c3160271c20d458e65a6996d3bc20d097231ab3f494b8a8dd4562a7b7e6f6"
+    }
+  ]
+}

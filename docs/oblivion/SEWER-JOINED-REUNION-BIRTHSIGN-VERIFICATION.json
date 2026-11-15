@@ -1,0 +1,296 @@
+{
+  "scope": "Connected original second ambush, north-door approach/Space, original reunion40/42 and normal Warrior birthsign menu/dialogue to50. Explicit composite; full escape incomplete.",
+  "full_escape_complete": false,
+  "implementation_unchanged": true,
+  "courses": {
+    "joined-subterrane-door-resolution-course-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-subterrane-door-resolution-course-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-subterrane-ambush-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "bdc1301467ff01496e58d054d5278849a61820dc9c505e4b47349a0af97c8e70",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-subterrane-door-resolution-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "159b3f08da80d38486d1ebb430ca654efc50ec21aa7d2ddc5c0dd3355c0a02b6",
+      "position": [
+        1473.913818359375,
+        5487.8134765625,
+        -991.0374755859375,
+        0.056054674088954926,
+        0.0,
+        0.4625944197177887
+      ],
+      "health": 80.0,
+      "stage": 36,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        34,
+        36
+      ],
+      "no_active_combat_or_pending_death_action": true
+    },
+    "joined-subterrane-reunion-stage42-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-subterrane-reunion-stage42-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-subterrane-door-resolution-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "159b3f08da80d38486d1ebb430ca654efc50ec21aa7d2ddc5c0dd3355c0a02b6",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-subterrane-reunion-stage42-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "7e569dfb9fa22cf111226f763ef625d4e989d3ccfcfd55054809ed68217f6235",
+      "position": [
+        1473.913818359375,
+        5487.8134765625,
+        -991.0374755859375,
+        0.056054674088954926,
+        0.0,
+        0.4625944197177887
+      ],
+      "health": 80.0,
+      "stage": 42,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        34,
+        36,
+        40,
+        42
+      ],
+      "no_active_combat_or_pending_death_action": true
+    },
+    "joined-warrior-birthsign-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/joined-warrior-birthsign-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-subterrane-reunion-stage42-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "7e569dfb9fa22cf111226f763ef625d4e989d3ccfcfd55054809ed68217f6235",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save": "build/oblivion-compat/sewer-escape/joined-warrior-birthsign-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "63c6bcd51702f1b09f30cd50c3c8ba35bdc4b979e6d9ac469610621dd46fade7",
+      "position": [
+        1473.913818359375,
+        5487.8134765625,
+        -991.0374755859375,
+        0.056054674088954926,
+        0.0,
+        0.4625944197177887
+      ],
+      "health": 100.0,
+      "stage": 50,
+      "completed_stages": [
+        5,
+        6,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        34,
+        36,
+        40,
+        42,
+        43,
+        44,
+        45,
+        50
+      ],
+      "no_active_combat_or_pending_death_action": true
+    }
+  },
+  "ambush_prefix": {
+    "scenario_report_present": false,
+    "launcher": {
+      "pid": 108901,
+      "child_pid": 108902,
+      "running": false,
+      "exit_code": -2,
+      "finished_utc": "2026-11-06T06:00:16.665680+00:00"
+    },
+    "whole_course_passed": false,
+    "accepted_prefix_actions": 891,
+    "accepted_evidence": "All25 approach/room/drop gates and real F5 saved with34, Player80HP, first assassin0176ff Player-not-killer; whole run intentionally stopped during later36 wait.",
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-cavern-to-subterrane-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "48bcec921b5469523a25137ad4caae7d0cc1f5d7a79c15cb18a4cb264835d445",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "save": "build/oblivion-compat/sewer-escape/joined-subterrane-ambush-course-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "bdc1301467ff01496e58d054d5278849a61820dc9c505e4b47349a0af97c8e70",
+    "first_kill": {
+      "actor": "content:oblivion.esm:0176ff",
+      "base": "content:oblivion.esm:017618",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "content:oblivion.esm:032a17"
+    },
+    "input_receipts_match": true
+  },
+  "birthsign": {
+    "form": "content:oblivion.esm:01fd9d",
+    "choice": "Warrior",
+    "health_base": 100,
+    "health_current": 100,
+    "strength_base": 50,
+    "endurance_base": 50,
+    "class_still_placeholder": "content:oblivion.esm:0230e6",
+    "selection_and_completed_captures_inspected": true
+  },
+  "assassins": [
+    {
+      "actor": "content:oblivion.esm:0176ff",
+      "base": "content:oblivion.esm:017618",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "content:oblivion.esm:032a17"
+    },
+    {
+      "actor": "content:oblivion.esm:017708",
+      "base": "content:oblivion.esm:017620",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "content:oblivion.esm:032a16"
+    }
+  ],
+  "all_three_escorts_alive": true,
+  "dead_assassins_retain_no_bound_inventory": true,
+  "death_count_changes": {
+    "content:oblivion.esm:017620": 1,
+    "content:oblivion.esm:017618": 1
+  },
+  "player_inventory_unchanged": true,
+  "door": {
+    "reference": "content:oblivion.esm:017753",
+    "animation": {
+      "count": 1,
+      "locked": false,
+      "obscript.animation_absolute": false,
+      "obscript.animation_group": "open",
+      "obscript.animation_loop_count": 0,
+      "obscript.animation_mode": 1,
+      "obscript.animation_playing": true,
+      "obscript.animation_progress": 1.0,
+      "obscript.animation_scripted": true,
+      "record_type": 1389317956,
+      "scale": 1.0
+    },
+    "capture_inspected": true,
+    "sequence": "Approaching doorway permits second assassin death and original36 before actual Space opens door. Door activation is not claimed as the cause of the kill."
+  },
+  "retained_attempts": {
+    "joined-subterrane-ambush-course-01": "First4 phases/actual891-action F5 prefix accepted; later36 passivewait interrupted. No whole pass.",
+    "joined-subterrane-backstep-01": "Fails36 wait; no checkpoint from it used.",
+    "joined-reunion-birthsign-course-01": "Original automatic Emperor greeting opens before planned navigation ends; navigation wait fails; no checkpoint used. Direct original UI reply recipe passes from unchanged42 save.",
+    "joined-follow-emperor-to-f-01": "Left-offset first point stops at doorway left edge; no checkpoint used.",
+    "joined-follow-emperor-centre-01": "First centre point reached; Player and Emperor then obstruct one another at threshold. No checkpoint used. Ordinary sidestep clears Emperor crossing."
+  },
+  "limits": [
+    "Only Warrior birthsign has this runtime coverage; class remains unchosen until later story.",
+    "Birthsign description panel remains blank in menu capture.",
+    "Uninterrupted new-game escape/fresh outdoor load remain outstanding.",
+    "No fresh broad builds for input-only changes; earlier engine/sanitizer evidence keeps original provenance."
+  ],
+  "escort_clearance": {
+    "scenario": "build/oblivion-compat/sewer-escape/joined-escort-door-clearance-01/scenario.json",
+    "passed": true,
+    "save": "build/oblivion-compat/sewer-escape/joined-escort-door-clearance-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "2423b915b97d14e1981e6edae1cc48af4bf2d4d82a5b2821b77db9ef05253b99",
+    "entry": {
+      "passed": true,
+      "source_save": "build/oblivion-compat/sewer-escape/joined-warrior-birthsign-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_save_sha256": "63c6bcd51702f1b09f30cd50c3c8ba35bdc4b979e6d9ac469610621dd46fade7",
+      "whole_state_restore": true,
+      "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+      "differences": []
+    },
+    "ordinary_input": "A+Shift_L0.4seconds, then release and observe",
+    "player_position": [
+      1444.22802734375,
+      5496.87451171875,
+      -991.0363159179688,
+      0.056054674088954926,
+      0.0,
+      0.4625944197177887
+    ],
+    "emperor_position": [
+      1568.1156005859375,
+      5711.30712890625,
+      -991.0407104492188,
+      0.0,
+      0.0,
+      -0.21338818967342377
+    ],
+    "emperor_cell": "content:oblivion.esm:022288",
+    "capture_inspected": true
+  }
+}

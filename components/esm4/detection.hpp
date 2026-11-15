@@ -106,11 +106,16 @@ namespace ESM4
     struct DetectionResult
     {
         double mLevel = 0.0; // [0, 100], suitable for GetDetectionLevel
-        bool mDetected = false; // threshold/roll result for GetDetected
+        bool mDetected = false; // Visual/threshold result; native conditions use nativeGetDetected.
         bool mValid = true;
 
         friend bool operator==(const DetectionResult&, const DetectionResult&) = default;
     };
+
+    // The native coordinator preserves a normalized score of 50 + signed
+    // awareness. GetDetected tests that awareness, independently of the
+    // visual acquisition flag used by combat.
+    bool nativeGetDetected(const DetectionResult& result);
 
     DetectionResult calculateDetection(const DetectionInput& input);
 }

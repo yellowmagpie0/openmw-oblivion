@@ -1,14 +1,17 @@
 #include "repair.hpp"
 
 #include <iomanip>
+#include <algorithm>
 
 #include <MyGUI_ScrollView.h>
+#include <MyGUI_RenderManager.h>
 
 #include <components/esm3/loadrepa.hpp>
 #include <components/widgets/box.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 
@@ -87,8 +90,26 @@ namespace MWGui
         std::stringstream qualityStr;
         qualityStr << std::setprecision(3) << quality;
 
-        mUsesLabel->setCaptionWithReplacing("#{sUses} " + MyGUI::utility::toString(uses));
-        mQualityLabel->setCaptionWithReplacing("#{sQuality} " + qualityStr.str());
+        const bool native = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        if (native)
+        {
+            MyGUI::TextBox* title;
+            getWidget(title, "Label");
+            title->setCaptionWithReplacing("#{Interface:Repair}");
+            const auto& tool = mRepair.getTool();
+            mUsesLabel->setCaption(std::string(tool.getClass().getName(tool))
+                + " (" + MyGUI::utility::toString(tool.getCellRef().getCount()) + ")");
+            auto size = mMainWidget->getSize();
+            size.height = std::min(size.height, std::max(180, MyGUI::RenderManager::getInstance().getViewSize().height - 20));
+            mMainWidget->setSize(size);
+        }
+        else
+        {
+            mUsesLabel->setCaptionWithReplacing("#{sUses} " + MyGUI::utility::toString(uses));
+            mQualityLabel->setCaptionWithReplacing("#{sQuality} " + qualityStr.str());
+        }
+        mQualityLabel->setVisible(!native);
+        mQualityLabel->setUserString("Hidden", native ? "true" : "false");
 
         bool toolBoxVisible = (mRepair.getTool().getCellRef().getCount() != 0);
         mToolBox->setVisible(toolBoxVisible);

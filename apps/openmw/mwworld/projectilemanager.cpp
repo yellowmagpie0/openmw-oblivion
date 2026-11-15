@@ -1,6 +1,7 @@
 #include "projectilemanager.hpp"
 
 #include <iomanip>
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -26,14 +27,18 @@
 #include <components/misc/resourcehelpers.hpp>
 
 #include <components/resource/resourcesystem.hpp>
+#include <components/resource/keyframemanager.hpp>
 #include <components/resource/scenemanager.hpp>
 
 #include <components/sceneutil/controller.hpp>
+#include <components/sceneutil/keyframe.hpp>
 #include <components/sceneutil/lightmanager.hpp>
 #include <components/sceneutil/nodecallback.hpp>
 #include <components/sceneutil/visitor.hpp>
 
 #include <components/settings/values.hpp>
+#include <components/esm4/magiccaster.hpp>
+#include <components/esm4/projectilerules.hpp>
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
@@ -63,6 +68,38 @@
 
 namespace
 {
+    float oblivionProjectileAnimationTime(Resource::ResourceSystem& resources,
+        const ESM4::MagicProjectileState& projectile)
+    {
+        const osg::Vec3f velocity(projectile.mVelocity[0], projectile.mVelocity[1], projectile.mVelocity[2]);
+        const float age = projectile.mDistance / velocity.length();
+        const auto model = Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(projectile.mModel));
+        const auto frames = resources.getKeyframeManager()->get(model);
+        const SceneUtil::ControllerSequenceMetadata* flight = nullptr;
+        for (const auto& sequence : frames->mControllerSequences)
+            if (sequence.mGroup == "specialidle_projectile")
+            {
+                if (flight) throw std::runtime_error("ambiguous native projectile animation");
+                flight = &sequence;
+            }
+        if (!flight) return age; // Legacy assets without named effect phases.
+        const float duration = flight->mStopTime - flight->mStartTime;
+        const float span = flight->mTimelineStop - flight->mTimelineStart;
+        if (!std::isfinite(duration) || duration <= 0 || !std::isfinite(span) || span <= 0
+            || !std::isfinite(flight->mFrequency) || flight->mFrequency <= 0)
+            throw std::runtime_error("invalid native projectile animation timing");
+        float time = age * flight->mFrequency;
+        if (flight->mCycleType == 0) time = std::fmod(time, duration);
+        else if (flight->mCycleType == 1)
+        {
+            time = std::fmod(time, 2 * duration);
+            if (time > duration) time = 2 * duration - time;
+        }
+        else if (flight->mCycleType == 2) time = std::min(time, duration);
+        else throw std::runtime_error("unsupported native projectile animation cycle");
+        return flight->mTimelineStart + time * span / duration;
+    }
+
     ESM::EffectList getMagicBoltData(std::vector<ESM::RefId>& projectileIDs, std::set<ESM::RefId>& sounds, float& speed,
         VFS::Path::NormalizedView& texture, std::string& sourceName, const ESM::RefId& id,
         const MWWorld::ESMStore* content = nullptr, const MWWorld::ESMStore* incoming = nullptr)
@@ -695,8 +732,88 @@ namespace MWWorld
         }
     }
 
+    void ProjectileManager::syncOblivionMagicProjectiles(
+        const std::map<std::uint64_t, ESM4::MagicProjectileState>& projectiles)
+    {
+        for (auto it = mOblivionMagicModels.begin(); it != mOblivionMagicModels.end();)
+            if (!projectiles.contains(it->first))
+            {
+                mParent->removeChild(it->second.mNode);
+                it = mOblivionMagicModels.erase(it);
+            }
+            else ++it;
+        for (const auto& [id, projectile] : projectiles)
+        {
+            const osg::Vec3f position(projectile.mPosition[0], projectile.mPosition[1], projectile.mPosition[2]);
+            const osg::Vec3f velocity(projectile.mVelocity[0], projectile.mVelocity[1], projectile.mVelocity[2]);
+            auto it = mOblivionMagicModels.find(id);
+            if (it == mOblivionMagicModels.end())
+            {
+                State state{};
+                const auto color = projectile.mEffectCode == ESM::fourCC("SHDG")
+                    ? osg::Vec4(.6f, .7f, 1.f, 1.f) : osg::Vec4(1.f, .4f, .1f, 1.f);
+                createModel(state, Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(projectile.mModel)),
+                    position, lookAt(velocity), false, true, color, {}, false);
+                // Allocate the retained node before publishing it to the scene.
+                it = mOblivionMagicModels.emplace(id, std::move(state)).first;
+                if (!mParent->addChild(it->second.mNode))
+                {
+                    mOblivionMagicModels.erase(it);
+                    throw std::runtime_error("native magic projectile scene publication rejected");
+                }
+            }
+            it->second.mNode->setPosition(position);
+            it->second.mNode->setAttitude(lookAt(velocity));
+            // TES4 effect NIFs contain separate Cast, Projectile and AreaEffect
+            // sequences. Select flight explicitly instead of playing Cast at age
+            // zero. Saved distance owns the phase across a fresh process.
+            it->second.mEffectAnimationTime->resetTime(oblivionProjectileAnimationTime(*mResourceSystem, projectile));
+        }
+    }
+
+    void ProjectileManager::syncOblivionArrowProjectiles(
+        const std::map<std::uint64_t, ESM4::ArrowProjectileState>& projectiles)
+    {
+        for (auto it = mOblivionArrowModels.begin(); it != mOblivionArrowModels.end();)
+            if (!projectiles.contains(it->first))
+            {
+                mParent->removeChild(it->second.mNode);
+                it = mOblivionArrowModels.erase(it);
+            }
+            else ++it;
+        for (const auto& [id, arrow] : projectiles)
+        {
+            const osg::Vec3f position(arrow.mPosition[0], arrow.mPosition[1], arrow.mPosition[2]);
+            const osg::Vec3f velocity(arrow.mVelocity[0], arrow.mVelocity[1], arrow.mVelocity[2]);
+            auto it = mOblivionArrowModels.find(id);
+            if (it == mOblivionArrowModels.end())
+            {
+                auto* scene = mResourceSystem->getSceneManager();
+                const auto model = scene->getTemplate(VFS::Path::Normalized(arrow.mModel));
+                const auto geometry = MWRender::cloneOblivionArrowGeometry(*model, *scene);
+                if (!geometry) throw std::runtime_error("native flight model has no Arrow:0");
+                State state{};
+                state.mNode = new osg::PositionAttitudeTransform;
+                state.mNode->setNodeMask(MWRender::Mask_Effect);
+                state.mNode->addChild(geometry);
+                it = mOblivionArrowModels.emplace(id, std::move(state)).first;
+                if (!mParent->addChild(it->second.mNode))
+                {
+                    mOblivionArrowModels.erase(it);
+                    throw std::runtime_error("native arrow scene publication rejected");
+                }
+            }
+            it->second.mNode->setPosition(position);
+            if (velocity.length2() > 0) it->second.mNode->setAttitude(lookAt(velocity));
+        }
+    }
+
     void ProjectileManager::clear()
     {
+        for (auto& [id, state] : mOblivionArrowModels) mParent->removeChild(state.mNode);
+        mOblivionArrowModels.clear();
+        for (auto& [id, state] : mOblivionMagicModels) mParent->removeChild(state.mNode);
+        mOblivionMagicModels.clear();
         ++mRestoreGeneration;
         for (auto& mProjectile : mProjectiles)
             cleanupProjectile(mProjectile);

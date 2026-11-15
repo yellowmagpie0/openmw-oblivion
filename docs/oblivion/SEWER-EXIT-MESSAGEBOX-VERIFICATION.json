@@ -1,0 +1,36 @@
+{
+  "scope": "Native interactive MessageBox formatting, buttons and caller-owned GetButtonPressed; full sewer escape remains incomplete.",
+  "normal_engine": {
+    "evidence": "build/oblivion-compat/sewer-escape/exit-messagebox-normal-integration-02/verification.json",
+    "source": {
+      "head": "0bb99b2c82833c3f4b6404ffe77ab8c7a51b63fd",
+      "source_fingerprint": "22cbf458bafec6d10d4f101a1c608565a86a3e6e4ed83542f82b21214873dad4"
+    },
+    "executed": 2198,
+    "passed": true
+  },
+  "original_button_owner": {
+    "evidence": "build/oblivion-compat/sewer-escape/button-owner-oracle-01/report.json",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "entry": "0x5072b0",
+    "cases": 72,
+    "boundaries": "Complete original handler, no function stubs; supplied reference/script identity and UI owner/selection globals."
+  },
+  "runtime": {
+    "evidence": "build/oblivion-compat/sewer-escape/sewers03-exterior-exit-02/scenario.json",
+    "passed": false,
+    "observed": "Original four-button review, Finished selection, MQ01 stage88, SetInCharGen false and physical exterior transition.",
+    "blockers": [
+      "Unsupported AddAchievement in MQ01 stage88",
+      "Native Resurrect reset unimplemented for passive regenerating rat",
+      "Unsupported outdoor GetDayOfWeek"
+    ],
+    "acceptance": "Failed; outdoor save excluded from accepted continuation chain."
+  },
+  "remaining": [
+    "Clean exterior exit and fresh outdoor reload",
+    "Shaman victory",
+    "Continuous prison-to-outdoors playthrough",
+    "Accumulated sanitizer integration"
+  ]
+}

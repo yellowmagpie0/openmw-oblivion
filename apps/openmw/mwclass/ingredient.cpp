@@ -11,6 +11,7 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/actioneat.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/nullaction.hpp"
@@ -71,7 +72,8 @@ namespace MWClass
 
     std::unique_ptr<MWWorld::Action> Ingredient::use(const MWWorld::Ptr& ptr, bool force) const
     {
-        if (ptr.get<ESM::Ingredient>()->mBase->mData.mEffectID[0].empty())
+        if (MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion
+            && ptr.get<ESM::Ingredient>()->mBase->mData.mEffectID[0].empty())
             return std::make_unique<MWWorld::NullAction>();
         std::unique_ptr<MWWorld::Action> action = std::make_unique<MWWorld::ActionEat>(ptr);
 
@@ -117,6 +119,16 @@ namespace MWClass
         {
             info.extra += MWGui::ToolTips::getCellRefString(ptr.getCellRef());
             info.extra += MWGui::ToolTips::getMiscString(ref->mBase->mScript.getRefIdString(), "Script");
+        }
+
+        auto world = MWBase::Environment::get().getWorld();
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            info.text = MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, "#{Interface:Weight}")
+                + MWGui::ToolTips::getValueString(ref->mBase->mData.mValue, "#{Interface:Value}")
+                + MWWorld::describeOblivionIngredient(*world, ptr);
+            info.isIngredient = true;
+            return info;
         }
 
         MWWorld::Ptr player = MWBase::Environment::get().getWorld()->getPlayerPtr();

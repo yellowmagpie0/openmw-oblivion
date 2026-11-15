@@ -26,6 +26,7 @@ namespace MWClass
         const ContainerCustomData& asContainerCustomData() const override;
 
         friend class Container;
+        friend class ESM4Container;
     };
 
     class Container : public MWWorld::RegisteredClass<Container>

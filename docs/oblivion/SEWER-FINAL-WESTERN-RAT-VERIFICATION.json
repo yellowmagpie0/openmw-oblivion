@@ -1,0 +1,102 @@
+{
+  "scope": "Normal final sewer stairs, first western rat victory and cleared passage to western bridge approach, with separate-process continuation. Not final sewer/exterior acceptance.",
+  "full_escape_complete": false,
+  "source_head": "c31f1006aa",
+  "implementation_changes": "Normal-input test courses only; no engine changes. Read-only observer supplies camera aim and dead/alive observations. Blocking, movement, weapon attacks and F5 are ordinary controls.",
+  "courses": {
+    "sewers03-western-rat-01": {
+      "path": "build/oblivion-compat/sewer-escape/sewers03-western-rat-01/scenario.json",
+      "passed": true,
+      "save_sha256": "c3d89f87151ce9a3a86846c656e5c4c794244b58e91fd5fb41144ae4772d2f95",
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sewers03-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "d52b9800b2d54f5a1c688529590ba91ce3c8d6cef2d7423a71dd6e0b08c6bfec",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "health": 80.85667419433594,
+      "fatigue": 120.64608764648438,
+      "position": [
+        -1817.59228515625,
+        590.526611328125,
+        6526.294921875
+      ],
+      "rat_life": {
+        "actor": "content:oblivion.esm:0666a7",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    },
+    "sewers03-bridge-approach-01": {
+      "path": "build/oblivion-compat/sewer-escape/sewers03-bridge-approach-01/scenario.json",
+      "passed": true,
+      "save_sha256": "210ce9db3a84149f53ee660055b3fee7b6724d111b4deb91f175a20311e38af6",
+      "entry_restore": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sewers03-western-rat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "c3d89f87151ce9a3a86846c656e5c4c794244b58e91fd5fb41144ae4772d2f95",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "health": 80.85667419433594,
+      "fatigue": 170.0,
+      "position": [
+        -1001.8759765625,
+        333.660400390625,
+        6543.0791015625
+      ],
+      "rat_life": {
+        "actor": "content:oblivion.esm:0666a7",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      }
+    }
+  },
+  "observed_combat": {
+    "victim": "content:oblivion.esm:0666a7",
+    "base": "content:oblivion.esm:02509b",
+    "initial_health": 4,
+    "player_contacts": [
+      {
+        "action_id": "196",
+        "damage": 1.79677
+      },
+      {
+        "action_id": "198",
+        "damage": 5.3402
+      }
+    ],
+    "killer": "dynamic:player:0000000000000001",
+    "final_player_health": 80.85667419433594,
+    "normal_and_power_contacts_observed": true,
+    "total_rat_base_death_count": 10,
+    "new_count_increment": 1,
+    "death_hit_not_replayed_on_fresh_continuation": true,
+    "travel_fatigue_recovery": [
+      120.64608764648438,
+      170.0
+    ],
+    "other_actor_values_unchanged_during_travel": true
+  },
+  "retained_failure": {
+    "path": "build/oblivion-compat/sewer-escape/sewers03-lower-west-01/scenario.json",
+    "status": "failed",
+    "reason": "Walking course stalled near rat while repeated native bites reduced Player health; waypoint10 timed out. No victory accepted and no save from it used. Manual XTest rescue/input attempts are retained separately; accepted replay starts from clean sewer landing."
+  },
+  "captures_inspected": [
+    "sewers03-western-rat-01/western-rat-victory.png",
+    "sewers03-bridge-approach-01/western-bridge-approach.png"
+  ],
+  "remaining": [
+    "Bridge/goblins, final upper sewer passage and original exit review/MQ01 stage88, exterior and outdoor reload.",
+    "Shaman victory, continuous prison-to-outdoors acceptance and accumulated sanitizer integration.",
+    "Earlier AddTopic/dialogue-time Autosave limitations."
+  ]
+}

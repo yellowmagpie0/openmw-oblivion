@@ -44,6 +44,8 @@ void ESM4::Reference::load(ESM4::Reader& reader)
     mOwner = {};
     mGlobal = {};
     mFactionRank.reset();
+    mOpenByDefault = false;
+    bool seenOpenByDefault = false;
     bool seenOwner = false;
     bool seenGlobal = false;
     const auto version = reader.esmVersion();
@@ -307,6 +309,17 @@ void ESM4::Reference::load(ESM4::Reader& reader)
                 reader.get(mCount);
                 break;
             }
+            case ESM::fourCC("ONAM"):
+                if (isTES4)
+                {
+                    if (seenOpenByDefault || subHdr.dataSize != 0)
+                        reader.fail("TES4 REFR ONAM must be a single empty marker");
+                    seenOpenByDefault = true;
+                    mOpenByDefault = true;
+                }
+                else
+                    reader.skipSubRecordData();
+                break;
             // lighting
             case ESM::fourCC("LNAM"): // lighting template formId
             case ESM::fourCC("XLIG"): // struct, FOV, fade, etc
@@ -318,7 +331,6 @@ void ESM4::Reference::load(ESM4::Reader& reader)
             //
             case ESM::fourCC("XPCI"): // formId
             case ESM::fourCC("XLCM"):
-            case ESM::fourCC("ONAM"):
             case ESM::fourCC("VMAD"):
             case ESM::fourCC("XPRM"):
             case ESM::fourCC("INAM"):

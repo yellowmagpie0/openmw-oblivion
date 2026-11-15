@@ -1,0 +1,48 @@
+{
+  "status": "Accepted bounded original24 Iron Arrow stack course in normal and instrumented games; broader M18/M15 remain open.",
+  "milestones": [
+    "M18 native inventory quantity transfer and lifetime"
+  ],
+  "content": {
+    "base": "content:oblivion.esm:017829",
+    "name": "Iron Arrow",
+    "quantity": 24,
+    "script": null,
+    "enchantment": null
+  },
+  "source": {
+    "path": "build/oblivion-compat/iron-arrow-drop/normal-iron-arrow-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "2e131af56fc955b97d66ebe596e26167470cb37ffa360af78ef2a64aa90fec85",
+    "next_dynamic_serial": 4
+  },
+  "acceptance": [
+    "Ordinary Shift-click drops all24; inventory24->0, one native AMMO key4/count24 and allocator5, original two-body locked-prismatic model.",
+    "Cold world load/resave preserves count24 and complete physical history; visible ordinary Space pickup0->24 retires key4 and all bodies once; final cold inventory retains24.",
+    "Normal and sanitizer courses preserve source metadata, all other inventory/equipment, health/passives/all27 skills, quests/script owners and33 credited deaths. Encumbrance changes2.4.",
+    "Retain prior retired key3 and never reuse it. Schema103 unchanged.",
+    "Instrumented drop waits three unpaused simulation seconds before saving; original0.5/.01 settled tolerances retained. Failed comparison against an earlier still-falling source is preserved; tick-zero full snapshot restoration passed independently."
+  ],
+  "tolerances": {
+    "relative_offset_units": 0.5,
+    "relative_rotation_coefficient": 0.01,
+    "loaded_snapshot_absolute": 0.0001,
+    "loaded_snapshot_relative": 1e-06
+  },
+  "limits": [
+    "Unequipped unscripted/unenchanted ordinary AMMO only; other native drop types remain singletons.",
+    "One full original Iron Arrow stack course does not establish every quantity/asset or equipped/scripted/bound transfers."
+  ],
+  "oracle": "IRON-ARROW-DROP-ORACLE.json",
+  "baseline": "build/oblivion-compat/ammo-stack-drop/normal-stack-baseline-01",
+  "verification": "AMMO-STACK-DROP-VERIFICATION.json",
+  "normal_continuation": {
+    "path": "build/oblivion-compat/ammo-stack-drop/normal-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "6cc32234c8a81a2f12f32e84c3005b818a29e401ce45b3b7c7fb60453d72885f",
+    "next_dynamic_serial": 5
+  },
+  "sanitized_continuation": {
+    "path": "build/oblivion-compat/ammo-stack-drop/sanitized-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "302f6757df72dc93a524c7e4e81708c1f9d5784e2714f64e034b16b58a990c6e",
+    "next_dynamic_serial": 5
+  }
+}

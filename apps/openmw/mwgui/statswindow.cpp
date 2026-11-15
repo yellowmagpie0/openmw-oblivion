@@ -1,5 +1,8 @@
 #include "statswindow.hpp"
 
+#include <algorithm>
+#include <stdexcept>
+
 #include <MyGUI_Button.h>
 #include <MyGUI_Gui.h>
 #include <MyGUI_ImageBox.h>
@@ -28,6 +31,8 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/player.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/oblivionskilltraining.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
@@ -237,8 +242,19 @@ namespace MWGui
         MWWorld::Ptr player = MWMechanics::getPlayer();
         const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
 
-        float progressRequirement = player.getClass().getNpcStats(player).getSkillProgressRequirement(
-            skillId, *esmStore.get<ESM::Class>().find(player.get<ESM::NPC>()->mBase->mClass));
+        const auto& stats = player.getClass().getNpcStats(player);
+        float progressRequirement;
+        if (stats.getSkill(skillId).isNativeProjection())
+        {
+            const auto& ids = MWWorld::oblivionSkillIds();
+            const auto found = std::find(ids.begin(), ids.end(), skillId);
+            if (found == ids.end()) throw std::invalid_argument("unknown native Player skill");
+            progressRequirement = MWWorld::oblivionPlayerSkillProgressRequirement(
+                esmStore, player, 12 + (found - ids.begin()));
+        }
+        else
+            progressRequirement = stats.getSkillProgressRequirement(
+                skillId, *esmStore.get<ESM::Class>().find(player.get<ESM::NPC>()->mBase->mClass));
 
         // This is how vanilla MW displays the progress bar (I think). Note it's slightly inaccurate,
         // due to the int casting in the skill levelup logic. Also the progress label could in rare cases

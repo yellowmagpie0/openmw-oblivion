@@ -33,8 +33,10 @@
 
 void ESM4::Furniture::load(ESM4::Reader& reader)
 {
+    const bool tes4 = !reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f);
     mId = reader.getFormIdFromHeader();
     mFlags = reader.hdr().record.flags;
+    mActiveMarkerFlags = 0;
 
     while (reader.getSubRecordHeader())
     {
@@ -60,7 +62,13 @@ void ESM4::Furniture::load(ESM4::Reader& reader)
                 reader.getFormId(mScriptId);
                 break;
             case ESM::fourCC("MNAM"):
-                reader.get(mActiveMarkerFlags);
+                if (tes4)
+                {
+                    if (subHdr.dataSize != sizeof(mActiveMarkerFlags) || !reader.getExact(mActiveMarkerFlags))
+                        reader.fail("FURN MNAM has an invalid marker flag layout");
+                }
+                else
+                    reader.get(mActiveMarkerFlags);
                 break;
             case ESM::fourCC("MODB"):
                 reader.get(mBoundRadius);

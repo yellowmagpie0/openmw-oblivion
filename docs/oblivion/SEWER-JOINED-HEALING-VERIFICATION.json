@@ -1,0 +1,92 @@
+{
+  "scope": "Ordinary menu selection of the starting Heal Minor Wounds and three actual native releases on the joined post-wall Player, without health injection or inventory consumption.",
+  "full_escape_complete": false,
+  "scenario": "build/oblivion-compat/sewer-escape/joined-post-wall-healing-01/scenario.json",
+  "passed": true,
+  "entry": {
+    "passed": true,
+    "source_save": "build/oblivion-compat/sewer-escape/joined-wall-rats-06/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "837d20a13a346ef92ac447519203153fcdfba799f9fe113b796fb526c1d09033",
+    "whole_state_restore": true,
+    "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+    "differences": [
+      [
+        "/native_animated_references/0/bodies/2/linear_velocity/0",
+        0.05079380422830582,
+        0.05079380050301552
+      ],
+      [
+        "/native_animated_references/0/bodies/3/linear_velocity/2",
+        -0.03283385559916496,
+        -0.032833851873874664
+      ],
+      [
+        "/native_animated_references/0/bodies/4/linear_velocity/2",
+        0.0025657182559370995,
+        0.002565718023106456
+      ],
+      [
+        "/native_animated_references/0/bodies/6/linear_velocity/0",
+        0.002632954390719533,
+        0.0026329541578888893
+      ],
+      [
+        "/native_animated_references/0/bodies/6/linear_velocity/2",
+        3.770211696974002e-05,
+        3.7702120607718825e-05
+      ],
+      [
+        "/native_animated_references/0/bodies/8/linear_velocity/1",
+        0.007199560292065144,
+        0.007199560757726431
+      ],
+      [
+        "/native_animated_references/0/bodies/9/linear_velocity/1",
+        -0.0729568600654602,
+        -0.07295685261487961
+      ],
+      [
+        "/native_animated_references/0/bodies/10/linear_velocity/1",
+        -0.017949417233467102,
+        -0.01794941909611225
+      ],
+      [
+        "/native_animated_references/0/bodies/11/linear_velocity/1",
+        -0.0068478710018098354,
+        -0.006847871467471123
+      ],
+      [
+        "/native_animated_references/0/bodies/11/linear_velocity/2",
+        -0.02085937187075615,
+        -0.0208593737334013
+      ]
+    ]
+  },
+  "source_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-wall-rats-06/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "837d20a13a346ef92ac447519203153fcdfba799f9fe113b796fb526c1d09033",
+    "health": 38
+  },
+  "output_save": {
+    "path": "build/oblivion-compat/sewer-escape/joined-post-wall-healing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7054e28c46c21447a6079c2c7bffabac30b9e91426f03d05b2ab6b61d6d523ba",
+    "health": 62,
+    "magicka": 50.249794006347656,
+    "character_gen_stage": 30
+  },
+  "actual_releases": [
+    "[19:14:59.050 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=46 magicka=61",
+    "[19:15:11.459 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=54 magicka=50.9632",
+    "[19:15:23.855 I] M16 native cast release: spell=content:oblivion.esm:000136 applied=1 health=62 magicka=41.2849"
+  ],
+  "inventory_unchanged": true,
+  "death_history_unchanged": true,
+  "pending_deaths": [],
+  "physical_action_owners": [],
+  "combat_engagements": [],
+  "runtime_executable_sha256": "e8c64702e4bd593a5fb27f1cb0e869ca6817fb72b4eb89068cae2a3692da97a9",
+  "source": "Camera fix at7bd2a8de7c;2203 normal engine cases retain the original dirty fingerprint in SEWER-IDLE-VIEW-SAVE-VERIFICATION.json. No further implementation change or broad test rerun.",
+  "capture_inspected": "build/oblivion-compat/sewer-escape/joined-post-wall-healing-01/post-wall-healed.png",
+  "limits": "Exact restored entry permits only the recorded10 tiny animated-body world-velocity projection differences\u22641e-5. No other normalization or save-state substitution.",
+  "next": "Original room rat037e40, key corpse loot, Club and keyed door, then joined solo dungeon/shaman and late escape."
+}

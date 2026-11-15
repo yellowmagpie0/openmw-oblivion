@@ -1,0 +1,614 @@
+{
+  "status": "accepted bounded original live Skeleton archery and strict draw/flight/impact restart; full M15/S5/S7 and expedition remain open",
+  "implementation_commit": "77c72be13f11e0271ed2c1cb0a89fa9dec1960e9",
+  "contract": "docs/oblivion/SKELETON-ARCHERY-CONTRACT.json",
+  "oracle": "docs/oblivion/SKELETON-ARCHERY-ORACLE.json",
+  "behavior": {
+    "content": "Original level1 CreatureSkeleton1Archer084b1a at04bb63, Iron Bow025231, Iron Arrows017829, DefaultSkeletonRanged014f89 and Canosel0463f5. Ordinary retained-stock provocation at about714 units.",
+    "ownership": "Unreleased owned draw survives fresh load and releases exactly once into a separately saved projectile. Another fresh process admits the original Creature caster, consumes that flight once and publishes one native Player hit. NPC stock6 preserved; bow wears0.48 once. No grants, scripted movement, damage setters or synthetic content.",
+    "clock": "Active bow owns the frame clock through completion; canonical actor-clock/calendar deltas agree within predeclared0.25s. Retained prior development counterexample proves doubled ticking was observable.",
+    "retained": "Schema97 exact wire/live/save comparisons; spent Imperial powers, collected arrow2 tombstone, Amulet inventory-script owner/locals and earlier bandit Player kill credit persist. The recovered arrow remains a separate unequipped inventory stack.",
+    "limits": "Bounded ordinary healthy weapon-capable live Creature at visible range. Authored full draw and approximate range policy; full tactical hold/chance/retreat/leading, broken NPC bow drops, NPC miss recovery and dead-caster matrices remain open."
+  },
+  "gates": {
+    "frozen_source": {
+      "head": "0aee5db9f4bccbe65462439557d15433bd9d06c1",
+      "source_fingerprint": "e7ff8b18bf103e9e97b8672f13bd08bf9009903024bfd316b19b1a8042a08b88"
+    },
+    "normal": {
+      "path": "build/oblivion-compat/skeleton-archery/normal-integration-01",
+      "sha256": "c03007762b8973c2e986d217dab6760e8d6f06c549c44fcff5f98b97a4ca1c15",
+      "components": 3288,
+      "engine": 2275
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/skeleton-archery/sanitized-integration-01",
+      "sha256": "638ba57b1a0d44f6848c95dd3f52e6d84f95126c96a16ef0f2cd4fa8286c3eea",
+      "components": 3288,
+      "engine": 2275,
+      "asan": "detect_leaks=1:halt_on_error=1",
+      "ubsan": "halt_on_error=1:print_stacktrace=1"
+    },
+    "focused": {
+      "path": "build/oblivion-compat/skeleton-archery/normal-focused-01",
+      "sha256": "d052ed05618e9db1e297c42915df069ef300c1d29ee01d6ce748f7512a3714f9"
+    },
+    "python": {
+      "executed": 609,
+      "reused": "docs/oblivion/VOICE-EMPEROR-VERIFICATION.json",
+      "source_commit": "a4c71d5fa3c7b5c9fbd4ed9c959ae92825b38267",
+      "source_files": 94,
+      "proof_sha256": "cad4c6e2346c28b60fe485b65f030884b5d5a35c584e6ae39eff5146ee8a6560",
+      "scope": "Existing Python implementation/test inputs unchanged; new read-only course auditor exercised on all six actual boundary cases."
+    }
+  },
+  "post_gate_auditor_correction": {
+    "reason": "Instrumented release save correctly contains one flight and110 Health. The old full-process-log assertion rejected its legitimate later impact after synchronous saving resumed. Scope activity counts to Writing saved game boundary; exact wire/live/save, HP, resources and serial assertions unchanged. C++ and recipes unchanged; broad gates reused.",
+    "changed": {
+      "scripts/verify_oblivion_skeleton_archery_course.py": {
+        "before": "4412b3f0eaf7ea964900aaf8f3182ccc7ca6ba94bf0d20a0f7765d545fcbd90f",
+        "after": "7e86a8bb28da4c9622f7f5d6cdc84ce450768992f8f9ca61a852f0e395960a5e"
+      }
+    },
+    "retained_failure": "build/oblivion-compat/skeleton-archery/sanitized-release-final-01-audit-before-log-boundary.log"
+  },
+  "frozen_code_and_recipe_hashes": {
+    "apps/openmw/mwmechanics/character.cpp": "bd0bac6d8ceaacac4162af68781613f8f89f9eed569130de8a1c8f6bd35de9c7",
+    "apps/openmw/mwmechanics/character.hpp": "5599dc6a1f3334f28b4d3a8f2b65316cf9d8d6c13dae333bf81bc1d2e60affba",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "c5dc78faa4909a669bcf68f9b2332c679d005ba1be5b74b57f4079c633ea8e91",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "c732b169da5f4d2db69685bc831bb74a4bbaecb965c2b3b3c1f8d6b747a1c3e1",
+    "apps/openmw/mwmechanics/oblivionranged.cpp": "b1dc92c6c5d709c1afab21c9c2fccfe170f3acd010e3308a026d8302d8b37f43",
+    "apps/openmw/mwworld/oblivionbow.cpp": "aa68ba738fb5c89aaa316d247eb03710ccc66e6aafcd6fa68298279c7cc1a647",
+    "apps/openmw/mwworld/worldimp.hpp": "a0c2f643e599391162d822f00a9c54ed573eca8f32c877791cb39012e612f22b",
+    "scripts/verify_oblivion_skeleton_archery_course.py": "7e86a8bb28da4c9622f7f5d6cdc84ce450768992f8f9ca61a852f0e395960a5e",
+    "scripts/data/oblivion_compat/oblivion_skeleton_archery_draw.json": "daef6c63a9a790fac7634c68448812a0199b2425b1b281a618b9af31cf4d2966",
+    "scripts/data/oblivion_compat/oblivion_skeleton_archery_draw_sanitized.json": "5f6b60c8886a8e4c45f7e231364fb24c8b31214df6af3a8d3250bc631d682fc7",
+    "scripts/data/oblivion_compat/oblivion_skeleton_archery_impact.json": "9828b924ddaf57b1771314c1536671668436a1484be2057bf24163f832bd3cfd",
+    "scripts/data/oblivion_compat/oblivion_skeleton_archery_impact_sanitized.json": "d7e813c0090ee39c0d327ca2a7f46d66aeda10dd790c9ccb636811461d9533a2",
+    "scripts/data/oblivion_compat/oblivion_skeleton_archery_release.json": "9c5bc2a9e57ae2ad20df7022d48b5f4c66a0562edef9e34b7bd25d74cb99ae63",
+    "scripts/data/oblivion_compat/oblivion_skeleton_archery_release_sanitized.json": "394816bb9bd9f5bb8a63741b17f04bc5a7df888fa6559296f003b8fa5f83eec8"
+  },
+  "cases": [
+    {
+      "path": "build/oblivion-compat/skeleton-archery/normal-draw-final-01",
+      "phase": "draw",
+      "instrumented": false,
+      "audit_sha256": "8f5e123ba4562a91859a5100e723c3232fe9d1fc98e1c08d04d81c4d22ba5ed1",
+      "process": {
+        "pid": 1306894,
+        "start_ticks": 206089568,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/normal-draw-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "829d2a85099e77b0a17ab5adaa049a46d008dbe585f005358a3533fce88f01b0"
+      },
+      "input_sha256": "fa710f96c3115e8f141f6fbd69ef3d8455a2d01acd926a1d1f8554e229e24002",
+      "output_sha256": "a244ebb629b97f5eec5e074a11ae64ab0d76b573a798000ca5a82c7c4edfb605",
+      "clock": {
+        "calendar_simulation_delta": 19.59674835205078,
+        "actor_delta": 19.59527587890625,
+        "tolerance": 0.25
+      },
+      "player_health_before": 110.0,
+      "player_health_after": 110.0,
+      "npc_ammunition": 6,
+      "releases": [],
+      "impacts": [],
+      "loaded_libraries_sha256": "f8ca807fd63b19a96f5c43c9bac48657b195b73d4ae47e08f5e73c8044d40674"
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/normal-release-final-01",
+      "phase": "release",
+      "instrumented": false,
+      "audit_sha256": "1823d12b64eaed6dda7335945f28275878ab344d70d46c0bc3c44ea9ae226676",
+      "process": {
+        "pid": 1307060,
+        "start_ticks": 206098572,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/normal-release-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/normal-draw-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "829d2a85099e77b0a17ab5adaa049a46d008dbe585f005358a3533fce88f01b0"
+      },
+      "input_sha256": "a244ebb629b97f5eec5e074a11ae64ab0d76b573a798000ca5a82c7c4edfb605",
+      "output_sha256": "e4de56f429143ca4fb162de0b9468eb661970e4cc9496aa8f093fbc00b0a3918",
+      "clock": {
+        "calendar_simulation_delta": 0.7831192016601562,
+        "actor_delta": 0.78302001953125,
+        "tolerance": 0.25
+      },
+      "player_health_before": 110.0,
+      "player_health_after": 110.0,
+      "npc_ammunition": 6,
+      "releases": [
+        [
+          "8",
+          "993"
+        ]
+      ],
+      "impacts": [],
+      "loaded_libraries_sha256": "d081749ce059ed11d3bd46d1565175987c421101fc8d90030f2877bf4c14babd"
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/normal-impact-final-01",
+      "phase": "impact",
+      "instrumented": false,
+      "audit_sha256": "42a2eae35a3c826369a6335a7c920d663435131400bc7a70defe80073a19be0e",
+      "process": {
+        "pid": 1307153,
+        "start_ticks": 206105032,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/normal-impact-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/normal-release-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "829d2a85099e77b0a17ab5adaa049a46d008dbe585f005358a3533fce88f01b0"
+      },
+      "input_sha256": "e4de56f429143ca4fb162de0b9468eb661970e4cc9496aa8f093fbc00b0a3918",
+      "output_sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad",
+      "clock": {
+        "calendar_simulation_delta": 0.3321075439453125,
+        "actor_delta": 0.33203125,
+        "tolerance": 0.25
+      },
+      "player_health_before": 110.0,
+      "player_health_after": 104.68827819824219,
+      "npc_ammunition": 6,
+      "releases": [],
+      "impacts": [
+        [
+          "8",
+          "5.31172"
+        ]
+      ],
+      "loaded_libraries_sha256": "9d53203c67d82e1036162d6c34274f7d82777acd0786dc7f654a99ca3c972afb"
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/sanitized-draw-final-01",
+      "phase": "draw",
+      "instrumented": true,
+      "audit_sha256": "9d1a5d6f908694f5c745299cd74822cb550f4c4dd8d6759d67fbfaa61a158bf4",
+      "process": {
+        "pid": 1322571,
+        "start_ticks": 206501467,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/sanitized-draw-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-arrow-recovery/normal-restart-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "402f7211cbb4a159d6439660be1f3cf6069bcc52238ae2cc31ec698d7aa21193"
+      },
+      "input_sha256": "fa710f96c3115e8f141f6fbd69ef3d8455a2d01acd926a1d1f8554e229e24002",
+      "output_sha256": "115c2826edf5560a819d8097759c4b380bab23a91007484b3a659f14441d720f",
+      "clock": {
+        "calendar_simulation_delta": 22.915420532226562,
+        "actor_delta": 22.91015625,
+        "tolerance": 0.25
+      },
+      "player_health_before": 110.0,
+      "player_health_after": 110.0,
+      "npc_ammunition": 6,
+      "releases": [],
+      "impacts": [],
+      "environment_sha256": "e903bae8fd4dc7e8a9be07f6be81bbe3482c3e3d4a06844edb51b1ff2523c5d0",
+      "loaded_libraries_sha256": "7bbccc87412dcf73030118e895dc970e506c51678441febb638b917bbe1a93cc"
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/sanitized-release-final-01",
+      "phase": "release",
+      "instrumented": true,
+      "audit_sha256": "851758a363064ca8f31a88e3c62b3cdd6413b844bc5c50804f0096a942efce0e",
+      "process": {
+        "pid": 1323167,
+        "start_ticks": 206541927,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/sanitized-release-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/sanitized-draw-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "402f7211cbb4a159d6439660be1f3cf6069bcc52238ae2cc31ec698d7aa21193"
+      },
+      "input_sha256": "115c2826edf5560a819d8097759c4b380bab23a91007484b3a659f14441d720f",
+      "output_sha256": "a7473c1ade74c58322aaa872daaf65ee200cffa4dbbb9f72841d6bb2df019004",
+      "clock": {
+        "calendar_simulation_delta": 0.8302688598632812,
+        "actor_delta": 0.830078125,
+        "tolerance": 0.25
+      },
+      "player_health_before": 110.0,
+      "player_health_after": 110.0,
+      "npc_ammunition": 6,
+      "releases": [
+        [
+          "8",
+          "993"
+        ]
+      ],
+      "impacts": [],
+      "environment_sha256": "d02c946cf27620943c3dbb0f265967d20770ed1e43f1a2cab609d2259372c615",
+      "loaded_libraries_sha256": "f6e1c8ff5ea14fa3fc94fd3ea9735af91c8e9c0905a132e1a4e464f96161e38e"
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/sanitized-impact-final-01",
+      "phase": "impact",
+      "instrumented": true,
+      "audit_sha256": "49acc87d2ecbd7c96c97a43b8d3a857112617ed6975b48657dabbf8458094c8b",
+      "process": {
+        "pid": 1323813,
+        "start_ticks": 206593663,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/sanitized-impact-final-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/sanitized-release-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "402f7211cbb4a159d6439660be1f3cf6069bcc52238ae2cc31ec698d7aa21193"
+      },
+      "input_sha256": "a7473c1ade74c58322aaa872daaf65ee200cffa4dbbb9f72841d6bb2df019004",
+      "output_sha256": "5c65b8416a0c2499b21b413094da93f0643073a49495abd7078a10859e35d63c",
+      "clock": {
+        "calendar_simulation_delta": 0.3321075439453125,
+        "actor_delta": 0.33203125,
+        "tolerance": 0.25
+      },
+      "player_health_before": 110.0,
+      "player_health_after": 104.68827819824219,
+      "npc_ammunition": 6,
+      "releases": [],
+      "impacts": [
+        [
+          "8",
+          "5.31172"
+        ]
+      ],
+      "environment_sha256": "6e20d9b111e81fe36566f0c8a705d04feafb4bf95c2160c233658f916e0e80c0",
+      "loaded_libraries_sha256": "256e7c1dbe40d3d9452928fb136889226891cf08ba7b3c91765a197733be8105"
+    }
+  ],
+  "player_floor_regressions": [
+    {
+      "path": "build/oblivion-compat/skeleton-archery/normal-player-floor-regression-01",
+      "instrumented": false,
+      "audit_sha256": "d958f5a2df2431197643834ed17721fcbd28106db7ac44d31ad57de8cb2e3519",
+      "process": {
+        "pid": 1307273,
+        "start_ticks": 206111406,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/normal-player-floor-regression-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-expire-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "829d2a85099e77b0a17ab5adaa049a46d008dbe585f005358a3533fce88f01b0"
+      },
+      "input_sha256": "4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41",
+      "output_sha256": "7338300fe3eadc385a7e8babce67b97d1b9812c51732fa620b57628e15c7e7d9",
+      "ammunition_before": 19,
+      "ammunition_after": 18
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/sanitized-player-floor-regression-01",
+      "instrumented": true,
+      "audit_sha256": "f426a9b65536328405d02b189c6790f6b3d3b2ebea1eb44ceb4723d492e47007",
+      "process": {
+        "pid": 1324103,
+        "start_ticks": 206620533,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skeleton-archery/sanitized-player-floor-regression-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/voice-emperor/normal-expire-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "402f7211cbb4a159d6439660be1f3cf6069bcc52238ae2cc31ec698d7aa21193"
+      },
+      "input_sha256": "4ebce7e739225d5fbd3fc4df484b2156975aaeb7e8c6722d91a1c02c147e0a41",
+      "output_sha256": "b37a8899b7c1b6babcd65d1cde3029f49904c9ee39e78a6fe22816f8da740125",
+      "ammunition_before": 19,
+      "ammunition_after": 18
+    }
+  ],
+  "outgoing": {
+    "path": "build/oblivion-compat/skeleton-archery/normal-impact-final-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "48e44c82bab34a0481abfab3970a77c0bd4fe731ff68d10ac555d52c345990ad",
+    "metadata": {
+      "cell": "content:oblivion.esm:0463f5",
+      "position": [
+        -2666.956298828125,
+        -9747.07421875,
+        -2662.20947265625,
+        -0.009765625,
+        0,
+        -2.8461861610412598
+      ],
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 30,
+        "hour": 12.120050430297852,
+        "time_scale": 30
+      },
+      "health": 104.68827819824219,
+      "magicka": 80,
+      "fatigue": 170,
+      "next_dynamic_serial": 3,
+      "next_arrow_projectile": 9,
+      "player_inventory": [
+        {
+          "base": "content:oblivion.esm:0661c1",
+          "count": 1,
+          "equipped_slots": 4,
+          "condition": 25.815637588500977
+        },
+        {
+          "base": "content:oblivion.esm:0661c3",
+          "count": 1,
+          "equipped_slots": 8,
+          "condition": 105.33522033691406
+        },
+        {
+          "base": "content:oblivion.esm:0be335",
+          "count": 1,
+          "equipped_slots": 16,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:02731a",
+          "count": 1,
+          "equipped_slots": 32,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:027319",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:027318",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:0250a0",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:03366c",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:033681",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:033690",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:02cf9f",
+          "count": 2,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:00000a",
+          "count": 8,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:159826",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:0223a8",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:159829",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": 61.18003845214844
+        },
+        {
+          "base": "content:oblivion.esm:090613",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": 22.49466323852539
+        },
+        {
+          "base": "content:oblivion.esm:047aca",
+          "count": 1,
+          "equipped_slots": 65536,
+          "condition": 86.63997650146484
+        },
+        {
+          "base": "content:oblivion.esm:017829",
+          "count": 17,
+          "equipped_slots": 131072,
+          "condition": -1
+        },
+        {
+          "base": "content:oblivion.esm:017829",
+          "count": 1,
+          "equipped_slots": 0,
+          "condition": -1
+        }
+      ],
+      "skeleton": {
+        "health": 18.0898015499115,
+        "position": [
+          -2788.537841796875,
+          -10450.251953125,
+          -2662.20947265625,
+          0,
+          0,
+          0.17121028900146484
+        ],
+        "inventory": [
+          {
+            "base": "content:oblivion.esm:01ebff",
+            "count": 1,
+            "condition": -1,
+            "charge": -1,
+            "equipped_slots": 0,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null,
+            "script_owner": null
+          },
+          {
+            "base": "content:oblivion.esm:025231",
+            "count": 1,
+            "condition": 111.5199966430664,
+            "charge": -1,
+            "equipped_slots": 65536,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null,
+            "script_owner": null
+          },
+          {
+            "base": "content:oblivion.esm:017829",
+            "count": 6,
+            "condition": -1,
+            "charge": -1,
+            "equipped_slots": 131072,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": null,
+            "script_owner": null
+          }
+        ]
+      },
+      "pending_bow": [
+        {
+          "actor": "content:oblivion.esm:04bb63",
+          "id": 993,
+          "bow_base": "content:oblivion.esm:025231",
+          "ammo_base": "content:oblivion.esm:017829",
+          "animation_group": "bowattack",
+          "playback_rate": 1,
+          "phase": 3,
+          "sequence_offset": -946.040771484375,
+          "key_times": [
+            0,
+            0.4000000059604645,
+            1.3666666746139526,
+            1.433333396911621,
+            2
+          ],
+          "action": 3,
+          "release_committed": true,
+          "player_hold_latched": false
+        }
+      ],
+      "flight": [],
+      "used_powers": [
+        {
+          "spell": "content:oblivion.esm:047ade",
+          "used_at": 97.54186427593231
+        },
+        {
+          "spell": "content:oblivion.esm:047add",
+          "used_at": 107.3028564453125
+        }
+      ]
+    }
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/next-content/normal-skeleton-response-baseline-01",
+      "result": "Original archer rushes/attempts handtohand but leaves bow/ammo unequipped and causes no Player damage in20 simulation seconds."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/skeleton-archery-development-build-01.log",
+      "result": "Missing CreatureStats definition include corrected before successful build."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/normal-skeleton-first-shots-development-01",
+      "result": "World AMMO4 filter did not match inventory WEAP facade; resolved native AMMO identity before selection."
+    },
+    {
+      "path": "build/oblivion-compat/next-content/normal-skeleton-first-shots-development-02",
+      "result": "Actual shots work; semantic timing failure:16.8201 game seconds versus22.9067 actor-clock seconds. Bow/idle-melee clock ownership corrected; development03 passes16.7344 versus16.7337."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/normal-release-development-01",
+      "result": "Resumed action works but save is after impact. Retained as failed flight capture."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/normal-release-development-02",
+      "result": "Earlier focus alone still misses flight because observer startup waits1.2 simulation seconds. Early read-only observer and release polling fix capture; development03 retains actual flight."
+    },
+    {
+      "path": "build/oblivion-compat/skeleton-archery/normal-draw-development-01-audit-first-stack-assumption.log",
+      "result": "Auditor initially assumed one AMMO stack. Genuine recovered arrow is a separate unequipped stack; final auditor checks total and exactly one equipped-stack debit."
+    }
+  ]
+}

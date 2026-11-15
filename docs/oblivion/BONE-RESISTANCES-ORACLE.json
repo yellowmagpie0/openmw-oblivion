@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "scope": "Independent original compiled RSPA flags/static actor value and factory selection; winning original Undead Bone Resistances content. Normal/instrumented fork gameplay ownership is separate.",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "compiled_default": {
+    "code": "RSPA",
+    "school": 5,
+    "base_cost": 0.0,
+    "data": 66,
+    "flags": 16777338,
+    "resistance": 4294967295,
+    "counters": []
+  },
+  "defaults": {
+    "path": "build/oblivion-compat/m15/S3/authority-draft/compiled-effect-default-arguments-01/report.json",
+    "sha256": "74e29aba76f4901ada4cdd2e2957eea6c2e44b23f71be53eb1400df16088aae7"
+  },
+  "factory": {
+    "path": "build/oblivion-compat/bone-resistances/report.json",
+    "sha256": "cde9abceea51c1021fe83bf95b3ec0aa303aabbbbf87ed0f9cfe04bbc831f494",
+    "cases": 24,
+    "entry": "0068ea50",
+    "result": "ValueModifier effect, fixed AV66; allocation failure returns null",
+    "boundaries": [
+      "Compiled custom-factory lookup uses captured23 registered keys; RSPA not custom.",
+      "Allocation and MagicItem type getter; no application/removal, actor storage or gameplay inferred."
+    ]
+  },
+  "factory_probe": {
+    "path": "build/oblivion-compat/bone-resistances/rspa-factory-probe.py",
+    "sha256": "bf3e97841d59e4bac7bd888f53216c9dc6bbb4b84512ed8716ddc5b8ce240356"
+  },
+  "original_records": {
+    "path": "build/oblivion-compat/bone-resistances/original-bone-records.json",
+    "sha256": "c4aaef05744b75d4b73ecde6763d21539c0a24147d0c35b44cb2210d83df7c4e"
+  },
+  "original_record_probe": {
+    "path": "build/oblivion-compat/bone-resistances/audit-original-bone.py",
+    "sha256": "5a2d5173f8a4aca554ad676beab9a11b04a6532eb2ecb75447a2bf49983b1c46"
+  },
+  "ability": {
+    "key": "content:oblivion.esm:02b532",
+    "type": 4,
+    "effects": [
+      [
+        "RSDI",
+        63,
+        100
+      ],
+      [
+        "RSPO",
+        67,
+        100
+      ],
+      [
+        "RSFR",
+        62,
+        70
+      ],
+      [
+        "WABR",
+        55,
+        1
+      ],
+      [
+        "RSPA",
+        66,
+        100
+      ]
+    ],
+    "effect_domain": "Self, area0, duration0; WABR authored magnitude0 resolves to1 through compiled NoMagnitude."
+  },
+  "ownership": "Reuse existing nonplayer Ability4 Maximum writer. Null ownership remains unknown; fresh references know no grant has run even when effects are unsupported."
+}

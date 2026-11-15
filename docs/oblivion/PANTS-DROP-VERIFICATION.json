@@ -1,0 +1,715 @@
+{
+  "status": "Bounded genuine articulated Sack Cloth Pants drop, ordinary pickup and cold persistence accepted; broader M15/M18 remain open",
+  "parent_commit": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+  "post_gate_changes": "Documentation closure only; implementation, semantic verifier and accepted input recipes unchanged from the common integration source fingerprint.",
+  "contract": {
+    "path": "docs/oblivion/PANTS-DROP-CONTRACT.json",
+    "sha256": "48106bae6dca03fe70cc4c9e819388201f6caabb40b0f04db134e5482f9c61b6"
+  },
+  "oracle": {
+    "path": "docs/oblivion/PANTS-DROP-ORACLE.json",
+    "sha256": "23e3def25c04b71b21fe9d9312499a8766ae67a5fc107cacc49a8eb1b04d90d0"
+  },
+  "schema": 103,
+  "result": "Genuine carried unequipped Sack Cloth Pants027318 drops once as typed CLOT key2 with the hash-identified male ground model, three authored dynamic box bodies and two limited hinges. Each physical clothing node renders, the full graph cold re-saves, ordinary visible crosshair/Space pickup restores exactly one item, and cold inventory load retains the retired count0 key/no physical bodies. Allocator3, Health70.480003/Endurance55, all27 skills, source inventory/equipment including Bone1, original quest/counter absence and33 credited deaths preserved. This is the separate Wellspring/Cairn branch; healthy shore history is not merged.",
+  "layers": {
+    "structural": "Prepared CLOT cell/registry/model/body/Lua publication and inventory removal extend shared singleton admission. Every child collision object is routed and removed as one owned graph; renderer binding identifies all body nodes. No equipped/scripted/enchanted/stack admission.",
+    "persistence": "Schema103 retains each additional body pose and native packed velocity. Old <=102 single-body wire remains readable; empty JSON extras stay omitted. Constraints reconstruct from the hash-identified authored asset; no mutable constraint/controller state claim.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/articulated-clothing/focused-normal-03/verification.json",
+        "sha256": "e3b7182950796d177a4d0024cbffe41858d344ee82fc08d3bf0e434a107f090b",
+        "source": {
+          "head": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+          "source_fingerprint": "5fba086ef21f04115519b07408ef075c2a5c118513fe27fbc7a9287c201c6d6d"
+        },
+        "results": {
+          "engine": {
+            "executed": 138,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "OblivionWorldTest.*Loose*:OblivionWorldTest.*Drop*:OblivionWorldTest.*Pickup*:*Loose*:*HeightField*",
+            "binary_sha256": "b8962b51128a183b7b5ae5e40cddf8eea284c163c78a33d8e0b57ac04eae80a8",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "f36b41f8f8c236465616a3dfbc03a05cf87174778854640934c879c3e50762f9",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/articulated-clothing/focused-sanitized-03/verification.json",
+        "sha256": "b0027a14aa076177c18340801b4c331d499ad163286288b91bf941c57a088355",
+        "source": {
+          "head": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+          "source_fingerprint": "5fba086ef21f04115519b07408ef075c2a5c118513fe27fbc7a9287c201c6d6d"
+        },
+        "results": {
+          "engine": {
+            "executed": 138,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "OblivionWorldTest.*Loose*:OblivionWorldTest.*Drop*:OblivionWorldTest.*Pickup*:*Loose*:*HeightField*",
+            "binary_sha256": "d6b02ff91bb51883cde1f4fcbee7886f998af2582b356cab130a102f556e172f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "f24a8ab907488866d6ea36e8186033e311155b0c02d16cbbe167ee0b5adbaa44",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/articulated-clothing/integration-normal-01/verification.json",
+        "sha256": "738e5b65cb1e34711461c13554c1e086e079fe739d63988fea2c9700e9695de2",
+        "source": {
+          "head": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+          "source_fingerprint": "5fba086ef21f04115519b07408ef075c2a5c118513fe27fbc7a9287c201c6d6d"
+        },
+        "results": {
+          "components": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "2ecf75e6e28f5bc0370c9a99a5ba0ec43393b92a89d408d483e88fe073e8c71d",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "446669b7fcd73a27e34a1034886d1fa495d3bba66091a49bde62face921cae61",
+            "inventory_sha256": "4cee88d39d6db07dff470c2329d4bf181a1430d4bcde34305b576830e5ca1641",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b8962b51128a183b7b5ae5e40cddf8eea284c163c78a33d8e0b57ac04eae80a8",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "c0d710ada1b1911dbdd924424a0f7b6f00f6cd09e2f908b125b98e2876cc03ef",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "0d086bf77ff28f6f30bf66572c0739a4945ad339765e573270c41ded7b4a2bb6"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/articulated-clothing/components-sanitized-01/verification.json",
+        "sha256": "a6ee40be9e21beb1141e9d05c305fc8b235d4e75f36b615903c11f390143cec0",
+        "source": {
+          "head": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+          "source_fingerprint": "5fba086ef21f04115519b07408ef075c2a5c118513fe27fbc7a9287c201c6d6d"
+        },
+        "results": {
+          "sanitize": {
+            "executed": 1122,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4*",
+            "binary_sha256": "54399603c103e584bada5ac55f2eba4f8d75afc7a574c4f7c77679d4915c064f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "334901bc1478e124a1d2038f404eb41b28ffd4f0f519c498520a04d11ccba479",
+            "inventory_sha256": "1ccdaee6903d4000fcc974c126904e3063fd2732fe726a2a194981f9b703cb13",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/articulated-clothing/integration-sanitized-1/verification.json",
+        "sha256": "648e72f5c57c64337c1c5086b526e1c2eceaac5b5f570c817fde00358d96bd5d",
+        "source": {
+          "head": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+          "source_fingerprint": "5fba086ef21f04115519b07408ef075c2a5c118513fe27fbc7a9287c201c6d6d"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "d6b02ff91bb51883cde1f4fcbee7886f998af2582b356cab130a102f556e172f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "599405b9c4382cd4ad16844522c30c49bd590edc31bf66ded8b6624da02524de",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/articulated-clothing/integration-sanitized-2/verification.json",
+        "sha256": "f016e36329fb5aa00ea5a55631314f4fec8c912eb0f616fd26d9a967a1a5ea2c",
+        "source": {
+          "head": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+          "source_fingerprint": "5fba086ef21f04115519b07408ef075c2a5c118513fe27fbc7a9287c201c6d6d"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "d6b02ff91bb51883cde1f4fcbee7886f998af2582b356cab130a102f556e172f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "8207bdd4cc400f4f96c56dca61f66ca6cabd59e2033b975867f4b0ac902a0a57",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/articulated-clothing/integration-sanitized-3/verification.json",
+        "sha256": "ce2452b446ef9e1b061c2d94fcd3862ad73371dc0ded339eb136bca0c65c8c43",
+        "source": {
+          "head": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+          "source_fingerprint": "5fba086ef21f04115519b07408ef075c2a5c118513fe27fbc7a9287c201c6d6d"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "d6b02ff91bb51883cde1f4fcbee7886f998af2582b356cab130a102f556e172f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c5002723f1fb8d2f624b376711f37e0a3d2adf696e01d9ce2765d2f8ddc9cc2c",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/articulated-clothing/integration-sanitized-4/verification.json",
+        "sha256": "bcffe80a9ad2627b2d4c0e5564f06484121c0ef4a67baddfb4118b9bb32ccffd",
+        "source": {
+          "head": "978d2ecb6191f90bc2d6db6761d74e69e78592f6",
+          "source_fingerprint": "5fba086ef21f04115519b07408ef075c2a5c118513fe27fbc7a9287c201c6d6d"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "d6b02ff91bb51883cde1f4fcbee7886f998af2582b356cab130a102f556e172f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "44a9b9ce73ade3d514102fdfd46297856c843c5e8310603d38107bed001e9c29",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "sanitizer_partition_union": {
+      "disjoint": true,
+      "counts": [
+        82,
+        82,
+        82,
+        2046
+      ],
+      "total": 2292
+    },
+    "independent_oracle": "Original installed winning CLOT record and independently re-extracted archive member. Body/joint graph is explicitly an engine parser diagnostic. Generic original-game inventory transfer observations reuse the Bone oracle only for ordinary UI ownership behavior, not numerical clothing dynamics.",
+    "runtime": [
+      {
+        "root": "build/oblivion-compat/articulated-clothing/normal-pants-native-drop-01",
+        "phase": "drop",
+        "process": {
+          "pid": 805500,
+          "start_ticks": 16361212,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "55f9c0b9776cd4a2ba14ce0908a88571c91db907a436bed3e62c4d2f6bfbc8ae"
+        },
+        "source_sha256": "8e052c5e1644c654d4160da34b822db364152560eb9cb1698e55903dfe6210f7",
+        "save_sha256": "2fb9baeca887df239c56c2877d7c361b60bf904fc21c5f9410f281a4f13aa565",
+        "next_dynamic_serial": 3,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-drop-01/pants-drop-verification.json",
+          "sha256": "9243d812ad12749062a29ad2f23728ca9a1c1b2b53373eeec9b66dbbd331da7c"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-pants-drop.json",
+          "sha256": "62fd5e9ef44cd02d9b53fde083288391d05aa1c14ae63e15b17fe2e9dadac65a"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-drop-01/original-pants-after-drop-inventory.png",
+            "sha256": "4e593553f5c976c7d91f3c6ded0f70c38f7f04543d1dbb0649c11a238e47aaa7"
+          },
+          {
+            "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-drop-01/original-pants-before-drop.png",
+            "sha256": "045205d160dd61d254d2c5c88782d2fd832c4e1903fd9b42c53c47b511fb2c77"
+          },
+          {
+            "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-drop-01/original-pants-dropped-world.png",
+            "sha256": "1f73a42b4179c7675316919cfda7552850708e990987729dc7d3a2835b2c2eb7"
+          },
+          {
+            "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-drop-01/original-pants-world-drop-cursor.png",
+            "sha256": "f6b51d7c799f143d893278c0084bcee5a157e2ded914c4ae0cfe11a79539a5a2"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/articulated-clothing/normal-pants-native-world-01",
+        "phase": "world",
+        "process": {
+          "pid": 805823,
+          "start_ticks": 16374709,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "55f9c0b9776cd4a2ba14ce0908a88571c91db907a436bed3e62c4d2f6bfbc8ae"
+        },
+        "source_sha256": "2fb9baeca887df239c56c2877d7c361b60bf904fc21c5f9410f281a4f13aa565",
+        "save_sha256": "09fd3db5311665f8f3739ee69594d5eaa6ae3811d706458441a6e232a1871c5d",
+        "next_dynamic_serial": 3,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-world-01/pants-drop-verification.json",
+          "sha256": "0cb79a9c7fe346685d1eebad0eeb2a31edb8a00509cb3d8efa6e90f2ff2663f0"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-pants-world.json",
+          "sha256": "cfff585d76e45a80b8c9f1f6ab6b1f4eed7275ca307609ddb0f7a19decce9603"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-world-01/original-pants-first-cold-world.png",
+            "sha256": "556726b7e7f41e08aeaa3875826b9d701f5d810a622339d61c60ad93d32c7257"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/articulated-clothing/normal-pants-native-pickup-01",
+        "phase": "pickup",
+        "process": {
+          "pid": 806020,
+          "start_ticks": 16386743,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "55f9c0b9776cd4a2ba14ce0908a88571c91db907a436bed3e62c4d2f6bfbc8ae"
+        },
+        "source_sha256": "09fd3db5311665f8f3739ee69594d5eaa6ae3811d706458441a6e232a1871c5d",
+        "save_sha256": "b3e18a2428fc42540886cd94bd126bd6e5b489beaa2d26311682b374ad84469b",
+        "next_dynamic_serial": 3,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-pickup-01/pants-drop-verification.json",
+          "sha256": "90b52d2a44f21cf0b73abe87699f149e84bd8bd616ffbb25817b8f6fe1fca781"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-pants-pickup.json",
+          "sha256": "fb6dfa09a02533faf1928e27adc5d785aac49e8710d332e3a0787560248afc70"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-pickup-01/original-pants-focused.png",
+            "sha256": "564b8bd4fb36fa78a8ce11639f62f5ee1c7e82b6018b900d219b4646c3543314"
+          },
+          {
+            "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-pickup-01/original-pants-picked-up.png",
+            "sha256": "a0e261f2bc9222989aff30404176e0a180aca981583496550aaa6d5960bbf0ce"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01",
+        "phase": "inventory",
+        "process": {
+          "pid": 806192,
+          "start_ticks": 16397512,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/normal-pants-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "55f9c0b9776cd4a2ba14ce0908a88571c91db907a436bed3e62c4d2f6bfbc8ae"
+        },
+        "source_sha256": "b3e18a2428fc42540886cd94bd126bd6e5b489beaa2d26311682b374ad84469b",
+        "save_sha256": "432ff1ca7e37288558ec27281a2056925e6eaf6d5f7de2198143a6b02850c4fc",
+        "next_dynamic_serial": 3,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01/pants-drop-verification.json",
+          "sha256": "9e0e366ab1b8222857eab1de681bec15221928b89a92366a5ff1c36f36927332"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-pants-inventory.json",
+          "sha256": "0870274fbfe3d26324399d879b97b049cb686116a4301990a41e5a02342c5b16"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/articulated-clothing/normal-pants-native-inventory-01/original-pants-cold-inventory.png",
+            "sha256": "3f12e21fb6263ba60ae08b644c9cc4c2bf1e9358a60304294e4c31101429d66a"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-drop-01",
+        "phase": "drop",
+        "process": {
+          "pid": 814308,
+          "start_ticks": 16457891,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/sanitized-pants-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bone-drop/normal-bone-cave-inventory-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "1926ed6df6c89bf09050c432d4fa12732b756e65f0efa55645f64efc9ec5de23"
+        },
+        "source_sha256": "8e052c5e1644c654d4160da34b822db364152560eb9cb1698e55903dfe6210f7",
+        "save_sha256": "a9d5ffe6e165fc8a86d22eebe9d7857f9a61b97897e446bf4e1e6d25d7d5a12d",
+        "next_dynamic_serial": 3,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-drop-01/pants-drop-verification.json",
+          "sha256": "0f3c42b8abab9e358d6e42a38f0a356a2fa96e9b7a29dc8193961f99e74aa8e8"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-pants-drop-sanitized.json",
+          "sha256": "45e760a66d4e88fb80bdaaa676b293fd7abe0cc057835a7de3e9ac96507ecf5f"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-drop-01/original-pants-after-drop-inventory.png",
+            "sha256": "0db8420f1746812f67e1ef35926560fca23128abf91a1dda611251388c28c63d"
+          },
+          {
+            "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-drop-01/original-pants-before-drop.png",
+            "sha256": "29f435e8995ecea80063b43f848ea13536523f860a9c49902f9ba46dd0a8263b"
+          },
+          {
+            "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-drop-01/original-pants-dropped-world.png",
+            "sha256": "e59018a6866d0861d1959672aa1450bafdec185fc1e887bf9363481b7c315b35"
+          },
+          {
+            "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-drop-01/original-pants-world-drop-cursor.png",
+            "sha256": "d65ba39d7e60740b3d423d7917259a8e0a6a89a710d740f3b70cfa0372e9ec49"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-world-01",
+        "phase": "world",
+        "process": {
+          "pid": 814639,
+          "start_ticks": 16490277,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/sanitized-pants-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/sanitized-pants-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "1926ed6df6c89bf09050c432d4fa12732b756e65f0efa55645f64efc9ec5de23"
+        },
+        "source_sha256": "a9d5ffe6e165fc8a86d22eebe9d7857f9a61b97897e446bf4e1e6d25d7d5a12d",
+        "save_sha256": "00054e6b8144e281b28cc06a8f819e9506bccb27281a22b8dd8525c3c6647b66",
+        "next_dynamic_serial": 3,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-world-01/pants-drop-verification.json",
+          "sha256": "3bb35faa9159fb8ae19fa9baf118ca8b25b02be7917cca857e25c67e0a5e2271"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-pants-world-sanitized.json",
+          "sha256": "9e3af0bba5807a0e5e7d9b25b62769afe9fb8c4918a7daa8e164c0f60dadd88d"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-world-01/original-pants-first-cold-world.png",
+            "sha256": "41992c6b87fe7086522ab9d79a6bf5027ef226c6be3bc36e90e4aa9dbfe6c76d"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-pickup-01",
+        "phase": "pickup",
+        "process": {
+          "pid": 814902,
+          "start_ticks": 16521679,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/sanitized-pants-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/sanitized-pants-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "1926ed6df6c89bf09050c432d4fa12732b756e65f0efa55645f64efc9ec5de23"
+        },
+        "source_sha256": "00054e6b8144e281b28cc06a8f819e9506bccb27281a22b8dd8525c3c6647b66",
+        "save_sha256": "e689154ee7e07f0275d5470000ab4842c016a7ed70a04d535de833c630b61630",
+        "next_dynamic_serial": 3,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-pickup-01/pants-drop-verification.json",
+          "sha256": "a33f77e9641b85661ae31ea280bfcc37d5513f4fbe4cf2b5e8922f2c3801910e"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-pants-pickup-sanitized.json",
+          "sha256": "f83d3bac15d93cfac19da997836376b01e95a1b051fdc37664573bd2100ec871"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-pickup-01/original-pants-focused.png",
+            "sha256": "e0f6cd1c990af620f8f4779256da659b57d1fede1c3bccdd2fcddbdc9a9849a8"
+          },
+          {
+            "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-pickup-01/original-pants-picked-up.png",
+            "sha256": "bacc04fbd4ca50692801b89a32b023fc1f9fcae512646fb9d0dce515f5138607"
+          }
+        ]
+      },
+      {
+        "root": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-inventory-01",
+        "phase": "inventory",
+        "process": {
+          "pid": 815122,
+          "start_ticks": 16555895,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/sanitized-pants-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/articulated-clothing/sanitized-pants-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "1926ed6df6c89bf09050c432d4fa12732b756e65f0efa55645f64efc9ec5de23"
+        },
+        "source_sha256": "e689154ee7e07f0275d5470000ab4842c016a7ed70a04d535de833c630b61630",
+        "save_sha256": "fdc7ed1042dd05fbccc6a25b4d0060fe42419e809cd55645370e4b69364226eb",
+        "next_dynamic_serial": 3,
+        "credited_deaths": 33,
+        "audit": {
+          "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-inventory-01/pants-drop-verification.json",
+          "sha256": "3bd719039a98564ce2843fc0ee8b5a3277ecf090f325e16f1067204f0d5dc877"
+        },
+        "manifest": {
+          "path": "docs/oblivion/original-pants-inventory-sanitized.json",
+          "sha256": "40c362b960c3d28e0264b01f0ebc850921a263948a715f803536ed671637f725"
+        },
+        "captures": [
+          {
+            "path": "build/oblivion-compat/articulated-clothing/sanitized-pants-native-inventory-01/original-pants-cold-inventory.png",
+            "sha256": "be42e0e55e392aca24518940e0b3a3824a871119c997ee5903a98772a271149f"
+          }
+        ]
+      }
+    ],
+    "semantic": "Public verify_pants_drop.py compares unrelated inventory and all27 skills/book progression, actor values/passives/life/deaths/quests/globals/script owners, schema103 roundtrip, live/retired identities and exact metadata. Tick-zero load observations retain all body poses/velocities within abs1e-4/rel1e-6 conversion tolerances before settling, bound to observation hashes and fresh process epochs."
+  },
+  "verifier": {
+    "path": "scripts/verify_pants_drop.py",
+    "sha256": "3889751750a016f4a4187b3be26b31eeda80a688c4514b5794583125988f95d0"
+  },
+  "real_graph_negative_codec": {
+    "path": "build/oblivion-compat/articulated-clothing/real-graph-codec-verification.json",
+    "sha256": "e3a7e3640db02a95f7b7413792d63057f3ce2f7a6990c11a0e9b5a4e29e0eee5"
+  },
+  "single_body_regressions": [
+    {
+      "root": "build/oblivion-compat/articulated-clothing/normal-worn-axe-articulated-regression-01",
+      "audit": {
+        "path": "build/oblivion-compat/articulated-clothing/normal-worn-axe-articulated-regression-01/worn-axe-verification.json",
+        "sha256": "f1a32035d312018dbd3d574558e8a0f56bfc8de55ff64860415754b23ca09cce"
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/articulated-clothing/verify-worn-axe-regression.py",
+        "sha256": "2b007a13afe40a6b1b66737769eaf32e74405708a018a88c1c74609ac18d43d2"
+      }
+    },
+    {
+      "root": "build/oblivion-compat/articulated-clothing/normal-worn-axe-articulated-world-regression-01",
+      "audit": {
+        "path": "build/oblivion-compat/articulated-clothing/normal-worn-axe-articulated-world-regression-01/worn-axe-verification.json",
+        "sha256": "65ff8958b98cbab8628626f35ebd08bb3d079b470e82648e1d54b8cac6bfa0fc"
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/articulated-clothing/verify-worn-axe-regression.py",
+        "sha256": "2b007a13afe40a6b1b66737769eaf32e74405708a018a88c1c74609ac18d43d2"
+      }
+    },
+    {
+      "root": "build/oblivion-compat/articulated-clothing/normal-bone-articulated-regression-01",
+      "audit": {
+        "path": "build/oblivion-compat/articulated-clothing/normal-bone-articulated-regression-01/bone-drop-verification.json",
+        "sha256": "c4535a6dd84f49ea4fff1436907a5ecc30cb8fe9c7b1863d4d89bccd56bfab40"
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/articulated-clothing/verify-bone-regression.py",
+        "sha256": "d8343ff5d1b34a27e7e43a4d4df7de481e09aa52b721679be5e994b8f211356d"
+      }
+    }
+  ],
+  "regression_verifier_derivation": "Historic public worn-axe verifier adapted only for schema102/103 source ->103 output. Historic Bone verifier adapted for103 and for the genuine source retaining earlier retired key1: that record must remain byte-equivalent as decoded; audit selects the newly allocated live key2. Historic receipts and public verifiers unchanged.",
+  "sanitizer_environment": {
+    "engine": {
+      "SDL_VIDEODRIVER": "x11",
+      "SDL_AUDIODRIVER": "dummy",
+      "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+      "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+      "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "component_helper_overrides": {
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "gameplay": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "scope": "Actual per-process libraries/preload/environment captured for each instrumented case; gameplay is not leak coverage."
+    }
+  },
+  "integration_runner": {
+    "path": "build/oblivion-compat/articulated-clothing/run-sanitized-integration.py",
+    "sha256": "975e77a5704e5f3a7304141f8ebf10c0da0489bc1f39c9749542bf0d0b997475"
+  },
+  "retained_attempts": [
+    {
+      "root": "build/oblivion-compat/clothing-drop",
+      "result": "Legacy ordinary pants drop/two cold saves/walk-save passed. No disappearance/save failure; unsupported articulated physical ownership selected as the next bounded functionality."
+    },
+    {
+      "roots": [
+        "build/oblivion-compat/articulated-clothing/focused-normal-01",
+        "build/oblivion-compat/articulated-clothing/focused-sanitized-01"
+      ],
+      "result": "Preliminary dispatch builds identity-guarded stopped after read-only inspection established single-body physics/scene/save restrictions; no passing claim."
+    },
+    {
+      "roots": [
+        "build/oblivion-compat/articulated-clothing/focused-normal-02",
+        "build/oblivion-compat/articulated-clothing/focused-sanitized-02"
+      ],
+      "result": "Stopped to preserve omitted empty extra-body JSON representation after legacy rewrite equality failure; partial builds retained."
+    },
+    {
+      "root": "build/oblivion-compat/articulated-clothing",
+      "result": "Python development01 had20 stale schema admission/recipe errors and1 empty-extra equality failure; development02 retained5 recipe target errors. Reviewed103 fixture admission and3 current-target manifests corrected; focused66+9 passed, final618 integration above passed."
+    },
+    {
+      "root": "build/oblivion-compat/articulated-clothing/normal-bone-articulated-regression-01",
+      "result": "Initial inherited verifier assumed only one historical Bone reference. Actual source retained earlier retired key1; corrected audit requires it unchanged and validates new live key2. Original failed audit retained; actual actions passed."
+    }
+  ],
+  "limits": [
+    "Ordinary unequipped unscripted unenchanted singleton clothing, dynamic bodies without blend controllers; not all clothing or equipped transfer.",
+    "Constraints reconstruct from hash-identified authored asset; no mutable controller or runtime constraint editing support.",
+    "Reasonable physical behavior and state ownership; no exact original trajectory arithmetic requirement.",
+    "Existing coastal geometry and old legacy object migration remain separate.",
+    "No full M15/M18 acceptance, all clothing coverage, exact original trajectory, collision rendering fix or legacy dropped-object migration claim."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "status": "Accepted bounded original-content chunk: normal/sanitized passage and cold load, full normal/sanitizer engine inventory and Python gates passed",
+  "scope": "Native character contact with owned released animated scenery, exercised by original Vilverin mace0c4986",
+  "source": {
+    "save": "build/oblivion-compat/expedition-return/normal-outside-door-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "fec79d98e5222b121d406e9d2bc8e8ad3908914f381f9be638d7794c95945aab",
+    "health": 110,
+    "blunt_base": 35,
+    "blunt_experience": 2
+  },
+  "original": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "member": "meshes/dungeons/caves/traps/ctrapswingmaceshort01.nif",
+    "member_sha256": "76f5d30cdee6fe7d318d2539409c7bd8a5db9d931d5232c14e38b499f0cd5a83",
+    "motion_proof": "original-03/push-observation.json",
+    "measured_head_displacement": 19.573333840606903,
+    "scene_reader": "scripts/inspect_oblivion_native_scene.py",
+    "lookup_entry": "0046B250",
+    "lookup_map": "00B0613C",
+    "boundary": "Console setup and God Mode, combat AI stopped, actual W input and read-only process scene transforms; no original force formula is certified."
+  },
+  "requirements": [
+    "Retained ordinary W course advances beyond Y-1900 alive, with actual mace motion.",
+    "Mace fixed anchor, body/constraint identity, filters and script progress retain ownership through passage and cold load.",
+    "Do not reset, disable, hide or teleport the mace or Player to clear the route.",
+    "Keep original Skeleton dead/empty with17body owner and retained loot/progression.",
+    "Voluntary pushes do not preempt incoming hazard response.",
+    "Nonnative movement, fixed/keyframed bodies and foreign physics owners retain existing handling.",
+    "Worker jobs only collect intents; serial physics barrier validates membership and mutates through owning physics."
+  ],
+  "approximation": {
+    "character_mass": 80,
+    "response_seconds": 0.1,
+    "force_limit": "one character weight per substep",
+    "fidelity": "Chosen physically bounded response, not original instruction-certified constants; contact gameplay, state ownership and save/load are acceptance targets."
+  },
+  "verification": {
+    "focused": "focused-normal-04: 262 related tests; new case has 18 ownership/worker courses",
+    "normal_runtime": "normal-retained-passage-02 and normal-retained-restart-01 passed and audited",
+    "sanitized_runtime": "sanitized-retained-passage-03 and sanitized-retained-restart-01 passed and audited",
+    "integration": "normal full2279 + Python612; sanitizer full2279 audited in two disjoint processes after Bullet cumulative thread-ID limit",
+    "receipt": "SETTLED-MACE-PUSH-VERIFICATION.json"
+  },
+  "incoming_policy": "A voluntary push skips a body or contact point approaching faster than1 game-unit/sec; incoming hazards keep their existing impact response."
+}

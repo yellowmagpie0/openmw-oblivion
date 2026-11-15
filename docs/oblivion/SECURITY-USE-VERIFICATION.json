@@ -1,0 +1,1307 @@
+{
+  "schema_version": 1,
+  "status": "accepted bounded Security-use extension; broader progression/content acceptance and expedition remain open",
+  "parent_commit": "d8168c740c06a252d5491dd64673121b35b69575",
+  "behavior": "Explicit Auto Attempt on native Player lock choices awards Security experience on both failure and success. Cancel/load award none. Native base/modifiers, shared fractional XP and advancement counters survive cold load.",
+  "content": {
+    "references": [
+      "content:oblivion.esm:049bbc",
+      "content:oblivion.esm:049bba"
+    ],
+    "base": "content:oblivion.esm:0228c8",
+    "cell": "content:oblivion.esm:0463f5",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "audits": [
+      {
+        "path": "build/oblivion-compat/security-use/authored-security-audit.json",
+        "sha256": "ada1f9a38e6f4a03df9a1a74673182c6819e0a5ce2c3df4d159d78ba0d8e3409"
+      },
+      {
+        "path": "build/oblivion-compat/security-use/original-gate-content-audit.json",
+        "sha256": "ce2c5a5733b35c919673caecd748a691166dba8381e2a45c9332953b9251f2ad"
+      },
+      {
+        "path": "build/oblivion-compat/security-use/original-level-gate-content-audit.json",
+        "sha256": "d7ca0bd50e0dd31b83e56bdd58e4a5a4dc7460251e8749881221796ee7c19b3a"
+      },
+      {
+        "path": "build/oblivion-compat/security-use/native-level-tooltip-defaults-audit.json",
+        "sha256": "cfc913ab8858a5bb742bb63af825f7095c557f5714d8b3cd19af073194098970"
+      }
+    ]
+  },
+  "state_ownership": {
+    "native_base": "Native Player AV30; existing projected views retain modifiers.",
+    "fractional_experience": "Existing shared Player NPCS skill18 STPR; not duplicated in native runtime JSON.",
+    "attribute_specialization_major_counters": "Existing shared NPCS INCR, three int32 SPEC entries, LPRO.",
+    "per_skill_counter": "Existing native Player actor_values skill_advances.30.",
+    "native_schema_version": 99
+  },
+  "checks": {
+    "normal-focused-02": {
+      "path": "build/oblivion-compat/security-use/normal-focused-02/verification.json",
+      "sha256": "4c69c447c4a4e38d0a94da34c8c0ef8774e99e0a1fcafcedd166ef1debf024bc",
+      "results": {
+        "engine": {
+          "executed": 28,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionSkillTraining.*:OblivionProfileServicesTest.*:*Door*:*Lockpick*",
+          "binary_sha256": "18e6b6da3680153ad8c4e18c743fd483eddac829e6919ce55a2a8554b9f84b27",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "57871b0878b0c3038144e46d06a328cbd476d56a5385eee51713cacb54979575",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8168c740c06a252d5491dd64673121b35b69575",
+        "source_fingerprint": "93136f530c887353dd1b3c9c932a67b2f738664c3457d68a2afe6f3eeaa4fce4"
+      }
+    },
+    "normal-integration-02": {
+      "path": "build/oblivion-compat/security-use/normal-integration-02/verification.json",
+      "sha256": "89e5e3f176587a94791e077abb840e03e342c8dc82fd9c1f5324f38c384475e1",
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "18e6b6da3680153ad8c4e18c743fd483eddac829e6919ce55a2a8554b9f84b27",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "eea626f6eadb314eb4999c772cb1a873713537ab0bfd814d6e12e14f3bd8a2e5",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 611,
+          "passed": true,
+          "log_sha256": "d906263d8b039203dd62d41d3704e7964ea1e6432698371e2bcd816ac300f2d1"
+        }
+      },
+      "source": {
+        "head": "d8168c740c06a252d5491dd64673121b35b69575",
+        "source_fingerprint": "93136f530c887353dd1b3c9c932a67b2f738664c3457d68a2afe6f3eeaa4fce4"
+      }
+    },
+    "sanitized-focused-03": {
+      "path": "build/oblivion-compat/security-use/sanitized-focused-03/verification.json",
+      "sha256": "bd71c95671949eb097159ddff0330687f439eb69e2e7a46f4acdc3b1859c4087",
+      "results": {
+        "engine": {
+          "executed": 79,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "InputRuntimeFacade.SwitchesAndControllerModesRestoreAcrossMoveAndScope:InputRuntimeFacade.NativeClockSeesWindowEventsBeforeDurationDependentControls:InputRuntimeFacade.SplitControlsPreserveDisableStateFromNestedLoadingEvents:InputRuntimeFacade.CommitAndOwnerDeathReleaseArchives:InputRuntimeFacade.SelectionRejectsInsideInputCallbacksAndRecoversAfterUnwind:InputRuntimeFacade.WrapperRestoresWishesAndFractionalWheelAgainstCurrentWindow:LocalMapCoordinatesTest.ActualInteriorMapRetainsCoordinateRoundTripAndFogExploration:ShadowRuntimeTest.DetachedManagersPreserveSelectionAndDisposalClearsOnlySelectedOwner:OblivionWorldTest.NativeWeaponFactoryPublishesBoundNifSourceWearIdentityRelationsAndDeferredObservers:OblivionWorldTest.CreatureArmedContactConsumesOrdinaryAndPowerWindowsOnceWithNativeFatigueCost:OblivionWorldTest.CreatureWeaponFactoryUsesSharedAttachmentAndAtomicallyPublishesOrRejectsBreak:OblivionWorldTest.NativeWeaponFactoryRejectsLateSourcesAndRollsBackSceneBeforeAnyDebit:OblivionWorldTest.NativeWeaponFactoryTransfersExplicitOwnerAndAppliesWinningCellClaimWithoutExtraScaleOnReference:OblivionWorldTest.NativeWeaponFactoryCancellationAndErasedWinningRecordsRetireBorrowedInputs:OblivionWorldTest.NativeWeaponFactoryBuildsTwoBoundDropsUnderOneSerialAndRegistryPublication:OblivionWorldTest.NativeWeaponFactoryPrependsRelationsAndRespectsRawQuestHeaderPredicate:OblivionWorldTest.NativeWeaponFactoryPreparationOutlivesWorldInventoryAnimationAndResourceOwnersSafely:OblivionWorldTest.NativeWeaponFactoryCommitsContactWearAndResourcesTogetherAndRejectsStaleContact:OblivionWorldTest.NativeWeaponFactoryPreservesLegacyFractionalConditionAndRejectsLateLegacyWear:OblivionWorldTest.NativeWeaponFactoryQueuesLuaSceneAdmissionWithPublication:OblivionWorldTest.NativeWeaponFactoryNewReferenceAcceptsPersistentScriptCommandsBeforePickup:OblivionWorldTest.NativeWeaponFactoryLuaAdmissionRejectsQueueMutationAndRestoresRetainedSelection:OblivionWorldTest.PreparedLuaSceneGroupAttachesAutostartAndDeliversActivationAfterRegistryPublication:OblivionWorldTest.PreparedLuaAutostartCancellationAndManagerDeathReleaseUnpublishedScriptPayloads:OblivionWorldTest.NativeWeaponFactoryFallingBodyPublishesSceneAndReferencePoseWithoutPhysicsFeedback:OblivionWorldTest.NativeWeaponFactoryPhysicalRotationAndInvalidScaleGuardPreserveRigidAuthority:OblivionWorldTest.NativeWeaponFactoryOwnsPhysicalNodeBindingSeparateFromCarriedAndCachedModels:OblivionWorldTest.NativeWeaponFactoryRetainsRotatedFileRootBelowPrivateReferenceWrapper:OblivionWorldTest.NativeWeaponFactoryDetachesScabbardSubtreeFromFoldedAndRetainedModels:OblivionWorldTest.NativeWeaponFactoryReplacesRootWithoutDiscardingPhysicalChildPose:OblivionWorldTest.NativeWeaponFactoryRelocatedCollisionFollowsRootWhileChildGeometryKeepsItsPose:OblivionWorldTest.NativeWeaponFactorySmallRootMotionKeepsReferenceAndAdvancesLocalBeforeCachedWorld:OblivionWorldTest.NativeWeaponFactoryAuthoredInactiveRootKeepsSceneWhileItsBodyFallsAndVisibleScaleChanges:OblivionWorldTest.NativeWeaponFactoryRootRotationMaskPreservesStoredPosition:OblivionWorldTest.NativeWeaponFactoryVisibleScaleRetainsAdmittedPhysicsAndChildLocalPose:OblivionWorldTest.NativeWeaponFactoryRelocatedSourceRemainsGuardedBeforePublication:OblivionWorldTest.NativeWeaponFactoryRejectsChangedPreparedPhysicalNodesBeforeWearOrPublication:OblivionWorldTest.NativeWeaponFactoryPassiveBindingPreservesEmbeddedControllerTraversal:OblivionWorldTest.NativeWeaponFactorySceneLinkLeasesTheExactPublishedAnimation:OblivionWorldTest.NativeWeaponFactorySceneLinkRetiresDespiteHeldAnimationCheckpointAndHandle:OblivionWorldTest.NativeWeaponFactoryCancelledPreparedSceneLinkInvalidatesDetachedPhysicalAdmission:OblivionWorldTest.NativeWeaponFactorySceneLinkNeverFollowsAReplacementModel:OblivionWorldTest.NativeWeaponFactoryLinkedPhysicsWaitsForScenePublicationWithoutConsumingPreparation:OblivionWorldTest.DefaultMeleeAiUsesPhysicalReachAndReleasesControlsOnDisabledProcessing:OblivionWorldTest.NativeContactDisarmPreservesIntactConditionAndConsumesOwnedStrikeAtomically:OblivionWorldTest.CounterContactPreparationOwnsTheMasterRollAndPublishesNoDamage:OblivionWorldTest.CounterPhysicalMissAcquiresAndConsumesWithoutOrdinaryAttackFatigue:OblivionWorldTest.NativeContactDisarmWithdrawsWeaponBlockUnlessShieldRemains:OblivionWorldTest.NativeContactDisarmRollsBackSceneFailuresAndRejectsStaleEquipment:OblivionWorldTest.NativeContactDisarmRejectsConflictingAndUnmatchedDropRequests:OblivionWorldTest.NativeContactOwnsWeaponDropAdmissionAndRollsBackBeforeResourcePublication:OblivionWorldTest.NativeContactCombinesDropAndRetainedBreakBeforeThrowingEquipmentObservers:OblivionWorldTest.NativeContactDropRejectsMismatchedContextsAndRetiredOwnersWithoutSpending:OblivionWorldTest.NativeLooseWeaponSnapshotsRestoreOwnedModelBodyAndScabbardPolicy:OblivionWorldTest.NativeLooseWeaponLoadRollsBackRejectedOrReentrantScenePublication:OblivionWorldTest.LegacyNativeDropsBootstrapPhysicalModelsWithoutInventingLostVelocityHistory:OblivionWorldTest.NativeLooseWeaponSavePreservesSubthresholdReferenceAndCachedRootIndependently:OblivionWorldTest.BlockingNpcWeaponBreakOwnsPhysicalDropAndRollsBackWithdrawnPostureOnSceneFailure:OblivionWorldTest.NativeShieldFactoryUsesForearmAndOwnerWorldBodyAndPreservesRightWeapon:OblivionWorldTest.NativeShieldFactoryRejectsWorldRoleOwnerSourceAndSceneChangesWithoutPublication:OblivionWorldTest.NativeLooseShieldSnapshotReadmitsOwnerWorldBodyAndPackedVelocityWithoutReplay:OblivionWorldTest.BlockingNpcShieldBreakPublishesOneContactDropAndPostureOrRollsBackEverything:OblivionWorldTest.LaterSelectedNpcShieldBreakPublishesOneBodyAndRollsBackMergedWearAndRandomOnFailure:OblivionWorldTest.DisarmAtomicallyFadesSteadyHeldResetsWindupAndPreservesCounterHeldHistory:OblivionWorldTest.MasterComputedDisarmPublishesFinalWearDropReactionsAndRandomAtomically:OblivionWorldTest.BrokenIncomingWeaponSkipsMasterRollAndPublishesRecoilWithOneZeroConditionDrop:OblivionWorldTest.PlayerDefaultDisarmCentersOwnedDropAndRollsBackFailures:OblivionWorldTest.ImmuneMeleeContactConsumesOncePreservesDefenderAndPublishesOnlyPlayerMessage:OblivionWorldTest.LowerUnarmedUnsupportedNpcPairLeavesActualContactPending:OblivionWorldTest.AdvancedUnarmedFullDamageJoinsMasterDisarmAndOwnedReactionsAtomically:OblivionWorldTest.AdvancedUnarmedOrdinaryDispatcherKeepsFullHitSoundsWithoutGeneralHitForce:OblivionWorldTest.SavedMovementBindsResidentContactsAndRestoresDiscardOnlyAfterSuccessfulBatch:OblivionWorldTest.StagedStaggerCounterMissStillPublishesMasterDropAndAttackerRecoil:OblivionWorldTest.AutonomousPlayerCombatRequiresHostilityResidenceAndDetection:OblivionWorldTest.AutonomousCombatAcquiresNearestDetectedHostileNpcWithoutReplacingController:OblivionWorldTest.SidePowerAutomaticDisarmOwnsDamageDropAndReplayBoundary:OblivionWorldTest.SidePowerSpareReplacementPublishesDropStackAndEquipmentAtomically:OblivionWorldTest.PhasedSidePowerDropGrantsExactlyOnePostSpeechReactionTail:OblivionWorldTest.MeleeAiEquipsTheExactUsableOwnedStackWithoutRepairOrRepeatedWrites",
+          "binary_sha256": "19913ba0b3a6c3eecba6fe90d57d8a65c7eaeae1fa52a665a64db53137353eac",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "93a27316a2e203c0bc94615679ae5b2fc49918534ad6d40efe0ef5e0412b7e6c",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8168c740c06a252d5491dd64673121b35b69575",
+        "source_fingerprint": "93136f530c887353dd1b3c9c932a67b2f738664c3457d68a2afe6f3eeaa4fce4"
+      }
+    },
+    "sanitized-integration-04": {
+      "path": "build/oblivion-compat/security-use/sanitized-integration-04/verification.json",
+      "sha256": "66e87680b93f772adde9400f302102a55ccbc0c15f238c22ef1eb6050c5dfc0f",
+      "results": {
+        "engine": {
+          "executed": 2278,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "19913ba0b3a6c3eecba6fe90d57d8a65c7eaeae1fa52a665a64db53137353eac",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "d15fa4500f4251509ecf2a3f5a00cd938930d6d5f9479a0588969122244538e3",
+          "inventory_sha256": "385de266f1edbfa33b8da9e51db6bc29e294b2d0d88e033fddba872aff5fbfa1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source": {
+        "head": "d8168c740c06a252d5491dd64673121b35b69575",
+        "source_fingerprint": "93136f530c887353dd1b3c9c932a67b2f738664c3457d68a2afe6f3eeaa4fce4"
+      }
+    },
+    "python-final-recipes-01": {
+      "path": "build/oblivion-compat/security-use/python-final-recipes-01/verification.json",
+      "sha256": "3884588a46622d8f5994977884f966bca94b26d45d007c3ea668a1d7041c4427",
+      "results": {
+        "python": {
+          "executed": 611,
+          "passed": true,
+          "log_sha256": "d7cb8ec34175ee179264e54e9cfecf738bff6cf572d1ee3adc48552ea5e34b51"
+        }
+      },
+      "source": {
+        "head": "d8168c740c06a252d5491dd64673121b35b69575",
+        "source_fingerprint": "051ebfa234ff91fabbad08f85bfd25763424250c962799f6eb7c0d85a3a27b1c"
+      }
+    }
+  },
+  "production_source_hashes": {
+    "apps/openmw/CMakeLists.txt": "63dc9f85f38f1937c6824ca320b2c51772ee70d28d90059107d9a3cfb3e3f58d",
+    "apps/openmw/mwgui/statswindow.cpp": "c043a726a2892c8a8afbd449863e86f79cd0729a2c019bc117cdbff3ec3a5b87",
+    "apps/openmw/mwlua/stats.cpp": "5ce51f9df217d41f8eaa0f3022726edb4dc364d250d832ba42a5c342a4e55dd7",
+    "apps/openmw/mwworld/oblivioninteraction.cpp": "9d70702f992074afd8e1c3f17c8db7a6dc7adc7306764d3b176157394c59b7fd",
+    "apps/openmw/mwworld/oblivionprofileservices.cpp": "d74b864ee030a121463753d3f8cfe330a7aeaa83efbc87e3c423bf880f18cd59",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "c6b0955df2c353176f230e58c4f74e384e352bf8c450e7df0cf05507b08d6f79",
+    "apps/openmw/mwworld/oblivionskilltraining.cpp": "ab0d34ca8a88e9311ccfeab6716f89551a56ed2a428b7e63e7341e4b02eca70c",
+    "apps/openmw/mwworld/oblivionskilltraining.hpp": "fb7a719f0e76709e23be1c541a7df6225e8225a921ecd68fa994bbe823a695d4",
+    "apps/openmw/mwworld/worldimp.hpp": "8c99e22ca5e6d270bdd4ec26bcb1c89602b42b1a230c8d43d16ddca226386e06",
+    "apps/openmw_tests/mwworld/testoblivionprofileservices.cpp": "fccfcf77a21066f9ea80727a63cc8f6650c8da9225e80de335bc23039cb03bbf",
+    "apps/openmw_tests/mwworld/testoblivionskilltraining.cpp": "a0ec2e07fe0e444e313135da6c925ee554d0ae4598fda9058527842f872f6c85",
+    "components/esm4/skilltraining.hpp": "1be72d11a755a7c6564e36b1e21a9396a38876ba710cac3d4353fc9826563bb3",
+    "scripts/data/oblivion_compat/oblivion_gate_security_cancel.json": "5f05beae6de3073c6de58a6dfe1b5496fd5df08ccce285deb94bfb3d8090850b",
+    "scripts/data/oblivion_compat/oblivion_gate_security_level_gain.json": "4d61b07ad28f698e73fcba2ee05e91f8d68cd8e698f5fbc351d0a3f1317970e2",
+    "scripts/data/oblivion_compat/oblivion_gate_security_level_restart.json": "1d576336fd06b5ba494681172e5b532bbb7d85f80f85d665a16ba96bc4971b14",
+    "scripts/data/oblivion_compat/oblivion_gate_security_one_attempt.json": "b171ead1565575f2cb43a331ed13218e0dcbce49f457ae7827282b4f088609c4",
+    "scripts/data/oblivion_compat/oblivion_gate_security_restart.json": "64b430e297bbc17b42c0032d1e65f865a376a76fd5e1906c88c080f2308bc5c9",
+    "scripts/verify_gate_security_advancement.py": "5b64742b74faeaef87fa2ae9eef63c41d334f3002819beef354c28f48b2e913d",
+    "scripts/verify_gate_security_use.py": "2d7c6afade0dbd1b466728ae1ae1ca6c696512d3e79e8ef41574c5febc4aaa6c"
+  },
+  "editable_recipes": {
+    "scripts/data/oblivion_compat/oblivion_gate_security_cancel.json": "5f05beae6de3073c6de58a6dfe1b5496fd5df08ccce285deb94bfb3d8090850b",
+    "scripts/data/oblivion_compat/oblivion_gate_security_one_attempt.json": "b171ead1565575f2cb43a331ed13218e0dcbce49f457ae7827282b4f088609c4",
+    "scripts/data/oblivion_compat/oblivion_gate_security_restart.json": "64b430e297bbc17b42c0032d1e65f865a376a76fd5e1906c88c080f2308bc5c9",
+    "scripts/data/oblivion_compat/oblivion_gate_security_level_gain.json": "4d61b07ad28f698e73fcba2ee05e91f8d68cd8e698f5fbc351d0a3f1317970e2",
+    "scripts/data/oblivion_compat/oblivion_gate_security_level_restart.json": "1d576336fd06b5ba494681172e5b532bbb7d85f80f85d665a16ba96bc4971b14",
+    "scripts/data/oblivion_compat/oblivion_gate_security_cancel_sanitized.json": "5bf245fecabef5f15bf3df24bd9c8baa945218fe8bc802851b0ec8e1464f69ae",
+    "scripts/data/oblivion_compat/oblivion_gate_security_one_attempt_sanitized.json": "2f15e01b1961e7cac820072d164e64ebbe215c41197e9024b0f48d5b38be5b68",
+    "scripts/data/oblivion_compat/oblivion_gate_security_restart_sanitized.json": "8eb55ae7400784b3605f56c10fd6eef544bb74f59f2b321d21453e62b94f9a62",
+    "scripts/data/oblivion_compat/oblivion_gate_security_level_gain_sanitized.json": "afff13f9dfe0a5a8d3b0151ba49b8c17c9510128e2831630e350d6347a9f04cb",
+    "scripts/data/oblivion_compat/oblivion_gate_security_level_restart_sanitized.json": "c9d32e89cab287fcd62aa0e06211131af41aa57b21cb008a9154b99a7d09d55d"
+  },
+  "runtime_courses": {
+    "normal-security-cancel-01": {
+      "path": "build/oblivion-compat/security-use/normal-security-cancel-01/security-audit.json",
+      "sha256": "f836c6668a586a08efc765526b07c21ae1cebddc6170c4d0b293b3bad68af379",
+      "audit": {
+        "passed": true,
+        "phase": "cancel",
+        "sanitized": false,
+        "input_sha256": "7ecd4febfef2c4a1011501a1a65679fc460eed82fe3b9c804f8834b5ff17daa1",
+        "save_sha256": "219e1e171785efdfe149ea243f9d6e30f2ad8c186c08992dd8bd3ea1f747dcac",
+        "binary_sha256": "183b45ea2177b2136dc2e13954deb2f61e79bd9529702569bf461b25c26f47e6",
+        "before_shared": {
+          "security_base": 5.0,
+          "security_experience": 0.0,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after_shared": {
+          "security_base": 5.0,
+          "security_experience": 0.0,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "attempts": 0,
+        "failed_attempts": 0,
+        "picks_before": 7,
+        "picks_after": 7,
+        "gate_locked": true,
+        "schema_version": 99
+      },
+      "process": {
+        "pid": 20281,
+        "start_ticks": 415943,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-security-cancel-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-final-gate-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "183b45ea2177b2136dc2e13954deb2f61e79bd9529702569bf461b25c26f47e6"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/normal-security-cancel-01/scenario.json",
+        "sha256": "2ba6cfc9e7d05af906dff2d31f35bcd4381556d70643a8bdd5347c04d6da6c51"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/normal-security-cancel-01/sdl-input.txt.delivered",
+        "sha256": "efcfdbc9abf6ceb21a45f92baa7257f22b9d484e0dc44a8b778899cf4f8589ba"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/normal-security-cancel-01/captured-input-manifest.json",
+        "sha256": "5f05beae6de3073c6de58a6dfe1b5496fd5df08ccce285deb94bfb3d8090850b"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/normal-security-cancel-01/loaded-libraries.json",
+        "sha256": "4e0273a90e9bf85a324ace14df6277980d93bfebece3c2dcd04fc841b11e0e43"
+      }
+    },
+    "normal-security-one-attempt-01": {
+      "path": "build/oblivion-compat/security-use/normal-security-one-attempt-01/security-audit.json",
+      "sha256": "071a8d377b64c8afe615943510f62a4be54925b00a63b0611aeb5874f4d3a240",
+      "audit": {
+        "passed": true,
+        "phase": "one-attempt",
+        "sanitized": false,
+        "input_sha256": "219e1e171785efdfe149ea243f9d6e30f2ad8c186c08992dd8bd3ea1f747dcac",
+        "save_sha256": "592e22e9b8a4a6fa3d745104ecdcd5ce300ca62367e4e64a3adaf11d0a16251c",
+        "binary_sha256": "183b45ea2177b2136dc2e13954deb2f61e79bd9529702569bf461b25c26f47e6",
+        "before_shared": {
+          "security_base": 5.0,
+          "security_experience": 0.0,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after_shared": {
+          "security_base": 5.0,
+          "security_experience": 1.5,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "attempts": 1,
+        "failed_attempts": 0,
+        "picks_before": 7,
+        "picks_after": 7,
+        "gate_locked": false,
+        "schema_version": 99
+      },
+      "process": {
+        "pid": 21816,
+        "start_ticks": 429582,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-security-one-attempt-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-security-cancel-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "183b45ea2177b2136dc2e13954deb2f61e79bd9529702569bf461b25c26f47e6"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/normal-security-one-attempt-01/scenario.json",
+        "sha256": "22dfa2f7635637bc555dac4d1afb6c3a17b86f21ed4cc615553b7af73ea8d099"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/normal-security-one-attempt-01/sdl-input.txt.delivered",
+        "sha256": "f12a74594c7d3846be90fe59ff57e01c34e9b361ebbea76703b85220048e5228"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/normal-security-one-attempt-01/captured-input-manifest.json",
+        "sha256": "b171ead1565575f2cb43a331ed13218e0dcbce49f457ae7827282b4f088609c4"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/normal-security-one-attempt-01/loaded-libraries.json",
+        "sha256": "314e238f746c7d0e15fe89595ead773a6d96c551160af85bf29852117a0e9e9f"
+      }
+    },
+    "normal-security-restart-01": {
+      "path": "build/oblivion-compat/security-use/normal-security-restart-01/security-audit.json",
+      "sha256": "3daa4e1c1ac5c8a090a226506321b6c70bf06baa5e286c60451a3e52af687e4e",
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "input_sha256": "592e22e9b8a4a6fa3d745104ecdcd5ce300ca62367e4e64a3adaf11d0a16251c",
+        "save_sha256": "a30520c9f5593869cf597660dbe05afd8730fca6736357dcc566f6c01c77b0ba",
+        "binary_sha256": "183b45ea2177b2136dc2e13954deb2f61e79bd9529702569bf461b25c26f47e6",
+        "before_shared": {
+          "security_base": 5.0,
+          "security_experience": 1.5,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after_shared": {
+          "security_base": 5.0,
+          "security_experience": 1.5,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "attempts": 0,
+        "failed_attempts": 0,
+        "picks_before": 7,
+        "picks_after": 7,
+        "gate_locked": false,
+        "schema_version": 99
+      },
+      "process": {
+        "pid": 22390,
+        "start_ticks": 439573,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-security-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-security-one-attempt-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "183b45ea2177b2136dc2e13954deb2f61e79bd9529702569bf461b25c26f47e6"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/normal-security-restart-01/scenario.json",
+        "sha256": "38f0cd5cb4a71e959706f9ff89f6343a1cd67bc315b3d793637f229370356e94"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/normal-security-restart-01/sdl-input.txt.delivered",
+        "sha256": "b6158b82838ffb5bcddc11aab8bcc2b366ade6a6ad00f9ce64d52150538d0e7d"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/normal-security-restart-01/captured-input-manifest.json",
+        "sha256": "64b430e297bbc17b42c0032d1e65f865a376a76fd5e1906c88c080f2308bc5c9"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/normal-security-restart-01/loaded-libraries.json",
+        "sha256": "a142d84ffdce9ba77b685e40b25c0df312743f0b1d540927c832cec480fc6682"
+      }
+    },
+    "normal-final-security-level-gain-01": {
+      "path": "build/oblivion-compat/security-use/normal-final-security-level-gain-01/advancement-audit.json",
+      "sha256": "f8796ef526c291283193adac3ddd1e342b61576939ee6038d2f70052b7ae34f1",
+      "audit": {
+        "passed": true,
+        "phase": "gain",
+        "sanitized": false,
+        "gate": "content:oblivion.esm:049bba",
+        "binary_sha256": "9160a1218eb1b89d5a2b2370ef9e63e7d7bdd1f874d53153b9021d248c1312d2",
+        "input_sha256": "a30520c9f5593869cf597660dbe05afd8730fca6736357dcc566f6c01c77b0ba",
+        "save_sha256": "6c9fa1b53363810bdf6b88528f9baf77ee36d9318a5fbe690a990e6773600bde",
+        "before_shared": {
+          "security_base": 5.0,
+          "security_experience": 1.5,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after_shared": {
+          "security_base": 6.0,
+          "security_experience": 0.10620927810668945,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            1
+          ]
+        },
+        "attempts": 1,
+        "failed_attempts": 1,
+        "picks_before": 7,
+        "picks_after": 6,
+        "skill_advances_before": 0.0,
+        "skill_advances_after": 1.0
+      },
+      "process": {
+        "pid": 33198,
+        "start_ticks": 667853,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-final-security-level-gain-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-security-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "9160a1218eb1b89d5a2b2370ef9e63e7d7bdd1f874d53153b9021d248c1312d2"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/normal-final-security-level-gain-01/scenario.json",
+        "sha256": "b68b3df595c6821e2f58e24d9586b62658df04ea90680244b3ad177013b912c4"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/normal-final-security-level-gain-01/sdl-input.txt.delivered",
+        "sha256": "7d72a64604a3d069734f17bc6479102a9c8aa2b5afbe738740ea9ca30800acf7"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/normal-final-security-level-gain-01/captured-input-manifest.json",
+        "sha256": "4d61b07ad28f698e73fcba2ee05e91f8d68cd8e698f5fbc351d0a3f1317970e2"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/normal-final-security-level-gain-01/loaded-libraries.json",
+        "sha256": "bea8b72a662ba1ede66e4fca368b5f96490c24b8502cb630dc9a5675c84a60e0"
+      }
+    },
+    "normal-final-security-level-restart-01": {
+      "path": "build/oblivion-compat/security-use/normal-final-security-level-restart-01/advancement-audit.json",
+      "sha256": "ea34dc6830da36ec696dc021e225e0a26966d04c3aee7eac61396be89e16c8e0",
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": false,
+        "gate": "content:oblivion.esm:049bba",
+        "binary_sha256": "9160a1218eb1b89d5a2b2370ef9e63e7d7bdd1f874d53153b9021d248c1312d2",
+        "input_sha256": "6c9fa1b53363810bdf6b88528f9baf77ee36d9318a5fbe690a990e6773600bde",
+        "save_sha256": "2a961a70f39988b4e4ade170ed8b7353259a97718ce982f9beb589094f29ccd2",
+        "before_shared": {
+          "security_base": 6.0,
+          "security_experience": 0.10620927810668945,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            1
+          ]
+        },
+        "after_shared": {
+          "security_base": 6.0,
+          "security_experience": 0.10620927810668945,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            1
+          ]
+        },
+        "attempts": 0,
+        "failed_attempts": 0,
+        "picks_before": 6,
+        "picks_after": 6,
+        "skill_advances_before": 1.0,
+        "skill_advances_after": 1.0
+      },
+      "process": {
+        "pid": 38651,
+        "start_ticks": 683707,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-final-security-level-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/normal-final-security-level-gain-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "9160a1218eb1b89d5a2b2370ef9e63e7d7bdd1f874d53153b9021d248c1312d2"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/normal-final-security-level-restart-01/scenario.json",
+        "sha256": "a777ed3536913927f0bcc5dff61b8858960928400b47100ac66bad67d2799280"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/normal-final-security-level-restart-01/sdl-input.txt.delivered",
+        "sha256": "b6158b82838ffb5bcddc11aab8bcc2b366ade6a6ad00f9ce64d52150538d0e7d"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/normal-final-security-level-restart-01/captured-input-manifest.json",
+        "sha256": "1d576336fd06b5ba494681172e5b532bbb7d85f80f85d665a16ba96bc4971b14"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/normal-final-security-level-restart-01/loaded-libraries.json",
+        "sha256": "d9f6def2dd20b52d6025016db2f78bc81092e22fb2a8201f6f6888f5c98236b6"
+      }
+    },
+    "sanitized-final-security-cancel-03": {
+      "path": "build/oblivion-compat/security-use/sanitized-final-security-cancel-03/security-audit.json",
+      "sha256": "d3db3a6c6acf7ef4f76c601e943e0c4c6df9b5ad0c3989b74e6bfc27c4472849",
+      "audit": {
+        "passed": true,
+        "phase": "cancel",
+        "sanitized": true,
+        "input_sha256": "7ecd4febfef2c4a1011501a1a65679fc460eed82fe3b9c804f8834b5ff17daa1",
+        "save_sha256": "33b6dc4c929f75bbcb5fbda7f67e39733d2f0a6e763dee7a2cc03bcb6b09381c",
+        "binary_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c",
+        "before_shared": {
+          "security_base": 5.0,
+          "security_experience": 0.0,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after_shared": {
+          "security_base": 5.0,
+          "security_experience": 0.0,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "attempts": 0,
+        "failed_attempts": 0,
+        "picks_before": 7,
+        "picks_after": 7,
+        "gate_locked": true,
+        "schema_version": 99
+      },
+      "process": {
+        "pid": 45131,
+        "start_ticks": 752827,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-cancel-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-final-gate-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-cancel-03/scenario.json",
+        "sha256": "2ae72a92fab76a8aadf3fb2458462c8bd846cfd968c31a12e8b593bbbee50d64"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-cancel-03/sdl-input.txt.delivered",
+        "sha256": "1d2ebcf50923cb0c36e033c18e83331f6b6ce48b23b3edc3c6fbd7c32f8cbd7f"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-cancel-03/captured-input-manifest.json",
+        "sha256": "5bf245fecabef5f15bf3df24bd9c8baa945218fe8bc802851b0ec8e1464f69ae"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-cancel-03/loaded-libraries.json",
+        "sha256": "c0d648eab50a45ea6197a64c72052d806dcb288f95a5706f0f2f355cbb2b5d9c"
+      },
+      "observed_environment": {
+        "process": {
+          "pid": 45131,
+          "start_ticks": 752827,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-cancel-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/iron-gate/normal-final-gate-passage-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-cancel-03/sdl-input.so"
+        }
+      }
+    },
+    "sanitized-final-security-one-attempt-01": {
+      "path": "build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/security-audit.json",
+      "sha256": "70a3850a499b9b6e71a8af3116d199378132467c53eedd915e713496599c56ae",
+      "audit": {
+        "passed": true,
+        "phase": "one-attempt",
+        "sanitized": true,
+        "input_sha256": "33b6dc4c929f75bbcb5fbda7f67e39733d2f0a6e763dee7a2cc03bcb6b09381c",
+        "save_sha256": "7fbc7b008efa0d1f840e0a3fdd78f6ed912c7d00be0f4da2e997ec1daac04e60",
+        "binary_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c",
+        "before_shared": {
+          "security_base": 5.0,
+          "security_experience": 0.0,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after_shared": {
+          "security_base": 5.0,
+          "security_experience": 1.5,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "attempts": 1,
+        "failed_attempts": 1,
+        "picks_before": 7,
+        "picks_after": 6,
+        "gate_locked": true,
+        "schema_version": 99
+      },
+      "process": {
+        "pid": 50539,
+        "start_ticks": 792250,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-cancel-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/scenario.json",
+        "sha256": "7840dedb603240919e9095bfefd9f845fe0a01b449aa587a83c75c103415e80d"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/sdl-input.txt.delivered",
+        "sha256": "88ac09d1efb0bb2279c087624177f2bf04ad5222fd7d365f4d8e4a49e886a47d"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/captured-input-manifest.json",
+        "sha256": "2f15e01b1961e7cac820072d164e64ebbe215c41197e9024b0f48d5b38be5b68"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/loaded-libraries.json",
+        "sha256": "d3260e9b7b8b06a541554885699d182615aba8db9021dced02857e8745b271e6"
+      },
+      "observed_environment": {
+        "process": {
+          "pid": 50539,
+          "start_ticks": 792250,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-cancel-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/sdl-input.so"
+        }
+      }
+    },
+    "sanitized-final-security-restart-01": {
+      "path": "build/oblivion-compat/security-use/sanitized-final-security-restart-01/security-audit.json",
+      "sha256": "cff383552101430546ba891bb4dc850cc13d3174a9e05b229421d57fb95ad877",
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "input_sha256": "7fbc7b008efa0d1f840e0a3fdd78f6ed912c7d00be0f4da2e997ec1daac04e60",
+        "save_sha256": "7b1fba279fac1152b21c490019b0fe1a709c64d651bb53b8d60c101d30d0ed26",
+        "binary_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c",
+        "before_shared": {
+          "security_base": 5.0,
+          "security_experience": 1.5,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after_shared": {
+          "security_base": 5.0,
+          "security_experience": 1.5,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "attempts": 0,
+        "failed_attempts": 0,
+        "picks_before": 6,
+        "picks_after": 6,
+        "gate_locked": true,
+        "schema_version": 99
+      },
+      "process": {
+        "pid": 50907,
+        "start_ticks": 825645,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-restart-01/scenario.json",
+        "sha256": "a3b8520e3eadd5cae2b18365c0a8c66120c124c4d39caf9ec0bb0bd8bd9e70f2"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-restart-01/sdl-input.txt.delivered",
+        "sha256": "b6158b82838ffb5bcddc11aab8bcc2b366ade6a6ad00f9ce64d52150538d0e7d"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-restart-01/captured-input-manifest.json",
+        "sha256": "8eb55ae7400784b3605f56c10fd6eef544bb74f59f2b321d21453e62b94f9a62"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-restart-01/loaded-libraries.json",
+        "sha256": "44b15f6e1751d448c6b4b81cf104a40543b3cff0431d399db011a7958ff12d80"
+      },
+      "observed_environment": {
+        "process": {
+          "pid": 50907,
+          "start_ticks": 825645,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-restart-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-one-attempt-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-restart-01/sdl-input.so"
+        }
+      }
+    },
+    "sanitized-final-security-level-gain-01": {
+      "path": "build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/advancement-audit.json",
+      "sha256": "35d77f05d49bb54604d4cd8dbaf3e356e6e2f69accfbffc912081630297e7e26",
+      "audit": {
+        "passed": true,
+        "phase": "gain",
+        "sanitized": true,
+        "gate": "content:oblivion.esm:049bba",
+        "binary_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c",
+        "input_sha256": "7b1fba279fac1152b21c490019b0fe1a709c64d651bb53b8d60c101d30d0ed26",
+        "save_sha256": "3c5c02912031d399e6964764c24b262a4483806c208e6391f1dbc0baf14a6b1f",
+        "before_shared": {
+          "security_base": 5.0,
+          "security_experience": 1.5,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            0
+          ]
+        },
+        "after_shared": {
+          "security_base": 6.0,
+          "security_experience": 0.10620927810668945,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            1
+          ]
+        },
+        "attempts": 1,
+        "failed_attempts": 0,
+        "picks_before": 6,
+        "picks_after": 6,
+        "skill_advances_before": 0.0,
+        "skill_advances_after": 1.0
+      },
+      "process": {
+        "pid": 51042,
+        "start_ticks": 853126,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/scenario.json",
+        "sha256": "4e630db0cd0c36fb37fd1ea94eafc1b1692c2e9edf163365bc48dd9707b48a2c"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/sdl-input.txt.delivered",
+        "sha256": "c1d2b6579ac8aa0092d56fa0b2b31c351b4a1f89a3a5ba748e43bddd435ee6e3"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/captured-input-manifest.json",
+        "sha256": "afff13f9dfe0a5a8d3b0151ba49b8c17c9510128e2831630e350d6347a9f04cb"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/loaded-libraries.json",
+        "sha256": "349e1c68aefc1a94931c5ba2ee06a644b0027d774afa8e7fd331d12619055a68"
+      },
+      "observed_environment": {
+        "process": {
+          "pid": 51042,
+          "start_ticks": 853126,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/sdl-input.so"
+        }
+      }
+    },
+    "sanitized-final-security-level-restart-01": {
+      "path": "build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/advancement-audit.json",
+      "sha256": "b90322c41f28b7b967f85d62f9c8cb46cf033469dbd795aa51af71088d82fb1f",
+      "audit": {
+        "passed": true,
+        "phase": "restart",
+        "sanitized": true,
+        "gate": "content:oblivion.esm:049bba",
+        "binary_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c",
+        "input_sha256": "3c5c02912031d399e6964764c24b262a4483806c208e6391f1dbc0baf14a6b1f",
+        "save_sha256": "463fb8c514c628ac6da152d2689ea92a0a509e4755ac443a3a93610ca8ed3e3d",
+        "before_shared": {
+          "security_base": 6.0,
+          "security_experience": 0.10620927810668945,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            1
+          ]
+        },
+        "after_shared": {
+          "security_base": 6.0,
+          "security_experience": 0.10620927810668945,
+          "level_progress": 0,
+          "attribute_increases": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "specialization_increases": [
+            0,
+            0,
+            1
+          ]
+        },
+        "attempts": 0,
+        "failed_attempts": 0,
+        "picks_before": 6,
+        "picks_after": 6,
+        "skill_advances_before": 1.0,
+        "skill_advances_after": 1.0
+      },
+      "process": {
+        "pid": 51288,
+        "start_ticks": 905542,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+      },
+      "scenario": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/scenario.json",
+        "sha256": "9b3d9df5bc9d7388e13f7c0134a927b5621fe5487fea7f7a7d8be50c13bbe37a"
+      },
+      "delivered_input": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/sdl-input.txt.delivered",
+        "sha256": "b6158b82838ffb5bcddc11aab8bcc2b366ade6a6ad00f9ce64d52150538d0e7d"
+      },
+      "captured_recipe": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/captured-input-manifest.json",
+        "sha256": "c9d32e89cab287fcd62aa0e06211131af41aa57b21cb008a9154b99a7d09d55d"
+      },
+      "libraries": {
+        "path": "build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/loaded-libraries.json",
+        "sha256": "6fec8f0771afb2d4f001ee18b6f4e54da7379f2a03e4238a2ebdcb2a12b262b0"
+      },
+      "observed_environment": {
+        "process": {
+          "pid": 51288,
+          "start_ticks": 905542,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-gain-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5f5df481c85421c1b616aa46fda368840b0118b1438ee5c3298aa0c361598f2c"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "x11",
+          "SDL_AUDIODRIVER": "dummy",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/security-use/sanitized-final-security-level-restart-01/sdl-input.so"
+        }
+      }
+    }
+  },
+  "visual_inspection": [
+    {
+      "path": "build/oblivion-compat/security-use/normal-visual-inspection.json",
+      "sha256": "f8ce446b86a5780281c5a1233ae130b0c99108a27ac70835da1640b4047039b3"
+    },
+    {
+      "path": "build/oblivion-compat/security-use/sanitized-visual-inspection.json",
+      "sha256": "27417ad2b74eaadea0d40e59f0dafffdd8735291f06ff70acd7ba58b6737fbe9"
+    }
+  ],
+  "evidence_reuse": {
+    "normal_first_three_courses": "Accepted pre-tooltip binary183b45ea2177b2136dc2e13954deb2f61e79bd9529702569bf461b25c26f47e6; same XP/lock implementation. The subsequent production change adds compiled tooltip defaults. Final normal level-gain/restart and all sanitizer courses use the corrected binary.",
+    "supplemental_source_checks": "Normal/sanitized integration01 and normal-focused01 remain in their original directories; final required checks above supersede them.",
+    "post_engine_check_changes": "Five byte-identical sanitized recipe variants copied from actual runtime inputs; Python-final-recipes01 verifies the expanded source. Closure documentation follows engine checks; production hashes are verified unchanged."
+  },
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/security-use/normal-security-use-baseline-01",
+      "reason": "Original pre-XP implementation logged seven failures with Security5/progress0. Unlock-dependent recipe failed; no accepted save."
+    },
+    {
+      "path": "build/oblivion-compat/security-use/normal-security-level-crossing-01",
+      "reason": "Direct ordinary route hit a stone partition; no attempt."
+    },
+    {
+      "path": "build/oblivion-compat/security-use/normal-security-level-crossing-02",
+      "reason": "Waypoint loop ended short of target; no attempt."
+    },
+    {
+      "path": "build/oblivion-compat/security-use/normal-security-level-crossing-03",
+      "reason": "Actual failure reached Security6 and saved expected counters, then Inventory opening exposed missing iLevelUp01Mult; not accepted. Corrected by original compiled defaults and regression."
+    },
+    {
+      "path": "build/oblivion-compat/security-use/normal-security-ui-inspect-01",
+      "reason": "Mouse replay did not select Stats and native screenshot timed out. External inspection showed Inventory only. Controller trigger route later opened Stats; no visual percentage claim."
+    },
+    {
+      "path": "build/oblivion-compat/security-use/sanitized-integration-02",
+      "reason": "79 graphics/input tests failed with x11 not available. All79 pass on dedicateddisplay187 (focused03), full2278 pass on dedicateddisplay188 (integration04). No sanitizer report in this environmental failure."
+    },
+    {
+      "path": "build/oblivion-compat/security-use/sanitized-final-security-cancel-01",
+      "reason": "ASan runtime preload order rejected launch before content loaded; no gameplay."
+    },
+    {
+      "path": "build/oblivion-compat/security-use/sanitized-final-security-cancel-02",
+      "reason": "Normal30-second navigation limit expired during healthy sanitizer approach; no attempt. Corrected long-limit recipe passes Cancel03."
+    }
+  ],
+  "acceptance_layers": {
+    "structural": "Raw master audits identify both unowned temporary child references, actual lock metadata, cell, native SKIL/GMST and typed base door fields.",
+    "compiler": "Both engine builds and exact inventories pass; supplemental ordinary-use cap/modifier/shared-save and native tooltip regressions pass.",
+    "semantic": "Actual native/shared skill/counter values and inventory agree across saved payloads, Lua observations and fresh process restart; serialized native payload round-trips exactly.",
+    "original_game": "Reused original failure/skill-gain observation plus fresh hash-identified compiled multiplier constructor checks; exact per-attempt use-slot/scaling remains uncertified.",
+    "runtime": "Five normal and five sanitizer normal-input courses, using only earned stock and original references; no fork grants/stat/position setters. Renderer screenshots inspected."
+  },
+  "limits": [
+    "1.5XP from authored use slot0 is a reasonable bounded award; no exact native action/use-slot or probability certification.",
+    "Ordinary-use cap100 has focused engine coverage; real level5-to6 crossing and minor-skill counters have gameplay coverage, not a full class/mastery/skill matrix.",
+    "General skill-use/tutorial-use tracking, notifications, full character leveling, manual tumblers/Skeleton Key and broader content-driven acceptance/expedition return remain open. Historical M12/M13 backend acceptance is unchanged.",
+    "Stats tab renders after the real gain; Security row/percentage tooltip remains below captured viewport. Native normalization is verified through the shared helper and read-only Lua/save evidence, not a visible percentage reading.",
+    "Engine sanitizer gates enable leak detection; rendered sanitizer courses disable it and do not certify rendered leak freedom."
+  ],
+  "continuation": {
+    "save": "build/oblivion-compat/security-use/normal-final-security-level-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "2a961a70f39988b4e4ade170ed8b7353259a97718ce982f9beb589094f29ccd2",
+    "security": 6,
+    "experience": 0.10620927810668945,
+    "picks": 6,
+    "health": 53.00106430053711,
+    "gate049bbc": "open/unlocked",
+    "gate049bba": "locked20 after one failed attempt",
+    "advancement": "Agility1, Stealth1, per-skill1, major level-progress0"
+  }
+}

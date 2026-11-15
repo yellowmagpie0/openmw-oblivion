@@ -1,0 +1,18 @@
+{
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "winning_skill": {
+    "path": "build/oblivion-compat/acrobatics-use/winning-skill-audit.json",
+    "sha256": "13361ed24fd83e28671c2fce5a74e3b5936032199286ccc2abfa8b76a8faad29"
+  },
+  "dispatcher": {
+    "path": "build/oblivion-compat/acrobatics-use/original-use-report.json",
+    "sha256": "bc8fd4d732f24f7ce25a9405516fe3c253ce3846df89d91973b0845d0ec3d7e2"
+  },
+  "cases": 30,
+  "expected": "Acrobatics26/SKIL04b, Speed4/Stealth2; primary0.3 secondary3. Primary jump only in this implementation.",
+  "limits": [
+    "Original668C30 executes with supplied skill lookup/base getter and captured final publication sink. No complete original jump caller or original live jump.",
+    "Actual original-content physics-admitted completed jump and existing callback ownership establish the runtime integration; no exact arithmetic/random-sequence claim."
+  ]
+}

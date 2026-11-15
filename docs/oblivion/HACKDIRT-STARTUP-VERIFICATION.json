@@ -1,0 +1,65 @@
+{
+  "scope": "Hackdirt pre-quest startup and GetTalkedToPC dispatcher repair",
+  "goal_complete": false,
+  "source_head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+  "tested_source_fingerprint": "3b72b6cf94d8f895786c0751e30eeef920149fda6a82f777df8339a3bed813b2",
+  "runtime_binary_sha256": "11c1aa18817ab92d33050c735762a8df8a65995f00697baf80235ef6f5c6a4e5",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "evidence_root": "build/oblivion-compat/hackdirt",
+  "normal_engine": {
+    "focused": {
+      "path": "talked-query-focused-01",
+      "passed": 1
+    },
+    "related": {
+      "path": "talked-dialogue-regression-01",
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0,
+      "inventory_matches": true
+    }
+  },
+  "oracle": {
+    "path": "inspection-01/talked-oracle.json",
+    "passed": 8,
+    "entry": "0x502b00",
+    "query": "0x4f4b10",
+    "boundary_stubs": [
+      "actor virtual +0x190 identity",
+      "actor virtual +0x7c talked flag"
+    ],
+    "flag_write_and_persistence_verified": false
+  },
+  "runtime": {
+    "path": "chorrol-start-02",
+    "passed": true,
+    "exit_code": 0,
+    "compiled_units": 9992,
+    "compilation_failures": 0,
+    "script_diagnostics": 0,
+    "quest_stage": 0,
+    "darma_alive": true,
+    "seedneeus_alive": true,
+    "gettalkedtopc_calls": 21,
+    "startconversation_calls": 1,
+    "greetPC": 1,
+    "startDay": 0,
+    "capture_inspected": true,
+    "dialogue_opened": false
+  },
+  "retained_failure": {
+    "path": "chorrol-start-01",
+    "reason": "17 unsupported GetTalkedToPC diagnostics in original Dar-Ma script"
+  },
+  "next_action": "Support StartConversation targeting the Player through the native dialogue UI; verify original Dar-Ma greeting result starts the introduction timer. Do not inject a stage or timer.",
+  "remaining_gates": [
+    "Document accepted playable pre-pickup Chorrol setup and controls",
+    "Original introduction, elapsed days, disappearance and Seed-Neeus acceptance",
+    "Overland travel and one original investigation route",
+    "Cavern entry and combat against original hostile inhabitants",
+    "Rescue Dar-Ma and original follower continuation",
+    "Return and original successful stage-100 completion/reward",
+    "Quest and follower save/reload in fresh processes",
+    "Required integration and sanitizer checks after the next implementation batch"
+  ]
+}

@@ -1,0 +1,482 @@
+{
+  "status": "accepted bounded original novice Bonemeal ingestion; full M16 and expedition remain open",
+  "milestone": "M16 harmful ingredient first effect and owned saved potency",
+  "implementation_commit": "6140e00da37b681995e60dba8d24f2866d84c90b",
+  "preflight_commit": "3dfd07cc14e9ceb60ee680b7a8ee6a1cbd302b82",
+  "content": {
+    "ingredient": "content:oblivion.esm:01ebff Bonemeal",
+    "source": "Original Skeleton04bb63/base084b1a, genuinely defeated with carried Flare and looted",
+    "input_save": "build/oblivion-compat/next-content/normal-bonemeal-acquire-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "input_sha256": "55cfe393ca9a3db8f669b82fda9615ba230804f5ae12dbe16a21c2bd8baeba68",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "behavior": {
+    "rule": "Observed novice Damage Fatigue1 per second for3 seconds; stored signed rate-1. Food REFA retains5 per second for1 second.",
+    "admission": "Non-food first DGFA15/1 Self/area0/AV10, original definition including base cost4.4; current Alchemy5/Luck50/zero Magic Resistance. Other non-food skill/potency domains remain unsupported.",
+    "inventory": "Bonemeal1->0 once; every unrelated inventory instance/count/condition/slot retained.",
+    "ownership": "Schema98 stores source ingredient, elapsed, resolved signed magnitude and duration independently of consumed stock or later caster skill.",
+    "migration": "Old92-97 food timers retain5/1. Pre98 cannot serialize nondefault resolved potency. Legacy JSON omitted script_owner normalizes only to null.",
+    "continuation": "Pending timer resumes only its remaining contribution. Completed restart emits no ingredient application and never spends again.",
+    "state": "Original Skeleton corpse remains empty and Player-credited; prior powers, Amulet script identity/locals and recovered-arrow tombstone persist.",
+    "regeneration": "Ordinary Fatigue regeneration stays active. Audits distinguish negative ingredient contribution from net bar movement and check native/facade agreement."
+  },
+  "layers": {
+    "independent_native_oracle": {
+      "path": "docs/oblivion/BONEMEAL-INGREDIENT-ORACLE.json",
+      "sha256": "5c0835665e6e5bdee2c0049572c14ef3b1f0c1b68474626ee481b561678e0acb"
+    },
+    "raw_winning_records": {
+      "path": "build/oblivion-compat/bonemeal/winning-records-enit-audit.json",
+      "sha256": "40c49d62dbbaf6d5d268f6bc3991ceb716d25ed513dd3401c70b290b5b162bd0"
+    },
+    "typed_parser_reuse": {
+      "path": "build/oblivion-compat/bonemeal/typed-loader-reuse.json",
+      "sha256": "b13bd4074d0192f80ed5bf37527a2243ea08177f48b72cede2b3da10da7f5fa7"
+    },
+    "normal_gates": {
+      "path": "build/oblivion-compat/bonemeal/normal-integration-01/verification.json",
+      "sha256": "fe14148eb839b3bc3a4e43d50b07c4c9248f705e0dec872a29cd93c2a1d39a43"
+    },
+    "sanitized_gates": {
+      "path": "build/oblivion-compat/bonemeal/sanitized-integration-01/verification.json",
+      "sha256": "ba23bd96d00e2ee51988c6fef07bdb64daa74bb54b2941013c4286f9408bbf53"
+    },
+    "frozen_code": {
+      "path": "build/oblivion-compat/bonemeal/frozen-acceptance-code.json",
+      "sha256": "8cf487e0b3be6857dcead849023a09df6ca3e046790402085ca3b2ce78f1e9e3"
+    },
+    "normal_to_sanitized_source_proof": {
+      "path": "build/oblivion-compat/bonemeal/normal-to-corrected-source-proof.json",
+      "sha256": "c9b34431baae20d4cf69eda87ed35ca44912e27a09273b3beceda58fe7797fb2"
+    },
+    "source_mapping": "Normal and sanitizer production C++, codec Python, tests and staging recipes are identical. Only actual-course capture/readiness/simulation-wait settings and the read-only auditor changed after normal gates; reconstructing the old bytes exactly reproduces the normal fingerprint."
+  },
+  "counts": {
+    "normal_components": 3290,
+    "normal_engine": 2276,
+    "python": 611,
+    "sanitized_components": 3290,
+    "sanitized_engine": 2276,
+    "actual_processes": 8
+  },
+  "runtime": {
+    "normal": {
+      "game_sha256": "b60abba201b28f77ef854e36febf959e46b862a327b3cf3ec08d84bb42ca5442",
+      "runs": {
+        "use": {
+          "course": "build/oblivion-compat/bonemeal/normal-use-final-02",
+          "audit": {
+            "path": "build/oblivion-compat/bonemeal/normal-use-final-02/course-audit.json",
+            "sha256": "00343ba8077ee49e14cdd5d3d8186bd3d810a168d05db4f1f18ee38806f096c9"
+          },
+          "semantic": {
+            "path": "build/oblivion-compat/bonemeal/normal-use-final-02/semantic-verification.json",
+            "sha256": "832123c5e5ce9eaac4f9d249c99e170edf4d8827a7f46c679a1e7a95136dfccf"
+          },
+          "process": {
+            "pid": 1346361,
+            "start_ticks": 207137819,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/normal-use-final-02/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-bonemeal-acquire-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "b60abba201b28f77ef854e36febf959e46b862a327b3cf3ec08d84bb42ca5442"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/bonemeal/normal-use-final-02/loaded-libraries.json",
+            "sha256": "1ceaf3ac9f839646061e11bb6111fb447f97a8def532695140b9d3770d298ea0"
+          },
+          "log": {
+            "path": "build/oblivion-compat/bonemeal/normal-use-final-02/process.log",
+            "sha256": "a617352dfcdd568e8574f02576c16e16c15daf0d54986046a93fa9b8e0bb3e47"
+          },
+          "save": {
+            "path": "build/oblivion-compat/bonemeal/normal-use-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "db5460cb32c5d8bca5160ae1a873f81e265790d786be35f9e9541023aa4e34a7"
+          },
+          "effect_contribution": -0.2890623,
+          "elapsed_before": 0,
+          "elapsed_after": 0.2890625,
+          "saved_pending": [
+            {
+              "ingredient": "content:oblivion.esm:01ebff",
+              "elapsed": 0.2890625,
+              "magnitude": -1.0,
+              "duration": 3.0
+            }
+          ],
+          "source_schema": 97
+        },
+        "pending_restart": {
+          "course": "build/oblivion-compat/bonemeal/normal-pending_restart-final-02",
+          "audit": {
+            "path": "build/oblivion-compat/bonemeal/normal-pending_restart-final-02/course-audit.json",
+            "sha256": "c654b506a1f4f2da8fb244a8c0b53e2504e526c7b20b115ba3349dd33d86edef"
+          },
+          "semantic": {
+            "path": "build/oblivion-compat/bonemeal/normal-pending_restart-final-02/semantic-verification.json",
+            "sha256": "3e0be3954a970c6d66af62f8b715160f92180a90aafd1765a095ecec34e0d538"
+          },
+          "process": {
+            "pid": 1346503,
+            "start_ticks": 207144870,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/normal-pending_restart-final-02/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/normal-use-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "b60abba201b28f77ef854e36febf959e46b862a327b3cf3ec08d84bb42ca5442"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/bonemeal/normal-pending_restart-final-02/loaded-libraries.json",
+            "sha256": "ec8c647f932984d4fb1086e16f3c57ec4b240565dc0dfac1f576c94f657eab33"
+          },
+          "log": {
+            "path": "build/oblivion-compat/bonemeal/normal-pending_restart-final-02/process.log",
+            "sha256": "c7bb5dc1adbc62857a9933d9ed576c3699890ffd13eef59da52263a2f8a60734"
+          },
+          "save": {
+            "path": "build/oblivion-compat/bonemeal/normal-pending_restart-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "cff60454f08fd12e42c4202174fe28cdfc5fd43b29b693060be6f8a9a928b7d9"
+          },
+          "effect_contribution": -2.7109411,
+          "elapsed_before": 0.2890625,
+          "elapsed_after": 3,
+          "saved_pending": [],
+          "source_schema": 98
+        },
+        "completed_restart": {
+          "course": "build/oblivion-compat/bonemeal/normal-completed_restart-final-02",
+          "audit": {
+            "path": "build/oblivion-compat/bonemeal/normal-completed_restart-final-02/course-audit.json",
+            "sha256": "ea64c7ff881c56512914565873a46ca69ca79bf01edd8d67b24b9a156df083c8"
+          },
+          "semantic": {
+            "path": "build/oblivion-compat/bonemeal/normal-completed_restart-final-02/semantic-verification.json",
+            "sha256": "8205236575f2a51a30be73ce150191c2170db6772dcc6219dde5c1dc245fec1d"
+          },
+          "process": {
+            "pid": 1346602,
+            "start_ticks": 207151037,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/normal-completed_restart-final-02/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/normal-pending_restart-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "b60abba201b28f77ef854e36febf959e46b862a327b3cf3ec08d84bb42ca5442"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/bonemeal/normal-completed_restart-final-02/loaded-libraries.json",
+            "sha256": "ad506041bfe3eb93948e3fed90c2fcede3f257f3b3ece85aa2ae7207516c9be6"
+          },
+          "log": {
+            "path": "build/oblivion-compat/bonemeal/normal-completed_restart-final-02/process.log",
+            "sha256": "3b9f686fa81ed37d7ce24b34fdedffc3fa4e6b57ee42db39823fbdf700b0ff7f"
+          },
+          "save": {
+            "path": "build/oblivion-compat/bonemeal/normal-completed_restart-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "e75b5f5a47873a7461627091a816904c12f818a9320e0af3b6d585de072f1959"
+          },
+          "effect_contribution": 0,
+          "elapsed_before": 3,
+          "elapsed_after": 3,
+          "saved_pending": [],
+          "source_schema": 98
+        },
+        "food_regression": {
+          "course": "build/oblivion-compat/bonemeal/normal-food_regression-final-02",
+          "audit": {
+            "path": "build/oblivion-compat/bonemeal/normal-food_regression-final-02/course-audit.json",
+            "sha256": "308e6468067115b52b757c716d2a833aea9481f0894bd0bd379d917f1074ca54"
+          },
+          "semantic": {
+            "path": "build/oblivion-compat/bonemeal/normal-food_regression-final-02/semantic-verification.json",
+            "sha256": "21907d04698f55126722c9ded4cd9e5bad9b5b2a26a491915db224c6ddc6ce5e"
+          },
+          "process": {
+            "pid": 1346698,
+            "start_ticks": 207157202,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/normal-food_regression-final-02/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-use-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "b60abba201b28f77ef854e36febf959e46b862a327b3cf3ec08d84bb42ca5442"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/bonemeal/normal-food_regression-final-02/loaded-libraries.json",
+            "sha256": "b0af75fdcff08fecfc982f77a135bb4c2dff34970eabb1a79b76d594c5109c0c"
+          },
+          "log": {
+            "path": "build/oblivion-compat/bonemeal/normal-food_regression-final-02/process.log",
+            "sha256": "0f6e8455828b306a95491758fb3e5e1fff65254d1cd9200bc656f01a4185b966"
+          },
+          "save": {
+            "path": "build/oblivion-compat/bonemeal/normal-food_regression-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "e52762999aaba69465583f718a789f88cc0696f99b17012edd82c53e5db7227a"
+          },
+          "effect_contribution": 3.544921,
+          "elapsed_before": 0.291015625,
+          "elapsed_after": 1,
+          "saved_pending": [],
+          "source_schema": 92
+        }
+      }
+    },
+    "sanitized": {
+      "game_sha256": "de20498df9fb2ca17f10da17696de433f24f53b0deff7637f5604f76a110767a",
+      "runs": {
+        "use": {
+          "course": "build/oblivion-compat/bonemeal/sanitized-use-final-02",
+          "audit": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-use-final-02/course-audit.json",
+            "sha256": "70a97bfdc774632a008e92f026560fa273035158a4a18c32490e7ba5db0eff4b"
+          },
+          "semantic": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-use-final-02/semantic-verification.json",
+            "sha256": "c463f20cbd3224687fd3779a83a1f31b9563ab36fae05fd295c150722a262bc4"
+          },
+          "process": {
+            "pid": 1356368,
+            "start_ticks": 207661531,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/sanitized-use-final-02/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/next-content/normal-bonemeal-acquire-loot-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "de20498df9fb2ca17f10da17696de433f24f53b0deff7637f5604f76a110767a"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-use-final-02/loaded-libraries.json",
+            "sha256": "e8e931992689b5882ff437ab991780f0963d4c4a2558821c13ac393fdefb4182"
+          },
+          "log": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-use-final-02/process.log",
+            "sha256": "fc8705314e627b2c2bb8f83725a271f3f2506dc11a895af40f0d0965279716e8"
+          },
+          "save": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-use-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "bed36b04606a533cb9a95a34f517f4a5381837d115b0a1484465279de77a6e1a"
+          },
+          "effect_contribution": -0.141602,
+          "elapsed_before": 0,
+          "elapsed_after": 0.1416015625,
+          "saved_pending": [
+            {
+              "ingredient": "content:oblivion.esm:01ebff",
+              "elapsed": 0.1416015625,
+              "magnitude": -1.0,
+              "duration": 3.0
+            }
+          ],
+          "source_schema": 97,
+          "sanitizer_environment": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-use-final-02/observed-sanitizer-environment.json",
+            "sha256": "c6820519510c79b4d2704e4b341eced1fc8624b055cc4bc08f1a235e9f586066"
+          }
+        },
+        "pending_restart": {
+          "course": "build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03",
+          "audit": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03/course-audit.json",
+            "sha256": "1b6f249496e5601d97e6c784521ad2d2ecfd73287edd9e4db7108664b0cb7deb"
+          },
+          "semantic": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03/semantic-verification.json",
+            "sha256": "655655b27d755b32b424680947e84e20d70b8a13c1be56f6b11d94f058fdbaa0"
+          },
+          "process": {
+            "pid": 1357008,
+            "start_ticks": 207734539,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/sanitized-use-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "de20498df9fb2ca17f10da17696de433f24f53b0deff7637f5604f76a110767a"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03/loaded-libraries.json",
+            "sha256": "c16a9b90e3a05deaed52d4bf20b773259faf08284cb6c15c4c9101ab7e96db5d"
+          },
+          "log": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03/process.log",
+            "sha256": "bb3db3ab54cbe58a75f249d19455e2e8d56e33c078c919812479152688665b62"
+          },
+          "save": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "b70268ee3992e63a79f682c3f2fa0e190cc3ad91662e36d900fcdbec6eb22891"
+          },
+          "effect_contribution": -2.8584047999999997,
+          "elapsed_before": 0.1416015625,
+          "elapsed_after": 3,
+          "saved_pending": [],
+          "source_schema": 98,
+          "sanitizer_environment": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03/observed-sanitizer-environment.json",
+            "sha256": "e3751cf3c65cc933d97ae61f08c9407032e6a10c1b63a4232a539902065a4cd9"
+          }
+        },
+        "completed_restart": {
+          "course": "build/oblivion-compat/bonemeal/sanitized-completed_restart-final-03",
+          "audit": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-completed_restart-final-03/course-audit.json",
+            "sha256": "aaf72bee8a9e95ae40828557fff75c53e87531345f69163ce5c2a786490548bc"
+          },
+          "semantic": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-completed_restart-final-03/semantic-verification.json",
+            "sha256": "cb967d039c9989449047a4e1726f01398e4a86dc60212b19a85234a81b6eac2f"
+          },
+          "process": {
+            "pid": 1357227,
+            "start_ticks": 207763987,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/sanitized-completed_restart-final-03/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/sanitized-pending_restart-final-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "de20498df9fb2ca17f10da17696de433f24f53b0deff7637f5604f76a110767a"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-completed_restart-final-03/loaded-libraries.json",
+            "sha256": "8ab778446f4be2a141d3645d8157ae0fdfa7d69672abecf0cb9d68cd7d28cbea"
+          },
+          "log": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-completed_restart-final-03/process.log",
+            "sha256": "e665d7457d93ad1ce8a9edcf79412dc23d004b8d70854441ce995433f199ca1b"
+          },
+          "save": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-completed_restart-final-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "5bdcf51e4bb36a64c534ce25febee92d2a6a4285ef4e88162f78bd7d042146d7"
+          },
+          "effect_contribution": 0,
+          "elapsed_before": 3,
+          "elapsed_after": 3,
+          "saved_pending": [],
+          "source_schema": 98,
+          "sanitizer_environment": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-completed_restart-final-03/observed-sanitizer-environment.json",
+            "sha256": "9ba476757a84f70e7cbf5e95475aaa6d53062a9be4aba03ba52faedbb0f76071"
+          }
+        },
+        "food_regression": {
+          "course": "build/oblivion-compat/bonemeal/sanitized-food_regression-final-03",
+          "audit": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-food_regression-final-03/course-audit.json",
+            "sha256": "69a26d52079152d2f4762810088e67578f0793246ae83a2e6320bbebb167cd7d"
+          },
+          "semantic": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-food_regression-final-03/semantic-verification.json",
+            "sha256": "8a5533c972e6d1f36df4563478d3bb4313613abefd166bdcee4b380f84035a1f"
+          },
+          "process": {
+            "pid": 1357452,
+            "start_ticks": 207791514,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/bonemeal/sanitized-food_regression-final-03/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ingredient-use/lettuce-use-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "de20498df9fb2ca17f10da17696de433f24f53b0deff7637f5604f76a110767a"
+          },
+          "libraries": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-food_regression-final-03/loaded-libraries.json",
+            "sha256": "44c684884214d9ba93aa7870e3d57b28096d79b9aa37b97849e41afd176b77fb"
+          },
+          "log": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-food_regression-final-03/process.log",
+            "sha256": "c311e5dc1dd4125095d359a8d193eb7eb138eff6ed7ecde82c5fc20dbee78d14"
+          },
+          "save": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-food_regression-final-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "sha256": "f3b3ac6bec16dc4a7d292101df26e464067ea7d592d1c65f6ad82948992620c1"
+          },
+          "effect_contribution": 3.544921,
+          "elapsed_before": 0.291015625,
+          "elapsed_after": 1,
+          "saved_pending": [],
+          "source_schema": 92,
+          "sanitizer_environment": {
+            "path": "build/oblivion-compat/bonemeal/sanitized-food_regression-final-03/observed-sanitizer-environment.json",
+            "sha256": "56a627cad62df9620953e143bed8a1c0785c2fc3e16e30c00059cdd99b2eb4a9"
+          }
+        }
+      }
+    }
+  },
+  "current_genuine_continuation": {
+    "path": "build/oblivion-compat/bonemeal/normal-completed_restart-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "e75b5f5a47873a7461627091a816904c12f818a9320e0af3b6d585de072f1959"
+  },
+  "sanitizer_scope": {
+    "unit": "ASan/UBSan; leak detection enabled; private Mesa/X11 display.",
+    "rendered": "ASan/UBSan; leak detection disabled. Exact loaded-library/environment/process records retained."
+  },
+  "retained_failures": {
+    "focused_python": "normal-focused-components-python-01:17 schema guard/recipe errors, fixed with current98 declarations;72 focused and611 full pass without weakening ownership/mutation checks.",
+    "capture_recipe": {
+      "path": "build/oblivion-compat/bonemeal/post-gate-recipe-correction.json",
+      "sha256": "1224591fc9140ca391c5826c4a872f9cb8294d96187bb10d63f5a56d4b3dead0"
+    },
+    "legacy_auditor": {
+      "path": "build/oblivion-compat/bonemeal/post-gate-auditor-correction.json",
+      "sha256": "eac7e3f5fd61c3b6068fecc7cfc03271f69421974f0afd1c5159b518941f28e1"
+    },
+    "instrumented_readiness": {
+      "path": "build/oblivion-compat/bonemeal/post-gate-sanitized-timeout-correction.json",
+      "sha256": "581852a40666266b967e83e489fdd8404bb476498b84cc7e108df2da2b42389f"
+    },
+    "simulation_wait": {
+      "path": "build/oblivion-compat/bonemeal/post-gate-simulation-wait-correction.json",
+      "sha256": "36560f0d8ff5ded08d96fec117d47ecb84cce5fb77cbaed07356c0c7d405f3ae"
+    },
+    "native": "High Alchemy continues damage beyond initial reading; not treated as a completed novice measurement. Fresh-load novice and two-use probes isolate accepted behavior. Owned X server was already gone after Steam shutdown; final exit/configuration/input checks pass."
+  },
+  "outside_scope": [
+    "General Alchemy/Luck potency, higher known effects and arbitrary ingredient profiles.",
+    "Alchemy experience, eaten-ingredient statistics and brewing.",
+    "General resistance/absorption and active-effects presentation.",
+    "Other recipients, time-skip matrices, full M16/M15 and full expedition acceptance."
+  ]
+}

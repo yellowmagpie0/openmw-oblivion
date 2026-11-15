@@ -1,0 +1,26 @@
+{
+  "scope": "TES4 CONT scene discovery through nearby.containers",
+  "original": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "reference": "content:oblivion.esm:06efcf",
+    "base": "content:oblivion.esm:024945",
+    "editor_id": "SackClutterMiddle01",
+    "name": "Sack",
+    "cell": "content:oblivion.esm:0352a9",
+    "record_payload_sha256": "70504d67f1647cdf0539ad6df477dc6084641ddb9d25f8a499a7519b7bb6956d"
+  },
+  "baseline": "build/oblivion-compat/gold-drop/normal-sack-approach-01: enabled saved CONT absent from nearby.containers before any movement or activation",
+  "acceptance": [
+    "Real original enabled Sack appears exactly once in nearby.containers with native record ID and ESM4Container type, original position and nonempty model bounds.",
+    "Ordinary F5 save, exit, fresh-process load and F5 resave preserve discovery without duplicate membership.",
+    "Player inventory, equipment/script ownership, health, skills, quests, credited deaths, dynamic allocator and untouched Sack stock are conserved.",
+    "Normal and ASan/UBSan runtime courses pass."
+  ],
+  "limits": [
+    "No loot activation or roll in this discovery course.",
+    "No TES4 Container inventory Lua bindings, MCP authoring, spawning, enable/disable or cell-transition coverage.",
+    "Broader milestone acceptance remains open."
+  ],
+  "manifest": "docs/oblivion/runtime/original-native-container-discovery.json",
+  "auditor": "scripts/verify_native_container_discovery.py"
+}

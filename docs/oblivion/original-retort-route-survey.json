@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "name": "Original Novice Retort: read-only walking route survey",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\nat 0 command content:oblivion.esm:04e936 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal elapsed=0\nreturn {{engineHandlers={{onFrame=function(dt)\n elapsed=elapsed+dt;if elapsed<1 then return end;elapsed=0\n assert(not types.Actor.isDead(self),'Player died during Retort route inspection')\n local target=nil\n for _,obj in ipairs(nearby.items) do if obj.recordId==core.getFormId('Oblivion.esm',0xc4f) then target=obj;break end end\n if not target then print('RetortRoute target absent');return end\n print('RetortRoute apparatus type API present='..tostring(types.ESM4Apparatus~=nil))\n print('RetortRoute target original=true player='..tostring(self.position)..' target='..tostring(target.position))\n local bounds=types.Actor.getPathfindingAgentBounds(self)\n local flags=nearby.NAVIGATOR_FLAGS.Walk+nearby.NAVIGATOR_FLAGS.OpenDoor+nearby.NAVIGATOR_FLAGS.UsePathgrid\n local offsets={{util.vector3(0,0,0),util.vector3(100,0,0),util.vector3(-100,0,0),util.vector3(0,100,0),util.vector3(0,-100,0)}}\n for i,offset in ipairs(offsets) do\n  local dest=nearby.findNearestNavMeshPosition(target.position+offset,{{agentBounds=bounds,includeFlags=flags,searchAreaHalfExtents=util.vector3(80,80,256)}})\n  if dest then\n   local status,path=nearby.findPath(self.position,dest,{{agentBounds=bounds,includeFlags=flags,destinationTolerance=64}})\n   print('RetortRoute candidate='..i..' status='..tostring(status)..' count='..#path..' destination='..tostring(dest))\n   if status==nearby.FIND_PATH_STATUS.Success and #path>0 then\n    for n,point in ipairs(path) do print('RetortRoute waypoint='..n..' position='..tostring(point)) end\n    print('RetortRoute ordinary navigation ready');return\n   end\n  else print('RetortRoute candidate='..i..' no nearest navigation position') end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "RetortRoute target original=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "RetortRoute ordinary navigation ready",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "screenshot",
+      "name": "retort-original-route-start.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "RetortRoute ordinary navigation ready",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "fWortChanceValue",
+    "Water Breathing",
+    "Dangling inventory script instance",
+    "Failed to save game"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-retort-route-survey",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

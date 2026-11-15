@@ -1,0 +1,839 @@
+{
+  "status": "Accepted bounded worn original Rusty Iron Cuirass native drop/cold world/pickup/cold equip/final cold inventory in normal and ASan/UBSan; broader M15/M18 remain open.",
+  "parent_commit": "a0b5a5cba587ea536717cbfc8372a28f563aab42",
+  "contract": "CUIRASS-DROP-CONTRACT.json",
+  "oracle": "CUIRASS-DROP-ORACLE.json",
+  "schema": 103,
+  "behavior": "Ordinary drag unequips and drops original worn Cuirass1->0 at condition19.6576748 into ARMOkey8/body + CGHeavyArmorScript worldowner; next9. Cold pickup0->1 moves script to inventory9/next10, fires original OnAdd once toMQ01heavyArmor1; separate cold paperdoll equip fires original OnEquip once toheavyArmorEquip1. Final cold equipped inventory stable; oldkeys1..7 retained, key8 retired/bodyremoved.",
+  "layers": {
+    "structural": "Existing typed ARMO variant admits body armor and durability; prepare/commit stateless script creation or existing-owner transfer jointly with reference/model/body/Lua/inventory publication. Pickup transfer limited to native dropped ARMO and existing Nirnroot domain. No authoring support change.",
+    "compiler_and_regression": [
+      {
+        "path": "build/oblivion-compat/cuirass-drop/focused-normal-01/verification.json",
+        "sha256": "a346ad3b054c5389a7d85a82c0a97098e6391f3cbe6f8b4a51a9322f03f29109",
+        "source": {
+          "head": "a0b5a5cba587ea536717cbfc8372a28f563aab42",
+          "source_fingerprint": "522e576957be9a66fcfafd3b3e60ad86311ea9bad3f29fc3db21834d00f538f3"
+        },
+        "results": {
+          "engine": {
+            "executed": 342,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*:*ScriptTransfer*",
+            "binary_sha256": "9e31cae4774307ff468844887dadc017814fac0fe662346a789665b5e5ec30f2",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "65c34c26b8a8d45ded4d6f2c2de965a4123e6000c9206ca87cd2940114b7bed4",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 618,
+            "passed": true,
+            "log_sha256": "c1657a95732b42927050234c92f56f18a593a95ce3909b81bf527c71a8bb6cd9"
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/focused-sanitized-01/verification.json",
+        "sha256": "8cce86fcc51ab20bd24e26e30c38da9f3dbf0dce7f31c2e31912fea66fb1a74d",
+        "source": {
+          "head": "a0b5a5cba587ea536717cbfc8372a28f563aab42",
+          "source_fingerprint": "522e576957be9a66fcfafd3b3e60ad86311ea9bad3f29fc3db21834d00f538f3"
+        },
+        "results": {
+          "engine": {
+            "executed": 342,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*Ragdoll*:*Loose*:*Drop*:*Pickup*:*HeightField*:*ScriptTransfer*",
+            "binary_sha256": "f7d9cabb04481559a0e20acbaf25632c2de260ce846bacf34a07cc6b7e90a37d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "fd3e6b17e77332a9e156ef845ce2b31c3768d14af2956f125268f6071d950f17",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-normal-01/verification.json",
+        "sha256": "249f594b6bccb09a385ab640771583e87b729efe39d2c5ae15b99d6bca7a8d50",
+        "source": {
+          "head": "a0b5a5cba587ea536717cbfc8372a28f563aab42",
+          "source_fingerprint": "522e576957be9a66fcfafd3b3e60ad86311ea9bad3f29fc3db21834d00f538f3"
+        },
+        "results": {
+          "engine": {
+            "executed": 2292,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "9e31cae4774307ff468844887dadc017814fac0fe662346a789665b5e5ec30f2",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "dc299fce7947179304fe22572882328178793c6597e1135528e2acdc8bf2822f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-sanitized-1/verification.json",
+        "sha256": "519ec46863be9d55c5d3869bcf017305937fed1c1c42305516ec64d3bc13aec5",
+        "source": {
+          "head": "a0b5a5cba587ea536717cbfc8372a28f563aab42",
+          "source_fingerprint": "522e576957be9a66fcfafd3b3e60ad86311ea9bad3f29fc3db21834d00f538f3"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "f7d9cabb04481559a0e20acbaf25632c2de260ce846bacf34a07cc6b7e90a37d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "be0bbe74e061fac87e27d975e2f1a44d8d04e3ff3e589c8be3570654cdfdb4fc",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-sanitized-2/verification.json",
+        "sha256": "b480b0e4b6d2ad975fd4ef30078080732cb654efb50f5d46a298808d6814dd31",
+        "source": {
+          "head": "a0b5a5cba587ea536717cbfc8372a28f563aab42",
+          "source_fingerprint": "522e576957be9a66fcfafd3b3e60ad86311ea9bad3f29fc3db21834d00f538f3"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "f7d9cabb04481559a0e20acbaf25632c2de260ce846bacf34a07cc6b7e90a37d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "6d2b33c41d2d3747edbe8f5f35ec7fd52e9761bce27d4567a866a8f0d89b268c",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-sanitized-3/verification.json",
+        "sha256": "ef83a76aeca6d9012eed2b84d14344d71e02619dd5912599aa849a331579bc8a",
+        "source": {
+          "head": "a0b5a5cba587ea536717cbfc8372a28f563aab42",
+          "source_fingerprint": "522e576957be9a66fcfafd3b3e60ad86311ea9bad3f29fc3db21834d00f538f3"
+        },
+        "results": {
+          "engine": {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "f7d9cabb04481559a0e20acbaf25632c2de260ce846bacf34a07cc6b7e90a37d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "7a71340869f0b43417de453810ceff3497a576e2f40a09efaac23d180baa4821",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-sanitized-4/verification.json",
+        "sha256": "439f3b7532f2729c802aa5f72b639cb4dfbabec64f33866dc5801f8e8edf0fde",
+        "source": {
+          "head": "a0b5a5cba587ea536717cbfc8372a28f563aab42",
+          "source_fingerprint": "522e576957be9a66fcfafd3b3e60ad86311ea9bad3f29fc3db21834d00f538f3"
+        },
+        "results": {
+          "engine": {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "f7d9cabb04481559a0e20acbaf25632c2de260ce846bacf34a07cc6b7e90a37d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "b93c024cdd0f6c86133761532dfc423e71ec1a996ca3b21fe89b89bda075c6dc",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    ],
+    "component_evidence_reused": {
+      "passed": true,
+      "reason": "Only engine/docs/runtime-auditor changes; component source/tests and exact binaries unchanged.",
+      "evidence": [
+        {
+          "mode": "normal",
+          "path": "build/oblivion-compat/iron-key-drop/integration-normal-01/verification.json",
+          "sha256": "dfe5b69dc8a2cc6c603fd238c3786e28f4589a4d387380ca609b1064dd9a2e72",
+          "original_source": {
+            "head": "e064d1c49b213c19d6ee2750472aed7d7fe96b24",
+            "source_fingerprint": "27577093b4e6d8b2f1854f71c95963a360b4337efb2ac2f9288565d2dba6656c"
+          },
+          "result": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "d789d321a548e4cf80940007a1f39c869368dab5175cc6874c3480f6cbfdde19",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "f09a4da083b4ac37167bb55fa82d309af0a97e59628bcc6cdb469cd862ae6c07",
+            "inventory_sha256": "ae8443738d2869a13b520182a423ecf263b2ed8741518a0fc319e5a1a61b22cd",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "binary": "build/components-tests"
+        },
+        {
+          "mode": "sanitized",
+          "path": "build/oblivion-compat/iron-key-drop/components-sanitized-01/verification.json",
+          "sha256": "32c567400cbcf2ccfd4a99bdb8103c6d72b5024e1b5fcbdac0b2d2c28724814a",
+          "original_source": {
+            "head": "e064d1c49b213c19d6ee2750472aed7d7fe96b24",
+            "source_fingerprint": "27577093b4e6d8b2f1854f71c95963a360b4337efb2ac2f9288565d2dba6656c"
+          },
+          "result": {
+            "executed": 3301,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "4435b48a130591268bef4510de95df0e3881f4ec76fda1ac71466952a68f483f",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c663474208e9c82ad43895db77cb1e319a285c2f55c97851cb1ef8b6040c49ac",
+            "inventory_sha256": "60cbbf968a22556ce62f8b924a73a5d5058dc75d4411dc869e0bf279af6b4081",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "binary": "build/m15-sanitize/components-tests"
+        }
+      ]
+    },
+    "exact_sanitized_engine_union": [
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-sanitized-1/engine.xml",
+        "count": 82,
+        "sha256": "be0bbe74e061fac87e27d975e2f1a44d8d04e3ff3e589c8be3570654cdfdb4fc"
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-sanitized-2/engine.xml",
+        "count": 82,
+        "sha256": "6d2b33c41d2d3747edbe8f5f35ec7fd52e9761bce27d4567a866a8f0d89b268c"
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-sanitized-3/engine.xml",
+        "count": 82,
+        "sha256": "7a71340869f0b43417de453810ceff3497a576e2f40a09efaac23d180baa4821"
+      },
+      {
+        "path": "build/oblivion-compat/cuirass-drop/integration-sanitized-4/engine.xml",
+        "count": 2046,
+        "sha256": "b93c024cdd0f6c86133761532dfc423e71ec1a996ca3b21fe89b89bda075c6dc"
+      }
+    ],
+    "semantic": "Independent original record, member and original script handler audit; exact schema103 payload roundtrips. Source hasMQ01flags0/0; only original pickup/equip callbacks produce1/0 then1/1, exactly one program owner and no replay on cold loads. All27skills/book progress/health/life/deaths/stages/counters/otherinventory retained. Full tick-zero physical snapshot tolerance1e-4 absolute/1e-6 relative.",
+    "actual_runtime": [
+      {
+        "mode": "normal",
+        "phase": "drop",
+        "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-drop-02",
+        "manifest": "docs/oblivion/original-cuirass-drop.json",
+        "manifest_sha256": "a28f55480843616cf12262e032c50fd78123838d1e4b052f8ad7ce25f0d65e1c",
+        "audit_sha256": "5fc2c69bf2dc3feadc311faa6b9033d5caf3c098d48de8b11808c96cd7b25b9e",
+        "source_sha256": "641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23",
+        "save_sha256": "53a9befe46e1d1c0a76849eb02e6a624be12b49f197349e8cc9a3854c2055c19",
+        "process": {
+          "pid": 921691,
+          "start_ticks": 18639580,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-drop-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2aad5fa99116b4d27d09efa52341266887c7ac05783d7e8df9837f5da8a3992c"
+        },
+        "tutorial_flags_before": [
+          0,
+          0
+        ],
+        "tutorial_flags_after": [
+          0,
+          0
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:native-reference:0000000000000008",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 9
+      },
+      {
+        "mode": "normal",
+        "phase": "world",
+        "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-world-02",
+        "manifest": "docs/oblivion/original-cuirass-world.json",
+        "manifest_sha256": "8572a090e10ff32233dd1b37f4fab89be75cf627b313b86f9e4b352d70bd54f6",
+        "audit_sha256": "555feff8c18a3afaeffd1006829d75699dcc3110ef639a7f2707e6c9672ea284",
+        "source_sha256": "53a9befe46e1d1c0a76849eb02e6a624be12b49f197349e8cc9a3854c2055c19",
+        "save_sha256": "b2c5af157c769dbd5af5b3e02667f8c38260583710843aef49d8382f59871c57",
+        "process": {
+          "pid": 922661,
+          "start_ticks": 18648434,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-world-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-drop-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2aad5fa99116b4d27d09efa52341266887c7ac05783d7e8df9837f5da8a3992c"
+        },
+        "tutorial_flags_before": [
+          0,
+          0
+        ],
+        "tutorial_flags_after": [
+          0,
+          0
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:native-reference:0000000000000008",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 9
+      },
+      {
+        "mode": "normal",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-pickup-02",
+        "manifest": "docs/oblivion/original-cuirass-pickup.json",
+        "manifest_sha256": "c22323150693761920588b8e717253f7364c2e2fe278ac4aa0ea7e7ade98d6e6",
+        "audit_sha256": "8207240ed2b4e97d22366a1d42905c7c05b24275608e5425aa413b15908dd4f3",
+        "source_sha256": "b2c5af157c769dbd5af5b3e02667f8c38260583710843aef49d8382f59871c57",
+        "save_sha256": "a14a3637513143d88f6d3b646a60cb65a8e18492e4e341a8bc351f1725dd06da",
+        "process": {
+          "pid": 923578,
+          "start_ticks": 18656807,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-pickup-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-world-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2aad5fa99116b4d27d09efa52341266887c7ac05783d7e8df9837f5da8a3992c"
+        },
+        "tutorial_flags_before": [
+          0,
+          0
+        ],
+        "tutorial_flags_after": [
+          1,
+          0
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:inventory-script:0000000000000009",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 10
+      },
+      {
+        "mode": "normal",
+        "phase": "equip",
+        "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-equip-01",
+        "manifest": "docs/oblivion/original-cuirass-equip.json",
+        "manifest_sha256": "20ffba9fe92ecd3935ab7290e69221c8f236bd81e01d80dfc35527daade3be54",
+        "audit_sha256": "d82f9cc091999213c1cfbe55de3167d3a0b63b38854704f85e811944cd7ec14e",
+        "source_sha256": "a14a3637513143d88f6d3b646a60cb65a8e18492e4e341a8bc351f1725dd06da",
+        "save_sha256": "6ad2ec340223477b846cc74e442f19afa2c63c3d05544d3ae2bdc44bd5d3bd01",
+        "process": {
+          "pid": 929435,
+          "start_ticks": 18666028,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-equip-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-pickup-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2aad5fa99116b4d27d09efa52341266887c7ac05783d7e8df9837f5da8a3992c"
+        },
+        "tutorial_flags_before": [
+          1,
+          0
+        ],
+        "tutorial_flags_after": [
+          1,
+          1
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:inventory-script:0000000000000009",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 10
+      },
+      {
+        "mode": "normal",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-inventory-01",
+        "manifest": "docs/oblivion/original-cuirass-inventory.json",
+        "manifest_sha256": "605b609eb7943c1b95cec5945adcde7a854040b6da7e83cdc991ff40e36ab520",
+        "audit_sha256": "96404f109ca481ea4fc69ae9c2a589cccfdc7a80edbf062273a88e803faa9853",
+        "source_sha256": "6ad2ec340223477b846cc74e442f19afa2c63c3d05544d3ae2bdc44bd5d3bd01",
+        "save_sha256": "56fdd64c3d18190376e0a2d08eb66edbbc27b8f342a00b4de428909ccb516d73",
+        "process": {
+          "pid": 929628,
+          "start_ticks": 18674731,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/normal-cuirass-native-equip-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2aad5fa99116b4d27d09efa52341266887c7ac05783d7e8df9837f5da8a3992c"
+        },
+        "tutorial_flags_before": [
+          1,
+          1
+        ],
+        "tutorial_flags_after": [
+          1,
+          1
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:inventory-script:0000000000000009",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 10
+      },
+      {
+        "mode": "sanitized",
+        "phase": "drop",
+        "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-drop-01",
+        "manifest": "docs/oblivion/original-cuirass-drop-sanitized.json",
+        "manifest_sha256": "4d9dfc3431c157c5c01865605fd1af52c06934eeafaa34dfa1ce3c986383c073",
+        "audit_sha256": "76beb374298a6c47b0cc818699c0cbdc50f2d051bda25e8275fbeca9d56f8464",
+        "source_sha256": "641aa96d37803a70f37be542983e0d1ef3a94228c0e61c280b0d531ff4535b23",
+        "save_sha256": "33a36d40ba8ff61c3bc8326c6af76e80022c1adf6e2fb3a787b8fc9887688a8e",
+        "process": {
+          "pid": 921408,
+          "start_ticks": 18620331,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-drop-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/torch-drop/normal-torch-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5e0e0eedfa31e66707b17cf12b2efdc3b1e3bb8b89bedd7b17f9aa04bc538b71"
+        },
+        "tutorial_flags_before": [
+          0,
+          0
+        ],
+        "tutorial_flags_after": [
+          0,
+          0
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:native-reference:0000000000000008",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 9
+      },
+      {
+        "mode": "sanitized",
+        "phase": "world",
+        "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-world-01",
+        "manifest": "docs/oblivion/original-cuirass-world-sanitized.json",
+        "manifest_sha256": "822edfb70e7b87fad17ffad861dbeeffde7c42699ef9f9be51b54517aafab235",
+        "audit_sha256": "13d7fbc7efe228e0ac169c2471546e54c10d0db354fd65997d3029a9e429cc79",
+        "source_sha256": "33a36d40ba8ff61c3bc8326c6af76e80022c1adf6e2fb3a787b8fc9887688a8e",
+        "save_sha256": "7049b43f61ed93e8b54db21fe25b04a6ed94c866cd0b772002ed3e586560aad2",
+        "process": {
+          "pid": 923440,
+          "start_ticks": 18654450,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-world-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5e0e0eedfa31e66707b17cf12b2efdc3b1e3bb8b89bedd7b17f9aa04bc538b71"
+        },
+        "tutorial_flags_before": [
+          0,
+          0
+        ],
+        "tutorial_flags_after": [
+          0,
+          0
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:native-reference:0000000000000008",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 9
+      },
+      {
+        "mode": "sanitized",
+        "phase": "pickup",
+        "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-pickup-01",
+        "manifest": "docs/oblivion/original-cuirass-pickup-sanitized.json",
+        "manifest_sha256": "11b769d6eec91bafa35361d5437b0d615be9c454b8e1dea094e51d0195de9ca5",
+        "audit_sha256": "799e587fb9fdeee6f197c397afda732a1150e2ba03d735d0281c83a63786cfc8",
+        "source_sha256": "7049b43f61ed93e8b54db21fe25b04a6ed94c866cd0b772002ed3e586560aad2",
+        "save_sha256": "08ab26596b1f26725504a67717821c4fcb92391b7453580aeca8debf70ad5cb5",
+        "process": {
+          "pid": 929847,
+          "start_ticks": 18689685,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-pickup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-world-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5e0e0eedfa31e66707b17cf12b2efdc3b1e3bb8b89bedd7b17f9aa04bc538b71"
+        },
+        "tutorial_flags_before": [
+          0,
+          0
+        ],
+        "tutorial_flags_after": [
+          1,
+          0
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:inventory-script:0000000000000009",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 10
+      },
+      {
+        "mode": "sanitized",
+        "phase": "equip",
+        "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-equip-01",
+        "manifest": "docs/oblivion/original-cuirass-equip-sanitized.json",
+        "manifest_sha256": "f95bf63351173e2364af99840a447fb42f4fbc99b0e6bcb208282a4b63aae282",
+        "audit_sha256": "4a5790a0370d5fafabfc60174fc86d341b965b48b2b9e1ed1c5daa897b5b3561",
+        "source_sha256": "08ab26596b1f26725504a67717821c4fcb92391b7453580aeca8debf70ad5cb5",
+        "save_sha256": "317a88193839d63b06d5513ffa414e697213ccab05bfdfc780e7b3bca00ab889",
+        "process": {
+          "pid": 931422,
+          "start_ticks": 18723389,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-equip-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-pickup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5e0e0eedfa31e66707b17cf12b2efdc3b1e3bb8b89bedd7b17f9aa04bc538b71"
+        },
+        "tutorial_flags_before": [
+          1,
+          0
+        ],
+        "tutorial_flags_after": [
+          1,
+          1
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:inventory-script:0000000000000009",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 10
+      },
+      {
+        "mode": "sanitized",
+        "phase": "inventory",
+        "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-inventory-01",
+        "manifest": "docs/oblivion/original-cuirass-inventory-sanitized.json",
+        "manifest_sha256": "53ed9f93b9ec50e42afa23a95e855fac7195ffea7b9b5f4aebd16553ffa94000",
+        "audit_sha256": "6f8fb684b9543c0a6d299727e373bb7b99aa30ffb374bb8e8264a8298ed59de4",
+        "source_sha256": "317a88193839d63b06d5513ffa414e697213ccab05bfdfc780e7b3bca00ab889",
+        "save_sha256": "6da34cb6b993f5b4aa0ea1dcd3d01aac85eadd6ffc6da2f50ffd82343d96c91b",
+        "process": {
+          "pid": 936249,
+          "start_ticks": 18758518,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-inventory-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-equip-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "5e0e0eedfa31e66707b17cf12b2efdc3b1e3bb8b89bedd7b17f9aa04bc538b71"
+        },
+        "tutorial_flags_before": [
+          1,
+          1
+        ],
+        "tutorial_flags_after": [
+          1,
+          1
+        ],
+        "script_instances": [
+          {
+            "unit": "content:oblivion.esm:0661bf@oblivion.esm/object/unit=0",
+            "context": "dynamic:inventory-script:0000000000000009",
+            "on_load_fired": false,
+            "locals": []
+          }
+        ],
+        "next_dynamic_serial": 10
+      }
+    ]
+  },
+  "fresh_content_regressions": [
+    {
+      "path": "build/oblivion-compat/cuirass-drop/regression-normal-torch-drop-01",
+      "audit_sha256": "6a44741daf9b371e2af066b608023442e7c3f1c846ef7c942066ec7a5c77d017",
+      "captured_manifest_sha256": "857f64ed200b28013890c99c48cc8618aa3086f9d05ac195f23950be7ca7da3e",
+      "source_sha256": "691485471547df2c54fd68edb2db6cfda79cd9e5170b26c5b600be038c4f49fc",
+      "save_sha256": "3235c30ba40c3c668b6436c22431063dedeeef1d0778b923716c690e5940d521"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/regression-normal-pants-world-01",
+      "audit_sha256": "e06b869beb2eb0d3a0324f269635d581eb0079ae4ee0467cab2ac4414c062b33",
+      "captured_manifest_sha256": "cfff585d76e45a80b8c9f1f6ab6b1f4eed7275ca307609ddb0f7a19decce9603",
+      "source_sha256": "2fb9baeca887df239c56c2877d7c361b60bf904fc21c5f9410f281a4f13aa565",
+      "save_sha256": "762bde47617e190c331bc6fd73d97fb268b29e384aca6cb211954d1fcaa5c447"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/regression-normal-nirnroot-drop-01",
+      "audit_sha256": "3117cdf403ff17cc381c10d430723dac368a2be6e29394cdd8480a3c55287866",
+      "captured_manifest_sha256": "2bcb66796e9bad31b5052c482261def9df18a6d764a05558e9d8271053939a6a",
+      "source_sha256": "10e7ce315370f5eb984e4c9c33fb61f332eae0f93f8c23eacb87c9060cd3c527",
+      "save_sha256": "ae8e1e29e1d9e76322eb587793fb22fafc27d04576b30c0ff98f3f6419d9d9cf"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/regression-normal-nirnroot-world-02",
+      "audit_sha256": "8d79e5201d5177796df60b60770f41dd09ed8627131bd3af913cdadbce8440ee",
+      "captured_manifest_sha256": "9602afbd6d3941759b67aed8b9669dab4ff19325bcd776bd6cb1a21edc4d0ffa",
+      "source_sha256": "ae8e1e29e1d9e76322eb587793fb22fafc27d04576b30c0ff98f3f6419d9d9cf",
+      "save_sha256": "2ab13c56ec1a1cada383803684ffbb2adff82eb8eba622cd37c2ec1c1eed5d16"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/regression-normal-nirnroot-pickup-01",
+      "audit_sha256": "11128855c9b8095eff7320129feec2cef02527a76d43e89b1fe50422a7712cb7",
+      "captured_manifest_sha256": "8c8b523769805cd1462e3bc90a67d4016572469436ec1f8c5195f1bb3dc848f4",
+      "source_sha256": "2ab13c56ec1a1cada383803684ffbb2adff82eb8eba622cd37c2ec1c1eed5d16",
+      "save_sha256": "078a5eb3d52c197463d95cd52b20eca1d984fbd8d12c6a8fe24766db5d1cc3a7"
+    }
+  ],
+  "stateful_nirnroot_verifier": {
+    "original": "scripts/verify_nirnroot_drop.py",
+    "original_sha256": "80519c1e772202ab9852d8c64b985b099aa67587ede95b87705917461733a3d1",
+    "adapted_sha256": "e806384b5001739254b69d3400b5c04ba6060b88e187c82e204912a2c8e87243",
+    "change": "Only schema expectation: original101 source migrates to current103;103 source also allowed. All gameplay, ownership, metadata, counters, progression and Found1 assertions retained.",
+    "import_setup": "Add repository scripts directory to sys.path because private copy is under ignored evidence."
+  },
+  "baseline": {
+    "passed": true,
+    "inventory": [],
+    "native_bodies": [],
+    "next_dynamic_serial": 8,
+    "encumbrance": 73.30000305175781
+  },
+  "retained_attempts": [
+    {
+      "case": "normal-cuirass-native-drop-01 + world01",
+      "scope": "Passing development body/script-owner checks before pickup-dropper guard; final game binary must rerun acceptance."
+    },
+    {
+      "case": "normal-cuirass-native-pickup-01",
+      "scope": "Harness preflight failed before game launch; no save."
+    },
+    {
+      "case": "development-normal-cuirass-equip-01",
+      "scope": "Picked old equipped-item coordinate after reacquisition reordered inventory; hovered and equipped Greaves, failed Cuirass-equipped observer, no save. Source unchanged. Run-id metadata edited during development run also invalidated manifest-unchanged check; excluded from acceptance. Corrected Cuirass coordinate240,475 from actual capture."
+    },
+    {
+      "case": "regression-normal-nirnroot-world-01",
+      "scope": "Wrong historical manifest filename; wrapper failed before scenario/game launch. Use actual world-cold recipe in newlabel."
+    },
+    {
+      "case": "development-sanitized-build-02",
+      "scope": "Compile-only failure: DropRelations.dropper is optional; corrected access inbuild03 before final games/checks. No game process from failedbuild."
+    }
+  ],
+  "limits": [
+    "Only singleton unenchanted ordinary armor; other event profiles remain deferred.",
+    "Scripted native armor admission requires a loaded OnAdd program with no locals and only OnAdd/OnEquip entries; use explicit prepared creation only for a missing source owner. Existing owners transfer without replaying events.",
+    "No general scripted/equipped stack, enchanted or broadM15/M18 acceptance claim."
+  ],
+  "binary_sha256": {
+    "normal": "2aad5fa99116b4d27d09efa52341266887c7ac05783d7e8df9837f5da8a3992c",
+    "sanitized": "5e0e0eedfa31e66707b17cf12b2efdc3b1e3bb8b89bedd7b17f9aa04bc538b71"
+  },
+  "oracle_sha256": "b6b33e24f99f2b168a071127c1eba8246524cf47e90dcb0a6f42dd0ade5a91ec",
+  "contract_sha256": "39c15de9fae87e7f6e5a274f9e7436ef382e696a07e3f149c63385ca5d8c56d4",
+  "inspected_visual_captures": [
+    {
+      "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-drop-02/original-cuirass-dropped-world.png",
+      "sha256": "1005a283169e72986742a52c74a7a47f8e74b3d6dd6b092e05323aa4c687b9f2"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-pickup-02/original-cuirass-focused.png",
+      "sha256": "be6660dca8b3b3a498aad7bec7077039798d1ee98fb2399030b0999f2d6de520"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-equip-01/original-cuirass-before-reequip.png",
+      "sha256": "2598af3dde18fd13e458802fba50a87e39c37d58f9a6e90ec862e1c2f43e10b8"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/normal-cuirass-native-equip-01/original-cuirass-reequipped.png",
+      "sha256": "e016ec6888b16e26281db5202e029988b3320ce024fdfeae37922276376df08b"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-drop-01/original-cuirass-dropped-world.png",
+      "sha256": "988ddf6fd05588f6892651ea11e63983247e41a8f001f8591ee7dfd69311fe90"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-pickup-01/original-cuirass-focused.png",
+      "sha256": "759677334416f26ab5020bb45fd338d275e55970a82d9f8b6843700465f7772c"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-equip-01/original-cuirass-before-reequip.png",
+      "sha256": "80b6fad2e26e5787938e92700d6d30b54ec0e28e7b4d2f3f5024c1f3ffcf3205"
+    },
+    {
+      "path": "build/oblivion-compat/cuirass-drop/sanitized-cuirass-native-equip-01/original-cuirass-reequipped.png",
+      "sha256": "9bd3e7f6d8cde4799e56efecc501d13e36e59a58f6cf01f28a006c176fec716b"
+    }
+  ]
+}

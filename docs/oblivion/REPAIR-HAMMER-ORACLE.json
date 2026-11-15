@@ -1,0 +1,39 @@
+{
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_rules": {
+    "path": "build/oblivion-compat/repair-hammer/original-repair-rules-report.json",
+    "sha256": "4141446c101e660516ab205fb8dd29fb668f22e7018af6166e3e596c795acef9"
+  },
+  "winning_settings": {
+    "path": "build/oblivion-compat/repair-hammer/winning-repair-settings.json",
+    "sha256": "d5eeb2402159f91b12dfa1e5de2d5b9761fc3fcb440bb983bdf1f5862433aa31"
+  },
+  "winning_skill": {
+    "path": "build/oblivion-compat/repair-hammer/winning-skill-audit.json",
+    "sha256": "1a29531105a9363d58a58897a32ce744d2605da68115a83cb96e976aff1086ec"
+  },
+  "content": {
+    "path": "build/oblivion-compat/repair-hammer/content-survey.json",
+    "sha256": "2f39ff28342a12819a9f74542e790b56fdc5fb5dc8087db57ed999aeadcebc2b"
+  },
+  "amount_cases": 8,
+  "break_cases": 25,
+  "rule": "Amount5482F0 uses installed ArmorerMult1 versus compiled3, compiled base0 and StrengthMult0.1. Original caller5D2698 truncates current condition before adding; normal limit is definition maximum. Break548330 executes original mastery56A300, apprentice multiplier0.5, master immunity and strict chance>integer roll. Armorer SKIL03d primary1.5.",
+  "boundaries": [
+    "Direct amount inputs and scale1; inspected caller uses raw integer AV12/AV0. Luck-adjusted skill547B90 and RNG47DF80 supplied/captured for break; original mastery, chance and comparison execute.",
+    "Original use-dispatch contract already established in prior skill oracles; final runtime uses winning Armorer primary, not a new progression formula.",
+    "No full original item-stack publication, repair menu or live original repair claim."
+  ],
+  "numeric_policy": "Simple original integer resampling and representative reasonable arithmetic; no blanket bit-parity or original RNG sequence requirement.",
+  "target_base_script": {
+    "form": "0661bf",
+    "editor_id": "CGHeavyArmorScript",
+    "original_target": "0661c1",
+    "handlers": {
+      "OnAdd player": "set MQ01.heavyarmor to 1",
+      "OnEquip player": "set MQ01.heavyArmorEquip to 1"
+    },
+    "scope": "No OnRepair handler; condition-only repair preserves target ownership/equipment. Native runtime script owners remain rejected."
+  }
+}

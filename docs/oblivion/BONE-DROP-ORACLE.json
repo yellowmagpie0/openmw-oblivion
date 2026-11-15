@@ -1,0 +1,505 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "type": "MISC",
+  "id": "0223a8",
+  "payload_sha256": "afa81e68af8b322060d521bfd524550c6ce514350078c6184bbf8227d96e8172",
+  "strings": {
+    "EDID": "skelBoneThin01",
+    "FULL": "Bone",
+    "MODL": "Dungeons\\Misc\\skelBoneThin01.NIF"
+  },
+  "value": 0,
+  "weight": 2.0,
+  "script_present": false,
+  "enchantment_present": false,
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "member": "meshes/dungeons/misc/skelbonethin01.nif",
+  "member_sha256": "db98e2a40a29e6c1115b135715e3616066db044f540ed4dac127ff759b0af6b7",
+  "parser_diagnostic": {
+    "path": "build/oblivion-compat/bone-drop/assets/meshes/dungeons/misc/skelbonethin01.nif",
+    "bodies": 1,
+    "joints": 0,
+    "mass": 5,
+    "fixed": false,
+    "passed": true,
+    "records": 12,
+    "root": 0,
+    "asset_root": -1,
+    "scabbard": -1,
+    "body_target": 0,
+    "shape": 2,
+    "bodyT": 0,
+    "shape_name": "Convex hull"
+  },
+  "scope": "Independent original installed master/asset identity and isolated original-game ordinary drop/pickup observations. Graph/mass5 is explicitly a current engine parser diagnostic, not an independent original executable arithmetic oracle. No exact trajectory claim.",
+  "original_game_probe": {
+    "root": "build/oblivion-compat/bone-drop/original-native-01",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "setup": "Isolated original console additem0223a8 1 after initial stock0. Fork uses genuinely carried Bone, no grants.",
+    "expected": {
+      "before_ui_drop": 1,
+      "after_shift_click_drop": 0,
+      "after_ordinary_space_pickup": 1,
+      "inventory_weight": 2
+    },
+    "observed": "Actual inventory shift-click drop leaves Bone on stone floor; correct crosshair Bone label then ordinary Space pickup removes that visible curved Bone and returns one item.",
+    "actions": {
+      "actions-00-menu.json": [
+        {
+          "type": "key",
+          "value": "Escape"
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        },
+        {
+          "type": "shot",
+          "name": "original-menu.png"
+        }
+      ],
+      "actions-01-menu.json": [
+        {
+          "type": "key",
+          "value": "Escape"
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        },
+        {
+          "type": "shot",
+          "name": "original-menu-ready.png"
+        }
+      ],
+      "actions-02-continue.json": [
+        {
+          "type": "click",
+          "x": 340,
+          "y": 590
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        },
+        {
+          "type": "shot",
+          "name": "continue-confirmation.png"
+        }
+      ],
+      "actions-03-pristine.json": [
+        {
+          "type": "click",
+          "x": 644,
+          "y": 383
+        },
+        {
+          "type": "sleep",
+          "seconds": 6
+        },
+        {
+          "type": "key",
+          "value": "F9"
+        },
+        {
+          "type": "sleep",
+          "seconds": 4
+        },
+        {
+          "type": "shot",
+          "name": "pristine-loaded.png"
+        }
+      ],
+      "actions-04-pristine-count.json": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 000223a8"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-pristine-count.png"
+        }
+      ],
+      "actions-05-setup.json": [
+        {
+          "type": "line",
+          "value": "player.additem 000223a8 1"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 000223a8"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-setup-count.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "F2"
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-inventory.png"
+        }
+      ],
+      "actions-06-ui-drop.json": [
+        {
+          "type": "down",
+          "value": "Shift_L"
+        },
+        {
+          "type": "hold_click",
+          "x": 202,
+          "y": 516,
+          "seconds": 0.8
+        },
+        {
+          "type": "up",
+          "value": "Shift_L"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-after-drop-inventory.png"
+        },
+        {
+          "type": "key",
+          "value": "F2"
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 000223a8"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-dropped-count.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "motion",
+          "x": 0,
+          "y": 300
+        },
+        {
+          "type": "sleep",
+          "seconds": 2
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-ground.png"
+        }
+      ],
+      "actions-07-reference-aim.json": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "click",
+          "x": 619,
+          "y": 454
+        },
+        {
+          "type": "line",
+          "value": "GetIsID 000223a8"
+        },
+        {
+          "type": "shot",
+          "name": "original-dropped-bone-reference.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "motion",
+          "x": -20,
+          "y": 40
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-pickup-aim.png"
+        }
+      ],
+      "actions-08-aim.json": [
+        {
+          "type": "motion",
+          "x": 0,
+          "y": 90
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-aim-02.png"
+        }
+      ],
+      "actions-09-reference-aim.json": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "click",
+          "x": 521,
+          "y": 190
+        },
+        {
+          "type": "line",
+          "value": "GetIsID 000223a8"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-selected-02.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "motion",
+          "x": -100,
+          "y": -150
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-aim-03.png"
+        }
+      ],
+      "actions-10-aim.json": [
+        {
+          "type": "motion",
+          "x": -10,
+          "y": -12
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-aim-04.png"
+        }
+      ],
+      "actions-11-close-pickup.json": [
+        {
+          "type": "down",
+          "value": "w"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.4
+        },
+        {
+          "type": "up",
+          "value": "w"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.7
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-close.png"
+        },
+        {
+          "type": "key",
+          "value": "space"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.6
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 000223a8"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-pickup-count.png"
+        }
+      ],
+      "actions-12-aim.json": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "motion",
+          "x": 5,
+          "y": 80
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-aim-05.png"
+        }
+      ],
+      "actions-13-curved-reference.json": [
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "click",
+          "x": 768,
+          "y": 540
+        },
+        {
+          "type": "line",
+          "value": "GetIsID 000223a8"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-selected-03.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "motion",
+          "x": 105,
+          "y": 120
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.5
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-aim-06.png"
+        }
+      ],
+      "actions-14-pickup.json": [
+        {
+          "type": "key",
+          "value": "space"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.6
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-picked-up.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "player.getitemcount 000223a8"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-recovered-count.png"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "key",
+          "value": "F2"
+        },
+        {
+          "type": "shot",
+          "name": "original-bone-recovered-inventory.png"
+        }
+      ],
+      "actions-15-exit.json": [
+        {
+          "type": "key",
+          "value": "Tab"
+        },
+        {
+          "type": "key",
+          "value": "grave"
+        },
+        {
+          "type": "line",
+          "value": "qqq"
+        }
+      ]
+    },
+    "restoration": {
+      "game_process_exited": true,
+      "wrapper_exit": 0,
+      "inputs": [
+        {
+          "path": "pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Oblivion.ini",
+          "restored_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+          "source_unchanged": true
+        },
+        {
+          "path": "pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/quicksave.ess",
+          "restored_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+          "source_unchanged": true
+        },
+        {
+          "path": "pfx/drive_c/users/steamuser/AppData/Local/Oblivion/Plugins.txt",
+          "restored_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+          "source_unchanged": true
+        }
+      ],
+      "owned_xserver_terminated": {
+        "pid": 764264,
+        "start_ticks": 15689513,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "display": ":5"
+      },
+      "original_probe_expected": {
+        "before": 1,
+        "after_ui_drop": 0,
+        "after_ordinary_space_pickup": 1
+      },
+      "limits": "Isolated original console additem setup; actual UI drop/crosshair Bone label/Space pickup. Wrong-target console GetIsID and first unsuccessful activation retained; no selected FF reference identity or exact trajectory claim."
+    },
+    "limits": [
+      "Wrong-target console GetIsID checks and unsuccessful first activation retained; they do not identify the dropped FF reference.",
+      "Original ordinary transfer/ground observation, not cold-save acceptance or exact trajectory/velocity/mass arithmetic."
+    ]
+  }
+}

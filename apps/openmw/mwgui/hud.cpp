@@ -10,6 +10,9 @@
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm3/loadmgef.hpp>
 #include <components/esm4/loadgmst.hpp>
+#include <components/esm4/loadspel.hpp>
+#include "../mwworld/oblivioncombatmagic.hpp"
+#include "tooltips.hpp"
 #include <components/misc/resourcehelpers.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/resource/resourcesystem.hpp>
@@ -337,6 +340,30 @@ namespace MWGui
 
     void HUD::setSelectedSpell(const ESM::RefId& spellId, int successChancePercent)
     {
+        auto& world = *MWBase::Environment::get().getWorld();
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto* spell = world.getStore().get<ESM4::Spell>().find(spellId);
+            const auto presentation = MWWorld::describeOblivionPlayerSpell(world, *spell);
+            if (spell->mFullName != mSpellName && mSpellVisible)
+            {
+                mWeaponSpellTimer = 5.f;
+                mSpellName = spell->mFullName;
+                mWeaponSpellBox->setCaption(mSpellName);
+                mWeaponSpellBox->setVisible(true);
+            }
+            mSpellStatus->setProgressRange(100);
+            mSpellStatus->setProgressPosition(successChancePercent);
+            ToolTipInfo info;
+            info.caption = spell->mFullName;
+            info.text = presentation.mDescription;
+            mSpellBox->setUserString("ToolTipType", "ToolTipInfo");
+            mSpellBox->setUserData(info);
+            mSpellImage->setSpellIcon(presentation.mIcon.empty() ? VFS::Path::Normalized{}
+                : Misc::ResourceHelpers::correctIconPath(VFS::Path::Normalized(presentation.mIcon),
+                    *MWBase::Environment::get().getResourceSystem()->getVFS()));
+            return;
+        }
         const ESM::Spell* spell = MWBase::Environment::get().getESMStore()->get<ESM::Spell>().find(spellId);
 
         const std::string& spellName = spell->mName;

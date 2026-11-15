@@ -152,6 +152,12 @@ namespace MWGui
 
     void SpellWindow::askDeleteSpell(const ESM::RefId& spellId)
     {
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            // The native list currently consists of inherent character grants.
+            MWBase::Environment::get().getWindowManager()->messageBox("#{sDeleteSpellError}");
+            return;
+        }
         // delete spell, if allowed
         const ESM::Spell* spell = MWBase::Environment::get().getESMStore()->get<ESM::Spell>().find(spellId);
 
@@ -224,7 +230,8 @@ namespace MWGui
         MWWorld::InventoryStore& store = player.getClass().getInventoryStore(player);
         store.setSelectedEnchantItem(store.end());
         MWBase::Environment::get().getWindowManager()->setSelectedSpell(
-            spellId, int(MWMechanics::getSpellSuccessChance(spellId, player)));
+            spellId, MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                ? 100 : int(MWMechanics::getSpellSuccessChance(spellId, player)));
 
         updateSpells();
     }

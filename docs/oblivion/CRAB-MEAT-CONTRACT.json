@@ -1,0 +1,55 @@
+{
+  "status": "Accepted bounded original food consumption, Endurance clamp, disease ownership and save/resume; natural positive damaged-Endurance gameplay remains open",
+  "milestone": "M16 bounded original food Restore Endurance ingestion",
+  "content": "03366c Crab Meat, original first REAT15/1 Self AV5, Food flags3, no script",
+  "domain": {
+    "actor": "Living Player",
+    "alchemy": 5,
+    "luck": 50,
+    "resist_magic": 0,
+    "effect": "Original REAT001889 flags0x00100870 cost38 school5 associated0 resistance-1"
+  },
+  "expectation": {
+    "completed_damage_restoration": 5,
+    "maximum_drain_unchanged": true,
+    "item_debit": 1,
+    "alchemy_xp": 0,
+    "later_effects": false
+  },
+  "real_content_course": [
+    "Retain unsupported ordinary-use baseline from genuine carried Crab Meat.",
+    "Consume carried food on healthy branch without fortifying Endurance; save and cold load without another debit.",
+    "Defeat original placed Mudcrab06c92a on genuine Swamp Fever branch, retain combat/healing consequences, loot its authored Crab Meat, consume while infected and retain disease drain through cold load."
+  ],
+  "verification_layers": {
+    "original_game": "Original isolated controlled damage and disease probes; console equipitem route explicitly declared.",
+    "normal_input_fork": "Twelve accepted ordinary-input fresh-process checkpoints, including genuinely defeated Mudcrab corpse loot on the infected branch; no grants or setters.",
+    "positive_damage_fork": "Focused authority/save-resume check only; naturally acquired positive damaged-Endurance healing remains open."
+  },
+  "scope_limits": [
+    "No claim of a natural damaged-Endurance healing gameplay course until one is recorded.",
+    "No high-skill, arbitrary ingredient, later known effect, brewing or disease cure support.",
+    "One-second effect timing follows existing food restoration execution; original total5 is observed, original midpoint not measured."
+  ],
+  "save_schema": 102,
+  "oracle": "CRAB-MEAT-ORACLE.json",
+  "verification": "CRAB-MEAT-VERIFICATION.json",
+  "result": {
+    "normal_runtime_cases": 6,
+    "instrumented_runtime_cases": 6,
+    "normal_components": 3301,
+    "instrumented_native_components": 1122,
+    "normal_engine": 2292,
+    "instrumented_engine_complete_disjoint_union": 2292,
+    "python": 618,
+    "healthy_endurance": 55,
+    "infected_endurance": 45,
+    "food_debit": 1,
+    "food_alchemy_xp": 0,
+    "completed_effect_restarted": false,
+    "normal_healthy_final_sha256": "9b498081a3dc4603e494897f4bb5931beda86d6e3d012cb5fe669ef498a77a98",
+    "normal_infected_final_sha256": "d75e151450f0fbea3943b5aeb5fb464b6adf87910ac5d8735b1937bfc1f173ad",
+    "sanitized_healthy_final_sha256": "9841041518a9973262b5f60aa8fc2c6e814381db3de6bedf72de280a315e410e",
+    "sanitized_infected_final_sha256": "779680f4175d9134d79e27038055f3afdd1e5cc64e9f6e6d93d7a1a04798b60c"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "status": "Verified on the original Canosel cask in normal and instrumented gameplay.",
+  "reference": "content:oblivion.esm:04bb85",
+  "base": "content:oblivion.esm:03767e",
+  "cell": "content:oblivion.esm:0463f5",
+  "original_game_oracle": "AYLEID-CASK-SELECTION-ORACLE.json",
+  "route_evidence": "build/oblivion-compat/container-window",
+  "untouched_checkpoint": {
+    "course": "normal-final-cask-approach-01",
+    "sha256": "0a89f411f0aab9518297408e46316da92c1399b864f2885ef736a58304403110"
+  },
+  "baseline_build_sha256": "dc12992963190e106374e5b124cf99d61d6c1acd575867f6c83aaad259f7c3ae",
+  "baseline": {
+    "course": "normal-automatic-transfer-baseline-02",
+    "save_sha256": "3bca4929ac82e68b678f6c432302e024acd479dc1aff13ae4c6479149afcd7df",
+    "result": "Activation transfers 20 Gold and empties the cask with no selection window."
+  },
+  "acceptance": [
+    "Reach the original unlocked cask by normal movement and record the old automatic transfer on a disposable branch.",
+    "Open and close the cask with the player stock unchanged. Resolve the authored leveled stock only once.",
+    "Take one selected entry and leave other entries. If the cask rolled one entry, an existing item earned on the expedition supplies the second entry through normal deposit.",
+    "Save and reload the remaining contents, then use Take All and verify an empty cask after another load.",
+    "Keep lock cancellation and explicit auto attempts working when a locked cask opens the selection window.",
+    "Compare actual saved inventory and reference metadata, including the unaffected player stock. Run the applicable integration checks."
+  ],
+  "verification": "AYLEID-CASK-SELECTION-VERIFICATION.json"
+}

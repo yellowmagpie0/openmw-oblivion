@@ -12,9 +12,36 @@ from scripts.tests import test_tes4_runtime_state as runtime_tests
 
 
 class PendingGetUpFixtureTests(unittest.TestCase):
-    def source(self, folder):
+    def source(self, folder, *, with_food=False, with_chameleon=False, with_potion=False, with_power=False, with_damage=False, with_health_drain=False, with_skill_books=False):
         state = runtime_tests.Tes4RuntimeStateTests.getup_pending_state()
         runtime._upgrade_actor_knockback(state); state['schema_version'] = runtime.CURRENT_VERSION
+        if with_food:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['ingredient_restoration'] = [{'ingredient': 'content:oblivion.esm:033681', 'elapsed': .25}]
+        if with_damage:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['ingredient_restoration'] = [dict(ingredient='content:oblivion.esm:01ebff', elapsed=2.,
+                                                     magnitude=-1., duration=3.)]
+        if with_health_drain:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['values'][8][1] = -5.
+            player['ingredient_restoration'] = [dict(ingredient='content:oblivion.esm:04e940', elapsed=.25,
+                                                     magnitude=-5., duration=1., actor_value=8)]
+        if with_skill_books:
+            state['player']['awarded_skill_books'] = ['content:oblivion.esm:0243fc']
+        if with_chameleon:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['values'][46][1] = 25.
+            player['scroll_chameleon'] = [dict(scroll='content:oblivion.esm:084aeb',
+                enchantment='content:oblivion.esm:05b044', magnitude=25., elapsed=12.)]
+        if with_potion:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['values'][1][1] = player['values'][2][1] = -1.
+            player['potion_attribute_effects'] = [dict(potion='content:oblivion.esm:0b1201',
+                duration=60., elapsed=12., modifiers=[dict(attribute=1, delta=-1.), dict(attribute=2, delta=-1.)])]
+        if with_power:
+            player = next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            player['used_powers'] = [dict(spell='content:oblivion.esm:047ade', used_at=73.25)]
         graph = state['native_getup_playback'].pop()
         payload = runtime.encode_payload(state)
         body = struct.pack('<4sII', b'VERS', 4, runtime.CURRENT_VERSION) + struct.pack('<4sI', b'DATA', len(payload)) + payload
@@ -40,6 +67,79 @@ class PendingGetUpFixtureTests(unittest.TestCase):
             self.assertTrue(target.read_bytes().endswith(opaque))
             self.assertFalse(report['runtime_acceptance'])
             self.assertFalse(report['io_queued'])
+
+    def test_schema92_staging_preserves_unrelated_pending_food(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_food=True)
+            before = runtime.load_save(source)
+            target = source.with_name('pending-food-preserved.omwsave')
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            food = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)['ingredient_restoration']
+            self.assertEqual(food(before), food(after))
+            self.assertEqual(food(after), [{'ingredient': 'content:oblivion.esm:033681', 'elapsed': .25}])
+
+    def test_schema98_staging_preserves_resolved_harmful_ingredient(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_damage=True)
+            target = Path(directory) / 'staged.omwsave'
+            before = runtime.load_save(source)
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            food = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)['ingredient_restoration']
+            self.assertEqual(food(before), food(after))
+
+    def test_schema101_staging_preserves_awarded_skill_book_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_skill_books=True)
+            target = Path(directory) / 'staged.omwsave'
+            before = runtime.load_save(source)
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            self.assertEqual(before['player']['awarded_skill_books'], after['player']['awarded_skill_books'])
+
+    def test_schema100_staging_preserves_health_drain_owner_and_modifier(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_health_drain=True)
+            target = Path(directory) / 'staged.omwsave'
+            before = runtime.load_save(source)
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            player = lambda state: next(a for a in state['native_actor_values'] if a['owner'] == 0)
+            self.assertEqual(player(before)['ingredient_restoration'], player(after)['ingredient_restoration'])
+            self.assertEqual(player(before)['values'][8], player(after)['values'][8])
+
+    def test_schema93_staging_preserves_unrelated_chameleon_source_and_contribution(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_chameleon=True)
+            before = runtime.load_save(source)
+            target = source.with_name('pending-chameleon-preserved.omwsave')
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            player = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)
+            self.assertEqual(player(before)['scroll_chameleon'], player(after)['scroll_chameleon'])
+            self.assertEqual(player(before)['values'][46], player(after)['values'][46])
+
+    def test_schema94_staging_preserves_unrelated_potion_contributions_and_lifetime(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_potion=True)
+            before = runtime.load_save(source)
+            target = source.with_name('pending-potion-preserved.omwsave')
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            player = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)
+            self.assertEqual(player(before)['potion_attribute_effects'], player(after)['potion_attribute_effects'])
+            self.assertEqual(player(before)['values'][1:3], player(after)['values'][1:3])
+
+    def test_schema95_staging_preserves_unrelated_greater_power_daily_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, recipe, _ = self.source(Path(directory), with_power=True)
+            before = runtime.load_save(source)
+            target = source.with_name('pending-power-preserved.omwsave')
+            stage(source, target, recipe)
+            after = runtime.load_save(target)
+            player = lambda s: next(a for a in s['native_actor_values'] if a['owner'] == 0)
+            self.assertEqual(player(before)['used_powers'], player(after)['used_powers'])
 
     def test_invalid_graph_rejects_before_output_and_preserves_seed(self):
         for mutation in [lambda g: g['pending_requests'].pop(),

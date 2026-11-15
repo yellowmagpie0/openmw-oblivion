@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "name": "Precisely select and loot original physical Skeleton corpse sanitized",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": ""
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal types=require('openmw.types')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal camera=require('openmw.camera')\nlocal util=require('openmw.util')\nlocal timer=0;local expected=nil;local aim=nil\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<.2 then return end;timer=0\n assert(not types.Actor.isDead(self),'Player died during original Skeleton corpse loot')\n local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x6c2ed));assert(a and a:isValid() and types.Actor.isDead(a),'Original Skeleton corpse unavailable')\n local source=types.Actor.inventory(a);local player=types.Actor.inventory(self)\n if not expected then expected={{}};for _,item in ipairs(source:getAll()) do expected[item.recordId]=player:countOf(item.recordId)+source:countOf(item.recordId);print('CryptSkeleton original loot item='..item.recordId..' count='..source:countOf(item.recordId)) end;assert(next(expected),'Original corpse must have loot') end\n local transferred=#source:getAll()==0\n for id,count in pairs(expected) do if player:countOf(id)~=count then transferred=false end end\n if transferred then print('CryptSkeleton corpse loot transferred');return end\n if core.isWorldPaused() then return end\n local box=a:getBoundingBox()\n if not aim or nearby.castRenderingRay(camera.getPosition(),aim,{{ignore=self}}).hitObject~=a then\n  aim=nil\n  for _,x in ipairs({{0,-.35,.35,-.7,.7}}) do\n   for _,y in ipairs({{0,-.35,.35,-.7,.7}}) do\n    local point=box.center+util.vector3(x*box.halfSize.x,y*box.halfSize.y,-.8*box.halfSize.z)\n    if nearby.castRenderingRay(camera.getPosition(),point,{{ignore=self}}).hitObject==a then aim=point;break end\n   end\n   if aim then break end\n  end\n end\n if not aim then print('CryptSkeleton corpse no visible target');return end\n local localPoint=camera.getViewTransform():apply(aim)\n local yaw=math.atan2(localPoint.x,-localPoint.z)\n local pitch=-math.atan2(localPoint.y,math.sqrt(localPoint.x*localPoint.x+localPoint.z*localPoint.z))\n if math.abs(yaw)<.004 and math.abs(pitch)<.004 then print('CryptSkeleton corpse loot facing') end\n print(string.format('CryptSkeleton corpse loot aim x=%d y=%d',math.max(-150,math.min(150,math.floor(yaw*256+.5))),math.max(-100,math.min(100,math.floor(pitch*256+.5)))))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "CryptSkeleton original loot item",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "CryptSkeleton corpse loot facing",
+      "maximum_iterations": 100,
+      "timeout_seconds": 180,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "CryptSkeleton corpse loot aim",
+          "after_start": true,
+          "timeout_seconds": 15,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "CryptSkeleton corpse loot aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        }
+      ],
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-physical-corpse-before-activation.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "space",
+      "seconds": 0.2
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "original-Skeleton-corpse-inventory.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "gamepad_button",
+      "value": "x",
+      "hold_seconds": 0.2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "CryptSkeleton corpse loot transferred",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-Skeleton-corpse-looted.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_down",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "CryptSkeleton corpse loot transferred",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died during original VilverinContinue acquisition",
+    "M16 native cast rejected:",
+    "M16 potion attributes applied:",
+    "M16 native scroll consumed:",
+    "Error in frame",
+    "onFrame failed"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "skeleton-corpse-loot-baseline",
+    "OPENMW_M15_EPOCH": "1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": true,
+  "sdl_xvfb_input": true
+}

@@ -1,0 +1,515 @@
+{
+  "status": "independent original Mead application/stacking/expiry control completed",
+  "root": "build/oblivion-compat/mead-use/original-native-02",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "scope": "Separate copied original-game prefix, original master only, original ALCH0b1201. Controlled original-game inventory grants and regeneration settings are independent oracle inputs; no fork acceptance content or statistics are manufactured.",
+  "observations": [
+    {
+      "case": "baseline",
+      "count": 2,
+      "intelligence": 40,
+      "willpower": 30,
+      "magicka": 80,
+      "fatigue": 140,
+      "fatigue_maximum": 140,
+      "resist_magic": 0,
+      "image": "native-mead-controlled-baseline.png"
+    },
+    {
+      "case": "first use at full Fatigue",
+      "count": 1,
+      "intelligence": 39,
+      "willpower": 29,
+      "magicka": 78,
+      "fatigue": 139,
+      "fatigue_maximum": 139,
+      "image": "native-mead-first-applied.png"
+    },
+    {
+      "case": "two actual jumps",
+      "count": 1,
+      "intelligence": 39,
+      "willpower": 29,
+      "magicka": 78,
+      "fatigue": 79,
+      "fatigue_maximum": 139,
+      "image": "native-mead-after-real-jumps.png"
+    },
+    {
+      "case": "same original Mead repeated",
+      "count": 0,
+      "intelligence": 38,
+      "willpower": 28,
+      "magicka": 76,
+      "fatigue": 80,
+      "fatigue_maximum": 138,
+      "image": "native-mead-second-applied.png"
+    },
+    {
+      "case": "first expired, second active",
+      "count": 0,
+      "intelligence": 39,
+      "willpower": 29,
+      "magicka": 78,
+      "fatigue": 81,
+      "fatigue_maximum": 139,
+      "image": "native-mead-first-expired-second-active.png"
+    },
+    {
+      "case": "both expired",
+      "count": 0,
+      "intelligence": 40,
+      "willpower": 30,
+      "magicka": 80,
+      "fatigue": 82,
+      "fatigue_maximum": 140,
+      "image": "native-mead-all-expired.png"
+    }
+  ],
+  "rules": {
+    "magnitude": "Authored DRAT1 each on Intelligence/Willpower; same ALCH stacks rather than refreshing a single contribution.",
+    "lifetime": "Authored60 seconds. Distinct expirations observed with the later drink still active after the earlier one ends; console/menu pause the lifetime. No exact wall-clock/frame claim.",
+    "instant": "REFA2 restores only at consumption and caps at full Fatigue. First use has no room; after two real jumps, the second restores2 while the new Willpower maximum subtracts1 from current Fatigue.",
+    "derived_resources": "Observed maximum/current counters are consistent with recomputing dynamic bases and retaining the resource damage offset as timed attributes apply/expire. This is a model inference from observations, not an original storage-layout claim."
+  },
+  "measurement": "Original console displays two decimal places. Use .01 observation tolerance; fork lifecycle clocks use authored simulation seconds without an exact original-frame/RNG requirement.",
+  "exit": {
+    "wrapper_exit": 0,
+    "pristine_input_unchanged": true,
+    "original_installed_exe_unchanged": true
+  },
+  "owned_services_exit": {
+    "steam_launcher_exit": 0,
+    "owned_display_exit": 0,
+    "pristine_unchanged": true,
+    "exe_unchanged": true
+  },
+  "game_epoch": "build/oblivion-compat/mead-use/original-native-02/game-process-epoch.json",
+  "input_log": "build/oblivion-compat/mead-use/original-native-02/input-log.jsonl",
+  "images": {
+    "native-mead-continue-confirm.png": "c4adc81a3ce5f4e03275ad1ce36e47971685870d2cb0353e9f5ffe7de113e824",
+    "native-mead-pristine-loaded.png": "ef1e014d2839fbbf96ab8cc2ee63fe450216be20af2a7bac5b4960fbca2fc032",
+    "native-mead-controlled-baseline.png": "2a836a0b0701e0e6125187db386c66b1bba6628945c06eb587384ef5e906204a",
+    "native-mead-inventory-before-use.png": "cd77ce5f4b77eaa58237ce73e3860f79be85fe3b659867698dae1832a056075f",
+    "native-mead-first-clicked.png": "6e8a9a4e3c6577410d06ca85b90bc59419b5d6e6fccd8f12f363c1bf34a42687",
+    "native-mead-first-applied.png": "e91ae9dd1b015d440bc9cf63d85c12cb51db3fa27529c446a651e3cc195889f1",
+    "native-mead-after-real-jumps.png": "30f64194d7fefe6faa6240a1fdf616006351d132ea6d1a31e1e6d0d24778269d",
+    "native-mead-before-repeat.png": "959e4ce8e06e8c8a852f65c9952411a1111be357d96c94a79a873f4aa4432146",
+    "native-mead-second-applied.png": "3f1cc6e6aa344d0372a848a107a90bfa0fe3ec7df08d7aec6a0e3bbb0437a9c4",
+    "native-mead-first-expired-second-active.png": "3308943e4b068c69c89396d1e81c4f04e1f7b939f64d568c5aa88b65baa15ddd",
+    "native-mead-all-expired.png": "34c1b77e9e050f3435491d216a2223fd10baf6e998ba5f1c0632387d9d1a4fb7"
+  },
+  "retained_setup_failures": {
+    "startup01": "Known application load error P:0000065432; retained original-native-01. Normal standalone Steam environment and a longer startup barrier succeed.",
+    "retry01": "No game launched: first helper parent had exited and its display was already gone. Second helper keeps owned services alive.",
+    "prefix_guard": "Literal Wine prefix comparison rejected a trailing slash. Resolved WINEPREFIX is verified inside the private copied prefix before any input.",
+    "fatigue_command": "DamageAV is not an original command; it changed no statistic. Actual jumps create the measured deficit."
+  },
+  "recipe": {
+    "boot": [
+      {
+        "type": "click",
+        "x": 340,
+        "y": 590
+      },
+      {
+        "type": "sleep",
+        "seconds": 1
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-continue-confirm.png"
+      }
+    ],
+    "load": [
+      {
+        "type": "click",
+        "x": 644,
+        "y": 382
+      },
+      {
+        "type": "sleep",
+        "seconds": 10
+      },
+      {
+        "type": "key",
+        "value": "F9"
+      },
+      {
+        "type": "sleep",
+        "seconds": 8
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-pristine-loaded.png"
+      }
+    ],
+    "controlled-baseline": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "EnablePlayerControls"
+      },
+      {
+        "type": "line",
+        "value": "setGS fFatigueReturnBase 0"
+      },
+      {
+        "type": "line",
+        "value": "setGS fFatigueReturnMult 0"
+      },
+      {
+        "type": "line",
+        "value": "setGS fMagickaReturnBase 0"
+      },
+      {
+        "type": "line",
+        "value": "setGS fMagickaReturnMult 0"
+      },
+      {
+        "type": "line",
+        "value": "player.AddItem 000b1201 2"
+      },
+      {
+        "type": "line",
+        "value": "player.DamageAV Fatigue 40"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Willpower"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 000b1201"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV ResistMagic"
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-controlled-baseline.png"
+      }
+    ],
+    "inventory": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "sleep",
+        "seconds": 1
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-inventory-before-use.png"
+      }
+    ],
+    "first-use": [
+      {
+        "type": "click",
+        "x": 170,
+        "y": 516
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-first-clicked.png"
+      },
+      {
+        "type": "key",
+        "value": "Tab"
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Willpower"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 000b1201"
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-first-applied.png"
+      }
+    ],
+    "fatigue-command-check": [
+      {
+        "type": "line",
+        "value": "player.DamageAV Fatigue 40"
+      },
+      {
+        "type": "shot",
+        "name": "native-fatigue-control-command-check.png"
+      }
+    ],
+    "exertion": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "key",
+        "value": "e"
+      },
+      {
+        "type": "sleep",
+        "seconds": 1
+      },
+      {
+        "type": "key",
+        "value": "e"
+      },
+      {
+        "type": "sleep",
+        "seconds": 1
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Willpower"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 000b1201"
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-after-real-jumps.png"
+      }
+    ],
+    "second-use": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "sleep",
+        "seconds": 25
+      },
+      {
+        "type": "key",
+        "value": "F2"
+      },
+      {
+        "type": "sleep",
+        "seconds": 0.5
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-before-repeat.png"
+      },
+      {
+        "type": "click",
+        "x": 170,
+        "y": 516
+      },
+      {
+        "type": "key",
+        "value": "Tab"
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Willpower"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 000b1201"
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-second-applied.png"
+      }
+    ],
+    "separate-expiry": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "sleep",
+        "seconds": 45
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Willpower"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 000b1201"
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-first-expired-second-active.png"
+      }
+    ],
+    "completed-expiry": [
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "sleep",
+        "seconds": 22
+      },
+      {
+        "type": "key",
+        "value": "grave"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Intelligence"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Willpower"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Magicka"
+      },
+      {
+        "type": "line",
+        "value": "player.GetAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetBaseAV Fatigue"
+      },
+      {
+        "type": "line",
+        "value": "player.GetItemCount 000b1201"
+      },
+      {
+        "type": "shot",
+        "name": "native-mead-all-expired.png"
+      }
+    ],
+    "quit": [
+      {
+        "type": "line",
+        "value": "qqq"
+      }
+    ]
+  },
+  "outside_scope": [
+    "Other potion profiles and nonzero resistance/absorption contexts",
+    "NPC drinking, potion slot limits, arbitrary effect interactions and death behavior",
+    "Original save/load implementation, exact rendering or frame scheduling"
+  ]
+}

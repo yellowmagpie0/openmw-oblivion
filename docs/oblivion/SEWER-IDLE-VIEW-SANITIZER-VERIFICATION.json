@@ -1,0 +1,79 @@
+{
+  "scope": "Current camera-fix full ASan/UBSan engine integration plus rendered sanitized idle-save prefix and clean fresh first-person reload/save. Full sewer escape remains incomplete.",
+  "full_escape_complete": false,
+  "engine_gate": {
+    "path": "build/oblivion-compat/sewer-escape/idle-view-sanitizer-integration-02/verification.json",
+    "passed": true,
+    "executed": 2203,
+    "failed": 0,
+    "skipped": 0,
+    "exact_inventory": true,
+    "all_command_exit_codes": 0,
+    "source": {
+      "head": "d697f176f872541fc1c4b1e18f3beb54193c29ec",
+      "source_fingerprint": "0d32544e76a083fb07a6b0a414ec2335b9626aafcfe1ee330cfed55835104ca6"
+    },
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "runtime_built": true
+  },
+  "initial_engine_attempt": {
+    "path": "build/oblivion-compat/sewer-escape/idle-view-sanitizer-integration-01",
+    "accepted_gate": false,
+    "reason": "2203 XML cases independently pass, but supervising helper lost its session and final report/exit provenance.02 resolves that uncertainty."
+  },
+  "rendered": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false,
+    "runtime_executable_sha256": "d765a92658669d961fa5748e3aa0510cee4fc17a018f6f9d556e207e87ae7bd0",
+    "idle_prefix": {
+      "scenario": "build/oblivion-compat/sewer-escape/idle-view-save-sanitized-01/scenario.json",
+      "raw_passed": false,
+      "independent_observation_accepted": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/joined-substructure-first-chest-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "e543d9999b5576914ecf9bc7616d1d7635ab7a1332f3fde89162d0c30983a83f",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "observed_modes": [
+        "FirstPerson",
+        "Vanity"
+      ],
+      "actual_F5_save": {
+        "path": "build/oblivion-compat/sewer-escape/idle-view-save-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "a7337f609ae4e49d7dbccfaa54468e518023655fcbbeac7dc8926a045f770ec8",
+        "FIRS": 1,
+        "health": 56
+      },
+      "failure": "Wrong manifest key left10-second SDL receipt default. Actual F5 writes realFIRS1, then key release receipt times out; raw failure retained. No runtime errors/forbidden findings, exit0."
+    },
+    "fresh_reload": {
+      "scenario": "build/oblivion-compat/sewer-escape/idle-view-reload-sanitized-01/scenario.json",
+      "passed": true,
+      "all_actions_complete": true,
+      "exit_code": 0,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/idle-view-save-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "a7337f609ae4e49d7dbccfaa54468e518023655fcbbeac7dc8926a045f770ec8",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "observed_mode": "FirstPerson",
+      "actual_F5_save": {
+        "path": "build/oblivion-compat/sewer-escape/idle-view-reload-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "ca6e7c30ea8803995cd5548e04d68e0962124bf3381038bc3aa5014b4afb8005",
+        "FIRS": 1,
+        "health": 56
+      },
+      "receipt_timeout_seconds": 90,
+      "capture_inspected": "build/oblivion-compat/sewer-escape/idle-view-reload-sanitized-01/idle-first-person-restored.png"
+    }
+  },
+  "next": "Continue genuine76-health Substructure gear save through original runners/zombie room, Natural Caverns/shaman and late escape. Full single-process escape and fresh outdoor reload remain required."
+}

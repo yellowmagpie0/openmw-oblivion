@@ -1,0 +1,245 @@
+{
+  "scope": "Native GetDetected awareness conditions restore original escort reunion; explicit SDL hat mapping restores test controller birthsign navigation",
+  "full_escape_complete": false,
+  "implementation": [
+    "Script/dialogue/idle/package GetDetected tests positive signed awareness via existing normalized50+awareness projection; visual combat acquisition remains separate. No saved field/schema change.",
+    "Full-opening and Warrior-birthsign editable test recipes explicitly map the identified virtual Linux controller D-pad to its actual hat0; no game-input receipt bypass."
+  ],
+  "oracle": "SEWER-GETDETECTED-ORACLE.json",
+  "checks": {
+    "reunion-detection-broad-normal-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/reunion-detection-broad-normal-01/verification.json",
+      "source": {
+        "head": "6be7e3f695d28bcfe7b07773c8c2283b0a65b7ae",
+        "source_fingerprint": "30b8308cd6226ce57963f387b91a2a1c5ed33b63311c7dd1e9cb27fb933280f1"
+      },
+      "results": {
+        "components": {
+          "executed": 3263,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "362dc5e2114af41376a76f97b538770653cbaee9b46ffff918fbb24c3ac1d17e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "a969a6d9a38090d6818850c0206bbfc8f7cc3b5f567acf5580c26a4bb4f453fb",
+          "inventory_sha256": "a0943b274869e82452930cdb60132f89b60324cfdcec6bf53cf757dd8ec15cee",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2216,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a3e3575951c06f41f05c19d3e35826e0f2c0d99cfc5cd78dea0d906cbd2663b0",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e9a864853ac227bccf84fcf2d2f9b5bfd67f02873eb61a5b5854659a91fb116d",
+          "inventory_sha256": "a785ec855258947d52898235434f9268899b97d4e1cea9c55b210746449015fd",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 578,
+          "passed": true,
+          "log_sha256": "144d06497a908a8c2948253182d3c8b4beed1f431b93168675db5b2bd7a666ae"
+        }
+      }
+    },
+    "reunion-detection-broad-sanitize-01": {
+      "evidence": "build/oblivion-compat/sewer-escape/reunion-detection-broad-sanitize-01/verification.json",
+      "source": {
+        "head": "6be7e3f695d28bcfe7b07773c8c2283b0a65b7ae",
+        "source_fingerprint": "30b8308cd6226ce57963f387b91a2a1c5ed33b63311c7dd1e9cb27fb933280f1"
+      },
+      "results": {
+        "engine": {
+          "executed": 2216,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "98c0d3772d1a9723b7dc08c92e9c30761a995de21009ad861cfbd1cdf75d6fe2",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "28bf8e5e3324fba83dfebad349da4ef3ec014cce1352c5b38d632d454f590d7f",
+          "inventory_sha256": "a785ec855258947d52898235434f9268899b97d4e1cea9c55b210746449015fd",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "focused_checks": {
+    "components": {
+      "path": "build/oblivion-compat/sewer-escape/reunion-detection-focused-01/verification.json",
+      "passed_cases": 9,
+      "engine_failure_in_same_attempt": "Cached condition fixture used non-native arbitrary scores; retained, corrected with signed projection"
+    },
+    "engine": {
+      "path": "build/oblivion-compat/sewer-escape/reunion-detection-focused-03/verification.json",
+      "passed_cases": 3
+    },
+    "assembly_repeat_python": 18,
+    "full_assembly": {
+      "path": "build/oblivion-compat/sewer-escape/controller-hat-full-assembly-01/full-escape-assembly.json",
+      "segments": 67,
+      "actions": 10477,
+      "luajit_compile_passed": true,
+      "runtime_acceptance": false
+    }
+  },
+  "runtime": {
+    "reunion-native-detection-02": {
+      "passed": true,
+      "scope": "Normal original6-action passive reunion from actual38 save to original40/42; full escape remains incomplete",
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-native-detection-02/retained-saves/3-0003-Quicksave.omwsave",
+      "save_sha256": "7e5e00502a2e1d8fe4f5b22a53f8a34f0b6fa3f2bd749bd4a05a9321c45e68b6",
+      "parsed_save_equals_native_snapshot": true,
+      "health": 80,
+      "magicka": 80,
+      "escorts_alive": true,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 287779,
+        "sequence": 4,
+        "tick": 119,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-after-subterrane-01/retained-saves/3-0009-Quicksave.omwsave",
+        "source_save_sha256": "08c5e72d95f71855363a49d0e239956f5af2d483087a770ef3903b5621e8b8a8",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "runtime_snapshot": "build/oblivion-compat/sewer-escape/reunion-runtime-snapshot-01/manifest.json"
+    },
+    "reunion-native-detection-sanitized-01": {
+      "passed": true,
+      "scope": "Actual sanitized original6-action reunion; not full escape acceptance",
+      "save_sha256": "98fe3bb6fbfeaa4d6d571ee5e80703bb19d228401015298c6b94adaa02884501",
+      "parsed_native_save_exact": true,
+      "health": 80.0,
+      "magicka": 80.0,
+      "escorts_alive": true,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 296551,
+        "sequence": 4,
+        "tick": 69,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/remaining-after-subterrane-01/retained-saves/3-0009-Quicksave.omwsave",
+        "source_save_sha256": "08c5e72d95f71855363a49d0e239956f5af2d483087a770ef3903b5621e8b8a8",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "runtime_sha256": "c79bdf258ade3a87de897aef8e60e840aadc5bcde7dba236cff0dc3792eef291",
+      "actual_loaded_libraries": {
+        "pid": 296551,
+        "libraries": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3",
+            "sha256": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
+          },
+          {
+            "path": "/usr/lib64/libasan.so.8.0.0",
+            "sha256": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f"
+          }
+        ]
+      },
+      "sanitizer_environment": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-native-detection-sanitized-01/sdl-input.so",
+        "LD_LIBRARY_PATH": null
+      }
+    },
+    "birthsign-controller-hat-01": {
+      "passed": true,
+      "scope": "Explicit SDL hat mapping permits original86-action Warrior birthsign course; full escape incomplete",
+      "save_sha256": "6522bb58fff51edae4d993f3d58be3d9092fa18fb18c8991b7462274a6b996dd",
+      "native_save_equals_receipt_snapshot": true,
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/reunion-native-detection-02/retained-saves/3-0003-Quicksave.omwsave",
+        "source_save_sha256": "7e5e00502a2e1d8fe4f5b22a53f8a34f0b6fa3f2bd749bd4a05a9321c45e68b6",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "all_inputs_delivered": true,
+      "birthsign": "content:oblivion.esm:01fd9d",
+      "health": 100,
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 288983,
+        "sequence": 4,
+        "tick": 50,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      }
+    }
+  },
+  "rendered_captures_reviewed": [
+    "reunion-native-detection-sanitized-01/segment01-emperor-come-closer.png",
+    "birthsign-controller-hat-01/segment01-warrior-selected.png",
+    "birthsign-controller-hat-01/segment01-birthsign-completed.png"
+  ],
+  "retained_failures": [
+    "reunion-detection-focused-01",
+    "reunion-detection-focused-02",
+    "reunion-native-detection-01 (missing snapshot defaults at startup)",
+    "remaining-after-native-reunion-01 (SDL D-pad receipt)",
+    "birthsign-controller-focus-01 (background hint/focus insufficient; mapping mismatch)",
+    "remaining-after-birthsign-01 (stage54/56 waits, actual CharacterGen50 escort stall)",
+    "escort-route-reload-01 (stage56 wait, report-enabled low frame rate limits simulation-time comparison)"
+  ],
+  "sanitizer_scope": {
+    "engine": "ASan/UBSan, detect_leaks=1:halt_on_error=1, exact2216 inventory",
+    "rendered_runtime": "ASan/UBSan halt-on-error, detect_leaks=0; no rendered leak-free claim"
+  },
+  "remaining_acceptance": [
+    "Resolve third-ambush escort movement stall and continue original53\u201367 through exterior.",
+    "One original-new-game process through all67 selected segments, rendered/native/input audit, then fresh load of its own outdoor save."
+  ],
+  "known_limits": [
+    "Original wrapper oracle stubs underlying awareness calculation, actor virtual admission and console diagnostics; not full original perception proof.",
+    "Held torches light the renderer but remain omitted from native perception lighting.",
+    "Existing visual/UI/spell limitations in SEWER-ESCAPE-HANDOFF.md remain open."
+  ]
+}

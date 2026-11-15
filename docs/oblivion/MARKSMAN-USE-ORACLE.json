@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_records": {
+    "path": "build/oblivion-compat/marksman-use/original-skill-content-audit.json",
+    "sha256": "fecec2350c283ef623c0d7a274e47a867daac8a87d5916e556b4f6c6af90935d"
+  },
+  "raw_record_probe": {
+    "path": "build/oblivion-compat/marksman-use/audit-original-skill.py",
+    "sha256": "2da93fa33d00d5ab2a99dce40917453777d893a73e65ba3d94198e98f14d68c5"
+  },
+  "marksman": {
+    "actor_value": 28,
+    "governing_attribute": 3,
+    "specialization": 2,
+    "primary_use": 0.800000011920929,
+    "secondary_use": 1.0
+  },
+  "source_class": {
+    "key": "content:oblivion.esm:023787",
+    "name": "Warrior",
+    "specialization": 0,
+    "major_skills": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+    ]
+  },
+  "static_miss_surface": {
+    "reference": "content:oblivion.esm:06bf42",
+    "base": "content:oblivion.esm:02d4d2",
+    "editor_id": "ARNHallTurn01",
+    "type": "STAT"
+  },
+  "original_dispatcher": {
+    "entry": "00668c30",
+    "probe": {
+      "path": "build/oblivion-compat/marksman-use/original-use-probe.py",
+      "sha256": "c48b114e62f31480832074e829453c0faaf2296ee4c797ae567f8366a740b953"
+    },
+    "report": {
+      "path": "build/oblivion-compat/marksman-use/original-use-report.json",
+      "sha256": "4075b2107ee38d2c864f422d6bee074892bf5ef9562a75a668a459c892b0b748"
+    },
+    "cases": 18,
+    "result": "Primary0.8/secondary1 read from SKIL; zero argument uses authored value, positive argument scales it; base>=100 makes no publication.",
+    "boundaries": [
+      "Winning SKIL resolution returns a fixture lookup token/record with independently audited authored use values.",
+      "Player base getter and final publication668B30 are boundaries. No level-up publication or persistence is inferred."
+    ]
+  },
+  "policy_scope": "Ordinary damaging Player hit uses primary0.8 once. Original projectile hit-versus-miss caller policy remains uncertified; blocked, immune, zero-damage and corpse cases are deferred. This is reasonable bounded behavior, not an exact-native-caller claim.",
+  "reused_training": "SECURITY-USE-VERIFICATION.json retains original generic requirement/counters and real Security level-up provenance. No generic training formula changes in this chunk."
+}

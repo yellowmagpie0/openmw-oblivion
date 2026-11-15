@@ -1,0 +1,85 @@
+{
+  "status": "Accepted bounded original Cheap Wine course: normal/instrumented use, active cold load, natural120s expiry and completed cold load pass; full2286 engine inventories, focused21 each and final Python616 pass.",
+  "milestone": "M16 mixed potion effects",
+  "original_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "content": {
+    "base": "content:oblivion.esm:037f7f DrinkWine0Cheap",
+    "reference": "content:oblivion.esm:06752a",
+    "alternate_reference": "content:oblivion.esm:06752d",
+    "cell": "ImperialSewerNorthExitExterior",
+    "reference_position": [
+      29238.23046875,
+      81712.9921875,
+      7.37408447265625
+    ],
+    "script": null,
+    "weight": 1,
+    "value": 2,
+    "food_flags_low_byte": 3,
+    "effects_in_authored_order": [
+      {
+        "code": "REFA",
+        "actor_value": 10,
+        "magnitude": 10,
+        "duration": 0,
+        "range": 0
+      },
+      {
+        "code": "DRAT",
+        "actor_value": 3,
+        "magnitude": 5,
+        "duration": 120,
+        "range": 0
+      },
+      {
+        "code": "DRAT",
+        "actor_value": 1,
+        "magnitude": 5,
+        "duration": 120,
+        "range": 0
+      },
+      {
+        "code": "DRAT",
+        "actor_value": 6,
+        "magnitude": 10,
+        "duration": 120,
+        "range": 0
+      }
+    ]
+  },
+  "source": {
+    "path": "build/oblivion-compat/alchemy-use/normal-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "9fe07697f095bfa48f13478bd1536b4d8e832114dc2ab9491e9c909f3658b5d8",
+    "meaning": "Healthy retained original expedition, Health110, no active ingredient effect. Separate from the Repair Hammer sewer branch."
+  },
+  "implementation_boundary": "Admit only the two independently audited original mixed-potion profiles: existing three-effect Mead and four-effect Cheap Wine. Preserve winning-record, script, food and exact-profile rejection rules and per-application timed attribute ownership. Restore Fatigue once using the admitted amount and present the original authored effect order. No schema or timer-ownership change.",
+  "acceptance": [
+    "Reach and acquire an original placed bottle through ordinary input. Audit exact ownership transfer and retain genuine skill/resource changes from travel.",
+    "Attempt ordinary use with the old binary and retain the complete unsupported-use result without calling it feature acceptance.",
+    "Normal and instrumented ordinary consumption debits one bottle, owns all three timed drains and restores Fatigue once, with an actual deficit to exercise restoration.",
+    "Save and cold load active effects; naturally expire after authored120 simulation seconds; retain original inventory/quest/progression owners without replaying instant restoration.",
+    "Full-health and unrelated attributes remain correct, derived Magicka/Fatigue follow the active drains, and appropriate focused and integration checks pass."
+  ],
+  "oracle_reuse": "Winning original ALCH/DRAT/REFA records define this profile. Reuse MEAD-POTION-ORACLE.json's independently observed timed Maximum contributions, derived-resource damage-offset preservation and instant-restoration ownership; disclose that it observed Mead rather than claiming a new original Wine live probe.",
+  "limits": [
+    "No general alcohol, arbitrary authored effect combination, poison cure, Fortify Health, resist-magic scaling or full M16 acceptance claim.",
+    "No grants, teleports, save editing, seed forcing or branch merging in fork gameplay acceptance."
+  ],
+  "travel": {
+    "prefix": "build/oblivion-compat/cheap-wine/normal-shore-prefix-05/travel-audit.json",
+    "approach": "build/oblivion-compat/cheap-wine/normal-original-wine-approach-09/travel-audit.json",
+    "approach_save_sha256": "f9b74c5fa0ab082296523572396bafc511e62157a2caf398a1bfb45f39796302",
+    "observed": "Health110; Athletics30/XP16.972494; Acrobatics5/XP0.3; every carried item retains exact metadata; original bottle not yet taken.",
+    "input_boundary": "Only ordinary run/swim/look/jump controls. Original LAND heights supply coastal waypoints; logged planning may skip an obstructed intermediate waypoint, never move the actor directly. Failed steeper/navmesh/steering attempts retained."
+  },
+  "earned_bottle_source": {
+    "path": "build/oblivion-compat/cheap-wine/normal-original-wine-acquire-08/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "ada38faca789e8ecdd97efd32309e838263941656c36903939fb80d8e426d871",
+    "health": 110,
+    "athletics": "30/XP17.009033",
+    "acrobatics": "5/XP0.6",
+    "wine_count": 1,
+    "original_ref_taken": "06752a; camera range122, original150 activation unchanged",
+    "baseline": "normal-original-wine-baseline-02, actual Cheap Wine tooltip/use, wine1 and all attributes unchanged; clean driver/native live/save audit"
+  }
+}

@@ -680,3 +680,20 @@ TEST(ESM4ActorValues, ModPCInfamyMatchesOriginalWrappingAndAccumulatorReset)
     EXPECT_EQ(ESM4::modifyPlayerInfamy({73, -1, std::nullopt}, 0),
         (ESM4::PlayerReputationState{73, -1, 0}));
 }
+
+TEST(ESM4ActorValues, ModPCFamePreservesInfamyAndAccumulatorAcrossSignedBoundaries)
+{
+    const auto maximum = std::numeric_limits<std::int32_t>::max();
+    const auto minimum = std::numeric_limits<std::int32_t>::min();
+    for (const auto accumulator : {std::optional<std::int32_t>{777}, std::optional<std::int32_t>{}})
+    {
+        EXPECT_EQ(ESM4::modifyPlayerFame({17, -3, accumulator}, 1),
+            (ESM4::PlayerReputationState{18, -3, accumulator}));
+        EXPECT_EQ(ESM4::modifyPlayerFame({maximum, -3, accumulator}, 1),
+            (ESM4::PlayerReputationState{minimum, -3, accumulator}));
+        EXPECT_EQ(ESM4::modifyPlayerFame({minimum, -3, accumulator}, -1),
+            (ESM4::PlayerReputationState{maximum, -3, accumulator}));
+        EXPECT_EQ(ESM4::modifyPlayerFame({-20, -3, accumulator}, 0),
+            (ESM4::PlayerReputationState{-20, -3, accumulator}));
+    }
+}

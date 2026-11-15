@@ -1,4 +1,5 @@
 #include "esm4interactive.hpp"
+#include "container.hpp"
 
 #include <algorithm>
 #include <array>
@@ -13,8 +14,9 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/doorstate.hpp>
 #include <components/esm3/loadskil.hpp>
-#include <components/esm4/playermechanics.hpp>
+#include <components/esm4/loadlvli.hpp>
 #include <components/esm4/npcplacement.hpp>
+#include <components/esm4/playermechanics.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
@@ -37,9 +39,11 @@
 #include "../mwworld/actionteleport.hpp"
 #include "../mwworld/failedaction.hpp"
 #include "../mwworld/manualref.hpp"
-#include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/oblivioninteraction.hpp"
+#include "../mwworld/oblivionlevelled.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/obliviontrespass.hpp"
 #include "../mwworld/worldimp.hpp"
 
 namespace MWClass
@@ -49,7 +53,15 @@ namespace MWClass
         void fillCreatureInventory(ESM4CreatureCustomData& data, const std::vector<ESM4::InventoryItem>& items,
             const MWWorld::ESMStore& store)
         {
-            for (const ESM4::InventoryItem& item : items)
+            auto* world = MWBase::Environment::get().getWorldOrNull();
+            const bool native = world && world->getGameProfile() == ESM::GameProfile::Oblivion;
+            const bool hasLevelledItems = native && std::any_of(items.begin(), items.end(), [&](const auto& item) {
+                return item.count != 0 && store.get<ESM4::LevelledItem>().search(
+                    ESM::FormId::fromUint32(item.item));
+            });
+            const auto expanded = hasLevelledItems ? MWWorld::expandOblivionLevelledItems(store, items,
+                world->getPlayerPtr().getClass().getCreatureStats(world->getPlayerPtr()).getLevel(), world->getPrng()) : items;
+            for (const ESM4::InventoryItem& item : expanded)
             {
                 if (item.count == 0)
                     continue;
@@ -163,6 +175,28 @@ namespace MWClass
         MWGui::ToolTipInfo info = ESM4InteractiveBase::getToolTipInfo(ptr, count);
         appendReferenceState(info, ptr);
         return info;
+    }
+
+    void ESM4Container::ensureCustomData(const MWWorld::Ptr& ptr) const
+    {
+        if (ptr.getRefData().getCustomData())
+            return;
+
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+        if (!world)
+            throw std::logic_error("Native container inventory requires a world");
+        auto data = std::make_unique<ContainerCustomData>();
+        world->getWorldModel().registerPtr(ptr);
+        auto staged = world->prepareOblivionContainerInventory(ptr);
+        data->mStore = std::move(static_cast<MWWorld::ContainerStore&>(*staged));
+        data->mStore.setPtr(ptr);
+        ptr.getRefData().setCustomData(std::move(data));
+    }
+
+    MWWorld::ContainerStore& ESM4Container::getContainerStore(const MWWorld::Ptr& ptr) const
+    {
+        ensureCustomData(ptr);
+        return ptr.getRefData().getCustomData()->asContainerCustomData().mStore;
     }
 
     ESM4Creature::ESM4Creature()
@@ -423,13 +457,15 @@ namespace MWClass
 
     void ESM4Creature::adjustScale(const MWWorld::ConstPtr& ptr, osg::Vec3f& scale, bool rendering) const
     {
-        if (!rendering) return;
         const auto* base = ptr.get<ESM4::Creature>()->mBase;
         if (!base->mAttackReach)
         {
-            scale *= base->mBaseScale;
+            if (rendering) scale *= base->mBaseScale;
             return;
         }
+        // Native Creature BNAM scales the actor, including its collision and
+        // navigation body. Rendering-only scaling leaves small creatures too
+        // large to approach within their equally scaled natural attack reach.
         osg::Vec3f prepared;
         for (unsigned axis = 0; axis < 3; ++axis)
         {
@@ -572,7 +608,8 @@ namespace MWClass
                 if (actor == world->getPlayerPtr())
                     MWBase::Environment::get().getWindowManager()->messageBox("Key used");
             }
-            else
+            // Keep ordinary key use first; the exit exemption preserves the lock.
+            else if (!MWWorld::oblivionPlayerHasDoorExitPermission(*world, ptr, actor))
             {
                 Log(Debug::Info) << "M5 door activation: result=locked ref="
                                  << ptr.getCellRef().getFormKey().serialize() << " level="

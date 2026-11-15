@@ -1,16 +1,27 @@
 #include "oblivionscriptmanager.hpp"
+
+#include <components/esm4/cellcondition.hpp>
+#include "oblivionactorstats.hpp"
 #include "oblivioninteraction.hpp"
 #include "oblivioncharactergen.hpp"
 #include "obliviondooranimation.hpp"
 #include <components/esm4/observation.hpp>
+#include <components/esm4/playermiscstats.hpp>
+#include <components/esm4/playermurderstate.hpp>
 #include <components/esm4/dropplacement.hpp>
+#include <components/esm4/skilltraining.hpp>
+#include <components/esm4/loadclas.hpp>
+#include <components/esm4/loadgmst.hpp>
+#include <components/esm4/loadskil.hpp>
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cctype>
 #include <charconv>
 #include <cmath>
 #include <cstdlib>
+#include <cstdio>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -33,6 +44,7 @@
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loaddial.hpp>
 #include <components/esm4/loaddoor.hpp>
+#include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadflor.hpp>
 #include <components/esm4/loadfurn.hpp>
 #include <components/esm4/loadglob.hpp>
@@ -55,12 +67,14 @@
 #include <components/esm4/loadsoun.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/inventorymechanics.hpp>
+#include <components/misc/messageformatparser.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/vfs/manager.hpp>
 #include <components/vfs/recursivedirectoryiterator.hpp>
 
+#include "../mwbase/dialoguemanager.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/inputmanager.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
@@ -89,10 +103,88 @@ namespace MWWorld
 {
     namespace
     {
-        bool nativeInventoryActor(const Ptr& actor)
+        // Formatting arguments precede the literal button labels. Consume the
+        // placeholders before handing the remaining labels to the existing UI.
+        class NativeMessageFormatter : public Misc::MessageFormatParser
+        {
+            const std::vector<ObScript::Value>& mArguments;
+            std::size_t mNext = 1;
+            std::string mText;
+
+            template <class T>
+            void append(const std::string& format, T value)
+            {
+                const int length = std::snprintf(nullptr, 0, format.c_str(), value);
+                if (length < 0)
+                    throw ObScript::RuntimeError("OBSV115", "invalid native message format", "MessageBox");
+                std::string text(static_cast<std::size_t>(length) + 1, '\0');
+                std::snprintf(text.data(), text.size(), format.c_str(), value);
+                text.resize(length);
+                mText += text;
+            }
+
+            void visitedCharacter(char c) override { mText += c; }
+
+            void visitedPlaceholder(Placeholder placeholder, int flags, int width, int precision,
+                Notation notation) override
+            {
+                if (mNext == mArguments.size())
+                    throw ObScript::RuntimeError("OBSV115", "missing native message format argument", "MessageBox");
+                const auto& value = mArguments[mNext++];
+                std::string format = "%";
+                if (flags & AlignLeft) format += '-';
+                if (flags & PositiveSign) format += '+';
+                if (flags & PositiveSpace) format += ' ';
+                if (flags & AlternateForm) format += '#';
+                if (flags & PrependZero) format += '0';
+                if (width >= 0) format += std::to_string(width);
+                if (precision >= 0) format += "." + std::to_string(precision);
+                if (placeholder == StringPlaceholder)
+                {
+                    format += 's';
+                    const auto text = ObScript::valueString(value);
+                    append(format, text.c_str());
+                }
+                else if (placeholder == IntegerPlaceholder)
+                {
+                    format += "lld";
+                    append(format, static_cast<long long>(ObScript::asInteger(value)));
+                }
+                else
+                {
+                    format += static_cast<char>(notation);
+                    append(format, ObScript::asNumber(value));
+                }
+            }
+
+        public:
+            explicit NativeMessageFormatter(const std::vector<ObScript::Value>& arguments)
+                : mArguments(arguments)
+            {
+            }
+
+            const std::string& text() const { return mText; }
+
+            std::vector<std::string> buttons() const
+            {
+                std::vector<std::string> result;
+                for (auto i = mNext; i < mArguments.size(); ++i)
+                {
+                    const auto* label = std::get_if<std::string>(&mArguments[i]);
+                    if (!label)
+                        throw ObScript::RuntimeError("OBSV115", "native message button must be a string", "MessageBox");
+                    result.push_back(*label);
+                }
+                return result;
+            }
+        };
+
+        bool nativeInventoryOwner(const Ptr& actor)
         {
             if (actor.isEmpty())
                 return false;
+            if (actor.getType() == ESM::REC_CONT4)
+                return actor.getRefData().getCustomData() != nullptr;
             if (actor.getType() == ESM::REC_NPC_4)
                 return actor.get<ESM4::Npc>()->mBase && actor.get<ESM4::Npc>()->mBase->mIsTES4;
             if (actor.getType() == ESM::REC_CREA4)
@@ -550,6 +642,7 @@ namespace MWWorld
     {
         OblivionScriptManager* mOwner;
         decltype(OblivionScriptManager::mNativeSpeech) mNativeSpeech{};
+        ESM::FormKey mMessageBoxOwner;
         decltype(OblivionScriptManager::mDiagnosedVoiceTopics) mDiagnosedVoiceTopics{};
         decltype(OblivionScriptManager::mInstances) mInstances{};
         decltype(OblivionScriptManager::mQuests) mQuests{};
@@ -582,8 +675,10 @@ namespace MWWorld
         }
         void swap(OblivionScriptManager& owner) noexcept
         {
+            owner.mItemTransferIdentity.reset();
             using std::swap;
             swap(mNativeSpeech, owner.mNativeSpeech);
+            swap(mMessageBoxOwner, owner.mMessageBoxOwner);
             swap(mDiagnosedVoiceTopics, owner.mDiagnosedVoiceTopics);
             swap(mInstances, owner.mInstances);
             swap(mQuests, owner.mQuests);
@@ -690,7 +785,9 @@ namespace MWWorld
     void OblivionScriptManager::clear()
     {
         requireMutableRuntime();
+        mItemTransferIdentity.reset();
         mNativeSpeech.clear();
+        mMessageBoxOwner = {};
         mDiagnosedVoiceTopics.clear();
         mInstances.clear();
         mSpokenDialogueInfos.clear();
@@ -731,13 +828,21 @@ namespace MWWorld
             return {};
         if (ptr == mWorld.getPlayerConstPtr())
             return ESM::FormKey::dynamic("player", 1);
-        return ptr.getCellRef().getFormKey();
+        const auto key = ptr.getCellRef().getFormKey();
+        return key.isNull() ? ptr.getCellRef().getNativeScriptOwner() : key;
     }
 
     Ptr OblivionScriptManager::ptrFor(const ESM::FormKey& key)
     {
         if (ESM4::runtimeReferenceKey(key) == ESM::FormKey::dynamic("player", 1))
             return mWorld.getPlayerPtr();
+        if (key.isDynamic() && key.mNamespace == "inventory-script")
+        {
+            auto& inventory = mWorld.getPlayerPtr().getClass().getInventoryStore(mWorld.getPlayerPtr());
+            for (auto item = inventory.begin(); item != inventory.end(); ++item)
+                if (item->getCellRef().getNativeScriptOwner() == key) return *item;
+            return {};
+        }
         if (const MWMechanics::OblivionAiService* oblivionAi = mWorld.getOblivionAiService())
             if (Ptr ptr = oblivionAi->resolveReference(key); !ptr.isEmpty())
                 return ptr;
@@ -760,7 +865,12 @@ namespace MWWorld
             return {};
         const ESM::FormKey script = mResolver.toFormKey(scriptId(ptr));
         const auto found = mScripts.find(script);
-        return found == mScripts.end() ? std::shared_ptr<const ObScript::Program>{} : found->second;
+        if (found != mScripts.end()) return found->second;
+        const auto native = OblivionProfileServices::nativeItemId(mStore, ptr.getCellRef().getRefId());
+        if (const auto* id = native.getIf<ESM::FormId>())
+            if (const auto base = mBaseScripts.find(mResolver.toFormKey(*id)); base != mBaseScripts.end())
+                return base->second;
+        return {};
     }
 
     std::shared_ptr<const ObScript::Program> OblivionScriptManager::scriptFor(const ESM::FormKey& key)
@@ -849,6 +959,21 @@ namespace MWWorld
         if (*local >= instance->second.mLocals.size())
             return std::nullopt;
         return numericScriptValue(instance->second.mLocals[*local]);
+    }
+
+    std::optional<double> OblivionScriptManager::scriptVariable(const Ptr& target, std::string_view name) const
+    {
+        const auto program = scriptFor(target);
+        if (!program) return std::nullopt;
+        const auto instance = mInstances.find({program->mUnit.serialize(), keyFor(target)});
+        for (std::size_t i = 0; i < program->mLocals.size(); ++i)
+            if (Misc::StringUtils::ciEqual(program->mLocals[i].mName, name))
+            {
+                if (instance == mInstances.end()) return 0.0;
+                if (i >= instance->second.mLocals.size()) return std::nullopt;
+                return numericScriptValue(instance->second.mLocals[i]);
+            }
+        return std::nullopt;
     }
 
     std::optional<Ptr> OblivionScriptManager::scriptedLookTarget(const Ptr& actor) const
@@ -1017,6 +1142,165 @@ namespace MWWorld
         if (mSuppressedActivations.contains(key))
             return false;
         return dispatchObjectEvent(self, "onactivate", actionReference);
+    }
+
+    bool OblivionScriptManager::dispatchInventoryEquip(const Ptr& actor, const Ptr& item)
+    {
+        requireMutableRuntime();
+        if (actor.isEmpty() || actor != mWorld.getPlayerPtr() || item.isEmpty()
+            || !actor.getClass().getInventoryStore(actor).isEquipped(item)) return false;
+        return dispatchInventoryEvent(actor, item, "onequip");
+    }
+
+    bool OblivionScriptManager::hasInventoryAddEvent(const ESM::FormKey& base) const
+    {
+        const auto found = mBaseScripts.find(base);
+        return found != mBaseScripts.end()
+            && std::any_of(found->second->mEntryPoints.begin(), found->second->mEntryPoints.end(),
+                [](const auto& entry) { return Misc::StringUtils::ciEqual(entry.mEvent, "onadd"); });
+    }
+
+    bool OblivionScriptManager::hasStatelessInventoryEvents(const ESM::FormKey& base) const
+    {
+        const auto found = mBaseScripts.find(base);
+        return found != mBaseScripts.end() && found->second->mLocals.empty()
+            && hasInventoryAddEvent(base)
+            && std::all_of(found->second->mEntryPoints.begin(), found->second->mEntryPoints.end(),
+                [](const auto& entry) {
+                    return Misc::StringUtils::ciEqual(entry.mEvent, "onadd")
+                        || Misc::StringUtils::ciEqual(entry.mEvent, "onequip");
+                });
+    }
+
+    bool OblivionScriptManager::dispatchInventoryAdd(const Ptr& actor, const Ptr& item)
+    {
+        requireMutableRuntime();
+        // The publisher assigns identity before insertion so separately acquired
+        // scripted ingredients cannot merge and share their persistent locals.
+        if (item.isEmpty() || item.getCellRef().getNativeScriptOwner().isNull()) return false;
+        return dispatchInventoryEvent(actor, item, "onadd");
+    }
+
+    bool OblivionScriptManager::dispatchInventoryEvent(const Ptr& actor, const Ptr& item, std::string_view event)
+    {
+        requireMutableRuntime();
+        // An exact Player-owned singleton. Its identity is neither the item
+        // base nor the containing actor, including during nested event calls.
+        if (actor != mWorld.getPlayerPtr() || item.isEmpty() || item.getCellRef().getCount() != 1)
+            return false;
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        if (item.getContainerStore() != &inventory) return false;
+        const auto native = OblivionProfileServices::nativeItemId(mStore, item.getCellRef().getRefId());
+        const auto* id = native.getIf<ESM::FormId>();
+        if (!id) return false;
+        const auto base = mResolver.toFormKey(*id);
+        const auto found = mBaseScripts.find(base);
+        if (found == mBaseScripts.end()) return false;
+        const auto program = found->second;
+        if (!std::any_of(program->mEntryPoints.begin(), program->mEntryPoints.end(), [&](const auto& entry) {
+                return Misc::StringUtils::ciEqual(entry.mEvent, event);
+            })) return false;
+        auto key = item.getCellRef().getNativeScriptOwner();
+        if (key.isNull())
+        {
+            if (!mWorld.mNextOblivionDynamicSerial
+                || mWorld.mNextOblivionDynamicSerial == std::numeric_limits<std::uint64_t>::max())
+                throw std::runtime_error("Native inventory script identity exhausted");
+            key = ESM::FormKey::dynamic("inventory-script", mWorld.mNextOblivionDynamicSerial);
+            item.getCellRef().setNativeScriptOwner(key);
+            ++mWorld.mNextOblivionDynamicSerial;
+        }
+        Log(Debug::Info) << "M7 inventory " << (event == "onequip" ? "equip" : "add")
+            << " event: item=" << base.serialize()
+            << " self=" << key.serialize() << " container=" << keyFor(actor).serialize();
+        // execute/instanceFor retain locals by the actual item identity. Script
+        // callbacks may unequip the item; no borrowed slot iterator survives.
+        return execute(program, key, key, event, keyFor(actor));
+    }
+
+    void OblivionScriptManager::retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept
+    {
+        // No script frame survives this UI consumption boundary. Erasure has
+        // no allocation/callback; other ingredient instances retain locals.
+        for (auto it = mInstances.begin(); it != mInstances.end(); )
+            if (it->first.mContext == owner) it = mInstances.erase(it);
+            else ++it;
+    }
+
+    struct OblivionScriptManager::PreparedItemScriptTransfer::Data
+    {
+        OblivionScriptManager* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        InstanceKey mSource, mTarget;
+        Instance mExpected;
+        std::map<InstanceKey, Instance> mPrepared;
+        bool mFresh = false;
+        bool mConsumed = false;
+    };
+
+    OblivionScriptManager::PreparedItemScriptTransfer::PreparedItemScriptTransfer(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    OblivionScriptManager::PreparedItemScriptTransfer::~PreparedItemScriptTransfer() = default;
+
+    bool OblivionScriptManager::PreparedItemScriptTransfer::isValid() const noexcept
+    {
+        if (!mData || mData->mConsumed || mData->mIdentity.expired()) return false;
+        const auto& d = *mData;
+        if (d.mOwner->mDepth || d.mOwner->mRetainedRuntime || d.mPrepared.size() != 1
+            || d.mOwner->mInstances.contains(d.mTarget)) return false;
+        for (const auto& [key, instance] : d.mOwner->mInstances)
+            if (key.mContext == d.mTarget.mContext
+                || (key.mContext == d.mSource.mContext && key.mUnit != d.mSource.mUnit)) return false;
+        const auto found = d.mOwner->mInstances.find(d.mSource);
+        if (d.mFresh) return found == d.mOwner->mInstances.end();
+        return found != d.mOwner->mInstances.end()
+            && found->second.mLocals == d.mExpected.mLocals
+            && found->second.mOnLoadFired == d.mExpected.mOnLoadFired;
+    }
+
+    bool OblivionScriptManager::PreparedItemScriptTransfer::commit() noexcept
+    {
+        if (!isValid()) return false;
+        auto& d = *mData;
+        // Compatible map allocators transfer the already allocated node.
+        d.mOwner->mInstances.merge(d.mPrepared);
+        if (!d.mFresh) d.mOwner->mInstances.erase(d.mSource);
+        d.mConsumed = true;
+        return true;
+    }
+
+    std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer>
+    OblivionScriptManager::prepareItemScriptTransfer(
+        const ESM::FormKey& base, const ESM::FormKey& from, const ESM::FormKey& to,
+        bool initializeStateless)
+    {
+        requireMutableRuntime();
+        if (mDepth || mRetainedRuntime || to.isNull() || from == to
+            || (initializeStateless ? !from.isNull() || !hasStatelessInventoryEvents(base) : from.isNull())
+            || ESM::FormKey::deserialize(from.serialize()) != from
+            || ESM::FormKey::deserialize(to.serialize()) != to)
+            throw std::invalid_argument("item script transfer requires distinct idle owners");
+        const auto program = mBaseScripts.find(base);
+        if (program == mBaseScripts.end() || !hasInventoryAddEvent(base))
+            throw std::invalid_argument("item script transfer requires a loaded OnAdd program");
+        auto data = std::make_unique<PreparedItemScriptTransfer::Data>();
+        data->mOwner = this;
+        data->mFresh = initializeStateless;
+        data->mSource = {program->second->mUnit.serialize(), from};
+        data->mTarget = {program->second->mUnit.serialize(), to};
+        const auto source = mInstances.find(data->mSource);
+        if (!initializeStateless && source == mInstances.end())
+            throw std::invalid_argument("item script transfer source instance is missing");
+        for (const auto& [key, instance] : mInstances)
+            if (key.mContext == to || (key.mContext == from && key.mUnit != data->mSource.mUnit))
+                throw std::invalid_argument("item script transfer has another owner/unit");
+        // Explicit fresh creation is restricted to programs with no local state
+        // and no world events. It does not replay pickup/equip callbacks.
+        if (!initializeStateless) data->mExpected = source->second;
+        data->mPrepared.emplace(data->mTarget, data->mExpected);
+        if (!mItemTransferIdentity) mItemTransferIdentity = std::make_shared<const char>();
+        data->mIdentity = mItemTransferIdentity;
+        return std::unique_ptr<PreparedItemScriptTransfer>(new PreparedItemScriptTransfer(std::move(data)));
     }
 
     void OblivionScriptManager::update(double secondsPassed)
@@ -1257,7 +1541,7 @@ namespace MWWorld
                 // be mistaken for an authoritative saved empty inventory by
                 // lazy class construction. Existing saved empties stay intact.
                 if (ptr.getType() == ESM::REC_NPC_4 || ptr.getType() == ESM::REC_CREA4)
-                    state.mInventory = mWorld.captureOblivionActorInventory(ptr);
+                    state.mInventory = mWorld.captureOblivionInventory(ptr);
                 try
                 {
                     state.mLockLevel = ptr.getCellRef().getLockLevel();
@@ -1315,6 +1599,21 @@ namespace MWWorld
             return ObScript::ReferenceValue{ *key, lower(name) };
         if (const auto key = mStore.findEsm4FormKey(name))
         {
+            if (const auto* global = mStore.search<ESM4::GlobalVariable>(*key);
+                global && (Misc::StringUtils::ciEqual(global->mEditorId, "GameDaysPassed")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "GameHour")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "GameDay")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "GameMonth")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "GameYear")
+                    || Misc::StringUtils::ciEqual(global->mEditorId, "TimeScale")))
+            {
+                // Calendar globals project the live clock owner. The runtime
+                // snapshot can predate ordinary time advance or a Wait jump.
+                const GlobalVariableName calendarName(global->mEditorId);
+                if (global->mType == 'f')
+                    return double(mWorld.getGlobalFloat(calendarName));
+                return std::int64_t(mWorld.getGlobalInt(calendarName));
+            }
             if (mWorld.mOblivionRuntimeState)
             {
                 const auto global = mWorld.mOblivionRuntimeState->mGlobals.find(*key);
@@ -1449,6 +1748,24 @@ namespace MWWorld
             return context.mSelf;
         };
         const auto objectPtr = [&]() { return ptrFor(objectKey()); };
+        const auto messageBoxOwner = [&]() {
+            const auto self = ESM4::runtimeReferenceKey(objectKey());
+            if (self == ESM::FormKey::dynamic("player", 1)) return self;
+            // Original5072B0 uses a permanent reference's FormID, otherwise
+            // the executing script's FormID. Other pollers must not consume it.
+            if (const auto* reference = mStore.search<ESM4::Reference>(self))
+            {
+                if (!(reference->mFlags & 0x4000u)) return self;
+            }
+            else if (const auto* actor = mStore.search<ESM4::ActorCharacter>(self))
+            {
+                if (!(actor->mFlags & 0x4000u)) return self;
+            }
+            const auto script = context.mUnit.mOwner;
+            if (const auto quest = mQuestScripts.find(script); quest != mQuestScripts.end())
+                return quest->second;
+            return script;
+        };
         const auto isDispositionActor = [&](const ESM::FormKey& key) {
             const auto base = mWorld.getOblivionReferenceBaseKey(key);
             return base && (mStore.search<ESM4::Npc>(*base) || mStore.search<ESM4::Creature>(*base));
@@ -1501,9 +1818,28 @@ namespace MWWorld
         if (name == "getsecondspassed")
             return context.mSecondsPassed;
         if (name == "getbuttonpressed")
-            return std::int64_t(MWBase::Environment::get().getWindowManager()->readPressedButton());
-        if (name == "getself" || name == "getcontainer")
+        {
+            if (mMessageBoxOwner.isNull() || mMessageBoxOwner != messageBoxOwner())
+                return std::int64_t(-1);
+            const int button = MWBase::Environment::get().getWindowManager()->readPressedButton();
+            if (button >= 0) mMessageBoxOwner = {};
+            return std::int64_t(button);
+        }
+        if (name == "getself")
             return ObScript::ReferenceValue{ context.mSelf, "self" };
+        if (name == "getcontainer")
+        {
+            if (context.mSelf.isDynamic() && context.mSelf.mNamespace == "inventory-script")
+            {
+                const auto item = ptrFor(context.mSelf);
+                const auto player = mWorld.getPlayerPtr();
+                const auto& inventory = player.getClass().getInventoryStore(player);
+                return ObScript::ReferenceValue{
+                    !item.isEmpty() && item.getContainerStore() == &inventory
+                        ? ESM::FormKey::dynamic("player", 1) : ESM::FormKey{}, "container"};
+            }
+            return ObScript::ReferenceValue{ context.mSelf, "self" };
+        }
         if (name == "getactionref" || name == "getactionreference")
             return ObScript::ReferenceValue{ context.mActionReference, "actionref" };
         if (name == "isactionref")
@@ -1551,10 +1887,20 @@ namespace MWWorld
         }
         if (name == "getignorefriendlyhits")
             return std::int64_t(mWorld.getOblivionIgnoreFriendlyHits(objectKey()).value_or(false));
+        if (name == "addtopic")
+        {
+            const auto key = keyFromValue(argument(0));
+            const auto* topic = key ? mStore.search<ESM4::Dialogue>(*key) : nullptr;
+            if (!topic || (topic->mFlags & ESM4::Rec_Deleted))
+                throw ObScript::RuntimeError("OBSV115", "AddTopic requires a native DIAL", name);
+            MWBase::Environment::get().getDialogueManager()->addTopic(ESM::RefId(topic->mId));
+            trace("addtopic topic=" + key->serialize());
+            return std::int64_t(0);
+        }
         if (name == "autosave")
         {
-            MWBase::Environment::get().getStateManager()->quickSave("Autosave");
-            trace("autosave");
+            MWBase::Environment::get().getStateManager()->requestAutosave();
+            trace("autosave requested");
             return std::int64_t(0);
         }
 
@@ -1586,7 +1932,11 @@ namespace MWWorld
                 changed = changed || state->mEnabled != enabled;
                 state->mEnabled = enabled;
             }
-            mWorld.synchronizeOblivionEnableParents();
+            // GameMode scripts commonly repeat Enable/Disable every frame.
+            // Only a changed root can change its enable-parent descendants;
+            // a no-op must not scan all resident cells and saved references.
+            if (changed)
+                mWorld.synchronizeOblivionEnableParents();
             if (changed)
                 trace(name + " ref=" + key.serialize());
             return std::int64_t(0);
@@ -1595,9 +1945,24 @@ namespace MWWorld
             return std::int64_t(!mWorld.getOblivionReferenceEnabled(objectKey()).value_or(true));
         if (name == "activate")
         {
-            const ESM::FormKey key = objectKey();
+            // An explicitly null parent ends a trap chain; it must not fall
+            // back to the current script's reference.
+            const ESM::FormKey key = target ? keyFromValue(*target).value_or(ESM::FormKey{}) : context.mSelf;
             const Ptr ptr = ptrFor(key);
-            const Ptr actor = ptrFor(context.mActionReference.isNull() ? context.mSelf : context.mActionReference);
+            auto activator = keyFromValue(argument(0)).value_or(ESM::FormKey{});
+            if (activator.isNull())
+                activator = context.mActionReference;
+            const Ptr actor = ptrFor(activator);
+            if (ptr.isEmpty() || actor.isEmpty() || !actor.getRefData().isEnabled())
+                return std::int64_t(0);
+            // The second argument explicitly requests the target's OnActivate.
+            // Trap chains pass another activator (not necessarily an actor) as
+            // the first argument; preserve it for GetActionRef/IsActionRef.
+            if (ObScript::asInteger(argument(1)) != 0 && dispatchObjectEvent(ptr, "onactivate", actor))
+            {
+                trace("activate-script ref=" + key.serialize() + " activator=" + activator.serialize());
+                return std::int64_t(0);
+            }
             if (!ptr.isEmpty())
             {
                 mSuppressedActivations.insert(key);
@@ -1674,9 +2039,18 @@ namespace MWWorld
         }
         if (name == "message" || name == "messagebox")
         {
-            const std::string text = ObScript::valueString(argument(0));
-            MWBase::Environment::get().getWindowManager()->messageBox(text);
-            trace(name + " text=" + text);
+            NativeMessageFormatter formatter(arguments);
+            formatter.process(ObScript::valueString(argument(0)));
+            const auto buttons = name == "messagebox" ? formatter.buttons() : std::vector<std::string>{};
+            const auto windows = MWBase::Environment::get().getWindowManager();
+            if (buttons.empty())
+                windows->messageBox(formatter.text());
+            else
+            {
+                windows->interactiveMessageBox(formatter.text(), buttons);
+                mMessageBoxOwner = messageBoxOwner();
+            }
+            trace(name + " text=" + formatter.text() + " buttons=" + std::to_string(buttons.size()));
             return std::int64_t(0);
         }
         if (name == "getrandompercent")
@@ -1727,7 +2101,7 @@ namespace MWWorld
             if (name == "getitemcount" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
             {
                 const Ptr actor = ptrFor(owner);
-                if (nativeInventoryActor(actor))
+                if (nativeInventoryOwner(actor))
                 {
                     const auto id = mResolver.toFormId(*item);
                     const auto count = id ? oblivionInventoryItemCount(actor.getClass().getContainerStore(actor),
@@ -1741,15 +2115,15 @@ namespace MWWorld
             if (name == "additem" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
             {
                 const Ptr actor = ptrFor(owner);
-                if (nativeInventoryActor(actor))
+                if (nativeInventoryOwner(actor))
                 {
                     const auto count = boundedCount(argument(itemArg + 1));
                     if (count < 0)
                         throw std::invalid_argument("Native AddItem negative-count delta semantics are unsupported");
-                    const int added = mWorld.oblivionAddActorItem(actor, *item, count);
+                    const int added = mWorld.oblivionAddNativeInventoryItem(actor, *item, count);
                     if (added > 0)
                     {
-                        auto inventory = mWorld.captureOblivionActorInventory(actor);
+                        auto inventory = mWorld.captureOblivionInventory(actor);
                         if (auto* current = referenceState(owner))
                             current->mInventory = std::move(inventory);
                     }
@@ -1763,13 +2137,13 @@ namespace MWWorld
             if (name == "removeitem" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
             {
                 const Ptr actor = ptrFor(owner);
-                if (nativeInventoryActor(actor))
+                if (nativeInventoryOwner(actor))
                 {
                     const auto count = boundedCount(argument(itemArg + 1));
-                    const int removed = mWorld.oblivionRemoveActorItem(actor, *item, count);
+                    const int removed = mWorld.oblivionRemoveNativeInventoryItem(actor, *item, count);
                     if (removed > 0)
                     {
-                        auto inventory = mWorld.captureOblivionActorInventory(actor);
+                        auto inventory = mWorld.captureOblivionInventory(actor);
                         // Reacquire after observers, which may mutate saved references.
                         if (auto* current = referenceState(owner))
                             current->mInventory = std::move(inventory);
@@ -1919,7 +2293,9 @@ namespace MWWorld
             if (left.isEmpty() || !left.isInCell() || !cellKey)
                 return std::int64_t(0);
             const ESM::FormId* cellId = left.getCell()->getCell()->getId().getIf<ESM::FormId>();
-            return std::int64_t(cellId != nullptr && mResolver.toFormKey(*cellId) == *cellKey);
+            return std::int64_t(cellId != nullptr
+                && ESM4::cellConditionMatches(mStore.get<ESM4::Cell>().search(ESM::RefId(*cellId)),
+                    mStore.get<ESM4::Cell>().search(*cellKey)));
         }
         if (name == "getinsamecell")
         {
@@ -1929,6 +2305,35 @@ namespace MWWorld
             return std::int64_t(!left.isEmpty() && !right.isEmpty() && left.getCell() == right.getCell());
         }
 
+        if (name == "setownership")
+        {
+            if (arguments.size() > 1)
+                throw ObScript::RuntimeError("OBSV117", "SetOwnership accepts one optional NPC/faction owner", name);
+            const ObScript::Value requestedOwner = argument(0);
+            const auto* integer = std::get_if<std::int64_t>(&requestedOwner);
+            const auto* number = std::get_if<double>(&requestedOwner);
+            const bool defaultOwner = arguments.empty() || (integer && *integer == 0) || (number && *number == 0);
+            std::optional<ESM::FormKey> owner;
+            if (defaultOwner)
+                owner = mWorld.getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1));
+            else
+                owner = keyFromValue(requestedOwner);
+            const auto* npc = owner ? mStore.search<ESM4::Npc>(*owner) : nullptr;
+            const auto* faction = owner ? mStore.search<ESM4::Faction>(*owner) : nullptr;
+            const auto ownerId = owner ? mResolver.toFormId(*owner) : std::nullopt;
+            if (!ownerId || !ownerId->hasContentFile()
+                || ((!npc || (npc->mFlags & ESM4::Rec_Deleted))
+                    && (!faction || (faction->mFlags & ESM4::Rec_Deleted))))
+                throw ObScript::RuntimeError("OBSV117", "SetOwnership requires a resolved NPC/faction base", name);
+            const auto reference = objectKey();
+            const Ptr ptr = objectPtr();
+            auto* saved = referenceState(reference);
+            if (!ptr.isEmpty()) ptr.getCellRef().setOwner(ESM::RefId(*ownerId));
+            if (saved) saved->mOwner = *owner;
+            trace("setownership ref=" + reference.serialize() + " owner=" + owner->serialize()
+                + " applied=" + (!ptr.isEmpty() || saved ? "true" : "false"));
+            return std::int64_t(0);
+        }
         if (name == "lock" || name == "unlock")
         {
             const Ptr ptr = objectPtr();
@@ -2114,7 +2519,8 @@ namespace MWWorld
         if (name == "getparentref")
         {
             const ESM::FormRecordMetadata* metadata = mStore.getFormKeyIndex().resolve(objectKey());
-            return ObScript::ReferenceValue{ metadata && metadata->mParent ? *metadata->mParent : ESM::FormKey{}, {} };
+            return ObScript::ReferenceValue{
+                metadata && metadata->mEnableParent ? *metadata->mEnableParent : ESM::FormKey{}, {} };
         }
         if (name == "getknockedstate")
             return std::int64_t(mWorld.getOblivionScriptKnockedState(objectKey()).value_or(0.0));
@@ -2126,6 +2532,10 @@ namespace MWWorld
             return std::int64_t(mWorld.getOblivionScriptIsWeaponOut(objectKey()).value_or(0.0));
         if (name == "getweaponanimtype")
             return std::int64_t(mWorld.getOblivionScriptWeaponAnimationType(objectKey()).value_or(0.0));
+        if (name == "gettalkedtopc")
+        {
+            return std::int64_t(isDispositionActor(objectKey()) && hasTalkedToPlayer(objectKey()));
+        }
         if (name == "getdead")
         {
             if (const auto* combat = mWorld.getOblivionCombatService())
@@ -2155,7 +2565,13 @@ namespace MWWorld
                 try
                 {
                     if (name == "resurrect")
-                        throw std::invalid_argument("native resurrection reset is not implemented");
+                    {
+                        const bool preserve = !arguments.empty() && ObScript::asInteger(argument(0)) == 1;
+                        if (!mWorld.resurrectOblivionActor(objectPtr(), preserve))
+                            throw std::invalid_argument("native Resurrect requires an initialized actor");
+                        trace("resurrect actor=" + nativeKey.serialize());
+                        return std::int64_t(0);
+                    }
                     ESM::FormKey killer;
                     if (!arguments.empty())
                     {
@@ -2214,6 +2630,26 @@ namespace MWWorld
             {
                 throw ObScript::RuntimeError("OBSV104", error.what(), name);
             }
+        }
+        if (name == "wait" || name == "stopwaiting")
+        {
+            const Ptr actor = objectPtr();
+            const auto package = keyFromValue(argument(0));
+            if (!package || oblivionAi() == nullptr || actor.isEmpty() || !oblivionAi()->handles(actor))
+                throw ObScript::RuntimeError("OBSV104", "Wait/StopWaiting requires a native actor and PACK", name);
+            const bool applied = oblivionAi()->setPackageWaiting(actor, *package, name == "wait");
+            trace(name + " actor=" + objectKey().serialize() + " package=" + package->serialize()
+                + " applied=" + (applied ? "true" : "false"));
+            return std::int64_t(applied);
+        }
+        if (name == "removescriptpackage")
+        {
+            const Ptr actor = objectPtr();
+            if (oblivionAi() == nullptr || actor.isEmpty() || !oblivionAi()->handles(actor))
+                throw ObScript::RuntimeError("OBSV104", "RemoveScriptPackage requires a native TES4 actor", name);
+            const bool removed = oblivionAi()->removeScriptPackage(actor);
+            trace(name + " actor=" + objectKey().serialize() + " removed=" + (removed ? "true" : "false"));
+            return std::int64_t(removed);
         }
         if (name == "forceflee")
         {
@@ -2326,7 +2762,7 @@ namespace MWWorld
                     return std::int64_t(oblivionAi()->getLOS(observer, detected));
                 const ESM4::DetectionResult result = oblivionAi()->detection(observer, detected);
                 return name == "getdetectionlevel" ? ObScript::Value(result.mLevel)
-                                                      : ObScript::Value(std::int64_t(result.mDetected));
+                                                      : ObScript::Value(std::int64_t(ESM4::nativeGetDetected(result)));
             }
             if (name == "getlos" || name == "getlineofsight")
                 return std::int64_t(mWorld.getLOS(observer, detected));
@@ -2336,7 +2772,8 @@ namespace MWWorld
                                                   : ObScript::Value(std::int64_t(visible));
         }
 
-        if (name == "startcombat" || name == "stopcombat")
+        if (name == "startcombat" || name == "stopcombat"
+            || name == "stopcombatalarmonactor" || name == "scaonactor")
         {
             try
             {
@@ -2363,6 +2800,8 @@ namespace MWWorld
                     const auto opponent = requireActor(*targetKey);
                     mWorld.executeOblivionStartCombat(ptrFor(actor), ptrFor(opponent));
                 }
+                else if (name == "stopcombatalarmonactor" || name == "scaonactor")
+                    mWorld.executeOblivionStopCombatAlarmOnActor(ptrFor(actor));
                 else
                 {
                     // The native command uses actor +334(true), whose Player
@@ -2382,7 +2821,9 @@ namespace MWWorld
         {
             return std::int64_t(mWorld.isOblivionInCombat(objectKey()).value_or(false));
         }
-        if (name == "isspelltarget" || name == "ispcamurderer")
+        if (name == "ispcamurderer")
+            return std::int64_t(playerIsMurderer());
+        if (name == "isspelltarget")
             return std::int64_t(0);
         if (name == "issneaking")
         {
@@ -2403,11 +2844,24 @@ namespace MWWorld
         }
         if (name == "isplayerinjail")
             return std::int64_t(mWorld.isPlayerInJail());
+        if (name == "getpcmiscstat" || name == "modpcmiscstat")
+        {
+            const auto index = ObScript::asInteger(argument(0));
+            const auto previous = playerMiscStat(index);
+            if (name == "getpcmiscstat") return std::int64_t(previous);
+            const auto delta = ObScript::asInteger(argument(1));
+            if (delta < std::numeric_limits<std::int32_t>::min() || delta > std::numeric_limits<std::int32_t>::max())
+                throw ObScript::RuntimeError("OBSV117", "ModPCMiscStat requires an int32 delta", name);
+            if (!mWorld.mOblivionRuntimeState)
+                mWorld.mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
+            mWorld.mOblivionRuntimeState->mPlayer.mActorValues[ESM4::playerMiscStatKey(index)]
+                = ESM4::addPlayerMiscStat(previous, static_cast<std::int32_t>(delta));
+            return std::int64_t(0);
+        }
         if (name == "getpcinfamy" || name == "getpcfactionmurder" || name == "getpcfactionsteal")
         {
             if (name == "getpcinfamy")
-                if (const auto infamy = mWorld.getOblivionPlayerInfamy())
-                    return std::int64_t(*infamy);
+                return playerInfamy();
             if (!mWorld.mOblivionRuntimeState)
                 return std::int64_t(0);
             const std::string valueName = name == "getpcinfamy" ? "infamy"
@@ -2423,14 +2877,35 @@ namespace MWWorld
                 throw ObScript::RuntimeError("OBSV117", "Legacy Player counter cannot fit int64 storage", name);
             return static_cast<std::int64_t>(integer);
         }
-        if (name == "modpcinfamy")
+        if (name == "modpcinfamy" || name == "modpcfame")
         {
             const auto delta = ObScript::asInteger(argument(0));
             if (delta < std::numeric_limits<std::int32_t>::min() || delta > std::numeric_limits<std::int32_t>::max())
-                throw ObScript::RuntimeError("OBSV117", "ModPCInfamy requires an int32 delta", name);
-            if (!mWorld.modifyOblivionPlayerInfamy(static_cast<std::int32_t>(delta)))
-                throw ObScript::RuntimeError("OBSV117", "Native Player Infamy is not ready", name);
+                throw ObScript::RuntimeError("OBSV117", "Player reputation mutation requires an int32 delta", name);
+            const bool applied = name == "modpcinfamy"
+                ? mWorld.modifyOblivionPlayerInfamy(static_cast<std::int32_t>(delta))
+                : mWorld.modifyOblivionPlayerFame(static_cast<std::int32_t>(delta));
+            if (!applied)
+                throw ObScript::RuntimeError("OBSV117", "Native Player reputation is not ready", name);
             return std::int64_t(0);
+        }
+        if (name == "modpcskill")
+        {
+            try
+            {
+                const auto skill = ESM4::actorValueIndex(lower(ObScript::valueString(argument(0))));
+                const auto count = ObScript::asInteger(argument(1));
+                if (!skill || *skill < 12 || *skill > 32 || count < 0
+                    || count > std::numeric_limits<std::int32_t>::max())
+                    throw std::invalid_argument("ModPCSkill requires a skill and nonnegative int32 level count");
+                if (count == 0) return std::int64_t(0);
+                mWorld.updateOblivionPlayerSkill(*skill, static_cast<std::int32_t>(count));
+                return std::int64_t(0);
+            }
+            catch (const std::exception& error)
+            {
+                throw ObScript::RuntimeError("OBSV117", error.what(), name);
+            }
         }
         if (name == "getlevel")
         {
@@ -2477,8 +2952,43 @@ namespace MWWorld
         }
         if (name == "getcurrenttime")
             return double(mWorld.mGlobalVariables[Globals::sGameHour].getFloat());
-        if (name == "getfactionrank")
-            return std::int64_t(-1);
+        if (name == "getdayofweek")
+        {
+            // Original5051D0 ->402C40 truncates GameDaysPassed and takes the
+            // unsigned low32 remainder. The world owns this integer counter.
+            return std::int64_t(static_cast<std::uint32_t>(
+                mWorld.mGlobalVariables[Globals::sDaysPassed].getInteger()) % 7);
+        }
+        if (name == "addachievement")
+        {
+            // The original PC command table dispatches to977C50: success,
+            // without extracting arguments or changing game/platform state.
+            trace("addachievement pc-noop");
+            return std::int64_t(0);
+        }
+        if (name == "getfactionrankdifference")
+        {
+            const auto faction = keyFromValue(argument(0));
+            const auto other = keyFromValue(argument(1));
+            if (!faction || !other) return std::int64_t(0);
+            const auto first = mWorld.getOblivionFactionRank(objectKey(), *faction);
+            const auto second = mWorld.getOblivionFactionRank(ESM4::runtimeReferenceKey(*other), *faction);
+            return std::int64_t(first == -1 || second == -1 ? 0 : int(first) - int(second));
+        }
+        if (name == "getfactionrank" || name == "setfactionrank")
+        {
+            const bool setting = name == "setfactionrank";
+            if (arguments.size() != (setting ? 2 : 1))
+                throw ObScript::RuntimeError("OBSV117", "Faction rank requires a faction and, for SetFactionRank, a rank", name);
+            const auto faction = keyFromValue(argument(0));
+            if (!setting)
+                return std::int64_t(faction ? mWorld.getOblivionFactionRank(objectKey(), *faction) : -1);
+            if (!faction || !mWorld.setOblivionFactionRank(objectKey(), *faction, boundedCount(argument(1))))
+                throw ObScript::RuntimeError("OBSV117", "SetFactionRank requires a resolved actor and faction", name);
+            trace("setfactionrank ref=" + objectKey().serialize() + " faction=" + faction->serialize()
+                + " rank=" + std::to_string(mWorld.getOblivionFactionRank(objectKey(), *faction)));
+            return std::int64_t(0);
+        }
         if (name == "getdestroyed")
         {
             const ESM4::RuntimeReferenceState* state = referenceState(objectKey());
@@ -2502,6 +3012,35 @@ namespace MWWorld
                 observation->record("scene-complex-command", {{"value", combat->sceneIsComplex()}});
             return std::int64_t(0);
         }
+        if (name == "setcrimegold")
+        {
+            if (arguments.size() != 1)
+                throw ObScript::RuntimeError("OBSV115", "SetCrimeGold requires one integer amount", name);
+            const auto requested = boundedCount(argument(0));
+            const Ptr actor = objectPtr();
+            if (actor.isEmpty() || !actor.getClass().isActor())
+                return std::int64_t(0);
+            ensureDispositionActor(objectKey());
+            auto* combat = mWorld.getOblivionCombatService();
+            const auto* current = combat ? combat->findActorValues(ESM4::runtimeReferenceKey(objectKey())) : nullptr;
+            if (!current || !current->mBounty)
+                throw ObScript::RuntimeError("OBSV115", "SetCrimeGold requires owned native bounty storage", name);
+            auto values = *current;
+            const bool player = values.mOwner == ESM4::ActorValueOwner::Player;
+            // The original wrapper subtracts the legal query (including its
+            // positive sub-one minimum), then adds that delta to raw storage.
+            const float old = ESM4::queryCrimeBounty(*values.mBounty, player, values.mPlayerInShiveringIsles);
+            const float delta = static_cast<float>(double(requested) - old);
+            values.mBounty = ESM4::modifyCrimeBounty(
+                *values.mBounty, delta, player, values.mPlayerInShiveringIsles).mState;
+            if (player)
+                combat->publishPlayerValues(mWorld.getPlayer(), std::move(values),
+                    resolveOblivionPlayerDynamicBaseSettings(mStore));
+            else
+                combat->publishNonPlayerValues(actor, std::move(values));
+            trace("setcrimegold ref=" + objectKey().serialize() + " requested=" + std::to_string(requested));
+            return std::int64_t(0);
+        }
         if (name == "getcrimegold" || name == "canpaycrimegold")
         {
             const Ptr actor = objectPtr();
@@ -2516,6 +3055,8 @@ namespace MWWorld
                 return double(*bounty);
             return std::int64_t(actor.getClass().getContainerStore(actor).count(ContainerStore::sGoldId) >= *bounty);
         }
+        if (name == "getisclassdefault")
+            return std::int64_t(oblivionIsClassDefault(mWorld, keyFromValue(argument(0)).value_or(ESM::FormKey{})));
         if (name == "getclassdefaultmatch")
             return std::int64_t(oblivionClassDefaultMatch(mWorld));
         if (name == "isturnarrest")
@@ -2779,7 +3320,31 @@ namespace MWWorld
                     && actor.getRefData().isEnabled() && actor.getCellRef().getCount() > 0
                     && !actor.getClass().getCreatureStats(actor).isDead();
             };
-            if (!available(speaker) || !available(listener) || speaker == listener)
+            if (!available(speaker) || speaker == listener)
+                return std::int64_t(0);
+            if (listener == mWorld.getPlayerPtr())
+            {
+                // The Player's projected record is not a TES4 NPC. Default
+                // Player conversations use the normal GREETING window path,
+                // which owns choices, result scripts and the talked-to flag.
+                if (listener.isEmpty()
+                    || listener.getClass().getCreatureStats(listener).isDead())
+                    return std::int64_t(0);
+                if (arguments.size() > 1)
+                {
+                    const auto topic = keyFromValue(argument(1));
+                    if (!topic || !MWBase::Environment::get().getDialogueManager()
+                            ->startScriptedDialogue(speaker, *topic))
+                        return std::int64_t(0);
+                    trace("conversation-player ref=" + keyFor(speaker).serialize()
+                        + " topic=" + topic->serialize());
+                    return std::int64_t(1);
+                }
+                MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_Dialogue, speaker);
+                trace("conversation-player ref=" + keyFor(speaker).serialize());
+                return std::int64_t(1);
+            }
+            if (!available(listener))
                 return std::int64_t(0);
             const auto root = arguments.size() > 1 ? keyFromValue(argument(1)) : mStore.findEsm4FormKey("HELLO");
             if (!root) return std::int64_t(0);
@@ -2937,13 +3502,25 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "cast")
+        {
+            const auto spell = keyFromValue(argument(0));
+            const auto victim = keyFromValue(argument(1));
+            if (spell && victim && mWorld.castOblivionEnvironmentalFire(objectPtr(), *spell, *victim))
+            {
+                trace("cast source=" + objectKey().serialize() + " spell=" + spell->serialize()
+                    + " target=" + victim->serialize() + " environmental-fire=true");
+                return std::int64_t(0);
+            }
+        }
+
         // These commands acknowledge state owned by later AI/UI/audio/magic
         // milestones without pretending their subsystem effect occurred. They
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
-            "addtopic", "showmap",
+            "showmap",
             "cast", "addspell", "removespell",
-            "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
+            "setquestobject", "modfactionrank",
             "setunconscious" };
         if (deferred.contains(name))
         {
@@ -2954,6 +3531,71 @@ namespace MWWorld
         }
 
         throw ObScript::RuntimeError("OBSV100", "Unsupported ObScript command " + name, name);
+    }
+
+    std::int64_t OblivionScriptManager::playerInfamy() const
+    {
+        if (const auto infamy = mWorld.getOblivionPlayerInfamy()) return *infamy;
+        if (!mWorld.mOblivionRuntimeState) return 0;
+        const auto& values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+        const auto found = values.find("infamy");
+        if (found == values.end()) return 0;
+        const double integer = std::trunc(found->second);
+        if (!std::isfinite(integer) || integer < -0x1p63 || integer >= 0x1p63)
+            throw ObScript::RuntimeError("OBSV117", "Legacy Player counter cannot fit int64 storage", "getpcinfamy");
+        return static_cast<std::int64_t>(integer);
+    }
+
+    bool OblivionScriptManager::playerIsMurderer() const
+    {
+        if (!mWorld.mOblivionRuntimeState) return false;
+        const auto& values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+        const auto found = values.find(std::string(ESM4::PlayerMurdererKey));
+        // Previous fork saves did not record this flag and always queried false.
+        return found != values.end() && ESM4::playerMurdererValue(found->second);
+    }
+
+    void OblivionScriptManager::notifyPlayerMurder()
+    {
+        requireMutableRuntime();
+        const auto next = ESM4::recordPlayerMurder({ playerIsMurderer(), playerMiscStat(32) });
+        if (!mWorld.mOblivionRuntimeState)
+            mWorld.mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
+        auto values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+        values[std::string(ESM4::PlayerMurdererKey)] = next.mMurderer ? 1.0 : 0.0;
+        values[ESM4::playerMiscStatKey(32)] = next.mMurders;
+        mWorld.mOblivionRuntimeState->mPlayer.mActorValues.swap(values);
+    }
+
+    std::uint32_t OblivionScriptManager::playerMiscStat(std::int64_t index) const
+    {
+        const auto key = ESM4::playerMiscStatKey(index);
+        if (!mWorld.mOblivionRuntimeState) return 0;
+        const auto& values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+        const auto found = values.find(key);
+        return found == values.end() ? 0 : ESM4::playerMiscStatValue(found->second);
+    }
+
+    bool OblivionScriptManager::hasTalkedToPlayer(const ESM::FormKey& actor) const
+    {
+        const auto* state = referenceState(ESM4::runtimeReferenceKey(actor));
+        if (!state) return false;
+        const auto found = state->mCustomState.find("native.dialogue.talked_to_player");
+        if (found == state->mCustomState.end()) return false;
+        return std::get<bool>(found->second);
+    }
+
+    void OblivionScriptManager::markTalkedToPlayer(const ESM::FormKey& actor)
+    {
+        requireMutableRuntime();
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        const auto base = mWorld.getOblivionReferenceBaseKey(key);
+        if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base)))
+            throw std::invalid_argument("Native dialogue history requires an actor reference");
+        auto* state = referenceState(key);
+        if (!state)
+            throw std::invalid_argument("Native dialogue actor has no reference state");
+        state->mCustomState["native.dialogue.talked_to_player"] = true;
     }
 
     bool OblivionScriptManager::hasSpokenDialogueInfo(const ESM::FormKey& info) const
@@ -3015,12 +3657,14 @@ namespace MWWorld
         auto& target = *mImpl->mTarget;
         if (target.mRetainedRuntime && !target.mRetainedRuntime->mDetached)
             return false;
+        target.mItemTransferIdentity.reset();
         target.mInstances.swap(mImpl->mInstances);
         target.mQuests.swap(mImpl->mQuests);
         target.mSpokenDialogueInfos.swap(mImpl->mSpokenDialogueInfos);
         target.mTrace.swap(mImpl->mTrace);
         target.mSequence = mImpl->mSequence;
         target.mNativeSpeech.clear();
+        target.mMessageBoxOwner = {};
         target.mDiagnosedVoiceTopics.clear();
         mImpl->mTarget = nullptr;
         // Logging cannot veto a completed state replacement.
@@ -3051,8 +3695,29 @@ namespace MWWorld
             quest.mRunning = (record.mData.flags & ESM4::Quest::Flag_StartGameEnabled) != 0;
             plan->mQuests.emplace(quest.mQuest, std::move(quest));
         }
+        std::map<ESM::FormKey, std::string> inventoryPrograms;
+        const auto inventoryProgramsFor = [&](const auto& inventory) {
+            for (const auto& item : inventory)
+            {
+                if (item.mScriptOwner.isNull()) continue;
+                const auto base = mBaseScripts.find(item.mBase);
+                if (base == mBaseScripts.end())
+                    throw std::invalid_argument("Saved inventory script item has no winning script");
+                inventoryPrograms.emplace(item.mScriptOwner, base->second->mUnit.serialize());
+            }
+        };
+        inventoryProgramsFor(state.mPlayer.mInventory);
+        for (const auto& reference : state.mReferences) inventoryProgramsFor(reference.mInventory);
+        for (const auto& [actor, abilities] : state.mNativeBoundAbilities)
+            for (const auto& ability : abilities) inventoryProgramsFor(ability.mDisplacedEquipment);
         for (const ESM4::RuntimeScriptInstance& saved : state.mScriptInstances)
         {
+            if (saved.mContext.isDynamic() && saved.mContext.mNamespace == "inventory-script")
+            {
+                const auto source = inventoryPrograms.find(saved.mContext);
+                if (source == inventoryPrograms.end() || source->second != saved.mUnit)
+                    throw std::invalid_argument("Saved inventory script unit no longer matches its actual item");
+            }
             const auto program = mProgramsByUnit.find(saved.mUnit);
             if (program == mProgramsByUnit.end())
                 throw std::invalid_argument("TES4 restored script has no compiled winning unit: " + saved.mUnit);

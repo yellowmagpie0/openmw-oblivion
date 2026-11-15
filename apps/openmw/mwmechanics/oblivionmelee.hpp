@@ -61,6 +61,10 @@ namespace MWMechanics
     // Ordinary active actors can acquire a detected hostile Player without a
     // script StartCombat. Existing directed controllers retain their targets.
     bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor);
+    // Scan resident native actors using the same disposition/fight/detection gates.
+    // Existing controllers keep their targets; nearest positive candidate wins.
+    bool acquireOblivionCombat(MWBase::World& world, const MWWorld::Ptr& actor,
+        std::span<const MWWorld::Ptr> candidates);
 
     struct OblivionOrdinaryContactResult
     {
@@ -194,6 +198,11 @@ namespace MWMechanics
         bool mEnchantedSound = false;
         bool mImmune = false;
     };
+    // A physical arrow has already sampled damage and paid shot costs. Reuse
+    // native mitigation/defender wear without sampling the current bow again.
+    std::optional<OblivionWeaponContactDamage> resolveOblivionArrowContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        float launchDamage, float normalizedDifficulty);
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.
     std::optional<OblivionWeaponContactDamage> resolveOblivionOrdinaryWeaponContact(

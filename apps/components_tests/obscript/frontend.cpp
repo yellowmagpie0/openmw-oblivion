@@ -68,6 +68,12 @@ namespace
         std::reverse(program.mLocals.begin(), program.mLocals.end());
         EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 11), 0u);
         definition.localVarData.push_back(definition.localVarData.back());
+        EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 11), 0u);
+        definition.localVarData.back().variableName = "UNIQUEIDLE";
+        EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 11), 0u);
+        program.mLocals.push_back(program.mLocals.front());
+        EXPECT_EQ(ObScript::nativeLocalIndex(definition, program, 11), 0u);
+        definition.localVarData.back().variableName = "convCount";
         EXPECT_FALSE(ObScript::nativeLocalIndex(definition, program, 11));
         definition.localVarData.clear();
         EXPECT_FALSE(ObScript::nativeLocalIndex(definition, program, 1));

@@ -1,0 +1,350 @@
+{
+  "scope": "Original CharacterGen88 Autosave request waits for saveable UI, writes a real automatic file, and reloads exactly. Topic effects and full opening remain incomplete.",
+  "implementation": "Game-owned pending autosave, retained/rolled back with the selected runtime, cleared on cleanup, consumed before save callbacks. Repeated blocked requests coalesce and autosave preference is respected. Manual quicksave behaviour unchanged.",
+  "fidelity": "Deferring until OpenMW can serialize the UI is a deliberate adaptation. Original dispatch evidence does not prove native queue timing or original disk acceptance while dialogue is open.",
+  "native_dispatch_oracle": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "entry": "0x50a3e0",
+    "manager": "0x466b70",
+    "cases": [
+      {
+        "enabled": false,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 0,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 0,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 1,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 1,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 2,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 2,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 3,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 3,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 0,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 0,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 1,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 1,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 2,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 2,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 3,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": false,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 3,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 0,
+        "same_thread": false,
+        "save_dispatched": true
+      },
+      {
+        "enabled": true,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 0,
+        "same_thread": true,
+        "save_dispatched": true
+      },
+      {
+        "enabled": true,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 1,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 1,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 2,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 2,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 3,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": false,
+        "player_raw_71c_71d": 3,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 0,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 0,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 1,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 1,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 2,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 2,
+        "same_thread": true,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 3,
+        "same_thread": false,
+        "save_dispatched": false
+      },
+      {
+        "enabled": true,
+        "manager_blocked": true,
+        "player_raw_71c_71d": 3,
+        "same_thread": true,
+        "save_dispatched": false
+      }
+    ],
+    "boundaries": "Full original command and save-dispatch manager paths. External GetCurrentThreadId supplied; save-notification display and final465130 disk-save operation captured. Actual65D140 player-byte predicate executes. No original disk save or open-dialogue acceptance is inferred; queueing in this fork is an explicit adaptation to its unsaveable UI."
+  },
+  "checks": {
+    "script-autosave-focused-01": {
+      "source": {
+        "head": "c256b197484cfe811d775ef94e957487f1677de9",
+        "source_fingerprint": "213176e5d69febce59f94372261d35f74368538ac589d7bc679e73e7240829ad"
+      },
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionDialogueMenu.ScriptAutosaveWaitsForSaveableUiAndRetainsTheOwningGame",
+          "binary_sha256": "9b0e8f96cb9b7ea97799fbf5e146b07db432fc432d9b8028287351a268b74953",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "eeddcb235be577fbc0c724659e4ff1612dbef2027ae2bdb35654bd1cd81d6f6a",
+          "inventory_sha256": "e93692bc9a7cd45736d1d15346da92380eebcd342e33d5ae7cc32f25952205ef",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/script-autosave-focused-01/verification.json"
+    },
+    "script-autosave-normal-integration-01": {
+      "source": {
+        "head": "c256b197484cfe811d775ef94e957487f1677de9",
+        "source_fingerprint": "213176e5d69febce59f94372261d35f74368538ac589d7bc679e73e7240829ad"
+      },
+      "results": {
+        "engine": {
+          "executed": 2201,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "9b0e8f96cb9b7ea97799fbf5e146b07db432fc432d9b8028287351a268b74953",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6b13c753d4328a70f43a1f2513b4c7d6b393c34d642ece2f9b8f245bdb459b07",
+          "inventory_sha256": "e93692bc9a7cd45736d1d15346da92380eebcd342e33d5ae7cc32f25952205ef",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": "build/oblivion-compat/sewer-escape/script-autosave-normal-integration-01/verification.json"
+    }
+  },
+  "runtime_executable_sha256": "8646ee7a7c36f3d2b89effdc1818fce3959b42ee6b8af6df4349b0fe9aa7cbb3",
+  "runtime": {
+    "baurus-class-autosave-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/baurus-class-autosave-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/final-victory-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "da75b253a4c09430dae9aa92b0c34ba61466d8e85b6a1dcb6525e146ce6ddf0e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "capture_inspected": true
+    },
+    "baurus-autosave-reload-01": {
+      "scenario": "build/oblivion-compat/sewer-escape/baurus-autosave-reload-01/scenario.json",
+      "passed": true,
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/baurus-class-autosave-01/userdata/saves/Bendu_Olo/Autosave.omwsave",
+        "source_save_sha256": "77d4c9daf5e0f2d4c405ae37bcfebbfb928a6acc922a01bd01d3c1c35c5ef56e",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "capture_inspected": true
+    }
+  },
+  "automatic_save": {
+    "path": "build/oblivion-compat/sewer-escape/baurus-class-autosave-01/userdata/saves/Bendu_Olo/Autosave.omwsave",
+    "sha256": "77d4c9daf5e0f2d4c405ae37bcfebbfb928a6acc922a01bd01d3c1c35c5ef56e",
+    "manual_f5_inputs": 0,
+    "only_save_file_in_course": true,
+    "class": "content:oblivion.esm:023787",
+    "chargen_stage": 88,
+    "mq02_stage": 20,
+    "health": 84.29767608642578,
+    "amulet_count": 1,
+    "key_count": 1
+  },
+  "fresh_reload_save": {
+    "path": "build/oblivion-compat/sewer-escape/baurus-autosave-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "75ae18ed835af185e81272c94963875c52e424e539c65120c76c4a39ae1e5658",
+    "whole_entry_differences": 0,
+    "autosave_replayed": false
+  },
+  "source_save_unchanged": {
+    "path": "build/oblivion-compat/sewer-escape/final-victory-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "da75b253a4c09430dae9aa92b0c34ba61466d8e85b6a1dcb6525e146ce6ddf0e"
+  },
+  "remaining": [
+    "CharacterGen88 AddTopic semantic support and native topic save/load",
+    "Continuous prison-to-outdoors course including shaman victory",
+    "Accumulated sanitizer integration"
+  ],
+  "known_limits": "These class/outdoor checkpoints predate the separate shaman victory; do not splice save state. Original-game dispatch harness captures disk I/O and notification boundaries."
+}

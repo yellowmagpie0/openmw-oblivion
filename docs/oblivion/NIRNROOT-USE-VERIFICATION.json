@@ -1,0 +1,610 @@
+{
+  "status": "Accepted bounded original-content Nirnroot ingestion: consumption, stacking, script retirement, active save and cold recovery",
+  "scope": "Original earned Nirnroot ingestion at Alchemy5/Luck50/ResistMagic0",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "normal_courses": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/normal-use-one-01/use-audit.json",
+        "sha256": "f5d7d0bd1aa7ddb85741a52ed3a8406d247ed8e1def109f875192b4544285cb8"
+      },
+      "passed": true,
+      "phase": "use",
+      "input_sha256": "1408e448b4b04a930fc2e2ccb208d2e549f0f04f9b72be93bc157f1ac7d72335",
+      "output_sha256": "534cd54ef6ee4915d19b083f7f019864b00d8ef52685c5f25d85e4b3d29a5ab7",
+      "health": 105.0,
+      "retained_owners": [
+        "dynamic:inventory-script:0000000000000001"
+      ],
+      "count": 1,
+      "effects": [
+        {
+          "ingredient": "content:oblivion.esm:04e940",
+          "elapsed": 0.0615234375,
+          "magnitude": -5.0,
+          "duration": 1.0,
+          "actor_value": 8
+        }
+      ],
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/normal-expired-restart-01/use-audit.json",
+        "sha256": "f21dc815f3e4aadab26b141db3b6e1893960fbbe6ccd8098f7d289bff47a421a"
+      },
+      "passed": true,
+      "phase": "expired",
+      "input_sha256": "534cd54ef6ee4915d19b083f7f019864b00d8ef52685c5f25d85e4b3d29a5ab7",
+      "output_sha256": "57a4dd1dd4d8df3f76819784d4f2898e487de36d67c1ca6ada8b3fac1688c26b",
+      "health": 110.0,
+      "retained_owners": [
+        "dynamic:inventory-script:0000000000000001"
+      ],
+      "count": 1,
+      "effects": [],
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/normal-use-two-02/use-audit.json",
+        "sha256": "5b9fc7b0d9f7acf074cf9d7a9a25d38c28a47a424652a0b59a0fb5e802c98459"
+      },
+      "passed": true,
+      "phase": "use",
+      "input_sha256": "1408e448b4b04a930fc2e2ccb208d2e549f0f04f9b72be93bc157f1ac7d72335",
+      "output_sha256": "39692d3f0f3eb8838216711384b39ad06ab5539033758c4f28b18dbc6b8a32af",
+      "health": 100.0,
+      "retained_owners": [],
+      "count": 2,
+      "effects": [
+        {
+          "ingredient": "content:oblivion.esm:04e940",
+          "elapsed": 0.0693359375,
+          "magnitude": -5.0,
+          "duration": 1.0,
+          "actor_value": 8
+        },
+        {
+          "ingredient": "content:oblivion.esm:04e940",
+          "elapsed": 0.0693359375,
+          "magnitude": -5.0,
+          "duration": 1.0,
+          "actor_value": 8
+        }
+      ],
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/normal-two-expired-restart-01/use-audit.json",
+        "sha256": "1d4da82efaf771ddff8ecdef013dc98a53b6595560400d8431e9c5f87cf33b9e"
+      },
+      "passed": true,
+      "phase": "expired",
+      "input_sha256": "39692d3f0f3eb8838216711384b39ad06ab5539033758c4f28b18dbc6b8a32af",
+      "output_sha256": "bbc144af934a2bad7ea36392a256f449fec28c785956062659a004d40b3b741d",
+      "health": 110.0,
+      "retained_owners": [],
+      "count": 2,
+      "effects": [],
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/normal-completed-restart-01/use-audit.json",
+        "sha256": "bebcffd7e13bfce673826966aad5be4cf6e933d5e62d982bb5f714626cf802d4"
+      },
+      "passed": true,
+      "phase": "restart",
+      "input_sha256": "57a4dd1dd4d8df3f76819784d4f2898e487de36d67c1ca6ada8b3fac1688c26b",
+      "output_sha256": "6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165",
+      "health": 110.0,
+      "retained_owners": [
+        "dynamic:inventory-script:0000000000000001"
+      ],
+      "count": 1,
+      "effects": [],
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    }
+  ],
+  "gates": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/focused-normal-01/verification.json",
+        "sha256": "ee6bd58a04b46873d7eee3755f7e34d02505c76ad53b475b4750b515b4d54c8e"
+      },
+      "overall_passed": true,
+      "results": {
+        "components": {
+          "executed": 197,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.*:OblivionActorStatsTest.*",
+          "binary_sha256": "e6f21300f614d3b059d38fd255dbb68daf6fd076241b78f6606610baff228857",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "05d700afc387c82cb4d6aef9a57afd0fd5606c5ce8f2b879721bc60e3b0f9866",
+          "inventory_sha256": "7a6493752b35c2ffc9418501fde5c5d85ff4ae9a0539c5eb269690047d27d0ef",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 99,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.*:OblivionActorStatsTest.*",
+          "binary_sha256": "3dfac1525840dfb149fb3cada6906acf279ae7354f163a451ee430caab405ee4",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "0a41a3216bef58cceafc7a4bb155fb3822b2465c5bb42b81bbe6e4c215cdbba4",
+          "inventory_sha256": "14f20da925547f7c825137bd16530801f577507e8b9a17cab0f89286fd38ab64",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "a5fb4fab02fa26e3a447b7e7245e12759ef904392ca1fbe7555082fc184cb468"
+      },
+      "source_after": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "a5fb4fab02fa26e3a447b7e7245e12759ef904392ca1fbe7555082fc184cb468"
+      },
+      "error": null
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/focused-normal-02/verification.json",
+        "sha256": "f334ad7827cefdb6d31cdca0fb327fec9686c4025daee6f62bf2e0e48544dc19"
+      },
+      "overall_passed": true,
+      "results": {
+        "engine": {
+          "executed": 104,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionMagicContent.*:OblivionActorStatsTest.*",
+          "binary_sha256": "c2924ac107b405cb1257e61d851d0817e769c0b8d23ba602c568e562790930dd",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "984d855ac3ec712cff0037ed71d4a11c1b36a92400e87ffeb43494ae2319c954",
+          "inventory_sha256": "0ae6eb1f6c2562d54f79bb3160e4e10ac64b266ef0cd3454e154ccd19bfacd3a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "5ea72838ebb7ac3ed72cdcd177218cb4c991c2ae8581245860df31e787921539"
+      },
+      "source_after": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "5ea72838ebb7ac3ed72cdcd177218cb4c991c2ae8581245860df31e787921539"
+      },
+      "error": null
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/integration-normal-01/verification.json",
+        "sha256": "397850740baadbb527164516697bea3fb21f2f234e12110ae6107523014fd6fa"
+      },
+      "overall_passed": false,
+      "results": {
+        "components": {
+          "executed": 3292,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "e6f21300f614d3b059d38fd255dbb68daf6fd076241b78f6606610baff228857",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3005cdfd63ce0da42c54382b4377326eaa5538cfb040cf1276cb714815fe0bb7",
+          "inventory_sha256": "3e5c1693a0bc06724c7970afad8af7caa24df005e01c447e0d31e8b0a0bc2462",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2280,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c2924ac107b405cb1257e61d851d0817e769c0b8d23ba602c568e562790930dd",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "48a57fed814d1ddab51aa0f469fe966ed87ae124a7e86bfc460e918258abe3db",
+          "inventory_sha256": "0ae6eb1f6c2562d54f79bb3160e4e10ac64b266ef0cd3454e154ccd19bfacd3a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "a2efa46f777ef0e2cbad06035f8f447d971deb5d21b951c899bcfa41945bae3c"
+      },
+      "source_after": null,
+      "error": "python.log: command exited 1"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/integration-sanitized-components-01/verification.json",
+        "sha256": "35ed837150a89b0dd28f0dc103b768be5b0a82e29a2816d4e8c6eb6e24e9de57"
+      },
+      "overall_passed": true,
+      "results": {
+        "sanitize": {
+          "executed": 1113,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "c2a345e443e5459cb0647cb5d458e22e02933aaaabdea56c34ed1c410f9af5b0",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "841035233ad953b649892718e1e7501192ee6b2aca8bc664fb39948263bc7920",
+          "inventory_sha256": "4ca146b87970ffd73e6522564142c87ced89e5784440da3881bf9a19cb170793",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "a2efa46f777ef0e2cbad06035f8f447d971deb5d21b951c899bcfa41945bae3c"
+      },
+      "source_after": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "a2efa46f777ef0e2cbad06035f8f447d971deb5d21b951c899bcfa41945bae3c"
+      },
+      "error": null
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/integration-python-02/verification.json",
+        "sha256": "da01dfcd562bdda9e25b7dc037621e41560dbd36111ed8b379433a83ff8e4ae6"
+      },
+      "overall_passed": true,
+      "results": {
+        "python": {
+          "executed": 614,
+          "passed": true,
+          "log_sha256": "682e88b200bd8a9be085d53c0b318416c1a5c21a836d9cb9d9e4668fbeec5f8e"
+        }
+      },
+      "source_before": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "e8f79d791821d5557a1a750dbbaef2ab59ed3592e3726d8651beaed194bfc03c"
+      },
+      "source_after": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "e8f79d791821d5557a1a750dbbaef2ab59ed3592e3726d8651beaed194bfc03c"
+      },
+      "error": null
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/integration-sanitized-actorbounds-01/verification.json",
+        "sha256": "68f49ef251e721a804dd7ca91a220cf65a02380ecc97e0f188f47a686250ace8"
+      },
+      "overall_passed": true,
+      "results": {
+        "engine": {
+          "executed": 11,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*ActorBounds*",
+          "binary_sha256": "3528916d539932ebc06d0fab1fcb40ffa9026983b7bf1f661fc1cbd0f3fce7d7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "a2755e091032f0fc64d0a35249ba9705fc23b13e18c61b62eb146ef4b2151dee",
+          "inventory_sha256": "0ae6eb1f6c2562d54f79bb3160e4e10ac64b266ef0cd3454e154ccd19bfacd3a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "e8f79d791821d5557a1a750dbbaef2ab59ed3592e3726d8651beaed194bfc03c"
+      },
+      "source_after": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "e8f79d791821d5557a1a750dbbaef2ab59ed3592e3726d8651beaed194bfc03c"
+      },
+      "error": null
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/integration-sanitized-rest-01/verification.json",
+        "sha256": "016989b25bd777238762b5b8cf9a1a7186a551ca56dee75a461e6abb6d088140"
+      },
+      "overall_passed": true,
+      "results": {
+        "engine": {
+          "executed": 2269,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-*ActorBounds*",
+          "binary_sha256": "3528916d539932ebc06d0fab1fcb40ffa9026983b7bf1f661fc1cbd0f3fce7d7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "2aece7f8ef5aeecff2d2476d542ece296fc3e464765d06288da3089aa72370c2",
+          "inventory_sha256": "0ae6eb1f6c2562d54f79bb3160e4e10ac64b266ef0cd3454e154ccd19bfacd3a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "e8f79d791821d5557a1a750dbbaef2ab59ed3592e3726d8651beaed194bfc03c"
+      },
+      "source_after": {
+        "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+        "source_fingerprint": "e8f79d791821d5557a1a750dbbaef2ab59ed3592e3726d8651beaed194bfc03c"
+      },
+      "error": null
+    }
+  ],
+  "normal_game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b",
+  "limits": [
+    "Bounded Alchemy5/Luck50/ResistMagic0 original food profile only; general Wortcraft, Alchemy XP, resistance and general effects UI remain open.",
+    "Consumed item script retirement is admitted only for the Player singleton at an idle M7 boundary. General inventory transfer/removal remains separate."
+  ],
+  "retained_failures": [
+    "Baseline01 unsupported repeat_until_log backend; baseline02 absolute mouse action unsupported by SDL replay; baseline03 drag cancellation needed two Escape presses. Baseline04 uses the actual gesture and proves no ingredient consumption before the fix.",
+    "Normal two-use01 selected food033690 after inventory reflow; structurally valid course/save but stacking assertion fails. Retry02 inspects the remaining Nirnroot tooltip at133,263 before actual second use.",
+    "Initial Python schema100 unit selected the first sorted actor instead of the Player; corrected selector.",
+    "Full Python integration initially rejected schema100 at the reviewed fixture ceiling99. Reviewed ceiling and three declarative target-schema recipes updated; new Health-drain preservation and future101 rejection checks pass."
+  ],
+  "provenance_notes": [
+    "Normal integration receipt overall passed=false because Python failed at the fixture schema ceiling. Its component3292 and engine2280 XML results pass. The parallel native sanitizer component runner records the identical source_before/source_after fingerprint a2efa46f\u2026 across this period.",
+    "Subsequent edits are Python fixture preflight/tests/target schemas, read-only verifier/stacking recipes and handoff documentation; production C++ is unchanged. Python614 passes independently at source e8f79d79\u2026.",
+    "Rendered sanitizer runs disable leak checks; instrumented engine checks enable them; component sanitizer checks disable them."
+  ],
+  "original_probe": {
+    "root": "build/oblivion-compat/nirnroot-use/original-01",
+    "observations": {
+      "path": "build/oblivion-compat/nirnroot-use/original-01/observations.json",
+      "sha256": "8ed871f4d7bf9d90a4d7bbf1807302992ef3c0f59185efe813354a6eea95ea28"
+    },
+    "restoration": {
+      "path": "build/oblivion-compat/nirnroot-use/original-01/restoration.json",
+      "sha256": "ed7268fa31936f30153d0d5d7c5817131e3270fd51d5c8884b43b1a2fa394f26"
+    },
+    "restoration_scope": "Documents/My Games/Oblivion full tree and Plugins.txt, not the whole Proton prefix",
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "normal_cpp_diff_sha256": "f3d349f61ce492fc11796d473b80809347e86c9df78e22d5a9b29884c1049198",
+  "sanitized_union": {
+    "passed": true,
+    "executed": 2280,
+    "inventory_union_matches": true,
+    "duplicate_tests": 0,
+    "missing_tests": 0,
+    "failed": 0,
+    "skipped": 0,
+    "parts": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nirnroot-use/integration-sanitized-actorbounds-01/verification.json",
+        "tests": 11
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nirnroot-use/integration-sanitized-rest-01/verification.json",
+        "tests": 2269
+      }
+    ],
+    "source": {
+      "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+      "source_fingerprint": "e8f79d791821d5557a1a750dbbaef2ab59ed3592e3726d8651beaed194bfc03c"
+    },
+    "test_binary_sha256": "3528916d539932ebc06d0fab1fcb40ffa9026983b7bf1f661fc1cbd0f3fce7d7",
+    "sanitizer": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "sanitized_game_sha256": "0dd67f34af98dc729c97c6102fcbae5a7e7a233fda790ea52b98b62d62e35a5f",
+  "sanitized_courses": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/sanitized-use-one-01/use-audit.json",
+        "sha256": "efbda0ef37ed08a04ff4121ca9c070180e88fabcbbfc35cfc48263bce4cdd07f"
+      },
+      "passed": true,
+      "phase": "use",
+      "input_sha256": "1408e448b4b04a930fc2e2ccb208d2e549f0f04f9b72be93bc157f1ac7d72335",
+      "output_sha256": "d6e41f50568c10f5ac44a882025ef64c059e91d8f735bba6ffd34d8c15da345e",
+      "health": 105.0,
+      "retained_owners": [
+        "dynamic:inventory-script:0000000000000001"
+      ],
+      "count": 1,
+      "effects": [
+        {
+          "ingredient": "content:oblivion.esm:04e940",
+          "elapsed": 0.0,
+          "magnitude": -5.0,
+          "duration": 1.0,
+          "actor_value": 8
+        }
+      ],
+      "game_sha256": "0dd67f34af98dc729c97c6102fcbae5a7e7a233fda790ea52b98b62d62e35a5f"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/sanitized-expired-restart-01/use-audit.json",
+        "sha256": "7ca4e008a71011b7c34e48386c6d3724eabe5b820901e42e938f887d7add2cd6"
+      },
+      "passed": true,
+      "phase": "expired",
+      "input_sha256": "d6e41f50568c10f5ac44a882025ef64c059e91d8f735bba6ffd34d8c15da345e",
+      "output_sha256": "b0133d1ab0b5234c63511f9c1e3e3556fc5fa83f45e9bdd2f647e63e24af9ad4",
+      "health": 110.0,
+      "retained_owners": [
+        "dynamic:inventory-script:0000000000000001"
+      ],
+      "count": 1,
+      "effects": [],
+      "game_sha256": "0dd67f34af98dc729c97c6102fcbae5a7e7a233fda790ea52b98b62d62e35a5f"
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/nirnroot-use/sanitized-two-expired-restart-01/use-audit.json",
+        "sha256": "5eb06f62f4dce7744fc2223d1bf40eb9768a9a2cc343318b022a5f2d845e858a"
+      },
+      "passed": true,
+      "phase": "expired",
+      "input_sha256": "39692d3f0f3eb8838216711384b39ad06ab5539033758c4f28b18dbc6b8a32af",
+      "output_sha256": "6756af3964e44cb4747dc43d91eef9eb77f84c55d4af2ca24f3d4f29353ff960",
+      "health": 110.0,
+      "retained_owners": [],
+      "count": 2,
+      "effects": [],
+      "game_sha256": "0dd67f34af98dc729c97c6102fcbae5a7e7a233fda790ea52b98b62d62e35a5f"
+    }
+  ],
+  "reviewed_images": {
+    "receipt": {
+      "path": "build/oblivion-compat/nirnroot-use/reviewed-images.json",
+      "sha256": "81bab017e0665a78b291f4877b164b36f8912b4d6917f78726d8f1dfe13405a5"
+    },
+    "count": 20
+  },
+  "normal_bonemeal_regression": {
+    "recipe": "scripts/data/oblivion_compat/oblivion_bonemeal_use.json",
+    "course": "build/oblivion-compat/nirnroot-use/normal-bonemeal-regression-01",
+    "audit": {
+      "path": "build/oblivion-compat/nirnroot-use/normal-bonemeal-regression-01/semantic-verification.json",
+      "sha256": "803b8b555d295cdc982ab5c2bc682266eb4a6e549c7066785e27bff13719daad"
+    },
+    "verifier_boundary": "Unchanged semantic verifier copied in ignored evidence; output schema98 assertion/report metadata adjusted to100 only. All inventory, scalar, contribution, pending timer, loot and process assertions retained."
+  },
+  "instrumented_engine_inventory": {
+    "receipt": {
+      "path": "build/oblivion-compat/nirnroot-use/sanitized-inventory-union.json",
+      "sha256": "7949dac09b130f7884fd7f78750a598de8990f12a3acbeaa2252bad71743d217"
+    },
+    "passed": true,
+    "executed": 2280,
+    "inventory_union_matches": true,
+    "duplicate_tests": 0,
+    "missing_tests": 0,
+    "failed": 0,
+    "skipped": 0,
+    "parts": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nirnroot-use/integration-sanitized-actorbounds-01/verification.json",
+        "tests": 11
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nirnroot-use/integration-sanitized-rest-01/verification.json",
+        "tests": 2269
+      }
+    ],
+    "source": {
+      "head": "3540222255b430a37f8c63b4f4079a0ab2c787ef",
+      "source_fingerprint": "e8f79d791821d5557a1a750dbbaef2ab59ed3592e3726d8651beaed194bfc03c"
+    },
+    "test_binary_sha256": "3528916d539932ebc06d0fab1fcb40ffa9026983b7bf1f661fc1cbd0f3fce7d7",
+    "sanitizer": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "process_epochs": [
+    {
+      "course": "normal-use-one-01",
+      "pid": 289719,
+      "start_ticks": 5286277,
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "course": "normal-expired-restart-01",
+      "pid": 289875,
+      "start_ticks": 5296705,
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "course": "normal-use-two-02",
+      "pid": 296245,
+      "start_ticks": 5314202,
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "course": "normal-two-expired-restart-01",
+      "pid": 296492,
+      "start_ticks": 5331007,
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "course": "normal-completed-restart-01",
+      "pid": 297240,
+      "start_ticks": 5351588,
+      "game_sha256": "2e6cb5d8eb14d8cfefeed781a8d6f4658939c366a6fa0c0304a143ff34e1a30b"
+    },
+    {
+      "course": "sanitized-use-one-01",
+      "pid": 298512,
+      "start_ticks": 5475710,
+      "game_sha256": "0dd67f34af98dc729c97c6102fcbae5a7e7a233fda790ea52b98b62d62e35a5f"
+    },
+    {
+      "course": "sanitized-expired-restart-01",
+      "pid": 304153,
+      "start_ticks": 5519193,
+      "game_sha256": "0dd67f34af98dc729c97c6102fcbae5a7e7a233fda790ea52b98b62d62e35a5f"
+    },
+    {
+      "course": "sanitized-two-expired-restart-01",
+      "pid": 304377,
+      "start_ticks": 5558343,
+      "game_sha256": "0dd67f34af98dc729c97c6102fcbae5a7e7a233fda790ea52b98b62d62e35a5f"
+    }
+  ],
+  "primary_continuation": {
+    "save": "build/oblivion-compat/nirnroot-use/normal-completed-restart-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "6a4d5b649af28eee89d7caaf01425bea5470049fcf99ac129b028fb8f0be1165",
+    "health": 110,
+    "nirnroot_count": 1,
+    "owner": "dynamic:inventory-script:0000000000000001",
+    "quest_credit": 2
+  },
+  "artifact_boundary": "Licensed originals, raw probes, generated saves/screenshots and bulky build evidence remain ignored. Declarative input recipes, expected values, C++/Python and this receipt are editable Git sources."
+}

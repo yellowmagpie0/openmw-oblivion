@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 85
+CURRENT_VERSION = 103
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -36,6 +36,10 @@ DEFAULT_MIGRATION_CLASS = "content:oblivion.esm:0230e6"
 
 class RuntimeStateError(RuntimeError):
     pass
+
+
+def _trap_contact_order(contact: dict[str, Any]) -> tuple:
+    return (*contact["reference"].split(":"), contact["body_record"], *contact["actor"].split(":"))
 
 
 def _global_identity(value: Any) -> tuple[str, str, int]:
@@ -354,6 +358,10 @@ def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
                 present = reader.unpack("<B")
                 if present > 1: raise RuntimeStateError("Invalid bound item source presence")
                 item["bound_source"] = {"spell": reader.string(), "effect_index": reader.unpack("<I")} if present else None
+            if version >= 97:
+                present = reader.unpack("<B")
+                if present > 1: raise RuntimeStateError("Invalid inventory script identity presence")
+                item["script_owner"] = reader.string() if present else None
         result.append(item)
     return result
 
@@ -384,6 +392,10 @@ def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int)
                 writer.pack("<B", int(source is not None))
                 if source is not None:
                     writer.string(source["spell"]); writer.pack("<I", source["effect_index"])
+            if version >= 97:
+                owner = item.get("script_owner")
+                writer.pack("<B", int(owner is not None))
+                if owner is not None: writer.string(owner)
 
 
 def _finite_float(reader: _Reader, label: str) -> float:
@@ -633,6 +645,27 @@ def _validate_ai(state: dict[str, Any]) -> None:
         detection_pairs.add((observer, target))
 
 
+def _validate_daily_packages(state: dict[str, Any]) -> None:
+    entries = state.get("daily_package_completions", [])
+    if not isinstance(entries, list) or len(entries) > MAX_COLLECTION:
+        raise RuntimeStateError("Invalid daily package completion list")
+    if state.get("schema_version", 1) < 89 and entries:
+        raise RuntimeStateError("Daily package completions require runtime schema89")
+    actors = {a["actor"] for a in state.get("actor_ai", [])}
+    previous = None
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise RuntimeStateError("Invalid daily package completion entry")
+        actor, package, day = entry.get("actor"), entry.get("package"), entry.get("day")
+        if (not isinstance(actor, str) or actor not in actors or not _canonical_content_key(package)
+                or not _valid_calendar(day) or day[3] != 0):
+            raise RuntimeStateError("Invalid daily package completion identity or day")
+        pair = (_global_identity(actor), _global_identity(package))
+        if previous is not None and pair <= previous:
+            raise RuntimeStateError("Noncanonical daily package completion identities")
+        previous = pair
+
+
 def _validate_basic_state(state: dict[str, Any]) -> None:
     """Validate the common envelope and the pre-M14 state shared by C++.
 
@@ -641,6 +674,20 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     of relying on a successful struct.pack as validation.
     """
 
+    _validate_daily_packages(state)
+    entries = state.get("package_waiting", [])
+    if not isinstance(entries, list) or len(entries) > MAX_COLLECTION:
+        raise RuntimeStateError("Invalid package waiting overrides")
+    if entries and state.get("schema_version", 1) < 91:
+        raise RuntimeStateError("Package waiting overrides require version91")
+    previous = None
+    for entry in entries:
+        if not isinstance(entry, dict) or not _canonical_content_key(entry.get("package")) or type(entry.get("waiting")) is not bool:
+            raise RuntimeStateError("Invalid package waiting override")
+        key = _global_identity(entry["package"])
+        if previous is not None and key <= previous:
+            raise RuntimeStateError("Noncanonical package waiting overrides")
+        previous = key
     crime = state.get("native_crime", crime_io.empty_state())
     try:
         crime_io.validate(crime)
@@ -853,6 +900,15 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if not valid:
             raise RuntimeStateError("Invalid TES4 native actor-value identity")
 
+    books = check_collection(player.get("awarded_skill_books", []), "awarded skill books")
+    if books and version < 101:
+        raise RuntimeStateError("Awarded skill-book history requires schema101")
+    for book in books:
+        native_key(book)
+        if not book.startswith("content:"):
+            raise RuntimeStateError("Invalid awarded skill-book base")
+    if len(books) != len(set(books)):
+        raise RuntimeStateError("Duplicate awarded skill-book base")
     generation = player.get("character_generation")
     if generation is not None:
         if version < 80:
@@ -906,7 +962,22 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         essential = base_override.get("essential")
         if essential is not None and (version < 84 or type(essential) is not bool):
             raise RuntimeStateError("Invalid or unsupported essential base override")
-        if len(values) > 72 or (not values and essential is None):
+        factions = base_override.get("factions")
+        if factions is not None:
+            if version < 90:
+                raise RuntimeStateError("Faction base overrides require version90")
+            entries = check_collection(factions, "actor base factions")
+            seen_factions = set()
+            for entry in entries:
+                if not isinstance(entry, list) or len(entry) != 2:
+                    raise RuntimeStateError("Invalid actor base faction")
+                faction, rank = entry
+                native_key(faction)
+                if (not faction.startswith("content:") or faction in seen_factions
+                        or type(rank) is not int or not -128 <= rank <= 127):
+                    raise RuntimeStateError("Invalid or duplicate actor base faction")
+                seen_factions.add(faction)
+        if len(values) > 72 or (not values and essential is None and factions is None):
             raise RuntimeStateError("Invalid TES4 native actor base value count")
         seen_values: set[int] = set()
         for entry in values:
@@ -1023,7 +1094,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             seen_spells = set()
             codes = {int.from_bytes(code.encode("ascii"), "little") for code in
                 ("WABR", "WKFI", "WKFR", "WKSH", "WKMA", "FOSP", "SABS", "STMA",
-                 "FOAT", "DRAT", "RSFI", "RSPO", "RSDI", "RSMA", "RSFR")}
+                 "FOAT", "DRAT", "RSFI", "RSPO", "RSDI", "RSMA", "RSFR", "RSPA")}
             for ability in check_collection(abilities, "passive ability ownership list"):
                 if not isinstance(ability, dict):
                     raise RuntimeStateError("Invalid TES4 passive ability")
@@ -1062,6 +1133,110 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 low = native_float(base_value + script + damage)
                 if process == 1:
                     native_float(low + maximum)
+
+        food = check_collection(actor.get("ingredient_restoration", []), "ingredient restoration list")
+        if food and (version < 92 or owner != 0):
+            raise RuntimeStateError("TES4 ingredient restoration requires Player ownership and version92")
+        for effect in food:
+            if not isinstance(effect, dict) or set(effect) not in (
+                    {"ingredient", "elapsed"}, {"ingredient", "elapsed", "magnitude", "duration"},
+                    {"ingredient", "elapsed", "magnitude", "duration", "actor_value"},
+                    {"ingredient", "elapsed", "actor_value"}):
+                raise RuntimeStateError("Invalid TES4 ingredient restoration state")
+            magnitude = native_float(effect.get("magnitude", 5))
+            duration = native_float(effect.get("duration", 1))
+            actor_value = effect.get("actor_value", 10)
+            allowed = (((5, 1), (-1, 3)) if actor_value == 10
+                       else ((-5, 1), (1, 3)) if actor_value == 8
+                       else ((5, 1),) if actor_value == 5 and version >= 102 else ())
+            if (("actor_value" in effect and version < 100) or (magnitude, duration) not in allowed
+                    or (version < 98 and ("magnitude" in effect or "duration" in effect))):
+                raise RuntimeStateError("Invalid TES4 resolved ingredient potency/version")
+            key = effect["ingredient"]
+            if not isinstance(key, str) or not key.startswith("content:"):
+                raise RuntimeStateError("Invalid TES4 consumed ingredient identity")
+            native_key(key)
+            elapsed = native_float(effect["elapsed"])
+            if not 0 <= elapsed < duration:
+                raise RuntimeStateError("Invalid TES4 ingredient restoration time")
+
+        chameleon = check_collection(actor.get("scroll_chameleon", []), "scroll Chameleon list")
+        if chameleon and (version < 93 or owner != 0):
+            raise RuntimeStateError("TES4 scroll Chameleon requires Player ownership and version93")
+        sources = set()
+        for effect in chameleon:
+            if not isinstance(effect, dict) or set(effect) != {"scroll", "enchantment", "magnitude", "elapsed"}:
+                raise RuntimeStateError("Invalid TES4 scroll Chameleon state")
+            for field in ("scroll", "enchantment"):
+                key = effect[field]
+                if not isinstance(key, str) or not key.startswith("content:"):
+                    raise RuntimeStateError("Invalid TES4 scroll Chameleon source")
+                native_key(key)
+            if effect["enchantment"] in sources:
+                raise RuntimeStateError("Duplicate TES4 Chameleon enchantment source")
+            sources.add(effect["enchantment"])
+            if native_float(effect["magnitude"]) != 25 or not 0 <= native_float(effect["elapsed"]) < 30:
+                raise RuntimeStateError("Invalid TES4 scroll Chameleon magnitude or lifetime")
+
+        lights = check_collection(actor.get("potion_light_effects", []), "potion Light list")
+        if lights and (version < 99 or owner != 0):
+            raise RuntimeStateError("TES4 potion Light requires Player ownership and schema99")
+        for effect in lights:
+            if not isinstance(effect, dict) or set(effect) != {"potion", "light", "magnitude", "duration", "elapsed"}:
+                raise RuntimeStateError("Invalid TES4 potion Light state")
+            for field in ("potion", "light"):
+                key = effect[field]
+                if not isinstance(key, str) or not key.startswith("content:"):
+                    raise RuntimeStateError("Invalid TES4 potion Light source")
+                native_key(key)
+            magnitude = native_float(effect["magnitude"])
+            duration, elapsed = native_float(effect["duration"]), native_float(effect["elapsed"])
+            if magnitude <= 0 or duration <= 0 or not 0 <= elapsed < duration:
+                raise RuntimeStateError("Invalid TES4 potion Light magnitude or lifetime")
+
+        powers = check_collection(actor.get("used_powers", []), "greater-power use history")
+        if powers and (version < 95 or owner != 0):
+            raise RuntimeStateError("TES4 greater-power history requires Player ownership and version95")
+        sources = set()
+        for power in powers:
+            if not isinstance(power, dict) or set(power) != {"spell", "used_at"}:
+                raise RuntimeStateError("Invalid TES4 greater-power use history")
+            key = power["spell"]
+            if not isinstance(key, str) or not key.startswith("content:"):
+                raise RuntimeStateError("Invalid TES4 greater-power source")
+            native_key(key)
+            if key in sources:
+                raise RuntimeStateError("Duplicate TES4 greater-power use history")
+            sources.add(key)
+            when = power["used_at"]
+            if isinstance(when, bool) or not isinstance(when, (int, float)) or not math.isfinite(when) or when < 0:
+                raise RuntimeStateError("Invalid TES4 greater-power clock")
+
+        potions = check_collection(actor.get("potion_attribute_effects", []), "potion attribute list")
+        if potions and (version < 94 or owner != 0):
+            raise RuntimeStateError("TES4 potion attributes require Player ownership and version94")
+        for effect in potions:
+            if not isinstance(effect, dict) or set(effect) != {"potion", "duration", "elapsed", "modifiers"}:
+                raise RuntimeStateError("Invalid TES4 potion attribute state")
+            key = effect["potion"]
+            if not isinstance(key, str) or not key.startswith("content:"):
+                raise RuntimeStateError("Invalid TES4 potion attribute source")
+            native_key(key)
+            duration, elapsed = native_float(effect["duration"]), native_float(effect["elapsed"])
+            if duration <= 0 or not 0 <= elapsed < duration:
+                raise RuntimeStateError("Invalid TES4 potion attribute lifetime")
+            modifiers = check_collection(effect["modifiers"], "potion attribute contributions")
+            if not 1 <= len(modifiers) <= 8:
+                raise RuntimeStateError("Invalid TES4 potion attribute contribution count")
+            attributes = set()
+            for modifier in modifiers:
+                if not isinstance(modifier, dict) or set(modifier) != {"attribute", "delta"}:
+                    raise RuntimeStateError("Invalid TES4 potion attribute contribution")
+                attribute = modifier["attribute"]
+                if (type(attribute) is not int or not 0 <= attribute < 8 or attribute in attributes
+                        or native_float(modifier["delta"]) == 0):
+                    raise RuntimeStateError("Invalid or duplicate TES4 potion attribute")
+                attributes.add(attribute)
 
         paralysis = check_collection(actor.get("melee_paralysis", []), "melee paralysis list")
         if version < 70 and paralysis:
@@ -1404,7 +1579,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Incomplete TES4 packed ragdoll snapshot")
             if "native_motion" in body:
                 motion = body["native_motion"]
-                if version < 33 or type(motion) is not int or motion not in (1, 6) or "native_packed_velocity" not in body:
+                if version < 33 or type(motion) is not int or motion not in (1, 6, 7) or "native_packed_velocity" not in body:
                     raise RuntimeStateError("Invalid TES4 logical ragdoll motion or version")
             if ("native_motion" in body) != ("native_motion" in bodies[0]):
                 raise RuntimeStateError("Incomplete TES4 logical ragdoll motion snapshot")
@@ -1439,7 +1614,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     for entry in loose_weapons:
         fields = {"reference", "base", "model", "asset_hash", "physical_scale", "scene_collision_flags", "body"}
         if (not isinstance(entry, dict) or not fields <= set(entry)
-                or not set(entry) <= fields | {"root_local"}):
+                or not set(entry) <= fields | {"root_local", "additional_bodies"}):
             raise RuntimeStateError("Invalid TES4 loose weapon snapshot")
         key, base = entry["reference"], entry["base"]
         native_key(key)
@@ -1448,8 +1623,12 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or key in native_keys or key == player["reference"]):
             raise RuntimeStateError("Duplicate, dangling, actor or mismatched TES4 loose weapon owner")
         loose_keys.add(key)
-        validate_physical_bodies({**entry, "bodies": [entry["body"]]})
-        if ("native_packed_velocity" not in entry["body"] or entry["body"].get("native_motion") != 1
+        extra = check_collection(entry.get("additional_bodies", []), "additional loose bodies")
+        if version < 103 and extra:
+            raise RuntimeStateError("Articulated loose item physics requires version103")
+        bodies = [entry["body"], *extra]
+        validate_physical_bodies({**entry, "bodies": bodies})
+        if (any("native_packed_velocity" not in body or body.get("native_motion") != 1 for body in bodies)
                 or native_float(entry["physical_scale"]) <= 0):
             raise RuntimeStateError("Incomplete or invalid TES4 loose weapon physics")
         flags = entry["scene_collision_flags"]
@@ -1533,6 +1712,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Duplicate, dangling or mismatched TES4 ragdoll owner")
             ragdoll_actors.add(actor)
         bodies = validate_physical_bodies(entry)
+        if not is_reference and any(body.get("native_motion") == 7 for body in bodies):
+            raise RuntimeStateError("Fixed anchors are only supported for animated scenery")
         nodes = {body["node_record"] for body in bodies}
         if "world_registration" in entry:
             registration = entry["world_registration"]
@@ -1659,6 +1840,129 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 if not isinstance(force, list) or len(force) != 4:
                     raise RuntimeStateError("Invalid TES4 generated controller force lanes")
                 for component in force: native_float(component)
+    contacts = check_collection(state.get("native_trap_contacts", []), "native trap contact list")
+    if version < 86 and contacts:
+        raise RuntimeStateError("Trap contacts require version86")
+    trap_bodies = {entry["reference"]: {body["record"]: body for body in entry["bodies"]} for entry in animated}
+    previous_contact = None
+    for contact in contacts:
+        if not isinstance(contact, dict) or set(contact) != {"reference", "body_record", "actor"}:
+            raise RuntimeStateError("Invalid trap contact shape")
+        native_key(contact["reference"]); native_key(contact["actor"])
+        record = contact["body_record"]
+        if type(record) is not int or not 0 <= record <= 0xffffffff:
+            raise RuntimeStateError("Invalid trap contact body identity")
+        body = trap_bodies.get(contact["reference"], {}).get(record)
+        if (body is None or body.get("native_motion") == 7
+                or contact["actor"] != player["reference"] and contact["actor"] not in native_keys):
+            raise RuntimeStateError("Dangling trap contact owner, actor or movable body")
+        order = _trap_contact_order(contact)
+        if previous_contact is not None and order <= previous_contact:
+            raise RuntimeStateError("Noncanonical trap contact list")
+        previous_contact = order
+
+    projectiles = check_collection(state.get("native_magic_projectiles", []), "native magic projectile list")
+    next_projectile = state.get("next_magic_projectile", 1)
+    if (type(next_projectile) is not int or not 0 < next_projectile <= 0xFFFFFFFFFFFFFFFF
+            or (version < 88 and (projectiles or next_projectile != 1))):
+        raise RuntimeStateError("Invalid native magic projectile serial or state version")
+    previous_projectile = 0
+    for projectile in projectiles:
+        if not isinstance(projectile, dict) or set(projectile) != {
+                "id", "caster", "source", "cell", "effect_code", "magnitude", "position", "velocity",
+                "distance", "maximum_distance", "model"}:
+            raise RuntimeStateError("Invalid native magic projectile shape")
+        serial = projectile["id"]
+        if type(serial) is not int or not previous_projectile < serial < next_projectile:
+            raise RuntimeStateError("Noncanonical native magic projectile serials")
+        previous_projectile = serial
+        for key in ("caster", "source", "cell"):
+            native_key(projectile[key])
+        if (projectile["caster"] not in native_keys or not projectile["source"].startswith("content:")
+                or not projectile["cell"].startswith("content:")):
+            raise RuntimeStateError("Dangling native magic projectile identity")
+        if type(projectile["effect_code"]) is not int or projectile["effect_code"] not in {
+                int.from_bytes(b'SHDG', 'little'), int.from_bytes(b'FIDG', 'little'), int.from_bytes(b'CHRM', 'little')}:
+            raise RuntimeStateError("Unsupported native magic projectile effect")
+        model = projectile["model"]
+        if not isinstance(model, str) or not model or '\0' in model:
+            raise RuntimeStateError("Invalid native magic projectile model")
+        for key in ("position", "velocity"):
+            values = projectile[key]
+            if not isinstance(values, list) or len(values) != 3:
+                raise RuntimeStateError("Invalid magic projectile vector")
+            for value in values:
+                native_float(value)
+        magnitude, distance, maximum = [native_float(projectile[key])
+            for key in ("magnitude", "distance", "maximum_distance")]
+        if (magnitude < 0 or distance < 0 or maximum <= 0 or distance > maximum
+                or not any(value != 0 for value in projectile["velocity"])):
+            raise RuntimeStateError("Invalid magic projectile magnitude or flight range")
+
+    arrows = check_collection(state.get("native_arrow_projectiles", []), "native arrow projectile list")
+    next_arrow = state.get("next_arrow_projectile", 1)
+    if (type(next_arrow) is not int or not 0 < next_arrow <= 0xFFFFFFFFFFFFFFFF
+            or (version < 96 and (arrows or next_arrow != 1))):
+        raise RuntimeStateError("Native arrow flight requires runtime-state version96")
+    previous_arrow = 0
+    for arrow in arrows:
+        if not isinstance(arrow, dict) or set(arrow) != {
+                "id", "caster", "bow", "ammunition", "cell", "position", "velocity",
+                "damage", "gravity_factor", "distance", "maximum_distance", "model"}:
+            raise RuntimeStateError("Invalid native arrow shape")
+        ident = arrow["id"]
+        if type(ident) is not int or not previous_arrow < ident < next_arrow:
+            raise RuntimeStateError("Invalid or noncanonical native arrow serial")
+        previous_arrow = ident
+        for key in ("caster", "bow", "ammunition", "cell"):
+            native_key(arrow[key])
+        if arrow["caster"] not in native_keys or any(
+                not arrow[key].startswith("content:") for key in ("bow", "ammunition", "cell")):
+            raise RuntimeStateError("Dangling native arrow identity")
+        model = arrow["model"]
+        if not isinstance(model, str) or not model or len(model.encode('utf-8')) > 4096 or '\0' in model:
+            raise RuntimeStateError("Invalid native arrow model")
+        for key in ("position", "velocity"):
+            if not isinstance(arrow[key], list) or len(arrow[key]) != 3:
+                raise RuntimeStateError("Invalid native arrow vector")
+            for value in arrow[key]:
+                native_float(value)
+        if any(native_float(arrow[key]) < 0 for key in ("damage", "gravity_factor", "distance")) \
+                or native_float(arrow["maximum_distance"]) <= 0:
+            raise RuntimeStateError("Invalid native arrow scalar")
+
+    casts = check_collection(state.get("native_spell_casts", []), "native spell cast list")
+    if version < 87 and casts:
+        raise RuntimeStateError("Native spell casts require version87")
+    previous_cast = None
+    for cast in casts:
+        if not isinstance(cast, dict) or set(cast) != {
+                "actor", "spell", "animation_group", "cost", "elapsed", "release_time", "duration", "released"}:
+            raise RuntimeStateError("Invalid native spell cast shape")
+        actor = cast["actor"]
+        native_key(actor); native_key(cast["spell"])
+        order = tuple(actor.split(":"))
+        if previous_cast is not None and order <= previous_cast:
+            raise RuntimeStateError("Noncanonical native spell cast owners")
+        previous_cast = order
+        group = cast["animation_group"]
+        if (not cast["spell"].startswith("content:") or not isinstance(group, str) or not group or "\0" in group
+                or type(cast["released"]) is not bool):
+            raise RuntimeStateError("Invalid native spell identity, group or release flag")
+        cost, elapsed, release, duration = [native_float(cast[k])
+            for k in ("cost", "elapsed", "release_time", "duration")]
+        if (min(cost, elapsed) < 0 or not 0 < release < duration or elapsed > duration
+                or cast["released"] != (elapsed >= release)):
+            raise RuntimeStateError("Inconsistent native spell release ownership")
+        life = next((row for row in lives if row["actor"] == actor), None)
+        melee = next((row for row in state.get("native_melee_states", []) if row["actor"] == actor), {})
+        if (actor not in native_keys or life is None or life["phase"] != 0
+                or any(row["actor"] == actor for row in state.get("native_bow_states", []))
+                or any(melee.get(k) is not None for k in ("strike", "reaction", "dodge", "passive_sequence"))
+                or any((melee.get("first_person") or {}).get(k) is not None
+                       for k in ("strike", "reaction", "passive_sequence"))):
+            raise RuntimeStateError("Dangling, dead or conflicting native spell caster")
+
     melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
     if version < 21 and melee_states:
         raise RuntimeStateError("TES4 melee state requires version 21")
@@ -2319,6 +2623,16 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         life_source(event.get("killer"))
         previous = identity
 
+    inventory_script_owners = set()
+    inventories = [state["player"].get("inventory", [])] + [row.get("inventory", []) for row in state.get("references", [])]
+    inventories += [ability.get("displaced_inventory", []) for row in state.get("native_bound_abilities", []) for ability in row.get("abilities", [])]
+    for inventory in inventories:
+        for item in inventory:
+            owner = item.get("script_owner")
+            if owner is not None:
+                if owner in inventory_script_owners or int(owner.split(":")[-1], 16) >= state["next_dynamic_serial"]:
+                    raise RuntimeStateError("Duplicate or unallocated inventory script identity")
+                inventory_script_owners.add(owner)
     scripts = check_collection(state.get("script_instances", []), "script instance list")
     quests = check_collection(state.get("quests", []), "quest list")
     if version < 2 and (state.get("script_event_sequence", 0) != 0 or scripts or quests):
@@ -2326,6 +2640,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     script_keys: set[tuple[str, str]] = set()
     for script in scripts:
         identity = (str(script.get("unit", "")), str(script.get("context", "null")))
+        if identity[1].startswith("dynamic:inventory-script:") and identity[1] not in inventory_script_owners:
+            raise RuntimeStateError("Dangling inventory script instance")
         if not identity[0] or identity[1] == "null" or identity in script_keys:
             raise RuntimeStateError("Invalid or duplicate TES4 runtime-state script instance")
         script_keys.add(identity)
@@ -2470,6 +2786,13 @@ def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) 
     }
     for item in value:
         _validate_ownership_extras(item, version)
+        owner = item.get("script_owner")
+        if owner is not None:
+            parts = owner.split(":") if isinstance(owner, str) else []
+            if (version < 97 or len(parts) != 3 or parts[:2] != ["dynamic", "inventory-script"]
+                    or len(parts[2]) != 16 or any(c not in "0123456789abcdef" for c in parts[2])
+                    or int(parts[2], 16) == 0 or item.get("count") != 1):
+                raise RuntimeStateError("Invalid inventory script identity")
         source = item.get("bound_source")
         if source is not None and (version < 83 or not isinstance(source, dict)
                 or not _canonical_content_key(source.get("spell"))
@@ -2586,6 +2909,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             uses = [reader.unpack("<f") for _ in range(21)] if generation_bool() else None
             player["character_generation"] = {"tracking": tracking, "skill_uses": uses,
                                                 "recommended_class": reader.string()}
+    if version >= 101:
+        books = [reader.string() for _ in range(reader.count())]
+        if books:
+            player["awarded_skill_books"] = books
     result["player"] = player
 
     globals_: dict[str, Any] = {}
@@ -2834,6 +3161,51 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                                       "removed": bool(flags & 4)})
                 if paralysis:
                     actor["melee_paralysis"] = paralysis
+            if version >= 92:
+                food = []
+                for _ in range(reader.count()):
+                    effect = {"ingredient": reader.string(), "elapsed": reader.unpack("<f")}
+                    if version >= 98:
+                        magnitude, duration = reader.unpack("<f"), reader.unpack("<f")
+                        if (magnitude, duration) != (5, 1):
+                            effect.update(magnitude=magnitude, duration=duration)
+                    if version >= 100:
+                        actor_value = reader.unpack("<B")
+                        if actor_value != 10:
+                            effect["actor_value"] = actor_value
+                    food.append(effect)
+                if food:
+                    actor["ingredient_restoration"] = food
+            if version >= 93:
+                chameleon = [{"scroll": reader.string(), "enchantment": reader.string(),
+                              "magnitude": reader.unpack("<f"), "elapsed": reader.unpack("<f")}
+                             for _ in range(reader.count())]
+                if chameleon:
+                    actor["scroll_chameleon"] = chameleon
+            if version >= 94:
+                potions = []
+                for _ in range(reader.count()):
+                    effect = {"potion": reader.string(), "duration": reader.unpack("<f"),
+                              "elapsed": reader.unpack("<f"), "modifiers": []}
+                    count = reader.count()
+                    if count > 8:
+                        raise RuntimeStateError("TES4 potion attribute list exceeds the size limit")
+                    effect["modifiers"] = [{"attribute": reader.unpack("<B"), "delta": reader.unpack("<f")}
+                                           for _ in range(count)]
+                    potions.append(effect)
+                if potions:
+                    actor["potion_attribute_effects"] = potions
+            if version >= 95:
+                powers = [{"spell": reader.string(), "used_at": reader.unpack("<d")}
+                          for _ in range(reader.count())]
+                if powers:
+                    actor["used_powers"] = powers
+            if version >= 99:
+                lights = [{"potion": reader.string(), "light": reader.string(),
+                           "magnitude": reader.unpack("<f"), "duration": reader.unpack("<f"),
+                           "elapsed": reader.unpack("<f")} for _ in range(reader.count())]
+                if lights:
+                    actor["potion_light_effects"] = lights
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -2852,6 +3224,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if essential > 2:
                     raise RuntimeStateError("Invalid essential base override")
                 base["essential"] = None if essential == 0 else essential == 2
+            if version >= 90:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid base faction presence")
+                base["factions"] = [[reader.string(), reader.unpack("<b")] for _ in range(reader.count())] if present else None
             result["native_actor_bases"].append(base)
     if version >= 12:
         result["native_actor_life"] = [
@@ -3227,13 +3604,15 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             entry = {field: reader.string() for field in ("reference", "base", "model", "asset_hash")}
             entry["physical_scale"] = reader.unpack("<f")
             entry["scene_collision_flags"] = reader.unpack("<H")
-            body = {"record": reader.unpack("<I"), "node_record": reader.unpack("<I")}
-            for field, size in (("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)):
-                body[field] = [reader.unpack("<f") for _ in range(size)]
-            body["native_packed_velocity"] = {field: [reader.unpack("<f") for _ in range(4)]
-                                              for field in ("linear", "angular")}
-            body["native_motion"] = reader.unpack("<B")
-            entry["body"] = body
+            def read_loose_body():
+                body = {"record": reader.unpack("<I"), "node_record": reader.unpack("<I")}
+                for field, size in (("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)):
+                    body[field] = [reader.unpack("<f") for _ in range(size)]
+                body["native_packed_velocity"] = {field: [reader.unpack("<f") for _ in range(4)]
+                                                  for field in ("linear", "angular")}
+                body["native_motion"] = reader.unpack("<B")
+                return body
+            entry["body"] = read_loose_body()
             root = reader.unpack("<B")
             if root > 1:
                 raise RuntimeStateError("Invalid TES4 loose weapon root marker")
@@ -3241,6 +3620,9 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 entry["root_local"] = {"rotation": [reader.unpack("<f") for _ in range(9)],
                                        "position": [reader.unpack("<f") for _ in range(3)],
                                        "scale": reader.unpack("<f")}
+            if version >= 103:
+                extra = [read_loose_body() for _ in range(reader.count())]
+                if extra: entry["additional_bodies"] = extra
             result["native_loose_weapons"].append(entry)
     if version >= 62:
         def movement_boolean():
@@ -3347,10 +3729,64 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             actor = reader.string(); order = tuple(actor.split(":"))
             if previous is not None and previous >= order:
                 raise RuntimeStateError("Noncanonical bound ability owners")
-            abilities = [{"spell": reader.string(), "displaced_inventory": _inventory(reader, 82)}
+            abilities = [{"spell": reader.string(), "displaced_inventory": _inventory(reader, version if version >= 97 else 82)}
                          for _ in range(reader.count())]
             owners.append({"actor": actor, "abilities": abilities}); previous = order
         result["native_bound_abilities"] = owners
+    if version >= 86:
+        result["native_trap_contacts"] = [
+            {"reference": reader.string(), "body_record": reader.unpack("<I"), "actor": reader.string()}
+            for _ in range(reader.count())]
+    if version >= 87:
+        result["native_spell_casts"] = []
+        for _ in range(reader.count()):
+            cast = {"actor": reader.string(), "spell": reader.string(), "animation_group": reader.string()}
+            for key in ("cost", "elapsed", "release_time", "duration"):
+                cast[key] = reader.unpack("<f")
+            flag = reader.unpack("<B")
+            if flag > 1: raise RuntimeStateError("Invalid native spell release flag")
+            cast["released"] = bool(flag)
+            result["native_spell_casts"].append(cast)
+    if version >= 88:
+        result["next_magic_projectile"] = reader.unpack("<Q")
+        result["native_magic_projectiles"] = []
+        for _ in range(reader.count()):
+            projectile = {"id": reader.unpack("<Q")}
+            for key in ("caster", "source", "cell"):
+                projectile[key] = reader.string()
+            projectile["effect_code"] = reader.unpack("<I")
+            projectile["magnitude"] = reader.unpack("<f")
+            for key in ("position", "velocity"):
+                projectile[key] = [reader.unpack("<f") for _ in range(3)]
+            for key in ("distance", "maximum_distance"):
+                projectile[key] = reader.unpack("<f")
+            projectile["model"] = reader.string()
+            result["native_magic_projectiles"].append(projectile)
+    if version >= 89:
+        result["daily_package_completions"] = [
+            {"actor": reader.string(), "package": reader.string(), "day": _calendar(reader)}
+            for _ in range(reader.count())]
+    if version >= 91:
+        result["package_waiting"] = []
+        for _ in range(reader.count()):
+            key = reader.string()
+            flag = reader.unpack("<B")
+            if flag > 1:
+                raise RuntimeStateError("Invalid package waiting flag")
+            result["package_waiting"].append({"package": key, "waiting": bool(flag)})
+    if version >= 96:
+        result["next_arrow_projectile"] = reader.unpack("<Q")
+        result["native_arrow_projectiles"] = []
+        for _ in range(reader.count()):
+            arrow = {"id": reader.unpack("<Q")}
+            for key in ("caster", "bow", "ammunition", "cell"):
+                arrow[key] = reader.string()
+            for key in ("position", "velocity"):
+                arrow[key] = [reader.unpack("<f") for _ in range(3)]
+            for key in ("damage", "gravity_factor", "distance", "maximum_distance"):
+                arrow[key] = reader.unpack("<f")
+            arrow["model"] = reader.string()
+            result["native_arrow_projectiles"].append(arrow)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -3407,6 +3843,11 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 for value in generation["skill_uses"]:
                     writer.pack("<f", float(value))
             writer.string(generation["recommended_class"])
+    if version >= 101:
+        books = player.get("awarded_skill_books", [])
+        writer.pack("<I", len(books))
+        for book in sorted(books):
+            writer.string(book)
     globals_ = state["globals"]
     writer.pack("<I", len(globals_))
     for key in sorted(globals_):
@@ -3624,6 +4065,51 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<f", effect["duration"])
                     writer.pack("<f", effect["elapsed"])
                     writer.pack("<B", effect["applied"] | (effect["terminated"] << 1) | (effect["removed"] << 2))
+            if version >= 92:
+                food = actor.get("ingredient_restoration", [])
+                writer.pack("<I", len(food))
+                for effect in food:
+                    writer.string(effect["ingredient"])
+                    writer.pack("<f", effect["elapsed"])
+                    if version >= 98:
+                        writer.pack("<f", effect.get("magnitude", 5))
+                        writer.pack("<f", effect.get("duration", 1))
+                    if version >= 100:
+                        writer.pack("<B", effect.get("actor_value", 10))
+            if version >= 93:
+                chameleon = actor.get("scroll_chameleon", [])
+                writer.pack("<I", len(chameleon))
+                for effect in chameleon:
+                    writer.string(effect["scroll"])
+                    writer.string(effect["enchantment"])
+                    writer.pack("<f", effect["magnitude"])
+                    writer.pack("<f", effect["elapsed"])
+            if version >= 94:
+                potions = actor.get("potion_attribute_effects", [])
+                writer.pack("<I", len(potions))
+                for effect in potions:
+                    writer.string(effect["potion"])
+                    writer.pack("<f", effect["duration"])
+                    writer.pack("<f", effect["elapsed"])
+                    writer.pack("<I", len(effect["modifiers"]))
+                    for modifier in effect["modifiers"]:
+                        writer.pack("<B", modifier["attribute"])
+                        writer.pack("<f", modifier["delta"])
+            if version >= 95:
+                powers = actor.get("used_powers", [])
+                writer.pack("<I", len(powers))
+                for power in powers:
+                    writer.string(power["spell"])
+                    writer.pack("<d", power["used_at"])
+            if version >= 99:
+                lights = actor.get("potion_light_effects", [])
+                writer.pack("<I", len(lights))
+                for effect in lights:
+                    writer.string(effect["potion"])
+                    writer.string(effect["light"])
+                    writer.pack("<f", effect["magnitude"])
+                    writer.pack("<f", effect["duration"])
+                    writer.pack("<f", effect["elapsed"])
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))
@@ -3638,6 +4124,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             if version >= 84:
                 essential = base.get("essential")
                 writer.pack("<B", 0 if essential is None else 2 if essential else 1)
+            if version >= 90:
+                factions = base.get("factions")
+                writer.pack("<B", factions is not None)
+                if factions is not None:
+                    writer.pack("<I", len(factions))
+                    for faction, rank in factions:
+                        writer.string(faction)
+                        writer.pack("<b", rank)
     if version >= 12:
         lives = sorted(state.get("native_actor_life", []), key=lambda life: life["actor"])
         writer.pack("<I", len(lives))
@@ -4053,20 +4547,25 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.string(entry[field])
             writer.pack("<f", entry["physical_scale"])
             writer.pack("<H", entry["scene_collision_flags"])
-            body = entry["body"]
-            writer.pack("<I", body["record"])
-            writer.pack("<I", body["node_record"])
-            for field in ("rotation", "position", "linear_velocity", "angular_velocity"):
-                for value in body[field]: writer.pack("<f", value)
-            for field in ("linear", "angular"):
-                for value in body["native_packed_velocity"][field]: writer.pack("<f", value)
-            writer.pack("<B", body["native_motion"])
+            def write_loose_body(body):
+                writer.pack("<I", body["record"])
+                writer.pack("<I", body["node_record"])
+                for field in ("rotation", "position", "linear_velocity", "angular_velocity"):
+                    for value in body[field]: writer.pack("<f", value)
+                for field in ("linear", "angular"):
+                    for value in body["native_packed_velocity"][field]: writer.pack("<f", value)
+                writer.pack("<B", body["native_motion"])
+            write_loose_body(entry["body"])
             writer.pack("<B", int("root_local" in entry))
             if "root_local" in entry:
                 root = entry["root_local"]
                 for field in ("rotation", "position"):
                     for value in root[field]: writer.pack("<f", value)
                 writer.pack("<f", root["scale"])
+            if version >= 103:
+                extra = entry.get("additional_bodies", [])
+                writer.pack("<I", len(extra))
+                for body in extra: write_loose_body(body)
     if version >= 62:
         movement = state.get("native_movement")
         writer.pack("<B", int(movement is not None))
@@ -4144,7 +4643,64 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.string(owner["actor"]); writer.pack("<I", len(owner["abilities"]))
             for ability in owner["abilities"]:
                 writer.string(ability["spell"])
-                _write_inventory(writer, ability.get("displaced_inventory", []), 82)
+                _write_inventory(writer, ability.get("displaced_inventory", []), version if version >= 97 else 82)
+    if version >= 86:
+        contacts = state.get("native_trap_contacts", [])
+        writer.pack("<I", len(contacts))
+        for contact in contacts:
+            writer.string(contact["reference"])
+            writer.pack("<I", contact["body_record"])
+            writer.string(contact["actor"])
+    if version >= 87:
+        casts = state.get("native_spell_casts", [])
+        writer.pack("<I", len(casts))
+        for cast in casts:
+            writer.string(cast["actor"]); writer.string(cast["spell"]); writer.string(cast["animation_group"])
+            for key in ("cost", "elapsed", "release_time", "duration"):
+                writer.pack("<f", cast[key])
+            writer.pack("<B", cast["released"])
+    if version >= 88:
+        writer.pack("<Q", state.get("next_magic_projectile", 1))
+        projectiles = state.get("native_magic_projectiles", [])
+        writer.pack("<I", len(projectiles))
+        for projectile in projectiles:
+            writer.pack("<Q", projectile["id"])
+            for key in ("caster", "source", "cell"):
+                writer.string(projectile[key])
+            writer.pack("<I", projectile["effect_code"])
+            writer.pack("<f", projectile["magnitude"])
+            for key in ("position", "velocity"):
+                for value in projectile[key]:
+                    writer.pack("<f", value)
+            for key in ("distance", "maximum_distance"):
+                writer.pack("<f", projectile[key])
+            writer.string(projectile["model"])
+    if version >= 89:
+        entries = state.get("daily_package_completions", [])
+        writer.pack("<I", len(entries))
+        for entry in entries:
+            writer.string(entry["actor"]); writer.string(entry["package"])
+            _write_calendar(writer, entry["day"])
+    if version >= 91:
+        entries = state.get("package_waiting", [])
+        writer.pack("<I", len(entries))
+        for entry in entries:
+            writer.string(entry["package"])
+            writer.pack("<B", entry["waiting"])
+    if version >= 96:
+        writer.pack("<Q", state.get("next_arrow_projectile", 1))
+        arrows = state.get("native_arrow_projectiles", [])
+        writer.pack("<I", len(arrows))
+        for arrow in arrows:
+            writer.pack("<Q", arrow["id"])
+            for key in ("caster", "bow", "ammunition", "cell"):
+                writer.string(arrow[key])
+            for key in ("position", "velocity"):
+                for value in arrow[key]:
+                    writer.pack("<f", value)
+            for key in ("damage", "gravity_factor", "distance", "maximum_distance"):
+                writer.pack("<f", arrow[key])
+            writer.string(arrow["model"])
     return writer.finish()
 
 
@@ -4279,6 +4835,28 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 85 and state.get("native_animated_references"):
         raise RuntimeStateError("Cannot infer animated reference bodies from an older schema")
     state.setdefault("native_animated_references", [])
+    if state.get("schema_version", 1) < 86 and state.get("native_trap_contacts"):
+        raise RuntimeStateError("Cannot infer trap contacts from an older schema")
+    state.setdefault("native_trap_contacts", [])
+    if state.get("schema_version", 1) < 87 and state.get("native_spell_casts"):
+        raise RuntimeStateError("Cannot infer pending casts from an older schema")
+    state.setdefault("native_spell_casts", [])
+    if state.get("schema_version", 1) < 88 and (state.get("native_magic_projectiles")
+            or state.get("next_magic_projectile", 1) != 1):
+        raise RuntimeStateError("Cannot infer magic projectiles from an older schema")
+    state.setdefault("native_magic_projectiles", [])
+    state.setdefault("next_magic_projectile", 1)
+    if state.get("schema_version", 1) < 89 and state.get("daily_package_completions"):
+        raise RuntimeStateError("Cannot infer daily package history from an older schema")
+    state.setdefault("daily_package_completions", [])
+    if state.get("schema_version", 1) < 91 and state.get("package_waiting"):
+        raise RuntimeStateError("Cannot infer package waiting overrides from an older schema")
+    state.setdefault("package_waiting", [])
+    if state.get("schema_version", 1) < 96 and (state.get("native_arrow_projectiles")
+            or state.get("next_arrow_projectile", 1) != 1):
+        raise RuntimeStateError("Cannot infer native arrow flight from an older schema")
+    state.setdefault("native_arrow_projectiles", [])
+    state.setdefault("next_arrow_projectile", 1)
 
 
 def _upgrade_loose_weapons(state: dict[str, Any]) -> None:
@@ -4457,11 +5035,24 @@ def _upgrade_bound_ownership(state: dict[str, Any]) -> None:
         for item in inventory: item.setdefault("bound_source", None)
 
 
+def _upgrade_inventory_scripts(state: dict[str, Any]) -> None:
+    inventories = [state.get("player", {}).get("inventory", [])] + [row.get("inventory", []) for row in state.get("references", [])]
+    inventories += [ability.get("displaced_inventory", []) for row in state.get("native_bound_abilities", []) for ability in row.get("abilities", [])]
+    for inventory in inventories:
+        for item in inventory:
+            if state.get("schema_version", 1) < 97 and item.get("script_owner") is not None:
+                raise RuntimeStateError("Legacy runtime cannot contain inventory script identity")
+            item.setdefault("script_owner", None)
+
+
 def _upgrade_base_essential(state: dict[str, Any]) -> None:
     for base in state.get("native_actor_bases", []):
         if state.get("schema_version", 1) < 84 and base.get("essential") is not None:
             raise RuntimeStateError("Legacy runtime cannot contain essential base overrides")
         base.setdefault("essential", None)
+        if state.get("schema_version", 1) < 90 and base.get("factions") is not None:
+            raise RuntimeStateError("Legacy runtime cannot contain faction base overrides")
+        base.setdefault("factions", None)
 
 
 def _upgrade_process_alerts(state: dict[str, Any]) -> None:
@@ -4541,6 +5132,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_faction_reactions(state)
     _upgrade_process_alerts(state)
     _upgrade_bound_ownership(state)
+    _upgrade_inventory_scripts(state)
     _upgrade_base_essential(state)
     _upgrade_friend_hit_counters(state)
     _upgrade_combat_controllers(state)
@@ -4634,6 +5226,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_faction_reactions(result)
     _upgrade_process_alerts(result)
     _upgrade_bound_ownership(result)
+    _upgrade_inventory_scripts(result)
     _upgrade_base_essential(result)
     _upgrade_friend_hit_counters(result)
     _upgrade_combat_controllers(result)
@@ -4779,6 +5372,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
         reference.setdefault("ownership_global", "null")
         reference.setdefault("dropper", None)
         reference.setdefault("dropped_items", None)
+    _upgrade_inventory_scripts(result)
     return result
 
 

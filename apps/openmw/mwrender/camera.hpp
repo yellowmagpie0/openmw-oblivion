@@ -103,10 +103,14 @@ namespace MWRender
 
         bool isVanityOrPreviewModeEnabled() const { return mMode == Mode::Vanity || mMode == Mode::Preview; }
         Mode getMode() const { return mMode; }
-        // A temporary recovery view must not replace the saved view preference.
+        // Temporary views preserve the selected first/third-person preference.
         Mode getModeForSave() const
         {
-            return mMode == Mode::ThirdPerson && mNativeRecoveryRestoreMode ? *mNativeRecoveryRestoreMode : mMode;
+            if (mMode == Mode::ThirdPerson && mNativeRecoveryRestoreMode)
+                return *mNativeRecoveryRestoreMode;
+            if (mMode == Mode::Vanity || mMode == Mode::Preview)
+                return mFirstPersonView ? Mode::FirstPerson : Mode::ThirdPerson;
+            return mMode;
         }
         void setNativeRecoveryView(bool active);
         void updateNativeRecoveryView();

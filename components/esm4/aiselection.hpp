@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <map>
 #include <vector>
 
 #include "aiconditions.hpp"
@@ -38,6 +39,7 @@ namespace ESM4
     struct PackageSelectionRequest
     {
         CalendarInstant mNow;
+        std::map<ESM::FormKey, CalendarInstant> mDailyPackageCompletions;
         std::vector<PackageCandidate> mBasePackages;
         std::optional<PackageCandidate> mScriptPackage;
         ConditionEvaluationContext mConditionContext;

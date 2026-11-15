@@ -1,0 +1,57 @@
+{
+  "status": "Independent original record audit, reused native settled age/fade provenance, and actual-shot baseline",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "meshes_bsa_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "audit": {
+    "path": "build/oblivion-compat/next-content/iron-arrow-winning-records-audit.json",
+    "sha256": "1faec85f92e4188d1f317aa4f4eac25e55e99b08adc56fd1b967ee988f2751e9",
+    "reader": "build/oblivion-compat/next-content/audit-iron-arrow-records.py"
+  },
+  "content": {
+    "ammunition": "content:oblivion.esm:017829",
+    "bow": "content:oblivion.esm:047aca",
+    "stone_reference": "content:oblivion.esm:049be8",
+    "stone_base": "content:oblivion.esm:02d59c",
+    "cell": "content:oblivion.esm:0463f5"
+  },
+  "rules": {
+    "provenance": "docs/oblivion/M15-NATIVE-RULE-PROVENANCE.md#arrow-age-expiry-and-fade",
+    "backend": "components/esm4/projectilerules.cpp::advanceArrowLifetime",
+    "original_instruction_entry": "0060C170",
+    "independent_prior_cases": 2016,
+    "age_maximum": 90,
+    "fade_seconds": 3,
+    "age_gate": "Strictly greater than90; whole crossing tick contributes to the three-second fade.",
+    "actor_inventory_roll": "The separate iArrowInventoryChance50 roll is for eligible actor hits. It is not used for this static surface.",
+    "fidelity": "Settled age begins at this bounded impact. Full flight aging, process-budget cleanup and full Havok penetration/ricochet remain open."
+  },
+  "actual_baseline": {
+    "path": "build/oblivion-compat/next-content/normal-iron-arrow-stone-baseline-01",
+    "stock_before": 19,
+    "stock_after": 18,
+    "projectile_serial": 6,
+    "impact": "Actual physical swept collision on original STAT049be8, zero actor damage, flight removed and no recoverable AMMO owner."
+  },
+  "representation": {
+    "native_namespace": "dynamic:native-reference",
+    "envelope": 97,
+    "source_fields": [
+      "bow",
+      "caster",
+      "surface",
+      "projectile serial",
+      "settled age",
+      "opacity",
+      "fading"
+    ],
+    "publication": "Prepare detached AMMO/cell/registry/Lua/model/collision; publish one retained item and consume one flight before observers.",
+    "placement": "Original AMMO model follows incoming velocity, with a two-world-unit backoff to avoid burying the entire pickable model under the ray-contact surface. No exact native penetration claim."
+  },
+  "acceptance": {
+    "conservation": "19 inventory ->18 plus1 world ->19 plus0 world; repeated Activate/fresh reload cannot regenerate it. Untaken expiry leaves18 plus0 world.",
+    "setup": "A98-unit foot-distance probe had a rendering ray hit but no native activation focus. Ordinary approach to45 units succeeds with the unchanged native activation range.",
+    "time_tolerance": "Expiry clock delta is93 minus saved settled age, within1s early/2s late for discrete frame crossing, screenshots and ordinary save input.",
+    "state": "Exact encoded payload/live/save comparisons, stable dynamic identity/serial and provenance, prior Amulet locals/kill credit and unchanged Player Health."
+  }
+}

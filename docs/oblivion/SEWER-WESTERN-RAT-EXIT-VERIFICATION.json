@@ -1,0 +1,151 @@
+{
+  "scope": "Original65\u201367 genuine-checkpoint run reaches exterior and its own outdoor save reloads fresh. This is loaded-course evidence, not uninterrupted new-game acceptance.",
+  "full_escape_complete": false,
+  "behavior": [
+    "Keep original65 eleven-point safe approach and checkpoint. Move first4 original66 bridge points verbatim before fight; replace blocked5th point with walk-only native navigation query guidance and ordinary camera/W inputs until rat within100.",
+    "Player kills same western rat0666a7.66 continues from original6th point, avoiding recrossing already-traversed bridge. No actor/health/position/quest injection."
+  ],
+  "runtime": {
+    "final-three-02": {
+      "passed_driver": true,
+      "actual_saves": [
+        {
+          "sequence": 3,
+          "sha256": "deff88e6dff7ba47dcfcc319d8043cc7bf3b9b0467060cd9afa1f4ff3db053d0",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 4,
+          "sha256": "59063be1897f2bb8dff161fad33069b7dd5e60a50b2dc8934259e4cc34d39d24",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 5,
+          "sha256": "a9adaa613e2b222e54037e3ee487a66f06ad73ba4b2d783d1cbf74c66ef3baf7",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 6,
+          "sha256": "baba26a119c1228cc97234f9e42d484188819f761b31713cd6cbbd94f407aa4b",
+          "native_save_exact": true
+        },
+        {
+          "sequence": 8,
+          "sha256": "9b79b88513e99a97eb793a4a8e51a2ae07004aaf680cab29e8dd661ace1221ae",
+          "native_save_exact": true
+        }
+      ],
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 319485,
+        "sequence": 9,
+        "tick": 8040,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 8,
+        "pending_count": 0,
+        "unsupported_count": 1
+      },
+      "unsupported_commands": [
+        "deferred command=setcrimegold unit=content:oblivion.esm:00a396@oblivion.esm/object/unit=0"
+      ],
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/manhole-visible-target-01/retained-saves/3-0003-Quicksave.omwsave",
+        "source_save_sha256": "70eb26795543648ee6e07c0adee722c37597ef661a834388492d0335c4ed5a6c",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "outdoor_health": 35.13861846923828,
+      "class": "content:oblivion.esm:023787",
+      "birthsign": "content:oblivion.esm:01fd9d",
+      "rat_life": {
+        "actor": "content:oblivion.esm:0666a7",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      "amulet_count": 1,
+      "baurus_key_count": 0,
+      "equipped_gear": {
+        "0661c1": 1,
+        "0661c3": 1,
+        "090613": 1
+      }
+    },
+    "final-three-outdoor-reload-01": {
+      "passed_driver": true,
+      "actual_saves": [
+        {
+          "sequence": 3,
+          "sha256": "ee7919fe61bed08f66194bf028d2699dfa5e27ee73ce18ea179eee566a64a230",
+          "native_save_exact": true
+        }
+      ],
+      "native_end": {
+        "run_id": "tutorial-player-intervention",
+        "epoch": 3,
+        "pid": 321129,
+        "sequence": 4,
+        "tick": 106,
+        "event": "run-end",
+        "error_count": 0,
+        "event_count": 3,
+        "pending_count": 0,
+        "unsupported_count": 0
+      },
+      "unsupported_commands": [],
+      "entry": {
+        "passed": true,
+        "source_save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/final-three-02/retained-saves/3-0008-Quicksave.omwsave",
+        "source_save_sha256": "9b79b88513e99a97eb793a4a8e51a2ae07004aaf680cab29e8dd661ace1221ae",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "outdoor_health": 35.13861846923828,
+      "class": "content:oblivion.esm:023787",
+      "birthsign": "content:oblivion.esm:01fd9d",
+      "rat_life": {
+        "actor": "content:oblivion.esm:0666a7",
+        "base": "content:oblivion.esm:02509b",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "dynamic:player:0000000000000001"
+      },
+      "amulet_count": 1,
+      "baurus_key_count": 0,
+      "equipped_gear": {
+        "0661c1": 1,
+        "0661c3": 1,
+        "090613": 1
+      }
+    }
+  },
+  "rendered_review": [
+    "western-rat-bridge-01/live-stall.png shows obstructing stone corner",
+    "final-three-02/segment03-first-daylight.png shows exterior; water/terrain/lighting remain visually rough, no complete exterior rendering or wilderness-playthrough claim"
+  ],
+  "retained_failures": [
+    "final-three-01 (523-unit out-of-range swings)",
+    "western-rat-reach-01 (straight approach drops off bridge; Player dies to2 rats)",
+    "western-rat-bridge-01 (invalid last waypoint; explicitly stopped after real F5 and normal SDL Quit; not an observation timeout)"
+  ],
+  "read_only_route_query": "western-rat-nav-query-01 shows successful path around corner using actual Player agent bounds",
+  "focused_native_kill": "western-rat-nav-approach-01/rat-nav-verification.json",
+  "runtime_snapshot": "follower-yield-runtime-snapshot-01/manifest.json",
+  "validation": {
+    "assembly_repeat_python": 18,
+    "full_segments": 67,
+    "full_actions": 10460,
+    "full_luajit_compile": true,
+    "C++": "Data-only route change uses existing immutable runtime; normal2217 and sanitized2217 engine evidence from follower chunk retains original provenance. Current uncommitted SetOwnership implementation is separate and only focused-tested."
+  },
+  "remaining_acceptance": [
+    "Implement original SetOwnership58, SetFactionRank80 and SetCrimeGold exit state/save semantics; do not waive unexpected unsupported events.",
+    "One original-new-game process through all67, its own outdoor fresh reload, native/input/save and rendered audit."
+  ]
+}

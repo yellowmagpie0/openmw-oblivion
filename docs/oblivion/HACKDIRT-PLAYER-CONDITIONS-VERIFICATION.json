@@ -1,0 +1,316 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-08",
+  "scope": "Original first Seed-Neeus Chorrol greeting and fresh-process persistence; full Hackdirt quest remains open",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "runtime_binary": {
+    "path": "build/openmw",
+    "sha256": "96e69a8b4022cbc29b45051403165685ebd8ba22c5910d5160e8cb7ae7efbba1"
+  },
+  "checks": {
+    "player-conditions-normal-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/player-conditions-normal-01/verification.json",
+        "sha256": "dcd7718851b5894397e0117729da03c393af2cdd5ddeb6ea8cf43511fa895a4c"
+      },
+      "results": {
+        "engine": {
+          "executed": 2234,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "31ec31476fe900e6b3f378665b239132a9c5a62be099bbe6a025e017ab441384",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "13e063eb08d19f12a1327ec0c8894e7e6e8e22b03975665fb5c561f76004c472",
+          "inventory_sha256": "ef851ec6cf292652a765008956df23445045e914bd121b88cf2e9b96bed6d297",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components": {
+          "executed": 3267,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8e6c486f540eced1a9f0b5e87e18b60e766b42ec1e52260b7f921435cfd8c692",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9efd7f0204fbb1b97354cdd6176972b120464b94015ff909514e8c4d0dc83632",
+          "inventory_sha256": "d0a7378b33eefdc208379186e33c3bacc5a627265b37c36009f786a40d67cf1b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 596,
+          "passed": true,
+          "log_sha256": "51796c7e496b2ef3e23044be491d9cb2141fb9df19153bdf4d2508c9a4bdb24a"
+        }
+      },
+      "source_before": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "a4aaaea3c386ed425bf445fe292e7a5ba49e2ceb204c6708c09a3263f206d62f"
+      },
+      "source_after": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "a4aaaea3c386ed425bf445fe292e7a5ba49e2ceb204c6708c09a3263f206d62f"
+      }
+    },
+    "player-conditions-sanitized-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/player-conditions-sanitized-01/verification.json",
+        "sha256": "6a8bf1dc7d3fb7fc6f1ebd3a6fa0781e41e98beb17512f7bffe8119eb183118f"
+      },
+      "results": {
+        "engine": {
+          "executed": 2234,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0c15f930f6df951779e8fd8214b8bcac2e778602079b9e94a43a00c540225e20",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6493cfbb787c795196bc369b6f3f1b5facd773e347601e14632bbf57c4e4f05f",
+          "inventory_sha256": "ef851ec6cf292652a765008956df23445045e914bd121b88cf2e9b96bed6d297",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "a4aaaea3c386ed425bf445fe292e7a5ba49e2ceb204c6708c09a3263f206d62f"
+      },
+      "source_after": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "a4aaaea3c386ed425bf445fe292e7a5ba49e2ceb204c6708c09a3263f206d62f"
+      }
+    },
+    "player-conditions-component-sanitize-01": {
+      "receipt": {
+        "path": "build/oblivion-compat/hackdirt/player-conditions-component-sanitize-01/verification.json",
+        "sha256": "6ecf449d244e68bec1270419e871fdf058040a03faca7a8404ff92eaf25979c6"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 1089,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "adecff06f29cfb3f66111c00976e293ce8f6841f8e04c16822495a3528251de1",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ea0c051e001fe9cf5bb83f1c0c3d1e5a935d9e10f95933fd3a9c683102a669c4",
+          "inventory_sha256": "c55d3284d63fb3f6f4d33d1e0efeb1e65900c09fcfe8848a62eadb7b1a5efa2b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "a4aaaea3c386ed425bf445fe292e7a5ba49e2ceb204c6708c09a3263f206d62f"
+      },
+      "source_after": {
+        "head": "90994539206fbfa9802af4bb73b6b1da86b55485",
+        "source_fingerprint": "a4aaaea3c386ed425bf445fe292e7a5ba49e2ceb204c6708c09a3263f206d62f"
+      }
+    }
+  },
+  "oracles": {
+    "murderer-query": {
+      "artifact": {
+        "path": "build/oblivion-compat/hackdirt/inspection-01/murderer-query-oracle.json",
+        "sha256": "df92c5b8c1c7b26219e092985d3ff6c1efe98bd84d2a99d5565430d4b4797dfc"
+      },
+      "passed": true,
+      "cases": 512,
+      "scope": "Complete global IsPCAMurderer callback and dedicated Player-byte predicate. Fixture allocation supplied. Constructor default, producers, clearing and save/reload are not tested.",
+      "stubs": []
+    },
+    "murderer-producer": {
+      "artifact": {
+        "path": "build/oblivion-compat/hackdirt/inspection-01/murderer-producer-oracle.json",
+        "sha256": "9918edeee5712e3ed8b0d54ff8ffc2e78faff09fd018c8afc6726d753a5c8853"
+      },
+      "passed": true,
+      "cases": 24,
+      "scope": "Full receiver-owned mutation and subsequent global query, including counter wrap and independent other-actor storage. Caller supplies receiver/allocation; admission/classification, constructor/reset and persistence are not tested.",
+      "stubs": []
+    },
+    "infamy-query": {
+      "artifact": {
+        "path": "build/oblivion-compat/hackdirt/inspection-01/infamy-query-oracle.json",
+        "sha256": "a9ecebece8e57f83bb465f38ae31af71b2bdfee53f6838e57607050c92f5a819"
+      },
+      "passed": true,
+      "cases": 14,
+      "scope": "Full GetPCInfamy callback: global Player receiver, ignored supplied subject and signed int32 output. Underlying getter arithmetic/mutations not tested.",
+      "stubs": [
+        "Player virtual +208 supplies the existing authoritative int32 infamy getter"
+      ]
+    },
+    "cell-prefix": {
+      "artifact": {
+        "path": "build/oblivion-compat/hackdirt/inspection-01/cell-prefix-oracle.json",
+        "sha256": "f05631236083ed3ee501623c8c4b005cb5397c8d109db7d08520c08ceb661170"
+      },
+      "passed": true,
+      "cases": 11,
+      "scope": "Full uncached GetInCell callback, original cell getter, prefix length and ASCII case-insensitive CRT comparison. No cell lookup/loading or cache invalidation tested.",
+      "stubs": [
+        "Cell virtual +D4 supplies editor-ID strings; actor cell field +40 supplied"
+      ]
+    }
+  },
+  "runtime": {
+    "seedneeus-greeting-11": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/seedneeus-greeting-11-console.json",
+        "sha256": "dfd65a9241a478c6db78e0764879678cc50364a276eb6275db7dffe17785d4f8"
+      },
+      "structural_passed": true,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/seedneeus-greeting-11/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "39e64a37e3848f6419e613fe7ce225b4fb333a661aa76d112d980f12b5158f22"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 27,
+        "hour": 1.4385075569152832,
+        "time_scale": 30.0
+      },
+      "quest_stage": 0,
+      "murderer": false,
+      "mother_talked": true,
+      "epoch": {
+        "pid": 507913,
+        "start_ticks": 185840187,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/seedneeus-greeting-11/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/seedneeus-greeting-07/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "info": "content:oblivion.esm:0237cf",
+      "disposition": 62,
+      "source_save": "build/oblivion-compat/hackdirt/seedneeus-greeting-07/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "semantic_passed": true
+    },
+    "seedneeus-reload-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/seedneeus-reload-01-console.json",
+        "sha256": "003fcfab3725e83a669f75522a8c7f2290fb49eb8ad806691d26f2b539b6e7e9"
+      },
+      "structural_passed": true,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/seedneeus-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "c43a7692136a2254fbaa97cecd633de97be34dd43a7a06f5d04439b425ce708b"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 27,
+        "hour": 1.4440407752990723,
+        "time_scale": 30.0
+      },
+      "quest_stage": 0,
+      "murderer": false,
+      "mother_talked": true,
+      "epoch": {
+        "pid": 508224,
+        "start_ticks": 185849566,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/seedneeus-reload-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/hackdirt/seedneeus-greeting-11/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ]
+      },
+      "semantic_passed": true,
+      "identical_fields": [
+        "quests",
+        "script_instances",
+        "disposition_modifiers",
+        "spoken_dialogue_infos"
+      ],
+      "no_dialogue_replay": true
+    },
+    "normal-wait-three-days-01": {
+      "console": {
+        "path": "build/oblivion-compat/hackdirt/normal-wait-three-days-01-console.json",
+        "sha256": "c723fca9c85835184f6f527e155243983c19dbd919ac00374a013b2af815fa6e"
+      },
+      "structural_passed": true,
+      "save": {
+        "path": "build/oblivion-compat/hackdirt/normal-wait-three-days-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "4f3241b8def79f81fb5276169f52d7ca136a074acddbc6f2bdcfe2f6e010a8b4"
+      },
+      "exact_native_payload_roundtrip": true,
+      "clock": {
+        "year": 433,
+        "month": 7,
+        "day": 28,
+        "hour": 1.4592571258544922,
+        "time_scale": 30.0
+      },
+      "quest_stage": 0,
+      "murderer": false,
+      "mother_talked": true,
+      "semantic_three_days_passed": false,
+      "accepted_elapsed_days": 1,
+      "observation": "Three scripted Wait attempts requested; save advanced from August27 to28/DaysPassed1 to2 only. Subsequent inputs arrived during slow first Wait. Do not accept as three days.",
+      "stack_sample": {
+        "path": "build/oblivion-compat/hackdirt/normal-wait-three-days-01/wait-stack-01.txt",
+        "sha256": "fd079ea49c4bdfc08804ac72fd85734eb25b9b84aace9844ac146732b9019589"
+      }
+    }
+  },
+  "limits": [
+    "Murder notification operation and dedicated flag/query are implemented; automatic murder admission/classification is outside this chunk.",
+    "Legacy fork saves without the flag default false; past unrecorded murders cannot be reconstructed.",
+    "Infamy and cell-ID virtual getter boundaries are supplied in the instruction probes; underlying infamy arithmetic and cell loading are not proved by them.",
+    "Normal-input courses are isolated SDL/X11 replays with read-only Lua aiming and query events; no M14 acceptance claim.",
+    "Timed missing-daughter pickup, road, investigation, cavern combat, rescue, following/waiting reload and original reward remain unaccepted."
+  ],
+  "retained_failures": [
+    "murderer-focused-01: malformed-save exception expectation corrected",
+    "player-crime-focused-01: test fixture tried forbidden NPC Fame mutation",
+    "disposition-binding-focused-01: test used NPC base instead of placed registry FormID",
+    "cell-prefix-focused-01: incorrect test suite filter selected zero engine cases",
+    "seedneeus-greeting-08: unsupported GetPCInfamy condition",
+    "seedneeus-greeting-09: generic low-disposition greeting before implicit listener binding fix",
+    "seedneeus-greeting-10: diagnostic Player token resolved to NPC base, not canonical active reference"
+  ],
+  "next_action": "Address observed Wait fast-forward door routing/reference lookup cost; repeat three normal days and original out-of-Chorrol disappearance, then return for original pickup."
+}

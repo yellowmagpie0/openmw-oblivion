@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "name": "Ordinary approach within original activation range then harvest second Cairn06a05f",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:01e723 GetStage\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function()\n frames=frames+1;if frames<30 or frames%5~=0 then return end\n assert(not Actor.isDead(self),'Player died during original Cairn Bolete harvest')\n local t=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x6a05f));assert(t and t:isValid(),'Original second Cairn missing')\n print('CairnHarvest stock='..Actor.inventory(self):countOf(core.getFormId('Oblivion.esm',0x6251e))..' health='..Actor.stats.dynamic.health(self).current)\n local v=camera.getViewTransform():apply(t:getBoundingBox().center)\n if v:length()<=140 then print('CairnHarvest within range') end\n local yaw=math.atan2(v.x,-v.z);local pitch=-math.atan2(v.y,math.sqrt(v.x*v.x+v.z*v.z))\n if math.abs(yaw)<.025 and math.abs(pitch)<.025 then print('CairnHarvest facing second') end\n print(string.format('CairnHarvest look x=%d y=%d range=%.2f',math.max(-150,math.min(150,math.floor(yaw*256+.5))),math.max(-100,math.min(100,math.floor(pitch*256+.5))),v:length()))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "CairnHarvest stock=0 health=83",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "CairnHarvest facing second",
+      "maximum_iterations": 150,
+      "timeout_seconds": 30,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "CairnHarvest look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)",
+          "timeout_seconds": 30,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "CairnHarvest look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.1
+        }
+      ]
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "CairnHarvest within range",
+      "maximum_iterations": 100,
+      "timeout_seconds": 20,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "CairnHarvest look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)",
+          "timeout_seconds": 15,
+          "after_start": true,
+          "abort_on_failure": true
+        },
+        {
+          "type": "mouse_move",
+          "x": 0,
+          "y": 0,
+          "from_log": {
+            "path": "process.log",
+            "pattern": "CairnHarvest look x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+          }
+        },
+        {
+          "type": "key_down",
+          "value": "w"
+        },
+        {
+          "type": "sleep",
+          "seconds": 0.15
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        }
+      ]
+    },
+    {
+      "type": "screenshot",
+      "name": "original-second-cairn-before-harvest.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "space",
+      "seconds": 0.25
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M5 interaction: kind=harvest result=(harvested|harvest_failed) ref=content:oblivion.esm:06a05f",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-second-cairn-after-harvest.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "CairnHarvest stock=0 health=83",
+    "M5 interaction: kind=harvest result=(harvested|harvest_failed) ref=content:oblivion.esm:06a05f",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "M16 native cast rejected:",
+    "Oblivion creature inventory item .* was not projected:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-cairn-bolete-harvest",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

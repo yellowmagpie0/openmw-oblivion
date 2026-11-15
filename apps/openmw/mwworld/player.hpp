@@ -57,6 +57,7 @@ namespace MWWorld
 
         bool mJumping;
         bool mOblivionJumpRequested = false;
+        bool mOblivionCastRequested = false;
         std::uint8_t mOblivionCharacterGenerationFlags = 0;
         std::optional<ESM4::CharacterGenerationState> mOblivionCharacterGeneration;
 
@@ -118,6 +119,14 @@ namespace MWWorld
 
         void setJumping(bool jumping);
         bool getJumping() const;
+
+        void requestOblivionCast() { mOblivionCastRequested = true; }
+        bool consumeOblivionCastRequest()
+        {
+            const bool requested = mOblivionCastRequested;
+            mOblivionCastRequested = false;
+            return requested;
+        }
 
         void requestOblivionJump() { mOblivionJumpRequested = true; }
         bool consumeOblivionJumpRequest()

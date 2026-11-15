@@ -1,0 +1,31 @@
+{
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "winning_skill": {
+    "path": "build/oblivion-compat/alchemy-use/winning-skill-audit.json",
+    "sha256": "500943240843ce3390fb3419d520e3a77253a432533bd1a610f0017c118a624b"
+  },
+  "winning_ingredients": {
+    "path": "build/oblivion-compat/alchemy-use/winning-ingredients.json",
+    "sha256": "37effde9576e3e5e00e77254006abdaa9f09a861f498da8e1a3b033cb3c4e179"
+  },
+  "caller": {
+    "path": "build/oblivion-compat/alchemy-use/original-eating-caller-report.json",
+    "sha256": "53d7499b0dff08dbd4201c4d4cce5ae01cfbccdf51185719623d9de32fb00d4d"
+  },
+  "dispatcher": {
+    "path": "build/oblivion-compat/alchemy-use/original-use-report.json",
+    "sha256": "a56bc1ed0811fa62ec1a29ab516edf25a1621693baf9831535d6514697ad72be"
+  },
+  "caller_cases": 24,
+  "dispatcher_cases": 30,
+  "expected": "Original Alchemy19/SKIL044 Intelligence1/Magic1 primary5 secondary0.5. Successful non-food ingredient branch passes19/usage1/default scale0; food flag2 bypasses.",
+  "limits": [
+    "Caller entry005fc9e2 is after magic-type8 dispatch: typed item, success boolean and actor vtable supplied; virtual39C publication captured, stop005fca2a/005fca80. No complete ingestion/potency/debit or original live eating.",
+    "Full668C30 dispatcher uses supplied winning lookup/base getter and captured668B30 final publication; actual progression, raw ownership and cold persistence are fork runtime checks."
+  ],
+  "retained_failures": [
+    "Initial caller harness omitted the early-food exit stop, causing an unmapped fetch after return; original-eating-caller-attempt01.py retained. Final adds explicit early stop,24 cases pass.",
+    "Initial survey assumed direct calls to668C30 and found0; actual Player actor vtable39C atA73DA8 supplies dispatcher. A Capstone import failed; local objdump provided instruction inspection."
+  ]
+}
