@@ -1,0 +1,115 @@
+{
+  "status": "Verified original behavior; proposed dropped-Torch ignition fix rejected",
+  "question": "Does original Torch02 remain lit or burn fuel after ordinary inactive/equipped inventory drop?",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "content": {
+    "base": "content:oblivion.esm:02cf9f",
+    "record_oracle": "TORCH-DROP-ORACLE.json",
+    "flags": "0x3b",
+    "off_default": true,
+    "full_usage_seconds": 1000
+  },
+  "probe_plan": {
+    "question": "Does original Torch02 dropped from inactive inventory emit a world light/flame despite OffDefault? Does equipped-drop differ, and does world fuel decrease over15 real simulation seconds?",
+    "implementation_decision": "Match verified original dropped Torch light state; include world fuel ticking only if observed original semantics require it. Preserve per-instance987 fuel and two fresh1000 siblings.",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "content": {
+      "base": "02cf9f",
+      "flags": "0x3b",
+      "time": 1000,
+      "radius": 768,
+      "member": "meshes/lights/torch02.nif"
+    },
+    "controls": [
+      "Exact isolated prefix Documents/Plugins backups and restoration; pristine ESS never overwritten",
+      "Master only and named copied baseline; controlled original console placement/give is oracle setup only",
+      "Actual inventory Shift drop, screenshots and read-only dynamic reference/ExtraLight/ExtraTimeLeft observations",
+      "Compare inactive and equipped original drops under matched scene/camera; normal activation/pickup read-back",
+      "No original process before launch; already running Steam left intact"
+    ],
+    "tolerances": {
+      "quantity": 0,
+      "fuel_absolute_seconds": 1,
+      "qualitative_light": "Visible flame/light and read-only native ExtraLight enabled/dimmer state; no pixel-identical shadow or flicker parity"
+    },
+    "scope": "Independent original probe before implementation; this console setup never supplies fork acceptance",
+    "fork_source": {
+      "save": "build/oblivion-compat/book-whole-stack/normal-book-whole-stack-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "0517fbe28fbe044a41e3c247253556ba1513d5c6f2fcd1e2504f4ec4d8b02a64",
+      "branch": "Main Cairn/Wellspring continuation; separate from awarded skill-book shore branch"
+    }
+  },
+  "observations": {
+    "inactive_drop": {
+      "carried_before": 1,
+      "carried_after": 0,
+      "world_reference": "ff000800",
+      "world_quantity": 1,
+      "extra_light_present": false,
+      "extra_time_left_present": false
+    },
+    "equipped_drop": {
+      "held_flame_and_floor_illumination_observed": true,
+      "carried_before": 1,
+      "carried_after": 0,
+      "world_reference": "ff000801",
+      "world_quantity": 1,
+      "world_flame_and_illumination": false,
+      "extra_light_present": false,
+      "remaining_seconds": 904.2192993164062
+    },
+    "world_interval": {
+      "declared_unpaused_seconds": 15,
+      "wall_seconds_including_paused_console_inspection": 98.534230794,
+      "remaining_before": 904.2192993164062,
+      "remaining_after": 904.2192993164062,
+      "change": 0
+    },
+    "pickup_control": {
+      "fresh_world_reference_disabled_only_after_paired_observations": "ff000800",
+      "normal_rendered_focus_and_Space_pickup": "ff000801",
+      "carried_after": 1,
+      "spent_world_reference_retired": true,
+      "controlled_native_equip_command_restores_held_flame_and_floor_illumination": true
+    }
+  },
+  "layout": {
+    "source_hint": "xOBSE f64a8fa0481e24b3e159d276b29b721a548876bf",
+    "verified_original_constructor": "0x429ec0..0x429edd",
+    "native_store": "ExtraTimeLeft type0x2d, vtable0xa35860, float at+c; mapped constructor bytes verified against hash-identified PE before reads",
+    "light_extra": "0x30 absence is supporting read-only metadata, independently paired with visible extinguished floor Torch and relit held control",
+    "reference_flags": "Raw flags0x100088 recorded; no unverified bit meaning assigned"
+  },
+  "fork_implication": {
+    "current_code": "Native Light OffDefault suppresses light and particle nodes; inactive world fuel remains unchanged",
+    "existing_runtime": "SPENT-TORCH-DROP-VERIFICATION.json retains real normal/SAN inactive world987 persistence with original provenance",
+    "decision": "Do not add dropped-world ignition or world fuel consumption to this ordinary Torch profile; no implementation change made",
+    "adjacent_unknowns": "Other light profiles, activation switches and spent-zero/infinite behavior remain open"
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "wrapper_exit_code": 0,
+  "evidence_root": "build/oblivion-compat/torch-world-light/original-01",
+  "artifacts": {
+    "probe-plan.json": "54b7da59257baed377636b7baaf2fd939f5ea34a7be5655334f89595ab2629ea",
+    "exe-metadata.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "game-process-epoch.json": "5c2ddb717562d2e6fa09771d0bd5aea582bd897832409c824c8d816ba620b572",
+    "input-log.jsonl": "88b419b119e51ff4a8b581fbf916dff75dd7ea22a0991ac79983fed0a0ac7a1f",
+    "after-inactive-drop.json": "7eabc6daee816914c6b1733c05ceaa213c0622ad6e81975c48bea78f0040ee25",
+    "after-equipped-drop.json": "9bf9caa46d2480b72daea7d261dfbee75f1d9dc369c1ad8dd24ad54ce14f4218",
+    "extra-time-left-constructor.txt": "93c35e0361192baab92bcb7d085f28aafb71c35abaae0a407f52ce5c10a74057",
+    "after-world-15-seconds.json": "4dd440285392dceb6b48c81a164f1ca9f30775fab53bcf7158215477ac9eacb9",
+    "after-spent-pickup.json": "6495dd8f4657cbc57cc716aba95998cf23ac75fc6cc1019ca27d686942d1902f",
+    "restoration.json": "ed7268fa31936f30153d0d5d7c5817131e3270fd51d5c8884b43b1a2fa394f26"
+  },
+  "limits": [
+    "Controlled original setup is oracle evidence, not a fork gameplay continuation",
+    "No native held burn-rate, timer expiry or exact numerical parity claim",
+    "The15-second interval proves observed unlit fuel retention, not every possible world-light lifetime",
+    "Proprietary images/bytes/disassembly remain in ignored local evidence"
+  ]
+}

@@ -38,11 +38,16 @@ preserves987 beside2fresh1000; [container discovery](NATIVE-CONTAINER-DISCOVERY-
 exposes original Sack06efcf. [Bonemeal](BONEMEAL-DROP-VERIFICATION.json) retains
 its original movable body. No full M16/M18 or TES4 MCP authoring claim.
 
-Next action: choose the next genuine carried/reached content exposing a remaining
-acceptance gap. Candidate: dropped original partially spent Torch world ignition/
-fuel lifetime, using the main cave continuation and an independent original probe
-if the rule is uncertain. Keep branches separate; do not enable Zahrasha or reroll
-sack contents.
+Latest rule investigation: [original dropped Torch state](TORCH-WORLD-STATE-ORACLE.json).
+Both inactive and equipped original Torch02 drops extinguish; spent904.2193 fuel
+holds across15 unpaused seconds. Pickup/equip relights it. Existing OffDefault/
+inactive world fuel behavior is appropriate; no dropped ignition/ticking fix.
+Original inputs restored exactly. Other light profiles and exhausted/infinite
+lights remain open.
+
+Next action: inspect genuinely carried scripted weapon content for a missing
+native ownership path; stateless Cuirass itself is already accepted. Keep branches
+separate; do not enable Zahrasha or reroll sack contents.
 
 Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
 ordinary approach reached the sack, whose first roll contained an inkwell/no gold.
@@ -75,7 +80,7 @@ Endurance55/no Swamp Fever, Crab0/Rice1, Nirnroot owner4/Found1, MS39stage10/
 counters2,33 credited deaths/all earned skills. Allocator7, dropped key6 retired.
 
 Current gaps: stateful-scripted loose armor, bound/enchanted and other stacked
-item categories; world Torch ignition/fuel ticking, spent-zero/infinite lights and broader
+item categories; spent-zero/infinite and other light profiles, and broader
 inventory lifetime/effects/UI; unsupported multi-body MISC, nonconvex triangle proxies
 and general prismatic
 motion; coastal rendering; natural positive Endurance-damage healing gameplay.
