@@ -5,6 +5,7 @@
 #include <MyGUI_ControllerManager.h>
 #include <MyGUI_ControllerRepeatClick.h>
 #include <MyGUI_EditBox.h>
+#include <MyGUI_TextBox.h>
 #include <MyGUI_Gui.h>
 #include <MyGUI_InputManager.h>
 #include <MyGUI_UString.h>
@@ -130,30 +131,55 @@ namespace MWGui
         MWMechanics::Alchemy::Result result = mAlchemy->create(mNameEdit->getCaption(), count);
         MWBase::WindowManager* winMgr = MWBase::Environment::get().getWindowManager();
 
-        switch (result)
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
         {
-            case MWMechanics::Alchemy::Result_NoName:
-                winMgr->messageBox("#{sNotifyMessage37}");
-                break;
-            case MWMechanics::Alchemy::Result_NoMortarAndPestle:
-                winMgr->messageBox("#{sNotifyMessage45}");
-                break;
-            case MWMechanics::Alchemy::Result_LessThanTwoIngredients:
-                winMgr->messageBox("#{sNotifyMessage6a}");
-                break;
-            case MWMechanics::Alchemy::Result_Success:
-                winMgr->playSound(ESM::RefId::stringRefId("potion success"));
-                if (count == 1)
-                    winMgr->messageBox("#{sPotionSuccess}");
-                else
-                    winMgr->messageBox(
-                        "#{sPotionSuccess} " + mNameEdit->getCaption().asUTF8() + " (" + std::to_string(count) + ")");
-                break;
-            case MWMechanics::Alchemy::Result_NoEffects:
-            case MWMechanics::Alchemy::Result_RandomFailure:
-                winMgr->messageBox("#{sNotifyMessage8}");
-                winMgr->playSound(ESM::RefId::stringRefId("potion fail"));
-                break;
+            switch (result)
+            {
+                case MWMechanics::Alchemy::Result_Success:
+                    winMgr->messageBox("Poison created.");
+                    break;
+                case MWMechanics::Alchemy::Result_NoName:
+                    winMgr->messageBox("Enter a name for the poison.");
+                    break;
+                case MWMechanics::Alchemy::Result_NoMortarAndPestle:
+                    winMgr->messageBox("You need a mortar and pestle.");
+                    break;
+                case MWMechanics::Alchemy::Result_LessThanTwoIngredients:
+                    winMgr->messageBox("Select two ingredients.");
+                    break;
+                case MWMechanics::Alchemy::Result_NoEffects:
+                case MWMechanics::Alchemy::Result_RandomFailure:
+                    winMgr->messageBox("Those ingredients cannot currently be brewed together.");
+                    break;
+            }
+        }
+        else
+        {
+            switch (result)
+            {
+                case MWMechanics::Alchemy::Result_NoName:
+                    winMgr->messageBox("#{sNotifyMessage37}");
+                    break;
+                case MWMechanics::Alchemy::Result_NoMortarAndPestle:
+                    winMgr->messageBox("#{sNotifyMessage45}");
+                    break;
+                case MWMechanics::Alchemy::Result_LessThanTwoIngredients:
+                    winMgr->messageBox("#{sNotifyMessage6a}");
+                    break;
+                case MWMechanics::Alchemy::Result_Success:
+                    winMgr->playSound(ESM::RefId::stringRefId("potion success"));
+                    if (count == 1)
+                        winMgr->messageBox("#{sPotionSuccess}");
+                    else
+                        winMgr->messageBox(
+                            "#{sPotionSuccess} " + mNameEdit->getCaption().asUTF8() + " (" + std::to_string(count) + ")");
+                    break;
+                case MWMechanics::Alchemy::Result_NoEffects:
+                case MWMechanics::Alchemy::Result_RandomFailure:
+                    winMgr->messageBox("#{sNotifyMessage8}");
+                    winMgr->playSound(ESM::RefId::stringRefId("potion fail"));
+                    break;
+            }
         }
 
         // remove ingredient slots that have been fully used up
@@ -454,6 +480,16 @@ namespace MWGui
         mItemView->update();
 
         std::vector<MWMechanics::EffectKey> effectIds = mAlchemy->listEffects();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            while (mEffectsBox->getChildCount())
+                MyGUI::Gui::getInstance().destroyWidget(mEffectsBox->getChildAt(0));
+            auto* description = mEffectsBox->createWidget<MyGUI::TextBox>("SandText",
+                MyGUI::IntCoord(4, 4, mEffectsBox->getWidth() - 8, mEffectsBox->getHeight() - 8),
+                MyGUI::Align::Stretch);
+            description->setCaption(mAlchemy->oblivionPotionDescription());
+            return;
+        }
         Widgets::SpellEffectList list;
         unsigned int effectIndex = 0;
         for (const MWMechanics::EffectKey& effectKey : effectIds)

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "scope": "Original 1.2.0416 novice mortar-only Wisp Stalk Caps plus Stinkhorn Cap brewing at Alchemy5, Intelligence40, Luck50. A bounded observation, not a general brewing formula.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "original_game_probe": {
+    "root": "build/oblivion-compat/tutorial-alchemy/original-01",
+    "setup": "Pristine isolated original save, console-set Alchemy5/Intelligence40/Luck50, added generic Novice Mortar and Pestle0105e3 and one each of original ingredients06251f/08446d. Setup grants are original-engine oracle inputs only, not the fork gameplay route.",
+    "interaction": "Ordinary inventory apparatus activation, tutorial popup acknowledgement, ingredient selection and Create button.",
+    "observations": {
+      "known_effect": "Damage Health",
+      "magnitude_ui": 1,
+      "duration_seconds_ui": 5,
+      "success": true,
+      "ingredients_consumed": [
+        1,
+        1
+      ],
+      "result_count": 1,
+      "default_name": "Damage Health",
+      "value_ui": 3,
+      "weight_ui": 0.1,
+      "post_brew_alchemy_console": 6
+    },
+    "captures": [
+      "poison-ready.png",
+      "created.png",
+      "crafted-inventory.png",
+      "post-brew-alchemy.png"
+    ],
+    "saved_result": "probe-saves/OpenMWAlchemyPoison.ess",
+    "prefix_restoration": "restoration.json: exact Documents and Plugins.txt restored; pristine SHA256 preserved",
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "acceptance": {
+    "magnitude": "1 point, matching original UI",
+    "duration": "5 seconds, matching original UI",
+    "weight": "0.1 within 0.01, allowing UI rounding; use actual authored ingredient weights",
+    "value": 3,
+    "identity_counts_consumption": "Strict; no duplicated result or ingredient restoration on cold reload",
+    "skill": "One native brewing skill-use event, independent original SKIL use value and existing native progression rules; level6 observed in original probe"
+  },
+  "open": [
+    "General skill/Luck/tool potency and value formulas",
+    "Additional apparatus and recipes",
+    "Application of crafted poison to a weapon"
+  ],
+  "skill_training": {
+    "authored_skill": {
+      "formid": "000044",
+      "actor_value": 19,
+      "governing_attribute": 1,
+      "specialization": 1,
+      "use_values": [
+        5.0,
+        0.5
+      ]
+    },
+    "settings": {
+      "factor": 0.3499999940395355,
+      "exponent": 1.5,
+      "minor_multiplier": 1.25
+    },
+    "provenance": "Factor/exponent and SKIL use values independently read from the pinned master. Major/minor/specialization multipliers are absent in that master. The minor multiplier reuses existing compatibility training defaults, as in SECURITY-USE-ORACLE.json; the fractional-XP audit enforces one authored5XP award under the existing model, not original fractional-XP parity. Original console independently observed Alchemy5 to6."
+  },
+  "assets": {
+    "original_record": "content:oblivion.esm:08dc75",
+    "purpose": "Original Damage Health poison model/icon provenance; its potency is not used as the crafted result.",
+    "model": "Clutter/Potions/PotionPoison.nif",
+    "icon": "Clutter/Potions/IconPotionPoison01.dds"
+  },
+  "save_representation": {
+    "type": "Existing shared generated ESM3 Potion facade plus native runtime shared-item inventory identity",
+    "flag": "0x100 is a fork save-only generated poison marker, not an original TES4 ALCH flag",
+    "effect": "Shared DamageHealth ENID with quantified1/5; native tooltip describes poison. Range0 in the facade does not grant self-consumption. Native potion consumption rejects generated poison until weapon application is implemented."
+  }
+}

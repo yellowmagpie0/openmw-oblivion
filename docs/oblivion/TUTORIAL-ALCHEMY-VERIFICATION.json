@@ -1,0 +1,718 @@
+{
+  "schema_version": 1,
+  "status": "completed bounded original tutorial-kit brewing and cold inventory persistence",
+  "full_M16_M19_complete": false,
+  "tested_dirty_source": {
+    "head": "214893b5f772b334d2c0664489675a45d68b53b9",
+    "source_fingerprint": "327c80975f044163ae40ef43647f08b80cd849bca22a63da2bcef30dfbabb632"
+  },
+  "cpp_sha256": {
+    "apps/openmw/mwgui/alchemywindow.cpp": "63d680c2c27e92a0fc705f0cc90e5d64c8cf1a22c45d642022156daf7050b2aa",
+    "apps/openmw/mwmechanics/alchemy.cpp": "3019e112111b32c802d1426e60aecefa37c8b2024c632c883b5507991a4ff236",
+    "apps/openmw/mwmechanics/alchemy.hpp": "8886ddf9c7579284f90d4756f8edbfa82a8d452dfc486ea453533809cd8148b9",
+    "apps/openmw/mwworld/oblivioncombatmagic.cpp": "7146d57c6a5629b81bc16279855b1a8c2a634c8f1cf57ac4b93413bd1ef46e9f",
+    "apps/openmw/mwworld/oblivioninteraction.cpp": "a500478a99dc81987ab3b01f0cb6f4d3abdc7d15d142ce75122c2db7fdd5a72a",
+    "components/esm3/loadalch.hpp": "1cefadf89cea126518d808fa9da6ccda0a91dfbd74c3f44e36e812bb91ee47cb",
+    "components/esm4/alchemy.hpp": "05088616b3ac63571dec5da2f5e73d6902c9e166f17aac42c7eaafb9dd88fdbd"
+  },
+  "game_binary_sha256": {
+    "normal": "52a8d4735e1e88b62b5bd0ea70b781b6d51946025616e2d16e1266acf54d6082",
+    "sanitized": "ad6d99742e5855c61da62da202bcbb239f3b012d9d73490f1cdfa9b1c7465622"
+  },
+  "contract": "TUTORIAL-ALCHEMY-CONTRACT.json",
+  "oracle": "TUTORIAL-ALCHEMY-ORACLE.json",
+  "layers": {
+    "structural": "Actual save contains one generated shared Potion definition plus one native shared-item inventory entry. Raw effect/flags/name/value/weight/model/icon and quantity ownership are inspected independently; native source references are retired.",
+    "compiler": "Normal and sanitizer game/test executables built; complete2292 engine inventory per mode covers the195 focused subset. Separate final-source SAN195 focused and preliminary normal03 focused receipts are retained, plus618 current Python checks. No new synthetic gameplay fixtures or unit tests.",
+    "semantic": "Pinned original master supplies the exact authored kit and OnAdd stage64. Independent original-game UI supplies novice Damage Health1/5s, value3, weight0.1 and skill5->6. Fractional XP enforces the existing compatibility training model, not original bit parity.",
+    "runtime": "Each mode performs actual world movement/activation, inventory apparatus use, ingredient selection/Create, gameplay save, new process load and resave. Both modes retain the single poison, ingredient debit, native skill progress and mortar owner without replay."
+  },
+  "courses": {
+    "normal": [
+      {
+        "path": "build/oblivion-compat/tutorial-alchemy/normal-final-acquire-01",
+        "audit": {
+          "passed": true,
+          "phase": "acquire",
+          "sanitized": false,
+          "source_sha256": "5d064d70b0b4a00dfbedcfcf02044ff3734d4bcde0401f26ec2386b9ab5301d3",
+          "save_sha256": "5af3a7b6be98e25baa9ffd7e19d0fe54795b2091195997315f124da3c2070848",
+          "binary_sha256": "52a8d4735e1e88b62b5bd0ea70b781b6d51946025616e2d16e1266acf54d6082",
+          "save_events": 4,
+          "generated_potions": [],
+          "alchemy_before": {
+            "base": 5.0,
+            "experience": 0.0
+          },
+          "alchemy_after": {
+            "base": 5.0,
+            "experience": 0.0
+          },
+          "mortar": [
+            {
+              "base": "content:oblivion.esm:0c7968",
+              "count": 1,
+              "condition": -1,
+              "charge": -1,
+              "equipped_slots": 0,
+              "hotkey": -1,
+              "owner": "null",
+              "remaining_usage_time": -1,
+              "ownership_rank": null,
+              "ownership_global": "null",
+              "extra_scale": null,
+              "bound_source": null,
+              "script_owner": "dynamic:inventory-script:0000000000000001"
+            }
+          ],
+          "quest": {
+            "quest": "content:oblivion.esm:01e723",
+            "stage": 80,
+            "running": true,
+            "completed_stages": [
+              5,
+              10,
+              15,
+              18,
+              20,
+              24,
+              28,
+              34,
+              52,
+              64,
+              72,
+              76,
+              80
+            ]
+          }
+        },
+        "process_epoch": {
+          "pid": 1208331,
+          "start_ticks": 23484459,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/normal-final-acquire-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "52a8d4735e1e88b62b5bd0ea70b781b6d51946025616e2d16e1266acf54d6082"
+        },
+        "manifest": "docs/oblivion/original-tutorial-alchemy-acquire.json",
+        "manifest_sha256": "87cc517c7c20c2d53f303525a036dbc7f2216dca9251c60dea42fe41ff264405",
+        "save": "build/oblivion-compat/tutorial-alchemy/normal-final-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      },
+      {
+        "path": "build/oblivion-compat/tutorial-alchemy/normal-final-brew-01",
+        "audit": {
+          "passed": true,
+          "phase": "brew",
+          "sanitized": false,
+          "source_sha256": "5af3a7b6be98e25baa9ffd7e19d0fe54795b2091195997315f124da3c2070848",
+          "save_sha256": "4d35bea8f1ccd1e63d6bab1c7be2f10d6f5959f424111ff47b15db9a01dccaab",
+          "binary_sha256": "52a8d4735e1e88b62b5bd0ea70b781b6d51946025616e2d16e1266acf54d6082",
+          "save_events": 1,
+          "generated_potions": [
+            {
+              "key": "dynamic:shared-item:0000000000000001",
+              "name": "Damage Health",
+              "weight": 0.10000000149011612,
+              "value": 3,
+              "flags": 256,
+              "effect": [
+                0,
+                0,
+                5,
+                1,
+                1
+              ],
+              "model": "Clutter/Potions/PotionPoison.nif",
+              "icon": "Clutter/Potions/IconPotionPoison01.dds",
+              "raw_sha256": "66fd2b7263ef4eda0b07f932943c62cedba1453baaa2bdc86174f06879b60182"
+            }
+          ],
+          "alchemy_before": {
+            "base": 5.0,
+            "experience": 0.0
+          },
+          "alchemy_after": {
+            "base": 6.0,
+            "experience": 2.1062092781066895
+          },
+          "mortar": [
+            {
+              "base": "content:oblivion.esm:0c7968",
+              "count": 1,
+              "condition": -1,
+              "charge": -1,
+              "equipped_slots": 0,
+              "hotkey": -1,
+              "owner": "null",
+              "remaining_usage_time": -1,
+              "ownership_rank": null,
+              "ownership_global": "null",
+              "extra_scale": null,
+              "bound_source": null,
+              "script_owner": "dynamic:inventory-script:0000000000000001"
+            }
+          ],
+          "quest": {
+            "quest": "content:oblivion.esm:01e723",
+            "stage": 80,
+            "running": true,
+            "completed_stages": [
+              5,
+              10,
+              15,
+              18,
+              20,
+              24,
+              28,
+              34,
+              52,
+              64,
+              72,
+              76,
+              80
+            ]
+          }
+        },
+        "process_epoch": {
+          "pid": 1208477,
+          "start_ticks": 23492631,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/normal-final-brew-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/normal-final-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "52a8d4735e1e88b62b5bd0ea70b781b6d51946025616e2d16e1266acf54d6082"
+        },
+        "manifest": "docs/oblivion/original-tutorial-alchemy-brew.json",
+        "manifest_sha256": "dd45c15181b5714dc158cde39108f786f6d4cb8378d53058af0c53bd0e2a1991",
+        "save": "build/oblivion-compat/tutorial-alchemy/normal-final-brew-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      },
+      {
+        "path": "build/oblivion-compat/tutorial-alchemy/normal-final-reload-01",
+        "audit": {
+          "passed": true,
+          "phase": "reload",
+          "sanitized": false,
+          "source_sha256": "4d35bea8f1ccd1e63d6bab1c7be2f10d6f5959f424111ff47b15db9a01dccaab",
+          "save_sha256": "3daa7c67027e16b2209b831a85c8de82c38b3ae8039e02ad02c1f915fa8a1e86",
+          "binary_sha256": "52a8d4735e1e88b62b5bd0ea70b781b6d51946025616e2d16e1266acf54d6082",
+          "save_events": 1,
+          "generated_potions": [
+            {
+              "key": "dynamic:shared-item:0000000000000001",
+              "name": "Damage Health",
+              "weight": 0.10000000149011612,
+              "value": 3,
+              "flags": 256,
+              "effect": [
+                0,
+                0,
+                5,
+                1,
+                1
+              ],
+              "model": "Clutter/Potions/PotionPoison.nif",
+              "icon": "Clutter/Potions/IconPotionPoison01.dds",
+              "raw_sha256": "66fd2b7263ef4eda0b07f932943c62cedba1453baaa2bdc86174f06879b60182"
+            }
+          ],
+          "alchemy_before": {
+            "base": 6.0,
+            "experience": 2.1062092781066895
+          },
+          "alchemy_after": {
+            "base": 6.0,
+            "experience": 2.1062092781066895
+          },
+          "mortar": [
+            {
+              "base": "content:oblivion.esm:0c7968",
+              "count": 1,
+              "condition": -1,
+              "charge": -1,
+              "equipped_slots": 0,
+              "hotkey": -1,
+              "owner": "null",
+              "remaining_usage_time": -1,
+              "ownership_rank": null,
+              "ownership_global": "null",
+              "extra_scale": null,
+              "bound_source": null,
+              "script_owner": "dynamic:inventory-script:0000000000000001"
+            }
+          ],
+          "quest": {
+            "quest": "content:oblivion.esm:01e723",
+            "stage": 80,
+            "running": true,
+            "completed_stages": [
+              5,
+              10,
+              15,
+              18,
+              20,
+              24,
+              28,
+              34,
+              52,
+              64,
+              72,
+              76,
+              80
+            ]
+          }
+        },
+        "process_epoch": {
+          "pid": 1208661,
+          "start_ticks": 23498538,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/normal-final-reload-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/normal-final-brew-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "52a8d4735e1e88b62b5bd0ea70b781b6d51946025616e2d16e1266acf54d6082"
+        },
+        "manifest": "docs/oblivion/original-tutorial-alchemy-reload.json",
+        "manifest_sha256": "df43ede77e7003e7a18e39b3bb9675e5ed99ec51240501e2aff22789f880d9d3",
+        "save": "build/oblivion-compat/tutorial-alchemy/normal-final-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      }
+    ],
+    "sanitized": [
+      {
+        "path": "build/oblivion-compat/tutorial-alchemy/sanitized-final-acquire-01",
+        "audit": {
+          "passed": true,
+          "phase": "acquire",
+          "sanitized": true,
+          "source_sha256": "5d064d70b0b4a00dfbedcfcf02044ff3734d4bcde0401f26ec2386b9ab5301d3",
+          "save_sha256": "fa6797cff6f8e209c8e6c733602b830943036945ba5c62d28f51d85cd9634b25",
+          "binary_sha256": "ad6d99742e5855c61da62da202bcbb239f3b012d9d73490f1cdfa9b1c7465622",
+          "save_events": 4,
+          "generated_potions": [],
+          "alchemy_before": {
+            "base": 5.0,
+            "experience": 0.0
+          },
+          "alchemy_after": {
+            "base": 5.0,
+            "experience": 0.0
+          },
+          "mortar": [
+            {
+              "base": "content:oblivion.esm:0c7968",
+              "count": 1,
+              "condition": -1,
+              "charge": -1,
+              "equipped_slots": 0,
+              "hotkey": -1,
+              "owner": "null",
+              "remaining_usage_time": -1,
+              "ownership_rank": null,
+              "ownership_global": "null",
+              "extra_scale": null,
+              "bound_source": null,
+              "script_owner": "dynamic:inventory-script:0000000000000001"
+            }
+          ],
+          "quest": {
+            "quest": "content:oblivion.esm:01e723",
+            "stage": 80,
+            "running": true,
+            "completed_stages": [
+              5,
+              10,
+              15,
+              18,
+              20,
+              24,
+              28,
+              34,
+              52,
+              64,
+              72,
+              76,
+              80
+            ]
+          }
+        },
+        "process_epoch": {
+          "pid": 1210164,
+          "start_ticks": 23588193,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/sanitized-final-acquire-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "ad6d99742e5855c61da62da202bcbb239f3b012d9d73490f1cdfa9b1c7465622"
+        },
+        "manifest": "docs/oblivion/original-tutorial-alchemy-acquire.json",
+        "manifest_sha256": "87cc517c7c20c2d53f303525a036dbc7f2216dca9251c60dea42fe41ff264405",
+        "save": "build/oblivion-compat/tutorial-alchemy/sanitized-final-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      },
+      {
+        "path": "build/oblivion-compat/tutorial-alchemy/sanitized-final-brew-01",
+        "audit": {
+          "passed": true,
+          "phase": "brew",
+          "sanitized": true,
+          "source_sha256": "fa6797cff6f8e209c8e6c733602b830943036945ba5c62d28f51d85cd9634b25",
+          "save_sha256": "bfdefa39a3a3babdeadd8b0f19e13d6b6f1a6aad1b04f4a9441c53fb03e29031",
+          "binary_sha256": "ad6d99742e5855c61da62da202bcbb239f3b012d9d73490f1cdfa9b1c7465622",
+          "save_events": 1,
+          "generated_potions": [
+            {
+              "key": "dynamic:shared-item:0000000000000001",
+              "name": "Damage Health",
+              "weight": 0.10000000149011612,
+              "value": 3,
+              "flags": 256,
+              "effect": [
+                0,
+                0,
+                5,
+                1,
+                1
+              ],
+              "model": "Clutter/Potions/PotionPoison.nif",
+              "icon": "Clutter/Potions/IconPotionPoison01.dds",
+              "raw_sha256": "66fd2b7263ef4eda0b07f932943c62cedba1453baaa2bdc86174f06879b60182"
+            }
+          ],
+          "alchemy_before": {
+            "base": 5.0,
+            "experience": 0.0
+          },
+          "alchemy_after": {
+            "base": 6.0,
+            "experience": 2.1062092781066895
+          },
+          "mortar": [
+            {
+              "base": "content:oblivion.esm:0c7968",
+              "count": 1,
+              "condition": -1,
+              "charge": -1,
+              "equipped_slots": 0,
+              "hotkey": -1,
+              "owner": "null",
+              "remaining_usage_time": -1,
+              "ownership_rank": null,
+              "ownership_global": "null",
+              "extra_scale": null,
+              "bound_source": null,
+              "script_owner": "dynamic:inventory-script:0000000000000001"
+            }
+          ],
+          "quest": {
+            "quest": "content:oblivion.esm:01e723",
+            "stage": 80,
+            "running": true,
+            "completed_stages": [
+              5,
+              10,
+              15,
+              18,
+              20,
+              24,
+              28,
+              34,
+              52,
+              64,
+              72,
+              76,
+              80
+            ]
+          }
+        },
+        "process_epoch": {
+          "pid": 1215533,
+          "start_ticks": 23623889,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/sanitized-final-brew-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/sanitized-final-acquire-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "ad6d99742e5855c61da62da202bcbb239f3b012d9d73490f1cdfa9b1c7465622"
+        },
+        "manifest": "docs/oblivion/original-tutorial-alchemy-brew.json",
+        "manifest_sha256": "dd45c15181b5714dc158cde39108f786f6d4cb8378d53058af0c53bd0e2a1991",
+        "save": "build/oblivion-compat/tutorial-alchemy/sanitized-final-brew-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      },
+      {
+        "path": "build/oblivion-compat/tutorial-alchemy/sanitized-final-reload-01",
+        "audit": {
+          "passed": true,
+          "phase": "reload",
+          "sanitized": true,
+          "source_sha256": "bfdefa39a3a3babdeadd8b0f19e13d6b6f1a6aad1b04f4a9441c53fb03e29031",
+          "save_sha256": "62a04d89b60303c34eabd168a8c3ccddad932b54a888be6c91c7322f94d845ce",
+          "binary_sha256": "ad6d99742e5855c61da62da202bcbb239f3b012d9d73490f1cdfa9b1c7465622",
+          "save_events": 1,
+          "generated_potions": [
+            {
+              "key": "dynamic:shared-item:0000000000000001",
+              "name": "Damage Health",
+              "weight": 0.10000000149011612,
+              "value": 3,
+              "flags": 256,
+              "effect": [
+                0,
+                0,
+                5,
+                1,
+                1
+              ],
+              "model": "Clutter/Potions/PotionPoison.nif",
+              "icon": "Clutter/Potions/IconPotionPoison01.dds",
+              "raw_sha256": "66fd2b7263ef4eda0b07f932943c62cedba1453baaa2bdc86174f06879b60182"
+            }
+          ],
+          "alchemy_before": {
+            "base": 6.0,
+            "experience": 2.1062092781066895
+          },
+          "alchemy_after": {
+            "base": 6.0,
+            "experience": 2.1062092781066895
+          },
+          "mortar": [
+            {
+              "base": "content:oblivion.esm:0c7968",
+              "count": 1,
+              "condition": -1,
+              "charge": -1,
+              "equipped_slots": 0,
+              "hotkey": -1,
+              "owner": "null",
+              "remaining_usage_time": -1,
+              "ownership_rank": null,
+              "ownership_global": "null",
+              "extra_scale": null,
+              "bound_source": null,
+              "script_owner": "dynamic:inventory-script:0000000000000001"
+            }
+          ],
+          "quest": {
+            "quest": "content:oblivion.esm:01e723",
+            "stage": 80,
+            "running": true,
+            "completed_stages": [
+              5,
+              10,
+              15,
+              18,
+              20,
+              24,
+              28,
+              34,
+              52,
+              64,
+              72,
+              76,
+              80
+            ]
+          }
+        },
+        "process_epoch": {
+          "pid": 1216447,
+          "start_ticks": 23644767,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/sanitized-final-reload-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/sanitized-final-brew-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "ad6d99742e5855c61da62da202bcbb239f3b012d9d73490f1cdfa9b1c7465622"
+        },
+        "manifest": "docs/oblivion/original-tutorial-alchemy-reload.json",
+        "manifest_sha256": "df43ede77e7003e7a18e39b3bb9675e5ed99ec51240501e2aff22789f880d9d3",
+        "save": "build/oblivion-compat/tutorial-alchemy/sanitized-final-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      }
+    ]
+  },
+  "gates": {
+    "normal": {
+      "path": "build/oblivion-compat/tutorial-alchemy/integration-normal-01/verification.json",
+      "results": {
+        "engine": {
+          "executed": 2292,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f53d870e390f324c31d088a01d10089f83f6521ab87c4d8b03e988e52ed6775a",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "957f06c5d92e32e5a26fa04c6898dd6d009f6a8b2ac7a46d1a5ad1907853f2fd",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 618,
+          "passed": true,
+          "log_sha256": "7d37106fa0e4c059a6198cf1e508fd9494ceef2bed99d624b7ad6d041fcf7a9d"
+        }
+      }
+    },
+    "sanitized_focused": {
+      "path": "build/oblivion-compat/tutorial-alchemy/sanitized-focused-02/verification.json",
+      "results": {
+        "engine": {
+          "executed": 195,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Loose*:*Book*:*Inventory*:*Pickup*:*ScriptTransfer*",
+          "binary_sha256": "86276f25f9eca23926e9f3f89df5d1e68259ac770e0646623d5f2f99fa3413fa",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "88467d5c2d131fca628decce4ac7355ca2fef2382900c3e224527c033cafde39",
+          "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized_full": {
+      "path": "build/oblivion-compat/tutorial-alchemy/sanitized-full-checks.json",
+      "results": {
+        "passed": true,
+        "executed": 2292,
+        "partitions": [
+          {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "86276f25f9eca23926e9f3f89df5d1e68259ac770e0646623d5f2f99fa3413fa",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "29ae4a352fd2f832de9b4e8f7c34dc013ba3d3bda025544beef2004edebe02e0",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "86276f25f9eca23926e9f3f89df5d1e68259ac770e0646623d5f2f99fa3413fa",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "b91c2fd41cde2e27223c37bd06570e5e86731a781e44dedde3585227e847fa68",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          {
+            "executed": 82,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "86276f25f9eca23926e9f3f89df5d1e68259ac770e0646623d5f2f99fa3413fa",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "95db6d7f848910bb86b0e14c7446639ca4457fd95e514dff1c8aa5cb925d075f",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          {
+            "executed": 2046,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "86276f25f9eca23926e9f3f89df5d1e68259ac770e0646623d5f2f99fa3413fa",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "9ad57619cc24f0e67cbb41b21009e422143ab0d9aaaec51f2a53cce2d7d1ef94",
+            "inventory_sha256": "5f5c3a415177e29cb63637932da1045050a0762e955303567d2b844c17a11e99",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        ],
+        "disjoint_union": true
+      }
+    },
+    "component_evidence": "Historical reference: CHARTER-BOOK-VERIFICATION.json retains its original3301-per-mode provenance. No fresh component-per-mode claim. Actual generated-record save/reload plus full current engine gates cover this shared serialization use."
+  },
+  "original_prefix_restored": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "retained_failures": [
+    "normal-kit-acquire01..11 retain preflight/aim/range failures;12 is first accepted old-binary acquisition,13 is preliminary native OnAdd validation.",
+    "normal-alchemy-baseline02 completes actions but errors on missing TES3 fWortChanceValue; retained as pre-change failure evidence.",
+    "normal-focused01 compiler rejected NotNullPtr dynamic_cast; corrected before passing02. No tests passed in01.",
+    "sanitized-focused01 deliberately stopped for the pending native UI fix after in-flight compilers finished; zero-byte object audit clean. It is not sanitizer acceptance.",
+    "normal-brew01 creates poison but F5 occurs while inventory remains open;02/03 explicitly fail pause gate. Tab is keyboard focus navigation; final recipe exits inventory with Escape. No gameplay patch to bypass pause.",
+    "Preliminary acquisition auditor assumed optional empty awarded_skill_books was emitted. Corrected absent-as-empty handling; no source save or implementation edits."
+  ],
+  "limitations": [
+    "Only the declared novice stats and mortar-only first-DGHE profile is implemented; higher skill/Luck/apparatus recipes remain open.",
+    "Generated poison is saved through the existing shared record namespace, not a newly implemented TES4 authoring/MCP API. Native consumption declines it; weapon poison application is a subsequent chunk.",
+    "This is a separate genuine first-goblin continuation, not full sewer escape acceptance or a merge with the main cave/shore inventories.",
+    "Runtime sanitizer leak detection is disabled with halt-on-error enabled; exact observed environment and loaded-library hashes are retained per process."
+  ]
+}

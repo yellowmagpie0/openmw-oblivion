@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "status": "completed bounded profile; see TUTORIAL-ALCHEMY-VERIFICATION.json",
+  "milestone": "M16 native magic and alchemy; M19 inventory UI integration",
+  "course": "Use the original Natural Caverns tutorial mortar and two adjacent ingredients to create one Damage Health poison, then cold reload it.",
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "cell": "content:oblivion.esm:0380bd",
+    "mortar": {
+      "base": "0c7968",
+      "reference": "0c796f",
+      "script": "0c7966",
+      "on_add_player": "SetStage MQ01 64"
+    },
+    "ingredients": [
+      {
+        "base": "06251f",
+        "reference": "0c796e",
+        "name": "Wisp Stalk Caps",
+        "first_effect": "DGHE"
+      },
+      {
+        "base": "08446d",
+        "reference": "0c796d",
+        "name": "Stinkhorn Cap",
+        "first_effect": "DGHE"
+      }
+    ]
+  },
+  "requirements": [
+    "Acquire the unmodified original authored kit using ordinary movement and activation from a genuine first-goblin victory checkpoint; no grants, teleports or combat neutralization.",
+    "Preserve the original mortar pickup script and quest state with exactly one acquisition event.",
+    "Use the inventory apparatus and alchemy UI to select both original ingredients, preview their shared known first effect and create exactly one poison.",
+    "Use independently observed original-game brewing behavior for success, ingredient debit, effect, weight, value and skill progress; justify numeric tolerances before acceptance.",
+    "Persist the generated item identity, name, effect and count, consumed ingredient counts and native skill progress across a new process save/load/resave without duplication.",
+    "Complete normal and sanitizer gameplay courses plus appropriate focused and integration checks, preserving failed attempts and source/binary provenance."
+  ],
+  "boundaries": [
+    "This is a separate tutorial checkpoint continuation, not completion or retuning of the frozen full sewer escape.",
+    "No full M16 or M19 milestone claim; additional apparatus, higher skill effects, arbitrary recipes and poison application require their own evidence and subsequent chunks."
+  ],
+  "evidence_root": "build/oblivion-compat/tutorial-alchemy",
+  "profile": {
+    "alchemy": 5,
+    "intelligence": 40,
+    "luck": 50,
+    "mortar_quality": 10,
+    "additional_apparatus": false,
+    "selected_ingredients": 2,
+    "matching_effect": "First known DGHE on both ingredients; no scripted effect"
+  },
+  "source_checkpoint": {
+    "path": "build/oblivion-compat/sewer-escape/joined-first-cavern-goblin-close-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "5d064d70b0b4a00dfbedcfcf02044ff3734d4bcde0401f26ec2386b9ab5301d3",
+    "provenance": "Accepted genuine first-goblin victory, no kit owned; Health80, Alchemy5/Int40/Luck50. Separate continuation from frozen sewer regression."
+  }
+}

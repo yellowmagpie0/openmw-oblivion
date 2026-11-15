@@ -961,14 +961,20 @@ namespace MWWorld
             && key.isDynamic()
             && sourceRelations.mDropper && !sourceRelations.mDropper->isNull()
             && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(item.mBase);
+        // Original tutorial apparatus has an OnAdd-only program. A static
+        // world pickup must create its inventory owner before notification,
+        // even though no world event has created a script instance to move.
+        const bool initializedApparatus = ptr.getType() == ESM::REC_APPA4 && key.isContent()
+            && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(item.mBase);
         std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer> scriptTransfer;
         const auto scriptSerial = mNextOblivionDynamicSerial;
-        if (transferredNirnroot || transferredEquipment)
+        if (transferredNirnroot || transferredEquipment || initializedApparatus)
         {
             if (item.mCount != 1 || !scriptSerial || scriptSerial == std::numeric_limits<std::uint64_t>::max())
                 throw std::invalid_argument("scripted native pickup requires a singleton identity");
             item.mScriptOwner = ESM::FormKey::dynamic("inventory-script", scriptSerial);
-            scriptTransfer = mOblivionScriptManager->prepareItemScriptTransfer(item.mBase, key, item.mScriptOwner);
+            scriptTransfer = mOblivionScriptManager->prepareItemScriptTransfer(item.mBase,
+                initializedApparatus ? ESM::FormKey{} : key, item.mScriptOwner, initializedApparatus);
         }
         auto sources = OblivionProfileServices::prepareActorInventory(mStore, resolver, {item});
         const Ptr player = getPlayerPtr();

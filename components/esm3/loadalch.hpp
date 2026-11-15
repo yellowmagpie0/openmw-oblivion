@@ -29,7 +29,10 @@ namespace ESM
 
         enum Flags
         {
-            Autocalc = 1 // Determines value
+            Autocalc = 1, // Determines value
+            // Save-only generated TES4 poison facade. Native effect semantics
+            // remain separate from ordinary TES3 potion consumption.
+            OblivionPoison = 0x100
         };
 
         struct ALDTstruct

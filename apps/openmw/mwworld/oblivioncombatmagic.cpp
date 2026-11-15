@@ -26,6 +26,8 @@
 
 #include <components/esm4/combatmagicprofile.hpp>
 #include <components/esm4/common.hpp>
+#include <components/esm3/loadalch.hpp>
+#include <components/esm3/loadmgef.hpp>
 #include <components/esm4/loadmgef.hpp>
 #include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadspel.hpp>
@@ -579,6 +581,18 @@ namespace MWWorld
 
     std::string describeOblivionPotion(MWBase::World& world, const ConstPtr& item)
     {
+        if (item.getCellRef().getRefId().is<ESM::GeneratedRefId>())
+        {
+            const auto* generated = world.getStore().get<ESM::Potion>().search(item.getCellRef().getRefId());
+            if (generated && generated->mData.mFlags == ESM::Potion::OblivionPoison
+                && generated->mEffects.mList.size() == 1)
+            {
+                const auto& effect = generated->mEffects.mList.front().mData;
+                if (effect.mEffectID == ESM::MagicEffect::DamageHealth && effect.mMagnMin == effect.mMagnMax)
+                    return "Poison: Damage Health " + std::to_string(effect.mMagnMin)
+                        + " pt for " + std::to_string(effect.mDuration) + "s";
+            }
+        }
         const auto* potion = world.getStore().get<ESM4::Potion>().search(item.getCellRef().getRefId());
         if (!potion) return {};
         if (resolvePotionLight(world.getStore(), *potion))

@@ -4,19 +4,17 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [original scripted Club transfers](SCRIPTED-CLUB-DROP-CONTRACT.json).
-Genuine worn CGClub159829 / stateless CGWeaponScript047ac0 now uses native Player
-weapon drop/pickup ownership. Normal/SAN drop publishes key17/body7/condition59.5000458,
-script owner17/next18 without event replay; cold world preserves it. Actual pickup
-retires body/key17, transfers script to inventory18/next19 and fires original OnAdd
-(MQweapon0->1). Cold paperdoll equip fires OnEquip (MQweaponEquip0->1); final cold
-inventory retains owner18/slots65536/condition and flags1/1. All unrelated inventory,
-27skills/XP/history/life/deaths/combat, Cuirass owner9/heavyflags1/1 remain intact.
-[Receipt](SCRIPTED-CLUB-DROP-VERIFICATION.json) distinguishes structural/compiler/
-semantic/runtime evidence;195 focused/2292 full engine per mode and618 Python pass.
-First audit confused authored Havok motion4 with runtime schema Dynamic1; retained,
-corrected without physics changes. Stateful/other event/enchanted/bound and NPC
-disarm profiles remain open. No full M15/M18 acceptance claim.
+Latest completed bounded chunk: [original tutorial alchemy kit](TUTORIAL-ALCHEMY-HANDOFF.md).
+A separate genuine Natural Caverns first-goblin checkpoint now supports actual
+kit acquisition, original mortar OnAdd, one novice Damage Health poison and
+cold save/reload. Normal/SAN real courses and2292 engine tests per mode, plus618
+Python checks pass; [receipt](TUTORIAL-ALCHEMY-VERIFICATION.json) records scope.
+Higher skill/tools/recipes and weapon poison application remain open. The main
+cave continuation below is unchanged; do not merge independent inventories.
+
+Previous [scripted Club transfers](SCRIPTED-CLUB-DROP-VERIFICATION.json) remain
+accepted with their original ownership, native body and event/restart evidence.
+No full M13/M15/M16/M18/M19 milestone claim.
 
 Current main Cairn/Wellspring continuation:
 `build/oblivion-compat/scripted-club-drop/normal-club-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

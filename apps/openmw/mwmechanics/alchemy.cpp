@@ -7,6 +7,7 @@
 #include <format>
 #include <map>
 #include <stdexcept>
+#include <sstream>
 
 #include <components/misc/rng.hpp>
 
@@ -14,6 +15,8 @@
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm3/loadmgef.hpp>
 #include <components/esm3/loadskil.hpp>
+#include <components/esm4/alchemy.hpp>
+#include <components/esm4/loadingr.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
@@ -21,9 +24,12 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/worldimp.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
 
 #include "creaturestats.hpp"
 #include "magiceffects.hpp"
+#include "oblivioncombat.hpp"
 
 namespace
 {
@@ -55,8 +61,44 @@ MWMechanics::Alchemy::Alchemy()
 {
 }
 
+bool MWMechanics::Alchemy::isOblivion() const
+{
+    return MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+}
+
+bool MWMechanics::Alchemy::supportsOblivionPoison() const
+{
+    auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+    auto* combat = world ? world->getOblivionCombatService() : nullptr;
+    if (!combat || mAlchemist != world->getPlayerPtr() || countIngredients() != 2
+        || mTools.size() != 4 || mTools[ESM::Apparatus::MortarPestle].isEmpty())
+        return false;
+    for (size_t i = 0; i < mTools.size(); ++i)
+        if (i != ESM::Apparatus::MortarPestle && !mTools[i].isEmpty())
+            return false;
+    const auto* mortar = mTools[ESM::Apparatus::MortarPestle].get<ESM::Apparatus>()->mBase;
+    if (!ESM4::NoviceAlchemyPoison::supports(combat->getPlayerValue(19), combat->getPlayerValue(1),
+            combat->getPlayerValue(7), mortar->mData.mQuality))
+        return false;
+    for (const auto& item : mIngredients)
+    {
+        if (item.isEmpty()) continue;
+        const auto* ingredient = world->getStore().get<ESM4::Ingredient>().search(item.getCellRef().getRefId());
+        if (!ingredient || item.getCellRef().getCount() < 1 || ingredient->mEffects.empty()) return false;
+        const auto& effect = ingredient->mEffects.front();
+        if (effect.mId != ESM::fourCC("DGHE") || effect.mActorValue != 8 || effect.mScriptEffect)
+            return false;
+    }
+    return true;
+}
+
 std::vector<MWMechanics::EffectKey> MWMechanics::Alchemy::listEffects() const
 {
+    if (isOblivion())
+    {
+        if (supportsOblivionPoison()) return { EffectKey(ESM::MagicEffect::DamageHealth) };
+        return {};
+    }
     // We care about the order of these effects as each effect can affect the next when applied.
     // The player can affect effect order by placing ingredients into different slots
     std::vector<EffectKey> effects;
@@ -148,6 +190,20 @@ void MWMechanics::Alchemy::updateEffects()
 {
     mEffects.clear();
     mValue = 0;
+
+    if (isOblivion())
+    {
+        if (!supportsOblivionPoison()) return;
+        ESM::ENAMstruct effect;
+        effect.mEffectID = ESM::MagicEffect::DamageHealth;
+        effect.mRange = 0;
+        effect.mArea = 0;
+        effect.mDuration = ESM4::NoviceAlchemyPoison::Duration;
+        effect.mMagnMin = effect.mMagnMax = ESM4::NoviceAlchemyPoison::Magnitude;
+        mEffects.push_back(effect);
+        mValue = ESM4::NoviceAlchemyPoison::Value;
+        return;
+    }
 
     if (countIngredients() < 2 || mAlchemist.isEmpty() || mTools[ESM::Apparatus::MortarPestle].isEmpty())
         return;
@@ -313,6 +369,18 @@ void MWMechanics::Alchemy::addPotion(const std::string& name)
 
     newRecord.mName = name;
 
+    if (isOblivion())
+    {
+        newRecord.mData.mFlags = ESM::Potion::OblivionPoison;
+        newRecord.mModel = "Clutter/Potions/PotionPoison.nif";
+        newRecord.mIcon = "Clutter/Potions/IconPotionPoison01.dds";
+        newRecord.mEffects.populate(mEffects);
+        const ESM::Potion* record = getRecord(newRecord);
+        if (!record) record = MWBase::Environment::get().getESMStore()->insert(newRecord);
+        mAlchemist.getClass().getContainerStore(mAlchemist).add(record->mId, 1);
+        return;
+    }
+
     auto& prng = MWBase::Environment::get().getWorld()->getPrng();
     int index = Misc::Rng::rollDice(6, prng);
     assert(index >= 0 && index < 6);
@@ -335,6 +403,12 @@ void MWMechanics::Alchemy::addPotion(const std::string& name)
 
 void MWMechanics::Alchemy::increaseSkill()
 {
+    if (isOblivion())
+    {
+        auto& world = dynamic_cast<MWWorld::World&>(*MWBase::Environment::get().getWorld());
+        world.useOblivionPlayerSkill(19, 0);
+        return;
+    }
     mAlchemist.getClass().skillUsageSucceeded(mAlchemist, ESM::Skill::Alchemy, ESM::Skill::Alchemy_CreatePotion);
 }
 
@@ -516,6 +590,8 @@ MWMechanics::Alchemy::TEffectsIterator MWMechanics::Alchemy::endEffects() const
 
 bool MWMechanics::Alchemy::knownEffect(size_t potionEffectIndex, const MWWorld::Ptr& npc)
 {
+    if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        return potionEffectIndex == 0;
     float alchemySkill = npc.getClass().getSkill(npc, ESM::Skill::Alchemy);
     static const float fWortChanceValue
         = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>().find("fWortChanceValue")->mValue.getFloat();
@@ -547,7 +623,7 @@ MWMechanics::Alchemy::Result MWMechanics::Alchemy::create(const std::string& nam
     setPotionName(name);
     Result readyStatus = getReadyStatus();
 
-    if (readyStatus == Result_NoEffects)
+    if (readyStatus == Result_NoEffects && !isOblivion())
         removeIngredients();
 
     if (readyStatus != Result_Success)
@@ -572,6 +648,16 @@ MWMechanics::Alchemy::Result MWMechanics::Alchemy::create(const std::string& nam
 
 MWMechanics::Alchemy::Result MWMechanics::Alchemy::createSingle()
 {
+    // Native brewing succeeds for a valid known recipe; TES3's random failure
+    // and legacy GMST potency rules do not apply to this profile.
+    if (isOblivion())
+    {
+        if (!supportsOblivionPoison()) return Result_NoEffects;
+        addPotion(mPotionName);
+        removeIngredients();
+        increaseSkill();
+        return Result_Success;
+    }
     if (beginEffects() == endEffects())
     {
         // all effects were nullified due to insufficient skill
@@ -600,13 +686,31 @@ std::string MWMechanics::Alchemy::suggestPotionName()
     if (effects.empty())
         return {};
 
+    if (isOblivion()) return "Damage Health";
+
     return effects.begin()->toString();
+}
+
+std::string MWMechanics::Alchemy::oblivionPotionDescription() const
+{
+    if (!isOblivion() || !supportsOblivionPoison()) return {};
+    return std::format("Damage Health {} pt for {}s", ESM4::NoviceAlchemyPoison::Magnitude,
+        ESM4::NoviceAlchemyPoison::Duration);
 }
 
 std::vector<std::string> MWMechanics::Alchemy::effectsDescription(
     const MWWorld::ConstPtr& ptr, const float alchemySkill)
 {
     std::vector<std::string> effects;
+
+    auto& world = *MWBase::Environment::get().getWorld();
+    if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+    {
+        std::istringstream description(MWWorld::describeOblivionIngredient(world, ptr));
+        for (std::string effect; std::getline(description, effect);)
+            if (!effect.empty()) effects.push_back(std::move(effect));
+        return effects;
+    }
 
     const auto& item = ptr.get<ESM::Ingredient>()->mBase;
     const auto& store = MWBase::Environment::get().getESMStore();

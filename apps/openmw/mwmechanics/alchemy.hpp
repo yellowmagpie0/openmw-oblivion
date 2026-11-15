@@ -50,6 +50,9 @@ namespace MWMechanics
         int mValue;
         std::string mPotionName;
 
+        bool isOblivion() const;
+        bool supportsOblivionPoison() const;
+
         void applyTools(int flags, float& value) const;
 
         void updateEffects();
@@ -129,6 +132,8 @@ namespace MWMechanics
 
         std::string suggestPotionName();
         ///< Suggest a name for the potion, based on the current effects
+
+        std::string oblivionPotionDescription() const;
 
         Result create(const std::string& name, int& count);
         ///< Try to create potions from the ingredients, place them in the inventory of the alchemist and

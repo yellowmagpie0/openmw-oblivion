@@ -461,6 +461,11 @@ long-duration effect save/load tests.
 representative Mage Guild, alchemy, enchanting, disease, and leveling scenarios
 match intended outcomes.
 
+Bounded real-content acceptance: the [original tutorial alchemy kit](oblivion/TUTORIAL-ALCHEMY-VERIFICATION.json)
+now supports a novice Damage Health poison with original mortar pickup event,
+native skill use and normal/SAN cold persistence. Higher skill/tool recipes and
+weapon poison application remain open; this does not close M16.
+
 #### M17 - Dialogue, voice, persuasion, and services
 
 **Deliver:** Implement DIAL/INFO ordering and conditions, greetings, topics,
