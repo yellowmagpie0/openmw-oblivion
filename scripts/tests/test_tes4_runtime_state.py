@@ -698,6 +698,33 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertNotIn("scroll_chameleon", player(loaded))
         self.assertEqual(player(loaded)["values"][46], actor["values"][46])
 
+    def test_crafted_weapon_poison105_preserves_elapsed_and_rejects_legacy_loss(self):
+        state = self.combat_controller_state()
+        state["schema_version"] = 105
+        actor = next(a for a in state["native_actor_values"] if a["owner"] == 1)
+        recipient = actor["actor"]
+        selected = lambda data: next(a for a in data["native_actor_values"] if a["actor"] == recipient)
+        effect = dict(poison="dynamic:shared-item:0000000000000001",
+                      attacker="dynamic:player:0000000000000001", magnitude=1., duration=5., elapsed=2.)
+        actor["weapon_poison_effects"] = [effect]
+        state["player"]["inventory"][0]["weapon_poison"] = effect["poison"]
+        wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(selected(loaded)["weapon_poison_effects"], [effect])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        for mutation in ({"elapsed": 5.}, {"elapsed": -1.}, {"elapsed": math.nan},
+                         {"magnitude": 2.}, {"duration": 6.}, {"attacker": "null"},
+                         {"poison": "dynamic:native-reference:0000000000000001"}):
+            bad = copy.deepcopy(state)
+            selected(bad)["weapon_poison_effects"][0].update(mutation)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 104
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del actor["weapon_poison_effects"]
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["player"]["inventory"][0]["weapon_poison"] = None
+        self.assertNotIn("weapon_poison_effects", selected(state_io.decode_payload(state_io.encode_payload(state))))
+
     def test_potion_attributes94_preserve_stacked_sources_and_legacy_unknown_modifiers(self):
         state = self.combat_controller_state()
         state["schema_version"] = 94

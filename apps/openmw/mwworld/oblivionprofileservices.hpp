@@ -44,7 +44,9 @@ namespace MWWorld
             const ESMStore& store, const ESM::RefId& id);
         static ESM::RefId sharedItemId(const ESMStore& store, const ESM::RefId& nativeId);
         static void validateWeaponPoison(const ESMStore& store, const ESM::RefId& weapon,
-            const ESM::FormKey& poison);
+            const ESM::FormKey& poison, const ESMStore* incoming = nullptr);
+        static bool isCraftedWeaponPoison(const ESMStore& store, const ESM::FormKey& poison,
+            const ESMStore* incoming = nullptr);
         static ESM::RefId nativeItemId(const ESMStore& store, const ESM::RefId& sharedId);
         static int sharedItemType(const ESMStore& store, const ESM::RefId& sharedId);
 

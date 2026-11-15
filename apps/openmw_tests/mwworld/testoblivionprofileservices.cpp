@@ -1,3 +1,4 @@
+#include <components/esm3/loadmgef.hpp>
 #include <gtest/gtest.h>
 
 #include <components/esm/records.hpp>
@@ -692,4 +693,38 @@ TEST(OblivionProfileServicesTest, GeneratedAmmunitionPreservesAnEquippedStack)
     EXPECT_EQ((*equipped).getCellRef().getCount(false), 17);
     EXPECT_EQ((*equipped).get<ESM::Weapon>()->mBase, definition);
     EXPECT_EQ(inventory->count(ammunition.mId), 17);
+}
+
+TEST(OblivionProfileServicesTest, CraftedPoisonBindsIncomingDefinitionAndRejectsOtherEffects)
+{
+    MWWorld::ESMStore store, incoming;
+    ESM::Potion potion{};
+    potion.blank();
+    potion.mId = store.generateId();
+    potion.mData.mFlags = ESM::Potion::OblivionPoison;
+    ESM::ENAMstruct effect{};
+    effect.mEffectID = ESM::MagicEffect::DamageHealth;
+    effect.mDuration = 5;
+    effect.mMagnMin = effect.mMagnMax = 1;
+    potion.mEffects.populate({effect});
+    store.getWritable<ESM::Potion>().insert(potion);
+    const auto key = ESM::FormKey::dynamic("shared-item", 1);
+    EXPECT_TRUE(MWWorld::OblivionProfileServices::isCraftedWeaponPoison(store, key));
+    EXPECT_FALSE(MWWorld::OblivionProfileServices::isCraftedWeaponPoison(store, key, &incoming));
+    incoming.getWritable<ESM::Potion>().insert(potion);
+    EXPECT_TRUE(MWWorld::OblivionProfileServices::isCraftedWeaponPoison(store, key, &incoming));
+    auto invalid = potion;
+    invalid.mEffects.mList.front().mData.mMagnMax = 2;
+    incoming.getWritable<ESM::Potion>().insert(invalid);
+    EXPECT_FALSE(MWWorld::OblivionProfileServices::isCraftedWeaponPoison(store, key, &incoming));
+    invalid = potion;
+    invalid.mScript = ESM::RefId::stringRefId("scripted");
+    incoming.getWritable<ESM::Potion>().insert(invalid);
+    EXPECT_FALSE(MWWorld::OblivionProfileServices::isCraftedWeaponPoison(store, key, &incoming));
+    invalid = potion;
+    invalid.mData.mFlags = 0;
+    incoming.getWritable<ESM::Potion>().insert(invalid);
+    EXPECT_FALSE(MWWorld::OblivionProfileServices::isCraftedWeaponPoison(store, key, &incoming));
+    EXPECT_FALSE(MWWorld::OblivionProfileServices::isCraftedWeaponPoison(
+        store, ESM::FormKey::dynamic("native-reference", 1)));
 }

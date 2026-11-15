@@ -4,7 +4,15 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [native Player currency purse](CURRENCY-PURSE-HANDOFF.md).
+Latest completed bounded chunk: [crafted novice weapon poison](CRAFTED-POISON-HANDOFF.md).
+The real tutorial recipe now coats the axe and damages the original goblin over
+five simulation seconds. All eight normal and instrumented input/cold phases
+pass, including paused time, expiry and no replay. Both modes pass 3,304 component
+and 2,294 engine cases; 619 Python checks pass. Preserve its separate alchemy
+inventory. [Receipt](CRAFTED-POISON-VERIFICATION.json). Other poison branches and
+full milestone acceptance remain open.
+
+The prior [native Player currency purse](CURRENCY-PURSE-HANDOFF.md) remains accepted.
 The Septim earned from Sam now appears in a noninteractive balance, matching the
 observed original UI, and remains in actual native inventory for trade/scripts.
 Real purchase 6 to 1, zero/one balance, footer controls and normal/SAN cold saves
@@ -23,7 +31,7 @@ contact and cold spent/death ownership. Its receipt retains the incomplete full
 instrumented approach boundary. Keep its inventory separate from the shore.
 
 The prior [tutorial kit](TUTORIAL-ALCHEMY-HANDOFF.md) remains accepted. Its earned
-1pt/5s generated poison is retained separately and still needs timed application.
+1pt/5s generated poison has the separate accepted application course linked above.
 Higher skill/tools/recipes and broader poison branches remain open. Preserve
 the independent inventories; the main cave continuation below is unchanged.
 

@@ -6724,17 +6724,19 @@ namespace MWWorld
             || item.getContainerStore() != &actor.getClass().getContainerStore(actor))
             return false;
         const auto* potion = mStore.get<ESM4::Potion>().search(item.getCellRef().getRefId());
-        if (!potion) return false;
+        const auto generated = OblivionInventory::sharedKey(item.getCellRef().getRefId());
+        const bool crafted = generated && OblivionProfileServices::isCraftedWeaponPoison(mStore, *generated);
+        if (!potion && !crafted) return false;
         if (const auto identity = mStore.get<ESM4::Potion>().findFormKey(item.getCellRef().getRefId()))
             if (const auto* winner = mStore.getFormKeyIndex().winner(*identity);
                 winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
                 return false;
-        if (ESM4::instantWeaponPoisonDamage(*potion))
+        if (crafted || ESM4::instantWeaponPoisonDamage(*potion))
         {
-            if (actor != getPlayerPtr() || !potion->mScriptId.isZeroOrUnset()
+            if (actor != getPlayerPtr() || (potion && !potion->mScriptId.isZeroOrUnset())
                 || !item.getCellRef().getNativeScriptOwner().isNull()) return false;
-            const auto poison = mStore.get<ESM4::Potion>().findFormKey(item.getCellRef().getRefId());
-            if (!poison || !poison->isContent()) return false;
+            const auto poison = crafted ? generated : mStore.get<ESM4::Potion>().findFormKey(item.getCellRef().getRefId());
+            if (!poison || !ESM4::weaponPoisonIdentity(*poison)) return false;
             auto& inventory = actor.getClass().getInventoryStore(actor);
             const auto equipped = inventory.getSlot(InventoryStore::Slot_CarriedRight);
             if (equipped == inventory.end()) return false;
@@ -6913,10 +6915,12 @@ namespace MWWorld
         };
         if (player)
             mOblivionCombat->updatePlayerFrameResourcesFromClock(
-                *mPlayer, movement, mOblivionCombat->findSpellCast(key) != nullptr, settings, prepareParalysis, processEffects);
+                *mPlayer, movement, mOblivionCombat->findSpellCast(key) != nullptr, settings, prepareParalysis, processEffects,
+                    resolveOblivionEssentialRecoverySettings(mStore), getGodModeState());
         else
             mOblivionCombat->updateNonPlayerFrameResourcesFromClock(
-                actor, movement, mOblivionCombat->findSpellCast(key) != nullptr, settings, prepareParalysis, processEffects);
+                actor, movement, mOblivionCombat->findSpellCast(key) != nullptr, settings, prepareParalysis, processEffects,
+                    resolveOblivionEssentialRecoverySettings(mStore), getGodModeState());
         if (friendHits)
             mOblivionRuntimeState->mFriendHitCounters.at(key).swap(*friendHits);
         // Terminal targets cannot keep a living native actor in its interrupted
@@ -8118,6 +8122,10 @@ namespace MWWorld
         validateOblivionScrollChameleon(mStore, state);
         validateOblivionPotionAttributes(mStore, state);
         validateOblivionPotionLight(mStore, state);
+        for (const auto& actor : state.mNativeActorValues)
+            for (const auto& effect : actor.mWeaponPoisonEffects)
+                if (!OblivionProfileServices::isCraftedWeaponPoison(mStore, effect.mPoison, incoming))
+                    throw std::invalid_argument("saved crafted poison definition no longer resolves");
         auto getupResources = prepareOblivionGetUpResources(state, incoming);
         if (prepared) prepared->mGetUpResources = std::move(getupResources);
         for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)
@@ -8352,7 +8360,7 @@ namespace MWWorld
             {
                 if (!baseId)
                     throw std::invalid_argument("native coating weapon base cannot be resolved");
-                OblivionProfileServices::validateWeaponPoison(mStore, ESM::RefId(*baseId), reference.mWeaponPoison);
+                OblivionProfileServices::validateWeaponPoison(mStore, ESM::RefId(*baseId), reference.mWeaponPoison, incoming);
             }
             if (reference.mItemCondition || reference.mItemCharge)
             {

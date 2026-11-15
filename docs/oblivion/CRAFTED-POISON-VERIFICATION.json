@@ -1,0 +1,1105 @@
+{
+  "status": "Accepted bounded novice crafted-poison course: normal and instrumented actual input, cold persistence and exact regression gates",
+  "parent_commit": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+  "contract": "CRAFTED-POISON-CONTRACT.json",
+  "oracle": "CRAFTED-POISON-ORACLE.json",
+  "runtime_candidate": {
+    "binary_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861",
+    "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+    "kind": "normal",
+    "sources_sha256": {
+      "apps/components_tests/esm4/runtimestate.cpp": "0df7ad8b6f0acfd83c63508412e0090499fcc00752ac62311968fecf2e1a76d0",
+      "apps/openmw/mwmechanics/oblivioncombat.cpp": "b9649b87a38fdca03c01cce0102df2e7599e98287b0cb7ba751db4e163832ceb",
+      "apps/openmw/mwmechanics/oblivioncombat.hpp": "bec793c03724622d5d419bc23df90562e012c80bd543187947948c8449fc7e85",
+      "apps/openmw/mwmechanics/oblivionmelee.cpp": "dd91f7953da6181782b0e5d4d4d1c63e852168ae340fba98d049676cc86c53d4",
+      "apps/openmw/mwworld/cellref.hpp": "f0209037394f4962f01b55392b6cc3e1297724642472feb848a41d7c1945c50e",
+      "apps/openmw/mwworld/oblivionprofileservices.cpp": "f7c14aa22aadfafaca782c7cc359323df51048c17c85fe0074fb617faa3d452d",
+      "apps/openmw/mwworld/oblivionprofileservices.hpp": "5b1456a78425ca6226715645e7a743dd9b09ec4b00bf1dfff063eb7d0e16ae99",
+      "apps/openmw/mwworld/worldimp.cpp": "3c4c2b321751dd55e1f5e3e8dc8a00c22d3f9a2c11f0cc623105ac6d055806f9",
+      "apps/openmw_tests/mwworld/testoblivionparalysis.cpp": "262bf0e508e39f7eb6d153891092336c0d3cee387ddb2bed7e0540811e49371b",
+      "apps/openmw_tests/mwworld/testoblivionprofileservices.cpp": "708cfc4055d66e44b8ac95a32857fe072b1102bcbe174bad199f12b1fb52f41c",
+      "components/esm4/inventorymechanics.cpp": "2758edbd403efea5133f638be200bb66fc6030593f94b40718d4742d51dcb56e",
+      "components/esm4/runtimestate.cpp": "3985b1c6ef024b7378b6ca4d33891131ae891c4a39ec7adf338500890cb6fdf2",
+      "components/esm4/runtimestate.hpp": "f53802bc4ae446ec2bf15aa3acd800c1e2230a9fd8e7bedcb04edfdd57a549e5",
+      "components/esm4/weaponpoison.hpp": "d10ca3bef2c0ee079f83a22ad0788f04f7bb75e19560ae9e1a8adf180e9a110b",
+      "scripts/tes4_runtime_state.py": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+      "scripts/tests/test_tes4_runtime_state.py": "34c131e3d9d7a4648828b3192c11d2d7c34f7474aa76739c8a5c7e82ce4069f0"
+    },
+    "frozen_resource_sha256": {
+      "version": "6fba0bdcf7c9a4b15ac8f2e7f0a508f2ad35a2216ffab086bda41e9a5c8215dc"
+    },
+    "linked_resources": {
+      "shaders": "/home/maciek/openmw-oblivion/openmw-oblivion/build/resources/shaders",
+      "vfs": "/home/maciek/openmw-oblivion/openmw-oblivion/build/resources/vfs",
+      "vfs-mw": "/home/maciek/openmw-oblivion/openmw-oblivion/build/resources/vfs-mw",
+      "lua_api": "/home/maciek/openmw-oblivion/openmw-oblivion/build/resources/lua_api",
+      "openmw.png": "/home/maciek/openmw-oblivion/openmw-oblivion/build/resources/openmw.png",
+      "defaultfilters": "/home/maciek/openmw-oblivion/openmw-oblivion/build/resources/defaultfilters",
+      "lua_libs": "/home/maciek/openmw-oblivion/openmw-oblivion/build/resources/lua_libs"
+    },
+    "configuration_sha256": {
+      "defaults.bin": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77",
+      "openmw.cfg": "2291eb4e130b803938b26be461475bef76e9f9035e6889e5d778a5b52423ea66"
+    }
+  },
+  "normal_courses": [
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-decline-dev-02",
+      "audit": {
+        "passed": true,
+        "phase": "decline",
+        "sanitized": false,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "3daa7c67027e16b2209b831a85c8de82c38b3ae8039e02ad02c1f915fa8a1e86",
+        "save_sha256": "6e6a805bd8d295fb1bfd36e91ed5201c587757ffc0739273580cd811c60ecedc",
+        "process": {
+          "pid": 1446234,
+          "start_ticks": 27851641,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/normal-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-decline-dev-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/normal-final-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0
+      },
+      "public_manifest": "original-crafted-poison-decline.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-apply-dev-01",
+      "audit": {
+        "passed": true,
+        "phase": "apply",
+        "sanitized": false,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "3daa7c67027e16b2209b831a85c8de82c38b3ae8039e02ad02c1f915fa8a1e86",
+        "save_sha256": "3c29d9462dcc40d8080562b457272897dd57d115d1c0d336403a539be4acd165",
+        "process": {
+          "pid": 1443981,
+          "start_ticks": 27756744,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/normal-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-apply-dev-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/normal-final-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 1,
+        "poison_contacts": 0
+      },
+      "public_manifest": "original-crafted-poison-apply.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-miss-dev-01",
+      "audit": {
+        "passed": true,
+        "phase": "miss",
+        "sanitized": false,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "3c29d9462dcc40d8080562b457272897dd57d115d1c0d336403a539be4acd165",
+        "save_sha256": "985218bc4d72f222a012adb689ff90255ced1c636d0edc06a5246ae6a1f34bdc",
+        "process": {
+          "pid": 1444631,
+          "start_ticks": 27766693,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/normal-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-miss-dev-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-apply-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0
+      },
+      "public_manifest": "original-crafted-poison-miss.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-approach-dev-01",
+      "audit": {
+        "passed": true,
+        "phase": "approach",
+        "sanitized": false,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "985218bc4d72f222a012adb689ff90255ced1c636d0edc06a5246ae6a1f34bdc",
+        "save_sha256": "d6941a269300f0aed60b2b3bb4027b2399cf929b3f5426b04775cca0cea2b6b4",
+        "process": {
+          "pid": 1445067,
+          "start_ticks": 27780038,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/normal-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-approach-dev-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-miss-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0
+      },
+      "public_manifest": "original-tutorial-poison-approach.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-contact-dev-01",
+      "audit": {
+        "passed": true,
+        "phase": "contact",
+        "sanitized": false,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "d6941a269300f0aed60b2b3bb4027b2399cf929b3f5426b04775cca0cea2b6b4",
+        "save_sha256": "de899e5c05b90f2c39ded357e6ab72e51e84f22ff58a89892e07ccfcb8dd02e8",
+        "process": {
+          "pid": 1445288,
+          "start_ticks": 27789045,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/normal-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-contact-dev-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-approach-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 1,
+        "apply_events": 0,
+        "poison_contacts": 1,
+        "target_health_before": 10,
+        "target_health_after": 8.843871831893921,
+        "effects_before": [],
+        "effects_after": [
+          {
+            "poison": "dynamic:shared-item:0000000000000001",
+            "attacker": "dynamic:player:0000000000000001",
+            "magnitude": 1,
+            "duration": 5,
+            "elapsed": 0.4139404296875
+          }
+        ]
+      },
+      "public_manifest": "original-crafted-poison-contact.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-active-cold-dev-01",
+      "audit": {
+        "passed": true,
+        "phase": "paused",
+        "sanitized": false,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "de899e5c05b90f2c39ded357e6ab72e51e84f22ff58a89892e07ccfcb8dd02e8",
+        "save_sha256": "ddfeec318f0278183d4cd757d524c2a32ad21ba529367c5c455d2735e53bf983",
+        "process": {
+          "pid": 1445454,
+          "start_ticks": 27802901,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/normal-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-active-cold-dev-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-contact-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0,
+        "target_health_before": 8.843871831893921,
+        "target_health_after": 6.273803472518921,
+        "effects_before": [
+          {
+            "poison": "dynamic:shared-item:0000000000000001",
+            "attacker": "dynamic:player:0000000000000001",
+            "magnitude": 1,
+            "duration": 5,
+            "elapsed": 0.4139404296875
+          }
+        ],
+        "effects_after": [
+          {
+            "poison": "dynamic:shared-item:0000000000000001",
+            "attacker": "dynamic:player:0000000000000001",
+            "magnitude": 1,
+            "duration": 5,
+            "elapsed": 2.9840087890625
+          }
+        ]
+      },
+      "public_manifest": "original-crafted-poison-active-reload.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-expiry-cold-dev-01",
+      "audit": {
+        "passed": true,
+        "phase": "expiry",
+        "sanitized": false,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "ddfeec318f0278183d4cd757d524c2a32ad21ba529367c5c455d2735e53bf983",
+        "save_sha256": "778063df3566804a4c570519e188e4f9bdd1747ebe313ae00fbc04d905d1d9d2",
+        "process": {
+          "pid": 1445574,
+          "start_ticks": 27813401,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/normal-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-expiry-cold-dev-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-active-cold-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 1,
+        "incoming_damage": 2.85,
+        "changed_armor": 1,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0,
+        "target_health_before": 6.273803472518921,
+        "target_health_after": 4.2578125,
+        "effects_before": [
+          {
+            "poison": "dynamic:shared-item:0000000000000001",
+            "attacker": "dynamic:player:0000000000000001",
+            "magnitude": 1,
+            "duration": 5,
+            "elapsed": 2.9840087890625
+          }
+        ],
+        "effects_after": []
+      },
+      "public_manifest": "original-crafted-poison-expiry.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-spent-cold-dev-01",
+      "audit": {
+        "passed": true,
+        "phase": "spent",
+        "sanitized": false,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "778063df3566804a4c570519e188e4f9bdd1747ebe313ae00fbc04d905d1d9d2",
+        "save_sha256": "584bd92c28528e28803370b0709d524e06fb25f9b1f25c8030777606a1c6bfd4",
+        "process": {
+          "pid": 1445793,
+          "start_ticks": 27822778,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/normal-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-spent-cold-dev-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-expiry-cold-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "2f6bdba46b3fe999b1e266c26dcdbfc75d445b5213308981162ae549eaaa3861"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0,
+        "target_health_before": 4.2578125,
+        "target_health_after": 4.2578125,
+        "effects_before": [],
+        "effects_after": []
+      },
+      "public_manifest": "original-crafted-poison-expiry.json"
+    }
+  ],
+  "focused": {
+    "component_poison_state": "normal-state-01:2 exact selected cases pass",
+    "engine": "normal-focused-02:29 engine cases pass; overall Python stage failed and was corrected",
+    "python": "normal-python-03:619 pass; includes corrected reviewed schema105 gates,106 rejection and identity-selected poison roundtrip"
+  },
+  "retained_failures": [
+    "normal-engine-dev-01: successful build, empty mistaken test filter; no engine acceptance from this run",
+    "normal-focused-02: Python actor-order assertion and old schema cap; targeted75 and full619 corrected",
+    "normal-crafted-decline-dev-01: bottle retained but old item-return click hit footer; course failed to close inventory; corrected decline-dev-02 passes",
+    "original-01: held click drag/drop, reference used as placeatme base, intended upward miss actually hit; all retained and corrected where claimed",
+    "original-01: expected active-effect ESS absent; no original active cold claim",
+    "sanitized-crafted-approach-01: failed waypoint3 30s fixed-heading route; alive/H80 and no sanitizer diagnostic. Retried same accepted miss save with continuous ordinary mouse steering; all five original waypoints and unchanged40unit threshold pass in approach02.",
+    "sanitized-crafted-contact-01: fixed-heading third waypoint overshot; alive/H80, no poison contact or save, whole course failed. Same accepted approach save retried with ordinary continuous mouse steering; unchanged3waypoints/40radius/150hitdistance/.04aim thresholds, contact02 passes."
+  ],
+  "remaining": [],
+  "normal_chain_hashes_linked": true,
+  "component_development_full": {
+    "course": "build/oblivion-compat/crafted-poison/components-existing-dev-01",
+    "executed": 3304,
+    "inventory_matches": true,
+    "failed": 0,
+    "skipped": 0,
+    "filter": "*",
+    "scope": "Correct verifier path applied to same unchanged binary inventory and XML; no test rerun.",
+    "original_attempt": "result.json: testexit0, verifier command used wrong path",
+    "verifier": ".codex/skills/openmw-build-test/scripts/verify_gtest.py"
+  },
+  "normal_engine_full": {
+    "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-engine-full-existing-01",
+    "exit_code": 0,
+    "seconds": 46.037126368959434,
+    "binary_sha256": "e314ce7ef817ed528d80dd9e0d507fa0a80d366633b229960046d308e3c8cbcc",
+    "built_binary_matches_verified_focused_build": true,
+    "cpp_sources_unchanged": true,
+    "scope": "Full normal integration execution of exact current run_checks-built binary; no normal build while sanitizer compilation is active. Includes source/binary provenance and exact inventory/XML validation.",
+    "inventory": {
+      "executed": 2294,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*"
+    },
+    "passed": true
+  },
+  "sanitizer_gates": {
+    "components": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "components-tests",
+            "-j",
+            "2"
+          ],
+          "log": "components-build.log",
+          "returncode": 0,
+          "seconds": 1.42
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "components-inventory.txt",
+          "returncode": 0,
+          "seconds": 1.019
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-components-01/components.xml"
+          ],
+          "log": "components.log",
+          "returncode": 0,
+          "seconds": 90.382
+        }
+      ],
+      "results": {
+        "components": {
+          "executed": 3304,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0be8b567a82ebc06d7f3d477fb06d57d946b90a1319fec06437a9dde300b75ee",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "eae8db47b39ad395cfb80e914fe2ebdba721312148eaf15df53ab57d3206309e",
+          "inventory_sha256": "c225304644a2e205a87bf5b8890277007b6e85a002435baac6dfd5f69d7c4c29",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+        "source_fingerprint": "7fd20d0050d4e1d126b686f66a3bf29f835d3658bfc659f991928d701bb4facb"
+      },
+      "source_after": {
+        "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+        "source_fingerprint": "7fd20d0050d4e1d126b686f66a3bf29f835d3658bfc659f991928d701bb4facb"
+      }
+    },
+    "partitions": {
+      "kind": "exact_disjoint_gtest_partition_coverage",
+      "passed": true,
+      "executed": 2294,
+      "disjoint": true,
+      "exact_union": true,
+      "partitions": [
+        {
+          "label": "sanitized-crafted-worker-0",
+          "executed": 82,
+          "filter": "WorkerCounts/*/0"
+        },
+        {
+          "label": "sanitized-crafted-worker-1",
+          "executed": 82,
+          "filter": "WorkerCounts/*/1"
+        },
+        {
+          "label": "sanitized-crafted-worker-2",
+          "executed": 82,
+          "filter": "WorkerCounts/*/2"
+        },
+        {
+          "label": "sanitized-crafted-rest",
+          "executed": 2048,
+          "filter": "*-WorkerCounts/*"
+        }
+      ],
+      "binary_sha256": "a0db0fe50ddffcdb31c946e5253eea26a6c517bd6c9d4fe44cc74fb971139041",
+      "source_before": {
+        "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+        "source_fingerprint": "7fd20d0050d4e1d126b686f66a3bf29f835d3658bfc659f991928d701bb4facb"
+      },
+      "source_after": {
+        "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+        "source_fingerprint": "7fd20d0050d4e1d126b686f66a3bf29f835d3658bfc659f991928d701bb4facb"
+      }
+    },
+    "focused": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw-tests",
+            "openmw",
+            "esmtool",
+            "-j",
+            "2"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 3.775
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 1.073
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=OblivionCombatMagicStore.*:OblivionProfileServicesTest.*:OblivionWeaponPoisonTest.*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-focused-01/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 1.167
+        }
+      ],
+      "results": {
+        "engine": {
+          "executed": 29,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionCombatMagicStore.*:OblivionProfileServicesTest.*:OblivionWeaponPoisonTest.*",
+          "binary_sha256": "a0db0fe50ddffcdb31c946e5253eea26a6c517bd6c9d4fe44cc74fb971139041",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "9d023b0fa4619cf63154e5e204c71ada702ac65548a4aea8e0b0ccbe17795888",
+          "inventory_sha256": "7caab49bbf8e56eb8380a1e0129dd79e171d32c9e1a308dba593de276e9deba9",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+        "source_fingerprint": "7fd20d0050d4e1d126b686f66a3bf29f835d3658bfc659f991928d701bb4facb"
+      },
+      "source_after": {
+        "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+        "source_fingerprint": "7fd20d0050d4e1d126b686f66a3bf29f835d3658bfc659f991928d701bb4facb"
+      }
+    }
+  },
+  "sanitizer_runtime_candidate": {
+    "binary_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf",
+    "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+    "kind": "sanitized",
+    "sources_sha256": {
+      "apps/components_tests/esm4/runtimestate.cpp": "0df7ad8b6f0acfd83c63508412e0090499fcc00752ac62311968fecf2e1a76d0",
+      "apps/openmw/mwmechanics/oblivioncombat.cpp": "b9649b87a38fdca03c01cce0102df2e7599e98287b0cb7ba751db4e163832ceb",
+      "apps/openmw/mwmechanics/oblivioncombat.hpp": "bec793c03724622d5d419bc23df90562e012c80bd543187947948c8449fc7e85",
+      "apps/openmw/mwmechanics/oblivionmelee.cpp": "dd91f7953da6181782b0e5d4d4d1c63e852168ae340fba98d049676cc86c53d4",
+      "apps/openmw/mwworld/cellref.hpp": "f0209037394f4962f01b55392b6cc3e1297724642472feb848a41d7c1945c50e",
+      "apps/openmw/mwworld/oblivionprofileservices.cpp": "f7c14aa22aadfafaca782c7cc359323df51048c17c85fe0074fb617faa3d452d",
+      "apps/openmw/mwworld/oblivionprofileservices.hpp": "5b1456a78425ca6226715645e7a743dd9b09ec4b00bf1dfff063eb7d0e16ae99",
+      "apps/openmw/mwworld/worldimp.cpp": "3c4c2b321751dd55e1f5e3e8dc8a00c22d3f9a2c11f0cc623105ac6d055806f9",
+      "apps/openmw_tests/mwworld/testoblivionparalysis.cpp": "262bf0e508e39f7eb6d153891092336c0d3cee387ddb2bed7e0540811e49371b",
+      "apps/openmw_tests/mwworld/testoblivionprofileservices.cpp": "708cfc4055d66e44b8ac95a32857fe072b1102bcbe174bad199f12b1fb52f41c",
+      "components/esm4/inventorymechanics.cpp": "2758edbd403efea5133f638be200bb66fc6030593f94b40718d4742d51dcb56e",
+      "components/esm4/runtimestate.cpp": "3985b1c6ef024b7378b6ca4d33891131ae891c4a39ec7adf338500890cb6fdf2",
+      "components/esm4/runtimestate.hpp": "f53802bc4ae446ec2bf15aa3acd800c1e2230a9fd8e7bedcb04edfdd57a549e5",
+      "components/esm4/weaponpoison.hpp": "d10ca3bef2c0ee079f83a22ad0788f04f7bb75e19560ae9e1a8adf180e9a110b",
+      "docs/oblivion/VILVERIN-HANDOFF.md": "1e662ff65502c162c2350a2b7633c241c86c561cd6adaf4872075041409cd5e0",
+      "scripts/data/oblivion_compat/m15_cached_block_input.json": "3355d38e1f612805b8bb0a1b202b866ea4d6297e3fa511e88a8bcc6d7ebbccbd",
+      "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json": "03c209f13c25e9a3959b78ecafdc6320f33c625a7d05cc18883e1eb6c1962f32",
+      "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json": "6725c3e7a04ccf41872d1b12ed709f745ca399f03ee24bdf9813de366929c916",
+      "scripts/tes4_m15_fixture_preflight.py": "507e734e6f4964e2b289b430bb999fb3e6ca8c501d23a65c0e9bbd5e29fd5267",
+      "scripts/tes4_runtime_state.py": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+      "scripts/tests/test_tes4_m15_fixture_preflight.py": "098d3622d035ef3299517762e8e94409ec711e14be2340ae070acc21028dca00",
+      "scripts/tests/test_tes4_runtime_state.py": "0967119cd2a3450a6f5a0d71bf79c1a7e3f9f813c1932dfb261087348208ee13"
+    },
+    "frozen_resource_sha256": {
+      "version": "6fba0bdcf7c9a4b15ac8f2e7f0a508f2ad35a2216ffab086bda41e9a5c8215dc"
+    },
+    "linked_resources": {
+      "shaders": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/resources/shaders",
+      "vfs": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/resources/vfs",
+      "vfs-mw": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/resources/vfs-mw",
+      "lua_api": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/resources/lua_api",
+      "openmw.png": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/resources/openmw.png",
+      "defaultfilters": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/resources/defaultfilters",
+      "lua_libs": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/resources/lua_libs"
+    },
+    "configuration_sha256": {
+      "defaults.bin": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77",
+      "openmw.cfg": "2291eb4e130b803938b26be461475bef76e9f9035e6889e5d778a5b52423ea66"
+    }
+  },
+  "sanitized_courses": [
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-decline-01",
+      "audit": {
+        "passed": true,
+        "phase": "decline",
+        "sanitized": true,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "62a04d89b60303c34eabd168a8c3ccddad932b54a888be6c91c7322f94d845ce",
+        "save_sha256": "755e596a2f4d94f0f118a5960cb7af8e4d35516faf7ad7e231c8b6d73db61b5f",
+        "process": {
+          "pid": 1454751,
+          "start_ticks": 28111082,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/sanitized-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-decline-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/sanitized-final-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0
+      },
+      "public_manifest": "original-crafted-poison-decline.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-apply-01",
+      "audit": {
+        "passed": true,
+        "phase": "apply",
+        "sanitized": true,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "62a04d89b60303c34eabd168a8c3ccddad932b54a888be6c91c7322f94d845ce",
+        "save_sha256": "0c67b1bb046c21684fe46ee6ce694d860a9e7dda78cc054fb1c8c745c7e9c3f9",
+        "process": {
+          "pid": 1454951,
+          "start_ticks": 28132838,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/sanitized-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-apply-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-alchemy/sanitized-final-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 1,
+        "poison_contacts": 0
+      },
+      "public_manifest": "original-crafted-poison-apply.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-miss-01",
+      "audit": {
+        "passed": true,
+        "phase": "miss",
+        "sanitized": true,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "0c67b1bb046c21684fe46ee6ce694d860a9e7dda78cc054fb1c8c745c7e9c3f9",
+        "save_sha256": "74617cde2757258c98328ef678153e767780a76ce7bd82785559b33f629bf550",
+        "process": {
+          "pid": 1455288,
+          "start_ticks": 28155065,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/sanitized-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-miss-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-apply-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0
+      },
+      "public_manifest": "original-crafted-poison-miss.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-approach-02",
+      "audit": {
+        "passed": true,
+        "phase": "approach",
+        "sanitized": true,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "74617cde2757258c98328ef678153e767780a76ce7bd82785559b33f629bf550",
+        "save_sha256": "555ed4a3ee874c06259d049fcaade1e19b8b8c8996fd960bd087d2d72b1e6457",
+        "process": {
+          "pid": 1455814,
+          "start_ticks": 28220708,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/sanitized-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-approach-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-miss-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0
+      },
+      "public_manifest": "original-crafted-poison-approach-sanitized.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-contact-02",
+      "audit": {
+        "passed": true,
+        "phase": "contact",
+        "sanitized": true,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "555ed4a3ee874c06259d049fcaade1e19b8b8c8996fd960bd087d2d72b1e6457",
+        "save_sha256": "826bd6491cc83df96cc4e666ca58e3144e9c9b76650d2060b38c670f1c772e4d",
+        "process": {
+          "pid": 1463717,
+          "start_ticks": 28338859,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/sanitized-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-contact-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 1,
+        "apply_events": 0,
+        "poison_contacts": 1,
+        "target_health_before": 10,
+        "target_health_after": 8.925781011581421,
+        "effects_before": [],
+        "effects_after": [
+          {
+            "poison": "dynamic:shared-item:0000000000000001",
+            "attacker": "dynamic:player:0000000000000001",
+            "magnitude": 1,
+            "duration": 5,
+            "elapsed": 0.33203125
+          }
+        ]
+      },
+      "public_manifest": "original-crafted-poison-contact-sanitized.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-paused-01",
+      "audit": {
+        "passed": true,
+        "phase": "paused",
+        "sanitized": true,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "826bd6491cc83df96cc4e666ca58e3144e9c9b76650d2060b38c670f1c772e4d",
+        "save_sha256": "0cf583fb73b253430e8344b0d0d106bf9640141e87f1fff60cad25da7b7cfd36",
+        "process": {
+          "pid": 1463999,
+          "start_ticks": 28379224,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/sanitized-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-paused-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-contact-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0,
+        "target_health_before": 8.925781011581421,
+        "target_health_after": 8.095824956893921,
+        "effects_before": [
+          {
+            "poison": "dynamic:shared-item:0000000000000001",
+            "attacker": "dynamic:player:0000000000000001",
+            "magnitude": 1,
+            "duration": 5,
+            "elapsed": 0.33203125
+          }
+        ],
+        "effects_after": [
+          {
+            "poison": "dynamic:shared-item:0000000000000001",
+            "attacker": "dynamic:player:0000000000000001",
+            "magnitude": 1,
+            "duration": 5,
+            "elapsed": 1.1619873046875
+          }
+        ]
+      },
+      "public_manifest": "original-crafted-poison-active-reload-sanitized.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-expiry-01",
+      "audit": {
+        "passed": true,
+        "phase": "expiry",
+        "sanitized": true,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "0cf583fb73b253430e8344b0d0d106bf9640141e87f1fff60cad25da7b7cfd36",
+        "save_sha256": "2bb3ad7f762461880fedad9d7680dd97f394811edf35ad6b35e79611e9b2a3a8",
+        "process": {
+          "pid": 1464194,
+          "start_ticks": 28397552,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/sanitized-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-expiry-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-paused-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 0,
+        "incoming_damage": 0,
+        "changed_armor": 0,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0,
+        "target_health_before": 8.095824956893921,
+        "target_health_after": 4.2578125,
+        "effects_before": [
+          {
+            "poison": "dynamic:shared-item:0000000000000001",
+            "attacker": "dynamic:player:0000000000000001",
+            "magnitude": 1,
+            "duration": 5,
+            "elapsed": 1.1619873046875
+          }
+        ],
+        "effects_after": []
+      },
+      "public_manifest": "original-crafted-poison-expiry.json"
+    },
+    {
+      "course": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-spent-01",
+      "audit": {
+        "passed": true,
+        "phase": "spent",
+        "sanitized": true,
+        "auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+        "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+        "canonical_payload_matches_actual_save": true,
+        "source_sha256": "2bb3ad7f762461880fedad9d7680dd97f394811edf35ad6b35e79611e9b2a3a8",
+        "save_sha256": "b4bb9774c6615002dc8a92f251f638342d9a08a2b1becd125c66b5ef354ddc15",
+        "process": {
+          "pid": 1464361,
+          "start_ticks": 28416828,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/candidate-assets/sanitized-dev-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-spent-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-expiry-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "4c496ce1ea7483ceb02430f613e0798904db93115e6a65bcd422b134ca72a8cf"
+        },
+        "source_inventory_loaded_exactly": true,
+        "generated_definition_retained": true,
+        "incoming_contacts": 1,
+        "incoming_damage": 2.85,
+        "changed_armor": 1,
+        "player_weapon_hits": 0,
+        "apply_events": 0,
+        "poison_contacts": 0,
+        "target_health_before": 4.2578125,
+        "target_health_after": 4.2578125,
+        "effects_before": [],
+        "effects_after": []
+      },
+      "public_manifest": "original-crafted-poison-expiry.json"
+    }
+  ],
+  "sanitized_chain_hashes_linked": true,
+  "tested_cpp_sha256": {
+    "apps/components_tests/esm4/runtimestate.cpp": "0df7ad8b6f0acfd83c63508412e0090499fcc00752ac62311968fecf2e1a76d0",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "b9649b87a38fdca03c01cce0102df2e7599e98287b0cb7ba751db4e163832ceb",
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": "bec793c03724622d5d419bc23df90562e012c80bd543187947948c8449fc7e85",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "dd91f7953da6181782b0e5d4d4d1c63e852168ae340fba98d049676cc86c53d4",
+    "apps/openmw/mwworld/cellref.hpp": "f0209037394f4962f01b55392b6cc3e1297724642472feb848a41d7c1945c50e",
+    "apps/openmw/mwworld/oblivionprofileservices.cpp": "f7c14aa22aadfafaca782c7cc359323df51048c17c85fe0074fb617faa3d452d",
+    "apps/openmw/mwworld/oblivionprofileservices.hpp": "5b1456a78425ca6226715645e7a743dd9b09ec4b00bf1dfff063eb7d0e16ae99",
+    "apps/openmw/mwworld/worldimp.cpp": "3c4c2b321751dd55e1f5e3e8dc8a00c22d3f9a2c11f0cc623105ac6d055806f9",
+    "apps/openmw_tests/mwworld/testoblivionparalysis.cpp": "262bf0e508e39f7eb6d153891092336c0d3cee387ddb2bed7e0540811e49371b",
+    "apps/openmw_tests/mwworld/testoblivionprofileservices.cpp": "708cfc4055d66e44b8ac95a32857fe072b1102bcbe174bad199f12b1fb52f41c",
+    "components/esm4/inventorymechanics.cpp": "2758edbd403efea5133f638be200bb66fc6030593f94b40718d4742d51dcb56e",
+    "components/esm4/runtimestate.cpp": "3985b1c6ef024b7378b6ca4d33891131ae891c4a39ec7adf338500890cb6fdf2",
+    "components/esm4/runtimestate.hpp": "f53802bc4ae446ec2bf15aa3acd800c1e2230a9fd8e7bedcb04edfdd57a549e5",
+    "components/esm4/weaponpoison.hpp": "d10ca3bef2c0ee079f83a22ad0788f04f7bb75e19560ae9e1a8adf180e9a110b"
+  },
+  "independent_auditor_sha256": "a6d4c8d7b10c2472ca8562596ca76da814fd0a4674cc50323600123685979394",
+  "runtime_codec_sha256": "00cfa3bdc07c3edf3fcd0d5b54e7a991e17c4a223aa961726fbe881983ab29cc",
+  "source_guard": {
+    "command": [
+      "cmake",
+      "--build",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+      "--target",
+      "openmw",
+      "esmtool",
+      "components-tests",
+      "openmw-tests",
+      "-j",
+      "2"
+    ],
+    "exit_code": 0,
+    "seconds": 4512.873382623016,
+    "cpp_source_unchanged": true,
+    "head_unchanged": true,
+    "scope": "Build preparation only. Required run_checks gates will independently verify final sources, binaries and test inventories."
+  },
+  "normal_final_save": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/normal-crafted-spent-cold-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "584bd92c28528e28803370b0709d524e06fb25f9b1f25c8030777606a1c6bfd4"
+  },
+  "sanitized_final_save": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/crafted-poison/sanitized-crafted-spent-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "b4bb9774c6615002dc8a92f251f638342d9a08a2b1becd125c66b5ef354ddc15"
+  },
+  "python_regression": {
+    "schema_version": 1,
+    "passed": true,
+    "commands": [
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "scripts/tests"
+        ],
+        "log": "python.log",
+        "returncode": 0,
+        "seconds": 94.088
+      }
+    ],
+    "results": {
+      "python": {
+        "executed": 619,
+        "passed": true,
+        "log_sha256": "41c990f53c29da9713fcccf76957a5db0747db49df587cf50074c4aa7a746f51"
+      }
+    },
+    "source_before": {
+      "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+      "source_fingerprint": "3f50181c449177d7886479f0940d3b4ae32057360ccb87806922df985b7bdb25"
+    },
+    "source_after": {
+      "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+      "source_fingerprint": "3f50181c449177d7886479f0940d3b4ae32057360ccb87806922df985b7bdb25"
+    }
+  },
+  "normal_component_full": {
+    "course": "build/oblivion-compat/crafted-poison/components-existing-dev-01",
+    "executed": 3304,
+    "inventory_matches": true,
+    "failed": 0,
+    "skipped": 0,
+    "filter": "*",
+    "scope": "Correct verifier path applied to same unchanged binary inventory and XML; no test rerun.",
+    "original_attempt": "result.json: testexit0, verifier command used wrong path",
+    "verifier": ".codex/skills/openmw-build-test/scripts/verify_gtest.py",
+    "binary_sha256": "e8519f2759100625842050015a96443c3323e4c2b40ec095de805d2ad8ca0358",
+    "build_evidence": "build/oblivion-compat/crafted-poison/normal-state-01",
+    "build_source": {
+      "head": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+      "source_fingerprint": "57d08fe00d977c440f2e8b6539ad1f1327b0b65b7e8333cd02591efb6ec7b8fe"
+    },
+    "inventory_sha256": "68e1099fb4ab32d8a154478a6c42eaa2529cfd55db059d0a53f2b8678094583e",
+    "xml_sha256": "c454aad7d65def732e73a6cdcd3d3635bb89a56be27145c35d4cae9919317c08"
+  }
+}

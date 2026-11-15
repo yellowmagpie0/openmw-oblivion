@@ -1128,10 +1128,12 @@ namespace MWMechanics
         // their owner update. First application requires the World preparation sink.
         void updateNonPlayerFrameResourcesFromClock(const MWWorld::Ptr& actor, const OblivionActorMovement& movement,
             bool hasActiveMagicItem, const OblivionFrameSettings& settings,
-            const std::function<void()>& prepareParalysis = {}, bool processEffects = true);
+            const std::function<void()>& prepareParalysis = {}, bool processEffects = true,
+            const ESM4::EssentialRecoverySettings& recovery = {}, bool godMode = false);
         void updatePlayerFrameResourcesFromClock(MWWorld::Player& player, const OblivionActorMovement& movement,
             bool hasActiveMagicItem, const OblivionFrameSettings& settings,
-            const std::function<void()>& prepareParalysis = {}, bool processEffects = true);
+            const std::function<void()>& prepareParalysis = {}, bool processEffects = true,
+            const ESM4::EssentialRecoverySettings& recovery = {}, bool godMode = false);
         void spendPlayerJumpFatigue(MWWorld::Player& player, std::int32_t encumbrance, bool canSpend,
             const OblivionFatigueSettings& settings);
         float getPlayerValue(std::uint8_t value) const;

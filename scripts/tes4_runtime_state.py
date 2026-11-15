@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 104
+CURRENT_VERSION = 105
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -840,7 +840,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         _validate_ownership_extras(reference, version)
         _validate_drop_relations(reference, version)
         poison = reference.get("weapon_poison")
-        if poison is not None and (version < 104 or not _canonical_content_key(poison)):
+        if poison is not None and (not _weapon_poison_key(poison, version)):
             raise RuntimeStateError("Invalid loose weapon coating")
         for name in ("item_condition", "item_charge"):
             extra = reference.get(name)
@@ -1185,6 +1185,19 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             sources.add(effect["enchantment"])
             if native_float(effect["magnitude"]) != 25 or not 0 <= native_float(effect["elapsed"]) < 30:
                 raise RuntimeStateError("Invalid TES4 scroll Chameleon magnitude or lifetime")
+
+        poisons = check_collection(actor.get("weapon_poison_effects", []), "weapon poison list")
+        if poisons and version < 105:
+            raise RuntimeStateError("Timed weapon poison requires schema105")
+        for effect in poisons:
+            if not isinstance(effect, dict) or set(effect) != {"poison", "attacker", "magnitude", "duration", "elapsed"}:
+                raise RuntimeStateError("Invalid timed weapon poison fields")
+            key = effect["poison"]
+            if (not _weapon_poison_key(key, version) or not key.startswith("dynamic:shared-item:")
+                    or effect["attacker"] != "dynamic:player:0000000000000001"
+                    or native_float(effect["magnitude"]) != 1 or native_float(effect["duration"]) != 5
+                    or not 0 <= native_float(effect["elapsed"]) < 5):
+                raise RuntimeStateError("Invalid timed weapon poison ownership or lifetime")
 
         lights = check_collection(actor.get("potion_light_effects", []), "potion Light list")
         if lights and (version < 99 or owner != 0):
@@ -2737,6 +2750,17 @@ def _write_actor_ai(writer: _Writer, actor: dict[str, Any], version: int) -> Non
     writer.string(str(actor.get("interruption_reason", "")))
 
 
+def _weapon_poison_key(value, version):
+    if _canonical_content_key(value):
+        return version >= 104
+    try:
+        kind, namespace, serial = _global_identity(value)
+        return (version >= 105 and kind == "dynamic" and namespace == "shared-item"
+                and serial > 0 and value == f"dynamic:shared-item:{serial:016x}")
+    except RuntimeStateError:
+        return False
+
+
 def _canonical_content_key(value):
     try:
         kind, namespace, serial = _global_identity(value)
@@ -2796,7 +2820,7 @@ def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) 
     for item in value:
         _validate_ownership_extras(item, version)
         poison = item.get("weapon_poison")
-        if poison is not None and (version < 104 or not _canonical_content_key(poison)
+        if poison is not None and (not _weapon_poison_key(poison, version)
                 or item.get("count") != 1 or item.get("bound_source") is not None):
             raise RuntimeStateError("Invalid native weapon coating")
         owner = item.get("script_owner")
@@ -3222,6 +3246,12 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                            "elapsed": reader.unpack("<f")} for _ in range(reader.count())]
                 if lights:
                     actor["potion_light_effects"] = lights
+            if version >= 105:
+                poisons = [{"poison": reader.string(), "attacker": reader.string(),
+                            "magnitude": reader.unpack("<f"), "duration": reader.unpack("<f"),
+                            "elapsed": reader.unpack("<f")} for _ in range(reader.count())]
+                if poisons:
+                    actor["weapon_poison_effects"] = poisons
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -4128,6 +4158,15 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<f", effect["magnitude"])
                     writer.pack("<f", effect["duration"])
                     writer.pack("<f", effect["elapsed"])
+            if version >= 105:
+                poisons = actor.get("weapon_poison_effects", [])
+                writer.pack("<I", len(poisons))
+                for effect in poisons:
+                    writer.string(effect["poison"])
+                    writer.string(effect["attacker"])
+                    writer.pack("<f", effect["magnitude"])
+                    writer.pack("<f", effect["duration"])
+                    writer.pack("<f", effect["elapsed"])
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))
@@ -4815,7 +4854,7 @@ def _upgrade_drop_relations(state: dict[str, Any]) -> None:
 def _upgrade_reference_item_extras(state: dict[str, Any]) -> None:
     for reference in state.get("references", []):
         poison = reference.get("weapon_poison")
-        if poison is not None and (state.get("schema_version", 1) < 104 or not _canonical_content_key(poison)):
+        if poison is not None and (not _weapon_poison_key(poison, state.get("schema_version", 1))):
             raise RuntimeStateError("Invalid loose weapon coating")
         reference.setdefault("weapon_poison", None)
         for name in ("item_condition", "item_charge"):

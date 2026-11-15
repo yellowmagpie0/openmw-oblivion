@@ -3392,7 +3392,7 @@ namespace MWMechanics
                 || request.mItem.getType() != ESM::REC_WEAP
                 || !request.mItem.getCellRef().getRefId().getIf<ESM::FormId>()
                 || request.mExpectedPoison.isNull()
-                || !request.mExpectedPoison.isContent())
+                || !ESM4::weaponPoisonIdentity(request.mExpectedPoison))
                 throw std::invalid_argument("invalid native poison contact request");
             auto& inventory = attacker.getClass().getInventoryStore(attacker);
             const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
@@ -3407,6 +3407,15 @@ namespace MWMechanics
                 conditions.push_back({request.mItem, request.mItem.getCellRef(), false,
                     OblivionWeaponBreakDisposition::None});
                 found = std::prev(conditions.end());
+            }
+            if (request.mExpectedPoison.isDynamic())
+            {
+                if (attackerKey != ESM::FormKey::dynamic("player", 1) || !receiving
+                    || !MWWorld::OblivionProfileServices::isCraftedWeaponPoison(
+                        *MWBase::Environment::get().getESMStore(), request.mExpectedPoison))
+                    throw std::invalid_argument("invalid crafted poison contact definition or attacker");
+                if (receivingLife->mPhase == ESM4::ActorLifePhase::Alive)
+                    receiving->mWeaponPoisonEffects.push_back({request.mExpectedPoison, attackerKey, 1, 5, 0});
             }
             found->mApplyPoison = true;
         }
@@ -5923,9 +5932,29 @@ namespace MWMechanics
         }
     }
 
+    namespace
+    {
+        float prepareWeaponPoison(ESM4::RuntimeActorValues& values, float duration, bool dead, bool process)
+        {
+            if (!process) return 0;
+            if (dead) { values.mWeaponPoisonEffects.clear(); return 0; }
+            float damage = 0;
+            for (auto it = values.mWeaponPoisonEffects.begin(); it != values.mWeaponPoisonEffects.end(); )
+            {
+                const auto step = ESM4::advanceWeaponPoison(*it, duration);
+                damage += step.mDamage;
+                it->mElapsed = step.mElapsed;
+                if (step.mExpired) it = values.mWeaponPoisonEffects.erase(it);
+                else ++it;
+            }
+            return damage;
+        }
+    }
+
     void OblivionCombatService::updateNonPlayerFrameResourcesFromClock(const MWWorld::Ptr& actor,
         const OblivionActorMovement& movement, bool hasActiveMagicItem, const OblivionFrameSettings& settings,
-        const std::function<void()>& prepareParalysis, bool processEffects)
+        const std::function<void()>& prepareParalysis, bool processEffects,
+        const ESM4::EssentialRecoverySettings& recovery, bool godMode)
     {
         const auto before = nonPlayerValues(actor);
         const auto key = before.mActor;
@@ -5935,6 +5964,7 @@ namespace MWMechanics
         const float managerTime = mActorManagerTime;
         updateWithActorClock(mActorUpdateTimes, key, managerTime, [&](float elapsed) {
             auto candidate = before;
+            const float poisonDamage = prepareWeaponPoison(candidate, elapsed, deadOrEssential, processEffects);
             const auto applications = prepareMeleeParalysis(candidate, elapsed, deadOrEssential, processEffects);
             if (!deadOrEssential)
                 updateFrameResources(candidate,
@@ -5946,13 +5976,21 @@ namespace MWMechanics
             const auto* current = findActorValues(key);
             if (!current || *current != before || mActorManagerTime != managerTime)
                 throw std::runtime_error("native paralysis frame changed during preparation");
-            if (candidate != before) publishNonPlayerValues(actor, std::move(candidate));
+            if (poisonDamage > 0)
+            {
+                candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner, 8,
+                    ESM4::ActorValueModifier::Damage, -poisonDamage);
+                publishHealthChange(actor, std::move(candidate), actor.getClass().isEssential(actor), recovery,
+                    false, ESM::FormKey::dynamic("player", 1));
+            }
+            else if (candidate != before) publishNonPlayerValues(actor, std::move(candidate));
         });
     }
 
     void OblivionCombatService::updatePlayerFrameResourcesFromClock(MWWorld::Player& player,
         const OblivionActorMovement& movement, bool hasActiveMagicItem, const OblivionFrameSettings& settings,
-        const std::function<void()>& prepareParalysis, bool processEffects)
+        const std::function<void()>& prepareParalysis, bool processEffects,
+        const ESM4::EssentialRecoverySettings& recovery, bool godMode)
     {
         const auto before = playerValues();
         const auto key = before.mActor;
@@ -5963,6 +6001,7 @@ namespace MWMechanics
         const float managerTime = mActorManagerTime;
         updateWithActorClock(mActorUpdateTimes, key, managerTime, [&](float elapsed) {
             auto candidate = before;
+            const float poisonDamage = prepareWeaponPoison(candidate, elapsed, deadOrEssential, processEffects);
             const auto applications = prepareMeleeParalysis(candidate, elapsed, deadOrEssential, processEffects);
             const bool dead = life ? life->mPhase == ESM4::ActorLifePhase::Dead
                 : ptr.getClass().getCreatureStats(ptr).isDead();
@@ -5993,7 +6032,15 @@ namespace MWMechanics
             const auto* current = findActorValues(key);
             if (!current || *current != before || mActorManagerTime != managerTime)
                 throw std::runtime_error("native paralysis frame changed during preparation");
-            if (candidate != before)
+            if (poisonDamage > 0 && !godMode)
+            {
+                candidate.mValues[8] = ESM4::changeActorValueModifier(candidate.mValues[8], candidate.mOwner, 8,
+                    ESM4::ActorValueModifier::Damage, -poisonDamage);
+                preparePlayerValues(candidate, settings.mFatigue.mPlayerBase);
+                publishHealthChange(ptr, std::move(candidate), ptr.getClass().isEssential(ptr), recovery,
+                    false, ESM::FormKey::dynamic("player", 1));
+            }
+            else if (candidate != before)
                 publishPlayerValues(player, std::move(candidate), settings.mFatigue.mPlayerBase);
         });
     }
@@ -7711,6 +7758,8 @@ namespace MWMechanics
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
         {
+            if (state.mVersion < 105 && !actor.mWeaponPoisonEffects.empty())
+                throw std::invalid_argument("native timed poison requires an Oblivion v105+ save");
             if (state.mVersion < 94 && !actor.mPotionAttributeEffects.empty())
                 throw std::invalid_argument("native potion attributes require an Oblivion v94+ save");
             if (state.mVersion < 93 && !actor.mScrollChameleon.empty())

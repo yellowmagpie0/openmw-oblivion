@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "name": "Original novice crafted poison: miss",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetAV Health\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal Actor=types.Actor\nlocal I=require('openmw.interfaces')\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function()\n frames=frames+1;if frames%15~=0 then return end\n assert(not Actor.isDead(self),'Player died at tutorial alchemy UI')\n local inv=Actor.inventory(self)\n print('AlchemyUI stock='..inv:countOf(core.getFormId('Oblivion.esm',0xc7968))..'/'..inv:countOf(core.getFormId('Oblivion.esm',0x6251f))..'/'..inv:countOf(core.getFormId('Oblivion.esm',0x8446d))..' paused='..tostring(core.isWorldPaused())..' mode='..tostring(I.UI.getMode())..' controls='..tostring(types.Player.getControlSwitch(self,types.Player.CONTROL_SWITCH.Controls)))\n local bottles=0;for _,o in ipairs(inv:getAll()) do if types.Potion.objectIsInstance(o) then local r=types.Potion.record(o);if r.name=='Damage Health' then bottles=bottles+o.count;print('AlchemyUI poison count='..o.count..' weight='..r.weight..' value='..r.value..' id='..o.recordId) end end end\n print('CraftedPoison bottles='..bottles..' health='..Actor.stats.dynamic.health(self).current..' paused='..tostring(core.isWorldPaused()))\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "CraftedPoison bottles=0 health=80",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "mouse_down",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=[0-9]+ action=2",
+      "after_start": false,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee miss committed: actor=dynamic:player:0000000000000001",
+      "after_start": false,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001",
+      "after_start": false,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "Tab",
+      "seconds": 0.3
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "mouse_move_absolute",
+      "x": 157,
+      "y": 478
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "screenshot",
+      "name": "axe-coating-tooltip.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "CraftedPoison bottles=0 health=80",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "Dangling inventory script instance"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-tutorial-poison-use",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": false
+}

@@ -7005,3 +7005,38 @@ TEST(ESM4RuntimeState, WeaponPoison104PersistsInstanceAndRejectsLegacyOrStackLos
     EXPECT_TRUE(legacy.mPlayer.mInventory.front().mWeaponPoison.isNull());
     EXPECT_TRUE(legacy.mReferences.front().mWeaponPoison.isNull());
 }
+
+TEST(ESM4RuntimeState, CraftedWeaponPoison105RetainsRemainingLifetimeAndRejectsLoss)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    const auto poison = ESM::FormKey::dynamic("shared-item", 1);
+    actor.mWeaponPoisonEffects.push_back({poison, ESM::FormKey::dynamic("player", 1), 1, 5, 2});
+    state.mNativeActorValues.push_back(actor);
+    state.mPlayer.mInventory.front().mWeaponPoison = poison;
+    const auto wire = state.serializeBinary();
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(loaded.mNativeActorValues.front().mWeaponPoisonEffects, actor.mWeaponPoisonEffects);
+    EXPECT_EQ(loaded.mPlayer.mInventory.front().mWeaponPoison, poison);
+    EXPECT_EQ(loaded.serializeBinary(), wire);
+    EXPECT_NE(loaded.canonicalJson().find("weapon_poison_effects"), std::string::npos);
+    const auto step = ESM4::advanceWeaponPoison(loaded.mNativeActorValues.front().mWeaponPoisonEffects.front(), 10);
+    EXPECT_NEAR(step.mDamage, 3, 0.0001);
+    EXPECT_TRUE(step.mExpired);
+    auto bad = state;
+    bad.mVersion = 104;
+    EXPECT_ANY_THROW(bad.serializeBinary());
+    bad = state;
+    bad.mNativeActorValues.front().mWeaponPoisonEffects.front().mElapsed = 5;
+    EXPECT_ANY_THROW(bad.serializeBinary());
+    bad = state;
+    bad.mNativeActorValues.front().mWeaponPoisonEffects.front().mAttacker = {};
+    EXPECT_ANY_THROW(bad.serializeBinary());
+    state.mNativeActorValues.front().mWeaponPoisonEffects.clear();
+    state.mPlayer.mInventory.front().mWeaponPoison = {};
+    state.mVersion = 104;
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorValues.front().mWeaponPoisonEffects.empty());
+}

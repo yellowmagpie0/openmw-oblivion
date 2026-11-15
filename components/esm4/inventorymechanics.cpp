@@ -1,4 +1,5 @@
 #include "inventorymechanics.hpp"
+#include "weaponpoison.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -100,7 +101,7 @@ namespace ESM4
             || !std::isfinite(item.mCharge)
             || !std::isfinite(item.mRemainingUsageTime))
             return false;
-        if (!item.mWeaponPoison.isNull() && (!item.mWeaponPoison.isContent() || item.mCount != 1
+        if (!item.mWeaponPoison.isNull() && (!weaponPoisonIdentity(item.mWeaponPoison) || item.mCount != 1
             || item.mBoundSource || ESM::FormKey::deserialize(item.mWeaponPoison.serialize()) != item.mWeaponPoison))
             return false;
         item.mEquippedSlots &= InventorySlotMask;

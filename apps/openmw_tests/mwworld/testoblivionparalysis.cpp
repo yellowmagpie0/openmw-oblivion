@@ -339,3 +339,38 @@ TEST(OblivionParalysisTest, BinaryRestorePublishesAndClearsDerivedPredicateOnlyW
         EXPECT_FALSE(stats.isParalyzed());
     }
 }
+
+TEST(OblivionWeaponPoisonTest, RecipientClockSkipsMissingPresentationAndNeverReplaysExpiry)
+{
+    NativeWorldFixture fixture;
+    const auto actor = setupActor(fixture, Kind::Creature, ESM4::ActorValueProcess::Active);
+    auto& combat = *fixture.mWorld.getOblivionCombatService();
+    const auto key = actorKey(actor, Kind::Creature);
+    auto values = *combat.findActorValues(key);
+    values.mWeaponPoisonEffects.push_back({ESM::FormKey::dynamic("shared-item", 1),
+        ESM::FormKey::dynamic("player", 1), 1, 5, 0});
+    publish(fixture, actor, Kind::Creature, values);
+    auto settings = MWWorld::resolveOblivionFrameSettings(fixture.mWorld.getStore());
+    settings.mMagicka = {0, 0};
+    settings.mFatigue.mRegeneration = {0, 0};
+    const auto update = [&](bool ready) {
+        combat.updateNonPlayerFrameResourcesFromClock(actor, {0, false, false}, false, settings, {}, ready);
+    };
+    const float health = combat.getNonPlayerValue(actor, 8);
+    update(false);
+    combat.advanceFrameClock(1);
+    update(false);
+    EXPECT_EQ(combat.findActorValues(key)->mWeaponPoisonEffects.front().mElapsed, 0);
+    EXPECT_EQ(combat.getNonPlayerValue(actor, 8), health);
+    combat.advanceFrameClock(1);
+    update(true);
+    EXPECT_NEAR(combat.getNonPlayerValue(actor, 8), health - 1, .001);
+    EXPECT_NEAR(combat.findActorValues(key)->mWeaponPoisonEffects.front().mElapsed, 1, .001);
+    combat.advanceFrameClock(10);
+    update(true);
+    EXPECT_NEAR(combat.getNonPlayerValue(actor, 8), health - 5, .001);
+    EXPECT_TRUE(combat.findActorValues(key)->mWeaponPoisonEffects.empty());
+    combat.advanceFrameClock(2);
+    update(true);
+    EXPECT_NEAR(combat.getNonPlayerValue(actor, 8), health - 5, .001);
+}

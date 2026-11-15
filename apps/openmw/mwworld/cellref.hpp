@@ -134,7 +134,7 @@ namespace MWWorld
         const ESM::FormKey& getNativeWeaponPoison() const noexcept { return mNativeWeaponPoison; }
         void setNativeWeaponPoison(ESM::FormKey poison)
         {
-            if (!poison.isNull() && (!poison.isContent()
+            if (!poison.isNull() && (!(poison.isContent() || (poison.isDynamic() && poison.mNamespace == "shared-item" && poison.mValue > 0))
                 || ESM::FormKey::deserialize(poison.serialize()) != poison))
                 throw std::invalid_argument("Invalid native weapon coating");
             mNativeWeaponPoison = std::move(poison);

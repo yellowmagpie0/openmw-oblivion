@@ -1191,6 +1191,9 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 potion attribute ownership");
         for (const auto& effect : mPotionAttributeEffects)
             effect.validate();
+        if (mWeaponPoisonEffects.size() > sMaximumCollectionSize)
+            throw std::runtime_error("Too many weapon poison applications");
+        for (const auto& effect : mWeaponPoisonEffects) effect.validate();
         if (mPotionLightEffects.size() > sMaximumCollectionSize
             || (!mPotionLightEffects.empty() && mOwner != ActorValueOwner::Player))
             throw std::runtime_error("Invalid TES4 potion Light ownership");
@@ -2157,6 +2160,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 105 && !actor.mWeaponPoisonEffects.empty())
+                throw std::runtime_error("Timed weapon poison requires schema105");
             if (mVersion < 99 && !actor.mPotionLightEffects.empty())
                 throw std::runtime_error("TES4 potion Light requires schema99");
             if (mVersion < 95 && !actor.mUsedPowers.empty())
@@ -2806,7 +2811,8 @@ namespace ESM4
             for (const RuntimeInventoryItem& item : inventory)
             {
                 validateOwnershipExtras(item.mOwnershipRank, item.mOwnershipGlobal, mVersion);
-                if (!item.mWeaponPoison.isNull() && (mVersion < 104 || !item.mWeaponPoison.isContent()
+                if (!item.mWeaponPoison.isNull() && (mVersion < 104 || !weaponPoisonIdentity(item.mWeaponPoison)
+                    || (mVersion < 105 && item.mWeaponPoison.isDynamic())
                     || ESM::FormKey::deserialize(item.mWeaponPoison.serialize()) != item.mWeaponPoison
                     || item.mCount != 1 || item.mBoundSource))
                     throw std::runtime_error("Invalid native weapon coating");
@@ -2924,7 +2930,8 @@ namespace ESM4
                 throw std::runtime_error("Duplicate TES4 runtime-state reference: " + reference.mKey.serialize());
             if (reference.mOwner && reference.mOwner->isNull())
                 throw std::runtime_error("TES4 runtime-state reference has a null owner");
-            if (!reference.mWeaponPoison.isNull() && (mVersion < 104 || !reference.mWeaponPoison.isContent()
+            if (!reference.mWeaponPoison.isNull() && (mVersion < 104 || !weaponPoisonIdentity(reference.mWeaponPoison)
+                || (mVersion < 105 && reference.mWeaponPoison.isDynamic())
                 || ESM::FormKey::deserialize(reference.mWeaponPoison.serialize()) != reference.mWeaponPoison))
                 throw std::runtime_error("Invalid loose weapon coating");
             for (const auto extra : {reference.mItemCondition, reference.mItemCharge})
@@ -3630,6 +3637,18 @@ namespace ESM4
                     {
                         writeKey(writer, effect.mPotion);
                         writeKey(writer, effect.mLight);
+                        writer.floating(effect.mMagnitude);
+                        writer.floating(effect.mDuration);
+                        writer.floating(effect.mElapsed);
+                    }
+                }
+                if (mVersion >= 105)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mWeaponPoisonEffects.size()));
+                    for (const auto& effect : actor.mWeaponPoisonEffects)
+                    {
+                        writeKey(writer, effect.mPoison);
+                        writeKey(writer, effect.mAttacker);
                         writer.floating(effect.mMagnitude);
                         writer.floating(effect.mDuration);
                         writer.floating(effect.mElapsed);
@@ -4900,6 +4919,13 @@ namespace ESM4
                     const auto count = reader.count();
                     for (std::uint32_t j = 0; j < count; ++j)
                         actor.mPotionLightEffects.push_back(
+                            {nativeKey(), nativeKey(), reader.float32(), reader.float32(), reader.float32()});
+                }
+                if (result.mVersion >= 105)
+                {
+                    const auto count = reader.count();
+                    for (std::uint32_t j = 0; j < count; ++j)
+                        actor.mWeaponPoisonEffects.push_back(
                             {nativeKey(), nativeKey(), reader.float32(), reader.float32(), reader.float32()});
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
@@ -6412,6 +6438,22 @@ namespace ESM4
                                 << ",\"delta\":" << std::setprecision(17) << modifier.mDelta << '}';
                         }
                         stream << "]}";
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 105 && !actor.mWeaponPoisonEffects.empty())
+                {
+                    stream << ",\"weapon_poison_effects\":[";
+                    bool first = true;
+                    for (const auto& effect : actor.mWeaponPoisonEffects)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        stream << "{\"poison\":\"" << escapeJson(effect.mPoison.serialize())
+                            << "\",\"attacker\":\"" << escapeJson(effect.mAttacker.serialize())
+                            << "\",\"magnitude\":" << effect.mMagnitude
+                            << ",\"duration\":" << effect.mDuration
+                            << ",\"elapsed\":" << std::setprecision(17) << effect.mElapsed << '}';
                     }
                     stream << ']';
                 }

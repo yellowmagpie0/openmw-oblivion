@@ -768,8 +768,18 @@ namespace MWWorld
         return key;
     }
 
+    bool OblivionProfileServices::isCraftedWeaponPoison(const ESMStore& store,
+        const ESM::FormKey& poison, const ESMStore* incoming)
+    {
+        const auto id = OblivionInventory::sharedId(poison);
+        if (!id) return false;
+        const auto* definition = incoming ? store.searchForRestore<ESM::Potion>(*id, *incoming)
+            : store.get<ESM::Potion>().search(*id);
+        return definition && ESM4::craftedWeaponPoison(*definition);
+    }
+
     void OblivionProfileServices::validateWeaponPoison(const ESMStore& store,
-        const ESM::RefId& item, const ESM::FormKey& poison)
+        const ESM::RefId& item, const ESM::FormKey& poison, const ESMStore* incoming)
     {
         if (poison.isNull()) return;
         const auto nativeId = nativeItemId(store, item);
@@ -778,7 +788,8 @@ namespace MWWorld
         const auto* potion = store.get<ESM4::Potion>().search(poison);
         const auto* winner = store.getFormKeyIndex().winner(poison);
         if (!weapon || weapon->mData.type > 3 || (weapon->mFlags & ESM4::Rec_Deleted)
-            || !potion || !ESM4::instantWeaponPoisonDamage(*potion)
+            || (!(potion && ESM4::instantWeaponPoisonDamage(*potion))
+                && !isCraftedWeaponPoison(store, poison, incoming))
             || (winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH)))
             throw std::invalid_argument("native coating requires a supported winning weapon and poison");
     }
@@ -825,7 +836,7 @@ namespace MWWorld
             ptr.getCellRef().setNativeItemScale(item.mExtraScale);
             ptr.getCellRef().setNativeBoundSource(item.mBoundSource);
             ptr.getCellRef().setNativeScriptOwner(item.mScriptOwner);
-            validateWeaponPoison(store, ptr.getCellRef().getRefId(), item.mWeaponPoison);
+            validateWeaponPoison(store, ptr.getCellRef().getRefId(), item.mWeaponPoison, incoming);
             ptr.getCellRef().setNativeWeaponPoison(item.mWeaponPoison);
             std::optional<int> slot;
             if (item.mEquippedSlots != 0)

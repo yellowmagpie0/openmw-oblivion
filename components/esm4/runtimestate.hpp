@@ -21,6 +21,7 @@
 #include <components/esm/position.hpp>
 
 #include "aiphase.hpp"
+#include "weaponpoison.hpp"
 #include "charactergenstate.hpp"
 #include "ability.hpp"
 #include "actormovementstate.hpp"
@@ -78,7 +79,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 104;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 105;
 
     struct RuntimeContentIdentity
     {
@@ -441,6 +442,8 @@ namespace ESM4
         // v94: applications own their contributions independently of inventory.
         // A legacy attribute modifier never implies a potion or an expiry time.
         std::vector<PotionAttributeState> mPotionAttributeEffects;
+        // v105: recipient-owned landed crafted poison, independent of inventory.
+        std::vector<WeaponPoisonState> mWeaponPoisonEffects;
         std::vector<PowerUseState> mUsedPowers;
 
         // v99: the consumed potion owns the light until its simulation lifetime ends.

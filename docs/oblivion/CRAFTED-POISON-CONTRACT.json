@@ -1,0 +1,41 @@
+{
+  "status": "Accepted for this original novice recipe and actual Player-to-Goblin course; no complete milestone claim",
+  "scope": "Original Natural Caverns Wisp Stalk Caps plus Stinkhorn Cap novice recipe: generated Damage Health poison, magnitude 1 for 5 seconds, applied to the carried original Rusty Iron War Axe and delivered to original Goblin Skirmisher.",
+  "parent_commit": "4ec79ba4bbbf0c3bfcfca5b370ebe92e012c1186",
+  "source": {
+    "course": "tutorial-alchemy/normal-final-reload-01",
+    "save_sha256": "3daa7c67027e16b2209b831a85c8de82c38b3ae8039e02ad02c1f915fa8a1e86",
+    "generated_key": "dynamic:shared-item:0000000000000001",
+    "weapon": "content:oblivion.esm:090613",
+    "target": "content:oblivion.esm:03b513",
+    "target_base": "content:oblivion.esm:03b512",
+    "branch": "Separate genuine alchemy branch; do not merge inventory or progress with the merchant continuation.",
+    "sanitized_save_sha256": "62a04d89b60303c34eabd168a8c3ccddad932b54a888be6c91c7322f94d845ce"
+  },
+  "required": [
+    "Decline retains bottle and uncoated weapon; accept consumes one bottle and retains its generated definition.",
+    "Cold load and ordinary air miss retain the exact generated coating.",
+    "One real unblocked hit on the zero-poison-resistance original actor consumes the coating and owns a recipient timer independently of inventory.",
+    "Damage accrues over 5 simulation seconds, matching original approximately 1 Health/second; paused menus do not advance it.",
+    "Cold active load resumes remaining lifetime and damage; expiry removes effect and cold spent load never replays it.",
+    "Preserve unrelated inventory, mortar script ownership, quests, generated definition, native allocator and existing skill-use semantics.",
+    "Normal and sanitizer actual gameplay; versioned save codec and appropriate focused/integration gates."
+  ],
+  "tolerances": {
+    "timed_damage_health": 0.02,
+    "original_rate_health_per_second": [
+      0.8,
+      1.2
+    ],
+    "original_lifetime_seconds": [
+      4.25,
+      5.75
+    ]
+  },
+  "open": [
+    "Other recipes and timed poison families",
+    "Poison resistance, accepted block and stacking rules outside this actual single-bottle course",
+    "Original active-effect cold persistence: expected original ESS was absent; no claim",
+    "Full M16/sewer or complete milestone acceptance"
+  ]
+}

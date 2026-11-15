@@ -156,6 +156,8 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
+    Version105 retains generated coating identities and recipient-owned poison
+    lifetimes. Copies preserve these fields without replaying damage.
     Version104 adds per-instance weapon coatings. Current-schema copies preserve
     the exact coating identity; older seeds receive an empty coating.
     Version103 adds additional loose-item bodies. Current-schema fixture copies
@@ -194,7 +196,7 @@ def is_current_fixture_schema(target, current, minimum):
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 104)
+            and target == current and minimum <= target <= 105)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):

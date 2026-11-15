@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "scope": "Isolated original-engine reference, using actual previously brewed poison ESS; not fork fixture setup",
+  "source": "build/oblivion-compat/tutorial-alchemy/original-01/probe-saves/OpenMWAlchemyPoison.ess",
+  "source_sha256": "74fd611725e70cc599d2c8c67a05ef58e24aaa394adff9a42a57a507f9d0aa2a",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "plugin": "Oblivion.esm only",
+  "prefix": "build/oblivion-compat/m15/S2/original-06/compat",
+  "restore": "Back up Documents and Plugins.txt, run under owned isolated Xvfb/prefix, restore exact prior inputs on exit; never overwrite pristine quicksave.",
+  "original_only_console_setup": [
+    "player.additem 90613 1",
+    "player.equipitem 90613",
+    "tai (verify AI Processing Off)",
+    "prid 3b513",
+    "moveto player",
+    "setav health 1000",
+    "getav resistpoison (must0)"
+  ],
+  "normal_input": [
+    "In inventory, short.2second click actual Damage Health bottle; observe Yes/No naming axe; decline and observe retained bottle.",
+    "Click again and accept; observe consumed bottle and green droplet.",
+    "For clean miss, swing before moving target into cell; coating remains.",
+    "Move existing target only in original setup, close console, swing once, reopen console promptly and read getav health.",
+    "Read health twice while paused; close console for a measured interval, pause and read health again; repeat beyond effect expiry.",
+    "Save coated weapon before contact under a distinct name, copy actual ESS, exit and cold-load copy in fresh original process; inspect retained green and missing bottle."
+  ],
+  "evidence": [
+    "original-01/input-log.jsonl",
+    "original-01/observations.json",
+    "original-01/restoration.json",
+    "original-02/input-log.jsonl",
+    "original-02/observations.json",
+    "original-02/restoration.json"
+  ],
+  "evidence_root": "build/oblivion-compat/crafted-poison",
+  "limits": [
+    "The initial one-second held inventory click invoked drag/drop; source reloaded, click shortened to.2second.",
+    "A first intended upward miss actually contacted the target; treated as a hit, not a miss pass.",
+    "Expected active-effect ESS absent despite console save message; no active original cold claim."
+  ]
+}

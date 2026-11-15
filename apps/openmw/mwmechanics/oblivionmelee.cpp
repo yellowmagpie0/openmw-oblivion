@@ -9,6 +9,7 @@
 #include "../mwworld/oblivioncombatdata.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/oblivioncombatmagic.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/environment.hpp"
@@ -2246,13 +2247,15 @@ namespace MWMechanics
             const auto* poison = world.getStore().get<ESM4::Potion>().search(coating);
             const auto* winner = world.getStore().getFormKeyIndex().winner(coating);
             const auto poisonDamage = poison ? ESM4::instantWeaponPoisonDamage(*poison) : std::nullopt;
+            const bool crafted = attacker == player
+                && MWWorld::OblivionProfileServices::isCraftedWeaponPoison(world.getStore(), coating);
             const float resistancePoison = victim == player ? service->getPlayerValue(67)
                 : service->getNonPlayerValue(victim, 67);
             // The real tutorial course has no poison resistance or accepted block.
             // Keep unresolved poison branches explicit instead of silently dropping the coating.
-            if (!poisonDamage || (winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
+            if ((!poisonDamage && !crafted) || (winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
                 || resistancePoison != 0.f || block->mAccepted) return std::nullopt;
-            result.mPoisonHealth = *poisonDamage;
+            result.mPoisonHealth = poisonDamage.value_or(0);
             result.mPoisonUse = OblivionPhysicalPoisonUse{attacker, item, coating};
         }
         result.mEnchantmentHealth = enchantment->mHealth;

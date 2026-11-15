@@ -1,0 +1,40 @@
+{
+  "scope": "Independent original 1.2.0416 observation using the actual bottle from the accepted original alchemy probe",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "brewing_reference": "TUTORIAL-ALCHEMY-ORACLE.json",
+  "original_brewed_save_sha256": "74fd611725e70cc599d2c8c67a05ef58e24aaa394adff9a42a57a507f9d0aa2a",
+  "original_only_setup": "Grant/equip090613; AI off; existing placed03b513 moved to Player and Health1000, ResistPoison0. Failed placeatme03b513 used reference rather than base; no spawn occurred. Fork gameplay grants and actor controls remain prohibited.",
+  "live_probe": "build/oblivion-compat/crafted-poison/original-01",
+  "observations": {
+    "confirmation": "Prompt names Rusty Iron War Axe; No retains bottle, Yes consumes bottle and shows green droplet.",
+    "clean_air_miss": "Done before bringing target into cell; retains green droplet.",
+    "health_samples": [
+      997.28,
+      997.28,
+      996.19,
+      994.17,
+      994.17
+    ],
+    "interpretation": "Paused console repeats997.28; approximately1.1seconds of simulation then996.19; after expiry994.17 remains stable for another interval. Physical damage is not assigned exact-parity significance.",
+    "coated_cold_source": {
+      "path": "build/oblivion-compat/crafted-poison/original-01/probe-saves/OpenMWCraftedCoated.ess",
+      "sha256": "f2482d885112d5965f96b3357a53b1eb35aee9aa8ddc0a1a23684fce8328643c"
+    },
+    "fresh_source_first_hit_repeat_samples": [
+      1000,
+      998.88,
+      997.59
+    ],
+    "repeat_context": "Reloaded actual brewed-bottle save before repeating one first contact; these are not second-hit poison replay observations."
+  },
+  "fresh_process_probe": "build/oblivion-compat/crafted-poison/original-02",
+  "fresh_process_observation": "Green droplet survives; consumed bottle remains absent.",
+  "restoration": "Both wrappers exit0; exact prefix inputs and pristine quicksave hash restored.",
+  "failed_attempts": [
+    "Long inventory click invoked drag/drop: reloaded actual source, shortened click to.2s.",
+    "placeatme used reference03b513: invalid ObjectID; actual base03b512. Corrected to existing placed actor prid/moveto.",
+    "First intended upward air miss actually hit; retain as contact and timer evidence. Clean air miss performed before moving target into cell."
+  ],
+  "limitation": "Console printed Game Saved for OpenMWCraftedActive, but expected ESS was absent when collecting probes. Coated ESS was copied before the collection assertion. Original active cold persistence is not established."
+}
