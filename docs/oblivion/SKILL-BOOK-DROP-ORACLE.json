@@ -1,0 +1,74 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "record_audit": {
+    "BOOK:0x243fc": {
+      "payload_sha256": "506a77eacc66bb0383be56061d027cf57836341d618ef9717d79b637af8a7aad",
+      "subrecords": [
+        "EDID",
+        "FULL",
+        "MODL",
+        "MODB",
+        "MODT",
+        "ICON",
+        "DESC",
+        "DATA"
+      ],
+      "EDID": "SKLxHandtoHand1",
+      "FULL": "Immortal Blood",
+      "MODL": "Clutter\\Books\\Octavo02.NIF",
+      "DATA": {
+        "flags": 0,
+        "book_skill": 5,
+        "value": 25,
+        "weight": 1.0
+      },
+      "scriptless": true,
+      "unenchanted": true
+    },
+    "REFR:0x66cc1": {
+      "payload_sha256": "f88fbfe454e945a8c0f9ee31389001ae07bf6cd132e7324d211ad4f1d321e4ca",
+      "subrecords": [
+        "NAME",
+        "DATA"
+      ],
+      "base": "0x243fc",
+      "position_rotation": [
+        53926.62890625,
+        86135.5390625,
+        412.11285400390625,
+        1.6099177173600765e-06,
+        0.10000026971101761,
+        8.143188523490608e-08
+      ]
+    }
+  },
+  "model": {
+    "member_sha256": "abf39c0b356aa9658ab753ea19c666e187cdc00bb644e2dca01b35fcd0df94d3",
+    "runtime_asset_hash": "0eae81ef5f5cc50219d3e78244708e61",
+    "body_record": 4,
+    "authored_root": 0,
+    "prepared_root": 18,
+    "bodies": 1,
+    "joints": 0,
+    "authored_mass": 1,
+    "body_transform": true
+  },
+  "independent_rules": [
+    {
+      "source": "SKILL-BOOK-READ-ORACLE.json",
+      "scope": "Hash-identified original executable: once-per-book-base skill award, repeat read counters and XP/progression ownership",
+      "artifact_root": "build/oblivion-compat/skill-book/original-01"
+    },
+    {
+      "source": "BOOK-WHOLE-STACK-ORACLE.json",
+      "scope": "Original ordinary takeable book physical ownership; same original Octavo02 member. Applying native transfer to skill book is an inference exercised in fork, not a new original Immortal Blood drop probe",
+      "artifact_root": "build/oblivion-compat/book-whole-stack/original-01"
+    }
+  ],
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "limits": [
+    "No new original game process or native arithmetic probe required for this eligibility change",
+    "Native skill5 maps to AV17; legacy logger can print hexadecimal11 depending on stream state. Audits inspect typed native values and actual award history, not log number alone.",
+    "No bit-identical physics trajectory claim"
+  ]
+}

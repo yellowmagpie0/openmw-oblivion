@@ -4,29 +4,32 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [Charter whole-book stack](BOOK-WHOLE-STACK-CONTRACT.json).
-Second original Charter06efb6 / BOOK026d8b was read/taken into existing06efb5 loot,
-count1->2/BooksRead15->16/allocator16. Native normal/SAN whole2 drop now publishes
-one key16/count2/body4/root18/next17 using original Octavo02. Cold world restores
-physical/quantity ownership; ordinary readerTake returns2, counts16->17 once and
-retires key16/body. Final cold inventory retains2/count17 without replay. Fresh
-normal/SAN one-from2 regressions retain inventory1/world1 and complementary metadata.
-Original whole5 quantity-dialog drop creates one count5 reference and readerTake
-returns5; read-only original observations/mapped ExtraCount instructions agree.
-Isolated original inputs restored exactly. Whole2 counted ownership is an explicit
-same-family inference; original Shift atcount2 drops1, so no shortcut parity claim.
-[Receipt](BOOK-WHOLE-STACK-VERIFICATION.json) separates original, structural,
-compiler, semantic and actual input layers.195 focused/2292 full engine per mode
-and618 Python pass. Failed normal pickup01 targeted distant untouched06efd0;
-nearest-native observer fixes normal02/SAN01. Both gates finished before publishing
-only the2 corrected pickup recipes; reverse fingerprint proves tested C++/other
-files unchanged. No geometry/component change; prior Charter3301-per-mode evidence
-remains separate. No skill/scroll/scripted/enchanted or high-count gameplay claim.
-Prior [Fundaments unit split](BOOK-STACK-VERIFICATION.json) preserves stack siblings;
-[Song singleton drop](SONG-DROP-VERIFICATION.json) introduced BOOK physical ownership.
-[Charter reader/Take](CHARTER-BOOK-VERIFICATION.json) keeps full text and permitted
-combat reading; [ordinary count](ORDINARY-BOOK-READ-VERIFICATION.json) keeps skill
-history separate. No full M13/M16/M18 or TES4 MCP authoring claim.
+Latest completed bounded chunk: [Immortal Blood native transfer](SKILL-BOOK-DROP-CONTRACT.json).
+Original skill BOOK0243fc / placed066cc1 on the independent shore branch was already
+awarded Hand-to-Hand35->36. Normal readerTake gives inventory1/BooksRead3->4;
+normal/SAN native drop publishes key1/count1/body4/root18/next2. Cold world restores
+physics; normal downhill walk/focus/readTake returns1 and counts4->5 without another
+skill award, retires key1/body; final cold inventory retains history, all skills/XP/
+progression, unrelated loot/life/deaths/quests. [Receipt](SKILL-BOOK-DROP-VERIFICATION.json)
+separates reused original rules, structural, compiler, semantic and runtime layers.
+195 focused/2292 full engine per mode and618 Python pass. Shore book slides downhill;
+world acceptance checks original terrain contact, not an indoor proximity assumption.
+Retained harness failures and corrected eye-range approach are linked in the receipt.
+Valid skill indices are admitted, but only skill5 runtime is claimed; scroll/scripted/
+enchanted remain open. No full M13/M15/M16/M18 or TES4 MCP authoring claim.
+
+Separate accepted skill-book continuation (do not merge with main cave branch):
+`build/oblivion-compat/skill-book-drop/normal-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `398a76813259777d0a3b024a8685b7d68b840848bc768d5f89df4c34786b6bf0`.
+SAN: same root `sanitized-inventory-01`, SHA256 `3dbf9b41f958cf750c98f36d161d665b43121204bcdb45b457bcab5842a9e25a`.
+Health83, Hand-to-Hand36, ImmortalBlood1, BooksRead5, awarded history0243fc,
+allocator2/key1 retired. Main Cairn/Wellspring continuation below remains separate.
+
+Prior [Charter whole stack](BOOK-WHOLE-STACK-VERIFICATION.json),
+[Fundaments unit split](BOOK-STACK-VERIFICATION.json),
+[Song singleton drop](SONG-DROP-VERIFICATION.json),
+[Charter reader/Take](CHARTER-BOOK-VERIFICATION.json) and
+[ordinary count](ORDINARY-BOOK-READ-VERIFICATION.json) retain their original scope.
 
 Prior [Alembic](ALEMBIC-DROP-VERIFICATION.json) retains separate original sphere
 children and native loose ownership. [Retort](RETORT-DROP-VERIFICATION.json)
@@ -35,10 +38,11 @@ preserves987 beside2fresh1000; [container discovery](NATIVE-CONTAINER-DISCOVERY-
 exposes original Sack06efcf. [Bonemeal](BONEMEAL-DROP-VERIFICATION.json) retains
 its original movable body. No full M16/M18 or TES4 MCP authoring claim.
 
-Next action: choose another real content source exposing an unimplemented
-acceptance gap. Ordinary singleton, unit split and counted whole-book ownership
-are now covered; keep skill/scroll/scripted/enchanted profiles open.
-Keep independent branches separate; do not enable Zahrasha or reroll the sack.
+Next action: choose the next genuine carried/reached content exposing a remaining
+acceptance gap. Candidate: dropped original partially spent Torch world ignition/
+fuel lifetime, using the main cave continuation and an independent original probe
+if the rule is uncertain. Keep branches separate; do not enable Zahrasha or reroll
+sack contents.
 
 Adjacent sack exploration is diagnostic only: disabled Zahrasha was never enabled;
 ordinary approach reached the sack, whose first roll contained an inkwell/no gold.

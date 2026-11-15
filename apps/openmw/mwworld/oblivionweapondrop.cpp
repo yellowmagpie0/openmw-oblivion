@@ -718,11 +718,13 @@ namespace MWWorld
                 if (baseDefinition->mData.type > 3 || !std::isfinite(baseDefinition->mData.quality)
                     || baseDefinition->mData.quality < 0 || !std::isfinite(baseDefinition->mData.weight)
                     || baseDefinition->mData.weight < 0) return std::nullopt;
-            // Start with ordinary takeable books; scrolls and skill/scripted
-            // books retain their existing path until their own real courses.
-            // A plain book stack uses one counted world reference, as in Oblivion.
+            // Takeable books use one counted world reference. Skill awards
+            // belong to the player's book-base history, not the dropped reference.
+            // Scrolls and scripted books retain their existing path.
             if constexpr (isBook)
-                if (baseDefinition->mData.flags != 0 || baseDefinition->mData.bookSkill != -1
+                if (baseDefinition->mData.flags != 0
+                    || baseDefinition->mData.bookSkill < ESM4::Book::BookSkill_None
+                    || baseDefinition->mData.bookSkill > ESM4::Book::BookSkill_Speechcraft
                     || !std::isfinite(baseDefinition->mData.weight) || baseDefinition->mData.weight < 0)
                     return std::nullopt;
             const auto lightProfile = [&] {

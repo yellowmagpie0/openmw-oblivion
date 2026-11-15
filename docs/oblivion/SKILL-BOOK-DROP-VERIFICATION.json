@@ -1,0 +1,188 @@
+{
+  "status": "Accepted bounded original skill-book native drop, cold physics, readerTake and cold inventory in normal and ASan/UBSan modes",
+  "tested_parent": "a079e70e60bbf83ad16c13277c80ab99b3f10c3f",
+  "evidence_root": "build/oblivion-compat/skill-book-drop",
+  "asset_and_read_state_audit": {
+    "path": "build/oblivion-compat/skill-book-drop/asset-and-read-state-audit.json",
+    "sha256": "5ca8a49d8c74328534b814fd9942d1574e299989e77cedda76514a80a7e6c853"
+  },
+  "publication_notes": [
+    "Normal world02 captured recipe contains five identical expected-log contact entries; deduplicated after its driver receipt completed and before SAN/runtime-final/Python-final02. Observer/input behavior unchanged. Captured per-course manifest hashes retain actual provenance."
+  ],
+  "implementation": {
+    "files": {
+      "apps/openmw/mwworld/oblivionweapondrop.cpp": "8cb07ec620d72a1d4a8e1871c112f210aee89c62c31729d56497ed1a7d368d67"
+    },
+    "change": "Valid authored skill indices -1..20 can use existing native BOOK drop path. Runtime state/schema/award formula/geometry unchanged; Hand-to-Hand skill5 is the exercised profile."
+  },
+  "layers": {
+    "structural": "Typed schema103 save independently decoded/re-encoded per accepted stage; one native reference/count1 plus one original Octavo02 body, retired after readerTake",
+    "compiler": "Both runtime and engine test binaries build;195 focused plus2292 full engine per mode pass",
+    "semantic": "All shared skills/XP, native Player values, progression/award history, unrelated loot, life/deaths, quests and generation state retained",
+    "runtime": "Original066cc1 normal read/Take; inventory1->native world1->inventory1; cold world restores physical owner; final cold inventory retains no duplicate award"
+  },
+  "source": {
+    "save": "build/oblivion-compat/ordinary-book-read/normal-skill-book-regression-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "441adb9057d3468edd89fe10357498bac52c9759fe465e59c218851c2206286b",
+    "branch": "Independent awarded skill-book shore branch; retain main cave continuation separately",
+    "books_read": 3,
+    "hand_to_hand": 36,
+    "health": 83
+  },
+  "acquisition": {
+    "passed": true,
+    "input_sha256": "441adb9057d3468edd89fe10357498bac52c9759fe465e59c218851c2206286b",
+    "save_sha256": "7881f1395254c6cbf6041cafe0858d08b3f770defc66be513075ac00b50a9ec5",
+    "books_read_before": 3,
+    "books_read_after": 4,
+    "awarded_books": [
+      "content:oblivion.esm:0243fc"
+    ],
+    "all_native_values_retained": true,
+    "all_shared_skills_and_progression_retained": true,
+    "next_dynamic_serial": 1,
+    "process": {
+      "pid": 1139936,
+      "start_ticks": 21995518,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skill-book-drop/pre-change-openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skill-book-drop/normal-acquisition-04/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/ordinary-book-read/normal-skill-book-regression-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "fa6e4f184b6a2aa8b33843a4aa8b4e76ed1378a21e5bdc0bebedaaba587e1c0f"
+    }
+  },
+  "baseline": {
+    "passed": true,
+    "input_sha256": "7881f1395254c6cbf6041cafe0858d08b3f770defc66be513075ac00b50a9ec5",
+    "output_sha256": "237e37cc66a151d662e10564de6b4f51d717a93193999380480d27e16e94bbbc",
+    "original_read_history_retained": true,
+    "legacy_world_book_observed": true,
+    "native_body_count": 0,
+    "allocator": 1,
+    "scope": "Rejected native skill-book eligibility reproduced with frozen old binary; legacy world placement exists, not disappearance. Do not continue native course from baseline save.",
+    "process": {
+      "pid": 1141068,
+      "start_ticks": 22005425,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skill-book-drop/pre-change-openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skill-book-drop/normal-baseline-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/skill-book-drop/normal-acquisition-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "fa6e4f184b6a2aa8b33843a4aa8b4e76ed1378a21e5bdc0bebedaaba587e1c0f"
+    }
+  },
+  "courses": {
+    "normal": {
+      "drop": {
+        "course": "build/oblivion-compat/skill-book-drop/normal-drop-01",
+        "save_sha256": "5de2a1fe640c3074bb72b2fc369c33b72ca87604d85201e4b8624d338e747099",
+        "game_sha256": "b11c30817289977e5a8e3e681f9103d9dad038a75f1bad8f5b7ff95b9a9a8e14",
+        "next_dynamic_serial": 2
+      },
+      "world": {
+        "course": "build/oblivion-compat/skill-book-drop/normal-world-02",
+        "save_sha256": "b0948330500fc96bcd247e1e88bc796265a42d47269f3680622a89e63e7e8f37",
+        "game_sha256": "b11c30817289977e5a8e3e681f9103d9dad038a75f1bad8f5b7ff95b9a9a8e14",
+        "next_dynamic_serial": 2
+      },
+      "pickup": {
+        "course": "build/oblivion-compat/skill-book-drop/normal-pickup-02",
+        "save_sha256": "34eb04086401dc6ae17694dd4635955c238e2e847a5e01cf3c34db43935f3fb5",
+        "game_sha256": "b11c30817289977e5a8e3e681f9103d9dad038a75f1bad8f5b7ff95b9a9a8e14",
+        "next_dynamic_serial": 2
+      },
+      "inventory": {
+        "course": "build/oblivion-compat/skill-book-drop/normal-inventory-01",
+        "save_sha256": "398a76813259777d0a3b024a8685b7d68b840848bc768d5f89df4c34786b6bf0",
+        "game_sha256": "b11c30817289977e5a8e3e681f9103d9dad038a75f1bad8f5b7ff95b9a9a8e14",
+        "next_dynamic_serial": 2
+      }
+    },
+    "sanitized": {
+      "drop": {
+        "course": "build/oblivion-compat/skill-book-drop/sanitized-drop-01",
+        "save_sha256": "a86838d6ef17047206e295bdc98447e5bc7bf32e14e32879188ad1143b485846",
+        "game_sha256": "d9ac25575fc14bbe1617e1af89dcaf2b58ea8426a563697d78599ae21b1273e6",
+        "next_dynamic_serial": 2
+      },
+      "world": {
+        "course": "build/oblivion-compat/skill-book-drop/sanitized-world-01",
+        "save_sha256": "35197b079f98dfeda347cc141a892df4236f3952b46adbb7c61f1308fb691fe0",
+        "game_sha256": "d9ac25575fc14bbe1617e1af89dcaf2b58ea8426a563697d78599ae21b1273e6",
+        "next_dynamic_serial": 2
+      },
+      "pickup": {
+        "course": "build/oblivion-compat/skill-book-drop/sanitized-pickup-01",
+        "save_sha256": "3ed4e2009227126c568f18c641ae104247319e58d390a78cbb1b404956277c45",
+        "game_sha256": "d9ac25575fc14bbe1617e1af89dcaf2b58ea8426a563697d78599ae21b1273e6",
+        "next_dynamic_serial": 2
+      },
+      "inventory": {
+        "course": "build/oblivion-compat/skill-book-drop/sanitized-inventory-01",
+        "save_sha256": "3dbf9b41f958cf750c98f36d161d665b43121204bcdb45b457bcab5842a9e25a",
+        "game_sha256": "d9ac25575fc14bbe1617e1af89dcaf2b58ea8426a563697d78599ae21b1273e6",
+        "next_dynamic_serial": 2
+      }
+    }
+  },
+  "oracle": "SKILL-BOOK-DROP-ORACLE.json",
+  "fresh_checks": {
+    "focused_per_mode": 195,
+    "full_engine_per_mode": 2292,
+    "sanitized_partitions": [
+      82,
+      82,
+      82,
+      2046
+    ],
+    "disjoint_exact_union": true,
+    "python": 618,
+    "engine_tested_source": {
+      "head": "a079e70e60bbf83ad16c13277c80ab99b3f10c3f",
+      "source_fingerprint": "40362c194be7b40e2053a9fb8039ce547d3f2603acceb1a58bb81e63f1f3e813"
+    },
+    "python_final": {
+      "head": "a079e70e60bbf83ad16c13277c80ab99b3f10c3f",
+      "source_fingerprint": "6b231871acea019507fdf05eb021ef389d46f0bce807dac8a12aaeddfeba1d72"
+    },
+    "runtime_final": {
+      "head": "a079e70e60bbf83ad16c13277c80ab99b3f10c3f",
+      "source_fingerprint": "8d15e8f733065fa71e3fbf095b07d9824136ba6fa054b90a67054b6b15305d97"
+    }
+  },
+  "provenance": [
+    "Full engine gates precede harness/auditor corrections for genuine shore terrain; C++ remains unchanged and hashes are pinned. Fresh Python checks follow those corrections. Final receipt/contract/handoff publication occurs afterward.",
+    "Prior component3301-per-mode evidence is reused from CHARTER-BOOK-VERIFICATION.json for unchanged NIF/component implementation; no fresh component run claimed.",
+    "Original skill-book reward and same-member book ownership probes retain their original hashes and scope; no new original Immortal Blood drop probe claimed."
+  ],
+  "retained_attempts": [
+    "Acquisition01 gameplay/readTake/save succeeded, rejected expected decimal skill17 log versus stream hex11. No award/value change; log expectation accepts both, typed native AV17 audit mandatory.",
+    "Survey01 rejected resource-version mismatch during concurrent build relink. Inventory screenshot only used for choosing ordinary icon325,475; no accepted continuation.",
+    "Acquisition02 repeated valid gameplay but resources922aeaf7a64d were built parent a079, while frozen pre-change binary embeds d003. Rejected; acquisition03 explicitly pins matching frozen resources26622e2b4489.",
+    "Acquisition02 and03 overlap accidentally exposed controller barrier: two virtual controllers open. Both rejected. All owned probes exited; read-only /proc check found no uinput holder before serial acquisition04.",
+    "Normal world01 preserves typed physics but fails copied indoor distance<200 assertion: original shore slope slides book318 units away, root z305 versus Player409. No engine loss. New world02 requires actual HeightMap contact gap[-5,30), exact tick-zero physical persistence; pickup follows genuine downhill item via ordinary inputs. Original near-player bounds retained for actual drop, not unrelated cold settling.",
+    "Normal pickup01 follows and visually focuses actual book within56 Player units, but eye ray stays162-166 versus150 activation distance. Pure aim loop exhausts; no read/Take/save. Pickup02 walks to20 horizontal units instead of70 and removes redundant forward step, retaining actual native range proof."
+  ],
+  "limits": [
+    "Real native skill-book course covers skill5, not all21 skill types or unread-world first award",
+    "Physics may slide the book downhill; distance is not a stability rule. Cold world requires observed terrain contact and exact tick-zero restored state; retrieval walks to actual native book. No trajectory or numerical bit-parity claim.",
+    "Scripted, enchanted, scroll and NoTake profiles remain excluded",
+    "Independent shore branch remains separate from main cave continuation"
+  ],
+  "sanitizers": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "scope": "Observed actual game environment/libraries required; inherited libasan precedes SDL input shim. No leak coverage."
+  }
+}

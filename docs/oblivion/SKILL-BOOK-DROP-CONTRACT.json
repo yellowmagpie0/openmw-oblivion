@@ -1,0 +1,33 @@
+{
+  "status": "Accepted bounded original awarded skill-book native drop/readTake/cold persistence",
+  "milestone": "M15 native loose ownership / M16 persistent skill-book awards",
+  "content": {
+    "base": "content:oblivion.esm:0243fc",
+    "reference": "content:oblivion.esm:066cc1",
+    "title": "Immortal Blood",
+    "skill_index": 5,
+    "actor_value": 17
+  },
+  "source": {
+    "save": "build/oblivion-compat/ordinary-book-read/normal-skill-book-regression-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "441adb9057d3468edd89fe10357498bac52c9759fe465e59c218851c2206286b",
+    "branch": "Independent awarded skill-book shore branch; retain main cave continuation separately",
+    "books_read": 3,
+    "hand_to_hand": 36,
+    "health": 83
+  },
+  "requirements": [
+    "Read and Take original066cc1 through ordinary input; BooksRead3 to4, no repeat skill award",
+    "Drop carried book into one native BOOK reference and original one-body Octavo02 physics owner",
+    "Cold-load world before reading and taking dynamic reference; BooksRead4 to5, no repeat award despite fresh reference read state",
+    "Final cold inventory retains one book, original award history, all skills and XP/major/attribute/specialization counters, unrelated inventory and quest state"
+  ],
+  "boundaries": [
+    "Valid skill indices -1..20 admitted; real runtime course covers Hand-to-Hand book5",
+    "Scripted, enchanted, scroll and NoTake profiles remain excluded",
+    "No original reference cloning, console grants, teleports or save edits supply fork acceptance",
+    "Existing independently verified skill-book and whole-book physical rules are reused with their original provenance"
+  ],
+  "oracle": "SKILL-BOOK-DROP-ORACLE.json",
+  "verification": "SKILL-BOOK-DROP-VERIFICATION.json"
+}
