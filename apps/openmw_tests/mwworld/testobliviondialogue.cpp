@@ -3981,6 +3981,29 @@ TEST(OblivionTutorialAction, EnableQueryDiscardsBorrowedIndexAfterBackingStorage
     }
 }
 
+TEST(OblivionEnableParent, ParentlessQueriesReadCurrentResidentFlagsAcrossLoadOrders)
+{
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        SwitchFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        // Exercise both actor and ordinary reference roots. Their plugin flags
+        // remain enabled while the authoritative resident changes repeatedly.
+        for (const auto& ptr : {f.mActor, f.mSwitch})
+        {
+            const auto reference = ptr.getCellRef().getFormKey();
+            for (const bool enabled : {false, true, false, true})
+            {
+                if (enabled) ptr.getRefData().enable();
+                else ptr.getRefData().disable();
+                EXPECT_EQ(world.getOblivionReferenceEnabled(reference), enabled);
+            }
+        }
+        EXPECT_EQ(world.getOblivionReferenceEnabled(key(0xeeee)), std::nullopt);
+    }
+}
+
 TEST(OblivionTutorialAction, FollowCellContextReevaluatesAndRestoredStaleRouteKeepsMandatoryPackage)
 {
     MWClass::ESM4Door::registerSelf();
