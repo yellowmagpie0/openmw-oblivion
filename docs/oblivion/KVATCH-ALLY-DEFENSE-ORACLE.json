@@ -1,0 +1,54 @@
+{
+  "status": "Independent helper semantics reused; original aggregate guard encounter observed. Individual native killer/trigger attribution was not captured.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_save_sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+  "probe": "build/oblivion-compat/kvatch-ally-defense/original-01",
+  "setup": "Original source, ordinary What will you do now?/Help/agreement through stage10. Declared original-only Player MoveTo setup to Savlian, then marker00cef7 to exercise gate-authored spawns; return Player to Savlian and offset200. No NPC placement, creature injection, StartCombat, Kill or stat/quest/faction writes. Player draws/blocks; no enemy attack inputs after staging.",
+  "observations": [
+    {
+      "capture": "05-native-agreed-baseline.png",
+      "result": "Stage10; Savlian IsInCombat false and GetCombatTarget null before the encounter."
+    },
+    {
+      "capture": "06-native-gate-staging.png",
+      "result": "A real gate-spawned Scamp is visibly alive and approaching."
+    },
+    {
+      "capture": "07-native-return-to-savlian.png",
+      "result": "Player blocks near the barricade; another guard is present."
+    },
+    {
+      "capture": "09-native-current-barricade.png",
+      "result": "Merandil has changed to a drawn sword."
+    },
+    {
+      "capture": "11-native-guard-and-gate-state.png",
+      "result": "Original gate ShowVars count3/deadCount3. Final Savlian/Merandil target queries are empty after the encounter; individual killing blows were not recorded."
+    }
+  ],
+  "inference": "The aggregate scene is consistent with guard combat clearing the actual spawns without Player creature attacks. It does not establish which guard acquired which enemy or exact notification timing.",
+  "reused_rules": {
+    "source": "M15-NATIVE-RULE-PROVENANCE.md: Fight score for AI and alarm response; Alarm recipient delivery gate",
+    "helper": "Original00546190, complete independent instruction cases; friend term when enabled and target disposition < friend disposition, with responsibility gate disabled in the recorded incident caller.",
+    "scope": "Reuse immutable helper semantics and installed settings; this runtime chunk chooses a bounded current-controller/detection policy, not full native alarm/crime propagation."
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "wrapper_exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "cleanup": {
+    "owner": "8e34537c-d153-48b7-aad4-317f9274fc47",
+    "remaining_owned_processes": [],
+    "clean": true
+  },
+  "scope_limits": [
+    "No direct native individual killer attribution or exact event-order assertion.",
+    "Fork primary acceptance must show actual NPC controller/target, physical attack/damage, Player survival and save/cold continuity using the original Scamps.",
+    "No full crime/reporting/culpability, zero-aggression guard exemption, NPC-offender or general companion-defense acceptance."
+  ]
+}

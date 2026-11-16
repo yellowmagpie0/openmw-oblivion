@@ -27,14 +27,30 @@ mode; Python:621. [Contract](KVATCH-FACTION-REACTION-CONTRACT.json),
 [original oracle](KVATCH-FACTION-REACTION-ORACLE.json),
 [verification](KVATCH-FACTION-REACTION-VERIFICATION.json).
 
-**Next chunk: actual gate approach and entry from the completed agreement.**
-Use the normal cold save:
-`build/oblivion-compat/kvatch-faction-reaction/normal-savlian-agreement-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `703fcbfb42cbd614ab841a897e6d1db83788cb7a8b00e533b19d345792b14e42`.
+**Latest accepted route slice: NPC defense against the real gate Scamps.**
+Nearby original Kvatch NPCs now use existing friend-disposition fight scoring
+against detected Creatures currently targeting the living Player. All three
+guards acquire a real Scamp; Savlian commits physical damage, reducing saved
+health40→32.8516. Normal/SAN own-save cold processes preserve that damage,
+controllers and attack intent, then commit a new damaging attack without
+repeating the saved hit. Four primary runtime courses, engine2,310 per mode
+and Python621 pass. No new incident ledger or save schema.
+[Contract](KVATCH-ALLY-DEFENSE-CONTRACT.json),
+[limited independent original oracle](KVATCH-ALLY-DEFENSE-ORACLE.json),
+[verification](KVATCH-ALLY-DEFENSE-VERIFICATION.json).
+Original live evidence records aggregate guard weapon response and gate
+count3/deadCount3, without individual killer attribution or exact trigger timing.
+This slice does not accept general crime/alarm behavior or full encounter clearing.
+
+**Next action: actual gate approach and entry with working guard defense.**
+Use the accepted normal post-hit cold save:
+`build/oblivion-compat/kvatch-ally-defense/normal-kvatch-guard-defense-cold-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `e11b21a684e146ce61ef4d83e65786fdad3620ab9df71e9a876a49fbe402525b`.
 It has an alive Player, earned inventory, three genuine timed Scamps, MS48
-stage10 and guard reaction40. Aim at the original gate and move/activate through
-normal controls. Do not replay Help or inject quest/stat writes. If combat
-blocks travel, use actual earned resources and inspect the observed failure.
+stage10, guard reaction40 and actual guard combat in progress. Continue through
+normal movement/activation; do not replay Help or inject quest/stat/target writes.
+The reusable wide-flank course is `kvatch-gate-entry/agreed-gate-entry.json`.
+Observe any further combat/navigation failure before selecting another chunk.
 Check authored teleport, script flags, weather release and cold continuity;
 then choose the next gap from actual interior gameplay.
 
@@ -47,7 +63,7 @@ The original completed voiced response changes faction state after speaking;
 no identical voice timing is claimed for the fork's text UI.
 
 Reusable compact normal/SAN producers and standalone verified archives are under
-`build/oblivion-compat/kvatch-faction-reaction`. Their loaded ELF sections/entry
+`build/oblivion-compat/kvatch-ally-defense`. Their loaded ELF sections/entry
 match the full builds. Earlier accepted full-debug producers remain recoverable
 from their original durable archives; their executable caches were retired.
 Failed probes/archive/input attempts stay in their ignored course directories.

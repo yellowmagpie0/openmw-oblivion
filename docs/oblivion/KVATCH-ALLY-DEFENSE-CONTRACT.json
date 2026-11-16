@@ -1,0 +1,46 @@
+{
+  "status": "Accepted; four primary normal/SAN post-hit defense/cold courses, exact engine/Python gates and durable compact producers verified.",
+  "parent": "2081d3b3a9",
+  "course": "Savlian barricade -> first Kvatch Oblivion Gate -> original interior",
+  "chunk": "NPC acquisition uses existing friend-disposition fight scoring when a detected Creature currently targets the living Player.",
+  "source": {
+    "path": "build/oblivion-compat/kvatch-faction-reaction/normal-savlian-agreement-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "703fcbfb42cbd614ab841a897e6d1db83788cb7a8b00e533b19d345792b14e42",
+    "provenance": "Actual earned-Amulet inventory, original Savlian agreement/stage10, directed guard reaction40, three genuine timed gate-spawned Scamps. No quest/stat/target/controller injection."
+  },
+  "observed_failure": {
+    "case": "build/oblivion-compat/kvatch-gate-entry/normal-agreed-gate-entry-01",
+    "finding": "Repeated actual Scamp melee commits against Player; nearby active Savlian has no controller. Merandil and Jesan are also enabled/active with Aggression5 and no controllers. No new unsupported command; route ends in Player death."
+  },
+  "content": {
+    "guards": [
+      "028a7a",
+      "028a92",
+      "028a91"
+    ],
+    "guard_bases": [
+      "028007",
+      "028035",
+      "02800b"
+    ],
+    "creature_base": "03e9cb",
+    "spawn_marker": "091229",
+    "template": "09122a",
+    "template_script": "09122b",
+    "quest": "0224d8",
+    "winning_audit": "build/oblivion-compat/kvatch-ally-defense/winning-content-audit.json"
+  },
+  "acceptance": [
+    "Use the actual saved stage10 encounter. At least one original Kvatch NPC automatically acquires a real current Scamp aggressor through the existing directed controller, without scripted StartCombat or controller writes in the fixture.",
+    "Observe actual guard movement/weapon combat and a committed damaging guard hit on a genuinely spawned Scamp. Player does not attack enemies and remains alive. This is not only a controller-graph assertion.",
+    "After an actual guard hit use ordinary F5, preserving health loss and a live current target. Restart separate normal/SAN processes; inspect actual load-complete controller/intent/life state, resave and observe further guard damage. Validate native106 codec/live equality, inventory/quest/reaction ownership, genuine spawn provenance and no repeated saved committed attack.",
+    "Use focused runtime checks while developing, then appropriate normal/SAN engine and Python integration gates at the checkpoint; archive exact tested producers and commit locally before the next route chunk."
+  ],
+  "scope_limits": [
+    "Only NPC observers and Creature aggressors whose current primary controller target is Player. No NPC-offender, arbitrary companion-victim, general crime/reporting/culpability or zero-aggression guard exemption acceptance.",
+    "Reuse existing actor disposition, detection, positive fight score and combat-controller owners; no new persistent incident ledger or save schema. Sleep/restrained/riding/knockdown/death/current-combat exclusions remain.",
+    "Nearest detected eligible target is the existing practical selection policy, not exact native target ranking or RNG/timing parity.",
+    "Native aggregate observations support guard combat against the actual spawns, but individual native killing blows/trigger timing were not recorded; see oracle scope.",
+    "Full clearing of all enemies, gate teleport/interior and full main-quest prerequisites remain separate route acceptance. Record any further observed lifecycle/navigation block rather than calling it complete."
+  ]
+}

@@ -1,0 +1,222 @@
+{
+  "status": "Accepted bounded Kvatch NPC defense, physical damage and live-target cold continuity; full clearing, gate entry and interior remain open.",
+  "tested_parent": "2081d3b3a9bbda889af1e5a19082d48f1fcf9014",
+  "production_source_sha256": {
+    "apps/openmw/mwmechanics/oblivionai.cpp": "21abea8a76d067c293eb9b6039c2fce5079b89d8a0a0b951f174514f6ef2f618",
+    "apps/openmw/mwworld/obliviondynamicreference.cpp": "b76c599182b7218a302de68aa99ad4e235d1bc2d160f677ef571b9a572a3f3f2",
+    "apps/openmw/mwworld/oblivionlevelled.cpp": "fd8f94e044b70522569b17befca8b87f0812d81ea5f8f1711267f93dff8cd827",
+    "apps/openmw/mwworld/oblivionlevelled.hpp": "5258813c00671462dd3cda656199aa63b7e192d812000285645f2fdcaad82a9f",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "33cfb30114fd0d6158e4e1d7bf5789a67742edca8eeb17243c0fc3e2d4032149",
+    "apps/openmw/mwworld/worldimp.cpp": "fd14693b5ee6b9e0dfff6f79bb158ed78220f3c5e751a78da3bec6627b236d7c",
+    "apps/openmw/mwworld/worldimp.hpp": "eed66120d7428be2e219964caacc93eea8fd6169e019bb86cd42ab827093f042",
+    "apps/openmw/mwworld/oblivionspawn.hpp": "36c10bd9ab36c16541913cc7162cc1c917eb424fc10616558c02f31332d64df5",
+    "apps/openmw/mwdialogue/dialoguemanagerimp.cpp": "7c535eb82550ad2c6cd7326693fd2654214d4886aadc3c60b2ea11bb6e720661",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "9883ea691ed18fc2807e1e55123fe9fa9b466e612977d19824607d38769806eb"
+  },
+  "implementation": "NPC observers reuse friend-disposition fight scoring for detected Creatures whose current primary controller target is the living Player. Existing acquisition creates the real controller. No new incident ledger or save schema.",
+  "contract": "KVATCH-ALLY-DEFENSE-CONTRACT.json",
+  "oracle": "KVATCH-ALLY-DEFENSE-ORACLE.json",
+  "runtime": [
+    {
+      "case": "build/oblivion-compat/kvatch-ally-defense/normal-kvatch-guard-defense-02",
+      "passed": true,
+      "phase": "defense",
+      "sanitized": false,
+      "input_sha256": "703fcbfb42cbd614ab841a897e6d1db83788cb7a8b00e533b19d345792b14e42",
+      "save_sha256": "f2ec1899ae4cd44a8d0586c0f1b25f000c8abb92f21a3258280ee36387fe2ca2",
+      "binary_sha256": "90141945deb1b979f48ba63f5d61c224413beac8332b736f9997f07d0e1beb98",
+      "saved_defenders": {
+        "content:oblivion.esm:028a7a": "dynamic:native-reference:0000000000000008",
+        "content:oblivion.esm:028a92": "dynamic:native-reference:0000000000000008",
+        "content:oblivion.esm:028a91": "dynamic:native-reference:0000000000000008"
+      },
+      "saved_target_health": {
+        "dynamic:native-reference:0000000000000008": 32.8516001701355
+      },
+      "guard_hits_before_save": [
+        {
+          "actor": "content:oblivion.esm:028a7a",
+          "action_id": 890,
+          "damage": 7.1484,
+          "victim": "dynamic:native-reference:0000000000000008",
+          "offset": 140624
+        }
+      ],
+      "guard_hits": [
+        {
+          "actor": "content:oblivion.esm:028a7a",
+          "action_id": 890,
+          "damage": 7.1484,
+          "victim": "dynamic:native-reference:0000000000000008",
+          "offset": 140624
+        }
+      ],
+      "no_duplicate_guard_action": true,
+      "earned_inventory_and_known_topics_preserved": true,
+      "quest_stage": 10,
+      "scope": "NPC defense against actual gate Scamps, physical damage and live-target cold continuity; gate entry remains open."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-ally-defense/normal-kvatch-guard-defense-cold-02",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": false,
+      "input_sha256": "f2ec1899ae4cd44a8d0586c0f1b25f000c8abb92f21a3258280ee36387fe2ca2",
+      "save_sha256": "e11b21a684e146ce61ef4d83e65786fdad3620ab9df71e9a876a49fbe402525b",
+      "binary_sha256": "90141945deb1b979f48ba63f5d61c224413beac8332b736f9997f07d0e1beb98",
+      "saved_defenders": {
+        "content:oblivion.esm:028a92": "dynamic:native-reference:0000000000000008",
+        "content:oblivion.esm:028a91": "dynamic:native-reference:0000000000000008",
+        "content:oblivion.esm:028a7a": "dynamic:native-reference:0000000000000008"
+      },
+      "saved_target_health": {
+        "dynamic:native-reference:0000000000000008": 32.8516001701355
+      },
+      "guard_hits_before_save": [],
+      "guard_hits": [
+        {
+          "actor": "content:oblivion.esm:028a7a",
+          "action_id": 892,
+          "damage": 7.12483,
+          "victim": "dynamic:native-reference:0000000000000008",
+          "offset": 148094
+        }
+      ],
+      "no_duplicate_guard_action": true,
+      "earned_inventory_and_known_topics_preserved": true,
+      "quest_stage": 10,
+      "scope": "NPC defense against actual gate Scamps, physical damage and live-target cold continuity; gate entry remains open."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-ally-defense/sanitized-kvatch-guard-defense-01",
+      "passed": true,
+      "phase": "defense",
+      "sanitized": true,
+      "input_sha256": "703fcbfb42cbd614ab841a897e6d1db83788cb7a8b00e533b19d345792b14e42",
+      "save_sha256": "b88a5c8a1e6e218ed8446e1255f2d2cfafeca74436f5c94b2c1049359df39ec7",
+      "binary_sha256": "58375274afa56a4999cb5a784aade29adb10905808df044192aa14f39bb17aa7",
+      "saved_defenders": {
+        "content:oblivion.esm:028a91": "dynamic:native-reference:0000000000000008",
+        "content:oblivion.esm:028a7a": "dynamic:native-reference:0000000000000008",
+        "content:oblivion.esm:028a92": "dynamic:native-reference:0000000000000008"
+      },
+      "saved_target_health": {
+        "dynamic:native-reference:0000000000000008": 32.8516001701355
+      },
+      "guard_hits_before_save": [
+        {
+          "actor": "content:oblivion.esm:028a7a",
+          "action_id": 890,
+          "damage": 7.1484,
+          "victim": "dynamic:native-reference:0000000000000008",
+          "offset": 140639
+        }
+      ],
+      "guard_hits": [
+        {
+          "actor": "content:oblivion.esm:028a7a",
+          "action_id": 890,
+          "damage": 7.1484,
+          "victim": "dynamic:native-reference:0000000000000008",
+          "offset": 140639
+        }
+      ],
+      "no_duplicate_guard_action": true,
+      "earned_inventory_and_known_topics_preserved": true,
+      "quest_stage": 10,
+      "scope": "NPC defense against actual gate Scamps, physical damage and live-target cold continuity; gate entry remains open."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-ally-defense/sanitized-kvatch-guard-defense-cold-01",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": true,
+      "input_sha256": "b88a5c8a1e6e218ed8446e1255f2d2cfafeca74436f5c94b2c1049359df39ec7",
+      "save_sha256": "e11b21a684e146ce61ef4d83e65786fdad3620ab9df71e9a876a49fbe402525b",
+      "binary_sha256": "58375274afa56a4999cb5a784aade29adb10905808df044192aa14f39bb17aa7",
+      "saved_defenders": {
+        "content:oblivion.esm:028a7a": "dynamic:native-reference:0000000000000008",
+        "content:oblivion.esm:028a92": "dynamic:native-reference:0000000000000008",
+        "content:oblivion.esm:028a91": "dynamic:native-reference:0000000000000008"
+      },
+      "saved_target_health": {
+        "dynamic:native-reference:0000000000000008": 32.8516001701355
+      },
+      "guard_hits_before_save": [],
+      "guard_hits": [
+        {
+          "actor": "content:oblivion.esm:028a7a",
+          "action_id": 892,
+          "damage": 7.13649,
+          "victim": "dynamic:native-reference:0000000000000008",
+          "offset": 148813
+        }
+      ],
+      "no_duplicate_guard_action": true,
+      "earned_inventory_and_known_topics_preserved": true,
+      "quest_stage": 10,
+      "scope": "NPC defense against actual gate Scamps, physical damage and live-target cold continuity; gate entry remains open."
+    }
+  ],
+  "visual_review": "Original aggregate guard/gate captures and all four primary normal/SAN post-hit defense/cold captures manually reviewed.",
+  "gates": {
+    "normal_engine": {
+      "path": "build/oblivion-compat/kvatch-ally-defense/normal-engine-01",
+      "executed": 2310,
+      "binary_sha256": "3f70a85701f76cea5ee474d66bd2aedfa9d9610dd9e220602287138081efc8a3",
+      "source": {
+        "head": "2081d3b3a9bbda889af1e5a19082d48f1fcf9014",
+        "source_fingerprint": "2704a3d7cb67d04f315c83dd54027573806aade2de13d01a2b86fd5e1c1de505"
+      }
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/kvatch-ally-defense/sanitized-engine-union.json",
+      "executed": 2310,
+      "binary_sha256": "bf141c6a818efc2ce3aaa38796ed512e0ee35ddda455793177698a071b4556fb",
+      "disjoint": true,
+      "unit_leaks": true
+    },
+    "python": {
+      "path": "build/oblivion-compat/kvatch-ally-defense/python-01",
+      "executed": 621,
+      "source": {
+        "head": "2081d3b3a9bbda889af1e5a19082d48f1fcf9014",
+        "source_fingerprint": "2704a3d7cb67d04f315c83dd54027573806aade2de13d01a2b86fd5e1c1de505"
+      }
+    },
+    "unchanged_components": "Reuse original WINDOWS-MERGE-VERIFICATION.json 3310-per-mode provenance; no new component coverage attributed to these game producers."
+  },
+  "artifacts": [
+    {
+      "mode": "normal",
+      "producer": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-ally-defense/normal-producer-02.json",
+      "sha256": "90141945deb1b979f48ba63f5d61c224413beac8332b736f9997f07d0e1beb98",
+      "proof": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-ally-defense/normal-allocated-section-proof.json",
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-ally-defense/normal-complete-producer-archive.json",
+      "standalone_archive_verified": true
+    },
+    {
+      "mode": "sanitized",
+      "producer": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-ally-defense/sanitized-producer-02.json",
+      "sha256": "58375274afa56a4999cb5a784aade29adb10905808df044192aa14f39bb17aa7",
+      "proof": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-ally-defense/sanitized-allocated-section-proof.json",
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-ally-defense/sanitized-complete-producer-archive.json",
+      "standalone_archive_verified": true
+    }
+  ],
+  "artifact_scope": "Actual rendered candidates remove debug-only sections before all acceptance runs. ELF loaded sections/entry match the completed full build, including sanitizer instrumentation and unwind data. Exact tested hashes have standalone zstd archives. Full unit binaries are separately built/inventoried, using leak1; rendered SAN uses leak0/halt-on-error and records actual loaded ASan/UBSan libraries.",
+  "winning_content_audit": "build/oblivion-compat/kvatch-ally-defense/winning-content-audit.json",
+  "scope_limits": [
+    "Original executable helper provenance is independent, but original live probe records only aggregate guard weapon response and gate count3/deadCount3, without individual killer attribution or exact trigger timing. See oracle.",
+    "Only NPC observers and current Creature-to-Player threats; no general alarm, crime, culpability, zero-aggression exemption or exact target ranking claim.",
+    "Actual damaging NPC hit reduces saved Scamp health40 to32.8516. Cold loads preserve life, controller and intent, then commit a new positive-damage attack ID without repeating the saved hit.",
+    "No full clearing, gate-entry, interior or main-quest prerequisite acceptance."
+  ],
+  "additional_evidence": [
+    "Normal defense01 and cold01 saved before the first NPC hit; these demonstrate pending-action continuation, and are separate from the four primary post-hit courses."
+  ],
+  "retained_failures": [
+    "Earlier wide-flank route ended in Player combat death with inactive guard controllers.",
+    "Original live probe cannot attribute individual killing blows; scope remains aggregate."
+  ]
+}

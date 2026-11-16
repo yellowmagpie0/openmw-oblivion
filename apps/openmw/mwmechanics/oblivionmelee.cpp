@@ -428,7 +428,8 @@ namespace MWMechanics
     }
 
     static std::optional<std::int32_t> oblivionFightScore(
-        MWWorld::World& world, const MWWorld::Ptr& actor, const MWWorld::Ptr& target)
+        MWWorld::World& world, const MWWorld::Ptr& actor, const MWWorld::Ptr& target,
+        std::optional<std::int32_t> friendDisposition = std::nullopt)
     {
         auto* combat = world.getOblivionCombatService();
         if (world.getGameProfile() != ESM::GameProfile::Oblivion || !combat
@@ -453,10 +454,11 @@ namespace MWMechanics
         const auto distance = (actor.getRefData().getPosition().asVec3()
             - target.getRefData().getPosition().asVec3()).length();
         // Original 524AD4/5EA187 only admit positive 546190 fight scores.
-        // Ordinary hostility has no ally incident/friend term.
+        // Ordinary hostility has no friend term. A witnessed Creature attack
+        // on the Player supplies that friend's disposition through the caller.
         // Detection and target selection belong to the acquisition caller.
-        const ESM4::FightScoreInput input{*disposition, 0, aggression, distance,
-            false, false, combat->getNonPlayerIntegerValue(actor, 36)};
+        const ESM4::FightScoreInput input{*disposition, friendDisposition.value_or(0), aggression, distance,
+            friendDisposition.has_value(), false, combat->getNonPlayerIntegerValue(actor, 36)};
         return ESM4::fightScore(input, ESM4::buildFightScoreSettings(settings));
     }
 
@@ -487,6 +489,17 @@ namespace MWMechanics
             && (state->mPhase == ESM4::PackagePhase::Act || state->mPhase == ESM4::PackagePhase::Wait))
             return false;
         const auto player = world.getPlayerPtr();
+        const auto playerKey = ESM::FormKey::dynamic("player", 1);
+        const auto* playerLife = combat->findActorLife(playerKey);
+        const bool canDefendPlayer = actor.getType() == ESM::REC_NPC_4 && player.isInCell()
+            && playerLife && playerLife->mPhase == ESM4::ActorLifePhase::Alive
+            && combat->getNonPlayerIntegerValue(actor, 34) > 0
+            && (actor.getCell() == player.getCell()
+                || (actor.getCell()->isExterior() && player.getCell()->isExterior()
+                    && !actor.getCell()->getCell()->getWorldSpace().empty()
+                    && actor.getCell()->getCell()->getWorldSpace() == player.getCell()->getCell()->getWorldSpace()));
+        bool queriedFriend = false;
+        std::optional<std::int32_t> friendDisposition, selectedFriend;
         const auto candidateKey = [&](const MWWorld::Ptr& candidate) {
             return candidate == player ? ESM::FormKey::dynamic("player", 1)
                 : candidate.getCellRef().getFormKey();
@@ -512,15 +525,37 @@ namespace MWMechanics
             if (distance > nearest || (distance == nearest && !selected.isEmpty()
                     && !(targetKey < candidateKey(selected))))
                 continue;
-            const auto score = oblivionFightScore(*nativeWorld, actor, target);
+            std::optional<std::int32_t> defendingFriend;
+            if (canDefendPlayer && target.getType() == ESM::REC_CREA4
+                && target.getCell()->getCell()->getWorldSpace() == player.getCell()->getCell()->getWorldSpace()
+                && nativeWorld->getOblivionCombatTarget(targetKey) == playerKey)
+            {
+                // Observe current directed controller intent, never the broad
+                // engagement graph or a cached incident. StopCombat, retargeting
+                // and death therefore revoke this context immediately.
+                if (!queriedFriend)
+                {
+                    friendDisposition = nativeWorld->getOblivionDisposition(key, playerKey);
+                    queriedFriend = true;
+                }
+                defendingFriend = friendDisposition;
+            }
+            const auto score = oblivionFightScore(*nativeWorld, actor, target, defendingFriend);
             if (!score || *score <= 0 || !ai->detection(actor, target).mDetected)
                 continue;
             selected = target;
             nearest = distance;
+            selectedFriend = defendingFriend;
         }
         // Practical nearest detected hostile policy, not original target ranking.
         // Publish only the selected controller; rejected candidates consume no RNG.
-        return !selected.isEmpty() && nativeWorld->executeOblivionStartCombat(actor, selected);
+        if (selected.isEmpty() || !nativeWorld->executeOblivionStartCombat(actor, selected))
+            return false;
+        if (selectedFriend)
+            Log(Debug::Info) << "M15 NPC Player defense: actor=" << key.serialize()
+                << " target=" << candidateKey(selected).serialize() << " defended=" << playerKey.serialize()
+                << " friend_disposition=" << *selectedFriend;
+        return true;
     }
 
     std::optional<std::int32_t> oblivionPlayerFightScore(
