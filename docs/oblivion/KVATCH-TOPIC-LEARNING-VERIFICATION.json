@@ -1,0 +1,127 @@
+{
+  "status": "Accepted bounded Player INFO-added-topic chunk; gate/interior progression remains open",
+  "tested_parent": "58f203eedba905c206316e8ba0ad67087d334771",
+  "production_source_sha256": {
+    "apps/openmw/mwmechanics/oblivionai.cpp": "21abea8a76d067c293eb9b6039c2fce5079b89d8a0a0b951f174514f6ef2f618",
+    "apps/openmw/mwworld/obliviondynamicreference.cpp": "b76c599182b7218a302de68aa99ad4e235d1bc2d160f677ef571b9a572a3f3f2",
+    "apps/openmw/mwworld/oblivionlevelled.cpp": "fd8f94e044b70522569b17befca8b87f0812d81ea5f8f1711267f93dff8cd827",
+    "apps/openmw/mwworld/oblivionlevelled.hpp": "5258813c00671462dd3cda656199aa63b7e192d812000285645f2fdcaad82a9f",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "6508bd1943084520fc75d1a3c7a010b964fd1ddd01b276b02751fb26aa572f9a",
+    "apps/openmw/mwworld/worldimp.cpp": "fd14693b5ee6b9e0dfff6f79bb158ed78220f3c5e751a78da3bec6627b236d7c",
+    "apps/openmw/mwworld/worldimp.hpp": "eed66120d7428be2e219964caacc93eea8fd6169e019bb86cd42ab827093f042",
+    "apps/openmw/mwworld/oblivionspawn.hpp": "36c10bd9ab36c16541913cc7162cc1c917eb424fc10616558c02f31332d64df5",
+    "apps/openmw/mwdialogue/dialoguemanagerimp.cpp": "7c535eb82550ad2c6cd7326693fd2654214d4886aadc3c60b2ea11bb6e720661"
+  },
+  "implementation": "Consume winning INFO NAME topic identities after original response/result execution; existing Player known-topic set and DIAS save/load own the knowledge. No save schema change.",
+  "oracle": "KVATCH-TOPIC-LEARNING-ORACLE.json",
+  "contract": "KVATCH-TOPIC-LEARNING-CONTRACT.json",
+  "runtime": [
+    {
+      "case": "build/oblivion-compat/kvatch-savlian/normal-savlian-topics-learned-01",
+      "passed": true,
+      "phase": "learned",
+      "sanitized": false,
+      "input_sha256": "7441a92e01ebdc990eb7e2599cc90be7d2024755a22807cbeed9adea196102aa",
+      "save_sha256": "5ed1169b443094216b05d0b58f87b93196827a831e4f639cc9908933a96aba9f",
+      "binary_sha256": "2f811ca1142e968aa53ad6d2e060ecd714f6140c17dcbe4fc40747c875bad396",
+      "before_known": 26,
+      "after_known": 28,
+      "quest_stage": 5,
+      "scope": "Player INFO-added topics and DIAS persistence; not full Kvatch progression.",
+      "earned_inventory_counts_and_ownership_preserved": true
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-savlian/normal-savlian-topics-cold-03",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": false,
+      "input_sha256": "5ed1169b443094216b05d0b58f87b93196827a831e4f639cc9908933a96aba9f",
+      "save_sha256": "b1d1c6a7ffa3b844dfb7a216a0bfc0b2ff8ffde3624fce1db97d92b66eb84c95",
+      "binary_sha256": "2f811ca1142e968aa53ad6d2e060ecd714f6140c17dcbe4fc40747c875bad396",
+      "before_known": 28,
+      "after_known": 28,
+      "quest_stage": 5,
+      "scope": "Player INFO-added topics and DIAS persistence; not full Kvatch progression.",
+      "earned_inventory_counts_and_ownership_preserved": true
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-savlian/sanitized-savlian-topics-learned-02",
+      "passed": true,
+      "phase": "learned",
+      "sanitized": true,
+      "input_sha256": "7441a92e01ebdc990eb7e2599cc90be7d2024755a22807cbeed9adea196102aa",
+      "save_sha256": "34f7656b436941a165bd87298da78247506189cdb671544526417b730281e7c3",
+      "binary_sha256": "78fafc28fec40321752aaa30477798b758912859c73a5ac392e078d1c8d103b2",
+      "before_known": 26,
+      "after_known": 28,
+      "quest_stage": 5,
+      "scope": "Player INFO-added topics and DIAS persistence; not full Kvatch progression.",
+      "earned_inventory_counts_and_ownership_preserved": true
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-savlian/sanitized-savlian-topics-cold-02",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": true,
+      "input_sha256": "34f7656b436941a165bd87298da78247506189cdb671544526417b730281e7c3",
+      "save_sha256": "42e03cfc6e8294ce0f3cb2703554ce1298cf35def4f0c8650efb759b6a9d1090",
+      "binary_sha256": "78fafc28fec40321752aaa30477798b758912859c73a5ac392e078d1c8d103b2",
+      "before_known": 28,
+      "after_known": 28,
+      "quest_stage": 5,
+      "scope": "Player INFO-added topics and DIAS persistence; not full Kvatch progression.",
+      "earned_inventory_counts_and_ownership_preserved": true
+    }
+  ],
+  "visual_review": "Original reply, fork normal/SAN learned menus, and both cold retained Help responses manually reviewed. Help opens INFO098144 and executes stage8 after the pre-conversation cold save at stage5.",
+  "gates": {
+    "normal_engine": {
+      "path": "build/oblivion-compat/kvatch-savlian/normal-engine-04",
+      "executed": 2310,
+      "source": {
+        "head": "58f203eedba905c206316e8ba0ad67087d334771",
+        "source_fingerprint": "ea537015b8d3cc80d13a28a3484542a73e85340c46d9700a792ede54f36aa221"
+      },
+      "binary_sha256": "0dd1b2339f8a3afda6a39a8f534d2d455367df7eb10f7617fed5f914df85076c"
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/kvatch-savlian/sanitized-engine-union.json",
+      "executed": 2310,
+      "disjoint": true,
+      "leaks": true,
+      "binary_sha256": "5d52d57238d515bfb06a7dbbb74cf38b3f4a07ff8a8513a6652c78856df2e457"
+    },
+    "python": {
+      "path": "build/oblivion-compat/kvatch-savlian/python-02",
+      "executed": 621,
+      "source": {
+        "head": "58f203eedba905c206316e8ba0ad67087d334771",
+        "source_fingerprint": "a2da36b971bbdf45d3389a3edbb6372833c8912cd7ff0abc62f7a55f2fd2249e"
+      }
+    },
+    "unchanged_components": "Reuse WINDOWS-MERGE-VERIFICATION.json, original 3310-per-mode provenance; not rerun or attributed to current producers."
+  },
+  "producer_archives": {
+    "path": "build/oblivion-compat/kvatch-savlian/chunk-delta-producer-archives.json",
+    "verified": true,
+    "normal_sha256": "2f811ca1142e968aa53ad6d2e060ecd714f6140c17dcbe4fc40747c875bad396",
+    "sanitized_sha256": "78fafc28fec40321752aaa30477798b758912859c73a5ac392e078d1c8d103b2"
+  },
+  "rendered_sanitizer": "Actual loaded ASan/UBSan libraries and process environment captured; halt-on-error, rendered leak0. Engine unit partitions use leak1.",
+  "retained_failures": [
+    "Original short click and console-toggle attempts; corrected native probe exited0, pristine save restored and owned processes cleaned.",
+    "Initial real fork reply has no learned subjects before the implementation.",
+    "Direct gate approaches met ordinary Scamp combat deaths/obstruction; no new unsupported command established there.",
+    "SAN short-pulse movement deadline; longer held-input retry accepted.",
+    "Cold SAN activation aimed away from the actor; pre-UI save independently retained all28 topics, but that course remained failed.",
+    "Cold normal Ask used Goodbye focus; explicit controller first-topic focus corrected the input.",
+    "Initial engine thin-archive missing relocated path, ENOSPC after failed linker removed its alias, empty placeholder mistaken for built target; aliases/mtime corrected before normal04 genuine build/tests pass.",
+    "Private coordinator used stale failed-receipt path after normal04 passed; resumed remaining SAN/Python gates without repeating normal tests."
+  ],
+  "scope_limits": [
+    "Player conversation UI only; ambient Say/SayTo and NPC-to-NPC topic exposure unaccepted.",
+    "Both cold saves occur before reopening and selecting Help. They retain stage5; stage8 is observed afterward in actual dialogue, not claimed saved by this slice.",
+    "No full main-quest prerequisites, physical cross-country travel, gate entry or interior completion claim.",
+    "Python02 includes final runtime fixture and auditor changes. Acceptance documentation is written after checks; production hashes independently match both rendered producers."
+  ]
+}

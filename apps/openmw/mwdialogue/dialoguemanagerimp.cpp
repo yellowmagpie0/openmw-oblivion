@@ -436,6 +436,7 @@ namespace MWDialogue
         const auto responses = info->mResponses;
         const auto flags = info->mInfoFlags;
         const auto links = info->mChoiceTopics;
+        const auto addedTopics = info->mAddedTopics;
         const auto speaker = mActor;
         const auto epoch = mRestoreEpoch;
         const auto unchanged = [&] { return mRestoreEpoch == epoch && mNativeDialogue && mActor == speaker; };
@@ -455,6 +456,27 @@ namespace MWDialogue
         {
             scripts->dispatchDialogueResponseResult(key, speaker);
             if (!unchanged()) return false;
+        }
+        // INFO NAME entries teach the Player subjects independently of a
+        // result script's AddTopic commands. Use the same knowledge owner and
+        // DIAS persistence as scripted topics; do not attach knowledge to the
+        // speaker or treat it as another forced choice. Resolve every winning
+        // record before changing knowledge.
+        std::vector<std::pair<ESM::FormKey, ESM::RefId>> learnedTopics;
+        learnedTopics.reserve(addedTopics.size());
+        for (const auto& topicKey : addedTopics)
+        {
+            const auto* topic = world->getStore().search<ESM4::Dialogue>(topicKey);
+            if (!topic || (topic->mFlags & ESM4::Rec_Deleted))
+                throw std::runtime_error("Native dialogue added topic has no winning record: " + topicKey.serialize());
+            learnedTopics.emplace_back(topicKey, ESM::RefId(topic->mId));
+        }
+        for (const auto& [topicKey, id] : learnedTopics)
+        {
+            const bool newlyKnown = !mKnownTopics.contains(id);
+            addTopic(id);
+            Log(Debug::Info) << "Native dialogue added topic: info=" << key.serialize()
+                << " topic=" << topicKey.serialize() << " new=" << int(newlyKnown);
         }
         // Result scripts can change the conditions of the next offered topics.
         // Resolve them once, after the result, and retain each selected INFO.

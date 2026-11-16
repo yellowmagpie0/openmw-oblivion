@@ -1,0 +1,48 @@
+{
+  "status": "Verified independent original UI/authored-field observations; fork acceptance is recorded separately in KVATCH-TOPIC-LEARNING-VERIFICATION.json.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_save_sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+  "probe": "build/oblivion-compat/kvatch-savlian/original-01",
+  "setup": "Original-only Player MoveTo Savlian reference028a7a; no quest/AddTopic/stat/NPC edits or manual saves. Initial MS48 stage0 queried, then original greeting and What will you do now? selected.",
+  "observations": [
+    {
+      "capture": "05-native-before-stage.png",
+      "result": "Original GetStage MS48 =0 before encounter."
+    },
+    {
+      "capture": "07-native-barricade.png",
+      "result": "Original Savlian greeting offers What happened here? and What will you do now?."
+    },
+    {
+      "capture": "10-native-choice-held.png",
+      "result": "Longer held click successfully selects the latter reply; earlier short-click captures retained."
+    },
+    {
+      "capture": "11-native-learned-menu.png",
+      "result": "After the reply, original topic list includes Help and Oblivion Gate. It also includes Martin; no claim that this INFO added Martin."
+    }
+  ],
+  "authored_metadata": {
+    "info": "build/oblivion-compat/kvatch-savlian/selected-info-metadata.json",
+    "topics": "build/oblivion-compat/kvatch-savlian/added-topic-records.json",
+    "rule": "Reply098143 contains NAME02d756 and NAME098112; its separate result script sets MS48.donowchoice1. The loader retains mAddedTopics; the old runtime never consumed that field.",
+    "winning_audit": "build/oblivion-compat/kvatch-savlian/winning-content-audit.json",
+    "winning_result": "All eight selected records originate in Oblivion.esm; installed ten DLCs provide no overrides. All eleven complete plugin hashes verified."
+  },
+  "scope": "Player UI topic exposure after the original reply; no original cold-save or ambient-speech assertion.",
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "wrapper_exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "cleanup": {
+    "owner": "d66f6c7c-dba7-4c80-a33f-d8c84947c96d",
+    "remaining_owned_processes": [],
+    "clean": true
+  },
+  "retained_failures": "Initial short original click did not select the reply; short console toggle did not exit. Correct held click, observed console and subsequent qqq exit0 retained."
+}

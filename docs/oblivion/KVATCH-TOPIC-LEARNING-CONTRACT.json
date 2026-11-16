@@ -1,0 +1,39 @@
+{
+  "status": "Accepted; four primary normal/SAN learning and cold-selection courses, exact engine/Python gates, original oracle and durable producers verified.",
+  "course": "Kvatch main gates -> original Savlian barricade encounter -> gate entry and interior",
+  "chunk": "INFO NAME added topics in Player conversation UI, using the existing global Player knowledge/DIAS owner",
+  "parent": "58f203eedb",
+  "source": {
+    "path": "build/oblivion-compat/kvatch-gate-spawn/normal-first-gate-creature-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7441a92e01ebdc990eb7e2599cc90be7d2024755a22807cbeed9adea196102aa",
+    "provenance": "Genuine earned-Amulet inventory; declared previous Player travel setup; full health, one actual Scamp. Walk normally back to Savlian; no quest, topic, stat or NPC writes."
+  },
+  "content": {
+    "actor": "028a7a",
+    "base": "028007",
+    "package": "17c463",
+    "greeting": "024853",
+    "reply": "098143",
+    "reply_topic": "098114",
+    "added_topics": {
+      "02d756": "Oblivion Gate",
+      "098112": "Help"
+    },
+    "quest": "0224d8"
+  },
+  "baseline": {
+    "case": "build/oblivion-compat/kvatch-savlian/normal-savlian-choice-01",
+    "finding": "Actual forced greeting and What will you do now? reply execute, but the learned-topic pane remains empty. Scenario only tested reply selection, not topic learning; its pass is not feature acceptance."
+  },
+  "acceptance": [
+    "Use the original forced greeting and ordinary conversation choice; show both authored added subjects in normal and SAN without injected AddTopic commands.",
+    "After Goodbye, save and restart a fresh process. DIAS retains exactly the prior knowledge plus the two authored native identities, without duplicates or new unrelated knowledge. Reopen the conversation and use retained subjects.",
+    "Preserve original result-script effects (greeting sets MS48 stage5; reply sets donowchoice1), earned inventory and actor ownership; allow naturally executed world behavior.",
+    "Appropriate normal/SAN engine and Python gates at integration, then local commit. Continue Help dialogue and actual gate entry/interior; this slice does not close that course."
+  ],
+  "scope_limits": [
+    "Player conversation UI only, including forced greetings; ambient Say/SayTo and NPC-to-NPC topic exposure are not accepted by this case.",
+    "No new save schema or second knowledge ledger. INFO field processing is separate from forced TCLT question links.",
+    "No bit-identical timing/random parity; native original also displays Martin, which is not an added topic in this INFO and is outside the new-topic claim."
+  ]
+}
