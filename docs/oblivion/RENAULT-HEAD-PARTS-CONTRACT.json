@@ -1,0 +1,57 @@
+{
+  "status": "Accepted bounded NPC head-part attachment continuity; full M11 remains open",
+  "milestone": "M11 native actor appearance under live equipment refresh",
+  "target": {
+    "reference": "content:oblivion.esm:032a15",
+    "base": "content:oblivion.esm:02349f",
+    "name": "Captain Renault",
+    "helmet": {
+      "type": "ARMO",
+      "id": "00022f71",
+      "editor_id": "BladesHelmetCG",
+      "name": "Blades Helmet",
+      "model": "Armor\\Blades\\M\\Helmet.NIF",
+      "record_sha256": "ba35038fec2f17ab6bd50a61f0efae50955aca8eecc07c2ed287e8f528811d52",
+      "biped_flags": 12582914
+    },
+    "hair": {
+      "type": "HAIR",
+      "id": "0001da82",
+      "editor_id": "ElfPonytail",
+      "model": "Characters\\Hair\\Style03.NIF",
+      "record_sha256": "9ee9f3ee6327706682f2eb03438532314b55908ed2f4c9b4a421419792d873f8"
+    }
+  },
+  "source": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-melee/player-combat-restart-departure-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "e4f009a4536399cf294c953922e509577e9fe2fb69d8c709072a8d20d53832f9",
+    "provenance": "Original normal-input tutorial combat continuation, CharacterGen27, Renault genuinely dead with eight original stacks and five equipped armor parts. Separate from accepted Wellspring inventory."
+  },
+  "baseline": {
+    "path": "build/oblivion-compat/renault-hair/normal-renault-hair-after-loot-01",
+    "binary_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3",
+    "result": "Ordinary Take All transfers the original gear and survives. Head/hair are displaced immediately and after six seconds; prior fresh process restores correct placement. Not a loading delay.",
+    "delayed_capture_sha256": "d14f56932c08aa458ab76d2bdff6124ba403eed866107eac79a8124774b248f2"
+  },
+  "independent_inputs": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "official_plugins_checked": 11,
+    "overrides": [],
+    "audit": "build/oblivion-compat/renault-hair/original-head-content-audit-02.json",
+    "scope": "Original record inputs and existing authored-bind FaceGen rule; no new original-executable arithmetic claim."
+  },
+  "implementation": "Use the immutable skeleton template head matrix for the existing FaceGen axis correction, retaining the posed live head only as attachment parent. Reuse resource caching; no new serialized or per-actor state.",
+  "acceptance": [
+    "Real normal and ASan/UBSan original Take All: head/hair remain aligned immediately and after six seconds, then survive fresh cold load.",
+    "Exact original eight-stack transfer fields/conditions/ownership and no cold inventory/death replay. Preserve original corpse, Player life and independent save branches; declare legitimate concurrent tutorial progression.",
+    "Affected renderer/FaceGen/physical ownership checks and appropriate full integration gates; retain provenance for unchanged component and Python checks."
+  ],
+  "scope_limits": [
+    "NPC path only; the separate Player appearance refresh path is adjacent and remains unverified.",
+    "Full M11 and broader tutorial/milestone acceptance remain open.",
+    "Do not reset ragdoll pose, controllers or physics to repair attachment orientation.",
+    "Existing fork Take All exposes five original NonPlayable Blades armor pieces. That native inventory-selection gap remains separate."
+  ],
+  "recipe": "scripts/data/oblivion_compat/original_renault_head_parts.json",
+  "verification": "RENAULT-HEAD-PARTS-VERIFICATION.json"
+}

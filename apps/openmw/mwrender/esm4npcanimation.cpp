@@ -58,6 +58,17 @@ namespace MWRender
         return ESM4::bipedModelForSex(rec->mModelMale, rec->mModelFemale, isFemale).getOriginal();
     }
 
+    static const osg::Node* findTes4HeadBindNode(const osg::Node& node)
+    {
+        if (Misc::StringUtils::ciEqual(node.getName(), "Bip01 Head"))
+            return &node;
+        if (const osg::Group* group = node.asGroup())
+            for (unsigned i = 0; i < group->getNumChildren(); ++i)
+                if (const osg::Node* head = findTes4HeadBindNode(*group->getChild(i)))
+                    return head;
+        return nullptr;
+    }
+
     ESM4EquipmentAnimation::ESM4EquipmentAnimation(const MWWorld::Ptr& ptr,
         osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem)
         : Animation(ptr, std::move(parentNode), resourceSystem)
@@ -427,11 +438,19 @@ namespace MWRender
                 attachment = found->second->asGroup();
                 if (correctHeadPartOrientation && Misc::StringUtils::ciEqual(attachBone, "Bip01 Head"))
                 {
-                    const osg::MatrixList matrices = attachment->getWorldMatrices(mObjectRoot);
-                    if (!matrices.empty())
+                    // A live head may already be animated or ragdolled when
+                    // equipment is refreshed. FaceGen's axis correction comes
+                    // from the immutable authored skeleton, not that pose.
+                    const auto skeleton = sceneManager->getTemplate(
+                        VFS::Path::Normalized(mPtr.getClass().getCorrectedModel(mPtr)));
+                    if (const osg::Node* head = findTes4HeadBindNode(*skeleton))
                     {
-                        attachmentAttitude = getTes4HeadPartCorrection(matrices.front());
-                        attitude = &attachmentAttitude;
+                        const osg::MatrixList matrices = head->getWorldMatrices(skeleton.get());
+                        if (!matrices.empty())
+                        {
+                            attachmentAttitude = getTes4HeadPartCorrection(matrices.front());
+                            attitude = &attachmentAttitude;
+                        }
                     }
                 }
             }

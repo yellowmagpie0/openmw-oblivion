@@ -4,6 +4,10 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M4/M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
+Latest bounded appearance repair: [Renault head-part continuity](RENAULT-HEAD-PARTS-HANDOFF.md).
+Normal/SAN actual loot and cold captures plus engine2310 per mode pass. Next:
+audit the original NonPlayable Blades armor exposure; preserve independent branches.
+
 Latest completed bounded chunk: [original Wellspring Stool sitting](STOOL-SITTING-HANDOFF.md).
 Normal and instrumented four-process sitting/cold/targeted Weight pickup/getup/
 standing courses pass, including first/third-person review. Full engine2295 and
