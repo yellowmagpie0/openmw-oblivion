@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "course": "build/oblivion-compat/kvatch-ilend/normal-earned-healing-02",
+  "source_sha256": "4dd8ac286448c9ec22e098cc928b291dffc18050fc67b064851c93d489529a73",
+  "save_sha256": "83961f3f2c4a43c52f3947085f2e7bc31725ee431a02a96a40b8dbc6414b2294",
+  "health_before": 22.70000457763672,
+  "health_after": 104.54000806808472,
+  "successful_original_heal_minor_wounds_casts": 11,
+  "inventory_ownership_topics_reactions_quests_preserved": true,
+  "stationary_entrance": true,
+  "native106_codec_live_equal": true,
+  "binary_sha256": "9a5148a8bd79840e5122c476d95a38e58eb9c4e479b6789555b21d589ea06220",
+  "scope": "Real earned-state route preparation through default next-spell and Cast inputs. Existing healing functionality works; no new engine spell-rule acceptance.",
+  "status": "Real route preparation verified; no new engine spell-rule acceptance.",
+  "input_change": "SDL replay accepts default next-spell key equal as SDL_SCANCODE_EQUALS46. Existing 18 focused replay tests pass.",
+  "input_source_sha256": "076be0b57d4f2ee3ef725ed5994ee9f6c7686ee62fd675a5dce2ef29e6d717e1",
+  "focused_checks": "build/oblivion-compat/kvatch-ilend/spell-cycle-input-checks.log",
+  "manifest": "scripts/data/oblivion_compat/original_kvatch_gate_healing.json",
+  "reused_game_producer": "KVATCH-TRAP-UPDATE-VERIFICATION.json",
+  "visual_review": "Selected Heal Minor Wounds and healed entrance captures reviewed.",
+  "retained_failure": "First fixed-cadence attempt healed to82.2 but exhausted16 attempts while magicka regenerated. Adaptive read-only magicka readiness succeeds without resource writes.",
+  "limits": [
+    "Normal preparation only; no new SAN runtime or broad engine gate attributed to this replay-key change.",
+    "Ilend encounter and Harrada physical damage remain open."
+  ]
+}

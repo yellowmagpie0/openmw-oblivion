@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "name": "Original first gate: heal through ordinary spell selection and Cast",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = false\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal t=0\nreturn {{engineHandlers={{onFrame=function(dt)\n if core.isWorldPaused() then return end\n t=t+dt;if t<.2 then return end;t=0\n assert(not types.Actor.isDead(self),'Player died in original gate entrance')\n local health=types.Actor.stats.dynamic.health(self).current\n local magicka=types.Actor.stats.dynamic.magicka(self).current\n if health<=100 and magicka>=25 then print('KvatchIlend cast ready') end\n print('KvatchIlend health='..tostring(health)..' position='..tostring(self.position))\n if health>100 then print('KvatchIlend healed for progression') end\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetFactionReaction content:oblivion.esm:0224d7 content:oblivion.esm:01dbcd\nat 1 command content:oblivion.esm:0224d8 GetStage\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "KvatchIlend health=",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_hold",
+      "value": "equal",
+      "seconds": 0.3
+    },
+    {
+      "type": "screenshot",
+      "name": "selected-healing-spell.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "KvatchIlend healed for progression",
+      "after_start": true,
+      "maximum_iterations": 20,
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "KvatchIlend cast ready",
+          "after_start": true,
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_hold",
+          "value": "c",
+          "seconds": 0.3
+        },
+        {
+          "type": "sleep",
+          "seconds": 1
+        }
+      ]
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "healed-original-gate-entrance.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1800,
+  "expected_exit": 0,
+  "expected_log": [
+    "KvatchIlend healed for progression",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Failed to save game",
+    "Unsupported ObScript command",
+    "M7 ObScript diagnostic",
+    "M15 state observation failed",
+    "failed to render",
+    "TES4 AI update failed",
+    "Native spawned actor inventory construction is incomplete"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-kvatch-gate-entry",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

@@ -19,16 +19,20 @@ with their recorded source provenance. Rendered SAN uses leak0; unit SAN leak1.
 [independent original handler](KVATCH-TRAP-UPDATE-ORACLE.json),
 [verification](KVATCH-TRAP-UPDATE-VERIFICATION.json).
 
-**Next action: heal through normal controls, then proceed toward Ilend Vonius.**
-Normal source:
-`build/oblivion-compat/kvatch-trap-update/normal-original-gate-entry-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `4dd8ac286448c9ec22e098cc928b291dffc18050fc67b064851c93d489529a73`.
-It has an alive Player at the entrance (health22.7), earned inventory and no
-healing potions. Ilend098138/base09812f is alive near[-311,2135,53]. Use actual
-spell selection/Cast, movement and dialogue; do not inject health/quest/target
-writes. Private preparation: `kvatch-ilend/heal-before-ilend.json`; its `equal`
-key requires input-backend support or ordinary GUI selection before launching.
-Harrada attack damage and further encounters have not yet been exercised.
+**Next action: approach Ilend Vonius through normal movement.**
+Healthy earned-state source:
+`build/oblivion-compat/kvatch-ilend/normal-earned-healing-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `83961f3f2c4a43c52f3947085f2e7bc31725ee431a02a96a40b8dbc6414b2294`.
+Eleven ordinary Heal Minor Wounds casts raised health22.7→104.54, with inventory,
+topics, reactions and quest stages unchanged. The replay helper now supports the
+default next-spell key;18 focused helper tests pass. This is route preparation,
+not new engine spell-rule acceptance.
+[Preparation evidence](KVATCH-INTERIOR-ROUTE-PREPARATION.json).
+Ilend098138/base09812f was alive near[-311,2135,53] in the entry checkpoint;
+reinspect his current state during approach. Private next course:
+`kvatch-ilend/ilend-approach.json`. It stops near him or at an observed modal.
+Use actual movement/dialogue, without health/quest/target writes. Harrada attack
+damage and further encounters remain open.
 
 Reusable exact rendered producers, loaded-section proofs, standalone verified
 archives and all primary/failed cases are under
