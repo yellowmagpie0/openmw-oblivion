@@ -1,0 +1,55 @@
+{
+  "status": "Verified independent original authored agreement/reaction observation; fork acceptance is recorded separately in KVATCH-FACTION-REACTION-VERIFICATION.json.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_save_sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+  "probe": "build/oblivion-compat/kvatch-faction-reaction/original-01",
+  "setup": "Load the hash-identified original Gaius/Weynon save; Player MoveTo028a7a only. Choose What will you do now?, Help and the first agreement. Query with numeric faction IDs; no injected faction/quest/stat writes or manual saves.",
+  "observations": [
+    {
+      "capture": "07-native-before-id-queries.png",
+      "stage": 5,
+      "kvatch_to_player": 20,
+      "player_to_kvatch": 0
+    },
+    {
+      "capture": "12-native-after-agreement.png",
+      "stage": 8,
+      "kvatch_to_player": 20,
+      "player_to_kvatch": 0,
+      "context": "Agreement selected; original response still speaking. This is not the completed-result value."
+    },
+    {
+      "capture": "13-native-after-response.png",
+      "stage": 10,
+      "kvatch_to_player": 40,
+      "player_to_kvatch": 0,
+      "context": "Completed original response; authored stage10 result adds20 to existing20, directed only."
+    }
+  ],
+  "authored": {
+    "quest": "0224d8",
+    "stage": 10,
+    "command": "ModFactionReaction",
+    "from_faction": "0224d7",
+    "to_faction": "01dbcd",
+    "delta": 20,
+    "winning_audit": "build/oblivion-compat/kvatch-faction-reaction/winning-content-audit.json",
+    "winning_result": "All four selected quest/faction/NPC records are original master records; all eleven installed plugin hashes checked, no DLC overrides."
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "wrapper_exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "cleanup": {
+    "owner": "e3113a40-38b7-443a-b64e-f856501616cf",
+    "remaining_owned_processes": [],
+    "clean": true
+  },
+  "retained_failures": "Editor-name console faction queries failed to resolve; numeric-ID queries worked. Early after-selection query correctly showed stage8/before20 while the response was still playing; completed-response query is stage10/after40.",
+  "scope": "Authored +20 with existing20 and reverse0; no overflow/wrapping, general voice timing or original cold-save claim."
+}

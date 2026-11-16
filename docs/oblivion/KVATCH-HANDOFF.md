@@ -17,26 +17,41 @@ Say/SayTo and NPC-to-NPC topic exposure remain outside this accepted slice.
 [Contract](KVATCH-TOPIC-LEARNING-CONTRACT.json),
 [independent original UI oracle](KVATCH-TOPIC-LEARNING-ORACLE.json).
 
-**Next chunk: accept Help, then approach and activate the actual gate.**
-Use the healthy, earned-inventory SAN learning save as a normal continuation:
-`build/oblivion-compat/kvatch-savlian/sanitized-savlian-topics-learned-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `34f7656b436941a165bd87298da78247506189cdb671544526417b730281e7c3`.
-It has three genuine timed Scamps and MS48 stage5. Select retained Help, accept
-its first answer (INFO `028030`, authored stage10), then walk to the gate.
-Private prepared course: `kvatch-savlian/help-agree-gate-entry.json`; publish
-its tested editable manifest with the next slice. No quest/topic/stat injections.
-Check the authored teleport, script flags, weather release and cold continuity;
-then take the next gap from actual interior gameplay.
+**Latest accepted chunk: MS48 stage10 ModFactionReaction.** The original
+agreement adds20 to winning KvatchGuards `0224d7` → PlayerFaction `01dbcd`
+reaction20, producing40; reverse remains0. The fork uses the existing directed
+RuntimeState owner (v81 within current schema106), with no shared FACT mutation.
+Normal/SAN actual agreements and own-save cold getters/resaves all pass; other
+reactions, inventory ownership/counts and quest stage10 persist. Engine:2,310 per
+mode; Python:621. [Contract](KVATCH-FACTION-REACTION-CONTRACT.json),
+[original oracle](KVATCH-FACTION-REACTION-ORACLE.json),
+[verification](KVATCH-FACTION-REACTION-VERIFICATION.json).
 
-Direct gate attempts met ordinary Scamp deaths/obstruction, without a new
-unsupported command. Savlian's existing friendly Ambush force-greeting already
-works; it needs no reimplementation. Actor `028a7a`, base `028007`, package
-`17c463`, stands at the barricade south of the original staging marker.
-Retained topic failures were input timing, camera aim and controller Goodbye
-focus; explicit held movement, live aiming and first-topic focus corrected them.
-All failures remain under `build/oblivion-compat/kvatch-savlian`. Producer source
-hashes and durable archives are in its verification receipt. Current executable
-caches remain available. Keep generated data/images outside Git.
+**Next chunk: actual gate approach and entry from the completed agreement.**
+Use the normal cold save:
+`build/oblivion-compat/kvatch-faction-reaction/normal-savlian-agreement-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `703fcbfb42cbd614ab841a897e6d1db83788cb7a8b00e533b19d345792b14e42`.
+It has an alive Player, earned inventory, three genuine timed Scamps, MS48
+stage10 and guard reaction40. Aim at the original gate and move/activate through
+normal controls. Do not replay Help or inject quest/stat writes. If combat
+blocks travel, use actual earned resources and inspect the observed failure.
+Check authored teleport, script flags, weather release and cold continuity;
+then choose the next gap from actual interior gameplay.
+
+Earlier direct gate attempts met ordinary combat deaths/obstruction. The latest
+`kvatch-gate-entry/normal-help-gate-entry-01` also exposed the now-fixed stage10
+command before a later death; no causal claim that the command caused that death.
+Savlian's friendly Ambush force-greeting already works (actor `028a7a`, base
+`028007`, package `17c463`) at the barricade south of the original staging marker.
+The original completed voiced response changes faction state after speaking;
+no identical voice timing is claimed for the fork's text UI.
+
+Reusable compact normal/SAN producers and standalone verified archives are under
+`build/oblivion-compat/kvatch-faction-reaction`. Their loaded ELF sections/entry
+match the full builds. Earlier accepted full-debug producers remain recoverable
+from their original durable archives; their executable caches were retired.
+Failed probes/archive/input attempts stay in their ignored course directories.
+Keep generated data/images outside Git and retain original test provenance.
 
 The separate genuine tutorial/earned-Amulet source is
 `build/oblivion-compat/quest-items/normal-earned-amulet-owned-cold-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

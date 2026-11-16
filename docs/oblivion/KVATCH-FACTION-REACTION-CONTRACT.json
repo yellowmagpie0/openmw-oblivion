@@ -1,0 +1,42 @@
+{
+  "status": "Accepted; original directed delta, four primary normal/SAN agreement/cold courses, exact engine/Python gates and durable compact producers verified.",
+  "course": "Kvatch barricade agreement -> first Oblivion Gate -> original interior",
+  "chunk": "MS48 stage10 ModFactionReaction, using existing directed native faction override and save ownership",
+  "parent": "e3f540969a",
+  "source": {
+    "path": "build/oblivion-compat/kvatch-savlian/sanitized-savlian-topics-learned-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "34f7656b436941a165bd87298da78247506189cdb671544526417b730281e7c3",
+    "provenance": "Verified original What will you do now? reply, MS48 stage5/donowchoice1, earned-Amulet inventory and three genuine timed Scamps. No topic/quest/stat injections."
+  },
+  "observed_failure": {
+    "case": "build/oblivion-compat/kvatch-gate-entry/normal-help-gate-entry-01",
+    "quest": "0224d8",
+    "stage": 10,
+    "unit": "quest-result/stage=10/entry=0/unit=2",
+    "unsupported": "modfactionreaction",
+    "later": "Ordinary Player combat death; no claim that this command caused that death."
+  },
+  "authored": {
+    "from_faction": "0224d7",
+    "from_editor_id": "KvatchGuards",
+    "to_faction": "01dbcd",
+    "to_editor_id": "PlayerFaction",
+    "winning_reaction": 20,
+    "delta": 20,
+    "expected_after": 40,
+    "expected_reverse": 0,
+    "winning_audit": "build/oblivion-compat/kvatch-faction-reaction/winning-content-audit.json"
+  },
+  "acceptance": [
+    "Independently observe original before/after and reverse faction values through the authored Help/agreement response, without injected faction or quest changes. Exact prefix restoration, pristine hash and wrapper status required.",
+    "Normal/SAN ordinary conversation reaches MS48 stage10 and executes the original delta. Winning source stays20, directed saved override becomes40; preserve reverse and unrelated existing reaction overrides.",
+    "After Goodbye use normal F5. Fresh processes query40 and reverse0 through GetFactionReaction, without replaying the setter or stage result; resave and verify runtime106/live/codec consistency and earned inventory ownership.",
+    "Run appropriate normal/SAN integration checks, preserve source/binary provenance and durable archives, commit locally, then resume actual gate entry."
+  ],
+  "scope_limits": [
+    "Authored +20 from winning20 is the numerical acceptance case. No bit-identical integer overflow/wrapping claim; implementation validates int32 delta and rejects overflow before mutation.",
+    "Reuse v81 directed override owner within current schema106; no new save version or second reaction ledger.",
+    "No full main-quest prerequisites, gate entry or interior completion claim. Native voiced reply timing and fork text UI timing are not asserted identical."
+  ],
+  "runtime_artifacts": "Separate compact candidates remove debug-only sections before runtime tests. ELF allocated sections/entry are verified unchanged; standalone archives decode to the exact tested executable hashes. Unit binaries retain their independent full build settings."
+}

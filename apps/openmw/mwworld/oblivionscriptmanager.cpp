@@ -2496,20 +2496,34 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
-        if (name == "setfactionreaction" || name == "getfactionreaction")
+        if (name == "setfactionreaction" || name == "modfactionreaction" || name == "getfactionreaction")
         {
-            const bool write = name == "setfactionreaction";
+            const bool modify = name == "modfactionreaction";
+            const bool write = name != "getfactionreaction";
             if (arguments.size() != (write ? 3u : 2u))
                 throw ObScript::RuntimeError("OBSV117", "Invalid faction reaction argument count", name);
             const auto from = keyFromValue(argument(0));
             const auto to = keyFromValue(argument(1));
             if (!from || !to) return std::int64_t(0);
             if (!write) return std::int64_t(mWorld.getOblivionFactionReaction(*from, *to).value_or(0));
-            const auto value = ObScript::asInteger(argument(2));
+            auto value = ObScript::asInteger(argument(2));
             if (value < std::numeric_limits<std::int32_t>::min() || value > std::numeric_limits<std::int32_t>::max())
                 throw ObScript::RuntimeError("OBSV117", "Faction reaction requires an int32 value", name);
+            std::string change;
+            if (modify)
+            {
+                // Read the current directed override, falling back to winning
+                // content. Repeated modifications accumulate in the same
+                // saved owner used by SetFactionReaction and disposition.
+                const auto current = mWorld.getOblivionFactionReaction(*from, *to);
+                if (!current) return std::int64_t(0);
+                change = " delta=" + std::to_string(value) + " previous=" + std::to_string(*current);
+                value += *current;
+                if (value < std::numeric_limits<std::int32_t>::min() || value > std::numeric_limits<std::int32_t>::max())
+                    throw ObScript::RuntimeError("OBSV117", "Modified faction reaction exceeds int32", name);
+            }
             if (mWorld.setOblivionFactionReaction(*from, *to, static_cast<std::int32_t>(value)))
-                trace("setfactionreaction from=" + from->serialize() + " to=" + to->serialize()
+                trace(name + " from=" + from->serialize() + " to=" + to->serialize() + change
                     + " value=" + std::to_string(value));
             return std::int64_t(0);
         }
