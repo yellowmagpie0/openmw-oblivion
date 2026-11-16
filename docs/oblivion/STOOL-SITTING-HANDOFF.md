@@ -41,6 +41,13 @@ POV tap entering Preview, and disk/quota failures before execution. Corrected
 final cases pass. Prior borrowed archives are restored exactly; only own
 reproducible superseded binary caches were retired, retaining source/hash/logs.
 
-Next action: at this clean local checkpoint, fetch and merge GitHub `windows`
-as requested, verify affected builds and actual content continuation, then choose
-the next real-content acceptance gap. Do not push or claim full milestones complete.
+The subsequent Windows branch merge is verified by the
+[Linux integration receipt](WINDOWS-MERGE-VERIFICATION.json): engine2310 and
+components3310 per mode, Python621, repeated normal/SAN Stool courses and a
+separate original equipped Renault Take All/cold continuation. Original chunk
+provenance above remains unchanged. Current main saves are in the integration
+receipt and [current handoff](VILVERIN-HANDOFF.md).
+
+Next: select the next observed original-content gap. Renault's immediate versus
+cold hair appearance after helmet removal is a candidate requiring a delayed
+same-process observation first. Do not push or call full milestones complete.

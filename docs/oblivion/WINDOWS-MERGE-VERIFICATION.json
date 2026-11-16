@@ -1,0 +1,945 @@
+{
+  "status": "Verified local merge; no push",
+  "merge_commit": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+  "premerge_stool_commit": "1e3668ce03",
+  "windows_branch": "origin/codex/windows-native-dev",
+  "windows_tip": "53509962b105b7914f095d12cad2338082349639",
+  "merge": "Clean ort merge; no manual conflict resolutions. GitHub has no branch literally named windows.",
+  "evidence_root": "build/oblivion-compat/windows-merge",
+  "checks": {
+    "components-python-normal-01": {
+      "path": "build/oblivion-compat/windows-merge/components-python-normal-01/verification.json",
+      "sha256": "145f5f8ae1a803f7bc72c22855a3bb806fa927917f6297792b87ba4aec417593",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "components": {
+          "executed": 3310,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6d23e86321772a14315861cb4e327b885d185a23dd3e49d069113b3fc179e1cc",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "5592ed6f2dc2fa08e799aade5c54245c96dab19385dca931c66a529660e5fa95",
+          "inventory_sha256": "87d3a7863bbf692b7d0dfca6d60895734256d9e1956d3e2774cf83c8efc59ca8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 621,
+          "passed": true,
+          "log_sha256": "dd0879fa2f34517ebcd09f32d8f73837ec2b6aebd4582405fd84fd9302d84cd0"
+        }
+      },
+      "runtime_build_command": null
+    },
+    "components-sanitized-01": {
+      "path": "build/oblivion-compat/windows-merge/components-sanitized-01/verification.json",
+      "sha256": "a764a66384211e3fafdf062b71c26c323a3bac22219cc4d2cdc04fdd0a05ad20",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "components": {
+          "executed": 3310,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7762740fb926334965724180d798e673d997fe14d0e3ce63971a7feedcd26fd1",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "d36d9c5da9fe8dea4f71d8ea33b1e2450de2dae66bb2372fc3bbff988f6cc20b",
+          "inventory_sha256": "5e7e16f9abdc87c888083a9b2ab87b06430290a2880947cd0be2a65c38495ade",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "runtime_build_command": null
+    },
+    "engine-normal-01": {
+      "path": "build/oblivion-compat/windows-merge/engine-normal-01/verification.json",
+      "sha256": "e9f3387bc5bef8eaca53dc7df91b3f36c281539662bfb10ec1962c9e20f4a564",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "engine": {
+          "executed": 2310,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "99ab75fbc22f121e8332c26fb4d360a47c7fd71efe5d825e8fb03df1a1aed3ec",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "d969475efc482fa3b56e25169b0fe2be0938f8d338d5350fcf7f4f3ff26f6c0b",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "runtime_build_command": null
+    },
+    "runtime-sanitized-01": {
+      "path": "build/oblivion-compat/windows-merge/runtime-sanitized-01/verification.json",
+      "sha256": "1fc69bb373e0510724436f4fdada52d6bfef192e9c4e04840b8ce1ba8a21c112",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": null,
+      "runtime_build_command": [
+        "cmake",
+        "--build",
+        "build/m15-sanitize",
+        "--target",
+        "openmw",
+        "esmtool",
+        "-j",
+        "3"
+      ]
+    },
+    "engine-sanitized-rest-01": {
+      "path": "build/oblivion-compat/windows-merge/engine-sanitized-rest-01/verification.json",
+      "sha256": "c3ed5fb56ebab6b369d95a5e5f9f14529f8a985d9725fd96012f7bb61949c68f",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "engine": {
+          "executed": 2058,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "c168ac4e545a0c966c4b57612bb1536fdea4482c1e51ded22ebc31eae4d91c4d",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "runtime_build_command": null
+    },
+    "engine-sanitized-workers-0-01": {
+      "path": "build/oblivion-compat/windows-merge/engine-sanitized-workers-0-01/verification.json",
+      "sha256": "810a81d5ff635ebcde767fd11f0ec3dd2bf8e04c85460dcb631d36d85e15c806",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "21a1bb2aca7eb5a7c4d7b2d5729c8d19fc04f907de02d3157f9c38ca17db136c",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "runtime_build_command": null
+    },
+    "engine-sanitized-workers-1-01": {
+      "path": "build/oblivion-compat/windows-merge/engine-sanitized-workers-1-01/verification.json",
+      "sha256": "9729f65fbb8e94c304918c76e740164ac0f7e0f2602abca685a47ffdb40ab030",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "d5c24b1cfa4e590fbc454d96c5ad3cbe2379a9215461357a2c2d3e7801b28ae3",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "runtime_build_command": null
+    },
+    "engine-sanitized-workers-2-01": {
+      "path": "build/oblivion-compat/windows-merge/engine-sanitized-workers-2-01/verification.json",
+      "sha256": "7b471a148421734ef96afb46dd5b1646777c6efdbaf133bf77ecf99065140b71",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "2e3c3843ce9d578dd47ad9444e42513238b39d8b83276e604c8605a269bfd647",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "runtime_build_command": null
+    }
+  },
+  "binaries": {
+    "normal": {
+      "path": "build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+      "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+      "binary_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3",
+      "build_gate": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/engine-normal-01/verification.json"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/windows-merge/candidate-assets/sanitized-01/openmw",
+      "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+      "binary_sha256": "d763b32da8c241dd91f0b5b6781a40e4a423689f11e3a6ab0cd1f7480fecfa96",
+      "build_gate": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/engine-sanitized-rest-01/verification.json"
+    }
+  },
+  "runtime": {
+    "normal_stool": [
+      {
+        "case": "build/oblivion-compat/windows-merge/normal-merged-stool-seat-02",
+        "phase": "seat",
+        "input_sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+        "save_sha256": "a600bac53de065e83b6a7936d545913ffcd7c8b20242d3908fccc2a9ece49878",
+        "process": {
+          "pid": 1654501,
+          "start_ticks": 31450384,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-stool-seat-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3"
+        },
+        "audit_sha256": "897c7d2517031f64eaf82fd5095cb549c71e6e4225a63a748e6804fa307bf02c"
+      },
+      {
+        "case": "build/oblivion-compat/windows-merge/normal-merged-stool-weight-02",
+        "phase": "weight",
+        "input_sha256": "a600bac53de065e83b6a7936d545913ffcd7c8b20242d3908fccc2a9ece49878",
+        "save_sha256": "4164f2f51c723325c1ee3723981884c567fb2ce27cdabd808e54da8d76563982",
+        "process": {
+          "pid": 1654724,
+          "start_ticks": 31458451,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-stool-weight-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-stool-seat-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3"
+        },
+        "audit_sha256": "fda31aa5856b1c244c4813cebac03173b243a33c26784ff984c4c15bd35a6348"
+      },
+      {
+        "case": "build/oblivion-compat/windows-merge/normal-merged-stool-exit-02",
+        "phase": "exit",
+        "input_sha256": "4164f2f51c723325c1ee3723981884c567fb2ce27cdabd808e54da8d76563982",
+        "save_sha256": "6b065c61246bd2478296f98b74f9953a40691b929d1eeb0645fbd925447ea157",
+        "process": {
+          "pid": 1654944,
+          "start_ticks": 31466702,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-stool-exit-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-stool-weight-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3"
+        },
+        "audit_sha256": "ca67d10d5ed4d9d431a30a23e6d61d4a4d801edceaae878bbc72b340824ab438"
+      },
+      {
+        "case": "build/oblivion-compat/windows-merge/normal-merged-stool-standing-02",
+        "phase": "standing",
+        "input_sha256": "6b065c61246bd2478296f98b74f9953a40691b929d1eeb0645fbd925447ea157",
+        "save_sha256": "a30aa67e0217f9676dcf88512c7697c69737c4e73caf2d3f21529e63080397f7",
+        "process": {
+          "pid": 1655333,
+          "start_ticks": 31474756,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-stool-standing-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-stool-exit-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3"
+        },
+        "audit_sha256": "3710f15e4585d7b58376f514d0480542ea7dceff6d54b82e5f816293d1c5dd9b"
+      }
+    ],
+    "sanitized_stool": [
+      {
+        "case": "build/oblivion-compat/windows-merge/sanitized-merged-stool-seat-01",
+        "phase": "seat",
+        "input_sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+        "save_sha256": "7803fb9cc1e89de023bda5ae21e5731c6b35e035bffc3c51fde02e1dbd46a1d7",
+        "process": {
+          "pid": 1664992,
+          "start_ticks": 31679230,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/sanitized-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/sanitized-merged-stool-seat-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d763b32da8c241dd91f0b5b6781a40e4a423689f11e3a6ab0cd1f7480fecfa96"
+        },
+        "audit_sha256": "97b5305733fdf798daf9cfebc66f36efca7d897c7a79e54049cea759807403c4"
+      },
+      {
+        "case": "build/oblivion-compat/windows-merge/sanitized-merged-stool-weight-01",
+        "phase": "weight",
+        "input_sha256": "7803fb9cc1e89de023bda5ae21e5731c6b35e035bffc3c51fde02e1dbd46a1d7",
+        "save_sha256": "5373f7316112b90893ee4c6ee8b4647df0efca5ae632551d21e5989022ec3826",
+        "process": {
+          "pid": 1665210,
+          "start_ticks": 31710893,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/sanitized-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/sanitized-merged-stool-weight-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/sanitized-merged-stool-seat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d763b32da8c241dd91f0b5b6781a40e4a423689f11e3a6ab0cd1f7480fecfa96"
+        },
+        "audit_sha256": "708bc9b84c79c53b5bdebbe635a19702ae11c6527230817cdd415208caac6f39"
+      },
+      {
+        "case": "build/oblivion-compat/windows-merge/sanitized-merged-stool-exit-01",
+        "phase": "exit",
+        "input_sha256": "5373f7316112b90893ee4c6ee8b4647df0efca5ae632551d21e5989022ec3826",
+        "save_sha256": "6ac1c42749f586916d23a2de7aa705f16598a805ee347b1770ca3d0cae5f3738",
+        "process": {
+          "pid": 1665424,
+          "start_ticks": 31742577,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/sanitized-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/sanitized-merged-stool-exit-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/sanitized-merged-stool-weight-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d763b32da8c241dd91f0b5b6781a40e4a423689f11e3a6ab0cd1f7480fecfa96"
+        },
+        "audit_sha256": "4d13932bbaac77c642abfd89b5279e1bee868ebebdf74e1169ad027db108a5ba"
+      },
+      {
+        "case": "build/oblivion-compat/windows-merge/sanitized-merged-stool-standing-01",
+        "phase": "standing",
+        "input_sha256": "6ac1c42749f586916d23a2de7aa705f16598a805ee347b1770ca3d0cae5f3738",
+        "save_sha256": "ab796dc11a455a68c1ed457c69ee8239aabbc73f0e56b0c2f72e2cf8a3003a06",
+        "process": {
+          "pid": 1665617,
+          "start_ticks": 31773323,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/sanitized-01/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/sanitized-merged-stool-standing-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/sanitized-merged-stool-exit-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "d763b32da8c241dd91f0b5b6781a40e4a423689f11e3a6ab0cd1f7480fecfa96"
+        },
+        "audit_sha256": "bb3eda875ffdf4fc7f6afa084f576884e81478db71f8042e402c431996be13cb"
+      }
+    ],
+    "renault": {
+      "passed": true,
+      "phases": [
+        {
+          "case": "build/oblivion-compat/windows-merge/normal-merged-renault-loot-04",
+          "phase": "loot",
+          "passed": true,
+          "input_sha256": "e4f009a4536399cf294c953922e509577e9fe2fb69d8c709072a8d20d53832f9",
+          "save_sha256": "72cdfac027b2ead32a16d759e28af7ea1bb2a586709104f33d38b36e6f165eaa",
+          "process": {
+            "pid": 1656754,
+            "start_ticks": 31524680,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-renault-loot-04/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-melee/player-combat-restart-departure-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3"
+          },
+          "transferred_original_stacks": 8,
+          "exact_fields": [
+            "base",
+            "condition",
+            "charge",
+            "owner",
+            "remaining_usage_time",
+            "ownership_rank",
+            "ownership_global",
+            "extra_scale",
+            "bound_source"
+          ],
+          "previous_death_counts_unchanged": true,
+          "declared_new_natural_death": {
+            "actor": "content:oblivion.esm:026be1",
+            "killer": "content:oblivion.esm:037e40",
+            "callback_id": 6
+          }
+        },
+        {
+          "case": "build/oblivion-compat/windows-merge/normal-merged-renault-cold-04",
+          "phase": "cold",
+          "passed": true,
+          "input_sha256": "72cdfac027b2ead32a16d759e28af7ea1bb2a586709104f33d38b36e6f165eaa",
+          "save_sha256": "b39529cba959fbff8be2b07cacf19fe397a5863650adac2092718bff1a629402",
+          "process": {
+            "pid": 1656946,
+            "start_ticks": 31531833,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-renault-cold-04/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/normal-merged-renault-loot-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3"
+          },
+          "transferred_original_stacks": 0,
+          "exact_fields": [
+            "base",
+            "condition",
+            "charge",
+            "owner",
+            "remaining_usage_time",
+            "ownership_rank",
+            "ownership_global",
+            "extra_scale",
+            "bound_source"
+          ],
+          "previous_death_counts_unchanged": true,
+          "declared_new_natural_death": null
+        }
+      ],
+      "scope": "Ordinary approach and Take All on original equipped Renault corpse, retained rendering, exact transfer fields and cold empty-corpse continuation. Movement-only corpse pass-through is additionally covered by actual Bullet worker-partition engine tests; no new manual crossing claim."
+    }
+  },
+  "sanitized_engine_union": {
+    "passed": true,
+    "executed": 2310,
+    "disjoint": true,
+    "full_inventory_matches": true,
+    "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+    "partitions": [
+      {
+        "case": "engine-sanitized-rest-01",
+        "source": {
+          "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+          "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+        },
+        "executed": 2058,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*-WorkerCounts/*",
+        "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+        "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+        "xml_sha256": "c168ac4e545a0c966c4b57612bb1536fdea4482c1e51ded22ebc31eae4d91c4d",
+        "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      {
+        "case": "engine-sanitized-workers-0-01",
+        "source": {
+          "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+          "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+        },
+        "executed": 84,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "WorkerCounts/*/0",
+        "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+        "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+        "xml_sha256": "21a1bb2aca7eb5a7c4d7b2d5729c8d19fc04f907de02d3157f9c38ca17db136c",
+        "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      {
+        "case": "engine-sanitized-workers-1-01",
+        "source": {
+          "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+          "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+        },
+        "executed": 84,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "WorkerCounts/*/1",
+        "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+        "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+        "xml_sha256": "d5c24b1cfa4e590fbc454d96c5ad3cbe2379a9215461357a2c2d3e7801b28ae3",
+        "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      {
+        "case": "engine-sanitized-workers-2-01",
+        "source": {
+          "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+          "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+        },
+        "executed": 84,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "WorkerCounts/*/2",
+        "binary_sha256": "b29fd5695b91ef1f9adb04b2c20af4ae1af03688e0ebf4187b1a912fcc1f7579",
+        "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+        "xml_sha256": "2e3c3843ce9d578dd47ad9444e42513238b39d8b83276e604c8605a269bfd647",
+        "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    ]
+  },
+  "performance": {
+    "passed": true,
+    "protocol": "ABBA order, same pristine real Scales save, software Mesa/Xvfb 1280x720, no sound, VSync/cap off; first gameplay stats +10s warmup/30s sample. No builds or other owned game courses overlap. Stationary short Linux comparison only, not Windows FPS parity or smooth-traversal acceptance.",
+    "runs": [
+      {
+        "case": "linux-perf-01-premerge",
+        "kind": "premerge",
+        "process": {
+          "pid": 1665809,
+          "start_ticks": 31805835,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/premerge-normal/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/linux-perf-01-premerge/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fb572d23c73075677ae1761d3a9f07a3fcf4e4b73fd08a042a129536e64fdabc"
+        },
+        "input_sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+        "metrics": {
+          "frames": 247,
+          "sample_seconds": 30.02601,
+          "fps": 8.2262012168783,
+          "median_frame_ms": 103.759,
+          "p95_frame_ms": 206.54600000000002,
+          "p99_frame_ms": 225.212,
+          "frames_over_50ms": 247,
+          "mean_ms": {
+            "Cull traversal time taken Camera 1": 1.5476194331983806,
+            "Draw traversal time taken Camera 1": 71.42775303643725,
+            "Update traversal time taken": 0.3735506072874494,
+            "focusobject_time_taken": 0.6457975708502024,
+            "gui_time_taken": 0.31399595141700404,
+            "input_time_taken": 0.10793522267206478,
+            "lua_time_taken": 1.4775465587044536,
+            "luasyncupdate_time_taken": 0.8575587044534414,
+            "mechanics_time_taken": 48.05339271255061,
+            "physics_time_taken": 29.1848987854251,
+            "physicsworker_time_taken": 0.6783157894736842,
+            "script_time_taken": 36.493995951417006,
+            "sound_time_taken": 0.0009595141700404859,
+            "state_time_taken": 0.00047368421052631577,
+            "world_time_taken": 0.08601214574898786
+          }
+        }
+      },
+      {
+        "case": "linux-perf-02-merged",
+        "kind": "merged",
+        "process": {
+          "pid": 1665903,
+          "start_ticks": 31815040,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/linux-perf-02-merged/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3"
+        },
+        "input_sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+        "metrics": {
+          "frames": 459,
+          "sample_seconds": 30.01344,
+          "fps": 15.29314866939611,
+          "median_frame_ms": 57.709,
+          "p95_frame_ms": 107.419,
+          "p99_frame_ms": 115.65100000000001,
+          "frames_over_50ms": 459,
+          "mean_ms": {
+            "Cull traversal time taken Camera 1": 1.742466230936819,
+            "Draw traversal time taken Camera 1": 56.38988235294118,
+            "Update traversal time taken": 0.42405010893246187,
+            "focusobject_time_taken": 0.7678322440087145,
+            "gui_time_taken": 0.3433921568627451,
+            "input_time_taken": 0.10152941176470588,
+            "lua_time_taken": 1.0611633986928104,
+            "luasyncupdate_time_taken": 0.7973572984749455,
+            "mechanics_time_taken": 33.64673638344227,
+            "physics_time_taken": 14.888002178649236,
+            "physicsworker_time_taken": 0.9524531590413944,
+            "script_time_taken": 8.301856209150326,
+            "sound_time_taken": 0.0009847494553376906,
+            "state_time_taken": 0.00045969498910675377,
+            "world_time_taken": 0.0890718954248366
+          }
+        }
+      },
+      {
+        "case": "linux-perf-03-merged",
+        "kind": "merged",
+        "process": {
+          "pid": 1665996,
+          "start_ticks": 31824132,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/normal-02/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/linux-perf-03-merged/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "f75874a3463cf35d6232d8231bae889abf62f3e8bd8b00357d11a812ec1c10e3"
+        },
+        "input_sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+        "metrics": {
+          "frames": 456,
+          "sample_seconds": 29.99866,
+          "fps": 15.200678963660376,
+          "median_frame_ms": 57.8505,
+          "p95_frame_ms": 108.916,
+          "p99_frame_ms": 118.19200000000001,
+          "frames_over_50ms": 456,
+          "mean_ms": {
+            "Cull traversal time taken Camera 1": 1.7422061403508773,
+            "Draw traversal time taken Camera 1": 56.41513815789474,
+            "Update traversal time taken": 0.4165657894736842,
+            "focusobject_time_taken": 0.7656600877192983,
+            "gui_time_taken": 0.34383552631578945,
+            "input_time_taken": 0.10324122807017544,
+            "lua_time_taken": 1.0360592105263158,
+            "luasyncupdate_time_taken": 0.7944385964912282,
+            "mechanics_time_taken": 33.905460526315785,
+            "physics_time_taken": 14.815473684210525,
+            "physicsworker_time_taken": 0.9619495614035087,
+            "script_time_taken": 8.243364035087719,
+            "sound_time_taken": 0.0009802631578947369,
+            "state_time_taken": 0.000493421052631579,
+            "world_time_taken": 0.08653508771929824
+          }
+        }
+      },
+      {
+        "case": "linux-perf-04-premerge",
+        "kind": "premerge",
+        "process": {
+          "pid": 1666238,
+          "start_ticks": 31833282,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/candidate-assets/premerge-normal/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/windows-merge/linux-perf-04-premerge/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "fb572d23c73075677ae1761d3a9f07a3fcf4e4b73fd08a042a129536e64fdabc"
+        },
+        "input_sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+        "metrics": {
+          "frames": 247,
+          "sample_seconds": 29.973708,
+          "fps": 8.240555356047373,
+          "median_frame_ms": 102.97,
+          "p95_frame_ms": 206.13899999999998,
+          "p99_frame_ms": 224.69,
+          "frames_over_50ms": 247,
+          "mean_ms": {
+            "Cull traversal time taken Camera 1": 1.614255060728745,
+            "Draw traversal time taken Camera 1": 71.10423076923077,
+            "Update traversal time taken": 0.3790485829959514,
+            "focusobject_time_taken": 0.6524817813765181,
+            "gui_time_taken": 0.30603643724696356,
+            "input_time_taken": 0.10647773279352227,
+            "lua_time_taken": 1.3665951417004047,
+            "luasyncupdate_time_taken": 0.8251052631578947,
+            "mechanics_time_taken": 47.87472469635628,
+            "physics_time_taken": 29.301489878542508,
+            "physicsworker_time_taken": 0.7224696356275303,
+            "script_time_taken": 36.284076923076924,
+            "sound_time_taken": 0.0009392712550607287,
+            "state_time_taken": 0.0004979757085020243,
+            "world_time_taken": 0.0861417004048583
+          }
+        }
+      }
+    ],
+    "assessment": {
+      "premerge": {
+        "pooled_fps": 8.233372030181876,
+        "fps_range": [
+          8.2262012168783,
+          8.240555356047373
+        ],
+        "mechanics_ms_range": [
+          47.87472469635628,
+          48.05339271255061
+        ]
+      },
+      "merged": {
+        "pooled_fps": 15.24692520341731,
+        "fps_range": [
+          15.200678963660376,
+          15.29314866939611
+        ],
+        "mechanics_ms_range": [
+          33.64673638344227,
+          33.905460526315785
+        ]
+      },
+      "pooled_fps_gain_percent": 85.18445598626138
+    },
+    "interpretation": "Consistent local stationary software-Mesa improvement; absolute frame times remain slow. No smooth traversal/60FPS or Windows FPS claim."
+  },
+  "tested_cpp_sha256": {
+    "apps/components_tests/esm4/actionledger.cpp": "f2801d0613362d312d45681e9c96720eb94ba2900500df1e3bb09df15e4bb278",
+    "apps/components_tests/esm4/pathgriddata.cpp": "ca1050445d2ee90c2cb56c525b4021df02bd94a542ebf66ad4e774f6e91332d4",
+    "apps/components_tests/esm4/runtimestate.cpp": "ef4278ade4f88d98ca8d898516ccf5c69bfacbce2f86882220aac26cc3e0115f",
+    "apps/components_tests/lua/testinputactions.cpp": "a608528f16883d0112242d8b25d0ac54e4de3364966a1f9f2b8a88689a251360",
+    "apps/components_tests/lua/testscriptscontainer.cpp": "20678bc1618db1807af1b29e7cdd9566a4c11a9fe7a95522f45a4cb54ce60a73",
+    "apps/components_tests/nifloader/testactorragdollphysics.cpp": "f071975d7563fc37d5e5f93c2c735e18d53fe1d8ad154b9e4557a76bce58b0ad",
+    "apps/components_tests/sceneutil/nifscenetraversal.cpp": "94ca4980d207f5ab3844ce43c0cf41e9293c1c4cbdf9086e08c7bff477c55b96",
+    "apps/openmw/mwclass/armor.cpp": "318df88a8cb8900dc6204a9dff41498e9fdf2ec15087c18e0e2e7b0c195590eb",
+    "apps/openmw/mwclass/esm4furniture.cpp": "5123d89cea708a27cff6cacd7e8255f45d3d1a6a1d9a6e2764192a383dcad5a0",
+    "apps/openmw/mwdialogue/keywordsearch.hpp": "9e161a8d270ed57da27a6a1ba2cdbfb315a82f61067ce43a72549fb2b20512f3",
+    "apps/openmw/mwlua/luamanagerimp.cpp": "e88366a5227b1f9ae9efa9e1bb4136d3e04caf0907e290b316aee04e677a417e",
+    "apps/openmw/mwmechanics/actors.hpp": "182298009dfe51c6ee60d587a253ed0ea1b45e7b5eab17744e9ebd642d679720",
+    "apps/openmw/mwmechanics/character.cpp": "63c15e8df1770b728636b18b0f9507a5498a37e7b0596a059c24304d344db162",
+    "apps/openmw/mwmechanics/character.hpp": "018f1f37b344f9369ede072a26ad49ad22ad180dc2bbe057b984de9d9c9fec96",
+    "apps/openmw/mwmechanics/objects.hpp": "33b5c693ad0f2904603ab4496ef8d15a7446db846dc014f9f4d0d28b5d4b32b1",
+    "apps/openmw/mwmechanics/oblivionai.cpp": "e0cf5aafda916c6fd8cf2ffb2a3726c2f517e15893edc877eaf84038c0a643d4",
+    "apps/openmw/mwmechanics/oblivionai.hpp": "eb88db1e073456cea3201edc299b4fef632ea3a3aa788f3e5c39adebf4bea076",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "6681dcea5345951e19b67e6a6aa79ed8901d7e26ef951c35c00b860e381d9bfb",
+    "apps/openmw/mwmechanics/obliviondoorstate.hpp": "051e76e161294d1733793f5a9679653bad24eab2237ae5b1078f89bfc097f22f",
+    "apps/openmw/mwphysics/actor.cpp": "5d2da7dcecbec32127915554289de84e7420c56103a9bfaba0a1be6412b98a32",
+    "apps/openmw/mwphysics/actorconvexcallback.cpp": "98af364c0665cab3971be1420f0377e12f4100e74c1bb474d42b571d22ccb4a5",
+    "apps/openmw/mwphysics/mtphysics.cpp": "5b9aca58be39b31f31420e5ecb221e280b88eca971af47b937a78a25bc4c6c9a",
+    "apps/openmw/mwphysics/mtphysics.hpp": "97809748bd7756cc64f5b05a2666f4e44f974fb79cc872effb69f25552724254",
+    "apps/openmw/mwphysics/physicssystem.cpp": "4a53637570773ad68bf5a08831a33c508fdbf9eeda77fdf71ee87dd10dc9b0a5",
+    "apps/openmw/mwphysics/ptrholder.hpp": "67b8a50e65006317bbc7066a52b0c4df6b8d32ecb4b18055459e327d018c9163",
+    "apps/openmw/mwrender/animation.cpp": "e31d39a26022dddc48d4a0bf3acfb049926540bd4c1d4a12aa00a8b50c88671f",
+    "apps/openmw/mwrender/animation.hpp": "86e83b252c060d81d87e3c7261e63334bc5c1fda26093eadb0fa6f97c1d408be",
+    "apps/openmw/mwrender/camera.cpp": "d5a4b3663d25939e4b76e2ba4468661ca99959111a1eca0ea804fc0364f90a8a",
+    "apps/openmw/mwrender/camera.hpp": "761c7f8e709038b21abbce9a0bc6b278429a400ad6b49e451e8a58034306e2aa",
+    "apps/openmw/mwrender/renderingmanager.cpp": "27d0a82a483b3e6d63ba836ab4aad9b88a3ad094a4bbc17e59352424592783f8",
+    "apps/openmw/mwrender/util.cpp": "e8ae9078c80902980558411c2daf4a4c40111a1d3429c9878326c8eae576a82b",
+    "apps/openmw/mwworld/containerstore.hpp": "9fb7bfef74d8ee802200b19748b77f9a546f551bd50ea8ae77fb44e340dcda17",
+    "apps/openmw/mwworld/datetimemanager.cpp": "ec54b8cb790055976accfd99143c5965bbb7a90c8e31886d1c3737e8675b7476",
+    "apps/openmw/mwworld/esmstore.cpp": "7bbba30ad44ad2744dfc6764b7aa360fc7c514338ebb08f005df90099082086f",
+    "apps/openmw/mwworld/oblivionarrowrecovery.cpp": "c7a03c000a6dbeb4257e38d853a50226bac7d96dd65b15ab6695964041a5735b",
+    "apps/openmw/mwworld/oblivioncombatmagic.cpp": "d1e48e22b52caf6068b0f8038113b2f45257a88109f8f6dbeda3f05023f5958d",
+    "apps/openmw/mwworld/oblivioncombatmagic.hpp": "3a7429ea9adecee93022e0221851c6cf3fb0b82b61d1237a5cbb501327e3aa23",
+    "apps/openmw/mwworld/oblivionenablestate.cpp": "f75e889d91949096fcb7d24f72653ac138af4a75b3596d380f906770e3503c30",
+    "apps/openmw/mwworld/oblivionfurniture.cpp": "4ad77fe9095428348825be11dd867b22915a2ddb29d560bfee47d625f29b8e31",
+    "apps/openmw/mwworld/oblivioninteraction.cpp": "ff7b5bac68a2a872d8c0cd005cf8a695b9c924afea22c0053eaf10290f4570b2",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "610aa57a17c67409305e5d931fe2c2a288578a6c1b06be59c7fe26549803dfc7",
+    "apps/openmw/mwworld/player.cpp": "68c3f3640f9b0fdfe97235a3f134790ea09912774156b92bd396124f47cdc9b3",
+    "apps/openmw/mwworld/worldimp.cpp": "bb8ff9aa2a5696ad2849ae50c8385afce817a1eca8b07f179d6e10eaddc0700a",
+    "apps/openmw/mwworld/worldimp.hpp": "b5dacde70157fd2577555d3f6c7621197976295d6212e240e855217796a2c870",
+    "apps/openmw_tests/mwdialogue/testkeywordsearch.cpp": "abc9bc1a0b1dcea21a0fca9df2a4998c7df32b2311fcfcc3234f53dc2b12618e",
+    "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "2221985ad2bee437d61ca098cd8accb1d632a1d5f6cebe8dbefc7d4fdeb0779e",
+    "apps/openmw_tests/mwrender/testphysicalpose.cpp": "25fdd8e1af006995ec3e9be5461c29db1f125679e6577aa698130948951025d9",
+    "apps/openmw_tests/mwworld/testoblivionactorstats.cpp": "bbb76994e536c006b97642ab5778debafc5e1c0d95bd4836949f575cb20a0add",
+    "apps/openmw_tests/mwworld/testoblivionai.cpp": "31c6eb7052754c552400b3693b32ca485e38b918fb4787226c06898cabc49986",
+    "apps/openmw_tests/mwworld/testoblivioncombatmagic.cpp": "6ea5b2ca852db942e2f8fb2b0c78eac697a23b66c2c06949b0f1870101fb985b",
+    "apps/openmw_tests/mwworld/testobliviondialogue.cpp": "5367c6a8ed6228205778140e3a172f23433511c8d90e3919c737033acc440b1a",
+    "apps/openmw_tests/mwworld/testoblivionskilltraining.cpp": "eb9157ef3ea674bc21747e75f37a4f348e3369946f9328b50cf0f7065303cf01",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "16e98fe6e18070e033c1be95cefddda7a2775d33dc8c406848ca7f98bba42bfc",
+    "apps/openmw_tests/mwworld/testptr.cpp": "6394ccc1b657e95c129da3966eee1ab71e32efff6150cbee71778c3c77de6ca2",
+    "apps/openmw_tests/mwworld/testtimestamp.cpp": "db91114f80ac1729bc28ec850e9f7785b5d54877e67e4df47198a381fc448a3b",
+    "components/esm4/actionledger.hpp": "10669472c9d2c741a99646207017f35921d91eb4c12115ee3daccb1136435dd0",
+    "components/esm4/pathgriddata.hpp": "b93fa7ab6678d740f1073fa71781ec81852f424975799b28b86b28730c1ca4ae",
+    "components/esm4/runtimestate.cpp": "0badd6eb2bc08223841e41a4f9b779b26a79657a1d920a28e251f7c490dc1087",
+    "components/esm4/runtimestate.hpp": "4b9e84232f0a72a0e46af640956bd05a1b774b7ccbbbdb7637f19c6148cccf31",
+    "components/lua/inputactions.hpp": "70ac5ca70bf9fea0617ccb4e7476114e6c43f953bf19907ea5b852b2efbb9694",
+    "components/lua/scriptscontainer.cpp": "962acd232a76247af047da1cffe9ed774515fde28f33877b6e374b447b6ab259",
+    "components/lua/scriptscontainer.hpp": "9eae5193026065f85b91c2dc7555dd233fa1ca79e93480fad21a5751d6ad9c32",
+    "components/lua_ui/resources.hpp": "0e24c4a4ae85256253d3f22872c8326a598004d987e265168a0b2b223b74bc57",
+    "components/sceneutil/nifscenetraversal.cpp": "75e799974f6659d8e2aba3a0871fdbbda697d15164f53dd528524611d9a25859",
+    "components/sceneutil/nifscenetraversal.hpp": "5a6b54a30c071fb700dd8f67ca49057d4dd1e3f0b9d942345d6a60201c164a6f"
+  },
+  "coverage": "Full Linux normal and ASan/UBSan engine2310/component3310 per mode, Python621, four normal and four sanitized original Stool processes, and separate normal equipped Renault Take All/cold empty corpse course. Exact inventories, state ownership and retained original content; no synthetic runtime fixtures.",
+  "sanitizers": "Unit processes use detect_leaks=1 with explicit SDL/Mesa/DBus environment; actual environment/libraries captured for each engine partition. Rendered courses use leak0, not rendered leak coverage.",
+  "visual_review": "Normal and SAN seated FP/TP plus cold/standing captures reviewed; Renault equipped menu, actual stripped corpse and cold empty corpse reviewed.",
+  "scope_limits": [
+    "No fresh native Windows build or Windows FPS claim from this Linux checkout; historical platform receipts remain in WINDOWS-LIVE-RUNTIME-FIXES.md and SANCTUM-ESCORT-CORPSE-COLLISION.md.",
+    "No full tutorial replay, all markers/NPC furniture, whole milestone, smooth 60FPS or rendered leak-coverage claim.",
+    "Possible transient hair absence after removing Renault helmet versus cold view is an adjacent candidate, requiring a delayed same-process capture before declaring a bug."
+  ],
+  "retained_failures": [
+    "Initial frozen runtime profile lacked defaults.bin; game exited before load, owned driver interrupted and failed case preserved. Fresh profile includes defaults.bin/openmw.cfg and passes.",
+    "Renault01 stale facing,02 insufficient root-based range,03 stopped while exact in-range ray prerequisite remained unmet. Final04 uses actual camera-to-visible-surface distance and exact crosshair/native activation range; normal inputs transfer eight stacks.",
+    "Initial global-death-equality audit rejected legitimate original tutorial progression: Rat037e40 kills026be1 once (callback6). Exact prior five death counts, declared new event, inventory and no cold replay are now checked; no actor state/quest setters supplied."
+  ],
+  "storage_provenance": [
+    "build/oblivion-compat/windows-merge/archived-stool-binaries.json",
+    "build/oblivion-compat/windows-merge/archived-prior-binaries.json",
+    "build/oblivion-compat/windows-merge/retired-duplicate-game-build-copies.json",
+    "build/oblivion-compat/windows-merge/retired-completed-component-caches.json",
+    "build/oblivion-compat/windows-merge/retired-completed-engine-caches.json"
+  ],
+  "next_action": "At the verified local checkpoint, select the next real-content gap. Investigate the observed Renault helmet/hair continuity candidate with a delayed same-process capture first; otherwise choose another genuinely reached unsupported case.",
+  "editable_reproducers": [
+    {
+      "public": "scripts/data/oblivion_compat/original_renault_equipped_loot.json",
+      "executed_manifest": "build/oblivion-compat/windows-merge/original-renault-loot-04.json",
+      "sha256": "0533bfd499e9850ce20e72c76209d58eef79e94c6957a5c9d61b1d9ad24819e5"
+    },
+    {
+      "public": "scripts/data/oblivion_compat/original_renault_empty_cold.json",
+      "executed_manifest": "build/oblivion-compat/windows-merge/original-renault-cold.json",
+      "sha256": "72c257dc1205b8432f15eec4c3e7b91d2a1d4d5428e174b7f3ae062e7496934c"
+    },
+    {
+      "public": "scripts/data/oblivion_compat/original_wellspring_performance.json",
+      "executed_manifest": "build/oblivion-compat/windows-merge/linux-perf-01-premerge.json",
+      "sha256": "abbde0f892c4cb855e1be7d23b119e5819629034b488f0eb188c39bba8d52542"
+    }
+  ],
+  "additional_real_save_auditor": {
+    "path": "scripts/verify_renault_equipped_loot.py",
+    "sha256": "c2f2870a39790883a00ccb79fe1ef622de4a0327c913dec6326caedc22a32bb5",
+    "exit_code": 0,
+    "log": "build/oblivion-compat/windows-merge/published-renault-audit.log"
+  },
+  "source_note": "All compiled source matches the clean tested merge commit. These identical already-executed editable recipes, real-save auditor and evidence documentation were published afterward; their addition is not relabeled as an earlier full Python run."
+}

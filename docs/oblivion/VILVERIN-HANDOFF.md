@@ -9,8 +9,11 @@ Normal and instrumented four-process sitting/cold/targeted Weight pickup/getup/
 standing courses pass, including first/third-person review. Full engine2295 and
 components3306 per mode plus Python621 pass; exact provenance is in the
 [receipt](STOOL-SITTING-VERIFICATION.json). Other furniture markers/NPC packages
-and full M4/M11/M14 remain open. Next: merge and verify GitHub `windows` at this
-clean checkpoint before selecting another content chunk, as requested.
+and full M4/M11/M14 remain open. GitHub `codex/windows-native-dev` is now merged
+and verified locally: [integration receipt](WINDOWS-MERGE-VERIFICATION.json).
+Engine2310/components3310 per mode, Python621, normal/SAN Stool and separate
+normal equipped Renault loot/cold checks pass. Next: investigate the observed
+helmet/hair continuity candidate using a delayed same-process capture first.
 
 Prior completed bounded chunk: [native articulated Scales drop](SCALES-DROP-HANDOFF.md).
 The genuinely acquired Wellspring Scales now retain all four authored bodies and
@@ -60,10 +63,10 @@ accepted with their original ownership, native body and event/restart evidence.
 No full M13/M15/M16/M18/M19 milestone claim.
 
 Current main Cairn/Wellspring continuation:
-`build/oblivion-compat/stool/normal-stool-fp-standing-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `f7e7119df4b8ad92895bac3a7f5d724e0c10369ec6f3d55dc0ba5e572ff43621`.
-SAN: same root `sanitized-stool-fp-standing-final-02`, SHA256
-`8bc75c390574bc1c7289be2aa9df92b17f37ec85deb1c69913eced9e14274635`.
+`build/oblivion-compat/windows-merge/normal-merged-stool-standing-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `a30aa67e0217f9676dcf88512c7697c69737c4e73caf2d3f21529e63080397f7`.
+SAN: `build/oblivion-compat/windows-merge/sanitized-merged-stool-standing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `ab796dc11a455a68c1ed457c69ee8239aabbc73f0e56b0c2f72e2cf8a3003a06`.
 Health70.480003/110, End55, Club59.5000458 equipped/owner18, Cuirass19.6576748
 owner9, Torch987+2fresh1000 inactive, Alembic1/Retort1, Song1/Fundaments2/Charter2,
 BooksRead17, Scales1, Weight1, allocator20; dropped native-reference19 retired and the

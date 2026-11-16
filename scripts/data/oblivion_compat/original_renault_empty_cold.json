@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "name": "Merged Windows original Renault cold empty corpse continuation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": ""
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal types=require('openmw.types')\nlocal core=require('openmw.core')\nlocal nearby=require('openmw.nearby')\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt;if timer<.2 then return end;timer=0\n assert(not types.Actor.isDead(self),'Player must remain alive')\n local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x032a15))\n assert(a and a:isValid() and types.Actor.isDead(a),'Original Renault corpse must persist')\n assert(#types.Actor.inventory(a):getAll()==0,'Cold corpse inventory replayed')\n print('MergeRenault cold empty corpse valid')\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "MergeRenault cold empty corpse valid",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "original-Renault-cold-empty.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.3
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "MergeRenault cold empty corpse valid",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "AddressSanitizer",
+    "runtime error:",
+    "Player died during original VilverinContinue acquisition",
+    "M16 native cast rejected:",
+    "M16 potion attributes applied:",
+    "M16 native scroll consumed:",
+    "Error in frame",
+    "onFrame failed"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "windows-merge-renault-cold",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 60,
+  "virtual_gamepad": true,
+  "sdl_xvfb_input": true
+}
