@@ -1,0 +1,39 @@
+{
+  "status": "Weather-script slice verified in normal/SAN; full original gate course remains failed at unsupported PlaceAtMe",
+  "course": "User-directed Kvatch main quest: start before main gates, enter first Oblivion Gate and continue original content",
+  "chunk": "Original first-gate storm weather query, transitional request and cold ownership",
+  "original_gate": {
+    "reference": "content:oblivion.esm:01e8a3",
+    "base": "content:oblivion.esm:1778c8",
+    "script": "content:oblivion.esm:1778c5",
+    "storm": "content:oblivion.esm:0836d5",
+    "clear": "content:oblivion.esm:038eee",
+    "quest": "content:oblivion.esm:0224d8"
+  },
+  "observed_failure": {
+    "case": "build/oblivion-compat/kvatch-approach/normal-earned-amulet-kvatch-staging-01",
+    "runtime_scenario_passed": false,
+    "diagnostic_setup_audit": "build/oblivion-compat/kvatch-approach/staging-diagnostic-audit.json",
+    "reason": "Original gate GameMode repeatedly aborts unsupported GetIsCurrentWeather; next branch calls unimplemented SetWeather with persistent override. First screenshot is loading UI, not rendered approach acceptance."
+  },
+  "source": "build/oblivion-compat/kvatch-approach/source.json",
+  "requirements": [
+    "Read actual native weather identity; once a requested transition starts, query identifies incoming weather while visual fade continues. A paused newly requested transition still reads outgoing weather before its first update.",
+    "SetWeather requests original WTHR fade with optional persistent regional override. It must not restart an identical in-flight fade on repeated gate frames; a script override takes priority over regional pending weather.",
+    "Original gate script, rather than injected fork weather commands, drives positive weather acceptance. Preserve genuine earned inventory, quest ownership and source provenance; naturally executed original script changes are audited.",
+    "Fresh-process continuation preserves weather identities, transition and override using existing weather save ownership; entering gate releases override through original script.",
+    "Normal and sanitizer real gate approach/continuation plus appropriate engine/Python checks. Record newly exposed independent blockers; full gate entry/main quest remains open until actually completed."
+  ],
+  "tolerances": {
+    "identity": "Exact original WTHR identity and boolean branch; exact saved ownership.",
+    "fade": "Existing authored native weather timing and reasonable visual fade; no bit-identical interpolation, RNG, rendered sky or exact frame-duration promise.",
+    "state": "Exact earned inventory and quest source; declared one-time Player staging only, no grants/quest writes/NPC repositioning."
+  },
+  "scope_limits": [
+    "Weather slice only; interrupted/reversed multi-weather visual transitions are not certified by this initial gate case.",
+    "Countess/furniture investigation deferred by user request.",
+    "No full Kvatch/main-quest completion or gate-entry claim until real normal-input evidence."
+  ],
+  "verification": "KVATCH-WEATHER-VERIFICATION.json",
+  "remaining_gate_blocker": "PlaceAtMe for original KvatchExteriorCreature list 008bfd; no gate entry or quest acceptance yet."
+}

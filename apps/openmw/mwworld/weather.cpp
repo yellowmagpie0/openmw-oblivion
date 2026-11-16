@@ -943,6 +943,32 @@ namespace MWWorld
         return true;
     }
 
+    bool WeatherManager::transitionWeatherOverride(
+        const ESM::RefId& weatherID, const bool overrideRegionalWeather)
+    {
+        const auto found = std::find_if(mWeatherSettings.begin(), mWeatherSettings.end(),
+            [&](const Weather& weather) { return weather.mId == weatherID; });
+        if (found == mWeatherSettings.end())
+            return false;
+
+        if (mCurrentWeather == invalidWeatherID)
+            forceWeather(found->mScriptId);
+        else if (mNextWeather != found->mScriptId && mCurrentWeather != found->mScriptId)
+        {
+            // A scripted override takes priority over a regional transition.
+            // Repeated gate requests must not restart the same authored fade.
+            mNextWeather = found->mScriptId;
+            mQueuedWeather = invalidWeatherID;
+            mTransitionFactor = 1.f;
+        }
+        else if (mCurrentWeather == found->mScriptId && mNextWeather != invalidWeatherID)
+            forceWeather(found->mScriptId);
+        mWeatherOverride = overrideRegionalWeather;
+        Log(Debug::Info) << "M10 weather transition requested: " << found->mName
+                         << " override=" << (mWeatherOverride ? "true" : "false");
+        return true;
+    }
+
     void WeatherManager::releaseWeatherOverride()
     {
         if (!mWeatherOverride)

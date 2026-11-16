@@ -1,0 +1,186 @@
+{
+  "status": "Verified bounded Kvatch gate weather-script slice; full gate course FAILED at unimplemented creature spawning",
+  "gate_entry_accepted": false,
+  "full_quest_accepted": false,
+  "tested_parent": "4d63f80e20913b92a47f5ed1a1c66878b590c447",
+  "contract": "KVATCH-WEATHER-CONTRACT.json",
+  "oracle": "KVATCH-WEATHER-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/kvatch-weather",
+  "production_sha256": {
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "ca103fdf3af8b6d0d903bd1d42d39b3dead23d061c98635cdd366a072e065179",
+    "apps/openmw/mwworld/weather.cpp": "f6f88beaefdc408620629e90df8ab9443ff579a0b51e4bde9b9533874340d48b",
+    "apps/openmw/mwworld/weather.hpp": "aa8971b0b7b1f4be8f8bbd2a438a4a358eb0b510a93ca0392eb46fbb00655108"
+  },
+  "runtime_weather_observations": [
+    {
+      "case": "build/oblivion-compat/kvatch-weather/normal-gate-weather-transition-01",
+      "audit_sha256": "5d6400b0ea951fcadd91a9f574456f7f34dbe9b5bded9438bab5920bc306226c",
+      "phase": "transition",
+      "sanitized": false,
+      "runtime_scenario_passed": false,
+      "gate_entry_accepted": false,
+      "input_sha256": "28dd5a527b7bdb6f4dd239670ed102c206dfafa5126887e9f010b6442f92dd1f",
+      "save_sha256": "b613f92d1aa3d2d5a3253df9350c5fe90a6e8522283620423f54404d68659db5",
+      "binary_sha256": "74eec249689474353c24391f265db80bcfc2292f4c859940870e8ad386554d93",
+      "weather": {
+        "CWTH_key": "content:oblivion.esm:038eee",
+        "NWTH_key": "content:oblivion.esm:0836d5",
+        "QWTH_key": null,
+        "TRFC": 0.39952942728996277,
+        "override": true
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-weather/normal-gate-weather-cold-01",
+      "audit_sha256": "6a3586f35348afbf3b847f07285265aff762aed1e0baf075dc899935a9373e4b",
+      "phase": "cold",
+      "sanitized": false,
+      "runtime_scenario_passed": true,
+      "gate_entry_accepted": false,
+      "input_sha256": "b613f92d1aa3d2d5a3253df9350c5fe90a6e8522283620423f54404d68659db5",
+      "save_sha256": "040b62dcd89364d2796a769be6ae14b053f3bd0a002a49739de4f60b7f3a736c",
+      "binary_sha256": "74eec249689474353c24391f265db80bcfc2292f4c859940870e8ad386554d93",
+      "weather": {
+        "CWTH_key": "content:oblivion.esm:038eee",
+        "NWTH_key": "content:oblivion.esm:0836d5",
+        "QWTH_key": null,
+        "TRFC": 0.31360000371932983,
+        "override": true
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-weather/sanitized-gate-weather-transition-01",
+      "audit_sha256": "3f1b5490a0a5f4a14019340265ece972fb14de63be6448813d72131457111930",
+      "phase": "transition",
+      "sanitized": true,
+      "runtime_scenario_passed": false,
+      "gate_entry_accepted": false,
+      "input_sha256": "28dd5a527b7bdb6f4dd239670ed102c206dfafa5126887e9f010b6442f92dd1f",
+      "save_sha256": "ab6900310dca2e7679bda48ff51b76fceddd264761dff9a5bae39c527ed60cf7",
+      "binary_sha256": "4a3438a7ca52618bc38ef73c10a39888a7f05a998bfbd40928c70aa86b4b07fb",
+      "weather": {
+        "CWTH_key": "content:oblivion.esm:038eee",
+        "NWTH_key": "content:oblivion.esm:0836d5",
+        "QWTH_key": null,
+        "TRFC": 0.44145894050598145,
+        "override": true
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-weather/sanitized-gate-weather-cold-01",
+      "audit_sha256": "b675274029ec7697657aadbce542fc8d9e17c654183ec8f1b0f9888a2797b898",
+      "phase": "cold",
+      "sanitized": true,
+      "runtime_scenario_passed": true,
+      "gate_entry_accepted": false,
+      "input_sha256": "ab6900310dca2e7679bda48ff51b76fceddd264761dff9a5bae39c527ed60cf7",
+      "save_sha256": "2d2118e27985ed2361faa572f572ec5431a17d7ee010d0daff158c08a57d4754",
+      "binary_sha256": "4a3438a7ca52618bc38ef73c10a39888a7f05a998bfbd40928c70aa86b4b07fb",
+      "weather": {
+        "CWTH_key": "content:oblivion.esm:038eee",
+        "NWTH_key": "content:oblivion.esm:0836d5",
+        "QWTH_key": null,
+        "TRFC": 0.3555295467376709,
+        "override": true
+      }
+    }
+  ],
+  "checks": [
+    {
+      "path": "build/oblivion-compat/kvatch-weather/normal-engine-01/verification.json",
+      "sha256": "0ac203aff3c959e65929fa82ce0e7f9d1c619a5f3048c51dda8f760be36663f1",
+      "mode": "engine",
+      "result": {
+        "executed": 2310,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "344a50213c29b1738fb7818e914f84d095b3d957f39859c01a479216deb8e83c",
+        "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+        "xml_sha256": "10bb332834e02f86750fec6c7f72900182941bfe25ae4e15a88132671c24fb2b",
+        "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "source": {
+        "head": "4d63f80e20913b92a47f5ed1a1c66878b590c447",
+        "source_fingerprint": "5c068f43e37efa773c86777eda56ddcbb015ab228664476835cc0e1e2ef93176"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/kvatch-weather/python-01/verification.json",
+      "sha256": "46817ff8ce495cf3ff5fb9b240ca20b2d1325d4c81df898138f5236719c8e051",
+      "mode": "python",
+      "result": {
+        "executed": 621,
+        "passed": true,
+        "log_sha256": "aa8d454c9330d759cfd2cee4cac287e2fdf694b834e2e20c7a95bced145ff609"
+      },
+      "source": {
+        "head": "4d63f80e20913b92a47f5ed1a1c66878b590c447",
+        "source_fingerprint": "5c068f43e37efa773c86777eda56ddcbb015ab228664476835cc0e1e2ef93176"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/kvatch-weather/sanitized-engine-union.json",
+      "sha256": "858df2a8b4e3252af524c12232438c301619649990369b02e5ef7b848c7c1c04",
+      "mode": "sanitized engine",
+      "executed": 2310,
+      "partitions": [
+        2058,
+        84,
+        84,
+        84
+      ],
+      "binary_sha256": "2e924dcd8e99f27677aca6f41313663363aea5fa842df50bc2e7b1028b468ecc",
+      "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+      "unit_leaks": true
+    }
+  ],
+  "producer_archives": {
+    "path": "build/oblivion-compat/kvatch-weather/chunk-delta-producer-archives.json",
+    "sha256": "a233ea7944a6dd128f972a2fa551f3eb9f51047038e1dcb35ba58ad57ac5be4d",
+    "codec": "Verified independent 512 MiB zstd patch-from chunks, level 10, against retained full Back anchors; adjacent per-producer metadata declares hashes/restore recipe."
+  },
+  "native_restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "winning_original_audit": {
+    "path": "build/oblivion-compat/kvatch-weather/winning-content-audit.json",
+    "sha256": "cbe73fdb0c4c6506543f334850a89564dce80da5b5bbe3f1d8417b5436b1e0aa",
+    "scope": "Gate, base, script, parent, weather and teleport records have no overrides across eleven installed original-game plugins."
+  },
+  "source_scope": "Original check fingerprints retained. Later documentation updates only; production C++ unchanged. Rendered SAN leak0; units leak1. Unchanged components retain original Windows integration 3310-per-mode receipt, not a fresh component run.",
+  "remaining_acceptance": [
+    "Actual transition scenarios remain failed on original PlaceAtMe. Their weather semantics pass independently; no full controller, approach or gate-entry acceptance.",
+    "Cold weather cases resume actual failed-route saves whose script count advanced without creatures. They validate weather ownership only; do not use these as legitimate spawn-course sources.",
+    "Next implementation must resume pristine diagnostic approach28dd5a52... with count 0 and implement native actor creation/lifetime/save ownership before entering the gate.",
+    "Interrupted/reversed weather transition presentation and unrelated weather command/AI-condition profiles are outside this bounded case."
+  ],
+  "retained_failures": [
+    {
+      "path": "normal-gate-weather-transition-01",
+      "reason": "Weather works, full scenario fails at unsupported PlaceAtMe three times; retained exactly."
+    },
+    {
+      "path": "sanitized-gate-weather-transition-01",
+      "reason": "Same actual original script failure under instrumentation; not waived."
+    },
+    {
+      "path": "normal-transition-audit-failed-01.json",
+      "reason": "Initial auditor treated original gate animation_progress as immutable; corrected only that observed advancing/wrapping clock while preserving all other reference fields."
+    },
+    {
+      "path": "sanitized-engine-rest-01",
+      "reason": "Temporary storage exhausted during final link before tests; compiled objects reused, verified old archived raw producer caches retired, retry02 passes."
+    }
+  ],
+  "next": "Implement original PlaceAtMe for first Kvatch gate leveled actor spawn; source root008bfd at Playerlevel 1 selects actual StuntedScamp 03e9cb. Preserve native dynamic identity, AI/combat/life and cold ownership. Then enter gate and continue user-directed course."
+}

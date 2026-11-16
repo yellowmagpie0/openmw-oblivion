@@ -362,6 +362,7 @@ namespace MWWorld
         void changeWeather(const ESM::RefId& regionID, const unsigned int weatherID);
         void changeWeather(const ESM::RefId& regionID, const ESM::RefId& weatherID);
         bool forceWeatherOverride(const ESM::RefId& weatherID, bool overrideRegionalWeather);
+        bool transitionWeatherOverride(const ESM::RefId& weatherID, bool overrideRegionalWeather);
         void releaseWeatherOverride();
         bool hasWeatherOverride() const { return mWeatherOverride; }
         void modRegion(const ESM::RefId& regionID, std::span<const uint8_t> chances);

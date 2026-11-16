@@ -11,6 +11,7 @@ semantic inventory/reward audits. Current canonical back-entry regression,
 occupied seats and full M11/M14 remain open. Next: the user-directed Kvatch main
 quest course, starting outside the main gates at the first Oblivion Gate, then
 entering and selecting discrete chunks from observed failures along that route.
+Follow [the current Kvatch handoff](KVATCH-HANDOFF.md) for active work.
 
 Earlier bounded furniture repair: [original Chorrol back-entry chair](CHORROL-BACK-SEAT-HANDOFF.md).
 Its normal/SAN course remains accepted; current back-entry regression is linked

@@ -1,0 +1,63 @@
+{
+  "status": "Independent original weather identity/transition probe complete; wrapper0/exact restoration",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_save": {
+    "path": "build/oblivion-compat/m5-original-test/prefix/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/Save 1 - Gaius - Weynon House, Level 1, Playing Time 00.49.51.ess",
+    "sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+    "context": "Independent original Gaius Weynon diagnostic checkpoint."
+  },
+  "weather_identities": [
+    {
+      "key": "000836d5",
+      "edid": "OblivionStormTamriel"
+    },
+    {
+      "key": "00038eee",
+      "edid": "Clear"
+    }
+  ],
+  "setup": "Original-only FW Clear1, SW OblivionStormTamriel1, weather queries; declared coc KvatchOblivionGateNEW and MoveTo actual camp map marker01e8a2. Normal Hirtel mandatory arrival dialogue completed with mouse; no original save writes.",
+  "observations": [
+    {
+      "capture": "build/oblivion-compat/kvatch-weather/original-01/06-clear-formid-query.png",
+      "scope": "Valid native FW00038eee1; paused queries Clear1/Storm0."
+    },
+    {
+      "capture": "build/oblivion-compat/kvatch-weather/original-01/07-sw-formid-paused-query.png",
+      "scope": "Valid SW000836d51 while paused; Clear remains1/Storm0 before normal frames."
+    },
+    {
+      "capture": "build/oblivion-compat/kvatch-weather/original-01/08-sw-after-frames.png",
+      "scope": "After roughly0.3s normal interior frames: Clear0/Storm1."
+    },
+    {
+      "capture": "build/oblivion-compat/kvatch-weather/original-01/23-outdoor-sw-frames-verified.png",
+      "scope": "Outdoor camp: valid SW000836d51 and paused Clear1/Storm0 are retained in console history, then roughly0.3s normal frames yield Clear0/Storm1 while sky remains visually clear. Incoming identity is observable before visual fade finishes."
+    }
+  ],
+  "retained_exploration": "03..05 used editor IDs rejected by native console; numeric winning FormIDs corrected this. 11..19 include loading/normal Hirtel dialogue and mangled console input; not normative weather evidence. Capture21 FW was malformed but actual Clear1/Storm0 state queries succeed; the subsequent valid SW and query history is visible in23. Slow-input helper120ms used for final outdoor repeat.",
+  "rule": "Query outgoing weather until requested transition has begun; then identify incoming WTHR during visual fade. Immediate ForceWeather retains immediate identity. Persistent override and normal release use existing weather owner; no exact interpolation claim.",
+  "captures_root": "build/oblivion-compat/kvatch-weather/original-01",
+  "launcher_sha256": "f72ed638b7df4aa3781bfe83762fe9e0fb0b45a42b19c010dee91655b6a39188",
+  "input_helper_sha256": "ef969122a11a953bced0aa9912c381bb13781055519fd4a67a4fefe017ae816b",
+  "wrapper_exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "cleanup": {
+    "owner_processes": [],
+    "restoration": {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    },
+    "wrapper_exit": {
+      "exit_code": 0,
+      "observed_by_parent": true
+    }
+  }
+}

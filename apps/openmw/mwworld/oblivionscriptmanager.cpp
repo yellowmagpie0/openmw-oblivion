@@ -3277,6 +3277,29 @@ namespace MWWorld
             return std::int64_t(changed);
         }
 
+        if (name == "getiscurrentweather")
+        {
+            const auto weather = keyFromValue(argument(0));
+            const auto id = weather ? mResolver.toFormId(*weather) : std::nullopt;
+            auto* manager = mWorld.mWeatherManager.get();
+            const auto* next = manager->getNextWeather();
+            // Native scripts see the incoming identity once its fade starts,
+            // even while the outgoing weather still dominates the sky.
+            const auto* current = next && manager->getTransitionFactor() < 1.f
+                ? next : manager->getWeather(manager->getWeatherID());
+            return std::int64_t(id && current && current->mId == ESM::RefId(*id));
+        }
+        if (name == "setweather" || name == "sw")
+        {
+            const auto weather = keyFromValue(argument(0));
+            const auto id = weather ? mResolver.toFormId(*weather) : std::nullopt;
+            const bool persistent = arguments.size() >= 2 && ObScript::asInteger(argument(1)) != 0;
+            const bool changed = id && mWorld.mWeatherManager->transitionWeatherOverride(ESM::RefId(*id), persistent);
+            trace("setweather weather=" + (weather ? weather->serialize() : std::string("null"))
+                + " override=" + (persistent ? "true" : "false")
+                + " applied=" + (changed ? "true" : "false"));
+            return std::int64_t(changed);
+        }
         if (name == "forceweather" || name == "fw")
         {
             const auto weather = keyFromValue(argument(0));
