@@ -2011,6 +2011,11 @@ namespace MWWorld
             trace("activate-default ref=" + key.serialize());
             return std::int64_t(0);
         }
+        // Original TrapUpdate (command 0x110c) returns success without work
+        // at 00977C50. Trap damage belongs to collision processing, not this
+        // legacy script call. In particular it must not replay contact damage.
+        if (name == "trapupdate")
+            return std::int64_t(0);
         if (name == "playgroup")
         {
             const Ptr ptr = objectPtr();

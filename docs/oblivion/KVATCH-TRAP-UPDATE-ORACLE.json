@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "command": "TrapUpdate",
+  "opcode": "0x110c",
+  "table": "0xb0f2a0",
+  "handler": "0x977c50",
+  "full_handler_executed": true,
+  "boundary_stubs": [],
+  "cases": [
+    {
+      "initial_eax": 0,
+      "returned_eax": 1,
+      "success_al": 1,
+      "result_and_fixture_memory_unchanged": true,
+      "returned": true
+    },
+    {
+      "initial_eax": 305419776,
+      "returned_eax": 305419777,
+      "success_al": 1,
+      "result_and_fixture_memory_unchanged": true,
+      "returned": true
+    },
+    {
+      "initial_eax": 4294967295,
+      "returned_eax": 4294967041,
+      "success_al": 1,
+      "result_and_fixture_memory_unchanged": true,
+      "returned": true
+    }
+  ],
+  "scope": "Complete original inert handler only. No trap collision, damage, animation or full native runtime assertion.",
+  "status": "Independent original command-table and complete-handler verification; fork runtime acceptance pending.",
+  "provenance": "Hash-identified original PE command table links TrapUpdate0x110c to00977c50. Complete handler executed with three initial EAX values, no boundary stubs, returns AL1 with unchanged fixture/result memory.",
+  "raw_evidence": "build/oblivion-compat/kvatch-trap-update",
+  "script_content": "Original Harrada script066707 initializes fTrapDamage5, fTrapPushBack750, minVelocity0, continuous0, calls TrapUpdate then decrements an active timer. This command has no collision/damage side effects.",
+  "scope_limits": [
+    "No native original live-game probe required to interpret this entire inert handler; this is independent instruction evidence, not native gameplay evidence.",
+    "Harrada animated collision/damage and continuous hazards are not accepted by this compatibility command."
+  ],
+  "retained_failures": [
+    "Historical shared oracle venv lacked its Unicorn library; a new private venv installed the dependency and executed successfully."
+  ]
+}

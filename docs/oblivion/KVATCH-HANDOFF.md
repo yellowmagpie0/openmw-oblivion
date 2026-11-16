@@ -1,93 +1,74 @@
 # Kvatch main-quest course — current handoff
 
 Target: outside Kvatch's main gates → original Savlian encounter → first Oblivion
-Gate → original interior progression. Gate entry, interior progression and full
-main-quest acceptance remain open. Choose chunks from observed route failures.
+Gate → original interior progression. Entry and cold interior continuity now
+pass; further interior progression and full main-quest acceptance remain open.
+Choose subsequent chunks from observed gameplay failures.
 
-Accepted slices: [weather commands](KVATCH-WEATHER-VERIFICATION.json),
-[gate creature spawning/lifetime](KVATCH-GATE-SPAWN-VERIFICATION.json) at
-`58f203eedb`, and [Savlian INFO-added topics](KVATCH-TOPIC-LEARNING-VERIFICATION.json).
-The topic chunk consumes reply `098143`'s two authored NAME subjects, Help and
-Oblivion Gate, through existing Player knowledge/DIAS persistence. Normal and
-SAN original greeting/reply teach both (26 → 28); fresh processes retain both
-and select Help, opening INFO `098144` and advancing MS48 to stage8. Cold saves
-are made before that selection and remain stage5/donowchoice1. Engine: 2,310 per
-mode; final Python: 621. Rendered SAN uses leak0, engine SAN leak1. Ambient
-Say/SayTo and NPC-to-NPC topic exposure remain outside this accepted slice.
-[Contract](KVATCH-TOPIC-LEARNING-CONTRACT.json),
-[independent original UI oracle](KVATCH-TOPIC-LEARNING-ORACLE.json).
+**Latest accepted chunk: native TrapUpdate compatibility and actual gate entry.**
+The original command0x110c points to a complete success no-op at00977c50.
+Recognizing it removes Harrada script066707's unsupported-command abort without
+adding damage, state or a save schema. Actual normal/SAN movement and activation
+enter original cell01e895/world01d0bc. The original activation sets
+`MS48.inOblivion=1` and releases the weather override; both are observed. Five
+loaded Harrada instances initialize and run without diagnostics. Own-save cold
+processes retain entrance pose, flag, locals, inventory, topics, stage10 and
+reaction40. Four primary courses pass; engine2,310 per mode and Python621 pass
+with their recorded source provenance. Rendered SAN uses leak0; unit SAN leak1.
+[Contract](KVATCH-TRAP-UPDATE-CONTRACT.json),
+[independent original handler](KVATCH-TRAP-UPDATE-ORACLE.json),
+[verification](KVATCH-TRAP-UPDATE-VERIFICATION.json).
 
-**Latest accepted chunk: MS48 stage10 ModFactionReaction.** The original
-agreement adds20 to winning KvatchGuards `0224d7` → PlayerFaction `01dbcd`
-reaction20, producing40; reverse remains0. The fork uses the existing directed
-RuntimeState owner (v81 within current schema106), with no shared FACT mutation.
-Normal/SAN actual agreements and own-save cold getters/resaves all pass; other
-reactions, inventory ownership/counts and quest stage10 persist. Engine:2,310 per
-mode; Python:621. [Contract](KVATCH-FACTION-REACTION-CONTRACT.json),
-[original oracle](KVATCH-FACTION-REACTION-ORACLE.json),
-[verification](KVATCH-FACTION-REACTION-VERIFICATION.json).
+**Next action: heal through normal controls, then proceed toward Ilend Vonius.**
+Normal source:
+`build/oblivion-compat/kvatch-trap-update/normal-original-gate-entry-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `4dd8ac286448c9ec22e098cc928b291dffc18050fc67b064851c93d489529a73`.
+It has an alive Player at the entrance (health22.7), earned inventory and no
+healing potions. Ilend098138/base09812f is alive near[-311,2135,53]. Use actual
+spell selection/Cast, movement and dialogue; do not inject health/quest/target
+writes. Private preparation: `kvatch-ilend/heal-before-ilend.json`; its `equal`
+key requires input-backend support or ordinary GUI selection before launching.
+Harrada attack damage and further encounters have not yet been exercised.
 
-**Latest accepted route slice: NPC defense against the real gate Scamps.**
-Nearby original Kvatch NPCs now use existing friend-disposition fight scoring
-against detected Creatures currently targeting the living Player. All three
-guards acquire a real Scamp; Savlian commits physical damage, reducing saved
-health40→32.8516. Normal/SAN own-save cold processes preserve that damage,
-controllers and attack intent, then commit a new damaging attack without
-repeating the saved hit. Four primary runtime courses, engine2,310 per mode
-and Python621 pass. No new incident ledger or save schema.
-[Contract](KVATCH-ALLY-DEFENSE-CONTRACT.json),
-[limited independent original oracle](KVATCH-ALLY-DEFENSE-ORACLE.json),
-[verification](KVATCH-ALLY-DEFENSE-VERIFICATION.json).
-Original live evidence records aggregate guard weapon response and gate
-count3/deadCount3, without individual killer attribution or exact trigger timing.
-This slice does not accept general crime/alarm behavior or full encounter clearing.
+Reusable exact rendered producers, loaded-section proofs, standalone verified
+archives and all primary/failed cases are under
+`build/oblivion-compat/kvatch-trap-update`. Normal entry uses short movement
+pulses. The failed first SAN entry timed out at low frame rate; its accepted
+retry holds normal forward/run while steering, releases before final aiming,
+and meets the same landing/state requirements. Do not repeat the failed timing
+recipe or run two rendered games simultaneously.
 
-**Next action: actual gate approach and entry with working guard defense.**
-Use the accepted normal post-hit cold save:
-`build/oblivion-compat/kvatch-ally-defense/normal-kvatch-guard-defense-cold-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `e11b21a684e146ce61ef4d83e65786fdad3620ab9df71e9a876a49fbe402525b`.
-It has an alive Player, earned inventory, three genuine timed Scamps, MS48
-stage10, guard reaction40 and actual guard combat in progress. Continue through
-normal movement/activation; do not replay Help or inject quest/stat/target writes.
-The reusable wide-flank course is `kvatch-gate-entry/agreed-gate-entry.json`.
-Observe any further combat/navigation failure before selecting another chunk.
-Check authored teleport, script flags, weather release and cold continuity;
-then choose the next gap from actual interior gameplay.
+Earlier accepted dependencies:
 
-Earlier direct gate attempts met ordinary combat deaths/obstruction. The latest
-`kvatch-gate-entry/normal-help-gate-entry-01` also exposed the now-fixed stage10
-command before a later death; no causal claim that the command caused that death.
-Savlian's friendly Ambush force-greeting already works (actor `028a7a`, base
-`028007`, package `17c463`) at the barricade south of the original staging marker.
-The original completed voiced response changes faction state after speaking;
-no identical voice timing is claimed for the fork's text UI.
+- [Weather commands](KVATCH-WEATHER-VERIFICATION.json).
+- [Real gate creature births and lifetime](KVATCH-GATE-SPAWN-VERIFICATION.json),
+  `58f203eedb`: three genuine timed Scamps with original template/script state.
+- [Savlian INFO-added topics](KVATCH-TOPIC-LEARNING-VERIFICATION.json),
+  `e3f540969a`: original reply teaches Help and Oblivion Gate; cold selection works.
+- [MS48 agreement faction delta](KVATCH-FACTION-REACTION-VERIFICATION.json),
+  `2081d3b3a9`: guard→Player reaction20+20=40, reverse0, own-save persistence.
+- [NPC Player defense](KVATCH-ALLY-DEFENSE-VERIFICATION.json), `edf3d84627`:
+  original guards acquire actual Scamps; Savlian deals physical damage, and cold
+  continuation preserves damage/controller/intent without replaying the saved
+  hit. Only detected Creature-to-Player threats are accepted, with no full
+  crime/alarm or complete encounter-clearing claim. Original live evidence is
+  aggregate guard response/count3/deadCount3, without individual killer attribution.
 
-Reusable compact normal/SAN producers and standalone verified archives are under
-`build/oblivion-compat/kvatch-ally-defense`. Their loaded ELF sections/entry
-match the full builds. Earlier accepted full-debug producers remain recoverable
-from their original durable archives; their executable caches were retired.
-Failed probes/archive/input attempts stay in their ignored course directories.
-Keep generated data/images outside Git and retain original test provenance.
+Gate01e8a3/base1778c8/script1778c5 pairs with01e8a5 in cell01e897/world01d0bc.
+Authored XTEL landing[1372.577,-1088.240,661.154] settles toZ671.825 on terrain;
+portal pose[1375.229,-1281.649,765.794] is not the incoming landing. Savlian's
+original Ambush force-greeting already works. Earlier ordinary combat deaths
+and fixture failures remain in their ignored evidence directories.
 
-The separate genuine tutorial/earned-Amulet source is
-`build/oblivion-compat/quest-items/normal-earned-amulet-owned-cold-drop-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `0d820b5cb21300bb43344ce2c4c8db1c815578f21560b84580ee6aeae4a8d292`.
-MQ01 stage100, MQ02 stage20; MQ03 was not artificially advanced. One declared
-Player MoveTo to marker `00cef7` established the requested location, not physical
-cross-country travel or full quest prerequisites. Keep this inventory separate
-from Chorrol/Vilverin. Never use weather diagnostic count3/missing-creature
-saves as legitimate spawn continuations. Earlier source/evidence details are
-linked from the spawn contract and receipt rather than repeated here.
+The separate earned-Amulet source and declared Kvatch travel setup are recorded
+in the spawn contract/receipt: MQ01stage100, MQ02stage20; MQ03 was not artificially
+advanced. One declared Player MoveTo to original marker00cef7 established the
+requested location, rather than cross-country travel or full quest prerequisites.
+Keep this inventory separate from Chorrol/Vilverin; never use diagnostic
+count3/missing-creature saves as legitimate spawn continuations.
 
-Gate `01e8a3`, base `1778c8`, script `1778c5`, marker `091229`, list `008bfd`,
-leaf `03e9cb`, template `09122a`/script `09122b`. Paired gate `01e8a5` is in
-cell `01e897`, world `01d0bc`. Portal pose [1375.229,-1281.649,765.794] differs
-from the incoming XTEL landing [1372.577,-1088.240,661.154], facing north.
-Breaking the Siege: quest `0224d8`; Find the Heir: `01e725`. Original content,
-records and probe provenance remain in ignored course evidence directories.
-
-[Chorrol throne work](CHORROL-THRONE-SEAT-HANDOFF.md) is complete at `4d63f80e20`;
-Countess investigation is deferred. The requested Windows integration is
-already merged: [receipt](WINDOWS-MERGE-VERIFICATION.json), including unchanged
-3,310-per-mode component coverage. Do not repeat that merge or call these slices
-complete Kvatch/main-quest acceptance.
+[Chorrol throne work](CHORROL-THRONE-SEAT-HANDOFF.md) is complete at4d63f80e20;
+Countess work is deferred. The requested Windows integration is already merged:
+[receipt](WINDOWS-MERGE-VERIFICATION.json), including unchanged3,310-per-mode
+component provenance. Do not repeat that merge or call these slices complete
+Kvatch/main-quest acceptance. Preserve earlier durable producer archive anchors.

@@ -1,0 +1,32 @@
+{
+  "status": "Accepted: independent original handler plus four real normal/SAN entry/cold courses and exact engine/Python gates.",
+  "parent": "edf3d84627",
+  "chunk": "Recognize native TrapUpdate without duplicate damage or new state; verify actual Kvatch gate entry and own-save cold interior continuity.",
+  "original": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "script": "066707",
+    "script_editor_id": "HarradaGroundtAttack",
+    "flora_bases": [
+      "07b7cc",
+      "07b7cd"
+    ],
+    "command_opcode": "0x110c",
+    "command_table": "0x00b0f2a0",
+    "execute_handler": "0x00977c50",
+    "behavior": "Complete handler returns success without reading arguments or result pointer. No scene, local, actor or collision mutation."
+  },
+  "evidence": "build/oblivion-compat/kvatch-trap-update",
+  "acceptance": [
+    "Original command table and complete handler verified against hash-identified executable independently of C++.",
+    "Normal/SAN ordinary Player movement and activation enter original world01d0bc through door01e8a3/01e8a5; all authored Harrada script instances initialize and run without unsupported commands. Actual saved XTEL landing, owner state and script locals audited.",
+    "Fresh own-save normal/SAN processes remain inside; native106 codec/live save equality, earned inventory/known topics/stage10/reaction40 and Harrada locals persist. No duplicate environmental damage attributed to this inert command.",
+    "Appropriate build/regression checks and exact rendered producer provenance; local commit before moving farther inside."
+  ],
+  "limits": [
+    "This command is intentionally inert in the original; collision hazard handling remains a separate authority. No claim that Harrada damage, continuous hazards or all interior content are implemented.",
+    "No full exterior encounter clearing, main-quest prerequisites or voice timing parity.",
+    "Physical collision settling may raise Player Z after authored XTEL. Compare initial transfer pose separately from settled saved pose."
+  ],
+  "input_timing": "Normal uses short walk pulses. Slow-frame SAN variant holds ordinary forward/run while steering, then releases before final aiming; acceptance requirements and source save are identical."
+}

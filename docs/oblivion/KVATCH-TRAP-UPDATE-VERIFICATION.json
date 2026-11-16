@@ -1,0 +1,205 @@
+{
+  "status": "Accepted bounded native TrapUpdate compatibility, actual first gate entry and own-save cold interior continuity; further interior progression remains open.",
+  "tested_parent": "edf3d84627286d77b046c32f16e24b69bc623c42",
+  "production_source_sha256": {
+    "apps/openmw/mwmechanics/oblivionai.cpp": "21abea8a76d067c293eb9b6039c2fce5079b89d8a0a0b951f174514f6ef2f618",
+    "apps/openmw/mwworld/obliviondynamicreference.cpp": "b76c599182b7218a302de68aa99ad4e235d1bc2d160f677ef571b9a572a3f3f2",
+    "apps/openmw/mwworld/oblivionlevelled.cpp": "fd8f94e044b70522569b17befca8b87f0812d81ea5f8f1711267f93dff8cd827",
+    "apps/openmw/mwworld/oblivionlevelled.hpp": "5258813c00671462dd3cda656199aa63b7e192d812000285645f2fdcaad82a9f",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "9aec304b22c2c950e78270f4eb3468f07cda93141ae8fae5c76fe2799c7931ea",
+    "apps/openmw/mwworld/worldimp.cpp": "fd14693b5ee6b9e0dfff6f79bb158ed78220f3c5e751a78da3bec6627b236d7c",
+    "apps/openmw/mwworld/worldimp.hpp": "eed66120d7428be2e219964caacc93eea8fd6169e019bb86cd42ab827093f042",
+    "apps/openmw/mwworld/oblivionspawn.hpp": "36c10bd9ab36c16541913cc7162cc1c917eb424fc10616558c02f31332d64df5",
+    "apps/openmw/mwdialogue/dialoguemanagerimp.cpp": "7c535eb82550ad2c6cd7326693fd2654214d4886aadc3c60b2ea11bb6e720661",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "9883ea691ed18fc2807e1e55123fe9fa9b466e612977d19824607d38769806eb"
+  },
+  "implementation": "TrapUpdate returns without mutations, matching the entire original success handler. Existing collision processing remains the damage authority. No new state or save schema.",
+  "contract": "KVATCH-TRAP-UPDATE-CONTRACT.json",
+  "oracle": "KVATCH-TRAP-UPDATE-ORACLE.json",
+  "independent_original_handler": {
+    "passed": true,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "command": "TrapUpdate",
+    "opcode": "0x110c",
+    "table": "0xb0f2a0",
+    "handler": "0x977c50",
+    "full_handler_executed": true,
+    "boundary_stubs": [],
+    "cases": [
+      {
+        "initial_eax": 0,
+        "returned_eax": 1,
+        "success_al": 1,
+        "result_and_fixture_memory_unchanged": true,
+        "returned": true
+      },
+      {
+        "initial_eax": 305419776,
+        "returned_eax": 305419777,
+        "success_al": 1,
+        "result_and_fixture_memory_unchanged": true,
+        "returned": true
+      },
+      {
+        "initial_eax": 4294967295,
+        "returned_eax": 4294967041,
+        "success_al": 1,
+        "result_and_fixture_memory_unchanged": true,
+        "returned": true
+      }
+    ],
+    "scope": "Complete original inert handler only. No trap collision, damage, animation or full native runtime assertion."
+  },
+  "winning_content_audit": "build/oblivion-compat/kvatch-trap-update/winning-content-audit.json",
+  "runtime": [
+    {
+      "case": "build/oblivion-compat/kvatch-trap-update/normal-original-gate-entry-01",
+      "passed": true,
+      "phase": "entry",
+      "sanitized": false,
+      "input_sha256": "e11b21a684e146ce61ef4d83e65786fdad3620ab9df71e9a876a49fbe402525b",
+      "save_sha256": "88a5a8096c233fc2bdec400a3b60c3e32189705b47797c1ac9f1c80f8e6fcbb0",
+      "binary_sha256": "9a5148a8bd79840e5122c476d95a38e58eb9c4e479b6789555b21d589ea06220",
+      "cell": "content:oblivion.esm:01e895",
+      "settled_landing_pose": [
+        1372.57666015625,
+        -1088.2403564453125,
+        671.825439453125,
+        0.0,
+        0.0,
+        1.6858741673786426e-06
+      ],
+      "harrada_instances": 5,
+      "authored_in_oblivion": 1,
+      "weather_override_release_observed": true,
+      "earned_inventory_topics_reactions_stage_preserved": true,
+      "scope": "Actual first gate entry and cold interior compatibility; Harrada damage and further progression remain open."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-trap-update/normal-original-gate-entry-cold-01",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": false,
+      "input_sha256": "88a5a8096c233fc2bdec400a3b60c3e32189705b47797c1ac9f1c80f8e6fcbb0",
+      "save_sha256": "4dd8ac286448c9ec22e098cc928b291dffc18050fc67b064851c93d489529a73",
+      "binary_sha256": "9a5148a8bd79840e5122c476d95a38e58eb9c4e479b6789555b21d589ea06220",
+      "cell": "content:oblivion.esm:01e895",
+      "settled_landing_pose": [
+        1372.57666015625,
+        -1088.2403564453125,
+        671.825439453125,
+        0.0,
+        0.0,
+        1.6858741673786426e-06
+      ],
+      "harrada_instances": 5,
+      "authored_in_oblivion": 1,
+      "weather_override_release_observed": false,
+      "earned_inventory_topics_reactions_stage_preserved": true,
+      "scope": "Actual first gate entry and cold interior compatibility; Harrada damage and further progression remain open."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-trap-update/sanitized-original-gate-entry-02",
+      "passed": true,
+      "phase": "entry",
+      "sanitized": true,
+      "input_sha256": "e11b21a684e146ce61ef4d83e65786fdad3620ab9df71e9a876a49fbe402525b",
+      "save_sha256": "bf0cd1e48d646417ba340a89a186d02b12b832f4db1315a0ee403e4c3deb4769",
+      "binary_sha256": "3beab24d2ead42b10bbbc2e55cfecd3b60fa174808cea87ba6b4e8eee5a37dfd",
+      "cell": "content:oblivion.esm:01e895",
+      "settled_landing_pose": [
+        1372.57666015625,
+        -1088.2403564453125,
+        671.825439453125,
+        0.0,
+        0.0,
+        1.6858741673786426e-06
+      ],
+      "harrada_instances": 5,
+      "authored_in_oblivion": 1,
+      "weather_override_release_observed": true,
+      "earned_inventory_topics_reactions_stage_preserved": true,
+      "scope": "Actual first gate entry and cold interior compatibility; Harrada damage and further progression remain open."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-trap-update/sanitized-original-gate-entry-cold-02",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": true,
+      "input_sha256": "bf0cd1e48d646417ba340a89a186d02b12b832f4db1315a0ee403e4c3deb4769",
+      "save_sha256": "205bdc89ae79e0af4704c8c7d1ebaf93d5861a33ec5cfdc26e85a89dd019f7e8",
+      "binary_sha256": "3beab24d2ead42b10bbbc2e55cfecd3b60fa174808cea87ba6b4e8eee5a37dfd",
+      "cell": "content:oblivion.esm:01e895",
+      "settled_landing_pose": [
+        1372.57666015625,
+        -1088.2403564453125,
+        671.825439453125,
+        0.0,
+        0.0,
+        1.6858741673786426e-06
+      ],
+      "harrada_instances": 5,
+      "authored_in_oblivion": 1,
+      "weather_override_release_observed": false,
+      "earned_inventory_topics_reactions_stage_preserved": true,
+      "scope": "Actual first gate entry and cold interior compatibility; Harrada damage and further progression remain open."
+    }
+  ],
+  "visual_review": "All four primary original-gate/interior and cold interior captures manually reviewed.",
+  "gates": {
+    "normal_engine": {
+      "path": "build/oblivion-compat/kvatch-trap-update/normal-engine-01",
+      "executed": 2310,
+      "binary_sha256": "2e0a4096f311684503153efb807ef4af3a5556457244941f6bdbd8908a4a54f6",
+      "source": {
+        "head": "edf3d84627286d77b046c32f16e24b69bc623c42",
+        "source_fingerprint": "4caafb1207fa62ba9331ae6eb93e9668fb7541888b5b9203611f5a57052b225c"
+      }
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/kvatch-trap-update/sanitized-engine-union.json",
+      "executed": 2310,
+      "binary_sha256": "6812394c26a5e0ffdae5c7eb6e874dcb6c4f9aedc1f21956338aca1a1772b558",
+      "unit_leaks": true,
+      "disjoint": true
+    },
+    "python": {
+      "path": "build/oblivion-compat/kvatch-trap-update/python-01",
+      "executed": 621,
+      "source": {
+        "head": "edf3d84627286d77b046c32f16e24b69bc623c42",
+        "source_fingerprint": "4caafb1207fa62ba9331ae6eb93e9668fb7541888b5b9203611f5a57052b225c"
+      }
+    },
+    "unchanged_components": "Reuse WINDOWS-MERGE-VERIFICATION.json original 3310-per-mode provenance; no new component acceptance attributed to these runtime producers."
+  },
+  "artifacts": [
+    {
+      "mode": "normal",
+      "sha256": "9a5148a8bd79840e5122c476d95a38e58eb9c4e479b6789555b21d589ea06220",
+      "producer": "build/oblivion-compat/kvatch-trap-update/normal-producer-02.json",
+      "archive": "build/oblivion-compat/kvatch-trap-update/normal-complete-producer-archive.json",
+      "loaded_section_proof": "build/oblivion-compat/kvatch-trap-update/normal-allocated-section-proof.json"
+    },
+    {
+      "mode": "sanitized",
+      "sha256": "3beab24d2ead42b10bbbc2e55cfecd3b60fa174808cea87ba6b4e8eee5a37dfd",
+      "producer": "build/oblivion-compat/kvatch-trap-update/sanitized-producer-02.json",
+      "archive": "build/oblivion-compat/kvatch-trap-update/sanitized-complete-producer-archive.json",
+      "loaded_section_proof": "build/oblivion-compat/kvatch-trap-update/sanitized-allocated-section-proof.json"
+    }
+  ],
+  "gate_provenance_note": "Engine/Python fingerprints predate the SAN timing-only manifest and strengthened flag/trace audit. All tested production C++ hashes remain identical; the strengthened auditor passes against each primary runtime. No new full engine/Python gate is attributed to those fixture-only additions.",
+  "artifact_scope": "Actual rendered candidates remove debug-only sections before acceptance, with every ELF loaded section and entry verified unchanged. Standalone zstd archives decode to exact tested hashes. Rendered SAN records actual ASan/UBSan libraries and leak0/halt; units use leak1.",
+  "retained_failures": [
+    "SAN short-pulse entry01 exhausted its movement limit at low frame rate; retry02 uses continuous ordinary forward/run with steering and releases before final aiming. No gameplay assertion was relaxed.",
+    "Gate-entry baseline reached original entrance and saved but failed because original Harrada GameMode aborted at unsupported TrapUpdate.",
+    "Earlier wide-flank fixture moved through its high aiming point and exhausted movement iterations; corrected near/aim/activate course enters alive.",
+    "Historical shared oracle venv lacked its dynamic library; separate private venv succeeded with the full original handler."
+  ],
+  "scope_limits": [
+    "The native command is inert. No Harrada damage, animated collision, continuous hazard, full encounter clearing or full main-quest prerequisite acceptance.",
+    "Actual entrance cell01e895 shares original world01d0bc with paired door01e8a5 in cell01e897. Settled Z differs from XTEL by capsule/terrain correction; XY match.",
+    "Loaded plants remain outside attack range; their initialized locals persist. No claim that positive attack timers or physical Harrada strikes have been exercised."
+  ]
+}
