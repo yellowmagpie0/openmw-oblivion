@@ -38,6 +38,8 @@ namespace MWWorld
             "chair_leftenter.kf", "dynamicidle_sit.kf", "chair_leftexit.kf"};
         constexpr std::array<std::string_view, 3> RightClips{
             "chair_rightenter.kf", "dynamicidle_sit.kf", "chair_rightexit.kf"};
+        constexpr std::array<std::string_view, 3> BackClips{
+            "chair_backenter.kf", "dynamicidle_sit.kf", "chair_backexit.kf"};
         std::string hexHash(std::string_view bytes)
         {
             constexpr char digits[] = "0123456789abcdef";
@@ -86,17 +88,18 @@ namespace MWWorld
         const bool forward = marker.mPositionRef == 13 && marker.mOrientation == 0;
         const bool left = marker.mPositionRef == 11 && marker.mOrientation == 1570;
         const bool right = marker.mPositionRef == 12 && marker.mOrientation == 4712;
-        // Admit only the original forward, left and right marker/clip families verified
-        // with ordinary Player activation. Other directions remain unsupported.
-        if ((!forward && !left && !right)
+        const bool back = marker.mPositionRef == 14 && marker.mOrientation == 3141;
+        // Admit only the original marker/clip pairs verified with ordinary
+        // Player activation. Other orientations remain unsupported.
+        if ((!forward && !left && !right && !back)
             || seat.mPlacement.rot[0] != 0 || seat.mPlacement.rot[1] != 0)
             throw std::invalid_argument("Unsupported Player furniture entry marker");
         auto result = std::make_shared<OblivionFurnitureResources>();
         result->mIdentity = seat;
         result->mIdentity.mModelHash = hexHash(view.getHash());
         result->mMarkerOffset = marker.mOffset;
-        result->mEntryYaw = left ? osg::PI_2f : right ? -osg::PI_2f : 0;
-        const auto& clips = forward ? ForwardClips : left ? LeftClips : RightClips;
+        result->mEntryYaw = left ? osg::PI_2f : right ? -osg::PI_2f : back ? osg::PIf : 0;
+        const auto& clips = forward ? ForwardClips : left ? LeftClips : right ? RightClips : BackClips;
         const auto actorModel = VFS::Path::normalizeFilename(seat.mActorModel);
         const auto slash = actorModel.rfind('/');
         if (slash == std::string::npos || actorModel.find("..") != std::string::npos)

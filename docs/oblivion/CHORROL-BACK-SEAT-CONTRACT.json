@@ -1,0 +1,79 @@
+{
+  "status": "Accepted bounded original Player back-entry chair lifecycle",
+  "milestone": "M14/M11 one original Player back-entry chair lifecycle",
+  "target": {
+    "ref": {
+      "id": "03fdd6",
+      "base_id": 191797,
+      "position": [
+        -2183.513427734375,
+        -68.57400512695312,
+        -272.67919921875,
+        0.0,
+        -0.0,
+        -2.9799964427948
+      ],
+      "lock": "",
+      "owner": "",
+      "teleport": ""
+    },
+    "base": {
+      "id": "02ed35",
+      "type": "FURN",
+      "edid": "UCChair01F",
+      "name": "Chair",
+      "model": "Furniture\\UpperClass\\UpperChair01.NIF",
+      "markers": "01000040"
+    }
+  },
+  "source": {
+    "path": "build/oblivion-compat/chorrol-right-seat/normal-right-standing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "a76cc4a47aa1af696a8e3099ae895dadbf6e98f3af54fe280159f732a2fc62c9",
+    "position": [
+      -1615.565185546875,
+      703.6891479492188,
+      -315.8624267578125,
+      -1.443359375,
+      0.0,
+      1.5707963705062866
+    ],
+    "provenance": "Accepted normal right-chair standing checkpoint from independent MS45 reward branch; preserve all inventory/reward ownership."
+  },
+  "gap": "UCChair01F02ed35 enables only marker0, position_ref14/orientation3141 in originalUpperChair01.NIF. Current1db0065404 supports forward13/0, left11/1570 andright12/4712, rejects14.",
+  "plan": [
+    "Reach actual03fdd6 through ordinary same-hall navigation/doors; demonstrate selected unsupported-marker activation and retain close standing save.",
+    "Audit winning original placed/base/cell records, original model/back KFs and isolated original Player lifecycle/anchors/headings; verify selected chair identity.",
+    "Implement only marker14/orientation3141 profile and back clips with existing owner/schema106, then normal/SAN entry, seated cold getup, standing cold movement and current right-entry regression.",
+    "Run appropriate current build/integration/semantic gates, retain decoded producer identities, commit locally and select next reached gap."
+  ],
+  "scope_limits": [
+    "No fork teleport, injected records, inventory grants or actor enabling.",
+    "Only this canonical marker14/orientation3141 profile. Adjacent original Throne02b1f5 has14/orientation0 and remains separate/unverified. No all-furniture/NPC/fullmilestone claim.",
+    "Original native diagnostic can use declared original-only travel; exact prefix input restoration required.",
+    "Run rendered games sequentially. Preserve prior independent branches and all failed attempts."
+  ],
+  "reached_source": {
+    "path": "build/oblivion-compat/chorrol-back-seat/normal-back-activation-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "90b4f0edb2f7e3089e6d5f71bf9d78ea1b7221244e0c5f69cfe6b2df3e910f82",
+    "position": [
+      -2188.60498046875,
+      -113.1755599975586,
+      -317.98541259765625,
+      0.607421875,
+      0.0,
+      0.1743299961090088
+    ],
+    "native_furniture": null,
+    "case_passed": true
+  },
+  "oracle": "CHORROL-BACK-SEAT-ORACLE.json",
+  "verification": "CHORROL-BACK-SEAT-VERIFICATION.json",
+  "final_checkpoints": {
+    "normal-back-seated-01": "b70de7bc8a6858c8f026d9bd3c821c078290c5a5f6fa9ed9c420e1dd035d123e",
+    "normal-back-getup-01": "c13124b195575d7d5b21a9bbd863af48cddb71169d113850ffa416ac00485da7",
+    "normal-back-standing-01": "635f12e156960663e3d36126ed236dbda49f4894aba33a0543ce30ca569cb52c",
+    "sanitized-back-seated-01": "aa25663ba91b4b779473f1ad3c9898b7d50a93e6c746ebe9c1ee5609735a734c",
+    "sanitized-back-getup-02": "69bf98770a393e4d35cc7311a5dfe1664266a841732028224ffec81ca7c0ff2c",
+    "sanitized-back-standing-01": "c6e4bd69e2cfd6b842eb3b87fa1a942c7dafb709f4be8ff68c9c535f28c733f4"
+  }
+}

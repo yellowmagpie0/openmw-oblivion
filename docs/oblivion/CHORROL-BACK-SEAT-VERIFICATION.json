@@ -1,0 +1,766 @@
+{
+  "status": "Accepted bounded original Player back-entry chair lifecycle",
+  "tested_parent": "1db006540497966883a3d696696ae188c436690d",
+  "contract": "CHORROL-BACK-SEAT-CONTRACT.json",
+  "oracle": "CHORROL-BACK-SEAT-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/chorrol-back-seat",
+  "cpp_sha256": {
+    "apps/openmw/mwworld/oblivionfurniture.cpp": "04ff4160ce11bfd44adfe0c4fd295424eaa4031a29fc1696619f353181fe7dc1"
+  },
+  "runtime_courses": [
+    {
+      "case": "build/oblivion-compat/chorrol-back-seat/normal-back-seated-01",
+      "audit_sha256": "b65abd63a2798c4c44743ffa5de1b2e26621ac0b9476bff312a90526788a23ec",
+      "passed": true,
+      "phase": "seat",
+      "sanitized": false,
+      "input_sha256": "90b4f0edb2f7e3089e6d5f71bf9d78ea1b7221244e0c5f69cfe6b2df3e910f82",
+      "save_sha256": "b70de7bc8a6858c8f026d9bd3c821c078290c5a5f6fa9ed9c420e1dd035d123e",
+      "binary_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff",
+      "process": {
+        "pid": 1793125,
+        "start_ticks": 34424800,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-back-seat-normal-tg91t_7j/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-back-seated-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-back-activation-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff"
+      },
+      "pose": [
+        -2183.852783203125,
+        -69.89701080322266,
+        -318.25189208984375,
+        0.607421875,
+        0.0,
+        -2.9799964427948
+      ],
+      "furniture": {
+        "reference": "content:oblivion.esm:03fdd6",
+        "base": "content:oblivion.esm:02ed35",
+        "cell": "content:oblivion.esm:02898f",
+        "placement": [
+          -2183.513427734375,
+          -68.57400512695312,
+          -272.67919921875,
+          0.0,
+          -0.0,
+          -2.9799964427948
+        ],
+        "scale": 1.0,
+        "marker": 0,
+        "phase": 3,
+        "elapsed": 2.2753334045410156,
+        "look_yaw": 0.0,
+        "actor_model": "Characters\\_Male\\skeleton.NIF",
+        "model_hash": "ed0b1466ea4ca579f34da70de91a62a7",
+        "clip_hashes": [
+          "8fe8c9b798552db597dd8086eaecf603",
+          "14b892219676ba03bfdbef8e80626efa",
+          "1bf8f2aab698a55ecaffb60c6dcfeedc"
+        ]
+      },
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-back-seat/normal-back-getup-01",
+      "audit_sha256": "7ea650e7d2b7b8f8a3acdea33a424cd44042237ae11408dd73c399ec7075ad34",
+      "passed": true,
+      "phase": "exit",
+      "sanitized": false,
+      "input_sha256": "b70de7bc8a6858c8f026d9bd3c821c078290c5a5f6fa9ed9c420e1dd035d123e",
+      "save_sha256": "c13124b195575d7d5b21a9bbd863af48cddb71169d113850ffa416ac00485da7",
+      "binary_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff",
+      "process": {
+        "pid": 1793264,
+        "start_ticks": 34432256,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-back-seat-normal-tg91t_7j/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-back-getup-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-back-seated-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff"
+      },
+      "pose": [
+        -2192.633056640625,
+        -123.75877380371094,
+        -317.9854431152344,
+        -1.443359375,
+        0.0,
+        -2.9799962043762207
+      ],
+      "furniture": null,
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-back-seat/normal-back-standing-01",
+      "audit_sha256": "2e84d1b086bd83364e27fd3f6af2ea88ec4baa6d9a2ccb159f2a0ff4e068a68b",
+      "passed": true,
+      "phase": "standing",
+      "sanitized": false,
+      "input_sha256": "c13124b195575d7d5b21a9bbd863af48cddb71169d113850ffa416ac00485da7",
+      "save_sha256": "635f12e156960663e3d36126ed236dbda49f4894aba33a0543ce30ca569cb52c",
+      "binary_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff",
+      "process": {
+        "pid": 1793847,
+        "start_ticks": 34439888,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-back-seat-normal-tg91t_7j/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-back-standing-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-back-getup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff"
+      },
+      "pose": [
+        -2196.8701171875,
+        -149.756103515625,
+        -317.9854736328125,
+        -1.443359375,
+        0.0,
+        -2.9799962043762207
+      ],
+      "furniture": null,
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-back-seat/sanitized-back-seated-01",
+      "audit_sha256": "a12de9833787f7fd0e344146685aa6dc0e3a3d5489bde83d7434970350845e87",
+      "passed": true,
+      "phase": "seat",
+      "sanitized": true,
+      "input_sha256": "90b4f0edb2f7e3089e6d5f71bf9d78ea1b7221244e0c5f69cfe6b2df3e910f82",
+      "save_sha256": "aa25663ba91b4b779473f1ad3c9898b7d50a93e6c746ebe9c1ee5609735a734c",
+      "binary_sha256": "26b6c408d5fab67186eeedec3352470d116a9ffac962a3d72800d96f5787fd58",
+      "process": {
+        "pid": 1799836,
+        "start_ticks": 34447418,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-back-seat-sanitized-b1zq3aai/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-back-seated-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-back-activation-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "26b6c408d5fab67186eeedec3352470d116a9ffac962a3d72800d96f5787fd58"
+      },
+      "pose": [
+        -2183.852783203125,
+        -69.89701080322266,
+        -318.25189208984375,
+        0.607421875,
+        0.0,
+        -2.9799964427948
+      ],
+      "furniture": {
+        "reference": "content:oblivion.esm:03fdd6",
+        "base": "content:oblivion.esm:02ed35",
+        "cell": "content:oblivion.esm:02898f",
+        "placement": [
+          -2183.513427734375,
+          -68.57400512695312,
+          -272.67919921875,
+          0.0,
+          -0.0,
+          -2.9799964427948
+        ],
+        "scale": 1.0,
+        "marker": 0,
+        "phase": 3,
+        "elapsed": 1.5213334560394287,
+        "look_yaw": 0.0,
+        "actor_model": "Characters\\_Male\\skeleton.NIF",
+        "model_hash": "ed0b1466ea4ca579f34da70de91a62a7",
+        "clip_hashes": [
+          "8fe8c9b798552db597dd8086eaecf603",
+          "14b892219676ba03bfdbef8e80626efa",
+          "1bf8f2aab698a55ecaffb60c6dcfeedc"
+        ]
+      },
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-back-seat/sanitized-back-getup-02",
+      "audit_sha256": "ed59e8c68af61ede9702e1a95b4595d2f9d2bd3c63e82c56055de5ba2eb64174",
+      "passed": true,
+      "phase": "exit",
+      "sanitized": true,
+      "input_sha256": "aa25663ba91b4b779473f1ad3c9898b7d50a93e6c746ebe9c1ee5609735a734c",
+      "save_sha256": "69bf98770a393e4d35cc7311a5dfe1664266a841732028224ffec81ca7c0ff2c",
+      "binary_sha256": "26b6c408d5fab67186eeedec3352470d116a9ffac962a3d72800d96f5787fd58",
+      "process": {
+        "pid": 1805931,
+        "start_ticks": 34528575,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-back-seat-sanitized-b1zq3aai/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-back-getup-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-back-seated-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "26b6c408d5fab67186eeedec3352470d116a9ffac962a3d72800d96f5787fd58"
+      },
+      "pose": [
+        -2192.633056640625,
+        -123.75877380371094,
+        -317.9854431152344,
+        -1.443359375,
+        0.0,
+        -2.9799962043762207
+      ],
+      "furniture": null,
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-back-seat/sanitized-back-standing-01",
+      "audit_sha256": "9c2e403508b74c7f7080c11f48aeb5d895735d9c94d6f7decefe6fb0e8cf595d",
+      "passed": true,
+      "phase": "standing",
+      "sanitized": true,
+      "input_sha256": "69bf98770a393e4d35cc7311a5dfe1664266a841732028224ffec81ca7c0ff2c",
+      "save_sha256": "c6e4bd69e2cfd6b842eb3b87fa1a942c7dafb709f4be8ff68c9c535f28c733f4",
+      "binary_sha256": "26b6c408d5fab67186eeedec3352470d116a9ffac962a3d72800d96f5787fd58",
+      "process": {
+        "pid": 1806149,
+        "start_ticks": 34561385,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-back-seat-sanitized-b1zq3aai/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-back-standing-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-back-getup-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "26b6c408d5fab67186eeedec3352470d116a9ffac962a3d72800d96f5787fd58"
+      },
+      "pose": [
+        -2193.48046875,
+        -128.958251953125,
+        -317.9854431152344,
+        -1.443359375,
+        0.0,
+        -2.9799962043762207
+      ],
+      "furniture": null,
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    }
+  ],
+  "normal_right_regression": [
+    {
+      "case": "build/oblivion-compat/chorrol-back-seat/normal-right-regression-seated-01",
+      "audit_sha256": "c33bf5f24eb83922b57167a6fd6cc0e09c6ea97fd06249c3b727eee589c3598c",
+      "audit": {
+        "passed": true,
+        "phase": "seat",
+        "sanitized": false,
+        "input_sha256": "0222e3d72603668cd9a3ccc78d1ef549e0413d8b61b99a95a577a1bdfb4db937",
+        "save_sha256": "6568e331dcd811de649e25a2d7be39c9a0053abdf5fa9ce21a68f6f47a8048ef",
+        "binary_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff",
+        "process": {
+          "pid": 1806421,
+          "start_ticks": 34591225,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/tmp/openmw-back-seat-normal-tg91t_7j/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-right-regression-seated-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-right-seat/normal-right-activation-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff"
+        },
+        "pose": [
+          -1693.51611328125,
+          703.4015502929688,
+          -317.9219970703125,
+          0.314453125,
+          0.0,
+          0.0
+        ],
+        "furniture": {
+          "reference": "content:oblivion.esm:03fdce",
+          "base": "content:oblivion.esm:02dd43",
+          "cell": "content:oblivion.esm:02898f",
+          "placement": [
+            -1693.4146728515625,
+            703.4398193359375,
+            -273.90081787109375,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": 1.0,
+          "marker": 1,
+          "phase": 3,
+          "elapsed": 0.1193334311246872,
+          "look_yaw": 0.0,
+          "actor_model": "Characters\\_Male\\skeleton.NIF",
+          "model_hash": "c3de08ee115ff2e8549a3726f3c3ac10",
+          "clip_hashes": [
+            "78c3e148e4a15902fbe2dfcc64045277",
+            "14b892219676ba03bfdbef8e80626efa",
+            "36cd515251c1f2b9db8d314c4edf3029"
+          ]
+        },
+        "reward": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 100,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            35,
+            50,
+            55,
+            60,
+            80,
+            100
+          ]
+        },
+        "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+      }
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-back-seat/normal-right-regression-getup-01",
+      "audit_sha256": "aafb8ba65fe0b1792c121a5c8d5fa5205c7714a199c714fc0aa33e76c5da8ff5",
+      "audit": {
+        "passed": true,
+        "phase": "exit",
+        "sanitized": false,
+        "input_sha256": "6568e331dcd811de649e25a2d7be39c9a0053abdf5fa9ce21a68f6f47a8048ef",
+        "save_sha256": "ce027aab1ed4487c6c4d78e6420b72d7c01dc7fdc955a865c5ac26e079b99afd",
+        "binary_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff",
+        "process": {
+          "pid": 1806518,
+          "start_ticks": 34598417,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/tmp/openmw-back-seat-normal-tg91t_7j/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-right-regression-getup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/normal-right-regression-seated-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff"
+        },
+        "pose": [
+          -1641.9049072265625,
+          703.6891479492188,
+          -315.8624267578125,
+          -1.150390625,
+          0.0,
+          1.5707963705062866
+        ],
+        "furniture": null,
+        "reward": {
+          "quest": "content:oblivion.esm:027815",
+          "stage": 100,
+          "running": true,
+          "completed_stages": [
+            1,
+            2,
+            10,
+            35,
+            50,
+            55,
+            60,
+            80,
+            100
+          ]
+        },
+        "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+      }
+    }
+  ],
+  "checks": {
+    "normal-engine-01": {
+      "path": "build/oblivion-compat/chorrol-back-seat/normal-engine-01/verification.json",
+      "sha256": "892dda940d894c6a78b2464cc337e971e2b664e00b142a3dc172ee7247e27bad",
+      "source": {
+        "head": "1db006540497966883a3d696696ae188c436690d",
+        "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+      },
+      "results": {
+        "engine": {
+          "executed": 2310,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "862ec76dba1a12494d21d3d4bda985f22cde688fe28bdbfad8b16fd2accdf15d",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "ea5576c3003f995b48534923a7bf486c2fc513519dec61e24817065aab1904cb",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "python-01": {
+      "path": "build/oblivion-compat/chorrol-back-seat/python-01/verification.json",
+      "sha256": "869cf5bea38ed12cb686e32562c08999b247182a496772e2418dc40532e960d7",
+      "source": {
+        "head": "1db006540497966883a3d696696ae188c436690d",
+        "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+      },
+      "results": {
+        "python": {
+          "executed": 621,
+          "passed": true,
+          "log_sha256": "c5da5431545fdb9551e0e1309e0a152e08ac957b5b93252a626d10ba7a85e236"
+        }
+      }
+    },
+    "sanitized-engine-rest-01": {
+      "path": "build/oblivion-compat/chorrol-back-seat/sanitized-engine-rest-01/verification.json",
+      "sha256": "06becc4d13d962b46ca11d02a4c02c6f7b916fac45a1e0715d8527c2a9da0d8a",
+      "source": {
+        "head": "1db006540497966883a3d696696ae188c436690d",
+        "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+      },
+      "results": {
+        "engine": {
+          "executed": 2058,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "5ec3d0947545a42913dd6d4c4a30d627c74d267a1da0289c35430e3e32a0ad52",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "58652c96aa529998ba041d1f32c11321072af35dbbad97f46ce8e909fc943751",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-engine-workers-0-01": {
+      "path": "build/oblivion-compat/chorrol-back-seat/sanitized-engine-workers-0-01/verification.json",
+      "sha256": "78003feef3774bb0dc643ba694fc7859666ddcb1269ff59d4e66f70f0c0e6b3d",
+      "source": {
+        "head": "1db006540497966883a3d696696ae188c436690d",
+        "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "5ec3d0947545a42913dd6d4c4a30d627c74d267a1da0289c35430e3e32a0ad52",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "b55367c778ccd203ac3d4675acb415d7ca5d1f3eae0860e2de1d894be6119e04",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-engine-workers-1-01": {
+      "path": "build/oblivion-compat/chorrol-back-seat/sanitized-engine-workers-1-01/verification.json",
+      "sha256": "5879ed67d9cbe527ded22f9086e4119d11153cae6f26add7e3ff934a356a0773",
+      "source": {
+        "head": "1db006540497966883a3d696696ae188c436690d",
+        "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "5ec3d0947545a42913dd6d4c4a30d627c74d267a1da0289c35430e3e32a0ad52",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "13eaa043d5e3978a605788b2325a9eb90d4f014bc2178f50339aac28892b02be",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-engine-workers-2-01": {
+      "path": "build/oblivion-compat/chorrol-back-seat/sanitized-engine-workers-2-01/verification.json",
+      "sha256": "a28d535df17d2bdc424a77251838d77626e81cad2bc0f593d93130d56c1474e2",
+      "source": {
+        "head": "1db006540497966883a3d696696ae188c436690d",
+        "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "5ec3d0947545a42913dd6d4c4a30d627c74d267a1da0289c35430e3e32a0ad52",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "84f88464dde8ed347585ac0c9bb3ab186e18361b640bbcbd0e26d88f5366361c",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitized_engine_union": {
+    "passed": true,
+    "executed": 2310,
+    "binary_sha256": "5ec3d0947545a42913dd6d4c4a30d627c74d267a1da0289c35430e3e32a0ad52",
+    "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+    "partitions": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-engine-rest-01",
+        "count": 2058,
+        "source": {
+          "head": "1db006540497966883a3d696696ae188c436690d",
+          "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+        }
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-engine-workers-0-01",
+        "count": 84,
+        "source": {
+          "head": "1db006540497966883a3d696696ae188c436690d",
+          "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+        }
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-engine-workers-1-01",
+        "count": 84,
+        "source": {
+          "head": "1db006540497966883a3d696696ae188c436690d",
+          "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+        }
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/sanitized-engine-workers-2-01",
+        "count": 84,
+        "source": {
+          "head": "1db006540497966883a3d696696ae188c436690d",
+          "source_fingerprint": "fa1336b4493f5d302d8239696e0054b76537a77d0061e35d04435e2aed90af6c"
+        }
+      }
+    ],
+    "disjoint": true,
+    "unit_leaks": true
+  },
+  "original_restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "producer_archives": [
+    {
+      "mode": "normal",
+      "path": "build/oblivion-compat/chorrol-back-seat/candidate-assets/normal-dev-01/openmw.zst",
+      "decoded_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff",
+      "verified": true,
+      "source_retired": true
+    },
+    {
+      "mode": "sanitized",
+      "path": "build/oblivion-compat/chorrol-back-seat/candidate-assets/sanitized-dev-01/openmw.zst",
+      "decoded_sha256": "26b6c408d5fab67186eeedec3352470d116a9ffac962a3d72800d96f5787fd58",
+      "verified": true,
+      "source_retired": true
+    }
+  ],
+  "cache_codec_migration": {
+    "path": "build/oblivion-compat/chorrol-back-seat/recompressed-historical-producers.json",
+    "sha256": "9fe11fb658bb6445344202e7ed52cead5a547af82a1b582b7fb2151c76e4593b",
+    "scope": "Twelve named historical generated normal executable archives changed gzip->zstd with exact decoded producer identity; all source/original content/saves/runtime evidence retained. Older archive paths resolve via this map and adjacent openmw-recompressed.json."
+  },
+  "reused_evidence": {
+    "components_receipt": "WINDOWS-MERGE-VERIFICATION.json",
+    "components_scope": "Unchanged components: original3310 cases per mode retain that original source provenance, not relabeled current.",
+    "forward_receipt": "CHORROL-RIGHT-SEAT-VERIFICATION.json",
+    "forward_scope": "Original forward course from accepted parent 1db0065404 retains its original provenance; current real regression covers right family."
+  },
+  "source_scope": "Production C++ unchanged since both tested builds. Original check fingerprints retained; later differences only document evidence. Rendered SAN leak0, unit SAN leak1.",
+  "scope_limits": [
+    "One real original Player canonical back-entry chair; marker14/orientation0 and other variants, NPC packages and full M11/M14 remain open.",
+    "Real reached independent MS45 reward branch, no fork teleport/grants/added records/actor enabling.",
+    "Declared gameplay pose tolerances, exact inventory/reward/owner/cold identity. No bit-identical frame/animation or rendered leak-free claim."
+  ],
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/sanitized-producer-premature-snapshot-01.json",
+      "scope": "Metadata sampled final link early; post-build identity guard refused before runtime. Corrected final image verified after completed build."
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/recompression-interrupted-01.json",
+      "scope": "Cache packing helper interrupted143; original gzip verified intact, partial scratch retired, resumed from nine verified archives; all twelve final rows verified."
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/original-01/07-chair-identity-standing.png",
+      "scope": "Centre click selected wall through backrest opening, exploratory07..11 excluded; selected-ID repeat12..16 supplies normative measurements."
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/sanitized-back-getup-01/interrupted-session.json",
+      "scope": "Attached long-running coordinator/process group ended143 during initial seated cold load, no completed scenario or getup acceptance. New detached coordinator supplies getup02 and remaining phases."
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/spare-sanitized-recompression-interrupted-01.json",
+      "scope": "Two of three spare SAN caches verified before attached helper143; original gzip intact, partial scratch retired, detached continuation completed final conversion."
+    }
+  ],
+  "additional_cache_codec_migration": {
+    "path": "build/oblivion-compat/chorrol-back-seat/recompressed-spare-sanitized-producers.json",
+    "sha256": "4138d8fe7cabee6046e683400888a279b0cd7d08f04e7c9fb55d8703d14976ad",
+    "count": 3,
+    "scope": "Remaining three historical SAN caches losslessly migrated; exact decoded producer identities retained."
+  },
+  "producer_post_build_identity": {
+    "path": "build/oblivion-compat/chorrol-back-seat/producer-post-build-identity.json",
+    "sha256": "0c566d76f93d2fb9b856f088b3976ec7b76cc9aed91e39da3c02f0965cb5f466"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "status": "Independent selected-chair back entry/idle/exit/standing observed; wrapper0/exact restored inputs",
+  "reference": "content:oblivion.esm:03fdd6",
+  "base": "content:oblivion.esm:02ed35",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_save": {
+    "path": "build/oblivion-compat/m5-original-test/prefix/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/Save 1 - Gaius - Weynon House, Level 1, Playing Time 00.49.51.ess",
+    "sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+    "context": "Independent original Gaius Weynon diagnostic checkpoint."
+  },
+  "winning_content_audit": "build/oblivion-compat/chorrol-back-seat/winning-content-audit.json",
+  "original_only_setup": "Continue hash-verified source; coc ChorrolCastleGreatHall; moveto03fdd6. Original-only position [-2199.6,-167.27,-318], yaw9.26/pitch30. Normal solid-backrest console click verifies Chair03fdd6 in capture12 before ordinary Space. No fork teleport, grants or actor enabling.",
+  "observed_states": {
+    "standing": 0,
+    "entering": 2,
+    "seated": 3,
+    "sleeping_while_seated": 0,
+    "exiting": 4,
+    "standing_after_exit": 0
+  },
+  "anchors": {
+    "entry_yaw_degrees": 9.22,
+    "seated_xyz_console_rounded": [
+      -2183.5,
+      -68.22,
+      -318.25
+    ],
+    "seated_yaw_degrees": 189.23,
+    "exit_phase_yaw_degrees": 9.22,
+    "standing_xyz_console_rounded": [
+      -2192.0,
+      -121.0,
+      -321.09
+    ],
+    "standing_yaw_degrees": 189.22
+  },
+  "rule": "Canonical marker14/orientation3141 uses the original back clips and a half-turn transition frame relative to placement. Idle faces placement; standing after exit adds another half-turn to the transition frame. Other marker14 orientations remain separate/unverified.",
+  "getup": "Ordinary empty-target Activate after upward mouse view; GetSitting4 then0 observed.",
+  "captures": [
+    "build/oblivion-compat/chorrol-back-seat/original-01/12-solid-chair-identity.png",
+    "build/oblivion-compat/chorrol-back-seat/original-01/13-verified-back-entry.png",
+    "build/oblivion-compat/chorrol-back-seat/original-01/14-verified-back-seated.png",
+    "build/oblivion-compat/chorrol-back-seat/original-01/15-verified-back-exit.png",
+    "build/oblivion-compat/chorrol-back-seat/original-01/16-verified-back-standing.png"
+  ],
+  "assets": [
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/asset-probe/chair_backenter.kf",
+      "sha256": "8e70200d4ddabf34fa9e5da64906753e1e7f94d595194984d245abf0cc897f1e",
+      "sample": "Loaded 1 embedded animation groups with 73 multiplexed transform tracks from meshes/characters/_male/idleanims/chair_backenter.kf\nsequence SpecialIdle_Chair_BackEnter root Bip01 timeline 0 1.46667\ntranslation 0 -0.108695 -0.833 0\ntranslation 0.733333 -2.67015 56.7304 0\ntranslation 1.46667 -0.108846 53.7397 0\n"
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/asset-probe/chair_backexit.kf",
+      "sha256": "489671b96da5ff8c2e2515613276cff0aa3eb5d6e853d84d19ad7d193779b9ff",
+      "sample": "Loaded 1 embedded animation groups with 73 multiplexed transform tracks from meshes/characters/_male/idleanims/chair_backexit.kf\nsequence SpecialIdle_Chair_BackExit root Bip01 timeline 0 1.8\ntranslation 0 -0.108846 53.7397 0\ntranslation 0.9 4.60443 48.2257 0\ntranslation 1.8 -0.108695 -0.833 0\n"
+    }
+  ],
+  "tolerances": "Seated anchor<2 units, standing<12 units (ground settlement), heading .02rad; exact owner/cold identity, no bit-identical frame or arithmetic claim.",
+  "retained_exploration": "Captures07..11 centre console click selected wall02b7b5 through backrest hole. Excluded from selected-ID normative evidence; repeat12 solid wood verifies actual03fdd6 before captures13..16.",
+  "wrapper_exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "cleanup": "qqq returned wrapper0, exact documents/plugins/pristine save restoration passed; no UUID-owned game processes remained. Detached restoration parent and separate Proton session.",
+  "launcher_sha256": "f72ed638b7df4aa3781bfe83762fe9e0fb0b45a42b19c010dee91655b6a39188"
+}

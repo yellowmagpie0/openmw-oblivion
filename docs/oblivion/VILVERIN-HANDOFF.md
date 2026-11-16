@@ -4,11 +4,15 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M4/M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest bounded furniture repair: [original Chorrol right-entry chair](CHORROL-RIGHT-SEAT-HANDOFF.md).
-Normal/SAN actual entry, cold seated getup and standing cold movement pass with
-semantic inventory/reward audits. Current left-entry regression, 2,310 engine
-tests per mode and 621 Python checks pass. Back-entry markers and NPC furniture
-packages remain open.
+Latest bounded furniture repair: [original Chorrol back-entry chair](CHORROL-BACK-SEAT-HANDOFF.md).
+Normal/SAN actual entry, cold seated getup and standing movement pass with
+semantic inventory/reward audits. Current right-entry regression, 2,310 engine
+tests per mode and 621 Python checks pass. Other marker/orientation variants
+(including the nearby throne) and NPC furniture packages remain open.
+
+Earlier bounded furniture repair: [original Chorrol right-entry chair](CHORROL-RIGHT-SEAT-HANDOFF.md).
+Its normal/SAN course and left-entry regression remain accepted; canonical back
+entry is now covered above.
 
 Earlier bounded furniture repair: [original Chorrol left-entry chair](CHORROL-LEFT-SEAT-HANDOFF.md).
 Its normal/SAN course and forward-entry regression remain accepted; right-entry
