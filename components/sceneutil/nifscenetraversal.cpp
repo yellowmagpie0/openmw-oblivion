@@ -14,6 +14,7 @@
 #include <bit>
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 #include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
@@ -26,6 +27,16 @@ namespace SceneUtil
         void require(bool condition, const char* message)
         {
             if (!condition) throw std::invalid_argument(message);
+        }
+
+        bool isActorAttachment(const osg::Node& node)
+        {
+            // This predicate runs for every child in repeated hierarchy
+            // validation. OSG takes a string reference; constructing this
+            // long name for every query otherwise allocates on every call.
+            static const std::string name = "openmwNativeActorAttachment";
+            bool attachment = false;
+            return node.getUserValue(name, attachment) && attachment;
         }
 
         osg::Matrixd inverse(const osg::Matrixd& matrix)
@@ -114,8 +125,7 @@ namespace SceneUtil
                 // TES4 composed actors attach independent parts beneath their
                 // rig. Keep their normal callbacks/drawing transforms, without
                 // assigning this rig's native body indices or projection rules.
-                bool attachment = false;
-                if (&node != &root && node.getUserValue("openmwNativeActorAttachment", attachment) && attachment)
+                if (&node != &root && isActorAttachment(node))
                     return;
                 if (!visited.insert(&node).second)
                 {
@@ -153,7 +163,8 @@ namespace SceneUtil
                         "unsupported NIF scene group policy");
                     Group saved{group, {}};
                     for (unsigned i = 0; i < group->getNumChildren(); ++i)
-                        saved.mChildren.emplace_back(group->getChild(i));
+                        if (!isActorAttachment(*group->getChild(i)))
+                            saved.mChildren.emplace_back(group->getChild(i));
                     mGroups.push_back(std::move(saved));
                     for (unsigned i = 0; i < group->getNumChildren(); ++i)
                         self(self, *group->getChild(i), parent);
@@ -232,10 +243,21 @@ namespace SceneUtil
                     || !entry.mTransform->getTraversalMatrix().sharesStorageWith(entry.mPublished)) return false;
             for (const auto& entry : mGroups)
             {
-                if (!entry.mGroup.valid() || entry.mGroup->getNumChildren() != entry.mChildren.size()) return false;
+                if (!entry.mGroup.valid()) return false;
                 if (entry.mGroup.get() != mRoot.get() && entry.mGroup->getNumParents() != 1) return false;
-                for (std::size_t i = 0; i < entry.mChildren.size(); ++i)
-                    if (!entry.mChildren[i].valid() || entry.mGroup->getChild(i) != entry.mChildren[i].get()) return false;
+                // Equipment is an independent renderer subtree. Looting and
+                // equipment refresh may replace it without changing the rig's
+                // native hierarchy, cached worlds or retained animation locals.
+                std::size_t next = 0;
+                for (unsigned i = 0; i < entry.mGroup->getNumChildren(); ++i)
+                {
+                    const auto* child = entry.mGroup->getChild(i);
+                    if (isActorAttachment(*child)) continue;
+                    if (next == entry.mChildren.size() || !entry.mChildren[next].valid()
+                        || child != entry.mChildren[next].get()) return false;
+                    ++next;
+                }
+                if (next != entry.mChildren.size()) return false;
             }
             if (mPreparation)
             {

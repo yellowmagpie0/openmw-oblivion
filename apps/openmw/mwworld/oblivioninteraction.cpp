@@ -11,6 +11,7 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 
 #include <components/debug/debuglog.hpp>
@@ -951,6 +952,12 @@ namespace MWWorld
             throw std::invalid_argument("pickup source is absent from the current native state");
         const auto* cacheOwner = mOblivionRuntimeState.get();
         const auto cachedSize = mOblivionRuntimeState->mReferences.size();
+#ifdef _MSC_VER
+        // Map move construction can allocate on MSVC. Prepare every destination
+        // before publication, then transfer the latest cache fields in place.
+        std::vector<ESM4::RuntimeReferenceState> preparedReferences;
+        if (newSource) preparedReferences.resize(cachedSize + 1);
+#endif
         const auto cachedRelations = cached->mDropRelations;
         const auto sourceRelations = ptr.getCellRef().getNativeDropRelations();
         auto takenRelations = sourceRelations;
@@ -1029,10 +1036,33 @@ namespace MWWorld
         cached->mCustomState.swap(custom);
         if (newSource)
         {
+#ifdef _MSC_VER
+            const auto fields = [](ESM4::RuntimeReferenceState& reference) {
+                return std::tie(reference.mKey, reference.mBase, reference.mCell,
+                    reference.mEnabled, reference.mDeleted, reference.mPosition, reference.mOwner,
+                    reference.mLockLevel, reference.mInventory, reference.mCustomState,
+                    reference.mActorDrawState, reference.mItemCondition, reference.mItemCharge,
+                    reference.mOwnershipRank, reference.mOwnershipGlobal, reference.mDropRelations);
+            };
+            static_assert(std::is_nothrow_swappable_v<decltype(fields(*newSource))>);
+            const auto exchange = [&fields](ESM4::RuntimeReferenceState& left,
+                                      ESM4::RuntimeReferenceState& right) noexcept {
+                auto current = fields(left);
+                auto incoming = fields(right);
+                current.swap(incoming);
+            };
+            // Include any dropper-list edits committed just above; a snapshot
+            // taken during preparation would overwrite those live changes.
+            for (std::size_t i = 0; i < cachedSize; ++i)
+                exchange(mOblivionRuntimeState->mReferences[i], preparedReferences[i]);
+            exchange(*newSource, preparedReferences.back());
+            mOblivionRuntimeState->mReferences.swap(preparedReferences);
+#else
             // Capacity was reserved before resource preparation and guarded
             // above. Moving the reference cannot allocate or invoke observers.
             static_assert(std::is_nothrow_move_constructible_v<ESM4::RuntimeReferenceState>);
             mOblivionRuntimeState->mReferences.push_back(std::move(*newSource));
+#endif
         }
         if (scene)
         {

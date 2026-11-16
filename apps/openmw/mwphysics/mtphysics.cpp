@@ -455,6 +455,7 @@ namespace MWPhysics
                 publication)
             , mLinearDeltas(mDefinition.mBodies.size())
         {
+            setBlocksActorMovement(!ptr.getClass().isActor() || !ptr.getClass().getCreatureStats(ptr).isDead());
             for (auto* object : mPhysics.collisionObjects())
             {
                 auto* body = btRigidBody::upcast(object);
@@ -1904,6 +1905,18 @@ namespace MWPhysics
         waitForWorkers();
         MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
         return mActorRagdolls.contains(ptr.mRef);
+    }
+
+    void PhysicsTaskScheduler::updateActorRagdollMovementCollision()
+    {
+        // Called on the main thread before submitting movement. Only this
+        // atomic projection is read by sweep callbacks on physics workers.
+        for (const auto& [_, ragdoll] : mActorRagdolls)
+        {
+            const auto ptr = ragdoll->getPtr();
+            ragdoll->setBlocksActorMovement(!ptr.getClass().isActor()
+                || !ptr.getClass().getCreatureStats(ptr).isDead());
+        }
     }
 
     std::vector<MWWorld::Ptr> PhysicsTaskScheduler::actorRagdollOwners()

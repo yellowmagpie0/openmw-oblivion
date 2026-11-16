@@ -4671,7 +4671,11 @@ namespace MWMechanics
                         mSecondsOfSwimming += duration;
                         while (mSecondsOfSwimming > 1)
                         {
-                            cls.skillUsageSucceeded(mPtr, ESM::Skill::Athletics, ESM::Skill::Athletics_SwimOneSecond);
+                            if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+                                MWWorld::recordOblivionCharacterGenerationSkillUse(
+                                    mPtr, ESM::Skill::Athletics, ESM::Skill::Athletics_SwimOneSecond, 1.f);
+                            else
+                                cls.skillUsageSucceeded(mPtr, ESM::Skill::Athletics, ESM::Skill::Athletics_SwimOneSecond);
                             mSecondsOfSwimming -= 1;
                         }
                     }
@@ -4680,7 +4684,11 @@ namespace MWMechanics
                         mSecondsOfRunning += duration;
                         while (mSecondsOfRunning > 1)
                         {
-                            cls.skillUsageSucceeded(mPtr, ESM::Skill::Athletics, ESM::Skill::Athletics_RunOneSecond);
+                            if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+                                MWWorld::recordOblivionCharacterGenerationSkillUse(
+                                    mPtr, ESM::Skill::Athletics, ESM::Skill::Athletics_RunOneSecond, 1.f);
+                            else
+                                cls.skillUsageSucceeded(mPtr, ESM::Skill::Athletics, ESM::Skill::Athletics_RunOneSecond);
                             mSecondsOfRunning -= 1;
                         }
                     }

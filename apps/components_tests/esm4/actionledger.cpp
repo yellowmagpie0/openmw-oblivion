@@ -69,6 +69,23 @@ TEST(ESM4ActionLedger, PreparedAllocationLeaseDistinguishesIssuanceAndConsumptio
     EXPECT_TRUE(live.sameState(expected));
 }
 
+TEST(ESM4ActionLedger, SwapKeepsPendingOwnershipAndAllocationFrontierTogether)
+{
+    ESM4::ActionLedger first, second;
+    first.restore({8, {2, 5}});
+    second.restore({20, {9}});
+    const auto oldFirst = first.capture(), oldSecond = second.capture();
+    using std::swap;
+    swap(first, second);
+    EXPECT_EQ(first.capture(), oldSecond);
+    EXPECT_EQ(second.capture(), oldFirst);
+    EXPECT_TRUE(first.consume(9));
+    EXPECT_FALSE(first.consume(2));
+    EXPECT_TRUE(second.consume(2));
+    EXPECT_EQ(first.allocate(), 20u);
+    EXPECT_EQ(second.allocate(), 8u);
+}
+
 TEST(ESM4ActionLedger, ExhaustionNeverWrapsOrReusesAnIdentity)
 {
     ESM4::ActionLedger ledger;

@@ -6,6 +6,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "actor.hpp"
@@ -41,6 +42,21 @@ namespace MWMechanics
     class Actors
     {
     public:
+#ifdef _MSC_VER
+        friend void swap(Actors& left, Actors& right) noexcept
+        {
+            left.mDeathCount.swap(right.mDeathCount);
+            left.mActors.swap(right.mActors);
+            left.mIndex.swap(right.mIndex);
+            using std::swap;
+            swap(left.mTimerDisposeSummonsCorpses, right.mTimerDisposeSummonsCorpses);
+            swap(left.mTimerUpdateHeadTrack, right.mTimerUpdateHeadTrack);
+            swap(left.mTimerUpdateEquippedLight, right.mTimerUpdateEquippedLight);
+            swap(left.mTimerUpdateHello, right.mTimerUpdateHello);
+            swap(left.mSneakTimer, right.mSneakTimer);
+            swap(left.mSneakSkillTimer, right.mSneakSkillTimer);
+        }
+#endif
         std::list<Actor>::const_iterator begin() const { return mActors.begin(); }
         std::list<Actor>::const_iterator end() const { return mActors.end(); }
         bool hasController(const MWWorld::Ptr& ptr) const { return mIndex.contains(ptr.mRef); }

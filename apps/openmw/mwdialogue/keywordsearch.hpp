@@ -27,6 +27,16 @@ namespace MWDialogue
         Entry mRoot;
 
     public:
+#ifdef _MSC_VER
+        // MSVC's map move can allocate. Exchange the trie in place so runtime
+        // retention keeps its no-throw contract without moving map sentinels.
+        friend void swap(KeywordSearch& left, KeywordSearch& right) noexcept
+        {
+            left.mRoot.mKeyword.swap(right.mRoot.mKeyword);
+            left.mRoot.mTopicId.swap(right.mRoot.mTopicId);
+            left.mRoot.mChildren.swap(right.mRoot.mChildren);
+        }
+#endif
         using Point = std::string::const_iterator;
 
         struct Match

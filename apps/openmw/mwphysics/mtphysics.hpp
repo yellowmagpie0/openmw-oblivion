@@ -242,6 +242,7 @@ namespace MWPhysics
             const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
         void removeActorRagdoll(const MWWorld::Ptr& ptr);
         bool hasActorRagdoll(const MWWorld::Ptr& ptr);
+        void updateActorRagdollMovementCollision();
         // Both operations join queued workers and lock the collision World.
         NifBullet::RagdollWorldRegistration captureActorRagdollWorldRegistrationSelection(const MWWorld::Ptr& ptr);
         void setActorRagdollWorldRegistrationSelection(

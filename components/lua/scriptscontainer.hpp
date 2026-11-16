@@ -2,6 +2,7 @@
 #define COMPONENTS_LUA_SCRIPTSCONTAINER_H
 
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <variant>
@@ -381,7 +382,19 @@ namespace LuaUtil
 
         EngineHandlerList mUpdateHandlers{ "onUpdate" };
         std::map<std::string_view, EngineHandlerList*> mEngineHandlers;
-        std::variant<UnloadedData, LoadedData> mData;
+        using RuntimeData = std::variant<UnloadedData, LoadedData>;
+#ifdef _MSC_VER
+        // MSVC's map move constructor can allocate, so swapping the variant
+        // cannot meet runtime retention's no-throw contract. Allocate before
+        // retention and exchange ownership instead, including across variants.
+        std::unique_ptr<RuntimeData> mData = std::make_unique<RuntimeData>();
+        RuntimeData& runtimeData() { return *mData; }
+        const RuntimeData& runtimeData() const { return *mData; }
+#else
+        RuntimeData mData;
+        RuntimeData& runtimeData() { return mData; }
+        const RuntimeData& runtimeData() const { return mData; }
+#endif
         int64_t mTemporaryCallbackCounter = 0;
 
         std::map<int, int64_t> mRemovedScriptsMemoryUsage;

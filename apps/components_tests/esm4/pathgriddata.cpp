@@ -2,6 +2,7 @@
 
 #include <array>
 #include <stdexcept>
+#include <utility>
 
 #include <components/esm4/pathgriddata.hpp>
 
@@ -127,6 +128,37 @@ TEST(ESM4PathgridData, ResolvesForeignCoordinatesAndReportsMissingEdges)
     EXPECT_GT(service.generation(key(3)), beforeUnload);
     EXPECT_EQ(service.route({ key(3), 0 }, { key(3), 1 }).mFailure,
         ESM4::PathgridRouteFailure::UnresolvedForeignLink);
+}
+
+TEST(ESM4PathgridData, SwappingServicesPreservesGraphOwnersOverlaysAndForeignLinkPolicy)
+{
+    auto first = makeGrid(3, { point(0), point(10) });
+    first.mForeign.push_back({ 0, 0, 30, 0, 0 });
+    auto second = makeGrid(4, { point(0) });
+    second.mForeign.push_back({ 0, 0, -20, 0, 0 });
+    ESM4::PathgridService original, incoming;
+    original.registerPathgrid(first, key(102));
+    original.registerPathgrid(second, key(103), { { 30, 0, 0 }, 1.0f, true });
+    ASSERT_TRUE(original.resolveForeignLinks(0.01f));
+    ASSERT_TRUE(original.cellLoaded(key(102)));
+    ASSERT_TRUE(original.setNodeEnabled({key(3), 1}, false));
+    incoming.registerPathgrid(makeGrid(5, { point(0) }), key(104));
+    const auto* graph = original.graph(key(3));
+    const auto* navigator = original.navigatorPathgrid(key(3));
+
+    using std::swap;
+    swap(original, incoming);
+    EXPECT_EQ(incoming.graphForCell(key(102)), graph);
+    EXPECT_EQ(incoming.navigatorPathgrid(key(3)), navigator);
+    EXPECT_TRUE(incoming.isCellLoaded(key(102)));
+    EXPECT_FALSE(incoming.isNodeEnabled({key(3), 1}));
+    EXPECT_TRUE(incoming.route({key(3), 0}, {key(4), 0}));
+    EXPECT_EQ(original.graphCount(), 1u);
+    EXPECT_NE(original.graphForCell(key(104)), nullptr);
+    EXPECT_FALSE(original.isCellLoaded(key(102)));
+    ASSERT_TRUE(incoming.unregisterPathgrid(key(4)));
+    incoming.registerPathgrid(second, key(103), { { 30, 0, 0 }, 1.0f, true });
+    EXPECT_TRUE(incoming.route({key(3), 0}, {key(4), 0}));
 }
 
 TEST(ESM4PathgridData, PreservesObjectLinksAndRejectsAmbiguousCells)

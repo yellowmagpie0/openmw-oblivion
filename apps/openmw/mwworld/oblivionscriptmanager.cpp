@@ -103,6 +103,24 @@ namespace MWWorld
 {
     namespace
     {
+        struct ReferenceQueries
+        {
+            const OblivionScriptManager* mOwner = nullptr;
+            const MWMechanics::OblivionSavedReferenceIndex* mIndex = nullptr;
+        };
+        thread_local ReferenceQueries sReferenceQueries;
+
+        struct ScopedReferenceQueries
+        {
+            ReferenceQueries mPrevious = sReferenceQueries;
+            ScopedReferenceQueries(const OblivionScriptManager& owner,
+                const MWMechanics::OblivionSavedReferenceIndex& index)
+            {
+                sReferenceQueries = {&owner, &index};
+            }
+            ~ScopedReferenceQueries() { sReferenceQueries = mPrevious; }
+        };
+
         // Formatting arguments precede the literal button labels. Consume the
         // placeholders before handing the remaining labels to the existing UI.
         class NativeMessageFormatter : public Misc::MessageFormatParser
@@ -1319,6 +1337,11 @@ namespace MWWorld
                 throw;
             }
         }
+        // Script commands keep reference identities immutable; insertion and
+        // save/restore can replace their vector. Every consumer validates the
+        // borrowed view before use, just like the low-process AI batch.
+        const MWMechanics::OblivionSavedReferenceIndex references(mWorld.mOblivionRuntimeState->mReferences);
+        const ScopedReferenceQueries queries(*this, references);
         mWorld.mLastOblivionScriptSeconds = secondsPassed;
         mElapsed += secondsPassed;
         for (auto speech = mNativeSpeech.begin(); speech != mNativeSpeech.end();)
@@ -1501,10 +1524,13 @@ namespace MWWorld
             mWorld.mOblivionRuntimeState
                 = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
         auto& references = mWorld.mOblivionRuntimeState->mReferences;
-        auto found = std::find_if(references.begin(), references.end(),
-            [&](const ESM4::RuntimeReferenceState& value) { return value.mKey == key; });
-        if (found != references.end())
-            return &*found;
+        if (sReferenceQueries.mOwner == this && sReferenceQueries.mIndex
+            && sReferenceQueries.mIndex->matches(references))
+        {
+            if (const auto* found = sReferenceQueries.mIndex->find(key))
+                return const_cast<ESM4::RuntimeReferenceState*>(found);
+        }
+        else if (auto* found = mWorld.findOblivionSavedReference(key)) return found;
 
         ESM4::RuntimeReferenceState state;
         if (key.isDynamic())
@@ -1555,7 +1581,7 @@ namespace MWWorld
         std::sort(references.begin(), references.end(), [](const auto& left, const auto& right) {
             return left.mKey < right.mKey;
         });
-        found = std::lower_bound(references.begin(), references.end(), key,
+        const auto found = std::lower_bound(references.begin(), references.end(), key,
             [](const ESM4::RuntimeReferenceState& value, const ESM::FormKey& wanted) {
                 return value.mKey < wanted;
             });
@@ -1583,12 +1609,10 @@ namespace MWWorld
 
     const ESM4::RuntimeReferenceState* OblivionScriptManager::referenceState(const ESM::FormKey& key) const
     {
-        if (!mWorld.mOblivionRuntimeState)
-            return nullptr;
-        const auto& references = mWorld.mOblivionRuntimeState->mReferences;
-        const auto found = std::find_if(references.begin(), references.end(),
-            [&](const ESM4::RuntimeReferenceState& value) { return value.mKey == key; });
-        return found == references.end() ? nullptr : &*found;
+        if (mWorld.mOblivionRuntimeState && sReferenceQueries.mOwner == this && sReferenceQueries.mIndex
+            && sReferenceQueries.mIndex->matches(mWorld.mOblivionRuntimeState->mReferences))
+            return sReferenceQueries.mIndex->find(key);
+        return mWorld.findOblivionSavedReference(key);
     }
 
     ObScript::Value OblivionScriptManager::resolveName(
@@ -1942,7 +1966,8 @@ namespace MWWorld
             return std::int64_t(0);
         }
         if (name == "getdisabled")
-            return std::int64_t(!mWorld.getOblivionReferenceEnabled(objectKey()).value_or(true));
+            return std::int64_t(!mWorld.getOblivionReferenceEnabled(objectKey(),
+                sReferenceQueries.mOwner == this ? sReferenceQueries.mIndex : nullptr).value_or(true));
         if (name == "activate")
         {
             // An explicitly null parent ends a trap chain; it must not fall
@@ -2082,8 +2107,6 @@ namespace MWWorld
                 if (name == "getitemcount")
                 {
                     const auto count = mWorld.oblivionPlayerItemCount(*item);
-                    trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
-                        + " count=" + std::to_string(count));
                     return std::int64_t(count);
                 }
                 const auto requested = boundedCount(argument(itemArg + 1));
@@ -2107,8 +2130,6 @@ namespace MWWorld
                     const auto count = id ? oblivionInventoryItemCount(actor.getClass().getContainerStore(actor),
                                                 OblivionProfileServices::sharedItemId(mWorld.mStore, ESM::RefId(*id)))
                                           : std::int64_t(0);
-                    trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
-                        + " count=" + std::to_string(count));
                     return count;
                 }
             }

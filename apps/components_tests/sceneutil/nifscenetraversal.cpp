@@ -1873,7 +1873,25 @@ TEST_F(NifSceneTraversalTest, ActorAttachmentKeepsOrdinaryCallbacksOutsideThePhy
     EXPECT_EQ(part->getMatrix().getTrans(), osg::Vec3f(4, 0, 0));
     EXPECT_FALSE(part->getTraversalMatrix().getMatrix());
     EXPECT_EQ(binding->cachedWorld(*mChild).mTranslation, osg::Vec3f(15, 0, 0));
-    // Removing the attachment still invalidates the owning rig's child list.
+    // Looting may destroy the independently owned mesh without retiring the rig.
     mChild->removeChild(attachment);
+    attachment = nullptr;
+    EXPECT_TRUE(binding->isValid());
+    EXPECT_NO_THROW(binding->updateObjectLocal(mStamp, 2, Nif::NiTransform::getIdentity(), callbacks));
+    EXPECT_EQ(partUpdates, 1u); EXPECT_EQ(projected, 6u);
+    EXPECT_EQ(binding->cachedWorld(*mChild).mTranslation, osg::Vec3f(15, 0, 0));
+    osg::ref_ptr<osg::Group> replacement = new osg::Group;
+    replacement->setUserValue("openmwNativeActorAttachment", true);
+    replacement->addChild(part); mRoot->insertChild(0, replacement);
+    EXPECT_TRUE(binding->isValid());
+    EXPECT_NO_THROW(binding->updateObjectLocal(mStamp, 3, Nif::NiTransform::getIdentity(), callbacks));
+    EXPECT_EQ(partUpdates, 2u); EXPECT_EQ(projected, 9u);
+    EXPECT_FALSE(part->getTraversalMatrix().getMatrix());
+    // Removing a real rig child, even by relabeling it, still rejects.
+    mLeaf->setUserValue("openmwNativeActorAttachment", true);
+    EXPECT_FALSE(binding->isValid());
+    mLeaf->setUserValue("openmwNativeActorAttachment", false);
+    EXPECT_TRUE(binding->isValid());
+    mChild->removeChild(mLeaf);
     EXPECT_FALSE(binding->isValid());
 }

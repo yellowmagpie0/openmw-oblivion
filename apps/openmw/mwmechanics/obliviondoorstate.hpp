@@ -6,6 +6,7 @@
 #include <span>
 #include <stdexcept>
 #include <vector>
+#include <unordered_map>
 
 #include <components/esm/refid.hpp>
 #include <components/esm4/runtimestate.hpp>
@@ -14,6 +15,29 @@
 
 namespace MWMechanics
 {
+    // Memoize locations, never values or borrowed pointers. Validate each hit
+    // against the current unique-key snapshot so vector edits and world swaps
+    // cannot return another reference's state. Missing keys are not cached.
+    class OblivionSavedReferenceLookup
+    {
+        std::unordered_map<ESM::FormKey, std::size_t> mOffsets;
+
+    public:
+        const ESM4::RuntimeReferenceState* find(
+            std::span<const ESM4::RuntimeReferenceState> references, const ESM::FormKey& key)
+        {
+            if (mOffsets.size() > references.size()) mOffsets.clear();
+            if (const auto cached = mOffsets.find(key); cached != mOffsets.end()
+                && cached->second < references.size() && references[cached->second].mKey == key)
+                return &references[cached->second];
+            const auto found = std::find_if(references.begin(), references.end(),
+                [&](const auto& reference) { return reference.mKey == key; });
+            if (found == references.end()) return nullptr;
+            mOffsets.insert_or_assign(key, static_cast<std::size_t>(found - references.begin()));
+            return &*found;
+        }
+    };
+
     // A read-only view for one low-process pass, before package callbacks run.
     // Index identities, not values: in-place state edits remain authoritative.
     // Insertion, removal, reordering or key edits require a new view.

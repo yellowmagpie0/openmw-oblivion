@@ -35,6 +35,13 @@
 #include <components/esm4/physicalframe.hpp>
 #include <components/nif/nativetransformmath.hpp>
 #include <apps/openmw/mwphysics/projectile.hpp>
+#include <apps/openmw/mwphysics/actorconvexcallback.hpp>
+#include <apps/openmw/mwphysics/collisiontype.hpp>
+#include <apps/openmw/mwphysics/trace.h>
+#include <apps/openmw/mwmechanics/creaturestats.hpp>
+#include <apps/openmw/mwworld/class.hpp>
+#include <apps/openmw/mwworld/esmstore.hpp>
+#include "../mwworld/oblivionworldfixture.hpp"
 #include <cstddef>
 #include <new>
 #include <bit>
@@ -178,6 +185,79 @@ namespace
         EXPECT_THROW(scheduler.restoreAnimatedReferenceSnapshot(mPtr, invalid, base, model), std::invalid_argument);
         EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), moved);
         scheduler.removeAnimatedReferenceBodies(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PassableCorpseRetainsRagdollRayHitsPoseAndImpulse)
+    {
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, MWPhysics::CollisionType_Actor, -1);
+        auto* body = mWorld.getCollisionObjectArray()[0];
+        auto* owner = static_cast<MWPhysics::PtrHolder*>(body->getUserPointer());
+        btBoxShape hull(btVector3(.2, .2, .2));
+        btCollisionObject walker;
+        walker.setCollisionShape(&hull);
+        walker.setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(-2, 0, 2)));
+        mWorld.addCollisionObject(&walker, MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_Default);
+        const auto blocked = [&] {
+            MWPhysics::ActorTracer trace;
+            trace.doTrace(&walker, osg::Vec3f(-2, 0, 2), osg::Vec3f(2, 0, 2), &mWorld);
+            return trace.mFraction < 1;
+        };
+        EXPECT_TRUE(blocked());
+        const auto initial = scheduler.captureActorRagdoll(mPtr);
+        owner->setBlocksActorMovement(false);
+        EXPECT_FALSE(blocked());
+        btCollisionWorld::ClosestRayResultCallback ray(btVector3(-2, 0, 2), btVector3(2, 0, 2));
+        ray.m_collisionFilterGroup = MWPhysics::CollisionType_World;
+        ray.m_collisionFilterMask = MWPhysics::CollisionType_Actor;
+        scheduler.rayTest(ray.m_rayFromWorld, ray.m_rayToWorld, ray);
+        EXPECT_EQ(ray.m_collisionObject, body);
+        const auto unchanged = scheduler.captureActorRagdoll(mPtr);
+        ASSERT_EQ(unchanged.size(), initial.size());
+        EXPECT_EQ(unchanged[0].mPose, initial[0].mPose);
+        EXPECT_EQ(unchanged[0].mLinearVelocity, initial[0].mLinearVelocity);
+        EXPECT_EQ(unchanged[0].mAngularVelocity, initial[0].mAngularVelocity);
+        scheduler.applyActorRagdollImpulse(mPtr, 0, btVector3(2, 0, 0), btVector3(0, 0, 2));
+        EXPECT_GT(scheduler.captureActorRagdoll(mPtr)[0].mLinearVelocity.x(), 0);
+        // Revival restores movement collision without rebuilding physical bodies.
+        owner->setBlocksActorMovement(true);
+        EXPECT_TRUE(blocked());
+        mWorld.removeCollisionObject(&walker);
+    }
+
+    TEST_P(RagdollSchedulerTest, MovementFilteringTracksDeathRestoreAndRevival)
+    {
+        TestingOpenMW::NativeWorldFixture fixture;
+        const auto& store = fixture.mWorld.getStore();
+        struct ActorClass final : MWWorld::Class
+        {
+            mutable MWMechanics::CreatureStats mStats;
+            explicit ActorClass(const MWWorld::ESMStore& store) : Class(ESM::REC_STAT), mStats(&store) {}
+            bool isActor() const override { return true; }
+            std::string_view getName(const MWWorld::ConstPtr&) const override { return "corpse fixture"; }
+            MWMechanics::CreatureStats& getCreatureStats(const MWWorld::Ptr&) const override { return mStats; }
+        } actorClass(store);
+        mLive->mClass = &actorClass;
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        const auto add = [&] {
+            scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, MWPhysics::CollisionType_Actor, -1);
+            return static_cast<MWPhysics::PtrHolder*>(mWorld.getCollisionObjectArray()[0]->getUserPointer());
+        };
+        auto* owner = add();
+        EXPECT_TRUE(owner->blocksActorMovement());
+        actorClass.mStats.setHealth(MWMechanics::DynamicStat<float>(0));
+        ASSERT_TRUE(actorClass.mStats.isDead());
+        scheduler.updateActorRagdollMovementCollision();
+        EXPECT_FALSE(owner->blocksActorMovement());
+        // Re-admission of a saved corpse must be passable before its first tick.
+        scheduler.removeActorRagdoll(mPtr);
+        owner = add();
+        EXPECT_FALSE(owner->blocksActorMovement());
+        actorClass.mStats.resurrect();
+        scheduler.updateActorRagdollMovementCollision();
+        EXPECT_TRUE(owner->blocksActorMovement());
+        scheduler.removeActorRagdoll(mPtr);
+        mLive->mClass = &MWWorld::Class::get(ESM::REC_STAT);
     }
 
     TEST_P(RagdollSchedulerTest, AnimatedHazardContactsRetainIncomingVelocityAndSeparation)

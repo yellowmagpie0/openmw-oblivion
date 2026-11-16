@@ -70,7 +70,6 @@ namespace MWWorld
         const MWMechanics::OblivionSavedReferenceIndex* references) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
-        const ESM::FormKeyResolver resolver(mContentFiles);
         std::span<const ESM4::RuntimeReferenceState> source;
         if (mOblivionRuntimeState)
         {
@@ -81,10 +80,29 @@ namespace MWWorld
         }
         else
             references = nullptr;
+        const auto referenceKey = ESM4::runtimeReferenceKey(key);
+        // Most offscreen actors have no enable parent. Read these roots using
+        // the record's already resolved runtime ID: constructing a load-order
+        // resolver and a cycle-detection set for every actor every frame is
+        // unnecessary. Read live/saved flags each time, so package actions and
+        // resident changes remain visible within the same low-process pass.
+        const auto rootEnabled = [&](const auto* record) -> std::optional<bool> {
+            if (!record || !record->mEsp.parent.isZeroOrUnset()) return std::nullopt;
+            if (const Ptr resident = mWorldModel.getPtr(record->mId); !resident.isEmpty())
+                return resident.getRefData().isEnabled();
+            bool value = (record->mFlags & ESM4::Rec_Disabled) == 0;
+            const auto* snapshot = references ? references->find(referenceKey) : findOblivionSavedReference(referenceKey);
+            if (snapshot) value = snapshot->mEnabled;
+            return value;
+        };
+        if (auto value = rootEnabled(mStore.get<ESM4::ActorCharacter>().searchStatic(referenceKey))) return value;
+        if (auto value = rootEnabled(mStore.get<ESM4::ActorCreature>().searchStatic(referenceKey))) return value;
+        if (auto value = rootEnabled(mStore.get<ESM4::Reference>().searchStatic(referenceKey))) return value;
+        const ESM::FormKeyResolver resolver(mContentFiles);
         // A single GetDisabled query must not allocate and sort an index of
         // the entire saved world. Batch AI callers supply their shared index;
         // standalone queries inspect only the requested enable-parent chain.
-        return enabled(mStore, resolver, ESM4::runtimeReferenceKey(key), references, &mWorldModel, nullptr, source);
+        return enabled(mStore, resolver, referenceKey, references, &mWorldModel, nullptr, source);
     }
 
     void World::normalizeOblivionEnableParents(ESM4::RuntimeState& state) const

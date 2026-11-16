@@ -32,7 +32,7 @@ namespace MWRender
             {
                 const osg::Node& node = *path[index];
                 if (node.getNodeMask() == 0
-                    || (index != 0 && (node.getNumParents() != 1 || node.getParent(0) != path[index - 1])))
+                    || (index != 0 && (node.getNumParents() != 1 || node.getParent(0) != path[index - 1].get())))
                     return false;
                 if (const auto* transform = dynamic_cast<const osg::Transform*>(&node))
                 {

@@ -29,6 +29,12 @@ namespace LuaUi
     class ResourceManager
     {
     public:
+#ifdef _MSC_VER
+        friend void swap(ResourceManager& left, ResourceManager& right) noexcept
+        {
+            left.mTextures.swap(right.mTextures);
+        }
+#endif
         std::shared_ptr<TextureResource> registerTexture(TextureData data)
         {
             TextureResources& list = mTextures[data.mPath];

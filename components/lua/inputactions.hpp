@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <sol/sol.hpp>
@@ -60,6 +61,19 @@ namespace LuaUtil::InputAction
     class Registry
     {
     public:
+#ifdef _MSC_VER
+        // Exchange owners directly: MSVC's unordered_map move may allocate.
+        friend void swap(Registry& left, Registry& right) noexcept
+        {
+            left.mKeys.swap(right.mKeys);
+            left.mIds.swap(right.mIds);
+            left.mInfo.swap(right.mInfo);
+            left.mHandlers.swap(right.mHandlers);
+            left.mBindings.swap(right.mBindings);
+            left.mValues.swap(right.mValues);
+            std::swap(left.mBindingTree, right.mBindingTree);
+        }
+#endif
         using ConstIterator = std::vector<Info>::const_iterator;
         void insert(const Info& info);
         size_t size() const { return mKeys.size(); }
@@ -108,6 +122,14 @@ namespace LuaUtil::InputTrigger
     class Registry
     {
     public:
+#ifdef _MSC_VER
+        friend void swap(Registry& left, Registry& right) noexcept
+        {
+            left.mIds.swap(right.mIds);
+            left.mInfo.swap(right.mInfo);
+            left.mHandlers.swap(right.mHandlers);
+        }
+#endif
         std::optional<std::string> firstKey() const
         {
             return mIds.empty() ? std::nullopt : std::optional(mIds.begin()->first);

@@ -1,3 +1,5 @@
+#include "apps/openmw/mwlua/localscripts.hpp"
+#include "apps/openmw/mwgui/tooltips.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
 #include "apps/openmw/mwmechanics/oblivionplayerhostility.hpp"
 #include <components/esm4/loadbsgn.hpp>
@@ -3601,6 +3603,46 @@ TEST(OblivionTutorialDoor, ForeignCellTeleportUsesFloorApproachAndFinishesOnlyAt
     }
 }
 
+TEST(OblivionTutorialDoor, AbstractRouteCannotLeaveADisabledOrLockedOnlyExitAcrossRestore)
+{
+    for (const bool shifted : {false, true})
+        for (const bool locked : {false, true})
+        {
+            SCOPED_TRACE(shifted);
+            SCOPED_TRACE(locked);
+            MWClass::ESM4Door::registerSelf();
+            SwitchFixture f(shifted, false, sameCellTeleportRecords(true, true), 8, false);
+            auto& world = f.mFixture.mWorld;
+            auto& ai = *world.getOblivionAiService();
+            MWWorld::Ptr door;
+            f.mActor.getCell()->forEach([&](const MWWorld::Ptr& candidate) {
+                if (candidate.getCellRef().getFormKey() == key(0xd01)) door = candidate;
+                return true;
+            }, true);
+            ASSERT_FALSE(door.isEmpty());
+            world.getWorldModel().registerPtr(door);
+            // Admit the package normally, then change the physical door
+            // before its first abstract route query. No renderer is required.
+            ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd05)));
+            world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+            if (locked) door.getCellRef().lock(100);
+            else door.getRefData().disable();
+            for (int i = 0; i < 16; ++i) ai.updateUnloaded(.25f);
+            const auto* state = ai.state(key(0xa00));
+            ASSERT_NE(state, nullptr);
+            EXPECT_EQ(state->mCell, key(0xb04));
+            EXPECT_TRUE(state->mDoor.isNull());
+            EXPECT_TRUE(state->mLastTransitionDoor.isNull());
+            EXPECT_EQ(state->mPhase, ESM4::PackagePhase::Stalled);
+            EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+            ai.restore(ESM4::RuntimeState::deserializeBinary(f.capture().serializeBinary()));
+            for (int i = 0; i < 16; ++i) ai.updateUnloaded(.25f);
+            EXPECT_EQ(ai.state(key(0xa00))->mCell, key(0xb04));
+            EXPECT_TRUE(ai.state(key(0xa00))->mLastTransitionDoor.isNull());
+            EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+        }
+}
+
 TEST(OblivionTutorialDoor, OwnedLockedTeleportRetainsLockAcrossAbstractTransitionAndActivationDenial)
 {
     for (bool shifted : {false,true})
@@ -3705,9 +3747,15 @@ TEST(OblivionTutorialAction, PotionUseRestoresNativeDamageAndConsumesExactlyOne)
 
 TEST(OblivionTutorialAction, ArmorFacadeUsesNativeClassAndConditionWithoutMorrowindSettings)
 {
+    struct TooltipWindows : TestingOpenMW::InventoryWindowManager
+    {
+        bool getFullHelp() const override { return false; }
+    };
     for (bool shifted : {false, true})
     {
+        TooltipWindows windows;
         SwitchFixture f(shifted);
+        f.mFixture.mEnvironment.setWindowManager(windows);
         auto& store = f.mFixture.mWorld.getStore();
         ASSERT_EQ(store.get<ESM::GameSetting>().search("iCuirassWeight"), nullptr);
         ASSERT_EQ(store.get<ESM::GameSetting>().search("iBaseArmorSkill"), nullptr);
@@ -3745,6 +3793,44 @@ TEST(OblivionTutorialAction, ArmorFacadeUsesNativeClassAndConditionWithoutMorrow
         incoming.getWritable<ESM4::Armor>().insertStatic(native, key(0xc10));
         EXPECT_EQ(cls.getEquipmentSkill(item, &incoming), ESM::Skill::LightArmor);
         EXPECT_EQ(cls.getEquipmentSkill(item, &store), ESM::Skill::HeavyArmor);
+
+        // A real player Combat interface models the Morrowind override that
+        // was being called by native item tooltips. Native class/rating must
+        // come from the winning TES4 record even while this interface exists.
+        TestingOpenMW::VFSTestFile script(R"(
+return { interfaceName = 'Combat', interface = {
+    getArmorSkill = function() return 'mediumarmor' end,
+    getSkillAdjustedArmorRating = function() return 999 end,
+} }
+)");
+        constexpr VFS::Path::NormalizedView path("armor-interface.lua");
+        auto vfs = TestingOpenMW::createTestVFS({{path, &script}});
+        LuaUtil::ScriptsConfiguration configuration;
+        ESM::LuaScriptsCfg scriptsConfig;
+        LuaUtil::parseOMWScripts(scriptsConfig, "CUSTOM: armor-interface.lua\n");
+        configuration.init(std::move(scriptsConfig), false);
+        LuaUtil::LuaState lua(vfs.get(), &configuration);
+        const auto player = f.mFixture.mWorld.getPlayerPtr();
+        auto scripts = std::make_shared<MWLua::LocalScripts>(&lua, MWLua::LObject(player));
+        ASSERT_TRUE(scripts->addCustomScript(*configuration.findId(path)));
+        struct ResetPlayerScripts
+        {
+            MWWorld::Ptr mPlayer;
+            ~ResetPlayerScripts() { mPlayer.getRefData().setLuaScripts({}); }
+        } resetScripts{player};
+        player.getRefData().setLuaScripts(std::move(scripts));
+        EXPECT_EQ(cls.getEquipmentSkill(item, true), ESM::Skill::HeavyArmor);
+        item.getCellRef().setNativeItemCondition(150.f);
+        EXPECT_NEAR(cls.getSkillAdjustedArmorRating(item, f.mActor, true), full * .5f, .001f);
+        const float playerRating = cls.getSkillAdjustedArmorRating(item, player, &store);
+        EXPECT_NEAR(cls.getSkillAdjustedArmorRating(item, player, true), playerRating, .001f);
+        EXPECT_NE(cls.getToolTipInfo(item, 1).text.find("#{sHeavy}"), std::string::npos);
+        // The Morrowind hook still applies to an ordinary legacy item.
+        auto legacy = shared;
+        legacy.mId = ESM::RefId::stringRefId("legacy-lua-armor");
+        store.insertStatic(legacy);
+        MWWorld::ManualRef legacyRef(store, legacy.mId);
+        EXPECT_EQ(cls.getEquipmentSkill(legacyRef.getPtr(), true), ESM::Skill::MediumArmor);
     }
 }
 
@@ -3981,6 +4067,29 @@ TEST(OblivionTutorialAction, EnableQueryDiscardsBorrowedIndexAfterBackingStorage
     }
 }
 
+TEST(OblivionEnableParent, ParentlessQueriesReadCurrentResidentFlagsAcrossLoadOrders)
+{
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        SwitchFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        // Exercise both actor and ordinary reference roots. Their plugin flags
+        // remain enabled while the authoritative resident changes repeatedly.
+        for (const auto& ptr : {f.mActor, f.mSwitch})
+        {
+            const auto reference = ptr.getCellRef().getFormKey();
+            for (const bool enabled : {false, true, false, true})
+            {
+                if (enabled) ptr.getRefData().enable();
+                else ptr.getRefData().disable();
+                EXPECT_EQ(world.getOblivionReferenceEnabled(reference), enabled);
+            }
+        }
+        EXPECT_EQ(world.getOblivionReferenceEnabled(key(0xeeee)), std::nullopt);
+    }
+}
+
 TEST(OblivionTutorialAction, FollowCellContextReevaluatesAndRestoredStaleRouteKeepsMandatoryPackage)
 {
     MWClass::ESM4Door::registerSelf();
@@ -4111,10 +4220,12 @@ TEST(OblivionTutorialDoor, DoorChainIncludesDirectedExteriorStreetBetweenTelepor
 {
     MWClass::ESM4Door::registerSelf();
     for (const bool shifted : {false, true})
-        for (const bool connected : {false, true})
+        for (const auto [connected, reverse] :
+            {std::pair{false, false}, std::pair{false, true}, std::pair{true, false}, std::pair{true, true}})
         {
             SCOPED_TRACE(shifted);
             SCOPED_TRACE(connected);
+            SCOPED_TRACE(reverse);
             const auto group = [](unsigned kind, unsigned label, const std::string& data) {
                 return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
                     + bytes(label) + bytes(kind) + bytes(0u) + data;
@@ -4156,7 +4267,7 @@ TEST(OblivionTutorialDoor, DoorChainIncludesDirectedExteriorStreetBetweenTelepor
             ESM4::Pathgrid second{};
             second.mFormKey = key(0xd09); second.mData = 1;
             second.mNodes = {{4096,0,0,0,0,0}};
-            second.mForeign = {{0,0,1280,0,0}};
+            if (reverse) second.mForeign = {{0,0,1280,0,0}};
             ESM4::Pathgrid shop{};
             shop.mFormKey = key(0xd17); shop.mData = 2;
             shop.mNodes = {{8192,0,0,1,0,0},{8256,0,0,1,0,0}};

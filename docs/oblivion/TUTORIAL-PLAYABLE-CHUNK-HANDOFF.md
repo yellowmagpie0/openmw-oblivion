@@ -1,5 +1,43 @@
 # Shortest path to a playable tutorial chunk
 
+## Take All renderer crash fix — 2026-11-15
+
+Current chunk: fix the reported crash when looting Renault after the first
+ambush. Independently marked equipment attachments were excluded from native
+rig projection but retained in its immutable child lists. Equipment refresh
+therefore invalidated the traversal while actor, binding and owner remained
+current. Child-list validation now compares the native children in order,
+excluding those independent attachments. Skeleton changes still reject; native
+world caches, animation locals and physics ownership remain in place.
+
+The new renderer regression reproduced both reported owner exceptions before
+the fix, including `traversal=0`. After the fix, removing/destroying armor and
+weapon subtrees, completing post-physics, attaching replacement equipment and
+advancing the next frame pass. Component coverage also retains rejection for
+removed or relabeled native rig children.
+
+Windows evidence under `build-windows/`:
+
+- `loot-regression-before-unrestricted.log` / `checks-0086da8b6cb844d9a2308330b68fdcfc`:
+  expected failing reproduction. The earlier sandbox build was interrupted.
+- `loot-regression-after-02.log` / `checks-431bdc2f0d89454fbda3b5a27ece66cd`:
+  63 traversal and 72 physical-pose tests pass, exact inventories, no skips.
+  The first after-fix build was interrupted to correct a test edit during review.
+- `loot-full-tests.log` / `checks-5b655c5b90c541729d46f01cada0f650`:
+  all 3,303 component and 2,296 engine tests pass, exact inventories, no skips,
+  unchanged tested dirty-source fingerprint
+  `7c6c95cdfba3c4ecaac219c08f8b8354bf339ede274ccaf895181a823b93d0b0`
+  at HEAD `0d0f09d3d68750543c04889907df229a3102a96b`.
+- `loot-runtime-build.log`: rebuilt `build-windows/openmw.exe`, SHA256
+  `f49a47970533dd9ae9dc4f1017faea9a05b0b83a6c09be2ba56b3d0658fd4e79`.
+
+Remaining acceptance gap / next action: replay normal-input Take All on the
+tutorial corpse using the rebuilt executable. This session established build
+and regression acceptance, not rendered gameplay acceptance or a sanitizer run.
+General loot and the broader tutorial gates below remain separate. This handoff
+entry was added after verification; its documentation change is outside the
+recorded source fingerprint. Unrelated local changes were preserved.
+
 ## Current handoff — completed 2026-11-04
 
 The scoped melee tutorial slice is implemented and verified: normal prison

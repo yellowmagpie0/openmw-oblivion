@@ -1,6 +1,9 @@
 #include "../mwworld/oblivioncharactergen.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/worldimp.hpp"
 #include "luamanagerimp.hpp"
 
+#include <algorithm>
 #include <filesystem>
 
 #include <MyGUI_InputManager.h>
@@ -931,6 +934,21 @@ namespace MWLua
     {
         requireMutableRuntime();
         MWWorld::recordOblivionCharacterGenerationSkillUse(actor, skillId, useType, scale);
+        MWBase::World* activeWorld = MWBase::Environment::get().getWorld();
+        if (auto* world = dynamic_cast<MWWorld::World*>(activeWorld);
+            world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            if (actor == world->getPlayerPtr())
+            {
+                const auto& ids = MWWorld::oblivionSkillIds();
+                const auto found = std::find(ids.begin(), ids.end(), skillId);
+                if (found != ids.end())
+                    world->useOblivionPlayerSkill(12 + static_cast<unsigned>(found - ids.begin()), useType, scale);
+            }
+            // Native skills are authority-owned projections. Do not also
+            // enqueue a Morrowind handler that writes their shared facade.
+            return;
+        }
         mEngineEvents.addToQueue(EngineEvents::OnSkillUse{ getId(actor), skillId.serializeText(), useType, scale });
     }
 

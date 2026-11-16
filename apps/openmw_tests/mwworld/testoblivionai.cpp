@@ -898,6 +898,45 @@ namespace
             EXPECT_EQ(references[i].mKey, order[i]);
     }
 
+    TEST(OblivionAiTest, SavedReferenceLookupRevalidatesOffsetsAfterEveryStructuralChange)
+    {
+        MWMechanics::OblivionSavedReferenceLookup lookup;
+        std::vector<ESM4::RuntimeReferenceState> references(4);
+        for (unsigned i = 0; i < references.size(); ++i) references[i].mKey = key(i + 1);
+        const auto check = [&] {
+            for (unsigned id = 1; id <= 9; ++id)
+            {
+                const auto wanted = key(id);
+                const auto linear = std::find_if(references.begin(), references.end(),
+                    [&](const auto& ref) { return ref.mKey == wanted; });
+                EXPECT_EQ(lookup.find(references, wanted), linear == references.end() ? nullptr : &*linear);
+            }
+        };
+        check(); // Warm locations and miss keys that will be inserted later.
+        references[1].mEnabled = false;
+        references[1].mCustomState["locked"] = true;
+        EXPECT_FALSE(lookup.find(references, key(2))->mEnabled);
+        EXPECT_TRUE(std::get<bool>(lookup.find(references, key(2))->mCustomState.at("locked")));
+        references.emplace_back().mKey = key(5);
+        references.reserve(references.capacity() + 100);
+        check();
+        std::reverse(references.begin(), references.end());
+        check();
+        references.erase(references.begin() + 1);
+        check();
+        references[0].mKey = key(6); // In-place identity edit, unchanged storage/size.
+        check();
+        auto replacement = references;
+        for (auto& ref : replacement) ref.mEnabled = false;
+        references.swap(replacement);
+        check();
+        for (const auto& ref : references) EXPECT_FALSE(lookup.find(references, ref.mKey)->mEnabled);
+        references.clear();
+        check();
+        references.emplace_back().mKey = key(9);
+        check();
+    }
+
     TEST(OblivionAiTest, SavedReferenceIndexReadsCurrentValuesAndRejectsChangedStorage)
     {
         std::vector<ESM4::RuntimeReferenceState> references(2);
@@ -1126,6 +1165,111 @@ TEST(OblivionAiTest, PausedEscortKeepsRecipientAtCurrentPositionWithoutAdvancing
         EXPECT_EQ(recipient.getRefData().getPosition().pos[0], 300);
         ESM4::RuntimeState captured; ai.capture(captured);
         EXPECT_TRUE(captured.mPendingPackageDone.empty());
+    }
+}
+
+TEST(OblivionAiTest, CompletedAuthoredTravelCatchesUpToEscortWithoutReplayingCompletion)
+{
+    for (const auto paused : {ESM4::PackagePhase::Path, ESM4::PackagePhase::Stalled})
+    {
+        SCOPED_TRACE(static_cast<int>(paused));
+        TestingOpenMW::NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWMechanics::MechanicsManager mechanics;
+        fixture.mEnvironment.setMechanicsManager(mechanics);
+        world.initializePhysics(new osg::Group);
+        MWClass::Npc::registerSelf(); MWClass::ESM4Npc::registerSelf();
+        world.setupPlayer();
+        const auto stable = [](unsigned id) { return ESM::FormKey::content("headless.esm", id); };
+        ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{1, 0});
+        cell.mFormKey = stable(1); cell.mCellFlags = ESM4::CELL_Interior;
+        store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        auto& resident = world.getWorldModel().getCell(cell.mId);
+        ESM4::Race race{}; race.mId = {0x810, 0};
+        race.mAttribMale = race.mAttribFemale = {40,40,40,40,40,40,40,40};
+        store.getWritable<ESM4::Race>().insertStatic(race, stable(0x810));
+        const auto makePackage = [&](unsigned id, ESM4::AIPackageType type) {
+            ESM4::AIPackage package{}; package.mId = {id,0}; package.mFormKey = stable(id);
+            package.mPackageType = type;
+            package.mLocationData.mKind = ESM4::PackageLocationKind::NearReference;
+            package.mTargetData.mDistance = 150;
+            store.getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+        };
+        makePackage(0xa00, ESM4::AIPackageType::Escort);
+        makePackage(0xa01, ESM4::AIPackageType::Travel);
+        const auto makeActor = [&](unsigned id, unsigned package, float x) {
+            auto npc = *store.search<ESM4::Npc>(stable(0x800));
+            npc.mId = {id+0x200,0}; npc.mFormKey = stable(id+0x200); npc.mRace = race.mId;
+            npc.mAIPackageKeys = {stable(package)};
+            store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+            ESM4::ActorCharacter reference{}; reference.mId = {id,0}; reference.mFormKey = stable(id);
+            reference.mBaseObj = npc.mId; reference.mBaseKey = npc.mFormKey;
+            store.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+            MWWorld::LiveCellRef<ESM4::Npc> live(reference, store.search<ESM4::Npc>(npc.mFormKey));
+            MWWorld::Ptr ptr(resident.insert(&live), &resident);
+            auto position = ptr.getRefData().getPosition(); position.pos[0] = x;
+            ptr.getRefData().setPosition(position);
+            world.getWorldModel().registerPtr(ptr);
+            EXPECT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Active));
+            return ptr;
+        };
+        const auto leader = makeActor(0x900, 0xa00, 500);
+        const auto recipient = makeActor(0x901, 0xa01, 300);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player",1);
+        saved.mPlayer.mCell = cell.mFormKey;
+        saved.mPlayer.mRace = stable(0x810);
+        saved.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class",1);
+        const auto remember = [&](const MWWorld::Ptr& actor, unsigned package,
+                                  ESM4::AIPackageType type, ESM4::PackagePhase phase) {
+            ESM4::RuntimeReferenceState reference;
+            reference.mKey = actor.getCellRef().getFormKey();
+            reference.mBase = actor.get<ESM4::Npc>()->mBase->mFormKey;
+            reference.mCell = cell.mFormKey; saved.mReferences.push_back(reference);
+            ESM4::RuntimeActorAiState state;
+            state.mActor = reference.mKey; state.mBase = reference.mBase; state.mCell = cell.mFormKey;
+            state.mPackage = stable(package); state.mPackageType = type;
+            state.mProcedure = ESM4::packageProcedure(type);
+            state.mDurationRemaining = 24; state.mConditionResult = ESM4::ConditionResult::True;
+            state.mSource = ESM4::PackageSource::Base; state.mSelectionGeneration = 1;
+            state.mPhase = phase; state.mTier = ESM4::ProcessTier::High;
+            state.mLastValidCell = cell.mFormKey; state.mLastValidPosition = actor.getRefData().getPosition();
+            state.mDestinationCell = cell.mFormKey; state.mHasDestination = true;
+            state.mDestinationPosition = actor.getRefData().getPosition();
+            state.mDestinationPosition.pos[0] += 100;
+            if (type == ESM4::AIPackageType::Escort) state.mTarget = stable(0x901);
+            saved.mActorAi.push_back(state);
+        };
+        remember(leader, 0xa00, ESM4::AIPackageType::Escort, paused);
+        remember(recipient, 0xa01, ESM4::AIPackageType::Travel, ESM4::PackagePhase::Complete);
+        auto& ai = *world.getOblivionAiService();
+        ai.restore(saved);
+        ASSERT_TRUE(ai.isEscortRecipient(recipient));
+        EXPECT_FALSE(ai.isEscortRecipient(leader));
+        const auto before = *ai.state(recipient);
+        auto& movement = recipient.getClass().getMovementSettings(recipient);
+        movement.mPosition[1] = 1; // A prior controller must be stopped.
+        for (unsigned frame = 0; frame < 5; ++frame) ai.update(recipient, 1.f/60, true);
+        const auto* after = ai.state(recipient);
+        ASSERT_NE(after, nullptr);
+        EXPECT_EQ(after->mPackage, before.mPackage);
+        EXPECT_EQ(after->mPhase, before.mPhase);
+        EXPECT_EQ(after->mRouteGeneration, before.mRouteGeneration);
+        EXPECT_EQ(after->mNoProgressSeconds, before.mNoProgressSeconds);
+        EXPECT_EQ(after->mDestinationPosition, before.mDestinationPosition);
+        // This headless fixture has no navigation tiles. Runtime continuation
+        // tests movement; here the completed package must survive the overlay.
+        EXPECT_EQ(movement.mPosition[0], 0);
+        EXPECT_EQ(movement.mPosition[1], 0);
+        EXPECT_EQ(recipient.getRefData().getPosition().pos[0], 300);
+        ESM4::RuntimeState captured; ai.capture(captured);
+        EXPECT_TRUE(captured.mPendingPackageDone.empty());
+        saved.mActorAi = captured.mActorAi;
+        for (auto& state : saved.mActorAi)
+            if (state.mActor == stable(0x900)) state.mPhase = ESM4::PackagePhase::Complete;
+        ai.restore(saved);
+        EXPECT_FALSE(ai.isEscortRecipient(recipient));
     }
 }
 

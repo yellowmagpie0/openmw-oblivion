@@ -556,13 +556,14 @@ namespace MWWorld
         mLocalScripts.swapRuntime(data.mLocals);
         mGlobalVariables.swapRuntime(data.mGlobals);
         mTimeManager->swapRuntime(data.mClock);
-        static_assert(std::is_nothrow_swappable_v<ESM4::PathgridService>);
-        std::swap(mStore.getOblivionPathgridService(), data.mPathgrids);
         using std::swap;
+        static_assert(std::is_nothrow_swappable_v<ESM4::PathgridService>);
+        swap(mStore.getOblivionPathgridService(), data.mPathgrids);
         static_assert(std::is_nothrow_swappable_v<decltype(mPrng)>);
         swap(mPrng, data.mPrng);
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionRuntimeState)>);
         swap(mOblivionRuntimeState, data.mOblivionRuntimeState);
+        mOblivionReferenceEffects.reset();
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionLooseWeaponStates)>);
         swap(mOblivionLooseWeaponStates, data.mOblivionLooseWeaponStates);
         swap(mOblivionAnimatedReferenceStates, data.mOblivionAnimatedReferenceStates);
@@ -669,6 +670,7 @@ namespace MWWorld
         mPendingOblivionServices.reset();
         mPendingOblivionRuntimeState.reset();
         mOblivionRuntimeState.reset();
+        mOblivionReferenceEffects.reset();
         mOblivionLooseWeaponStates.reset();
         mOblivionAnimatedReferenceStates.reset();
         mOblivionFurnitureResources.reset();
@@ -1503,6 +1505,7 @@ namespace MWWorld
         mPlayerInJail = false;
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
+        mOblivionReferenceEffects.reset();
         mOblivionLooseWeaponStates.reset();
         mOblivionAnimatedReferenceStates.reset();
         mOblivionFurnitureResources.reset();
@@ -2680,6 +2683,19 @@ namespace MWWorld
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
+    const ESM4::RuntimeReferenceState* World::findOblivionSavedReference(const ESM::FormKey& key) const
+    {
+        if (!mOblivionRuntimeState) return nullptr;
+        if (!mOblivionReferenceLookup)
+            mOblivionReferenceLookup = std::make_unique<MWMechanics::OblivionSavedReferenceLookup>();
+        return mOblivionReferenceLookup->find(mOblivionRuntimeState->mReferences, key);
+    }
+
+    ESM4::RuntimeReferenceState* World::findOblivionSavedReference(const ESM::FormKey& key)
+    {
+        return const_cast<ESM4::RuntimeReferenceState*>(std::as_const(*this).findOblivionSavedReference(key));
+    }
+
     std::optional<ESM::FormKey> World::getOblivionReferenceBaseKey(const ESM::FormKey& reference) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion)
@@ -2712,10 +2728,7 @@ namespace MWWorld
             if (const auto* object = resident.getCellRef().getNativeReference())
                 return base(*object);
         }
-        if (mOblivionRuntimeState)
-            for (const auto& saved : mOblivionRuntimeState->mReferences)
-                if (saved.mKey == key)
-                    return saved.mBase;
+        if (const auto* saved = findOblivionSavedReference(key)) return saved->mBase;
         if (const auto* actor = mStore.search<ESM4::ActorCharacter>(key))
             return base(*actor);
         if (const auto* creature = mStore.search<ESM4::ActorCreature>(key))
@@ -2874,7 +2887,10 @@ namespace MWWorld
         for (const auto& record : mStore.get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(mStore.get<ESM4::GameSetting>().search(record.mId));
-        const auto charm = mOblivionRuntimeState ? oblivionCharmModifier(*mOblivionRuntimeState, source, destination) : 0;
+        const auto* charmOwner = findOblivionSavedReference(source);
+        const auto charmEffect = charmOwner ? readOblivionCharm(*charmOwner) : std::nullopt;
+        const auto charm = charmEffect && charmEffect->mCaster == destination
+            ? static_cast<std::int32_t>(charmEffect->mMagnitude) : 0;
         const auto totalModifier = std::clamp<std::int64_t>(std::int64_t(modifierOverride.value_or(modifier)) + charm,
             std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max());
         const ESM4::DispositionInput input{integerValue(source, 6), integerValue(destination, 6), integerValue(source, 36),
@@ -7725,6 +7741,7 @@ namespace MWWorld
         if (!preparedCellMoves.commit())
             throw std::logic_error("native cell movement preparation is stale");
         mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
+        mOblivionReferenceEffects.reset();
         mOblivionLooseWeaponStates = std::move(preparedLooseWeapons);
         mOblivionAnimatedReferenceStates = std::move(preparedAnimatedReferences);
         mOblivionIdleResourceCache = preparedGetUpResources ? preparedGetUpResources->mCache : nullptr;
