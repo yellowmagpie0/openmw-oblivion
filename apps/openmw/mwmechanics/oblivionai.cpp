@@ -6256,12 +6256,14 @@ namespace MWMechanics
         if (found == mActors.end() || found->second.mState.mPackageType != ESM4::AIPackageType::Travel)
             return false;
         const auto* current = package(found->second.mState.mPackage);
-        if (!current || current->mLocationData.mKind != ESM4::PackageLocationKind::CurrentLocation)
+        if (!current || (current->mLocationData.mKind != ESM4::PackageLocationKind::CurrentLocation
+                && found->second.mState.mPhase != ESM4::PackagePhase::Complete))
             return false;
         for (const auto& [leaderKey, leader] : mActors)
         {
             if (leaderKey == found->first || leader.mState.mPackageType != ESM4::AIPackageType::Escort
-                || leader.mState.mTarget != found->first || leader.mState.mRestrained)
+                || leader.mState.mTarget != found->first || leader.mState.mRestrained
+                || leader.mState.mPhase == ESM4::PackagePhase::Complete)
                 continue;
             const auto leaderPtr = loadedPtrFor(leaderKey);
             if (package(leader.mState.mPackage) && !leaderPtr.isEmpty() && cellKey(leaderPtr) == cellKey(actor)
@@ -6670,12 +6672,14 @@ namespace MWMechanics
             }
             if (current && actor.getType() == ESM::REC_NPC_4
                 && live.mState.mPackageType == ESM4::AIPackageType::Travel
-                && current->mLocationData.mKind == ESM4::PackageLocationKind::CurrentLocation)
+                && (current->mLocationData.mKind == ESM4::PackageLocationKind::CurrentLocation
+                    || live.mState.mPhase == ESM4::PackagePhase::Complete))
             {
                 for (const auto& [leaderKey, leader] : mActors)
                 {
                     if (leaderKey == live.mState.mActor || leader.mState.mPackageType != ESM4::AIPackageType::Escort
-                        || leader.mState.mTarget != live.mState.mActor || leader.mState.mRestrained)
+                        || leader.mState.mTarget != live.mState.mActor || leader.mState.mRestrained
+                        || leader.mState.mPhase == ESM4::PackagePhase::Complete)
                         continue;
                     const auto leaderPtr = loadedPtrFor(leaderKey);
                     const auto* escort = package(leader.mState.mPackage);
@@ -6693,6 +6697,9 @@ namespace MWMechanics
                         stopMovement(actor);
                         return true;
                     }
+                    // A completed authored Travel can stop just beyond the
+                    // leader's waiting radius (notably on the Sanctum stairs).
+                    // Catch up without resetting its goal or replaying PackageDone.
                     const float range = std::max(64.f, float(escort->mTargetData.mDistance));
                     // A smaller receiver stop radius leaves room for the leader
                     // to resume without both actors stopping at the same boundary.

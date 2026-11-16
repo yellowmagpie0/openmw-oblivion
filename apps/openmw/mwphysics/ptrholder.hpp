@@ -2,6 +2,7 @@
 #define OPENMW_MWPHYSICS_PTRHOLDER_H
 
 #include <memory>
+#include <atomic>
 #include <mutex>
 #include <utility>
 
@@ -32,6 +33,11 @@ namespace MWPhysics
 
         btCollisionObject* getCollisionObject() const { return mCollisionObject.get(); }
 
+        // Main-thread life state projected for physics workers. Movement
+        // filtering must not read mutable CreatureStats from a worker.
+        void setBlocksActorMovement(bool blocks) { mBlocksActorMovement.store(blocks, std::memory_order_relaxed); }
+        bool blocksActorMovement() const { return mBlocksActorMovement.load(std::memory_order_relaxed); }
+
         void setVelocity(osg::Vec3f velocity) { mVelocity = velocity; }
 
         osg::Vec3f velocity() { return std::exchange(mVelocity, osg::Vec3f()); }
@@ -52,6 +58,7 @@ namespace MWPhysics
 
     protected:
         MWWorld::Ptr mPtr;
+        std::atomic_bool mBlocksActorMovement{true};
         std::unique_ptr<btCollisionObject> mCollisionObject;
         osg::Vec3f mVelocity;
         osg::Vec3f mSimulationPosition;

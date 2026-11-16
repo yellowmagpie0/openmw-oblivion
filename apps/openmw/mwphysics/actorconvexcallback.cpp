@@ -6,6 +6,7 @@
 #include <components/misc/convert.hpp>
 
 #include "projectile.hpp"
+#include "ptrholder.hpp"
 
 namespace MWPhysics
 {
@@ -30,6 +31,12 @@ namespace MWPhysics
         btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
     {
         if (convexResult.m_hitCollisionObject == mMe)
+            return 1;
+        // Keep corpse bodies in the world for dynamics, targeting and loot,
+        // but neither their retained capsule nor their limbs impede walking.
+        if ((convexResult.m_hitCollisionObject->getBroadphaseHandle()->m_collisionFilterGroup & CollisionType_Actor)
+            && convexResult.m_hitCollisionObject->getUserPointer()
+            && !static_cast<const PtrHolder*>(convexResult.m_hitCollisionObject->getUserPointer())->blocksActorMovement())
             return 1;
         if (!mMe->checkCollideWith(convexResult.m_hitCollisionObject)
             || !convexResult.m_hitCollisionObject->checkCollideWith(mMe))

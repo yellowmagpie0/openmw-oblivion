@@ -41,6 +41,7 @@ namespace MWPhysics
         , mTaskScheduler(scheduler)
     {
         const bool allowFallback = fallbackHalfExtents.length2() > 0.f;
+        setBlocksActorMovement(!ptr.getClass().getCreatureStats(ptr).isDead());
         // TES4 NPC skeleton bounds describe the rendered animation envelope,
         // including outstretched limbs, rather than the movement hull. Use
         // the profile-supplied actor bounds for those multipart models while

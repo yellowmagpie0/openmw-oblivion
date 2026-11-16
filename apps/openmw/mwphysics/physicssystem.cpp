@@ -1525,9 +1525,12 @@ namespace MWPhysics
     void PhysicsSystem::prepareSimulation(bool willSimulate, std::vector<Simulation>& simulations)
     {
         assert(simulations.empty());
+        mTaskScheduler->updateActorRagdollMovementCollision();
         simulations.reserve(mActors.size() + mProjectiles.size());
         for (const auto& [ref, physicActor] : mActors)
         {
+            const auto owner = physicActor->getPtr();
+            physicActor->setBlocksActorMovement(!owner.getClass().getCreatureStats(owner).isDead());
             if (!physicActor->isActive() || physicActor->isCollisionSuspended()
                 || physicActor->isMovementSuspended())
                 continue;
