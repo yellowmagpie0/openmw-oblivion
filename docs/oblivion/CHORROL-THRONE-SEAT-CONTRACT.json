@@ -1,0 +1,80 @@
+{
+  "status": "Accepted bounded original empty Player throne lifecycle",
+  "milestone": "M14/M11 one original Player throne lifecycle with alternate marker orientation",
+  "target": {
+    "ref": {
+      "id": "02b1f5",
+      "base_id": 192895,
+      "position": [
+        -2415.03564453125,
+        -480.5352478027344,
+        -223.42410278320312,
+        0.0,
+        -0.0,
+        -1.570794939994812
+      ],
+      "lock": "",
+      "owner": "",
+      "teleport": ""
+    },
+    "base": {
+      "id": "02f17f",
+      "type": "FURN",
+      "edid": "CastleThroneChorrolF",
+      "name": "Throne",
+      "model": "Clutter\\CastleInterior\\CastleThroneChorrol.NIF",
+      "markers": "01000040"
+    }
+  },
+  "source": {
+    "path": "build/oblivion-compat/chorrol-back-seat/normal-back-standing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "635f12e156960663e3d36126ed236dbda49f4894aba33a0543ce30ca569cb52c",
+    "position": [
+      -2196.8701171875,
+      -149.756103515625,
+      -317.9854736328125,
+      -1.443359375,
+      0.0,
+      -2.9799962043762207
+    ],
+    "provenance": "Accepted independent MS45 reward branch after canonical back-chair standing reload, no inventory merge."
+  },
+  "known_gap": "Original CastleThroneChorrol.NIF marker0 has position_ref14/orientation0, offset[1.86975,-55.6479,-61.0215]. Current08168f7b4d accepts14/3141 but rejects14/0. Determine correct entry/idle/exit headings independently; do not assume idle faces placement.",
+  "occupancy_scope": "Positive Player course on an empty throne. Initial fork checkpoint has no actor within60units of target seat; closest retained NPC is about183units horizontally fromreference. Native diagnostic must verify empty throne (ordinary waiting/time setup if needed). NPC furniture packages/occupied-seat behavior remain separate unimplemented scope.",
+  "plan": [
+    "Normally navigate from accepted nearby back-chair standing save to actual02b1f5, verify exact focus and unsupported marker; preserve close standing checkpoint and source reward/inventory.",
+    "Audit winning original placed/base/cell/model records; use isolated original game, verify selected empty throne identity, measure GetSitting0/2/3/4/0/GetSleeping0 and all pose/headings, then exit0/exactrestore.",
+    "Implement only verified14/0 entry/idle/exit frame behavior with existing owner/schema106; retain canonical profiles and other unverified orientations rejected.",
+    "Normal/SAN actual entry, seated cold getup, standing cold movement, current canonical back regression and appropriate integration/semantic gates; localcommit, then next reached gap."
+  ],
+  "tolerances": {
+    "seated_anchor_world_units": 4,
+    "standing_anchor_world_units": 12,
+    "heading_radians": 0.02,
+    "reason": "Distinct throne marker origin and authored bank root offsets warrant a small explicit pose tolerance; visual alignment is also required. Exact ownership/identity, inventory/reward and cold continuity remain strict. No bit-identical animation/frame claim."
+  },
+  "scope_limits": [
+    "No fork teleport, actor enabling, grants, injected records or forced deficits.",
+    "Only Player empty-throne marker14/orientation0; no NPC package/full M11/M14 completion claim.",
+    "Native-only declared travel/time setup permitted; preserve original prefix/game/saves exactly. One rendered game at a time."
+  ],
+  "reached_source": {
+    "path": "build/oblivion-compat/chorrol-throne-seat/normal-throne-activation-baseline-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "92813db7e1e94262f8f71585e5bf55a73d7e150664feb73a7a49f640406827c8",
+    "position": [
+      -2416.46826171875,
+      -539.6423950195312,
+      -282.9944763183594,
+      0.765625,
+      0.0,
+      0.0571131706237793
+    ],
+    "native_furniture": null,
+    "case_passed": true,
+    "nearest_actor": [
+      "content:oblivion.esm:003916",
+      183.2531842704484
+    ]
+  },
+  "native_oracle": "docs/oblivion/CHORROL-THRONE-SEAT-ORACLE.json"
+}

@@ -1,0 +1,85 @@
+{
+  "status": "Independent selected empty throne entry/idle/exit/standing observed; wrapper0 and exact restored inputs",
+  "reference": "content:oblivion.esm:02b1f5",
+  "base": "content:oblivion.esm:02f17f",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_save": {
+    "path": "build/oblivion-compat/m5-original-test/prefix/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/Save 1 - Gaius - Weynon House, Level 1, Playing Time 00.49.51.ess",
+    "sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+    "context": "Independent original Gaius Weynon diagnostic checkpoint."
+  },
+  "winning_content_audit": "build/oblivion-compat/chorrol-throne-seat/winning-content-audit.json",
+  "original_only_setup": "Continue original Gaius; ordinary Wait7hours from17.0924 to00.136; coc ChorrolCastleGreatHall and moveto02b1f5; dismiss naturally triggered Shivering Isles quest notice. Original-only stand[-2315,-480,-284], yaw270/pitch30. Capture11 selected exact empty Throne02b1f5 before ordinary Space.",
+  "observed_states": {
+    "standing": 0,
+    "entering": 2,
+    "seated": 3,
+    "sleeping_while_seated": 0,
+    "exiting": 4,
+    "standing_after_exit": 0
+  },
+  "anchors": {
+    "entry_yaw_degrees": 269.98,
+    "seated_xyz_console_rounded": [
+      -2415.03,
+      -478.69,
+      -284.45
+    ],
+    "seated_yaw_degrees": 89.98,
+    "exit_phase_yaw_degrees": 269.98,
+    "standing_xyz_console_rounded": [
+      -2360.99,
+      -478.62,
+      -286.09
+    ],
+    "standing_yaw_degrees": 89.98
+  },
+  "rule": "Verified marker14/orientation0 uses Back clips, placement-aligned transition frame and half-turn idle frame. Standing adds half-turn to transition frame.",
+  "getup": "Ordinary empty-target Activate after upward mouse view; GetSitting4 then0 observed.",
+  "captures": [
+    "build/oblivion-compat/chorrol-throne-seat/original-01/11-selected-standing.png",
+    "build/oblivion-compat/chorrol-throne-seat/original-01/12-entering.png",
+    "build/oblivion-compat/chorrol-throne-seat/original-01/13-seated.png",
+    "build/oblivion-compat/chorrol-throne-seat/original-01/14-getting-up.png",
+    "build/oblivion-compat/chorrol-throne-seat/original-01/15-standing.png"
+  ],
+  "assets": [
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/asset-probe/chair_backenter.kf",
+      "sha256": "8e70200d4ddabf34fa9e5da64906753e1e7f94d595194984d245abf0cc897f1e",
+      "sample": "Loaded 1 embedded animation groups with 73 multiplexed transform tracks from meshes/characters/_male/idleanims/chair_backenter.kf\nsequence SpecialIdle_Chair_BackEnter root Bip01 timeline 0 1.46667\ntranslation 0 -0.108695 -0.833 0\ntranslation 0.733333 -2.67015 56.7304 0\ntranslation 1.46667 -0.108846 53.7397 0\n"
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-back-seat/asset-probe/chair_backexit.kf",
+      "sha256": "489671b96da5ff8c2e2515613276cff0aa3eb5d6e853d84d19ad7d193779b9ff",
+      "sample": "Loaded 1 embedded animation groups with 73 multiplexed transform tracks from meshes/characters/_male/idleanims/chair_backexit.kf\nsequence SpecialIdle_Chair_BackExit root Bip01 timeline 0 1.8\ntranslation 0 -0.108846 53.7397 0\ntranslation 0.9 4.60443 48.2257 0\ntranslation 1.8 -0.108695 -0.833 0\n"
+    }
+  ],
+  "tolerances": "Predeclared seated<4 world units, standing<12, heading .02rad; exact identity/ownership/cold state.",
+  "retained_exploration": "Native captures08/09 retain naturally triggered quest modal; dismissed normally in10. Fork baseline01 physics-focus observer was premature; actual empty focus, not acceptance. Baseline02 rendering-camera observer selects exact throne and reproduces rejection.",
+  "wrapper_exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "cleanup": "qqq returned wrapper0, exact documents/plugins/pristine save restoration passed; no UUID-owned game processes remained. Detached restoration parent and separate Proton session.",
+  "launcher_sha256": "f72ed638b7df4aa3781bfe83762fe9e0fb0b45a42b19c010dee91655b6a39188",
+  "model": {
+    "path": "build/oblivion-compat/next-marker14/castlethronechorrol.nif",
+    "sha256": "8d5f995f5946ab532c50376a65af64ec138892d9aad75283cc6de7fe7da7c35d",
+    "marker": {
+      "index": 0,
+      "position_ref": 14,
+      "orientation": 0,
+      "offset": [
+        1.86975,
+        -55.6479,
+        -61.0215
+      ]
+    }
+  }
+}

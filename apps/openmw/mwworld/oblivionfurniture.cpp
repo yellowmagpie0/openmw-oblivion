@@ -60,6 +60,7 @@ namespace MWWorld
         ESM4::RuntimePlayerFurniture mIdentity;
         osg::Vec3f mMarkerOffset;
         float mEntryYaw = 0;
+        float mIdleYaw = 0;
         std::array<std::shared_ptr<const MWRender::Animation::NativeIdleResource>, 3> mClips;
     };
 
@@ -89,9 +90,10 @@ namespace MWWorld
         const bool left = marker.mPositionRef == 11 && marker.mOrientation == 1570;
         const bool right = marker.mPositionRef == 12 && marker.mOrientation == 4712;
         const bool back = marker.mPositionRef == 14 && marker.mOrientation == 3141;
+        const bool throne = marker.mPositionRef == 14 && marker.mOrientation == 0;
         // Admit only the original marker/clip pairs verified with ordinary
         // Player activation. Other orientations remain unsupported.
-        if ((!forward && !left && !right && !back)
+        if ((!forward && !left && !right && !back && !throne)
             || seat.mPlacement.rot[0] != 0 || seat.mPlacement.rot[1] != 0)
             throw std::invalid_argument("Unsupported Player furniture entry marker");
         auto result = std::make_shared<OblivionFurnitureResources>();
@@ -99,6 +101,9 @@ namespace MWWorld
         result->mIdentity.mModelHash = hexHash(view.getHash());
         result->mMarkerOffset = marker.mOffset;
         result->mEntryYaw = left ? osg::PI_2f : right ? -osg::PI_2f : back ? osg::PIf : 0;
+        // The original throne enters facing its backrest, then sits facing
+        // the hall. Its transition frame remains aligned with placement.
+        result->mIdleYaw = throne ? osg::PIf : 0;
         const auto& clips = forward ? ForwardClips : left ? LeftClips : right ? RightClips : BackClips;
         const auto actorModel = VFS::Path::normalizeFilename(seat.mActorModel);
         const auto slash = actorModel.rfind('/');
@@ -261,7 +266,7 @@ namespace MWWorld
         mPhysics->setActorMovementSuspended(actor, true);
         moveObject(actor, position);
         const auto pitch = actor.getRefData().getPosition().rot[0] + look.x();
-        const float entryYaw = index == 1 ? 0 : resources.mEntryYaw;
+        const float entryYaw = index == 1 ? resources.mIdleYaw : resources.mEntryYaw;
         rotateObject(actor, osg::Vec3f(pitch, 0, seat.mPlacement.rot[2] + entryYaw + (finished ? osg::PIf : 0)));
         mPlayer->consumeOblivionJumpRequest(); mPlayer->consumeOblivionCastRequest();
         if (finished)

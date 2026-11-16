@@ -1,0 +1,255 @@
+{
+  "status": "Accepted bounded original empty Player throne lifecycle",
+  "tested_parent": "08168f7b4d4d68d5bbca33959d96d68415166f7a",
+  "contract": "CHORROL-THRONE-SEAT-CONTRACT.json",
+  "oracle": "CHORROL-THRONE-SEAT-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/chorrol-throne-seat",
+  "cpp_sha256": "e7de0b383abace700595cd95489b61a6001512935c77cf763786d22632c1a01f",
+  "runtime_courses": [
+    {
+      "case": "build/oblivion-compat/chorrol-throne-seat/normal-throne-seated-02",
+      "audit_sha256": "9f48f6b6da69a63cf59679d833ced2a607280435659698ff7e02f66dab272544",
+      "phase": "seat",
+      "sanitized": false,
+      "input_sha256": "92813db7e1e94262f8f71585e5bf55a73d7e150664feb73a7a49f640406827c8",
+      "save_sha256": "018e20f1cfa388b214b045a13089a8c0e3043badebc33b1608d04a94ce32caea",
+      "binary_sha256": "b75441a1e50c289445e8a1a245216b2d8abe189107870a49e58158c158b388c3",
+      "pose": [
+        -2413.12744140625,
+        -478.77435302734375,
+        -284.4456481933594,
+        0.765625,
+        0.0,
+        1.5707978010177612
+      ]
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-throne-seat/normal-throne-getup-02",
+      "audit_sha256": "15194090be10f186679084e31eedca574086a39b532c326fbaab51d6a020acd2",
+      "phase": "exit",
+      "sanitized": false,
+      "input_sha256": "018e20f1cfa388b214b045a13089a8c0e3043badebc33b1608d04a94ce32caea",
+      "save_sha256": "5f925e4dbe94142aee26573519873d375d1d15e53f930aecdadbc9c2057b2565",
+      "binary_sha256": "b75441a1e50c289445e8a1a245216b2d8abe189107870a49e58158c158b388c3",
+      "pose": [
+        -2358.5546875,
+        -478.7742614746094,
+        -282.9944763183594,
+        -1.28515625,
+        0.0,
+        1.5707978010177612
+      ]
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-throne-seat/normal-throne-standing-01",
+      "audit_sha256": "87ada72299136c637935dbf01a5d01f134f6c57121cfaa5afacfcc4945b23398",
+      "phase": "standing",
+      "sanitized": false,
+      "input_sha256": "5f925e4dbe94142aee26573519873d375d1d15e53f930aecdadbc9c2057b2565",
+      "save_sha256": "4ae856bfa673a6956654a0e8726874670d14ed46323da254de0eb570a5b98ed6",
+      "binary_sha256": "b75441a1e50c289445e8a1a245216b2d8abe189107870a49e58158c158b388c3",
+      "pose": [
+        -2332.213134765625,
+        -478.7742614746094,
+        -282.9944763183594,
+        -1.28515625,
+        0.0,
+        1.5707978010177612
+      ]
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-throne-seat/sanitized-throne-seated-01",
+      "audit_sha256": "c2a571a3ec791deda4943520b1156c19aba86cfc7886aeb926198f28ec7c884d",
+      "phase": "seat",
+      "sanitized": true,
+      "input_sha256": "92813db7e1e94262f8f71585e5bf55a73d7e150664feb73a7a49f640406827c8",
+      "save_sha256": "69f67ea736ba15e223119489f0add4ef8923ec1bb45706c773d3fd82e72ce96b",
+      "binary_sha256": "f5a16293308c99ef5488a425f222cd58eacc0ec084de151bd4acc38b2cb84edf",
+      "pose": [
+        -2413.12744140625,
+        -478.77435302734375,
+        -284.4456481933594,
+        0.765625,
+        0.0,
+        1.5707978010177612
+      ]
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-throne-seat/sanitized-throne-getup-01",
+      "audit_sha256": "b0afdd5df3567c20498d6d4dfb51ae4792204f024c39b5cdd33318b50f4fd596",
+      "phase": "exit",
+      "sanitized": true,
+      "input_sha256": "69f67ea736ba15e223119489f0add4ef8923ec1bb45706c773d3fd82e72ce96b",
+      "save_sha256": "de6b9d84af3f51012ae566cea03eea640b8a92fc8e1b363141541d3a372a7ca8",
+      "binary_sha256": "f5a16293308c99ef5488a425f222cd58eacc0ec084de151bd4acc38b2cb84edf",
+      "pose": [
+        -2358.5546875,
+        -478.7742614746094,
+        -282.9944763183594,
+        -1.5707963705062866,
+        0.0,
+        1.5707978010177612
+      ]
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-throne-seat/sanitized-throne-standing-01",
+      "audit_sha256": "4569edb81908d0f84ade83eb2c225111ec9e59ce041c4212f1c418fed785308a",
+      "phase": "standing",
+      "sanitized": true,
+      "input_sha256": "de6b9d84af3f51012ae566cea03eea640b8a92fc8e1b363141541d3a372a7ca8",
+      "save_sha256": "b08842331bd460fec2ebdb19ec13b6d899d13a98f583f44ce5d85a5abe78f194",
+      "binary_sha256": "f5a16293308c99ef5488a425f222cd58eacc0ec084de151bd4acc38b2cb84edf",
+      "pose": [
+        -2353.286376953125,
+        -478.7742614746094,
+        -282.9944763183594,
+        -1.5707963705062866,
+        0.0,
+        1.5707978010177612
+      ]
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-throne-seat/normal-back-regression-seated-01",
+      "audit_sha256": "f89558b6202bc2cc57ebe8da01bb875b26490a4cb3723c93c03e29b94b488bdd",
+      "phase": "seat",
+      "sanitized": false,
+      "input_sha256": "90b4f0edb2f7e3089e6d5f71bf9d78ea1b7221244e0c5f69cfe6b2df3e910f82",
+      "save_sha256": "584898e2846886087eb659bcdef3f9c55ff9097f2b4e199a542e1a86b0202aa5",
+      "binary_sha256": "b75441a1e50c289445e8a1a245216b2d8abe189107870a49e58158c158b388c3",
+      "pose": [
+        -2183.852783203125,
+        -69.89701080322266,
+        -318.25189208984375,
+        0.607421875,
+        0.0,
+        -2.9799964427948
+      ]
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-throne-seat/normal-back-regression-getup-02",
+      "audit_sha256": "1443ac4299e1fb08adbb0de1b3d33cb85e1220d5cb58546f75524b4315c48287",
+      "phase": "exit",
+      "sanitized": false,
+      "input_sha256": "584898e2846886087eb659bcdef3f9c55ff9097f2b4e199a542e1a86b0202aa5",
+      "save_sha256": "c4c1b73d0c312dc22dd00deb7c7683d0ed866f9235aa8f2e25d057eb869d8357",
+      "binary_sha256": "b75441a1e50c289445e8a1a245216b2d8abe189107870a49e58158c158b388c3",
+      "pose": [
+        -2192.633056640625,
+        -123.75877380371094,
+        -317.9854431152344,
+        -1.150390625,
+        0.0,
+        -2.9799962043762207
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "path": "build/oblivion-compat/chorrol-throne-seat/normal-engine-01/verification.json",
+      "sha256": "19ea9d8834856f5fb75af94a64123d39f268e5a9207d85af096aa109fd2c9193",
+      "mode": "engine",
+      "result": {
+        "executed": 2310,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "1a75d32b44a39c427087f91f7e87fcb881557fbeb27ea2d5439b3cb25cf4486d",
+        "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+        "xml_sha256": "03309d7c41e54ce671db7b186385cda86d3dd361561be5ed07b277341a7f7ff9",
+        "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "source": {
+        "head": "08168f7b4d4d68d5bbca33959d96d68415166f7a",
+        "source_fingerprint": "cde0a85072fa781f44f50aa8419c83573400ded0a7507ae30ca499d1d99e23be"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-throne-seat/python-01/verification.json",
+      "sha256": "c65053438db924dfa518bfca8fb1bb5efc0ac1e47cc6982a74bf21a5fe1abbb9",
+      "mode": "python",
+      "result": {
+        "executed": 621,
+        "passed": true,
+        "log_sha256": "2d531c93e73eb8c0659df7eeb9d34985e8b203f84090f7bf0d47b06e36f40372"
+      },
+      "source": {
+        "head": "08168f7b4d4d68d5bbca33959d96d68415166f7a",
+        "source_fingerprint": "cde0a85072fa781f44f50aa8419c83573400ded0a7507ae30ca499d1d99e23be"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-throne-seat/sanitized-engine-union.json",
+      "sha256": "08b9f954e4b9679322ef9811cd3612fdda81b8dfc71e6d2e93889b5e77330272",
+      "mode": "sanitized engine",
+      "executed": 2310,
+      "binary_sha256": "b340abf641ed31ae44156c1919874846f66b8b86ec0d70e7d365e63ec42bea36",
+      "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+      "partitions": [
+        2058,
+        84,
+        84,
+        84
+      ],
+      "unit_leaks": true
+    }
+  ],
+  "producer_archives": {
+    "path": "build/oblivion-compat/chorrol-throne-seat/chunk-delta-producer-archives.json",
+    "sha256": "01d6ee7e5ce2477d427529a7a18d55677827e2905eefd94dd28d90757b55343d",
+    "scope": "Lossless independent 512MiB zstd deltas require retained full Back producer anchors; every chunk and concatenated executable decoded SHA verified. See adjacent openmw-chunk-deltas.json for exact base hashes and restore recipe."
+  },
+  "original_restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "reused_evidence": {
+    "components_receipt": "WINDOWS-MERGE-VERIFICATION.json",
+    "scope": "Unchanged components retain original 3310-per-mode provenance; no fresh component run claimed.",
+    "earlier_player_profiles": "CHORROL-BACK-SEAT-VERIFICATION.json"
+  },
+  "source_scope": "Engine/Python receipts retain tested dirty-source fingerprint. Later changes are evidence documentation only; production C++ unchanged. Rendered SAN leak0, units leak1.",
+  "scope_limits": [
+    "One Player lifecycle on empty throne marker 14/orientation 0; NPC packages, occupied seats and full M11/M14 remain open.",
+    "Independent MS45 reward branch retained without fork teleport/grants/actor enabling/clock writes. Exact inventory/reward/skills/ownership/cold identity; predeclared pose tolerances.",
+    "First/third captures reviewed; high throne back obscures Player from rear camera. No general camera/animation parity claim."
+  ],
+  "retained_attempts": [
+    {
+      "path": "normal-back-regression-getup-01",
+      "reason": "Gameplay getup completed, but save-state observation failed with iostream error and produced an empty live snapshot; no save-complete evidence. Corrected acceptance comes from retry02; underlying I/O cause not established."
+    },
+    {
+      "path": "normal-throne-activation-baseline-01",
+      "reason": "Physics focus observer prematurely converged; actual M5 empty. Rendering-camera repeat02 selects actual throne and reproduces unsupported marker."
+    },
+    {
+      "path": "normal-throne-seated-01",
+      "reason": "Gameplay actions complete but prior resources version stamp caused scenario rejection. Correct frozen current stamp; accepted seated02."
+    },
+    {
+      "path": "normal-throne-getup-01",
+      "reason": "SDL input-helper compilation failed from temporary disk quota before runtime. Derived cache recovery; accepted getup02."
+    },
+    {
+      "path": "sanitized-engine-rest-01",
+      "reason": "Temporary storage exhausted during link; no unit acceptance. Verified caches retired, rest02 and exact worker partitions pass."
+    },
+    {
+      "path": "delta-detached.log",
+      "reason": "Whole-file delta decoder rejected4096MB integer limit, then large-file handling on valid-limit retry. No failed delta accepted; verified independent chunks replace it. Optional SAN level19 packing was deliberately interrupted for faster level10 continuation (delta-level-change.json); all final decoded identities still verified."
+    }
+  ],
+  "storage": {
+    "deduplicated_live_snapshots": "build/oblivion-compat/chorrol-throne-seat/deduplicated-live-snapshots.json",
+    "scope": "56 historical completed live snapshots byte-verified and hardlinked; every path/hash retained. Recoverable caches retired with hashes in storage-recovery.json and unit-binary-cache-retired.json. Original assets/saves/evidence retained."
+  },
+  "next": "User-directed main quest route: start outside Kvatch main gates at the first Oblivion Gate, enter it and choose discrete implementation chunks from observed failures along that route. Countess arrival discrepancy remains recorded for later."
+}

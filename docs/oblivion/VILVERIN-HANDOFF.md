@@ -4,11 +4,17 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M4/M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest bounded furniture repair: [original Chorrol back-entry chair](CHORROL-BACK-SEAT-HANDOFF.md).
+Latest bounded furniture repair: [original Chorrol empty throne](CHORROL-THRONE-SEAT-HANDOFF.md).
 Normal/SAN actual entry, cold seated getup and standing movement pass with
-semantic inventory/reward audits. Current right-entry regression, 2,310 engine
-tests per mode and 621 Python checks pass. Other marker/orientation variants
-(including the nearby throne) and NPC furniture packages remain open.
+semantic inventory/reward audits. Current canonical back-entry regression,
+2,310 engine tests per mode and 621 Python checks pass. NPC furniture packages,
+occupied seats and full M11/M14 remain open. Next: the user-directed Kvatch main
+quest course, starting outside the main gates at the first Oblivion Gate, then
+entering and selecting discrete chunks from observed failures along that route.
+
+Earlier bounded furniture repair: [original Chorrol back-entry chair](CHORROL-BACK-SEAT-HANDOFF.md).
+Its normal/SAN course remains accepted; current back-entry regression is linked
+above. Empty Player throne support is now covered above.
 
 Earlier bounded furniture repair: [original Chorrol right-entry chair](CHORROL-RIGHT-SEAT-HANDOFF.md).
 Its normal/SAN course and left-entry regression remain accepted; canonical back
