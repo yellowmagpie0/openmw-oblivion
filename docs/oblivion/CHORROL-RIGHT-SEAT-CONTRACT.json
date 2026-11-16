@@ -1,0 +1,70 @@
+{
+  "status": "Accepted bounded original Player right-entry chair lifecycle",
+  "milestone": "M14/M11 single original Player right-entry chair lifecycle",
+  "target": {
+    "ref": {
+      "id": "03fdce",
+      "base_id": 187715,
+      "position": [
+        -1693.4146728515625,
+        703.4398193359375,
+        -273.90081787109375,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "lock": "",
+      "owner": "",
+      "teleport": ""
+    },
+    "base": {
+      "id": "02dd43",
+      "type": "FURN",
+      "edid": "UCChair04R",
+      "name": "Chair",
+      "model": "Furniture\\UpperClass\\UpperChair04.NIF",
+      "markers": "02000040"
+    }
+  },
+  "source": {
+    "path": "build/oblivion-compat/chorrol-left-stool/normal-left-standing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "7e311798bd589e28f2ce06f17393c41748dcc0d2cc9e18d4d451cc331ea9a7bc",
+    "provenance": "Accepted normal left chair standing cold continuation, independent MS45 stage100 reward branch. Preserve all five stacks/reward."
+  },
+  "gap": "Original UCChair04R enables only marker1: position_ref12/orientation4712. Current b8fd8a1ee3 accepts only forward13/0 and left11/1570.",
+  "plan": [
+    "Normally walk from accepted left-chair standing save to right-side entry of actual03fdce; demonstrate unsupported marker with ordinary activation and retain close standing checkpoint.",
+    "Audit winning original placed/base/cell records and original KF assets; independently verify identified original Player right-entry/idle/exit headings and anchors.",
+    "Add right clip/entry transform family using existing owner/schema106; preserve accepted forward/left behavior and reject unverified back family.",
+    "Normal+SAN entry, seated cold getup, standing cold movement with semantic inventory/reward audit and appropriate integration/regression gates; localcommit, then next actualcontent gap."
+  ],
+  "scope_limits": [
+    "No fork teleport, grants, added records or actor enabling.",
+    "Only Player right-entry family, no full M11/M14/NPC packages/back-entry claim.",
+    "Separate rendered games; preserve failures, original inputs and accepted checkpoint provenance."
+  ],
+  "reached_source": {
+    "path": "build/oblivion-compat/chorrol-right-seat/normal-right-activation-baseline-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "0222e3d72603668cd9a3ccc78d1ef549e0413d8b61b99a95a577a1bdfb4db937",
+    "position": [
+      -1563.1600341796875,
+      751.2252197265625,
+      -315.8624572753906,
+      0.314453125,
+      0.0,
+      -2.049717664718628
+    ],
+    "case_passed": true,
+    "native_furniture": null
+  },
+  "oracle": "CHORROL-RIGHT-SEAT-ORACLE.json",
+  "verification": "CHORROL-RIGHT-SEAT-VERIFICATION.json",
+  "final_checkpoints": {
+    "normal-right-seated-01": "72f50cc7f28796fed0c9cb2980cf3f6a1cd33de4c8e03ae1896e65f56ebd3d8e",
+    "normal-right-getup-01": "a6f85355ded35bdc30ff272f980f3f05abd11bf1c9ce255e4f4e3cca13d681cd",
+    "normal-right-standing-01": "a76cc4a47aa1af696a8e3099ae895dadbf6e98f3af54fe280159f732a2fc62c9",
+    "sanitized-right-seated-01": "60a65cc2d1c3c53b3966e0da7c7a182529474aa727ce9087915a009f4a13ae2a",
+    "sanitized-right-getup-01": "63643f9e4161cbecfa438d252cf3677faf93881ec460c22f507543981cd1f3b7",
+    "sanitized-right-standing-01": "fbdf13ca089b3d1b2ec5ac0cc833df4b3adacb1740575a18761cd77a00529597"
+  }
+}

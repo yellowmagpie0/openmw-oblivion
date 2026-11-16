@@ -1,0 +1,73 @@
+{
+  "status": "Independent original right-entry/idle/exit/standing observed; clean wrapper0/exact restored inputs",
+  "reference": "content:oblivion.esm:03fdce",
+  "base": "content:oblivion.esm:02dd43",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "winning_content_audit": "build/oblivion-compat/chorrol-right-seat/winning-content-audit.json",
+  "original_only_setup": "Continue hash-verified original Weynon source. coc ChorrolCastleGreatHall; moveto03fdce; original Player setup only [-1593,703,-318], yaw270/pitch30, ordinary mouse80down. Console-click actual chair verifies03fdce before ordinary Space. No fork teleport, grants or actor enabling.",
+  "observed_states": {
+    "standing": 0,
+    "entering": 2,
+    "seated": 3,
+    "sleeping_while_seated": 0,
+    "exiting": 4,
+    "standing_after_exit": 0
+  },
+  "anchors": {
+    "entry_yaw_degrees": 269.98,
+    "seated_xyz_console_rounded": [
+      -1693.12,
+      703.42,
+      -317.92
+    ],
+    "seated_yaw_degrees": 359.98,
+    "exit_phase_yaw_degrees": 269.98,
+    "standing_xyz_console_rounded": [
+      -1643.61,
+      704.0,
+      -318.96
+    ],
+    "standing_yaw_degrees": 89.98
+  },
+  "rule": "Right transition actor heading and root motion use chair placement minus quarter-turn; idle heading uses placement. Standing after exit adds half-turn to transition heading and faces right. Marker12/orientation4712 selects authored right family.",
+  "getup": "Ordinary empty-target Activate after mouse-upward view. GetSitting4 then0 observed.",
+  "captures": [
+    "build/oblivion-compat/chorrol-right-seat/original-01/07-chair-identity.png",
+    "build/oblivion-compat/chorrol-right-seat/original-01/08-standing-state.png",
+    "build/oblivion-compat/chorrol-right-seat/original-01/09-right-entry-transition.png",
+    "build/oblivion-compat/chorrol-right-seat/original-01/10-right-seated-anchor.png",
+    "build/oblivion-compat/chorrol-right-seat/original-01/11-empty-target.png",
+    "build/oblivion-compat/chorrol-right-seat/original-01/12-right-exit-transition.png",
+    "build/oblivion-compat/chorrol-right-seat/original-01/13-right-standing-anchor.png"
+  ],
+  "assets": [
+    {
+      "path": "build/oblivion-compat/chorrol-right-seat/asset-probe/chair_rightenter.kf",
+      "sha256": "10dcc3bb02876e3a345cd65d543cfab28db6d38b5fb9ff5f1f35493b07340bf6",
+      "sample": "Loaded 1 embedded animation groups with 73 multiplexed transform tracks from meshes/characters/_male/idleanims/chair_rightenter.kf\nsequence SpecialIdle_Chair_RightEnter root Bip01 timeline 0 1.13333\ntranslation 0 1.53649e-06 -1.47319e-06 0\ntranslation 0.566667 1.38078 36.5714 0\ntranslation 1.13333 -0.287617 51.411 0\n"
+    },
+    {
+      "path": "build/oblivion-compat/chorrol-right-seat/asset-probe/chair_rightexit.kf",
+      "sha256": "be638d26d8a4288e45a5ee5345e9249ba5b6710a1ec04e3a8065453ed6e52690",
+      "sample": "Loaded 1 embedded animation groups with 73 multiplexed transform tracks from meshes/characters/_male/idleanims/chair_rightexit.kf\nsequence SpecialIdle_Chair_RightExit root Bip01 timeline 0 1.23333\ntranslation 0 -0.300194 51.363 0\ntranslation 0.616667 -0.300206 43.005 0\ntranslation 1.23333 1.53482e-06 -1.43051e-06 0\n"
+    }
+  ],
+  "tolerances": "Seated anchor<2 units, standing<12 units accounting for ground settlement, heading .02rad; exact owner/identity and cold continuity. No bit-identical arithmetic or frame claim.",
+  "wrapper_exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "launcher_sha256": "f72ed638b7df4aa3781bfe83762fe9e0fb0b45a42b19c010dee91655b6a39188",
+  "cleanup": "Detached launcher and separate Proton session; qqq wrapper0, parent exact restored documents/plugins/pristine save; no UUID-owned processes remained.",
+  "source_save": {
+    "path": "build/oblivion-compat/m5-original-test/prefix/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/Save 1 - Gaius - Weynon House, Level 1, Playing Time 00.49.51.ess",
+    "sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+    "context": "Independent original Gaius Weynon diagnostic checkpoint; original-only travel setup declared above."
+  },
+  "original_source_metadata": "build/oblivion-compat/chorrol-right-seat/original-01/source.json"
+}

@@ -36,6 +36,8 @@ namespace MWWorld
             "chair_forwardenter.kf", "dynamicidle_sit.kf", "chair_forwardexit.kf"};
         constexpr std::array<std::string_view, 3> LeftClips{
             "chair_leftenter.kf", "dynamicidle_sit.kf", "chair_leftexit.kf"};
+        constexpr std::array<std::string_view, 3> RightClips{
+            "chair_rightenter.kf", "dynamicidle_sit.kf", "chair_rightexit.kf"};
         std::string hexHash(std::string_view bytes)
         {
             constexpr char digits[] = "0123456789abcdef";
@@ -83,17 +85,18 @@ namespace MWWorld
         const auto& marker = markers->mLegacyMarkers[seat.mMarker];
         const bool forward = marker.mPositionRef == 13 && marker.mOrientation == 0;
         const bool left = marker.mPositionRef == 11 && marker.mOrientation == 1570;
-        // Admit only the original forward and left marker/clip families verified
+        const bool right = marker.mPositionRef == 12 && marker.mOrientation == 4712;
+        // Admit only the original forward, left and right marker/clip families verified
         // with ordinary Player activation. Other directions remain unsupported.
-        if ((!forward && !left)
+        if ((!forward && !left && !right)
             || seat.mPlacement.rot[0] != 0 || seat.mPlacement.rot[1] != 0)
             throw std::invalid_argument("Unsupported Player furniture entry marker");
         auto result = std::make_shared<OblivionFurnitureResources>();
         result->mIdentity = seat;
         result->mIdentity.mModelHash = hexHash(view.getHash());
         result->mMarkerOffset = marker.mOffset;
-        result->mEntryYaw = left ? osg::PI_2f : 0;
-        const auto& clips = left ? LeftClips : ForwardClips;
+        result->mEntryYaw = left ? osg::PI_2f : right ? -osg::PI_2f : 0;
+        const auto& clips = forward ? ForwardClips : left ? LeftClips : RightClips;
         const auto actorModel = VFS::Path::normalizeFilename(seat.mActorModel);
         const auto slash = actorModel.rfind('/');
         if (slash == std::string::npos || actorModel.find("..") != std::string::npos)
