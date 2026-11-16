@@ -7,6 +7,7 @@
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwworld/action.hpp"
 #include "../mwworld/nullaction.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include <components/debug/debuglog.hpp>
 
@@ -15,6 +16,19 @@ namespace MWClass
     namespace
     {
         constexpr std::uint32_t SleepFurniture = 0x80000000u;
+
+        class Sit final : public MWWorld::Action
+        {
+        public:
+            explicit Sit(const MWWorld::Ptr& furniture) : Action(false, furniture) {}
+        private:
+            void executeImp(const MWWorld::Ptr& actor) override
+            {
+                auto* world = dynamic_cast<MWWorld::World*>(
+                    static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+                if (world) world->activateOblivionFurniture(getTarget(), actor);
+            }
+        };
 
         class BedRest final : public MWWorld::Action
         {
@@ -72,6 +86,8 @@ namespace MWClass
     {
         if (ptr.get<ESM4::Furniture>()->mBase->mActiveMarkerFlags & SleepFurniture)
             return std::make_unique<BedRest>(ptr);
+        if (ptr.get<ESM4::Furniture>()->mBase->mActiveMarkerFlags & 0x40000000u)
+            return std::make_unique<Sit>(ptr);
         return std::make_unique<MWWorld::NullAction>();
     }
 }

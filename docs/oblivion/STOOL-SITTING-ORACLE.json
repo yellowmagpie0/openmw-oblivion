@@ -1,0 +1,188 @@
+{
+  "status": "independent original sit, cold seated restore and getup observed; implementation pending",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "source": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m5-original-test/prefix/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/Save 1 - Gaius - Weynon House, Level 1, Playing Time 00.49.51.ess",
+    "sha256": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+    "reason": "Independent original-only diagnostic for ordinary Wellspring Stool06efc7 sit/getup, native GetSitting/GetSleeping and cold pose. Original-only travel to real target may be used; fork acceptance stays at genuinely reached nearby stool, with no teleport or actors enabled.",
+    "plugins": [
+      {
+        "name": "Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "matching_furniture_records": [
+          {
+            "type": "FURN",
+            "id": "0002c46d",
+            "MNAM": "04000040",
+            "NAME": ""
+          },
+          {
+            "type": "REFR",
+            "id": "0006efc7",
+            "MNAM": "",
+            "NAME": "6dc40200"
+          }
+        ]
+      },
+      {
+        "name": "Knights.esp",
+        "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCBattlehornCastle.esp",
+        "sha256": "f8bd2baa13f17f8994c0e737146097bc320f28c0d9821a00516bcec53fc6e28d",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCSpellTomes.esp",
+        "sha256": "3146d1f3936606410f75a54d385276e364f8a346437b919c398d8bd7d66e339e",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCMehrunesRazor.esp",
+        "sha256": "8d52b80c7ceb9f18aae3f48815a5b0468b8479992eb69fa3cbf910f8b66b7971",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCShiveringIsles.esp",
+        "sha256": "7725fc1cf14f60b258aeb089a112b518ab904acb3c3f549487d6e554fb873bcb",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCVileLair.esp",
+        "sha256": "fa174924ff2b44e69d1d27dc2a4c99e757d90c7b34109138d2b1ed9f430d5002",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCThievesDen.esp",
+        "sha256": "bade981f2c6665a934afb3ece481c4bba358d8114389a7f811403534e506407d",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCHorseArmor.esp",
+        "sha256": "d20d968a3492a73aa3f6c7ba033604f32b3aee7ea4e7447ae90881a25267b305",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCFrostcrag.esp",
+        "sha256": "ade51332829033c95f9ba73fbbb3ee31f44dd62f12fbf8e0066dd6384a65b6c0",
+        "matching_furniture_records": []
+      },
+      {
+        "name": "DLCOrrery.esp",
+        "sha256": "b1533ce31acdeb0c0385ab15c898b1c59c730e1d9b05848c8b4b76f2aaf3ad7d",
+        "matching_furniture_records": []
+      }
+    ]
+  },
+  "original_only_setup": "Initial unloaded moveto failed; original-only coc WellspringCave, then moveto loaded original06efc7 and ordinary backward step. No fork teleport, grant or actor enabling.",
+  "target": {
+    "base": "content:oblivion.esm:02c46d",
+    "reference": "content:oblivion.esm:06efc7",
+    "model": "meshes/furniture/lowerclass/lowerclassstool01.nif",
+    "active_marker_flags": "0x40000004"
+  },
+  "observed_states": {
+    "standing": 0,
+    "entering": 2,
+    "seated": 3,
+    "exiting": 4,
+    "standing_after_exit": 0,
+    "sleeping_while_seated": 0
+  },
+  "getup": "Ordinary Activate with no activation target requests getup. Targeted item activation can acquire an item while remaining seated; do not intercept every Activate as getup.",
+  "targeted_item_control": {
+    "base": "content:oblivion.esm:01c5ed",
+    "name": "Weight",
+    "count_in_cold_seated_save": 0,
+    "count_after_original01_targeted_seated_activations": 2
+  },
+  "cold_save": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/stool/original-01/OpenMWStoolSeated01.ess",
+    "sha256": "0b443e2281021c00db17f2d4cc831db5bd45295f278a1de07981269a1d69b079"
+  },
+  "anchors": {
+    "seated_console_rounded": [
+      -2718.18,
+      -1733.88,
+      -640.34
+    ],
+    "seated_yaw_degrees": 257.83,
+    "clean_cold_getup_console_rounded": [
+      -2667.85,
+      -1720.06,
+      -642.54
+    ],
+    "getup_yaw_degrees": 77.83
+  },
+  "assets": [
+    {
+      "file": "lowerclassstool01.nif",
+      "sha256": "7efa973dbca7c54e8f7a61cfb8c8724e656163ac5ab37ab8d16a1c218bf1ae6d",
+      "inspection": "build/oblivion-compat/stool/asset-probe/lowerclassstool01.nif.txt"
+    },
+    {
+      "file": "chair_forwardenter.kf",
+      "sha256": "30f2ac9eb3d7787136c0337eddf777e7c7001b47bea9a46e564b9e648f6abb23",
+      "inspection": "build/oblivion-compat/stool/asset-probe/chair_forwardenter.kf.txt"
+    },
+    {
+      "file": "dynamicidle_sit.kf",
+      "sha256": "f07ef25b48360461738089a6a51d806b35a84afd4e3a630ef75e611ad40d6738",
+      "inspection": "build/oblivion-compat/stool/asset-probe/dynamicidle_sit.kf.txt"
+    },
+    {
+      "file": "chair_forwardexit.kf",
+      "sha256": "a2932ba3cdd793e2e487b6a3fd932c6aac3734dce3624d4ecf932d6655ec25b5",
+      "inspection": "build/oblivion-compat/stool/asset-probe/chair_forwardexit.kf.txt"
+    }
+  ],
+  "asset_boundary": "Markers, hashes and clip timings are authored-input inspection. Expected gameplay state, pose, cold retention and target-dependent activation come from the identified original process.",
+  "tolerances": "Use authored entry/exit motion and a plausible seated pose, with strict state/furniture ownership and save continuity. No bit-identical animation/frame/endpoint requirement.",
+  "captures": [
+    "original-01/standing-state.png",
+    "original-01/seated-state.png",
+    "original-01/seated-anchor.png",
+    "original-01/seated-third-person.png",
+    "original-01/weight-count-after-seated-activations.png",
+    "original-01/empty-target-activate-state.png",
+    "original-02/cold-seated-state.png",
+    "original-02/cold-exit-transition-state.png",
+    "original-02/cold-exit-standing-state.png",
+    "original-02/cold-exit-anchor.png",
+    "original-02/cold-saved-weight-count.png",
+    "original-02/entry-transition-state.png",
+    "original-02/second-seated-state.png"
+  ],
+  "retained_attempts": [
+    "Original01 attached wrapper ended143 without cleanup; exact original inputs manually restored after confirming no owned processes remained. Actual captures retained, not claimed as a clean wrapper pass.",
+    "Original02 detached fresh process exited0 and automatically restored exact inputs.",
+    "Movement/jump and targeted activation probes did not get up; subsequent no-target activation resolved the required branch.",
+    "Unloaded original reference moveto compiler refusal retained."
+  ],
+  "restoration": [
+    {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+      "method": "Manual exact cleanup after attached wrapper termination143; owned process scan empty before restore. Interrupted run retained, not a clean wrapper acceptance.",
+      "time_ns": 1794787585522165978
+    },
+    {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    }
+  ],
+  "manual_discovery_source": "https://assets.ctfassets.net/rporu91m20dc/35hpuLKJ2wsgsaWgKmsqaW/1ba5c2c99d147348094c06d0c8649b79/manual_oblivion-goty_pc_en-us.pdf",
+  "targeted_weight_control": {
+    "type": "MISC",
+    "key": "content:oblivion.esm:01c5ed",
+    "editor_id": "UpperScaleWeight01",
+    "name": "Weight",
+    "value": 0,
+    "weight": 1.0,
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "winning_record_audit": "build/oblivion-compat/stool/weight-winning-record-audit.json",
+    "installed_plugins_verified": 11
+  }
+}

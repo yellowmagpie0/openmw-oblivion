@@ -68,6 +68,7 @@ namespace ESM4
     struct RuntimeInventoryItem;
     struct RuntimeReferenceState;
     struct RuntimeLooseWeapon;
+    struct RuntimePlayerFurniture;
     struct RuntimeState;
     struct PhysicalFrameResult;
     class ObservationStream;
@@ -222,6 +223,12 @@ namespace MWWorld
         // Immutable retained projection also identifies the cache version to
         // detached scene admissions across reentrant callbacks.
         std::shared_ptr<const NativeLooseWeaponStates> mOblivionLooseWeaponStates;
+        struct OblivionFurnitureResources;
+        std::shared_ptr<const OblivionFurnitureResources> mOblivionFurnitureResources;
+        std::shared_ptr<const OblivionFurnitureResources> prepareOblivionFurnitureResources(
+            const ESM4::RuntimePlayerFurniture& seat, bool verifyHashes) const;
+        std::shared_ptr<const OblivionFurnitureResources> prepareOblivionFurnitureState(
+            const ESM4::RuntimeState& state) const;
         struct OblivionGetUpResources;
         std::shared_ptr<const OblivionGetUpResources> mOblivionGetUpResources;
         struct OblivionGetUpLoads;
@@ -518,6 +525,12 @@ namespace MWWorld
         // main thread. No IDLE selection, NI start, clock advance or RNG draw.
         std::size_t updateOblivionPendingGetUpLoads(SceneUtil::WorkQueue& queue);
         bool advanceOblivionGetUpPlayback(MWRender::Animation& animation, const Ptr& actor, float duration);
+        unsigned getOblivionPlayerSitting() const;
+        bool rotateOblivionFurnitureView(float yaw);
+        bool activateOblivionFurniture(const Ptr& furniture, const Ptr& actor);
+        bool requestOblivionFurnitureExit();
+        bool updateOblivionPlayerFurniture(MWRender::Animation& animation, const Ptr& actor, float duration,
+            bool interrupted);
         bool updateOblivionActorRecovery(MWRender::Animation& animation, const Ptr& actor, float duration);
         class PreparedOblivionGetUpIdle
         {

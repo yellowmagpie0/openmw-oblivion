@@ -32,6 +32,7 @@
 #include "../mwrender/camera.hpp"
 #include "../mwrender/renderingmanager.hpp"
 
+#include "worldimp.hpp"
 #include "cellstore.hpp"
 #include "class.hpp"
 #include "ptr.hpp"
@@ -166,6 +167,9 @@ namespace MWWorld
 
     void Player::yaw(float yaw)
     {
+        if (auto* world = dynamic_cast<World*>(static_cast<MWBase::World*>(
+                MWBase::Environment::get().getWorld())); world && world->rotateOblivionFurnitureView(yaw))
+            return;
         MWWorld::Ptr ptr = getPlayer();
         ptr.getClass().getMovementSettings(ptr).mRotation[2] += yaw;
     }
@@ -226,11 +230,13 @@ namespace MWWorld
             }
         }
 
-        if (toActivate.isEmpty())
+        if (toActivate.isEmpty() || !toActivate.getClass().hasToolTip(toActivate))
+        {
+            if (auto* world = dynamic_cast<World*>(static_cast<MWBase::World*>(
+                    MWBase::Environment::get().getWorld())))
+                world->requestOblivionFurnitureExit();
             return;
-
-        if (!toActivate.getClass().hasToolTip(toActivate))
-            return;
+        }
 
         MWBase::Environment::get().getLuaManager()->objectActivated(toActivate, player);
     }

@@ -4453,6 +4453,41 @@ namespace MWMechanics
                 mOblivionRecoveryActive = nativeRecovery;
             }
 
+        if (auto* nativeWorld = dynamic_cast<MWWorld::World*>(world);
+            nativeWorld && nativeWorld->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const bool furniture = nativeWorld->getOblivionPlayerSitting() && mPtr == nativeWorld->getPlayerPtr();
+            if (furniture && !mOblivionFurnitureActive && !nativeRecovery)
+            {
+                cancelOblivionCombatInput();
+                resetCurrentHitState(); resetCurrentIdleState(); resetCurrentMovementState();
+            }
+            const bool active = nativeWorld->updateOblivionPlayerFurniture(*mAnimation, mPtr, duration, nativeRecovery);
+            if (active)
+            {
+                auto& input = cls.getMovementSettings(mPtr);
+                std::fill(std::begin(input.mPosition), std::end(input.mPosition), 0.f);
+                input.mRotation[2] = 0;
+                mAnimation->setHeadYaw(0); mAnimation->setHeadPitch(0);
+                // The chair owns explicit body samples and motion. Ordinary
+                // hand/unequip clocks must still finish so POV can change.
+                mAnimation->runAnimation(duration);
+                world->queueMovement(mPtr, osg::Vec3f());
+                mOblivionFurnitureActive = true;
+                return;
+            }
+            if (mOblivionFurnitureActive)
+            {
+                // Recovery has already published its knockout state and pose.
+                // Retiring the chair must not reset that incoming owner.
+                if (!nativeRecovery)
+                {
+                    resetCurrentHitState(); resetCurrentIdleState(); resetCurrentMovementState();
+                }
+                mOblivionFurnitureActive = false;
+            }
+        }
+
         bool isPlayer = mPtr == MWMechanics::getPlayer();
         bool isFirstPersonPlayer = isPlayer && MWBase::Environment::get().getWorld()->isFirstPerson();
         bool godmode = isPlayer && MWBase::Environment::get().getWorld()->getGodModeState();

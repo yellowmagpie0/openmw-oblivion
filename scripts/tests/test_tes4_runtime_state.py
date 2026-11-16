@@ -5443,3 +5443,39 @@ class PackageWaiting91Tests(unittest.TestCase):
         state = self.make_state(); state['package_waiting'] *= 2
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.encode_payload(state)
+
+
+class PlayerFurnitureStateTests(unittest.TestCase):
+    def make_seated(self):
+        state = make_state(); state["schema_version"] = 106; state["ai_rng_state"] = 1
+        ref = {"key": "content:oblivion.esm:06efc7", "base": "content:oblivion.esm:02c46d",
+               "cell": state["player"]["cell"], "position": [0.] * 6,
+               "enabled": True, "deleted": False, "owner": None, "lock_level": 0, "inventory": [], "custom_state": {}}
+        state["references"] = [ref]
+        state["native_player_furniture"] = {
+            "reference": ref["key"], "base": ref["base"], "cell": ref["cell"],
+            "placement": ref["position"].copy(), "scale": 1., "marker": 2, "phase": 3, "elapsed": .375, "look_yaw": .25,
+            "actor_model": "characters/_male/skeleton.nif", "model_hash": "a" * 32, "clip_hashes": ["b" * 32] * 3}
+        return state
+
+    def test_owned_phases_and_absent_legacy_round_trip(self):
+        state = self.make_seated()
+        for phase in (2, 3, 4):
+            state["native_player_furniture"]["phase"] = phase
+            self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_player_furniture"],
+                             state["native_player_furniture"])
+        state.pop("native_player_furniture"); state["schema_version"] = 105
+        self.assertNotIn("native_player_furniture", state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_invalid_owner_clock_phase_and_asset(self):
+        state = self.make_seated()
+        for key, value in (("base", "content:oblivion.esm:000001"), ("phase", 1), ("marker", 30),
+                           ("elapsed", math.nan), ("scale", 0), ("clip_hashes", ["b" * 32]),
+                           ("placement", [1.] * 6)):
+            bad = copy.deepcopy(state); bad["native_player_furniture"][key] = value
+            with self.subTest(key=key), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        for key, value in (("enabled", False), ("deleted", True)):
+            bad = copy.deepcopy(state); bad["references"][0][key] = value
+            with self.subTest(key=key), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)

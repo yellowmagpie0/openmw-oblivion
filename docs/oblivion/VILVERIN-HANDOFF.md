@@ -4,7 +4,15 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M4/M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest completed bounded chunk: [native articulated Scales drop](SCALES-DROP-HANDOFF.md).
+Latest completed bounded chunk: [original Wellspring Stool sitting](STOOL-SITTING-HANDOFF.md).
+Normal and instrumented four-process sitting/cold/targeted Weight pickup/getup/
+standing courses pass, including first/third-person review. Full engine2295 and
+components3306 per mode plus Python621 pass; exact provenance is in the
+[receipt](STOOL-SITTING-VERIFICATION.json). Other furniture markers/NPC packages
+and full M4/M11/M14 remain open. Next: merge and verify GitHub `windows` at this
+clean checkpoint before selecting another content chunk, as requested.
+
+Prior completed bounded chunk: [native articulated Scales drop](SCALES-DROP-HANDOFF.md).
 The genuinely acquired Wellspring Scales now retain all four authored bodies and
 three constraints through native drop, moving cold continuation, settling and
 pickup. Normal/SAN four-stage courses pass, with fresh final-binary admission
@@ -52,13 +60,13 @@ accepted with their original ownership, native body and event/restart evidence.
 No full M13/M15/M16/M18/M19 milestone claim.
 
 Current main Cairn/Wellspring continuation:
-`build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a`.
-SAN: same root `sanitized-scales-native-inventory-01`, SHA256
-`fd6779644a334fe60a0d4992b59e158b0105c2e12733ecdd6b4f0675b805e012`.
+`build/oblivion-compat/stool/normal-stool-fp-standing-final-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `f7e7119df4b8ad92895bac3a7f5d724e0c10369ec6f3d55dc0ba5e572ff43621`.
+SAN: same root `sanitized-stool-fp-standing-final-02`, SHA256
+`8bc75c390574bc1c7289be2aa9df92b17f37ec85deb1c69913eced9e14274635`.
 Health70.480003/110, End55, Club59.5000458 equipped/owner18, Cuirass19.6576748
 owner9, Torch987+2fresh1000 inactive, Alembic1/Retort1, Song1/Fundaments2/Charter2,
-BooksRead17, Scales1, allocator20; dropped native-reference19 retired and the
+BooksRead17, Scales1, Weight1, allocator20; dropped native-reference19 retired and the
 original Scales06efbd consumed. Preserve independent inventories. The earlier
 allocator19 Club continuation retains its provenance in the Scales contract.
 

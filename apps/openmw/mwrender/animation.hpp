@@ -636,6 +636,9 @@ namespace MWRender
             const VFS::Path::Normalized& model() const;
             const std::string& fileHash() const;
             const SceneUtil::ControllerSequenceMetadata& metadata() const;
+            // Sample the retained KF's accumulation root in authored sequence
+            // coordinates, without starting playback or changing scene clocks.
+            std::optional<osg::Vec3f> rootTranslation(float frame) const;
             // Keep the exact parsed KF for an NI source without extending the
             // native loaded-info cache entry's lifetime. No backend lookup.
             std::shared_ptr<const NativeIdleResource> retainSourceArtifact() const;

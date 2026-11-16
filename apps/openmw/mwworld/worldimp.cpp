@@ -288,6 +288,7 @@ namespace MWWorld
         std::optional<MWMechanics::OblivionCombatService> mCombat;
         decltype(World::mOblivionLooseWeaponStates) mLooseWeapons;
         decltype(World::mOblivionAnimatedReferenceStates) mAnimatedReferences;
+        decltype(World::mOblivionFurnitureResources) mFurnitureResources;
         decltype(World::mOblivionGetUpResources) mGetUpResources;
         std::optional<OblivionScriptManager::PreparedRestore> mScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
@@ -490,6 +491,7 @@ namespace MWWorld
         decltype(World::mOblivionRuntimeState) mOblivionRuntimeState{};
         decltype(World::mOblivionLooseWeaponStates) mOblivionLooseWeaponStates{};
         decltype(World::mOblivionAnimatedReferenceStates) mOblivionAnimatedReferenceStates{};
+        decltype(World::mOblivionFurnitureResources) mOblivionFurnitureResources{};
         decltype(World::mOblivionGetUpResources) mOblivionGetUpResources{};
         decltype(World::mOblivionGetUpLoads) mOblivionGetUpLoads{};
         decltype(World::mOblivionIdleResourceCache) mOblivionIdleResourceCache{};
@@ -564,6 +566,7 @@ namespace MWWorld
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionLooseWeaponStates)>);
         swap(mOblivionLooseWeaponStates, data.mOblivionLooseWeaponStates);
         swap(mOblivionAnimatedReferenceStates, data.mOblivionAnimatedReferenceStates);
+        swap(mOblivionFurnitureResources, data.mOblivionFurnitureResources);
         swap(mOblivionGetUpResources, data.mOblivionGetUpResources);
         swap(mOblivionGetUpLoads, data.mOblivionGetUpLoads);
         swap(mOblivionIdleResourceCache, data.mOblivionIdleResourceCache);
@@ -668,6 +671,7 @@ namespace MWWorld
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
         mOblivionAnimatedReferenceStates.reset();
+        mOblivionFurnitureResources.reset();
         mOblivionGetUpResources.reset();
         mOblivionGetUpLoads.reset();
         mOblivionIdleResourceCache.reset();
@@ -1501,6 +1505,7 @@ namespace MWWorld
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
         mOblivionAnimatedReferenceStates.reset();
+        mOblivionFurnitureResources.reset();
         mOblivionGetUpResources.reset();
         mOblivionGetUpLoads.reset();
         mOblivionIdleResourceCache.reset();
@@ -2065,6 +2070,7 @@ namespace MWWorld
             state.mPlayer.mAwardedSkillBooks = mOblivionRuntimeState->mPlayer.mAwardedSkillBooks;
             state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
             state.mFactionReactions = mOblivionRuntimeState->mFactionReactions;
+            state.mNativePlayerFurniture = mOblivionRuntimeState->mNativePlayerFurniture;
             state.mNativeBoundAbilities = mOblivionRuntimeState->mNativeBoundAbilities;
             state.mNativeTrapContacts = mOblivionRuntimeState->mNativeTrapContacts;
             state.mNativeMagicProjectiles = mOblivionRuntimeState->mNativeMagicProjectiles;
@@ -7130,6 +7136,7 @@ namespace MWWorld
         std::optional<OblivionScriptManager::PreparedRestore> preparedScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> preparedAi;
         auto retained = std::move(mPendingOblivionServices);
+        auto preparedFurnitureResources = retained ? retained->mFurnitureResources : prepareOblivionFurnitureState(state);
         auto preparedGetUpResources = retained && retained->mGetUpResources ? retained->mGetUpResources
             : prepareOblivionGetUpResources(state);
         auto preparedAnimatedReferences = retained && retained->mAnimatedReferences ? retained->mAnimatedReferences
@@ -7721,6 +7728,7 @@ namespace MWWorld
         mOblivionLooseWeaponStates = std::move(preparedLooseWeapons);
         mOblivionAnimatedReferenceStates = std::move(preparedAnimatedReferences);
         mOblivionIdleResourceCache = preparedGetUpResources ? preparedGetUpResources->mCache : nullptr;
+        mOblivionFurnitureResources = std::move(preparedFurnitureResources);
         mOblivionGetUpResources = std::move(preparedGetUpResources);
         mOblivionGetUpLoads.reset();
         preparedRegistry.commit();
@@ -8114,6 +8122,8 @@ namespace MWWorld
         if (const auto flag = state.mPlayer.mActorValues.find(std::string(ESM4::PlayerMurdererKey));
             flag != state.mPlayer.mActorValues.end())
             ESM4::playerMurdererValue(flag->second);
+        auto furnitureResources = prepareOblivionFurnitureState(state);
+        if (prepared) prepared->mFurnitureResources = std::move(furnitureResources);
         validateOblivionMagicProjectiles(state);
         validateOblivionArrowProjectiles(state);
         validateOblivionEnvironmentalFire(state);

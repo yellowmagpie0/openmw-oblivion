@@ -71,6 +71,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     runtime._upgrade_friend_hit_counters(state)
     runtime._upgrade_combat_controllers(state)
     runtime._upgrade_actor_knockback(state)
+    state.setdefault('native_player_furniture', None)
     state['schema_version'] = recipe['target_schema']
     next(v for v in state['native_actor_values'] if v['actor'] == actor)['process_action'] = 8
     state['native_melee_states'] = [v for v in state['native_melee_states'] if v['actor'] != actor]

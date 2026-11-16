@@ -57,6 +57,7 @@ class PassiveSlot3FixtureTests(unittest.TestCase):
                 after['native_melee_states'] = before['native_melee_states']
                 next(v for v in after['native_actor_values'] if v['actor'] == recipe['actor'])['process_action'] = -1
                 for actor in before['native_actor_values']: actor.setdefault('process_alerted', None)
+                before.setdefault('native_player_furniture', None)
                 runtime._upgrade_bound_ownership(before)
                 runtime._upgrade_inventory_scripts(before)
                 runtime._upgrade_reference_item_extras(before)

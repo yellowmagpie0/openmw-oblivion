@@ -54,6 +54,7 @@ class NpcPassiveFixtureTests(unittest.TestCase):
                 after['references'][0]['actor_draw_state'] = 0
                 after['content'] = before['content']
                 for actor in before['native_actor_values']: actor.setdefault('process_alerted', None)
+                before.setdefault('native_player_furniture', None)
                 runtime._upgrade_bound_ownership(before)
                 runtime._upgrade_inventory_scripts(before)
                 runtime._upgrade_reference_item_extras(before)

@@ -74,6 +74,51 @@ namespace
         return state;
     }
 
+    TEST(ESM4RuntimeState, PlayerFurnitureRoundTripsEveryOwnedPhaseAndLegacyHasNoSeat)
+    {
+        auto state = makeState();
+        state.mVersion = 106;
+        auto& reference = state.mReferences.front(); reference.mEnabled = true;
+        ESM4::RuntimePlayerFurniture seat;
+        seat.mReference = reference.mKey; seat.mBase = reference.mBase; seat.mCell = reference.mCell;
+        seat.mPlacement = reference.mPosition; seat.mMarker = 2;
+        seat.mActorModel = "characters/_male/skeleton.nif"; seat.mModelHash = std::string(32, 'a');
+        seat.mClipHashes.fill(std::string(32, 'b')); seat.mElapsed = .375f;
+        for (unsigned phase : {2u, 3u, 4u})
+        {
+            seat.mPhase = phase; state.mNativePlayerFurniture = seat;
+            const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_EQ(restored.mNativePlayerFurniture, state.mNativePlayerFurniture);
+            EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        }
+        state.mNativePlayerFurniture.reset(); state.mVersion = 105;
+        EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativePlayerFurniture);
+    }
+
+    TEST(ESM4RuntimeState, PlayerFurnitureRejectsDanglingMovedDisabledAndMalformedOwners)
+    {
+        auto state = makeState(); state.mVersion = 106;
+        auto& reference = state.mReferences.front(); reference.mEnabled = true;
+        ESM4::RuntimePlayerFurniture seat;
+        seat.mReference = reference.mKey; seat.mBase = reference.mBase; seat.mCell = reference.mCell;
+        seat.mPlacement = reference.mPosition; seat.mActorModel = "characters/_male/skeleton.nif";
+        seat.mModelHash = std::string(32, 'a'); seat.mClipHashes.fill(std::string(32, 'b'));
+        state.mNativePlayerFurniture = seat;
+        ASSERT_NO_THROW(state.validate());
+        const auto reject = [&](auto mutation) { auto bad = state; mutation(bad); EXPECT_THROW(bad.validate(), std::runtime_error); };
+        reject([](auto& s) { s.mVersion = 105; });
+        reject([](auto& s) { s.mReferences.clear(); });
+        reject([](auto& s) { s.mReferences.front().mEnabled = false; });
+        reject([](auto& s) { s.mReferences.front().mDeleted = true; });
+        reject([](auto& s) { s.mNativePlayerFurniture->mBase = ESM::FormKey::content("Oblivion.esm", 0x201); });
+        reject([](auto& s) { s.mNativePlayerFurniture->mPlacement.pos[0] += 1; });
+        reject([](auto& s) { s.mNativePlayerFurniture->mPhase = 1; });
+        reject([](auto& s) { s.mNativePlayerFurniture->mMarker = 30; });
+        reject([](auto& s) { s.mNativePlayerFurniture->mElapsed = std::numeric_limits<float>::quiet_NaN(); });
+        reject([](auto& s) { s.mNativePlayerFurniture->mScale = 0; });
+        reject([](auto& s) { s.mNativePlayerFurniture->mClipHashes[0] = "changed"; });
+    }
+
     ESM4::RuntimeState makeM14State()
     {
         ESM4::RuntimeState state = makeState();
@@ -1908,7 +1953,7 @@ namespace
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
                 + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0)
-                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0) + (version >= 88 ? 12 : 0) + (version >= 89 ? 4 : 0) + (version >= 91 ? 4 : 0) + (version >= 96 ? 12 : 0);
+                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0) + (version >= 88 ? 12 : 0) + (version >= 89 ? 4 : 0) + (version >= 91 ? 4 : 0) + (version >= 96 ? 12 : 0) + (version >= 106 ? 1 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -6379,12 +6424,13 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
     if (state.mVersion >= 97) ownerTail.insert(ownerTail.end(), {0, 0}); // Absent bound source and inventory script identity.
     if (state.mVersion >= 104) ownerTail.insert(ownerTail.end(), {4, 0, 0, 0, 'n', 'u', 'l', 'l'}); // Absent weapon coating.
-    const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0) + (state.mVersion >= 91 ? 4 : 0) + (state.mVersion >= 96 ? 12 : 0);
+    const std::size_t furnitureSuffix = state.mVersion >= 106 ? 1 : 0;
+    const std::size_t contactSuffix = furnitureSuffix + (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0) + (state.mVersion >= 91 ? 4 : 0) + (state.mVersion >= 96 ? 12 : 0);
     ASSERT_GE(wire.size(),ownerTail.size() + contactSuffix);
     EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin() + contactSuffix));
     std::vector<std::uint8_t> emptySuffix(contactSuffix, 0);
-    if (state.mVersion >= 88) emptySuffix[contactSuffix - 12 - (state.mVersion >= 89 ? 4 : 0) - (state.mVersion >= 91 ? 4 : 0) - (state.mVersion >= 96 ? 12 : 0)] = 1; // First unused magic projectile serial.
-    if (state.mVersion >= 96) emptySuffix[contactSuffix - 12] = 1; // First unused arrow serial.
+    if (state.mVersion >= 88) emptySuffix[contactSuffix - furnitureSuffix - 12 - (state.mVersion >= 89 ? 4 : 0) - (state.mVersion >= 91 ? 4 : 0) - (state.mVersion >= 96 ? 12 : 0)] = 1; // First unused magic projectile serial.
+    if (state.mVersion >= 96) emptySuffix[contactSuffix - furnitureSuffix - 12] = 1; // First unused arrow serial.
     EXPECT_TRUE(std::equal(emptySuffix.begin(), emptySuffix.end(), wire.end() - contactSuffix));
     const std::vector<std::uint8_t> sourceWire{0x01, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x02, 0x00, 0x00, 0x00};
     EXPECT_NE(std::search(wire.begin(),wire.end(),sourceWire.begin(),sourceWire.end()),wire.end());
@@ -6560,7 +6606,8 @@ TEST(ESM4RuntimeState, NativeSpellCastRetainsReleaseBoundaryAndRejectsDanglingOw
     invalid = state; invalid.mNativeSpellCasts.at(actor).mSpell = {};
     EXPECT_THROW(invalid.serializeBinary(), std::invalid_argument);
     auto wire = state.serializeBinary();
-    const auto castTail = (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0) + (state.mVersion >= 91 ? 4 : 0);
+    const auto castTail = (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0)
+        + (state.mVersion >= 91 ? 4 : 0) + (state.mVersion >= 96 ? 12 : 0) + (state.mVersion >= 106 ? 1 : 0);
     wire.at(wire.size() - castTail - 1) = 2; // Invalid released flag, before later schema tails.
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
 }

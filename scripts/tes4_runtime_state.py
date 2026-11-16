@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 105
+CURRENT_VERSION = 106
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1628,6 +1628,34 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             if abs(determinant - 1.) > 1e-4:
                 raise RuntimeStateError("Improper TES4 ragdoll rotation")
         return bodies
+
+    seat = state.get("native_player_furniture")
+    if seat is not None:
+        fields = {"reference", "base", "cell", "placement", "scale", "marker", "phase", "elapsed",
+                  "actor_model", "model_hash", "clip_hashes", "look_yaw"}
+        if version < 106 or not isinstance(seat, dict) or set(seat) != fields:
+            raise RuntimeStateError("Invalid Player furniture fields/version")
+        for key in ("reference", "base", "cell"):
+            native_key(seat[key])
+        reference = legacy_refs.get(seat["reference"])
+        hashes = [seat["model_hash"], *seat["clip_hashes"]]
+        if (not seat["reference"].startswith("content:") or not seat["base"].startswith("content:")
+                or reference is None or reference["base"] != seat["base"]
+                or reference["cell"] != seat["cell"] or player["cell"] != seat["cell"]
+                or not reference["enabled"] or reference["deleted"]
+                or seat["placement"] != reference["position"]
+                or not isinstance(seat["marker"], int) or not 0 <= seat["marker"] < 30
+                or seat["phase"] not in (2, 3, 4)
+                or not math.isfinite(seat["elapsed"]) or not 0 <= seat["elapsed"] <= 120
+                or not math.isfinite(seat["look_yaw"])
+                or not math.isfinite(seat["scale"]) or seat["scale"] <= 0
+                or not isinstance(seat["actor_model"], str) or not seat["actor_model"]
+                or len(seat["clip_hashes"]) != 3
+                or any(not isinstance(h, str) or len(h) != 32
+                       or any(c not in "0123456789abcdef" for c in h) for h in hashes)):
+            raise RuntimeStateError("Invalid Player furniture owner or lifecycle")
+        if len(seat["placement"]) != 6 or any(not math.isfinite(v) for v in seat["placement"]):
+            raise RuntimeStateError("Invalid Player furniture placement")
 
     loose_weapons = check_collection(state.get("native_loose_weapons", []), "native loose weapon list")
     if version < 53 and loose_weapons:
@@ -3833,6 +3861,19 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 arrow[key] = reader.unpack("<f")
             arrow["model"] = reader.string()
             result["native_arrow_projectiles"].append(arrow)
+    if version >= 106:
+        present = reader.unpack("<B")
+        if present > 1:
+            raise RuntimeStateError("Invalid Player furniture presence flag")
+        result["native_player_furniture"] = None
+        if present:
+            seat = {key: reader.string() for key in ("reference", "base", "cell")}
+            seat["placement"] = _position(reader)
+            for key, fmt in (("scale", "<f"), ("marker", "<B"), ("phase", "<B"), ("elapsed", "<f"), ("look_yaw", "<f")):
+                seat[key] = reader.unpack(fmt)
+            seat["actor_model"] = reader.string(); seat["model_hash"] = reader.string()
+            seat["clip_hashes"] = [reader.string() for _ in range(3)]
+            result["native_player_furniture"] = seat
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -4758,6 +4799,18 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             for key in ("damage", "gravity_factor", "distance", "maximum_distance"):
                 writer.pack("<f", arrow[key])
             writer.string(arrow["model"])
+    if version >= 106:
+        seat = state.get("native_player_furniture")
+        writer.pack("<B", seat is not None)
+        if seat is not None:
+            for key in ("reference", "base", "cell"):
+                writer.string(seat[key])
+            _write_position(writer, seat["placement"])
+            for key, fmt in (("scale", "<f"), ("marker", "<B"), ("phase", "<B"), ("elapsed", "<f"), ("look_yaw", "<f")):
+                writer.pack(fmt, seat[key])
+            writer.string(seat["actor_model"]); writer.string(seat["model_hash"])
+            for h in seat["clip_hashes"]:
+                writer.string(h)
     return writer.finish()
 
 
@@ -5212,6 +5265,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     player.setdefault("birthsign", "null")
     player.setdefault("female", False)
     player.setdefault("character_generation_flags", 0)
+    state.setdefault("native_player_furniture", None)
     state["schema_version"] = CURRENT_VERSION
     state.setdefault("native_crime", crime_io.empty_state())
     state.setdefault("script_event_sequence", 0)
@@ -5296,6 +5350,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_combat_controllers(result)
     _upgrade_melee_paralysis(result)
     _upgrade_melee_input_release(result)
+    result.setdefault("native_player_furniture", None)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)

@@ -11,6 +11,7 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/class.hpp"
+#include "../mwworld/worldimp.hpp"
 #include "../mwworld/ptr.hpp"
 #include "../mwworld/refdata.hpp"
 
@@ -90,6 +91,15 @@ namespace MWRender
         osg::NodePathList nodepaths;
         if (mTrackingNode)
             nodepaths = mTrackingNode->getParentalNodePaths();
+
+        if (mMode == Mode::FirstPerson && mAnimation && !mTrackingPtr.isEmpty())
+        {
+            const auto* world = dynamic_cast<const MWWorld::World*>(
+                static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+            if (world && mTrackingPtr == world->getPlayerConstPtr() && world->getOblivionPlayerSitting())
+                if (const osg::Node* head = mAnimation->getNode("Bip01 Head"))
+                    nodepaths = head->getParentalNodePaths();
+        }
 
         // Unsupported or incomplete actor skeletons can expose a Camera/Head
         // node without attaching it to the rendered hierarchy. Keep the
@@ -210,7 +220,7 @@ namespace MWRender
         // Adjust camera distance.
         mCameraDistance = mPreferredCameraDistance;
         osg::Quat orient
-            = osg::Quat(mPitch + mExtraPitch, osg::Vec3d(1, 0, 0)) * osg::Quat(mYaw + mExtraYaw, osg::Vec3d(0, 0, 1));
+            = osg::Quat(mPitch + mExtraPitch, osg::Vec3d(1, 0, 0)) * osg::Quat(mYaw + mExtraYaw + mNativeFurnitureYaw, osg::Vec3d(0, 0, 1));
         osg::Vec3d offset = orient * osg::Vec3d(0.f, -mCameraDistance, 0.f);
         MWPhysics::RayCastingResult result
             = rayCasting->castSphere(focal, focal + offset, cameraObstacleLimit, mCollisionType);
@@ -226,7 +236,7 @@ namespace MWRender
     osg::Quat Camera::getOrient() const
     {
         return osg::Quat(mRoll + mExtraRoll, osg::Vec3d(0, 1, 0)) * osg::Quat(mPitch + mExtraPitch, osg::Vec3d(1, 0, 0))
-            * osg::Quat(mYaw + mExtraYaw, osg::Vec3d(0, 0, 1));
+            * osg::Quat(mYaw + mExtraYaw + mNativeFurnitureYaw, osg::Vec3d(0, 0, 1));
     }
 
     void Camera::setMode(Mode newMode, bool force)

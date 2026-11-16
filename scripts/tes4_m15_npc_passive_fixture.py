@@ -76,6 +76,7 @@ def stage(source: Path, output: Path, recipe: dict, plugin: Path) -> dict:
     runtime._upgrade_friend_hit_counters(state)
     runtime._upgrade_combat_controllers(state)
     runtime._upgrade_actor_knockback(state)
+    state.setdefault('native_player_furniture', None)
     state['schema_version'] = recipe['target_schema']
     next(v for v in state['references'] if v['key'] == actor)['actor_draw_state'] = 1
     next(v for v in state['content'] if v['plugin'].lower() == override['plugin'])['fingerprint'] = override['replacement_fingerprint']

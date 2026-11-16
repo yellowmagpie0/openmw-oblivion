@@ -1187,6 +1187,7 @@ namespace MWRender
     void RenderingManager::clear()
     {
         mCamera->setNativeRecoveryView(false);
+        mCamera->setNativeFurnitureYaw(0);
         mSky->setMoonColour(false);
 
         notifyWorldSpaceChanged();

@@ -56,6 +56,7 @@ namespace MWRender
         void reset()
         {
             mNativeRecoveryRestoreMode.reset();
+            mNativeFurnitureYaw = 0;
             setMode(Mode::FirstPerson);
         }
 
@@ -73,6 +74,7 @@ namespace MWRender
         float getExtraYaw() const { return mExtraYaw; }
         float getExtraRoll() const { return mExtraRoll; }
         void setExtraPitch(float angle) { mExtraPitch = angle; }
+        void setNativeFurnitureYaw(float angle) { mNativeFurnitureYaw = angle; }
         void setExtraYaw(float angle) { mExtraYaw = angle; }
         void setExtraRoll(float angle) { mExtraRoll = angle; }
 
@@ -155,6 +157,7 @@ namespace MWRender
         float mHeight;
         float mPitch, mYaw, mRoll;
         float mExtraPitch = 0, mExtraYaw = 0, mExtraRoll = 0;
+        float mNativeFurnitureYaw = 0;
         bool mLockPitch = false, mLockYaw = false;
         osg::Vec3d mPosition;
         osg::Matrixf mViewMatrix;

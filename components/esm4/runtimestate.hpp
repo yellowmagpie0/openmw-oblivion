@@ -79,7 +79,21 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 105;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 106;
+
+    // v106: one Player-owned forward chair lifecycle. Clip clocks are independent
+    // of actor locomotion; cold loading never replays entry or marker selection.
+    struct RuntimePlayerFurniture
+    {
+        ESM::FormKey mReference, mBase, mCell;
+        ESM::Position mPlacement{};
+        float mScale = 1;
+        std::uint8_t mMarker = 0, mPhase = 2; // native GetSitting: 2/3/4
+        float mElapsed = 0, mLookYaw = 0;
+        std::string mActorModel, mModelHash;
+        std::array<std::string, 3> mClipHashes; // enter, sit, exit
+        friend bool operator==(const RuntimePlayerFurniture&, const RuntimePlayerFurniture&) = default;
+    };
 
     struct RuntimeContentIdentity
     {
@@ -1061,6 +1075,8 @@ namespace ESM4
         // v83: reference-owned associated-item Ability effects. Inventory
         // instances carry their exact spell/effect source independently.
         std::map<ESM::FormKey, std::vector<RuntimeBoundAbility>> mNativeBoundAbilities;
+
+        std::optional<RuntimePlayerFurniture> mNativePlayerFurniture;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

@@ -77,7 +77,7 @@ add_openmw_dir (mwsound
     )
 
 add_openmw_dir (mwworld
-    refdata worldimp worldbackend scene globals class action nullaction actionteleport
+    refdata worldimp oblivionfurniture worldbackend scene globals class action nullaction actionteleport
     containerstore preparedinitialinventory preparedsaverecords actiontalk actiontake actionhorse manualref player cellvisitors failedaction
     worldmodel sharedactorinitialization oblivionanimatedreference oblivionlooseweapon oblivionweapondrop oblivioningredientdrop obliviondynamicreference oblivionownership localscripts customdata inventorystore ptr actionopen actionread actionharvest
     actionequip timestamp actionalchemy cellstore actionapply actioneat

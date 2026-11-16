@@ -1065,6 +1065,30 @@ namespace MWRender
     const SceneUtil::ControllerSequenceMetadata& Animation::NativeIdleResource::metadata() const
     { return mFrames->mControllerSequences.front(); }
 
+    std::optional<osg::Vec3f> Animation::NativeIdleResource::rootTranslation(float frame) const
+    {
+        const auto& sequence = metadata();
+        if (!std::isfinite(frame) || frame < sequence.mStartTime || frame > sequence.mStopTime
+            || sequence.mAccumRootName.empty())
+            return std::nullopt;
+        const SceneUtil::KeyframeController* root = nullptr;
+        for (const auto& [name, controller] : mFrames->mKeyframeControllers)
+            if (Misc::StringUtils::ciEqual(name, sequence.mAccumRootName))
+            {
+                if (root || !controller) return std::nullopt;
+                root = controller.get();
+            }
+        if (!root) return std::nullopt;
+        const float span = sequence.mStopTime - sequence.mStartTime;
+        const float time = span > 0
+            ? std::lerp(sequence.mTimelineStart, sequence.mTimelineStop, (frame - sequence.mStartTime) / span)
+            : sequence.mTimelineStart;
+        const auto translation = root->getTranslation(time);
+        for (unsigned axis = 0; axis < 3; ++axis)
+            if (!std::isfinite(translation[axis])) return std::nullopt;
+        return translation;
+    }
+
     std::shared_ptr<const Animation::NativeIdleResource> Animation::NativeIdleResource::retainSourceArtifact() const
     {
         return std::shared_ptr<const NativeIdleResource>(new NativeIdleResource(mModel, mFrames));

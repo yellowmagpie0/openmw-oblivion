@@ -2406,6 +2406,32 @@ namespace ESM4
             }
         }
         checkSize(mNativeActorKnockback.size(), "native actor knockback list");
+        if (mNativePlayerFurniture)
+        {
+            const auto& seat = *mNativePlayerFurniture;
+            const auto reference = std::find_if(mReferences.begin(), mReferences.end(), [&](const auto& ref) {
+                return ref.mKey == seat.mReference;
+            });
+            const auto validHash = [](const std::string& hash) {
+                return hash.size() == 32 && std::all_of(hash.begin(), hash.end(), [](char c) {
+                    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+                });
+            };
+            if (mVersion < 106 || !seat.mReference.isContent() || !seat.mBase.isContent()
+                || seat.mCell != mPlayer.mCell || reference == mReferences.end()
+                || reference->mBase != seat.mBase || reference->mCell != seat.mCell
+                || !reference->mEnabled || reference->mDeleted || seat.mMarker >= 30
+                || seat.mPhase < 2 || seat.mPhase > 4 || !std::isfinite(seat.mElapsed) || seat.mElapsed < 0
+                || seat.mElapsed > 120 || !std::isfinite(seat.mLookYaw) || !std::isfinite(seat.mScale) || seat.mScale <= 0
+                || seat.mActorModel.empty() || !validHash(seat.mModelHash)
+                || !std::all_of(seat.mClipHashes.begin(), seat.mClipHashes.end(), validHash))
+                throw std::runtime_error("Invalid Player furniture owner or lifecycle");
+            for (unsigned i = 0; i < 3; ++i)
+                if (!std::isfinite(seat.mPlacement.pos[i]) || !std::isfinite(seat.mPlacement.rot[i])
+                    || seat.mPlacement.pos[i] != reference->mPosition.pos[i]
+                    || seat.mPlacement.rot[i] != reference->mPosition.rot[i])
+                    throw std::runtime_error("Player furniture placement changed");
+        }
         checkSize(mNativeLooseWeapons.size(), "native loose weapon list");
         if (mVersion < 53 && !mNativeLooseWeapons.empty())
             throw std::runtime_error("TES4 loose weapon physics requires runtime-state version53");
@@ -4337,6 +4363,20 @@ namespace ESM4
                 writer.string(arrow.mModel);
             }
         }
+        if (mVersion >= 106)
+        {
+            writer.integer<std::uint8_t>(mNativePlayerFurniture.has_value());
+            if (mNativePlayerFurniture)
+            {
+                const auto& seat = *mNativePlayerFurniture;
+                writeKey(writer, seat.mReference); writeKey(writer, seat.mBase); writeKey(writer, seat.mCell);
+                writePosition(writer, seat.mPlacement);
+                writer.floating(seat.mScale);
+                writer.integer(seat.mMarker); writer.integer(seat.mPhase); writer.floating(seat.mElapsed); writer.floating(seat.mLookYaw);
+                writer.string(seat.mActorModel); writer.string(seat.mModelHash);
+                for (const auto& hash : seat.mClipHashes) writer.string(hash);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -5875,6 +5915,21 @@ namespace ESM4
                 arrow.mDistance = reader.float32(); arrow.mMaximumDistance = reader.float32();
                 arrow.mModel = reader.string();
                 result.mNativeArrowProjectiles.emplace(id, std::move(arrow));
+            }
+        }
+        if (result.mVersion >= 106)
+        {
+            const auto present = reader.integer<std::uint8_t>();
+            if (present > 1) throw std::runtime_error("Invalid Player furniture presence flag");
+            if (present)
+            {
+                auto& seat = result.mNativePlayerFurniture.emplace();
+                seat.mReference = readKey(reader); seat.mBase = readKey(reader); seat.mCell = readKey(reader);
+                seat.mPlacement = readPosition(reader);
+                seat.mScale = reader.float32();
+                seat.mMarker = reader.integer<std::uint8_t>(); seat.mPhase = reader.integer<std::uint8_t>();
+                seat.mElapsed = reader.float32(); seat.mLookYaw = reader.float32(); seat.mActorModel = reader.string(); seat.mModelHash = reader.string();
+                for (auto& hash : seat.mClipHashes) hash = reader.string();
             }
         }
         if (!reader.eof())
@@ -7688,6 +7743,27 @@ namespace ESM4
                     << "\",\"waiting\":" << (waiting ? "true" : "false") << '}';
             }
             stream << ']';
+        }
+        if (mVersion >= 106)
+        {
+            stream << ",\"native_player_furniture\":";
+            if (!mNativePlayerFurniture) stream << "null";
+            else
+            {
+                const auto& seat = *mNativePlayerFurniture;
+                stream << "{\"reference\":\"" << escapeJson(seat.mReference.serialize())
+                    << "\",\"base\":\"" << escapeJson(seat.mBase.serialize())
+                    << "\",\"cell\":\"" << escapeJson(seat.mCell.serialize()) << "\",\"placement\":";
+                writeJsonPosition(stream, seat.mPlacement);
+                stream << ",\"scale\":" << seat.mScale << ",\"marker\":" << unsigned(seat.mMarker)
+                    << ",\"phase\":" << unsigned(seat.mPhase) << ",\"elapsed\":" << seat.mElapsed
+                    << ",\"look_yaw\":" << seat.mLookYaw
+                    << ",\"actor_model\":\"" << escapeJson(seat.mActorModel)
+                    << "\",\"model_hash\":\"" << seat.mModelHash << "\",\"clip_hashes\":[";
+                for (std::size_t i = 0; i < 3; ++i)
+                    stream << (i ? ",\"" : "\"") << seat.mClipHashes[i] << '\"';
+                stream << "]}";
+            }
         }
         stream << "}";
         return stream.str();

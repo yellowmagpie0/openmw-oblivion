@@ -1677,6 +1677,9 @@ namespace MWMechanics
                     return value(!controller && ai != nullptr && !parameterKey.isNull() && ai->mPackage == parameterKey ? 1.0 : 0.0);
                 if (function == "GetRestrained")
                     return value(ai != nullptr && ai->mRestrained ? 1.0 : 0.0);
+                if (function == "GetSitting" && subjectKey == ESM::FormKey::dynamic("player", 1)
+                    && mWorld.getOblivionPlayerSitting())
+                    return value(mWorld.getOblivionPlayerSitting());
                 const bool sleeping = ai != nullptr && ai->mPackageType == ESM4::AIPackageType::Sleep
                     && (ai->mPhase == ESM4::PackagePhase::Act || ai->mPhase == ESM4::PackagePhase::Wait);
                 return value(function == "IsRidingHorse" ? ai != nullptr && !ai->mMount.isNull()
@@ -2763,7 +2766,8 @@ namespace MWMechanics
             if (function == "GetIsPlayableRace")
                 return value(playableRace(subjectPtr, baseKey(subjectPtr)) ? 1.0 : 0.0);
             if (function == "GetSitting")
-                return value(sleeping() ? 1.0 : 0.0);
+                return value(subjectPtr == mWorld.getPlayerPtr() && mWorld.getOblivionPlayerSitting()
+                    ? mWorld.getOblivionPlayerSitting() : (sleeping() ? 1.0 : 0.0));
             if (function == "GetGlobalValue")
             {
                 const auto global = resolveGlobal(parameterKey);
@@ -5835,7 +5839,8 @@ namespace MWMechanics
     bool OblivionAiService::updateMountedAttachment(const MWWorld::Ptr& rider, LiveActor& live, bool highProcess)
     {
         if (mWorld.mPhysics)
-            mWorld.mPhysics->setActorMovementSuspended(rider, !live.mState.mMount.isNull());
+            mWorld.mPhysics->setActorMovementSuspended(rider, !live.mState.mMount.isNull()
+                || (rider == mWorld.getPlayerPtr() && mWorld.getOblivionPlayerSitting()));
         if (live.mState.mMount.isNull())
             return false;
 

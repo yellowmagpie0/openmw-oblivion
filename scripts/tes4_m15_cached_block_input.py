@@ -49,6 +49,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     runtime.write_save(source, output, state)
     expected = copy.deepcopy(state)
     expected['schema_version'] = recipe['target_schema']
+    expected.setdefault('native_player_furniture', None)
     expected.setdefault('native_loose_weapons', [])
     expected.setdefault('native_animated_references', [])
     expected.setdefault('native_trap_contacts', [])

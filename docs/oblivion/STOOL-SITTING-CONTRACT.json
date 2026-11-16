@@ -1,0 +1,49 @@
+{
+  "status": "Accepted bounded original Player forward-entry Stool lifecycle; full M4/M11/M14 remain open",
+  "milestones": "M14 furniture use / M11 authored actor animation",
+  "target": {
+    "name": "Stool",
+    "base": "content:oblivion.esm:02c46d",
+    "reference": "content:oblivion.esm:06efc7",
+    "cell": "content:oblivion.esm:0352a9",
+    "model": "meshes/furniture/lowerclass/lowerclassstool01.nif",
+    "enabled": true,
+    "distance": 49.0
+  },
+  "source": {
+    "path": "build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+    "provenance": "Accepted primary cave continuation after Scales; no inventory grant, teleport or actor enabling."
+  },
+  "baseline": {
+    "case": "build/oblivion-compat/stool/normal-stool-activation-baseline-01",
+    "save_sha256": "1d2de6894b10c183ca137b5d15219f27aa65720fa7fd988c59328c014672aee8",
+    "input": "Ordinary F sheath, camera aiming, Space on the original Stool, four-second observation and F5.",
+    "result": "Stool caption visible; Player remains standing at the same world position, with unchanged inventory, actor values, quests, target and allocator20.",
+    "audit": "build/oblivion-compat/stool/activation-baseline-audit.json",
+    "implementation_gap": "ESM4Furniture::activate returns NullAction for non-bed furniture."
+  },
+  "plan": [
+    "Verify original Stool sitting/getup, actor query semantics and cold pose independently using identified executable/content and exact prefix restoration.",
+    "Use the original FURN active-marker flags, BSFurnitureMarker data and original chair entry/idle/exit KF assets for a single ordinary Player stool path. Add only state, movement/input, rendering and persistence dependencies needed for that concrete lifecycle.",
+    "Exercise normal sit, seated cold load and ordinary getup without duplicated furniture ownership or unrelated inventory/quest/actor changes, then repeat instrumented acceptance and focused/appropriate integration checks.",
+    "Record scope, original-versus-fork differences and source-linked evidence, commit locally, then choose another actual-content gap."
+  ],
+  "scope_limits": [
+    "No synthetic actors or furniture, fork teleports, forced actor deficits, enabling disabled actors or merged inventories.",
+    "No complete NPC use-item package, all chairs/markers, beds/jail/rest or full M11/M14 acceptance claim. Preserve existing bed-rest behavior.",
+    "The Scales chunk is locally committed at c971770012; its primary cave inventory is the independent source for this chunk.",
+    "Proprietary models/KFs, original saves and bulky captures remain ignored. Do not push."
+  ],
+  "oracle": "STOOL-SITTING-ORACLE.json",
+  "required_semantics": "Standing0 -> entering2 -> seated3 -> exiting4 -> standing0; sitting is not sleeping. Activate with no target gets up; targeted activation retains ordinary interaction behavior.",
+  "runtime_state": {
+    "schema": 106,
+    "owner": "One Player furniture lifecycle, independent of bed rest, mount and recovery ownership.",
+    "identity": "Original placed FURN, cell/base/placement/marker, exact retained NIF and three KF opaque hashes, authored actor model.",
+    "continuation": "Native phase2/3/4, elapsed clip time and independent camera look yaw; old105 has no invented chair owner.",
+    "verified_cold_scope": "Actual seated phase3 and nonzero look; entering/exiting phases structurally round-trip, not yet independently cold runtime acceptance."
+  },
+  "normal_evidence_root": "build/oblivion-compat/stool",
+  "verification": "STOOL-SITTING-VERIFICATION.json"
+}
