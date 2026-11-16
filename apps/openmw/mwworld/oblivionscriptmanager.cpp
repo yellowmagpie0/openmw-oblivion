@@ -881,9 +881,12 @@ namespace MWWorld
     {
         if (ptr.isEmpty())
             return {};
-        const ESM::FormKey script = mResolver.toFormKey(scriptId(ptr));
+        const auto override = mWorld.getOblivionReferenceScriptOverride(ptr.getCellRef().getFormKey());
+        const ESM::FormKey script = override.value_or(mResolver.toFormKey(scriptId(ptr)));
+        if (override && override->isNull()) return {};
         const auto found = mScripts.find(script);
         if (found != mScripts.end()) return found->second;
+        if (override) return {};
         const auto native = OblivionProfileServices::nativeItemId(mStore, ptr.getCellRef().getRefId());
         if (const auto* id = native.getIf<ESM::FormId>())
             if (const auto base = mBaseScripts.find(mResolver.toFormKey(*id)); base != mBaseScripts.end())
@@ -893,6 +896,11 @@ namespace MWWorld
 
     std::shared_ptr<const ObScript::Program> OblivionScriptManager::scriptFor(const ESM::FormKey& key)
     {
+        if (const auto override = mWorld.getOblivionReferenceScriptOverride(key))
+        {
+            const auto program = mScripts.find(*override);
+            return program == mScripts.end() ? nullptr : program->second;
+        }
         if (const auto direct = mBaseScripts.find(key); direct != mBaseScripts.end())
             return direct->second;
         if (const Ptr ptr = ptrFor(key); !ptr.isEmpty())
@@ -920,7 +928,11 @@ namespace MWWorld
             return std::nullopt;
 
         std::shared_ptr<const ObScript::Program> program;
-        if (const auto direct = mBaseScripts.find(target); direct != mBaseScripts.end())
+        if (const auto override = mWorld.getOblivionReferenceScriptOverride(target))
+        {
+            if (const auto found = mScripts.find(*override); found != mScripts.end()) program = found->second;
+        }
+        else if (const auto direct = mBaseScripts.find(target); direct != mBaseScripts.end())
             program = direct->second;
         else if (const auto script = mScripts.find(target); script != mScripts.end())
             program = script->second;
@@ -2281,6 +2293,17 @@ namespace MWWorld
             return std::int64_t(changed);
         }
 
+        if (name == "placeatme")
+        {
+            const auto base = keyFromValue(argument(0));
+            if (!base || arguments.size() > 4
+                || (arguments.size() > 1 && ObScript::asInteger(argument(1)) != 1)
+                || (arguments.size() > 2 && ObScript::asNumber(argument(2)) != 0)
+                || (arguments.size() > 3 && ObScript::asInteger(argument(3)) != 0))
+                throw ObScript::RuntimeError("OBSV109",
+                    "Native PlaceAtMe currently requires one actor at its marker without offsets", name);
+            return ObScript::ReferenceValue{mWorld.placeOblivionActorAt(objectPtr(), *base), {}};
+        }
         if (name == "moveto" || name == "movetomarker")
         {
             const Ptr ptr = objectPtr();

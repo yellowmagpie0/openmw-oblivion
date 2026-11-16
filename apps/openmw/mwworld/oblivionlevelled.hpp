@@ -13,9 +13,11 @@ namespace MWWorld
     class ESMStore;
     std::vector<ESM4::InventoryItem> expandOblivionLevelledItems(const ESMStore& store,
         const std::vector<ESM4::InventoryItem>& items, int level, Misc::Rng::Generator& random);
-    bool supportsOblivionLevelledActor(const ESMStore& store, const ESM::FormKey& list, int level);
+    bool supportsOblivionLevelledActor(const ESMStore& store, const ESM::FormKey& list, int level, bool allowRootTemplate = false);
     std::optional<ESM::FormId> selectOblivionLevelledActor(const ESMStore& store,
         const ESM::FormKey& list, int level, Misc::Rng::Generator& random);
+    bool oblivionLevelledActorListContains(const ESMStore& store, const ESM::FormKey& list,
+        const ESM::FormKey& base, std::optional<int> level = std::nullopt);
     bool oblivionLevelledActorContains(const ESMStore& store, const ESM::FormKey& reference,
         const ESM::FormKey& base, std::optional<int> level = std::nullopt);
     // Returns true only for a validated saved selection, including a saved empty draw.

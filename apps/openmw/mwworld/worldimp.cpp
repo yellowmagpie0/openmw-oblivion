@@ -24,6 +24,7 @@
 #include "obliviondooranimation.hpp"
 #include "oblivionbounditems.hpp"
 #include "oblivionlevelled.hpp"
+#include "oblivionspawn.hpp"
 #include <components/esm4/loadlvlc.hpp>
 #include <components/esm4/loadclas.hpp>
 #include "oblivioncombatdata.hpp"
@@ -2848,8 +2849,8 @@ namespace MWWorld
             if (const auto* to = race(destination, targetNpc))
                 if (const auto value = from->mDisposition.find(to->mId); value != from->mDisposition.end())
                     raceReaction = value->second;
-        const auto sourceFactions = getOblivionActorFactions(*sourceBase);
-        const auto targetFactions = getOblivionActorFactions(*targetBase);
+        const auto sourceFactions = getOblivionReferenceFactions(source);
+        const auto targetFactions = getOblivionReferenceFactions(destination);
         std::int32_t sameReaction = 0, otherReaction = 10000, sameRank = -1, otherRank = -1;
         for (const auto& from : sourceFactions)
         {
@@ -3199,7 +3200,7 @@ namespace MWWorld
         const auto base = getOblivionReferenceBaseKey(actor);
         const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(faction);
         if (!base || !id || !mStore.search<ESM4::Faction>(faction)) return -1;
-        const auto entries = getOblivionActorFactions(*base);
+        const auto entries = getOblivionReferenceFactions(actor);
         const auto found = std::ranges::find(entries, id->toUint32(), &ESM4::ActorFaction::faction);
         return found == entries.end() ? -1 : found->rank;
     }
@@ -3219,7 +3220,7 @@ namespace MWWorld
         ESM::FormKeyResolver resolver(mContentFiles);
         const auto id = resolver.toFormId(faction);
         if (!id) return false;
-        auto entries = getOblivionActorFactions(*base);
+        auto entries = getOblivionReferenceFactions(actor);
         const auto found = std::ranges::find(entries, id->toUint32(), &ESM4::ActorFaction::faction);
         const auto stored = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(rank));
         if (found == entries.end()) entries.insert(entries.begin(), {id->toUint32(), stored, 0, 0, 0});
@@ -3228,6 +3229,14 @@ namespace MWWorld
         std::vector<ESM4::RuntimeActorFaction> replacement;
         for (const auto& entry : entries)
             replacement.push_back({resolver.toFormKey(ESM::FormId::fromUint32(entry.faction)), entry.rank});
+        if (mOblivionRuntimeState)
+            for (auto& reference : mOblivionRuntimeState->mReferences)
+                if (reference.mKey == ESM4::runtimeReferenceKey(actor)
+                    && reference.mCustomState.contains("native.spawn.factions"))
+                {
+                    setOblivionSpawnFactions(reference, replacement);
+                    return true;
+                }
         mOblivionCombat->setBaseFactions(*base,
             creature ? ESM4::ActorBaseKind::Creature : ESM4::ActorBaseKind::Npc, std::move(replacement));
         return true;
@@ -8309,6 +8318,7 @@ namespace MWWorld
         for (const auto& reference : state.mReferences)
         {
             validateCell(reference.mCell);
+            validateOblivionSpawn(reference);
             const bool levelled = validateOblivionLevelledActor(mStore, reference);
             const bool levelledActor = levelled
                 && !std::get<bool>(reference.mCustomState.at("native.levelled_actor.empty"));

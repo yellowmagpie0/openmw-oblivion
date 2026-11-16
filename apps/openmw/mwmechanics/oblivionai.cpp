@@ -1737,7 +1737,7 @@ namespace MWMechanics
                 const auto base = mWorld.getOblivionReferenceBaseKey(subjectKey);
                 const auto* faction = mWorld.mStore.search<ESM4::Faction>(parameterKey);
                 if (!id || !base || !faction) return value(0.0);
-                const auto entries = mWorld.getOblivionActorFactions(*base);
+                const auto entries = mWorld.getOblivionReferenceFactions(subjectKey);
                 return value(ESM4::factionMembership(entries, {}, id->toUint32(),
                     ESM4::runtimeReferenceKey(subjectKey) == ESM::FormKey::dynamic("player", 1),
                     faction->mFactionFlags.value_or(0)) ? 1.0 : 0.0);
@@ -2332,7 +2332,7 @@ namespace MWMechanics
                 const auto id = ESM::FormKeyResolver(mWorld.mContentFiles).toFormId(factionKey);
                 const auto* faction = mWorld.mStore.search<ESM4::Faction>(factionKey);
                 if (!base || !id || !faction) return false;
-                const auto entries = mWorld.getOblivionActorFactions(*base);
+                const auto entries = mWorld.getOblivionReferenceFactions(subjectKey);
                 return ESM4::factionMembership(entries, {}, id->toUint32(),
                     subjectPtr == mWorld.getPlayerPtr(), faction->mFactionFlags.value_or(0));
             };
@@ -3057,7 +3057,7 @@ namespace MWMechanics
             if (owner == live.mState.mActor || owner == live.mState.mBase)
                 return true;
             const ESM::FormId ownerId = resolver.toFormId(owner).value_or(ESM::FormId{});
-            const auto entries = mWorld.getOblivionActorFactions(live.mState.mBase);
+            const auto entries = mWorld.getOblivionReferenceFactions(live.mState.mActor);
             return std::any_of(entries.begin(), entries.end(), [ownerId](const auto& faction) {
                 return ESM::FormId::fromUint32(faction.faction) == ownerId && faction.rank != -1;
             });
@@ -3496,7 +3496,7 @@ namespace MWMechanics
                 ? resolver.toFormKey(*owner.getIf<ESM::FormId>())
                 : ESM::FormKey{};
             if (ownerKey == actorKey(actor) || ownerKey == baseKey(actor)) return true;
-            const auto factions = mWorld.getOblivionActorFactions(baseKey(actor));
+            const auto factions = mWorld.getOblivionReferenceFactions(actorKey(actor));
             return std::any_of(factions.begin(), factions.end(), [&](const auto& faction) {
                 return faction.rank != -1 && ESM::RefId(ESM::FormId::fromUint32(faction.faction)) == owner;
             });
@@ -5374,10 +5374,8 @@ namespace MWMechanics
             }
             return ESM::FormKey::content(mWorld.mContentFiles[contentFile], value.mIndex) == owner;
         };
-        const auto base = actor && !actor->isEmpty()
-            ? mWorld.getOblivionReferenceBaseKey(actorKey(*actor)).value_or(live.mState.mBase)
-            : live.mState.mBase;
-        const auto entries = mWorld.getOblivionActorFactions(base);
+        const auto key = actor && !actor->isEmpty() ? actorKey(*actor) : live.mState.mActor;
+        const auto entries = mWorld.getOblivionReferenceFactions(key);
         return std::any_of(entries.begin(), entries.end(), [&matchesFaction](const auto& item) {
             return item.faction != 0 && item.rank != -1 && matchesFaction(ESM::FormId::fromUint32(item.faction));
         });

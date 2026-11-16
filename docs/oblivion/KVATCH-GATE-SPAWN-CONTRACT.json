@@ -1,0 +1,40 @@
+{
+  "status": "Verified bounded level-one default gate actor creation/template/lifetime/cold slice; gate entry and full quest remain open",
+  "course": "User-directed Kvatch main gates -> first Oblivion Gate -> interior progression",
+  "chunk": "Original gate default single-actor PlaceAtMe, leveled selection, lifetime and cold ownership",
+  "source": {
+    "path": "build/oblivion-compat/kvatch-approach/normal-earned-amulet-kvatch-staging-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "28dd5a527b7bdb6f4dd239670ed102c206dfafa5126887e9f010b6442f92dd1f",
+    "provenance": "Genuine earned-Amulet branch with explicitly declared Player-only travel staging; inventory/Player values/quests/allocator preserved. Gate locals: marker091229, count0, timer0, deadCount0. Do not use prior weather diagnostic count3 saves."
+  },
+  "original_content": {
+    "gate": "content:oblivion.esm:01e8a3",
+    "script": "content:oblivion.esm:1778c5",
+    "marker": "content:oblivion.esm:091229",
+    "list": "content:oblivion.esm:008bfd",
+    "level1_leaf": "content:oblivion.esm:03e9cb",
+    "leaf_name": "Stunted Scamp",
+    "source_metadata": "build/oblivion-compat/kvatch-gate-spawn/master-list-audit.json",
+    "native_rule_reuse": "Existing selectOblivionLevelledActor and levelledEntryPool native-verified actor selection; original list has chanceNone0 and only the level1 tier eligible for this actual character.",
+    "template": "content:oblivion.esm:09122a",
+    "template_script": "content:oblivion.esm:09122b"
+  },
+  "acceptance": [
+    "Original gate GameMode completes without unsupported commands; actual PlaceAtMe creates real actor references from original marker/list, not injected replacements.",
+    "Created references have unique native-reference serials, original selected base and location, real appearance/physics/AI/combat/life and initialized inventory; exact save/live ownership and no incomplete construction marker.",
+    "Template faction/script snapshots belong to each spawned reference, preserve selected leaf identity/stats/AI and persist across reload; unrelated leaf-base actors remain unchanged. Original creature death script updates gate deadCount exactly once.",
+    "Cold reload retains those exact actors, chosen base, life/values/inventory and original gate spawn count/timer. No duplicate replay or reroll. Additional original timer-driven spawns receive distinct identities.",
+    "Earned Player inventory/quest source remains separate and intact except naturally executed original gameplay. No grants, quest writes, forced actor enabling, stat deficits or weather injection.",
+    "Normal and sanitizer actual gate creation/cold continuation plus appropriate engine/Python verification before local commit; preserve failures. Then approach/activate actual gate and continue inside, fixing subsequent observed gaps."
+  ],
+  "tolerances": {
+    "identity": "Exact chosen base, native reference/allocator, saved inventory and life/owner continuity.",
+    "selection": "At actual Playerlevel1, original list has a single eligible StuntedScamp leaf. No bit-identical random sequence claim.",
+    "placement": "Original marker position/yaw; natural physics settling and AI movement. Inspect actual appearance/state instead of pinning a fabricated position."
+  },
+  "scope_limits": [
+    "This first script-command slice supports one actor at an active resident marker with default distance/direction. Other record categories, explicit quantities/offsets and unloaded-marker behavior are explicitly rejected, not silently emulated.",
+    "Broader grouped spawning, respawn schedules and unrelated milestones remain open until their own observed original-content cases.",
+    "Gate entry and complete Kvatch/main quest acceptance remain open until normal-input progression is verified."
+  ]
+}

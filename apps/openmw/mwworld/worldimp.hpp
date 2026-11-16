@@ -491,6 +491,8 @@ namespace MWWorld
         bool setOblivionFactionReaction(const ESM::FormKey& from, const ESM::FormKey& to, std::int32_t value);
         bool setOblivionEssential(const ESM::FormKey& base, bool essential);
         std::optional<bool> getOblivionEssentialOverride(const ESM::FormKey& base) const;
+        std::vector<ESM4::ActorFaction> getOblivionReferenceFactions(const ESM::FormKey& actor) const;
+        std::optional<ESM::FormKey> getOblivionReferenceScriptOverride(const ESM::FormKey& actor) const;
         std::vector<ESM4::ActorFaction> getOblivionActorFactions(const ESM::FormKey& base) const;
         std::int8_t getOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction) const;
         bool setOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction, std::int32_t rank);
@@ -1024,6 +1026,8 @@ namespace MWWorld
         // Reserve a contiguous group without advancing the saved serial. One
         // successful commit advances by the entire group, including exhaustion.
         std::unique_ptr<PreparedOblivionDynamicReferenceKey> prepareOblivionDynamicReferenceKeys(std::size_t count);
+        void validateOblivionSpawn(const ESM4::RuntimeReferenceState& reference) const;
+        ESM::FormKey placeOblivionActorAt(const Ptr& anchor, const ESM::FormKey& base);
 
         // Retain current physical projections before scene ownership is released.
         // Validation failure leaves native authority and physical owners intact.

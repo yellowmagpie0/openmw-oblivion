@@ -1,0 +1,90 @@
+{
+  "status": "Independent original executable observations; fork acceptance recorded separately in KVATCH-GATE-SPAWN-VERIFICATION.json",
+  "question": "Which selected-leaf properties and template fields does the real Kvatch leveled-creature placement retain?",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_save": "dce1ea5d52b6f41e2ac6d341177ab15448b844d292588dd128d581c4dd62f75b",
+  "probe": "build/oblivion-compat/kvatch-gate-spawn/original-01",
+  "setup": "Original-only diagnostic coc KvatchOblivionGateNEW and player.placeatme 00008bfd. Select the actual resulting Scamp in the native console; no original save written. This is a template-rule probe, not main-quest progression acceptance.",
+  "identities": {
+    "list": "008bfd",
+    "template": "09122a",
+    "selected_leaf": "03e9cb",
+    "template_script": "09122b",
+    "observed_native_reference": "ff000966"
+  },
+  "observations": [
+    {
+      "capture": "08-native-selected-scamp.png",
+      "result": "Selected actual Stunted Scamp reference ff000966."
+    },
+    {
+      "capture": "09-native-template-identity-values.png",
+      "values": {
+        "GetIsID 0003e9cb": 1,
+        "GetIsID 0009122a": 0,
+        "GetBaseAV Health": 40,
+        "GetAV Aggression": 100,
+        "GetAV Confidence": 80
+      }
+    },
+    {
+      "capture": "10-native-template-factions-script.png",
+      "values": {
+        "GetInFaction 0004b90b": 0,
+        "GetInFaction 00090ac0": 1,
+        "sv dead": 0
+      }
+    },
+    {
+      "capture": "11-native-template-spells.png",
+      "values": {
+        "GetBaseAV Magicka": 50
+      },
+      "limitation": "GetSpell command attempts were rejected; no spell-list observation is claimed."
+    }
+  ],
+  "conclusion": "Retain selected leaf identity, health/magicka and observed AI values; replace faction membership and bind template script on each created reference. Do not mutate the shared leaf base.",
+  "numeric_scope": "Observed level-one content values; no random-number or rounding parity claim.",
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "cleanup": {
+    "owner": "53e536a7-6321-4062-b072-30bc8749eb60",
+    "remaining_owned_processes": [],
+    "clean": true
+  },
+  "retained_failures": [
+    "Earlier fork normal-first-gate-creature-01 rejected the root template before creating actors; no acceptance.",
+    "Initial native captures caught intro/menu before actual load; native GetSpell was unsupported."
+  ],
+  "winning_content": "Root/leaf/template read-only master audits in kvatch-gate-spawn; weather slice winning record audit across installed plugins retained under kvatch-weather. No extracted proprietary script text is checked in.",
+  "all_authored_factions": {
+    "evidence": "build/oblivion-compat/kvatch-gate-spawn/all-authored-factions.json",
+    "template_order": [
+      "053fed:0",
+      "090ac0:0"
+    ],
+    "normalized_native_order": [
+      "090ac0:0",
+      "053fed:0"
+    ],
+    "leaf_order": [
+      "053fed:0",
+      "04b90b:0"
+    ],
+    "note": "Read all repeated SNAM fields; the earlier dictionary summary retained only the last SNAM. Native console confirmed encounter membership replaces the leaf membership.",
+    "normalization_scope": "Ordered normalization reuses the existing native SNAM setter rule. Native console independently checked encounter versus leaf membership; it did not enumerate order."
+  },
+  "winning_spawn_audit": {
+    "path": "build/oblivion-compat/kvatch-gate-spawn/winning-content-audit.json",
+    "sha256": "2dc71b623fb34973f15d1ca36ce0d1c363336b688a7d5f994008ae84896826b9",
+    "plugins": 11,
+    "no_dlc_overrides": true
+  }
+}

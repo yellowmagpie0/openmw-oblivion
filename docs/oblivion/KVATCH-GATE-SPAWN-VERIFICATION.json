@@ -1,0 +1,734 @@
+{
+  "status": "Verified bounded original Kvatch gate creature creation, template ownership, lifetime and cold continuation; entry/main quest remain open",
+  "tested_parent": "f558bb120cac2d58dfd0efe62b4a5bf901b80cf9",
+  "gate_entry_accepted": false,
+  "full_quest_accepted": false,
+  "contract": "KVATCH-GATE-SPAWN-CONTRACT.json",
+  "oracle": "KVATCH-GATE-SPAWN-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/kvatch-gate-spawn",
+  "production_sha256": {
+    "apps/openmw/mwmechanics/oblivionai.cpp": "21abea8a76d067c293eb9b6039c2fce5079b89d8a0a0b951f174514f6ef2f618",
+    "apps/openmw/mwworld/obliviondynamicreference.cpp": "b76c599182b7218a302de68aa99ad4e235d1bc2d160f677ef571b9a572a3f3f2",
+    "apps/openmw/mwworld/oblivionlevelled.cpp": "fd8f94e044b70522569b17befca8b87f0812d81ea5f8f1711267f93dff8cd827",
+    "apps/openmw/mwworld/oblivionlevelled.hpp": "5258813c00671462dd3cda656199aa63b7e192d812000285645f2fdcaad82a9f",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "6508bd1943084520fc75d1a3c7a010b964fd1ddd01b276b02751fb26aa572f9a",
+    "apps/openmw/mwworld/worldimp.cpp": "fd14693b5ee6b9e0dfff6f79bb158ed78220f3c5e751a78da3bec6627b236d7c",
+    "apps/openmw/mwworld/worldimp.hpp": "eed66120d7428be2e219964caacc93eea8fd6169e019bb86cd42ab827093f042",
+    "apps/openmw/mwworld/oblivionspawn.hpp": "36c10bd9ab36c16541913cc7162cc1c917eb424fc10616558c02f31332d64df5"
+  },
+  "runtime_courses": [
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/normal-first-gate-creature-03",
+      "audit_sha256": "ab2a303dcc2baec83e2d95ff85166125a6a6071793e55e452ff0831f5f241ad7",
+      "passed": true,
+      "phase": "first",
+      "sanitized": false,
+      "input_sha256": "28dd5a527b7bdb6f4dd239670ed102c206dfafa5126887e9f010b6442f92dd1f",
+      "save_sha256": "7441a92e01ebdc990eb7e2599cc90be7d2024755a22807cbeed9adea196102aa",
+      "binary_sha256": "05641115ba76a9cbc0842ecba66b2c3ae03bb434079434cc22f85640bccdc837",
+      "actors": [
+        "dynamic:native-reference:0000000000000008"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 1
+        },
+        {
+          "type": "number",
+          "value": 6.71399986743927
+        },
+        {
+          "type": "number",
+          "value": 0
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "normal-first-gate-creature-03",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/normal-first-gate-creature-03/original-kvatch-first-scamp.png",
+        "sha256": "9390fb104fa5c74358554af2595032aa24ff30e2a9823fcf654ad1770bc1f509",
+        "review": "Manually viewed: real Kvatch gate/exterior rendered, no loading overlay. Creature identity/life/count additionally audited from live/save data.",
+        "corpse_visible": false
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/normal-first-gate-creature-cold-02",
+      "audit_sha256": "944397b4d5f7a733d6c254f3eb85b28c18751881102ac742776c8e005bba5ec9",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": false,
+      "input_sha256": "7441a92e01ebdc990eb7e2599cc90be7d2024755a22807cbeed9adea196102aa",
+      "save_sha256": "b55c5ffbc7200852cf40c8f0f8ba223e6bef8db2151ffbdab421287ece0a8e09",
+      "binary_sha256": "05641115ba76a9cbc0842ecba66b2c3ae03bb434079434cc22f85640bccdc837",
+      "actors": [
+        "dynamic:native-reference:0000000000000008"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 1
+        },
+        {
+          "type": "number",
+          "value": 3.2209997102618217
+        },
+        {
+          "type": "number",
+          "value": 0
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "normal-first-gate-creature-cold-02",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/normal-first-gate-creature-cold-02/original-kvatch-first-scamp-cold.png",
+        "sha256": "bf39b06cd58fdad7c27fb693fb27646720a54b3f1ba99cd4b3aa38d89f1bb5b0",
+        "review": "Manually viewed: real Kvatch gate/exterior rendered, no loading overlay. Creature identity/life/count additionally audited from live/save data.",
+        "corpse_visible": false
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/normal-gate-timed-creatures-01",
+      "audit_sha256": "16d1fe6817879c6b774c81c851637bb8c0a8de09a4de044fad452b55e0b37ae6",
+      "passed": true,
+      "phase": "three",
+      "sanitized": false,
+      "input_sha256": "b55c5ffbc7200852cf40c8f0f8ba223e6bef8db2151ffbdab421287ece0a8e09",
+      "save_sha256": "9a3febdf555a44ffb2a9ecb70de12cca0d60794a2c379a8695c43ac82ff9ab4b",
+      "binary_sha256": "05641115ba76a9cbc0842ecba66b2c3ae03bb434079434cc22f85640bccdc837",
+      "actors": [
+        "dynamic:native-reference:0000000000000008",
+        "dynamic:native-reference:0000000000000009",
+        "dynamic:native-reference:000000000000000a"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 3
+        },
+        {
+          "type": "number",
+          "value": 6.709999844431877
+        },
+        {
+          "type": "number",
+          "value": 0
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:0000000000000009": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:000000000000000a": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "normal-gate-timed-creatures-01",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/normal-gate-timed-creatures-01/original-kvatch-three-scamps.png",
+        "sha256": "7d4a36fb152d68b7c129bf1b08140cdd06ae9c785566189aac17e1ff44a2b95d",
+        "review": "Manually viewed: real Kvatch gate/exterior rendered, no loading overlay. Creature identity/life/count additionally audited from live/save data.",
+        "corpse_visible": false
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/normal-gate-creature-fight-02",
+      "audit_sha256": "d14af4e2b99eae14863e5ac1b0f3e14a04b4efe46c271e966b7de94becf0aca6",
+      "passed": true,
+      "phase": "death",
+      "sanitized": false,
+      "input_sha256": "7441a92e01ebdc990eb7e2599cc90be7d2024755a22807cbeed9adea196102aa",
+      "save_sha256": "c25b52b76e86cf372a428fb974f687d1083b18681fa732083679abce860ed1e6",
+      "binary_sha256": "05641115ba76a9cbc0842ecba66b2c3ae03bb434079434cc22f85640bccdc837",
+      "actors": [
+        "dynamic:native-reference:0000000000000008",
+        "dynamic:native-reference:0000000000000009",
+        "dynamic:native-reference:000000000000000a"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 3
+        },
+        {
+          "type": "number",
+          "value": 5.015999749302864
+        },
+        {
+          "type": "number",
+          "value": 1
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:0000000000000009": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:000000000000000a": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "normal-gate-creature-fight-02",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/normal-gate-creature-fight-02/original-kvatch-creature-death.png",
+        "sha256": "bd274ef8a3501edbecaecc692224a56966fb06f64c5bca20f77ba20c6964585c",
+        "review": "Manually viewed: real Kvatch gate/exterior rendered, no loading overlay. Creature identity/life/count additionally audited from live/save data.",
+        "corpse_visible": true
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/normal-gate-creature-death-cold-01",
+      "audit_sha256": "d8577e9ec317073c8a567cc7e78cf2dbaed2fcecc250b0c23014ccd1dc603c8f",
+      "passed": true,
+      "phase": "death-cold",
+      "sanitized": false,
+      "input_sha256": "c25b52b76e86cf372a428fb974f687d1083b18681fa732083679abce860ed1e6",
+      "save_sha256": "a521eb7085400959857dde5a9729f73e4657515e973f95f4ffa2e8160eefef93",
+      "binary_sha256": "05641115ba76a9cbc0842ecba66b2c3ae03bb434079434cc22f85640bccdc837",
+      "actors": [
+        "dynamic:native-reference:0000000000000008",
+        "dynamic:native-reference:0000000000000009",
+        "dynamic:native-reference:000000000000000a"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 3
+        },
+        {
+          "type": "number",
+          "value": 4.093999698758125
+        },
+        {
+          "type": "number",
+          "value": 1
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:0000000000000009": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:000000000000000a": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "normal-gate-creature-death-cold-01",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/normal-gate-creature-death-cold-01/original-kvatch-creature-death-cold.png",
+        "sha256": "83f2c5776926e1cf4ab4cbfc2e83d5f93473d0aa1ff70e69f8e73c8aa5f9b2a7",
+        "review": "Manually viewed: real Kvatch gate/exterior rendered, no loading overlay. Creature identity/life/count additionally audited from live/save data.",
+        "corpse_visible": true
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/sanitized-first-gate-creature-01",
+      "audit_sha256": "7a11a940ca1ac6ad469ba2bd1da08ce8f2e131ff1df88d4ac1deedb53e30c31b",
+      "passed": true,
+      "phase": "first",
+      "sanitized": true,
+      "input_sha256": "28dd5a527b7bdb6f4dd239670ed102c206dfafa5126887e9f010b6442f92dd1f",
+      "save_sha256": "0498ba470ad6cbdaf3b9230b68d85c54c1e0b8061d49cdd375ed5f40e4a60c73",
+      "binary_sha256": "a2099aa3cbea49bcdb1e3c47ec12e6fcdf8b42e5692f0ce5b43d95c8e0a091a9",
+      "actors": [
+        "dynamic:native-reference:0000000000000008"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 1
+        },
+        {
+          "type": "number",
+          "value": 8.837999939918518
+        },
+        {
+          "type": "number",
+          "value": 0
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "sanitized-first-gate-creature-01",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/sanitized-first-gate-creature-01/original-kvatch-first-scamp.png",
+        "sha256": "45f1a68f157ada1a6c1d23b35a14c98a44a81a51582277eaadc282c527e5e8a4",
+        "review": "Manually viewed: real Kvatch gate/exterior rendered, no loading overlay. Creature identity/life/count additionally audited from live/save data.",
+        "corpse_visible": false
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/sanitized-first-gate-creature-cold-01",
+      "audit_sha256": "333173644573ce5873e3f835ef573f60576e7349a929715ec0b4ffae35979748",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": true,
+      "input_sha256": "0498ba470ad6cbdaf3b9230b68d85c54c1e0b8061d49cdd375ed5f40e4a60c73",
+      "save_sha256": "a20471621cae87d6c2c7849e5fb79e7565360c569608412602594cc39a819ec8",
+      "binary_sha256": "a2099aa3cbea49bcdb1e3c47ec12e6fcdf8b42e5692f0ce5b43d95c8e0a091a9",
+      "actors": [
+        "dynamic:native-reference:0000000000000008"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 1
+        },
+        {
+          "type": "number",
+          "value": 7.675999879837036
+        },
+        {
+          "type": "number",
+          "value": 0
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "sanitized-first-gate-creature-cold-01",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/sanitized-first-gate-creature-cold-01/original-kvatch-first-scamp-cold.png",
+        "sha256": "9d72782750b4242998fd5c3b43256d5aac66c06b71c38691ea819e87431d5f83",
+        "review": "Manually viewed: real Kvatch gate/exterior rendered, no loading overlay. Creature identity/life/count additionally audited from live/save data.",
+        "corpse_visible": false
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/sanitized-gate-timed-creatures-01",
+      "audit_sha256": "9c7680998bd3830c011fe7f26f82b4e0098d21b318696198dd1f0950f96b91f5",
+      "passed": true,
+      "phase": "three",
+      "sanitized": true,
+      "input_sha256": "a20471621cae87d6c2c7849e5fb79e7565360c569608412602594cc39a819ec8",
+      "save_sha256": "6a6616c2cfa9d63e045c5dec85d86088382dd47c2ac50353711330d3540236ac",
+      "binary_sha256": "a2099aa3cbea49bcdb1e3c47ec12e6fcdf8b42e5692f0ce5b43d95c8e0a091a9",
+      "actors": [
+        "dynamic:native-reference:0000000000000008",
+        "dynamic:native-reference:0000000000000009",
+        "dynamic:native-reference:000000000000000a"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 3
+        },
+        {
+          "type": "number",
+          "value": 9.003999948501587
+        },
+        {
+          "type": "number",
+          "value": 0
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:0000000000000009": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:000000000000000a": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "sanitized-gate-timed-creatures-01",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/sanitized-gate-timed-creatures-01/original-kvatch-three-scamps.png",
+        "sha256": "42c4cae8f2e8c858fa4705df08e54bef61710e82d7444644d235ce6d4b270395",
+        "review": "Manually viewed: original Kvatch exterior, gate and Scamp models/corpse rendered; no loading overlay. Saved/live actor state audited separately.",
+        "corpse_visible": false
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-gate-spawn/sanitized-normal-death-cold-01",
+      "audit_sha256": "6414b579b02aff436ce4ecb946a4dc99cab7feeb16554e1ddcb952a3bec27fbd",
+      "passed": true,
+      "phase": "death-cold",
+      "sanitized": true,
+      "input_sha256": "c25b52b76e86cf372a428fb974f687d1083b18681fa732083679abce860ed1e6",
+      "save_sha256": "467d257b0104976474aafe1f269b46224278bd11275583781952dfaeab264502",
+      "binary_sha256": "a2099aa3cbea49bcdb1e3c47ec12e6fcdf8b42e5692f0ce5b43d95c8e0a091a9",
+      "actors": [
+        "dynamic:native-reference:0000000000000008",
+        "dynamic:native-reference:0000000000000009",
+        "dynamic:native-reference:000000000000000a"
+      ],
+      "gate_locals": [
+        {
+          "type": "reference",
+          "value": "content:oblivion.esm:091229"
+        },
+        {
+          "type": "number",
+          "value": 3
+        },
+        {
+          "type": "number",
+          "value": 4.18599970638752
+        },
+        {
+          "type": "number",
+          "value": 1
+        }
+      ],
+      "scope": "Original gate actor creation/template ownership and declared continuation only; gate entry/main quest remain open.",
+      "selected_aggression_confidence": {
+        "dynamic:native-reference:0000000000000008": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:0000000000000009": [
+          100,
+          80
+        ],
+        "dynamic:native-reference:000000000000000a": [
+          100,
+          80
+        ]
+      },
+      "visual": {
+        "case": "sanitized-normal-death-cold-01",
+        "path": "build/oblivion-compat/kvatch-gate-spawn/sanitized-normal-death-cold-01/original-kvatch-creature-death-cold.png",
+        "sha256": "83f2c5776926e1cf4ab4cbfc2e83d5f93473d0aa1ff70e69f8e73c8aa5f9b2a7",
+        "review": "Manually viewed: original Kvatch exterior, gate and Scamp models/corpse rendered; no loading overlay. Saved/live actor state audited separately.",
+        "corpse_visible": true
+      }
+    }
+  ],
+  "checks": [
+    {
+      "path": "build/oblivion-compat/kvatch-gate-spawn/normal-engine-01/verification.json",
+      "sha256": "800bc06ba8f031b51ceaed4a4983bb4631f9e04b91508ab9547fe5a821a61d1d",
+      "mode": "engine",
+      "result": {
+        "executed": 2310,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "b4bd4c5682114299188c1298f8e6588718f3a5ba8584be8ce46efbec3a8f0330",
+        "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+        "xml_sha256": "b58aef182324b470c8278dfba51c3e64d4f3f75a3ad41213769f6ee74da443f1",
+        "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "source": {
+        "head": "f558bb120cac2d58dfd0efe62b4a5bf901b80cf9",
+        "source_fingerprint": "1c4a340e79f00b44b19ac13899f00033a7a445028ae9a1a3cc39b9bab9667481"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/kvatch-gate-spawn/python-01/verification.json",
+      "sha256": "08019e8b8dd390a016db56182b77f6554591c35267fc693736134536f910ffdd",
+      "mode": "python",
+      "result": {
+        "executed": 621,
+        "passed": true,
+        "log_sha256": "f7a300aa11b7e16e5febc7d74195323fdebab83b47420cb52b87f48a197ad982"
+      },
+      "source": {
+        "head": "f558bb120cac2d58dfd0efe62b4a5bf901b80cf9",
+        "source_fingerprint": "1c4a340e79f00b44b19ac13899f00033a7a445028ae9a1a3cc39b9bab9667481"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/kvatch-gate-spawn/sanitized-engine-union.json",
+      "sha256": "0df4ea51b3536e0970318710ff15408488c751e9ac8350648c5a9fdbe73bea8a",
+      "mode": "sanitized engine",
+      "executed": 2310,
+      "binary_sha256": "a187f820bc95ae898417061bae7fff3d00085591ef0fd3a45806fad0826308a0",
+      "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+      "partitions": [
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/sanitized-engine-rest-02",
+          "count": 2058,
+          "source": {
+            "head": "f558bb120cac2d58dfd0efe62b4a5bf901b80cf9",
+            "source_fingerprint": "1c4a340e79f00b44b19ac13899f00033a7a445028ae9a1a3cc39b9bab9667481"
+          }
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/sanitized-engine-workers-0-02",
+          "count": 84,
+          "source": {
+            "head": "f558bb120cac2d58dfd0efe62b4a5bf901b80cf9",
+            "source_fingerprint": "1c4a340e79f00b44b19ac13899f00033a7a445028ae9a1a3cc39b9bab9667481"
+          }
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/sanitized-engine-workers-1-02",
+          "count": 84,
+          "source": {
+            "head": "f558bb120cac2d58dfd0efe62b4a5bf901b80cf9",
+            "source_fingerprint": "1c4a340e79f00b44b19ac13899f00033a7a445028ae9a1a3cc39b9bab9667481"
+          }
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/sanitized-engine-workers-2-02",
+          "count": 84,
+          "source": {
+            "head": "f558bb120cac2d58dfd0efe62b4a5bf901b80cf9",
+            "source_fingerprint": "1c4a340e79f00b44b19ac13899f00033a7a445028ae9a1a3cc39b9bab9667481"
+          }
+        }
+      ],
+      "unit_leaks": true
+    }
+  ],
+  "producer_archives": [
+    {
+      "mode": "normal",
+      "codec": "Independent 512MiB zstd patch-from chunks, long29, level10; baseline streamed to bound temporary disk use",
+      "base_archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/candidate-assets/normal-dev-01/openmw.zst",
+      "base_archive_sha256": "d3c0546605d48ce8cf89f1e71c3fd1961c2bf88828af5d5611a17a63ee11dfe3",
+      "base_decoded_sha256": "75dae7a2b3a4f75b1378a56f2cf3f78462c148e69cc0b7181c004d8d3e1895ff",
+      "decoded_sha256": "05641115ba76a9cbc0842ecba66b2c3ae03bb434079434cc22f85640bccdc837",
+      "raw_size": 1504543696,
+      "verified": true,
+      "parts": [
+        {
+          "index": 0,
+          "offset": 0,
+          "size": 536870912,
+          "base_size": 536870912,
+          "base_sha256": "0a2e5609efc141325007a9220fa6833654eeeb618126803dc946fb2f4272fa5b",
+          "decoded_sha256": "294bb60e39d5f40962a37c5132dd8f4cacb2c0dea42ee91ddc23d44e88b90259",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/normal-dev-02/00.delta.zst",
+          "delta_sha256": "66a664f8d8b3cd54a3956021895bfd332e3708283cd50bfd54c6b5f0639c85b7",
+          "delta_size": 120198046
+        },
+        {
+          "index": 1,
+          "offset": 536870912,
+          "size": 536870912,
+          "base_size": 536870912,
+          "base_sha256": "9653cf03dd61da75f853ff4598d747907251e6dedbf4382e14eabb4028277052",
+          "decoded_sha256": "7740d9806fef116fbb985b529a0a390ff7905f6750d14f9af2d4d04feea8d2b4",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/normal-dev-02/01.delta.zst",
+          "delta_sha256": "cb8281127687cb7fb72aafa8aaba9cb5bc628f002dc3e7be3df8008b78695b6f",
+          "delta_size": 84433433
+        },
+        {
+          "index": 2,
+          "offset": 1073741824,
+          "size": 430801872,
+          "base_size": 428764176,
+          "base_sha256": "83f1ede7d460ca7a2aeacd2225ef5617924246d9414ca96e0976888db7ee4d69",
+          "decoded_sha256": "a98dcc959117fee8b4c8d5564f5517aea1beb2051b6cf3731e6cd7ece717000c",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/normal-dev-02/02.delta.zst",
+          "delta_sha256": "3f9d9144e2e1a42ba99659eac9939194c812f5038038e516ffe79fb8e355184e",
+          "delta_size": 39205164
+        }
+      ],
+      "restore": "Stream-decode full base archive. For each part take base at offset for base_size bytes, verify base_sha256, zstd -d --patch-from=SLICE -M2000MB DELTA; concatenate decoded chunks and verify decoded_sha256."
+    },
+    {
+      "mode": "sanitized",
+      "codec": "Independent 512MiB zstd patch-from chunks, long29, level10; baseline streamed to bound temporary disk use",
+      "base_archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-back-seat/candidate-assets/sanitized-dev-01/openmw.zst",
+      "base_archive_sha256": "8b632ac4b883abd6b1269b56b06c1fb0779452188beb099f584263f2bf5b9318",
+      "base_decoded_sha256": "26b6c408d5fab67186eeedec3352470d116a9ffac962a3d72800d96f5787fd58",
+      "decoded_sha256": "a2099aa3cbea49bcdb1e3c47ec12e6fcdf8b42e5692f0ce5b43d95c8e0a091a9",
+      "raw_size": 2791004240,
+      "verified": true,
+      "parts": [
+        {
+          "index": 0,
+          "offset": 0,
+          "size": 536870912,
+          "base_size": 536870912,
+          "base_sha256": "3dc35aa8ca0e65d741fa2d1d6f2ee9d216d107c2288e5ab8634c908167f314d2",
+          "decoded_sha256": "e2aa8de0e1fecb11729fd15da58947cdee49c5f93c1d624b0174f4ec976e043b",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/sanitized-dev-02/00.delta.zst",
+          "delta_sha256": "ce90ea281f2bc14fc5fc56e5f64920ce9f4eda9ebada13b7cc53cbd47efaa277",
+          "delta_size": 64084574
+        },
+        {
+          "index": 1,
+          "offset": 536870912,
+          "size": 536870912,
+          "base_size": 536870912,
+          "base_sha256": "8edd88bd71bb533095d80b7ed0a3d30053bcfbfc0f548637348686c31e949e18",
+          "decoded_sha256": "873951167eb639987be347cc412e5e7ca9e7cd91ea67cfa98336ccb46d0ce59e",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/sanitized-dev-02/01.delta.zst",
+          "delta_sha256": "eb472485b7579b0889db0ee72c96801f0ab71d943d7a5854d1de0b7c4bb5518e",
+          "delta_size": 34102972
+        },
+        {
+          "index": 2,
+          "offset": 1073741824,
+          "size": 536870912,
+          "base_size": 536870912,
+          "base_sha256": "365226e3f357e95aa7914917b4745885fc9bd30deed92302cf25a0abb73fab1b",
+          "decoded_sha256": "89b714fff62996f2602ac879e9799fc80cb93b970fac3499d1e5713dea3f5065",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/sanitized-dev-02/02.delta.zst",
+          "delta_sha256": "957b0da7cd7c8131c37199f72e80d4409b2f2b10cc5a21e06d81d73deae4ed84",
+          "delta_size": 129623697
+        },
+        {
+          "index": 3,
+          "offset": 1610612736,
+          "size": 536870912,
+          "base_size": 536870912,
+          "base_sha256": "944130f08cda5107f6a2c1aecacea6bbe99b06742c7b67191b463209ee70dc9f",
+          "decoded_sha256": "2d258604a88adf894def4c7eaaf6f98ca2f88e1c5e3500946e19ccb91d06c3dc",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/sanitized-dev-02/03.delta.zst",
+          "delta_sha256": "84fa634661707e8cb01ca847b56809cfed609ba52022ebd476880a41f9853fef",
+          "delta_size": 113077451
+        },
+        {
+          "index": 4,
+          "offset": 2147483648,
+          "size": 536870912,
+          "base_size": 536870912,
+          "base_sha256": "09b77c438e589ded1d95818cf0a901a01592492aaf0c6ae835465e9f99421066",
+          "decoded_sha256": "be43e17711f294662d4390fa83db70c51397bf599ddffa619ce9bfc119e1477f",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/sanitized-dev-02/04.delta.zst",
+          "delta_sha256": "53ebd41cce0e595c57da4e9aa23d9a565a001e4ce93afc23e3161756f0cee6a0",
+          "delta_size": 18439350
+        },
+        {
+          "index": 5,
+          "offset": 2684354560,
+          "size": 106649680,
+          "base_size": 102584960,
+          "base_sha256": "742477258a924e77d6be9e300294b0b68276c260d33564513cc4c76d886d007a",
+          "decoded_sha256": "087f35389fe40b52f6b6214d25f31fc8e5feecd7c75a18b56f0bf50bd16d639d",
+          "delta": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-gate-spawn/candidate-assets/sanitized-dev-02/05.delta.zst",
+          "delta_sha256": "078e25d31c2b6f60ebdded8bc83ee35aafbcbe1d86ee1a64a7567786e746ecf5",
+          "delta_size": 13743916
+        }
+      ],
+      "restore": "Stream-decode full base archive. For each part take base at offset for base_size bytes, verify base_sha256, zstd -d --patch-from=SLICE -M2000MB DELTA; concatenate decoded chunks and verify decoded_sha256."
+    }
+  ],
+  "winning_content": {
+    "path": "build/oblivion-compat/kvatch-gate-spawn/winning-content-audit.json",
+    "sha256": "2dc71b623fb34973f15d1ca36ce0d1c363336b688a7d5f994008ae84896826b9",
+    "plugins": 11,
+    "no_dlc_overrides": true
+  },
+  "native_restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "source_scope": "Exact check fingerprints retained. Production C++ matches both immutable runtime producers. Later reporting updates only. Components unchanged: retain original Windows integration 3310-per-mode receipt (WINDOWS-MERGE-VERIFICATION.json), not a fresh component run. Rendered SAN uses leak0; unit SAN uses leak1.",
+  "runtime_scope": "Normal: actual gate births, own-save cold, three timed actors, natural creature attacks/armor wear, ordinary SDL club kill, script deathCount1 and corpse cold. SAN: actual births, own-save cold, timed-three actor/AI/life continuation, and fresh-process restoration of the NORMAL Player-caused death save. No additional SAN Player-kill or bit-identical timing/random claim.",
+  "retained_failures": [
+    {
+      "case": "sanitized-engine-rest-01",
+      "reason": "ENOSPC during SAN unit link. Incomplete output never executed; failure, cache recovery and fresh retry02 retained."
+    },
+    {
+      "case": "normal-first-gate-creature-01",
+      "reason": "Initial implementation rejected original root creature template; stopped own scenario with deadline cleanup. No actors/acceptance; pristine source retained."
+    },
+    {
+      "case": "normal-first-gate-creature-02",
+      "reason": "Semantic birth passed but screenshot caught loading overlay; visual acceptance uses repeat03."
+    },
+    {
+      "case": "normal-first-gate-creature-cold-01",
+      "reason": "Fixture used unsupported GetInFaction command; corrected to supported GetFactionRank in cold02. No extra functionality added for diagnostic."
+    },
+    {
+      "case": "normal-gate-creature-fight-01",
+      "reason": "Preflight rejected repeat_until_log without isolated SDL input; corrected and validated fight02."
+    }
+  ],
+  "remaining_acceptance": [
+    "Approach and activate actual gate through normal controls; confirm authored paired destination, weather release, script flags and cold interior ownership.",
+    "Continue original interior content and select next discrete implementation from actual failure. Main-quest prerequisites/full quest course remain unproven.",
+    "Explicit quantities/offsets, NPC templates, nested unknown templates, other PlaceAtMe record categories and broader respawn schedules are outside this verified level-one default-actor case."
+  ],
+  "next": {
+    "course": "Actual Kvatch gate entry",
+    "healthy_source": "build/oblivion-compat/kvatch-gate-spawn/normal-first-gate-creature-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_sha256": "7441a92e01ebdc990eb7e2599cc90be7d2024755a22807cbeed9adea196102aa",
+    "reason": "Genuine earned inventory, one actual Scamp and full Player health. Avoid weather missing-creature diagnostic saves and damaged corpse-proof saves for entry."
+  }
+}

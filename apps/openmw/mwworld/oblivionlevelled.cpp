@@ -119,7 +119,7 @@ namespace MWWorld
         return result;
     }
 
-    bool supportsOblivionLevelledActor(const ESMStore& store, const ESM::FormKey& key, int level)
+    bool supportsOblivionLevelledActor(const ESMStore& store, const ESM::FormKey& key, int level, bool allowRootTemplate)
     {
         checkedLevel(level);
         const auto* root = store.get<ESM4::LevelledCreature>().search(key);
@@ -128,7 +128,8 @@ namespace MWWorld
         std::set<ESM::FormId> path;
         std::function<bool(const ESM4::LevelledCreature&)> supported = [&](const ESM4::LevelledCreature& list) {
             Recursion guard(path, list.mId);
-            if (!list.mScriptId.isZeroOrUnset() || !list.mTemplate.isZeroOrUnset()) return false;
+            if (!list.mScriptId.isZeroOrUnset()
+                || (!list.mTemplate.isZeroOrUnset() && !(allowRootTemplate && &list == root))) return false;
             if (list.chanceNone() == 100) return true;
             const auto pool = ESM4::levelledEntryPool(list.mLvlObject, checkedLevel(level),
                 list.calcAllLvlLessThanPlayer() ? 1 : 0, maxDifference, true);
@@ -179,8 +180,13 @@ namespace MWWorld
         const ESM::FormKey& base, std::optional<int> level)
     {
         const auto* placed = store.get<ESM4::Reference>().search(reference);
-        if (!placed) return false;
-        const auto* root = store.get<ESM4::LevelledCreature>().search(placed->mBaseObj);
+        return placed && oblivionLevelledActorListContains(store, placed->mBaseKey, base, level);
+    }
+
+    bool oblivionLevelledActorListContains(const ESMStore& store, const ESM::FormKey& key,
+        const ESM::FormKey& base, std::optional<int> level)
+    {
+        const auto* root = store.get<ESM4::LevelledCreature>().search(key);
         if (!root) return false;
         if (!store.get<ESM4::Npc>().search(base) && !store.get<ESM4::Creature>().search(base)) return false;
         const auto maxDifference = level ? difference(store, true) : 0;
