@@ -4,6 +4,12 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M4/M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
+Latest bounded furniture repair: [original Chorrol left-entry chair](CHORROL-LEFT-SEAT-HANDOFF.md).
+Normal/SAN actual entry, seated cold getup and standing cold movement pass,
+preserving the independent MS45 reward inventory. Normal forward-entry regression,
+2,310 engine tests per mode and 621 Python tests pass. Right/back markers and NPC furniture
+packages remain open; choose the next reached content gap.
+
 Latest bounded inventory repair: [Renault armor playability](RENAULT-PLAYABILITY-HANDOFF.md).
 Normal/SAN real three-stack Take All and cold continuation pass: five original
 NonPlayable armor stacks are hidden and discarded without Player transfer,

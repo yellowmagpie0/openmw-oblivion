@@ -1,0 +1,88 @@
+{
+  "status": "Accepted bounded original Player left-entry chair lifecycle",
+  "milestone": "M14/M11 single original Player left-entry chair lifecycle",
+  "target": {
+    "ref": {
+      "id": "03fdd0",
+      "base_id": 187717,
+      "position": [
+        -1779.96728515625,
+        716.7825317382812,
+        -273.60137939453125,
+        0.0,
+        -0.0,
+        -0.09999707341194153
+      ],
+      "lock": "",
+      "owner": "",
+      "teleport": ""
+    },
+    "base": {
+      "id": "02dd45",
+      "type": "FURN",
+      "edid": "UCChair04L",
+      "name": "Chair",
+      "model": "Furniture\\UpperClass\\UpperChair04.NIF",
+      "markers": "01000040"
+    }
+  },
+  "source": {
+    "path": "build/oblivion-compat/hackdirt/return-completed-reload-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "4ce1c88f5a9a6c4d5b8a97241207cff5790952e5249ecd6b0d68c0e51550d682",
+    "cell": "content:oblivion.esm:000807",
+    "position": [
+      -150.84814453125,
+      -34.861106872558594,
+      1.017913818359375,
+      0.212890625,
+      0.0,
+      -2.100093126296997
+    ],
+    "inventory_stacks": 5,
+    "provenance": "Accepted original MS45 return/reward cold checkpoint. Independent from Wellspring, shore and tutorial inventories."
+  },
+  "known_gap": "World::prepareOblivionFurnitureResources accepts position_ref13/orientation0 with forward clips. UCChair04L02dd45 enables only marker0, position_ref11/orientation1570 in originalUpperChair04.NIF, currently rejected.",
+  "plan": [
+    "Reach actual Castle Great Hall and chair through ordinary movement/doors from retained Chorrol shop; save a close pre-activation checkpoint for both runtime modes.",
+    "Audit winning original placed/base/cell records, original NIF/KFs and original-game sit/exit orientation/anchor through isolated restored native probe.",
+    "Implement only left marker/clip and necessary final facing dependencies using existing furniture owner/save identity; retain forward behavior and reject other unverified directions.",
+    "Normal+SAN actual left sit, seated cold, getup and standing cold; preserve source inventory/MS45reward and independent branches, then appropriate gates/localcommit."
+  ],
+  "scope_limits": [
+    "No new placed records, actors, grants, forced deficits or fork teleports.",
+    "No all-direction/NPC furniture packages or full M11/M14 claim.",
+    "Use sequential rendered virtual-controller probes. Reuse unchanged evidence with original provenance."
+  ],
+  "reached_source": {
+    "case": "build/oblivion-compat/chorrol-left-stool/normal-castle-continue-01",
+    "passed": true,
+    "save": "build/oblivion-compat/chorrol-left-stool/normal-castle-continue-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "035a6bca9f123154639475623456d47f7f00466d23940d44681c43e98157d9bc",
+    "cell": "content:oblivion.esm:02898f",
+    "position": [
+      686.1203002929688,
+      -473.6062316894531,
+      -512.6500244140625,
+      0.0,
+      0.0,
+      -1.5707958936691284
+    ],
+    "reputation": {
+      "fame": 1,
+      "infamy": 0,
+      "bounty_accumulator": 0
+    }
+  },
+  "target_revision": "Initial stool03fdda isbehindkeyedguardroomdoor; retain its exploratory failure, usechair03fdd0for sameleftentryfunction. The actual checkpoint has approachdoor02ba65 unlocked.",
+  "failing_baseline": "build/oblivion-compat/chorrol-left-stool/manual-left-chair-baseline-01.json",
+  "oracle": "docs/oblivion/CHORROL-LEFT-SEAT-ORACLE.json",
+  "verification": "CHORROL-LEFT-SEAT-VERIFICATION.json",
+  "final_checkpoints": {
+    "normal-left-seated-01": "19b250cbef3081bd16c338158161871f56c47f45f02a09869ea34176f0b2230b",
+    "normal-left-getup-03": "9a7f16470d6e02c5668f66ec2ce5f38eef7f1135a58a8b38515707be174dbc39",
+    "normal-left-standing-01": "7e311798bd589e28f2ce06f17393c41748dcc0d2cc9e18d4d451cc331ea9a7bc",
+    "sanitized-left-seated-02": "0588d65854d385904db366c81d9e1d23e8366dde8fe25a62e95869c050db6e62",
+    "sanitized-left-getup-01": "09ed564136d60563574884ff171450c8c94a5b7fc1d4f331bea2c405f0451325",
+    "sanitized-left-standing-01": "439864e14b743fa335fb017cddc4f3eefebd3b2a4c34579b699ea58f9ca1f664"
+  }
+}

@@ -32,8 +32,10 @@ namespace MWWorld
 {
     namespace
     {
-        constexpr std::array<std::string_view, 3> Clips{
+        constexpr std::array<std::string_view, 3> ForwardClips{
             "chair_forwardenter.kf", "dynamicidle_sit.kf", "chair_forwardexit.kf"};
+        constexpr std::array<std::string_view, 3> LeftClips{
+            "chair_leftenter.kf", "dynamicidle_sit.kf", "chair_leftexit.kf"};
         std::string hexHash(std::string_view bytes)
         {
             constexpr char digits[] = "0123456789abcdef";
@@ -53,6 +55,7 @@ namespace MWWorld
     {
         ESM4::RuntimePlayerFurniture mIdentity;
         osg::Vec3f mMarkerOffset;
+        float mEntryYaw = 0;
         std::array<std::shared_ptr<const MWRender::Animation::NativeIdleResource>, 3> mClips;
     };
 
@@ -78,24 +81,28 @@ namespace MWWorld
         if (!markers || seat.mMarker >= markers->mLegacyMarkers.size())
             throw std::invalid_argument("Missing Player furniture marker");
         const auto& marker = markers->mLegacyMarkers[seat.mMarker];
-        // This admission covers the actual forward-entry marker, not unverified
-        // side/back, bed or modern Bethesda marker conventions.
-        if (marker.mPositionRef != 13 || marker.mOrientation != 0
+        const bool forward = marker.mPositionRef == 13 && marker.mOrientation == 0;
+        const bool left = marker.mPositionRef == 11 && marker.mOrientation == 1570;
+        // Admit only the original forward and left marker/clip families verified
+        // with ordinary Player activation. Other directions remain unsupported.
+        if ((!forward && !left)
             || seat.mPlacement.rot[0] != 0 || seat.mPlacement.rot[1] != 0)
             throw std::invalid_argument("Unsupported Player furniture entry marker");
         auto result = std::make_shared<OblivionFurnitureResources>();
         result->mIdentity = seat;
         result->mIdentity.mModelHash = hexHash(view.getHash());
         result->mMarkerOffset = marker.mOffset;
+        result->mEntryYaw = left ? osg::PI_2f : 0;
+        const auto& clips = left ? LeftClips : ForwardClips;
         const auto actorModel = VFS::Path::normalizeFilename(seat.mActorModel);
         const auto slash = actorModel.rfind('/');
         if (slash == std::string::npos || actorModel.find("..") != std::string::npos)
             throw std::invalid_argument("Furniture has no native actor animation bank");
         const auto directory = actorModel.substr(0, slash + 1) + "idleanims/";
-        for (std::size_t i = 0; i < Clips.size(); ++i)
+        for (std::size_t i = 0; i < clips.size(); ++i)
         {
             auto& clip = result->mClips[i];
-            clip = MWRender::Animation::acquireNativeIdleResource(*mResourceSystem, directory + std::string(Clips[i]));
+            clip = MWRender::Animation::acquireNativeIdleResource(*mResourceSystem, directory + std::string(clips[i]));
             if (!clip || !clip->rootTranslation(clip->metadata().mStartTime)
                 || !clip->rootTranslation(clip->metadata().mStopTime)
                 || clip->metadata().mStopTime <= clip->metadata().mStartTime)
@@ -239,14 +246,17 @@ namespace MWWorld
                                      : clip->rootTranslation(frame);
         if (!root) throw std::runtime_error("Player furniture lost its retained root sample");
         const auto rotation = Misc::Convert::makeOsgQuat(seat.mPlacement);
-        const auto position = seat.mPlacement.asVec3() + rotation * (resources.mMarkerOffset * seat.mScale + *root);
+        const osg::Quat entryRotation(resources.mEntryYaw, osg::Vec3f(0, 0, -1));
+        const auto position = seat.mPlacement.asVec3()
+            + rotation * (resources.mMarkerOffset * seat.mScale + entryRotation * *root);
         const auto look = actor.getClass().getRotationVector(actor);
         seat.mLookYaw = std::remainder(seat.mLookYaw + look.z(), 2 * osg::PIf);
         mRendering->getCamera()->setNativeFurnitureYaw(-seat.mLookYaw);
         mPhysics->setActorMovementSuspended(actor, true);
         moveObject(actor, position);
         const auto pitch = actor.getRefData().getPosition().rot[0] + look.x();
-        rotateObject(actor, osg::Vec3f(pitch, 0, seat.mPlacement.rot[2] + (finished ? osg::PIf : 0)));
+        const float entryYaw = index == 1 ? 0 : resources.mEntryYaw;
+        rotateObject(actor, osg::Vec3f(pitch, 0, seat.mPlacement.rot[2] + entryYaw + (finished ? osg::PIf : 0)));
         mPlayer->consumeOblivionJumpRequest(); mPlayer->consumeOblivionCastRequest();
         if (finished)
         {

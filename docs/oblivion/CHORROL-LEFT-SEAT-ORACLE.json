@@ -1,0 +1,63 @@
+{
+  "status": "Independent identified original Player left-entry/idle/exit observations; fork runtime acceptance pending",
+  "reference": "content:oblivion.esm:03fdd0",
+  "base": "content:oblivion.esm:02dd45",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "winning_content_audit": "build/oblivion-compat/chorrol-left-stool/winning-content-audit.json",
+  "original_only_setup": "Continue isolated original Weynon diagnostic save; coc ChorrolCastleGreatHall; moveto03fdd0. First ordinary activation accidentally exercised neighboring chair and is excluded. Reposition original Player only to [-1832,711,-318] with heading84.27/pitch35, aim then console-click verifies actual03fdd0. No fork teleport, grant or actor enabling.",
+  "observed_states": {
+    "entering": 2,
+    "seated": 3,
+    "exiting": 4,
+    "standing_after_exit": 0,
+    "sleeping_while_seated": 0
+  },
+  "anchors": {
+    "seated_xyz_console_rounded": [
+      -1780.54,
+      716.83,
+      -317.62
+    ],
+    "seated_yaw_degrees": 354.22,
+    "entry_yaw_degrees": 84.22,
+    "exit_phase_yaw_degrees": 84.22,
+    "standing_xyz_console_rounded": [
+      -1829.58,
+      712.64,
+      -316.63
+    ],
+    "standing_yaw_degrees": 264.22
+  },
+  "rule": "Left transition actor heading and root translation use chair placement plus quarter-turn. Idle actor heading uses chair placement. Exit restores standing heading transition plus half-turn. Original marker orientation1570 selects the authored left family, not an arbitrary angle in radians.",
+  "getup": "Empty-target Activate requests getup. Targeted items and movement did not exit; preserve failed exploratory attempts.",
+  "captures": {
+    "23-target-identity.png": "build/oblivion-compat/chorrol-left-stool/original-01/23-target-identity.png",
+    "24-exact-chair-seated.png": "build/oblivion-compat/chorrol-left-stool/original-01/24-exact-chair-seated.png",
+    "25-exit-transition.png": "build/oblivion-compat/chorrol-left-stool/original-01/25-exit-transition.png",
+    "26-exact-chair-standing.png": "build/oblivion-compat/chorrol-left-stool/original-01/26-exact-chair-standing.png",
+    "28-entry-transition.png": "build/oblivion-compat/chorrol-left-stool/original-01/28-entry-transition.png",
+    "29-exit-heading.png": "build/oblivion-compat/chorrol-left-stool/original-01/29-exit-heading.png"
+  },
+  "assets": [
+    {
+      "path": "build/oblivion-compat/next-furniture/asset-probe/chair_leftenter.kf",
+      "sha256": "4e17fd8b5468a269e3dc93980403776c28168dec2b881e0b195bff376aac8791"
+    },
+    {
+      "path": "build/oblivion-compat/next-furniture/asset-probe/chair_leftexit.kf",
+      "sha256": "520069203f71ece423d1fd13cf7078009be66b608ba458120d5a2f7249b5166f"
+    }
+  ],
+  "tolerances": "Gameplay anchor seated<2 units, standing<12 units (ground collision settlement), heading .02rad; exact ownership/identity and save continuity. No bit-identical/frame claim.",
+  "retained_failures": [
+    "Captures01..19: launch/menu/setup, first activated neighboring chair, not used as target pose oracle.",
+    "Original qqq ended attached wrapper143 without automatic restoration completion; no UUID-owned processes remained, exact original inputs manually restored and verified. Not a clean wrapper pass."
+  ],
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "method": "Manual exact restore after original qqq ended attached wrapper143; no owner UUID processes remained before restore. Not a clean wrapper pass.",
+    "time_ns": 1794826564197356397
+  }
+}

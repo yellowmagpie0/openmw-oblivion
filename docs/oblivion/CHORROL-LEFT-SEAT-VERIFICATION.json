@@ -1,0 +1,734 @@
+{
+  "status": "Accepted bounded original Player left-entry chair lifecycle",
+  "tested_parent": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+  "contract": "CHORROL-LEFT-SEAT-CONTRACT.json",
+  "oracle": "CHORROL-LEFT-SEAT-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/chorrol-left-stool",
+  "cpp_sha256": {
+    "apps/openmw/mwworld/oblivionfurniture.cpp": "29a28528603ac337019c804d9b2f92acb75f50d72d28447c013ce3b314aacaa3"
+  },
+  "runtime_courses": [
+    {
+      "case": "build/oblivion-compat/chorrol-left-stool/normal-left-seated-01",
+      "audit_sha256": "04b9a4a58f845cdedecf05b262841b909c49e83b5a0120f2de49e23088674a6a",
+      "passed": true,
+      "phase": "seat",
+      "sanitized": false,
+      "input_sha256": "9238ba5d3b0c93d509d30252cb838348bfbeaf9cb7684d5edb4c10444e37b24a",
+      "save_sha256": "19b250cbef3081bd16c338158161871f56c47f45f02a09869ea34176f0b2230b",
+      "binary_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6",
+      "process": {
+        "pid": 1753596,
+        "start_ticks": 33874135,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/candidate-assets/normal-dev-01/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/normal-left-seated-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/manual-left-chair-baseline-01.omwsave"
+        ],
+        "exe_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6"
+      },
+      "pose": [
+        -1779.9739990234375,
+        716.7754516601562,
+        -317.62255859375,
+        0.7890625,
+        0.0,
+        -0.09999707341194153
+      ],
+      "furniture": {
+        "reference": "content:oblivion.esm:03fdd0",
+        "base": "content:oblivion.esm:02dd45",
+        "cell": "content:oblivion.esm:02898f",
+        "placement": [
+          -1779.96728515625,
+          716.7825317382812,
+          -273.60137939453125,
+          0.0,
+          -0.0,
+          -0.09999707341194153
+        ],
+        "scale": 1.0,
+        "marker": 0,
+        "phase": 3,
+        "elapsed": 2.2696666717529297,
+        "look_yaw": 0.0,
+        "actor_model": "Characters\\_Male\\skeleton.NIF",
+        "model_hash": "c3de08ee115ff2e8549a3726f3c3ac10",
+        "clip_hashes": [
+          "82ed2e624ed3fbb6508afecef3bee8f9",
+          "14b892219676ba03bfdbef8e80626efa",
+          "f817aec282a1732e954c377d5a54a0ae"
+        ]
+      },
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-left-stool/normal-left-getup-03",
+      "audit_sha256": "069d9d5b8de546944d0fbcce42c22a1e75b1a2aeab99e5bd39660cbeac07daaa",
+      "passed": true,
+      "phase": "exit",
+      "sanitized": false,
+      "input_sha256": "19b250cbef3081bd16c338158161871f56c47f45f02a09869ea34176f0b2230b",
+      "save_sha256": "9a7f16470d6e02c5668f66ec2ce5f38eef7f1135a58a8b38515707be174dbc39",
+      "binary_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6",
+      "process": {
+        "pid": 1759811,
+        "start_ticks": 33907754,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/candidate-assets/normal-dev-01/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/normal-left-getup-03/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/normal-left-seated-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6"
+      },
+      "pose": [
+        -1831.3228759765625,
+        712.0921020507812,
+        -317.62255859375,
+        -1.26171875,
+        0.0,
+        -1.6707934141159058
+      ],
+      "furniture": null,
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-left-stool/normal-left-standing-01",
+      "audit_sha256": "9fc32020aa06c81e5e8cd2334b7801eaa91121f3286aeb41114917317fe0bdc6",
+      "passed": true,
+      "phase": "standing",
+      "sanitized": false,
+      "input_sha256": "9a7f16470d6e02c5668f66ec2ce5f38eef7f1135a58a8b38515707be174dbc39",
+      "save_sha256": "7e311798bd589e28f2ce06f17393c41748dcc0d2cc9e18d4d451cc331ea9a7bc",
+      "binary_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6",
+      "process": {
+        "pid": 1760384,
+        "start_ticks": 33916831,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/candidate-assets/normal-dev-01/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/normal-left-standing-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/normal-left-getup-03/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6"
+      },
+      "pose": [
+        -1837.8155517578125,
+        710.7473754882812,
+        -313.227783203125,
+        -1.26171875,
+        0.0,
+        -1.6707934141159058
+      ],
+      "furniture": null,
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-left-stool/sanitized-left-seated-02",
+      "audit_sha256": "d480f4df306a3a4946e940253d8db355a06b422805da4d260bd3107f9780e300",
+      "passed": true,
+      "phase": "seat",
+      "sanitized": true,
+      "input_sha256": "9238ba5d3b0c93d509d30252cb838348bfbeaf9cb7684d5edb4c10444e37b24a",
+      "save_sha256": "0588d65854d385904db366c81d9e1d23e8366dde8fe25a62e95869c050db6e62",
+      "binary_sha256": "2bca446f66f4cf993105c3c6fc9849aed7ac6067fc16420bc8eee05a533d4a06",
+      "process": {
+        "pid": 1766669,
+        "start_ticks": 33963200,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-left-seat-san-2f_720y2/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-left-seated-02/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/manual-left-chair-baseline-01.omwsave"
+        ],
+        "exe_sha256": "2bca446f66f4cf993105c3c6fc9849aed7ac6067fc16420bc8eee05a533d4a06"
+      },
+      "pose": [
+        -1779.9739990234375,
+        716.7754516601562,
+        -317.62255859375,
+        0.7890625,
+        0.0,
+        -0.09999707341194153
+      ],
+      "furniture": {
+        "reference": "content:oblivion.esm:03fdd0",
+        "base": "content:oblivion.esm:02dd45",
+        "cell": "content:oblivion.esm:02898f",
+        "placement": [
+          -1779.96728515625,
+          716.7825317382812,
+          -273.60137939453125,
+          0.0,
+          -0.0,
+          -0.09999707341194153
+        ],
+        "scale": 1.0,
+        "marker": 0,
+        "phase": 3,
+        "elapsed": 1.5226668119430542,
+        "look_yaw": 0.0,
+        "actor_model": "Characters\\_Male\\skeleton.NIF",
+        "model_hash": "c3de08ee115ff2e8549a3726f3c3ac10",
+        "clip_hashes": [
+          "82ed2e624ed3fbb6508afecef3bee8f9",
+          "14b892219676ba03bfdbef8e80626efa",
+          "f817aec282a1732e954c377d5a54a0ae"
+        ]
+      },
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-left-stool/sanitized-left-getup-01",
+      "audit_sha256": "7d55b58d41dc6e38b5e5980667619e7148340bfb15d5000248fbe4be7e534f2d",
+      "passed": true,
+      "phase": "exit",
+      "sanitized": true,
+      "input_sha256": "0588d65854d385904db366c81d9e1d23e8366dde8fe25a62e95869c050db6e62",
+      "save_sha256": "09ed564136d60563574884ff171450c8c94a5b7fc1d4f331bea2c405f0451325",
+      "binary_sha256": "2bca446f66f4cf993105c3c6fc9849aed7ac6067fc16420bc8eee05a533d4a06",
+      "process": {
+        "pid": 1767148,
+        "start_ticks": 33994569,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-left-seat-san-2f_720y2/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-left-getup-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-left-seated-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "2bca446f66f4cf993105c3c6fc9849aed7ac6067fc16420bc8eee05a533d4a06"
+      },
+      "pose": [
+        -1831.3228759765625,
+        712.0921020507812,
+        -317.62255859375,
+        -1.5546875,
+        0.0,
+        -1.6707934141159058
+      ],
+      "furniture": null,
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-left-stool/sanitized-left-standing-01",
+      "audit_sha256": "4cfaf6960b16efc410bbfd673c5a0e62dfbab86452497f6da595804be7c69518",
+      "passed": true,
+      "phase": "standing",
+      "sanitized": true,
+      "input_sha256": "09ed564136d60563574884ff171450c8c94a5b7fc1d4f331bea2c405f0451325",
+      "save_sha256": "439864e14b743fa335fb017cddc4f3eefebd3b2a4c34579b699ea58f9ca1f664",
+      "binary_sha256": "2bca446f66f4cf993105c3c6fc9849aed7ac6067fc16420bc8eee05a533d4a06",
+      "process": {
+        "pid": 1767411,
+        "start_ticks": 34025908,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/tmp/openmw-left-seat-san-2f_720y2/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-left-standing-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-left-getup-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "2bca446f66f4cf993105c3c6fc9849aed7ac6067fc16420bc8eee05a533d4a06"
+      },
+      "pose": [
+        -1831.580078125,
+        709.9754638671875,
+        -313.227783203125,
+        -1.5546875,
+        0.0,
+        -1.6707934141159058
+      ],
+      "furniture": null,
+      "reward": {
+        "quest": "content:oblivion.esm:027815",
+        "stage": 100,
+        "running": true,
+        "completed_stages": [
+          1,
+          2,
+          10,
+          35,
+          50,
+          55,
+          60,
+          80,
+          100
+        ]
+      },
+      "tolerances": "Original seated <2 units, standing <12 units, heading .02rad; exact ownership and cold identity."
+    }
+  ],
+  "normal_forward_regression": [
+    {
+      "case": "build/oblivion-compat/chorrol-left-stool/normal-forward-regression-seat-01",
+      "audit_sha256": "1db3f9e16f9a51ade9ee5a7c8fc1a08d2641fe184de36c70197099ede8002ecf",
+      "audit": {
+        "passed": true,
+        "phase": "seat",
+        "input_sha256": "a247a6d78c80f9627d1eb75fdfd2520c3b1d3786c0e7a7f28b1b0a357be0372a",
+        "save_sha256": "f47abefaa30a1e372c157a61d1db225e572da3b703259bc2ffd3f7a0619447ae",
+        "binary_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6",
+        "process": {
+          "pid": 1767614,
+          "start_ticks": 34055559,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/tmp/openmw-left-seat-normal-68xpw71b/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/normal-forward-regression-seat-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/scales/normal-scales-native-inventory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6"
+        },
+        "seat": {
+          "reference": "content:oblivion.esm:06efc7",
+          "base": "content:oblivion.esm:02c46d",
+          "cell": "content:oblivion.esm:0352a9",
+          "placement": [
+            -2717.4814453125,
+            -1733.6151123046875,
+            -624.1513671875,
+            0.0,
+            -0.0,
+            -1.7831851243972778
+          ],
+          "scale": 1.0,
+          "marker": 2,
+          "phase": 3,
+          "elapsed": 0.7843332290649414,
+          "look_yaw": 0.0,
+          "actor_model": "Characters\\_Male\\skeleton.NIF",
+          "model_hash": "11897321c33bf58d4127f3483e02b617",
+          "clip_hashes": [
+            "28a533a4cafa7f517e1d5eac9aa6896f",
+            "14b892219676ba03bfdbef8e80626efa",
+            "68680db2d0a5761863aacba7dfa4a8f2"
+          ]
+        },
+        "player_pose": [
+          -2718.713134765625,
+          -1733.88330078125,
+          -640.34326171875,
+          1.0454057455062866,
+          0.0,
+          -1.7831851243972778
+        ],
+        "weight_count": 0,
+        "allocator": 20,
+        "strict_fields": [
+          "inventory except declared one Weight pickup",
+          "quests",
+          "actor life",
+          "death counts",
+          "actor values except encumbrance",
+          "skills and level progress",
+          "original Stool reference",
+          "dynamic serial",
+          "cold-load furniture identity/clock and saved live state"
+        ],
+        "tolerances": "seated anchor <2 units and heading .01rad; clean original getup endpoint <12 units and heading .01rad; exact state/asset ownership",
+        "runtime_scope": "Single original Player forward Stool lifecycle; no NPC/all-chair/M14 completion claim"
+      }
+    },
+    {
+      "case": "build/oblivion-compat/chorrol-left-stool/normal-forward-regression-getup-01",
+      "audit_sha256": "ed4fd696b4c63be957f4ee981fec83a9a3a08472ecb3a73881e1ecb3fbd15819",
+      "audit": {
+        "passed": true,
+        "phase": "exit",
+        "input_sha256": "f47abefaa30a1e372c157a61d1db225e572da3b703259bc2ffd3f7a0619447ae",
+        "save_sha256": "80a845a662b1aeb64bb0da10bed41ffcbe5642fd4617be96358adae4b491727a",
+        "binary_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6",
+        "process": {
+          "pid": 1767729,
+          "start_ticks": 34063122,
+          "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+          "argv": [
+            "/tmp/openmw-left-seat-normal-68xpw71b/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/normal-forward-regression-getup-01/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/normal-forward-regression-seat-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+          ],
+          "exe_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6"
+        },
+        "seat": null,
+        "player_pose": [
+          -2664.531494140625,
+          -1722.199462890625,
+          -639.4564819335938,
+          -1.2983442544937134,
+          0.0,
+          1.3584076166152954
+        ],
+        "weight_count": 0,
+        "allocator": 20,
+        "strict_fields": [
+          "inventory except declared one Weight pickup",
+          "quests",
+          "actor life",
+          "death counts",
+          "actor values except encumbrance",
+          "skills and level progress",
+          "original Stool reference",
+          "dynamic serial",
+          "cold-load furniture identity/clock and saved live state"
+        ],
+        "tolerances": "seated anchor <2 units and heading .01rad; clean original getup endpoint <12 units and heading .01rad; exact state/asset ownership",
+        "runtime_scope": "Single original Player forward Stool lifecycle; no NPC/all-chair/M14 completion claim"
+      }
+    }
+  ],
+  "checks": {
+    "normal-engine-01": {
+      "path": "build/oblivion-compat/chorrol-left-stool/normal-engine-01/verification.json",
+      "sha256": "c0a8e3b4d80e945171a8c8b026ca5a0b8b68139094fb5a6b52897e5e5bae7a62",
+      "source": {
+        "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+        "source_fingerprint": "61e7c46a9b1c2ce9e171f78f4d3f915363620c32f2ac12ce58b7e5d48e804a66"
+      },
+      "results": {
+        "engine": {
+          "executed": 2310,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "26c70bac6f7e859c92f6e6451eba52e107a5f42b703735fd472fc4c320f6e42f",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "0c27e965950795708198dc760b9da175e0655e21760a1f100a729cecbc0c78f7",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "python-01": {
+      "path": "build/oblivion-compat/chorrol-left-stool/python-01/verification.json",
+      "sha256": "34c5fd90999e45edc8ca7dacf27f3fe055176575d479ed3d4e040e9b9321eda2",
+      "source": {
+        "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+        "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+      },
+      "results": {
+        "python": {
+          "executed": 621,
+          "passed": true,
+          "log_sha256": "bcf5812b95e10a9d8bc15c33e3953c67ff2ffc432e61da6ba15f793f9c9113bf"
+        }
+      }
+    },
+    "sanitized-engine-rest-01": {
+      "path": "build/oblivion-compat/chorrol-left-stool/sanitized-engine-rest-01/verification.json",
+      "sha256": "2c7a47875d8513fbadc3fe3c8fce3a1ad21b633e943f0cba1ad4ce3d6854f9e8",
+      "source": {
+        "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+        "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+      },
+      "results": {
+        "engine": {
+          "executed": 2058,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "a3338e92263d050c1c88de9b6cbd460a3355b8e7ed212c3f39e62f6c1143d29d",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "112a4e11f2dca9174c9a69ce813ee3a6349be00c2520ed7afec31525d850aa81",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-engine-workers-0-01": {
+      "path": "build/oblivion-compat/chorrol-left-stool/sanitized-engine-workers-0-01/verification.json",
+      "sha256": "69e4e18f7a8440f3ce7b3f962e54abe89ed31e5d6da05328c7ece770fe90a9bf",
+      "source": {
+        "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+        "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "a3338e92263d050c1c88de9b6cbd460a3355b8e7ed212c3f39e62f6c1143d29d",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "2957b03d348f1b2adcd488247bca19c7cb01fb0d8cf9880463271de1c13751de",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-engine-workers-1-01": {
+      "path": "build/oblivion-compat/chorrol-left-stool/sanitized-engine-workers-1-01/verification.json",
+      "sha256": "cfb282f9b9526b1ec485eebdc434ede51bd962b4c2dae276176d0c131a021949",
+      "source": {
+        "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+        "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "a3338e92263d050c1c88de9b6cbd460a3355b8e7ed212c3f39e62f6c1143d29d",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "0966f4b51c9e9df87d6e028c4b32ab268b8195c9a305b4016ba18c1cab9cfc3b",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-engine-workers-2-01": {
+      "path": "build/oblivion-compat/chorrol-left-stool/sanitized-engine-workers-2-01/verification.json",
+      "sha256": "f4393097f2baa939088b0b1a51e2b9ee52e35785644b59c177396d304fab6420",
+      "source": {
+        "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+        "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "a3338e92263d050c1c88de9b6cbd460a3355b8e7ed212c3f39e62f6c1143d29d",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "0cb91c325d8c62472776cce5527f3d3408b060e454429d42e63f114f22e2d342",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitized_engine_union": {
+    "passed": true,
+    "executed": 2310,
+    "binary_sha256": "a3338e92263d050c1c88de9b6cbd460a3355b8e7ed212c3f39e62f6c1143d29d",
+    "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+    "partitions": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-engine-rest-01",
+        "count": 2058,
+        "source": {
+          "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+          "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+        }
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-engine-workers-0-01",
+        "count": 84,
+        "source": {
+          "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+          "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+        }
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-engine-workers-1-01",
+        "count": 84,
+        "source": {
+          "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+          "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+        }
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/chorrol-left-stool/sanitized-engine-workers-2-01",
+        "count": 84,
+        "source": {
+          "head": "4eb52080d7a4be1986bc44a1fb26b02fee609f8f",
+          "source_fingerprint": "ccd3628e8c2746e6d30e22780e5a12b4a89a4369b47176b8596f117d3e68c519"
+        }
+      }
+    ],
+    "disjoint": true,
+    "unit_leaks": true
+  },
+  "original_restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "method": "Manual exact restore after original qqq ended attached wrapper143; no owner UUID processes remained before restore. Not a clean wrapper pass.",
+    "time_ns": 1794826564197356397
+  },
+  "producer_archives": [
+    {
+      "mode": "normal",
+      "path": "build/oblivion-compat/chorrol-left-stool/candidate-assets/normal-dev-01/openmw.zst",
+      "decoded_sha256": "3ad374fbe76e0e052d928e85037170841743e47c35914dc9cba980c6c0980bd6",
+      "verified": true,
+      "source_retired": true
+    },
+    {
+      "mode": "sanitized",
+      "path": "build/oblivion-compat/chorrol-left-stool/candidate-assets/sanitized-dev-01/openmw.zst",
+      "decoded_sha256": "2bca446f66f4cf993105c3c6fc9849aed7ac6067fc16420bc8eee05a533d4a06",
+      "verified": true,
+      "source_retired": true
+    }
+  ],
+  "source_scope": "C++ unchanged between tested builds and final receipt. Original fingerprints retained; later fingerprint differences are harness, audit and evidence edits. Rendered SAN leak0, unit SAN leak1. No fresh component claim.",
+  "reused_components": {
+    "receipt": "WINDOWS-MERGE-VERIFICATION.json",
+    "scope": "Unchanged components; original3310 cases per mode retained with that receipt provenance, not relabeled current."
+  },
+  "retained_failures": [
+    "Rejected keyed-room stool03fdda and exploratory route/load/script-list attempts; composite route saves retained.",
+    "Manual chair baseline01 actually rejected unsupported marker; automatic rendering-ray focus missed collision proxy.",
+    "Normal getup01/02 targeted actual tableware after ignored initial large mouse motion; source save unchanged, no accepted output.",
+    "SANseated01 timed out180s before slow load completed, actual late load event and clean exit retained; SANseated02 uses900s.",
+    "Original first activated neighboring chair, excluded. qqq ended attached wrapper143; exact isolated inputs manually restored, no owner or private-server processes remained."
+  ],
+  "scope_limits": [
+    "One original Player left-entry chair with real save ownership and normal input. Right/back markers and NPC furniture packages remain open.",
+    "Independent Hackdirt reward branch; no fork teleport, grants, injected refs or actor enabling.",
+    "No full M11/M14, exact arithmetic/animation-frame, rendered leak-free, performance60FPS or whole-quest uninterrupted claim."
+  ],
+  "cache_cleanup": [
+    "build/oblivion-compat/chorrol-left-stool/normal-runtime-link-storage.json",
+    "build/oblivion-compat/chorrol-left-stool/sanitized-link-storage.json"
+  ]
+}
