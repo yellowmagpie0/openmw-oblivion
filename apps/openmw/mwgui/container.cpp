@@ -4,6 +4,7 @@
 #include <MyGUI_InputManager.h>
 
 #include <components/settings/values.hpp>
+#include <components/esm4/loadarmo.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
@@ -12,6 +13,7 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/class.hpp"
+#include "../mwworld/esmstore.hpp"
 #include "../mwworld/inventorystore.hpp"
 
 #include "../mwmechanics/aipackage.hpp"
@@ -261,6 +263,7 @@ namespace MWGui
 
         mModel->update();
 
+        bool completed = true;
         for (size_t i = 0; i < mModel->getItemCount(); ++i)
         {
             if (i == 0)
@@ -274,9 +277,30 @@ namespace MWGui
             const ItemStack item = mModel->getItem(static_cast<ItemModel::ModelIndex>(i));
 
             if (!mModel->onTakeItem(item.mBase, static_cast<int>(item.mCount)))
+            {
+                completed = false;
                 break;
+            }
 
             mModel->moveItem(item, item.mCount, playerModel);
+        }
+
+        if (completed && mPtr.getClass().isActor() && mPtr.getClass().getCreatureStats(mPtr).isDead())
+        {
+            // TES4 Take All also removes NonPlayable armor, without transferring it.
+            // Ordinary single-item looting and raw/script inventories keep these stacks.
+            auto& inventory = mPtr.getClass().getContainerStore(mPtr);
+            const auto& records = MWBase::Environment::get().getESMStore()->get<ESM4::Armor>();
+            std::vector<MWWorld::Ptr> hiddenArmor;
+            for (auto it = inventory.begin(MWWorld::ContainerStore::Type_Armor); it != inventory.end(); ++it)
+            {
+                const auto* native = records.search(it->getCellRef().getRefId());
+                if (native && (native->mGeneralFlags & 0xf000) == ESM4::Armor::TYPE_TES4
+                    && (native->mGeneralFlags & ESM4::Armor::TES4_NonPlayable))
+                    hiddenArmor.push_back(*it);
+            }
+            for (const auto& item : hiddenArmor)
+                inventory.remove(item, item.getCellRef().getCount());
         }
 
         MWBase::Environment::get().getWindowManager()->removeGuiMode(GM_Container);

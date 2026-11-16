@@ -1,0 +1,769 @@
+{
+  "status": "Accepted bounded TES4 ARMO inventory visibility and dead-corpse Take All",
+  "tested_parent": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+  "contract": "RENAULT-PLAYABILITY-CONTRACT.json",
+  "evidence_root": "build/oblivion-compat/nonplayable-armor",
+  "cpp_sha256": {
+    "apps/openmw/mwclass/armor.cpp": "033ac3f1330a18374c750b552c1e895cba135f62461dd608b2a633ad0c97d145",
+    "apps/openmw/mwclass/armor.hpp": "7bb026c33662f6f0b5a19fab4006d3cf9e6856120b9e0e960169618ccd797512",
+    "apps/openmw/mwgui/container.cpp": "4cc1bdc5d97ac680b2a9885869d2475b48a507e5de773da22ab7f43d4911e4b2"
+  },
+  "checks": {
+    "normal-focused-02": {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-focused-02/verification.json",
+      "sha256": "4765385d1317f6bd11dfa7b59815250eea467d432de3b055738968aa1c8e104f",
+      "source": {
+        "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+        "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+      },
+      "results": {
+        "engine": {
+          "executed": 98,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Armor*:*Inventory*:*Container*",
+          "binary_sha256": "8b9d93f45ac78f6662dc27b90f2514d58c191ad78854cdf186cc222ae041ed42",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "8c1130fd32b455a361296e21ae3b19e69b30c8e151fe7805f440efe29a13be35",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal-full-01": {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-full-01/verification.json",
+      "sha256": "b3aaf0ae503773b71aa8ae2a9589febb6a17950ffa287209781cbd01ad171de9",
+      "source": {
+        "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+        "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+      },
+      "results": {
+        "engine": {
+          "executed": 2310,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8b9d93f45ac78f6662dc27b90f2514d58c191ad78854cdf186cc222ae041ed42",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "aa6bbc4467067ad8f497a81d1aa0927ea0b0af042fce8806e1529a2788c6d9b6",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-rest-03": {
+      "path": "build/oblivion-compat/nonplayable-armor/sanitized-rest-03/verification.json",
+      "sha256": "77a49257366bfa05b1821a9d0e23f744aa3c1377c9b463c4d7f9f7d4f34536fe",
+      "source": {
+        "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+        "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+      },
+      "results": {
+        "engine": {
+          "executed": 2058,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "da5d67fabe606c0cebdc47892d94dad5fe7687c45773284c49976e58e9994d57",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-workers-0-01": {
+      "path": "build/oblivion-compat/nonplayable-armor/sanitized-workers-0-01/verification.json",
+      "sha256": "8617d827a3535c91913a2cfdedd3d510ec978cd593da43e0efdf09b5135ffff5",
+      "source": {
+        "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+        "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "2e23782f2d0fe79df5cfef83ffe57665f2b3556c9d03491de0f1821fe5347c42",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-workers-1-01": {
+      "path": "build/oblivion-compat/nonplayable-armor/sanitized-workers-1-01/verification.json",
+      "sha256": "c82ea8b2deaf3012a47f108091bb83421fe2ae85b07be9f2d93632c2977c6180",
+      "source": {
+        "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+        "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "d5e905ebfa4af164a6f68720e0e61833c0907339c3cc78e357d6cd2a74765370",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized-workers-2-01": {
+      "path": "build/oblivion-compat/nonplayable-armor/sanitized-workers-2-01/verification.json",
+      "sha256": "52ccadd8163401732a36f0291d58a1237cdd1b55197f0ba9c6dac1772379ba8c",
+      "source": {
+        "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+        "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+      },
+      "results": {
+        "engine": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "1c9f64e56b32cbaa2bd0f729bb32fd1baf20c4fdd77f73904029b6da055b4115",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitized_engine_union": {
+    "passed": true,
+    "executed": 2310,
+    "exact_union": true,
+    "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+    "source": {
+      "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+      "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+    },
+    "partitions": [
+      {
+        "path": "build/oblivion-compat/nonplayable-armor/sanitized-rest-03",
+        "result": {
+          "executed": 2058,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "da5d67fabe606c0cebdc47892d94dad5fe7687c45773284c49976e58e9994d57",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+          "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/nonplayable-armor/sanitized-workers-0-01",
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "2e23782f2d0fe79df5cfef83ffe57665f2b3556c9d03491de0f1821fe5347c42",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+          "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/nonplayable-armor/sanitized-workers-1-01",
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "d5e905ebfa4af164a6f68720e0e61833c0907339c3cc78e357d6cd2a74765370",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+          "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+        }
+      },
+      {
+        "path": "build/oblivion-compat/nonplayable-armor/sanitized-workers-2-01",
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "1c9f64e56b32cbaa2bd0f729bb32fd1baf20c4fdd77f73904029b6da055b4115",
+          "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+          "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+        }
+      }
+    ],
+    "unit_leak_checking": true
+  },
+  "binaries": {
+    "normal": {
+      "binary_sha256": "a2ab71cfe465723ed072d4491f60582347043d83c2ce1112f4ab997d47ff976c",
+      "gate": "build/oblivion-compat/nonplayable-armor/normal-focused-02/verification.json",
+      "source": {
+        "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+        "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+      }
+    },
+    "sanitized": {
+      "binary_sha256": "3af6c9444d7ced10a979b05670e4028b8a1c90c70eaf19b5ccd3509ec1ca2da4",
+      "gate": "build/oblivion-compat/nonplayable-armor/sanitized-workers-0-01/verification.json",
+      "source": {
+        "head": "d79801f8b9b3f6318fdfa1674ea798172af87c98",
+        "source_fingerprint": "d26235d0de61b09bafb2dfee174a58dcf2eb36dc888023416e72cf3baf9b4967"
+      }
+    }
+  },
+  "runtime": {
+    "normal": {
+      "passed": true,
+      "phases": [
+        {
+          "case": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-04",
+          "phase": "loot",
+          "passed": true,
+          "input_sha256": "e4f009a4536399cf294c953922e509577e9fe2fb69d8c709072a8d20d53832f9",
+          "save_sha256": "3460894e28d3efbe4cdc3cba98ce78b68f4f1e6836f6197e5f5885707310b192",
+          "process": {
+            "pid": 1739314,
+            "start_ticks": 32804105,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/candidate-assets/normal-dev-01/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-04/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-melee/player-combat-restart-departure-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "a2ab71cfe465723ed072d4491f60582347043d83c2ce1112f4ab997d47ff976c"
+          },
+          "transferred_original_stacks": 3,
+          "exact_fields": [
+            "base",
+            "condition",
+            "charge",
+            "owner",
+            "remaining_usage_time",
+            "ownership_rank",
+            "ownership_global",
+            "extra_scale",
+            "bound_source",
+            "equipped_slots",
+            "script_owner",
+            "weapon_poison"
+          ],
+          "previous_death_counts_unchanged": true,
+          "declared_new_natural_death": {
+            "actor": "content:oblivion.esm:026be1",
+            "killer": "content:oblivion.esm:037e40",
+            "callback_id": 6
+          }
+        },
+        {
+          "case": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-cold-04",
+          "phase": "cold",
+          "passed": true,
+          "input_sha256": "3460894e28d3efbe4cdc3cba98ce78b68f4f1e6836f6197e5f5885707310b192",
+          "save_sha256": "77cfacdb534516cead3193075db71f25a80229c82e200900a8f7d0b4f5aa3e78",
+          "process": {
+            "pid": 1739454,
+            "start_ticks": 32816451,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/candidate-assets/normal-dev-01/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/normal-nonplayable-cold-04/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "a2ab71cfe465723ed072d4491f60582347043d83c2ce1112f4ab997d47ff976c"
+          },
+          "transferred_original_stacks": 0,
+          "exact_fields": [
+            "base",
+            "condition",
+            "charge",
+            "owner",
+            "remaining_usage_time",
+            "ownership_rank",
+            "ownership_global",
+            "extra_scale",
+            "bound_source",
+            "equipped_slots",
+            "script_owner",
+            "weapon_poison"
+          ],
+          "previous_death_counts_unchanged": true,
+          "declared_new_natural_death": null
+        }
+      ],
+      "scope": "Ordinary-input original Renault loot: three playable stacks transferred with exact fields, five hidden armor stacks discarded, cold continuation without replay. UI/appearance separately reviewed. SAN uses the independently audited ordinary-input preloot checkpoint."
+    },
+    "sanitized": {
+      "passed": true,
+      "phases": [
+        {
+          "case": "build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-loot-05",
+          "phase": "loot",
+          "passed": true,
+          "input_sha256": "66136593533e0d69781ef3e06ca1646367ca67232cfe7772d2f908c76ea37bcc",
+          "save_sha256": "bf551342c8337bacc94f5c18e983235b5f8608ef81f09b72a4bf6d539a1e5601",
+          "process": {
+            "pid": 1740118,
+            "start_ticks": 32895775,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/candidate-assets/sanitized-dev-01/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-loot-05/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/normal-preloot-checkpoint-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "3af6c9444d7ced10a979b05670e4028b8a1c90c70eaf19b5ccd3509ec1ca2da4"
+          },
+          "transferred_original_stacks": 3,
+          "exact_fields": [
+            "base",
+            "condition",
+            "charge",
+            "owner",
+            "remaining_usage_time",
+            "ownership_rank",
+            "ownership_global",
+            "extra_scale",
+            "bound_source",
+            "equipped_slots",
+            "script_owner",
+            "weapon_poison"
+          ],
+          "previous_death_counts_unchanged": true,
+          "declared_new_natural_death": null
+        },
+        {
+          "case": "build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-cold-05",
+          "phase": "cold",
+          "passed": true,
+          "input_sha256": "bf551342c8337bacc94f5c18e983235b5f8608ef81f09b72a4bf6d539a1e5601",
+          "save_sha256": "4814818cbfdc42814db9eb374657748555527f57100dbb317aef1a90cb9f4bac",
+          "process": {
+            "pid": 1740493,
+            "start_ticks": 32924356,
+            "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/candidate-assets/sanitized-dev-01/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-cold-05/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-loot-05/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+            ],
+            "exe_sha256": "3af6c9444d7ced10a979b05670e4028b8a1c90c70eaf19b5ccd3509ec1ca2da4"
+          },
+          "transferred_original_stacks": 0,
+          "exact_fields": [
+            "base",
+            "condition",
+            "charge",
+            "owner",
+            "remaining_usage_time",
+            "ownership_rank",
+            "ownership_global",
+            "extra_scale",
+            "bound_source",
+            "equipped_slots",
+            "script_owner",
+            "weapon_poison"
+          ],
+          "previous_death_counts_unchanged": true,
+          "declared_new_natural_death": null
+        }
+      ],
+      "scope": "Ordinary-input original Renault loot: three playable stacks transferred with exact fields, five hidden armor stacks discarded, cold continuation without replay. UI/appearance separately reviewed. SAN uses the independently audited ordinary-input preloot checkpoint."
+    }
+  },
+  "visual_review": [
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/original-01/original-paired-helmet-loot-ui.png",
+      "sha256": "5937a0fa026e32cd5095591419bc1d14b6bc654abde5a663ce2029045208efe9",
+      "review": "Native paired original-only helmet UI: one playable row."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/original-01/original-paired-after-take-all-counts.png",
+      "sha256": "aaa42d395834b610167e16c8f325dd6455afa5e93cf71e610b9d3c2459c640f8",
+      "review": "Native first unequipped paired transfer and hidden discard."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/original-01/repeat-after.png",
+      "sha256": "d41990c425f05382a277a78235091debf134a3b935fe6d09b2710e5566693d72",
+      "review": "Native second unequipped repeat agrees."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/original-01/equipped-before.png",
+      "sha256": "962366606a93e73754d1a875e41d396415764e68bcc2e3642125523af46860a5",
+      "review": "Native controlled CG helmet GetEquipped1 and both counts1."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/original-01/equipped-ui.png",
+      "sha256": "89cc192bf473d4c4fc773459b71b38aba7d2ea3e7bea1cf1f41b94cbd846712d",
+      "review": "Native equipped paired UI contains one playable helmet."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/original-01/equipped-after.png",
+      "sha256": "b046c9ca2becfc7e694b239bfd40e6322a9cab97787549ecf8181408bfd12b78",
+      "review": "Native equipped Take All discards CG, transfers playable only."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-01/original-Renault-corpse-inventory.png",
+      "sha256": "e86c440e8b70d236667f073f002d706d0afb75435d67c80a8222a2e107934026",
+      "review": "Actual untouched fork corpse shows three stacks while armor remains equipped."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-01/original-Renault-corpse-looted.png",
+      "sha256": "20fc54cd4112d3cd213387615c878e3f0beb6b1dac1d34d32838698b58a60dc7",
+      "review": "Actual Take All removes armor, head/hair stays aligned."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-01/renault-after-six-seconds.png",
+      "sha256": "6d983514f9ae50a367f761343522a2d203c0a41f719cadacfdf4799634e43693",
+      "review": "Head/hair aligned after six seconds."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-cold-01/original-Renault-cold-empty.png",
+      "sha256": "d5a4d8242ff54f624ef150e4d08fef494dee4e47b68d23ca487fcb93a5508815",
+      "review": "Fresh-process empty corpse and aligned head/hair."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-04/original-Renault-corpse-inventory.png",
+      "sha256": "c24c573a5e1496e65de1091e18481adc8b6d9d5bf7f6333cf1e2ff84c4c038a1",
+      "review": "Final sequential normal course: UI has3playable stacks; immediate/six-second/cold head/hair aligned."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-04/original-Renault-corpse-looted.png",
+      "sha256": "b1a18304553120dfd0284953d4c30a33d3f4dab671ed3436c3e8b593d080577c",
+      "review": "Final sequential normal course: UI has3playable stacks; immediate/six-second/cold head/hair aligned."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-loot-04/renault-after-six-seconds.png",
+      "sha256": "cd8a0eea590d2fa5dda14c4067b3c63c9a35f925310883f8bc3887f507e03f99",
+      "review": "Final sequential normal course: UI has3playable stacks; immediate/six-second/cold head/hair aligned."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-nonplayable-cold-04/original-Renault-cold-empty.png",
+      "sha256": "4e2d14d894990d818985c6bb33e146c8ecd1fc2d2292dc5e462d721a2b06623e",
+      "review": "Final sequential normal course: UI has3playable stacks; immediate/six-second/cold head/hair aligned."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/normal-preloot-checkpoint-01/original-physical-corpse-before-activation.png",
+      "sha256": "90ec881a51244312aacd3d53b3efff2025b28af48a0d205f2463ccee005ef54d",
+      "review": "Ordinary-input checkpoint at original armored Renault before loot; source inventories remain exact with absent/null schema normalization."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-loot-05/original-Renault-corpse-inventory.png",
+      "sha256": "039dfc8aa99ed8dd6ff6bd2de6d84a1b3ceda2f143542901ffb47f49dd55c04c",
+      "review": "Final sequential SAN composite course: UI3, immediate and6sec head aligned."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-loot-05/original-Renault-corpse-looted.png",
+      "sha256": "613543cf2c36c9e342ba7237b3b5fc92842278e34628cc157a860e2b47d88f1c",
+      "review": "Final sequential SAN composite course: UI3, immediate and6sec head aligned."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-loot-05/renault-after-six-seconds.png",
+      "sha256": "b3c82a9d49f5d1363523bf89bd7c2c86c682a825177516032a32e53421f5bd40",
+      "review": "Final sequential SAN composite course: UI3, immediate and6sec head aligned."
+    },
+    {
+      "path": "build/oblivion-compat/nonplayable-armor/sanitized-nonplayable-cold-05/original-Renault-cold-empty.png",
+      "sha256": "d683ff91e71d352261f13df9153701865641dd7c8b7f7a564845ed804699231a",
+      "review": "Final fresh SAN cold continuation, head aligned and actual persistent corpse; inventory/death replay separately checked bysaveaudit."
+    }
+  ],
+  "independent_oracle": {
+    "root": "build/oblivion-compat/nonplayable-armor/original-01",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "setup": "Original Gaius source corpse empty. Controlled original-only AddItem CG 022f71 and playable 000c09 pair; two unequipped and one equipped repetitions. No fork grants.",
+    "observations": {
+      "observed": {
+        "unequipped_repeats": 2,
+        "equipped_repeats": 1,
+        "npc_cg_before": 1,
+        "npc_playable_before": 1,
+        "visible_rows": 1,
+        "npc_cg_after": 0,
+        "npc_playable_after": 0,
+        "player_cg_after": 0,
+        "player_playable_delta": 1,
+        "equipped_before": 1,
+        "equipped_after": 0
+      },
+      "context": "Controlled AddItem pair in original game only on real dead Renault; fork acceptance uses natural untouched source. showinventory unsupported failure retained.",
+      "owner_processes_remaining": [],
+      "restoration": {
+        "restored": true,
+        "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+      }
+    }
+  },
+  "winning_records": {
+    "path": "build/oblivion-compat/renault-hair/original-head-content-audit-02.json",
+    "sha256": "ff12733e46c38355f62b0c7d5bd0056dd24e48bd221fe770613a231a7374e197",
+    "official_plugins": 11,
+    "overrides": []
+  },
+  "reused_checks": {
+    "components-python-normal-01": {
+      "path": "build/oblivion-compat/windows-merge/components-python-normal-01/verification.json",
+      "sha256": "145f5f8ae1a803f7bc72c22855a3bb806fa927917f6297792b87ba4aec417593",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "components": {
+          "executed": 3310,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6d23e86321772a14315861cb4e327b885d185a23dd3e49d069113b3fc179e1cc",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "5592ed6f2dc2fa08e799aade5c54245c96dab19385dca931c66a529660e5fa95",
+          "inventory_sha256": "87d3a7863bbf692b7d0dfca6d60895734256d9e1956d3e2774cf83c8efc59ca8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 621,
+          "passed": true,
+          "log_sha256": "dd0879fa2f34517ebcd09f32d8f73837ec2b6aebd4582405fd84fd9302d84cd0"
+        }
+      },
+      "runtime_build_command": null
+    },
+    "components-sanitized-01": {
+      "path": "build/oblivion-compat/windows-merge/components-sanitized-01/verification.json",
+      "sha256": "a764a66384211e3fafdf062b71c26c323a3bac22219cc4d2cdc04fdd0a05ad20",
+      "source": {
+        "head": "7f0f4e239914d726b05bac7c65b7724a5e4509b7",
+        "source_fingerprint": "641dabc2320f6e75c18fdf9208667b9daaca8262b511bdcf4fa8f76b98c3838e"
+      },
+      "results": {
+        "components": {
+          "executed": 3310,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7762740fb926334965724180d798e673d997fe14d0e3ce63971a7feedcd26fd1",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "d36d9c5da9fe8dea4f71d8ea33b1e2450de2dae66bb2372fc3bbff988f6cc20b",
+          "inventory_sha256": "5e7e16f9abdc87c888083a9b2ab87b06430290a2880947cd0be2a65c38495ade",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "runtime_build_command": null
+    }
+  },
+  "reuse_note": "Unchanged components3310 per mode and Python621 retain original Windows merge revision provenance. New standalone save auditor executed against actual normal/SAN courses; no claim it was in that earlier Python unittest gate. C++ unchanged after exact current engine gates; subsequent edits are driver startup/navigation, stronger auditor and documentation.",
+  "implementation": "Armor showsInInventory honors native TES4 NonPlayable flag with TES3 fallback. Successful dead-actor Take All discards hidden native armor via ContainerStore removal after visible transfers; single-item operations do not purge hidden armor. No save-format change.",
+  "acceptance": {
+    "normal_engine": 2310,
+    "sanitized_engine": 2310,
+    "focused_inventory": 98,
+    "actual_normal_and_sanitized_take_all": true,
+    "composite_sanitized_approach": {
+      "passed": true,
+      "case": "build/oblivion-compat/nonplayable-armor/normal-preloot-checkpoint-01",
+      "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-melee/player-combat-restart-departure-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "source_sha256": "e4f009a4536399cf294c953922e509577e9fe2fb69d8c709072a8d20d53832f9",
+      "save": "build/oblivion-compat/nonplayable-armor/normal-preloot-checkpoint-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "save_sha256": "66136593533e0d69781ef3e06ca1646367ca67232cfe7772d2f908c76ea37bcc",
+      "original_corpse_stacks": 8,
+      "original_equipped_stacks": 5,
+      "full_player_and_corpse_inventories_exact": true,
+      "schema_normalization": "Absent v84 inventory fields equal explicit null defaults in current schema; every non-null field and stack order remain exact.",
+      "declared_natural_death": {
+        "actor": "content:oblivion.esm:026be1",
+        "killer": "content:oblivion.esm:037e40",
+        "callback": 6
+      },
+      "process": {
+        "pid": 1739877,
+        "start_ticks": 32868909,
+        "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/candidate-assets/normal-dev-01/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/normal-preloot-checkpoint-01/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-melee/player-combat-restart-departure-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+        ],
+        "exe_sha256": "a2ab71cfe465723ed072d4491f60582347043d83c2ce1112f4ab997d47ff976c"
+      },
+      "scope": "Actual mouse/walking approach and F5 before looting; no grants, teleports or actor edits. Other native quest/time progression is allowed. This checkpoint supplies the composite SAN Take All source."
+    },
+    "visible_and_transferred_stacks": 3,
+    "discarded_hidden_stacks": 5,
+    "fresh_cold_no_replay": true,
+    "player_original_equipment_script_and_poison_ownership_preserved": true,
+    "head_immediate_six_second_cold_aligned": true
+  },
+  "sanitizers": {
+    "unit": "ASan+UBSan, leak1 halt_on_error1, explicit Mesa/X11/SDL/dummy audio and disabled D-Bus; exact disjoint worker-count union.",
+    "rendered": "ASan+UBSan with explicit libasan preload, leak0; loaded-library hashes and observed environment retained in each case."
+  },
+  "scope_limits": [
+    "ARMO only; CLOT and other record families remain adjacent.",
+    "Controlled original AddItem observations establish armor behavior in this caller context, not complete inventory system parity.",
+    "Full tutorial and milestone acceptance remain open.",
+    "Hidden armor discard is scoped to dead actors, the independently observed caller context. CLOT, living actors, general container discard and loose-world NonPlayable interaction are not accepted.",
+    "Full tutorial/M11/M15 and separate Player head-refresh path remain open. Independent Wellspring and shore branches are unchanged."
+  ],
+  "retained_failures": {
+    "normal-focused-01": "Compile error using NotNullPtr as raw pointer, corrected before passing gates.",
+    "sanitized-rest-01": "Link ENOSPC; no tests.",
+    "sanitized-rest-02": "Empty tmpfs placeholder newer than object files skipped link; permission failure at inventory, no tests. Corrected mtime; same compiler configuration.",
+    "sanitized-nonplayable-loot-01": "180-second startup deadline before observer ready; no gameplay actions.",
+    "sanitized-nonplayable-loot-02": "Driver advanced while turning and lost camera visibility.",
+    "sanitized-nonplayable-loot-04": "Intentionally stopped healthy but slow sanitized approach; not accepted. Final SAN action starts from independently audited ordinary-input preloot save.",
+    "sanitized-nonplayable-loot-03": "Driver used stale camera samples during slow frames, lost target before loot.",
+    "normal-nonplayable-loot-03": "Reached three-stack UI; concurrent virtual controllers invalidated Take All input barrier. Final runs sequential.",
+    "preloot-auditor-setup": "Initial v84/current dictionary equality and absent furniture-key checks rejected harmless explicit null schema defaults; normalized absent/null only, all non-null fields and order remain exact.",
+    "native-original": "showinventory unsupported read-only command; paired GetItemCount/GetEquipped and ordinary UI observations used instead."
+  },
+  "storage": {
+    "temporary_unit_link": {
+      "alias": "build/m15-sanitize/openmw-tests",
+      "target": "/tmp/openmw-nonplayable-units-vye0_xhu/openmw-tests",
+      "link_probe_passed": true,
+      "reason": "Same link command and unit bytes on executable private tmpfs to avoid filesystem ENOSPC. Remove alias and own temporary directory after exact full unit checks; compiler flags/config unchanged.",
+      "retained_setup_failure": "sanitized-rest-02: empty tmpfs placeholder newer than objects caused CMake to skip link; inventory refused execution. Placeholder mtime reset to zero before retry; no tests executed.",
+      "cleaned": true,
+      "binary_sha256": "c216b935035dc06fbb427ddc52247454d5b4bb55e008f001200c9266900643b6",
+      "proof": "sanitized-engine-union.json"
+    },
+    "normal_unit_cache": "retired-normal-unit-cache.json",
+    "component_object_cache": "retired-component-test-object-caches.json",
+    "head_archives": "archived-head-producers.json",
+    "historical_archives": "archived-historical-producers.json",
+    "identical_hardlinks": "deduplicated-historical-producers.json",
+    "note": "Only generated producer/cache storage changed. Exact byte hashes preserved for archives/deduplication; saves/source/original assets retained. No lingering tmpfs alias."
+  },
+  "next_action": "Choose the next reached original content exposing an unimplemented acceptance gap. Continue the active goal; no push."
+}

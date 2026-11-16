@@ -4,11 +4,17 @@ Target course: genuine sewer exit → independent Vilverin expedition → outsid
 alive with retained loot. **Normal retained expedition completed.** Broader
 M4/M13/M15/M16/M18 acceptance remains open. Keep independent save branches separate.
 
-Latest bounded appearance repair: [Renault head-part continuity](RENAULT-HEAD-PARTS-HANDOFF.md).
-Normal/SAN actual loot and cold captures plus engine2310 per mode pass. Next:
-audit the original NonPlayable Blades armor exposure; preserve independent branches.
+Latest bounded inventory repair: [Renault armor playability](RENAULT-PLAYABILITY-HANDOFF.md).
+Normal/SAN real three-stack Take All and cold continuation pass: five original
+NonPlayable armor stacks are hidden and discarded without Player transfer,
+matching independent original-game observations. Engine2310 per mode passes.
+Next: choose another reached original content gap; preserve independent branches.
 
-Latest completed bounded chunk: [original Wellspring Stool sitting](STOOL-SITTING-HANDOFF.md).
+Latest bounded appearance repair: [Renault head-part continuity](RENAULT-HEAD-PARTS-HANDOFF.md).
+Normal/SAN actual loot and cold captures plus engine2310 per mode pass. The
+separate NonPlayable armor exposure is now addressed above.
+
+Earlier completed bounded chunk: [original Wellspring Stool sitting](STOOL-SITTING-HANDOFF.md).
 Normal and instrumented four-process sitting/cold/targeted Weight pickup/getup/
 standing courses pass, including first/third-person review. Full engine2295 and
 components3306 per mode plus Python621 pass; exact provenance is in the
@@ -16,8 +22,8 @@ components3306 per mode plus Python621 pass; exact provenance is in the
 and full M4/M11/M14 remain open. GitHub `codex/windows-native-dev` is now merged
 and verified locally: [integration receipt](WINDOWS-MERGE-VERIFICATION.json).
 Engine2310/components3310 per mode, Python621, normal/SAN Stool and separate
-normal equipped Renault loot/cold checks pass. Next: investigate the observed
-helmet/hair continuity candidate using a delayed same-process capture first.
+normal equipped Renault loot/cold checks pass. Later head-part and armor
+playability repairs are linked above.
 
 Prior completed bounded chunk: [native articulated Scales drop](SCALES-DROP-HANDOFF.md).
 The genuinely acquired Wellspring Scales now retain all four authored bodies and

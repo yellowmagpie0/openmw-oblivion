@@ -65,6 +65,18 @@ namespace MWClass
         return getNameOrId<ESM::Armor>(ptr);
     }
 
+    bool Armor::showsInInventory(const MWWorld::ConstPtr& ptr) const
+    {
+        if (!ptr.getCellRef().getRefId().is<ESM::FormId>())
+            return MWWorld::Class::showsInInventory(ptr);
+        const auto& store = *MWBase::Environment::get().getESMStore();
+        const auto* native = store.get<ESM4::Armor>().search(ptr.getCellRef().getRefId());
+        if (native && (native->mGeneralFlags & 0xf000) == ESM4::Armor::TYPE_TES4
+            && (native->mGeneralFlags & ESM4::Armor::TES4_NonPlayable))
+            return false;
+        return MWWorld::Class::showsInInventory(ptr);
+    }
+
     std::unique_ptr<MWWorld::Action> Armor::activate(const MWWorld::Ptr& ptr, const MWWorld::Ptr& actor) const
     {
         return defaultItemActivate(ptr, actor);

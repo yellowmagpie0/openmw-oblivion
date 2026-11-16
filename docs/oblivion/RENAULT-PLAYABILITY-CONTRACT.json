@@ -1,0 +1,81 @@
+{
+  "status": "Accepted bounded TES4 ARMO inventory visibility and dead-corpse Take All",
+  "target": "Original Captain Renault NonPlayable armor inventory selection and Take All",
+  "source": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-melee/player-combat-restart-departure-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "e4f009a4536399cf294c953922e509577e9fe2fb69d8c709072a8d20d53832f9",
+    "provenance": "Original normal-input tutorial combat continuation, CharacterGen27, Renault genuinely dead with eight original stacks and five equipped armor parts. Separate from accepted Wellspring inventory."
+  },
+  "independent_oracle": {
+    "root": "build/oblivion-compat/nonplayable-armor/original-01",
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "setup": "Original Gaius source corpse empty. Controlled original-only AddItem CG 022f71 and playable 000c09 pair; two unequipped and one equipped repetitions. No fork grants.",
+    "observations": {
+      "observed": {
+        "unequipped_repeats": 2,
+        "equipped_repeats": 1,
+        "npc_cg_before": 1,
+        "npc_playable_before": 1,
+        "visible_rows": 1,
+        "npc_cg_after": 0,
+        "npc_playable_after": 0,
+        "player_cg_after": 0,
+        "player_playable_delta": 1,
+        "equipped_before": 1,
+        "equipped_after": 0
+      },
+      "context": "Controlled AddItem pair in original game only on real dead Renault; fork acceptance uses natural untouched source. showinventory unsupported failure retained.",
+      "owner_processes_remaining": [],
+      "restoration": {
+        "restored": true,
+        "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+      }
+    }
+  },
+  "acceptance": [
+    "Natural eight-stack/five-equipped Renault source: UI displays three playable stacks; ordinary Take All transfers those three only and discards hidden five.",
+    "Normal and SAN actual input; immediate and six-second head/hair aligned; fresh cold load preserves inventory, life and death ownership.",
+    "Appropriate integration checks, exact original provenance for reused checks."
+  ],
+  "scope_limits": [
+    "ARMO only; CLOT and other record families remain adjacent.",
+    "Controlled original AddItem observations establish armor behavior in this caller context, not complete inventory system parity.",
+    "Full tutorial and milestone acceptance remain open."
+  ],
+  "verification": "RENAULT-PLAYABILITY-VERIFICATION.json",
+  "sanitized_action_source": {
+    "passed": true,
+    "case": "build/oblivion-compat/nonplayable-armor/normal-preloot-checkpoint-01",
+    "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-melee/player-combat-restart-departure-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_sha256": "e4f009a4536399cf294c953922e509577e9fe2fb69d8c709072a8d20d53832f9",
+    "save": "build/oblivion-compat/nonplayable-armor/normal-preloot-checkpoint-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "save_sha256": "66136593533e0d69781ef3e06ca1646367ca67232cfe7772d2f908c76ea37bcc",
+    "original_corpse_stacks": 8,
+    "original_equipped_stacks": 5,
+    "full_player_and_corpse_inventories_exact": true,
+    "schema_normalization": "Absent v84 inventory fields equal explicit null defaults in current schema; every non-null field and stack order remain exact.",
+    "declared_natural_death": {
+      "actor": "content:oblivion.esm:026be1",
+      "killer": "content:oblivion.esm:037e40",
+      "callback": 6
+    },
+    "process": {
+      "pid": 1739877,
+      "start_ticks": 32868909,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "argv": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/candidate-assets/normal-dev-01/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/nonplayable-armor/normal-preloot-checkpoint-01/config",
+        "--no-sound=1",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/tutorial-melee/player-combat-restart-departure-04/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+      ],
+      "exe_sha256": "a2ab71cfe465723ed072d4491f60582347043d83c2ce1112f4ab997d47ff976c"
+    },
+    "scope": "Actual mouse/walking approach and F5 before looting; no grants, teleports or actor edits. Other native quest/time progression is allowed. This checkpoint supplies the composite SAN Take All source."
+  },
+  "acceptance_scope": "Natural original eight-stack/five-equipped Renault corpse: three visible/transferred playable stacks and five discarded hidden armor stacks. Broader milestones remain open."
+}
