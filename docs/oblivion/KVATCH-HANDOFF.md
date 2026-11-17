@@ -19,20 +19,62 @@ with their recorded source provenance. Rendered SAN uses leak0; unit SAN leak1.
 [independent original handler](KVATCH-TRAP-UPDATE-ORACLE.json),
 [verification](KVATCH-TRAP-UPDATE-VERIFICATION.json).
 
-**Next action: approach Ilend Vonius through normal movement.**
-Healthy earned-state source:
-`build/oblivion-compat/kvatch-ilend/normal-earned-healing-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `83961f3f2c4a43c52f3947085f2e7bc31725ee431a02a96a40b8dbc6414b2294`.
-Eleven ordinary Heal Minor Wounds casts raised health22.7→104.54, with inventory,
-topics, reactions and quest stages unchanged. The replay helper now supports the
-default next-spell key;18 focused helper tests pass. This is route preparation,
-not new engine spell-rule acceptance.
-[Preparation evidence](KVATCH-INTERIOR-ROUTE-PREPARATION.json).
-Ilend098138/base09812f was alive near[-311,2135,53] in the entry checkpoint;
-reinspect his current state during approach. Private next course:
-`kvatch-ilend/ilend-approach.json`. It stops near him or at an observed modal.
-Use actual movement/dialogue, without health/quest/target writes. Harrada attack
-damage and further encounters remain open.
+**Latest self-contained feature: scripted Harrada flora/morph animation.**
+Native Flora now joins the mechanics animation manager. Named embedded float
+tracks bind independently to their matching morph slots and use the existing
+sequence clock. Original plant068733 visibly attacks. Four real normal/SAN
+attack/save and own-save cold courses pass: normal phase0.096→0.345; SAN
+phase0.249→0.498, with no scripted attack replay before resave. Inventory,
+quest stage25, Player health and Ilend life state persist. No new save schema.
+Normal components3,310/engine2,310/Python621 and SANcomponents3,310 pass.
+[Contract](KVATCH-HARRADA-ANIMATION-CONTRACT.json),
+[original asset inspection](KVATCH-HARRADA-ANIMATION-ORACLE.json),
+[feature checkpoint](KVATCH-HARRADA-ANIMATION-VERIFICATION.json).
+
+**Immediate next action: NEW Windows performance merge requested by the user.**
+After this feature commit, fetch latest GitHub `origin/codex/windows-native-dev`
+and merge its new work. The earlier53509962 integration does not satisfy this
+new request. Full sanitizer engine integration was deliberately deferred to the
+combined-source checkpoint; run fresh combined-source engine/component/Python
+checks and affected real runtime courses before continuing any content work.
+Do not report that deferred gate as passed. Keep all changes local; no push.
+
+Evidence: `build/oblivion-compat/kvatch-harrada`. Final rendered producer04 and
+resources03 cover14 relevant source files; class-only01/02 are not animation
+acceptance. SANcold01 was kernel-OOM-killed during concurrent large test-file
+compilation; cold02 passed alone. Preserve the failure and sequencing records.
+Serialize heavy sanitizer rendering and large unit compilation.
+
+Normal active-animation continuation:
+`build/oblivion-compat/kvatch-harrada/normal-original-harrada-morph-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `3229196a195cd3fb407a96cb4e9bb87ea8c807a8c381cdbfc0ac7bb18320e873`.
+For replaying approach from a healthy earned source, use the road checkpoint
+below. Phantom actor contact damage/pushback remains separate: the model uses
+bhkSimpleShapePhantom/SPCollisionObject, excluded from the existing multibody
+ACTI trap path. Verify original actual contact behavior before implementing it;
+never substitute proximity damage. Do not start that chunk before the merge and
+combined integration are verified.
+
+**Latest earned route checkpoint (normal baseline only):** original Ilend reply
+1778d0 advances MS48 to25, evaluates package1778d1 and saves. A fresh process then
+walks the Player>1,000units; Ilend physically moves>500units and closes within500.
+No new engine mechanic or SAN acceptance is attributed to these baseline courses.
+Continue from:
+`build/oblivion-compat/kvatch-ilend/normal-original-ilend-follow-cold-road-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `becc73807be4b5e52f63579085380745c9c12d1ef6d1f2d7fe90e1d265890b93`.
+Player health104.54; Ilend alive; original inventory and quest progress are earned.
+The Harrada baseline uses this source without stat/quest/target writes. It reaches
+87units from the plant and records failed playback every2seconds. A new candidate
+must preserve that same route provenance.
+
+Earlier [healing preparation](KVATCH-INTERIOR-ROUTE-PREPARATION.json) used11 normal
+Heal Minor Wounds casts (22.7→104.54), preserving inventory, topics and quest state.
+The default next-spell replay key is supported;18 focused helper tests pass.
+For Ilend UI replay, use `kvatch-ilend/ilend-follow-agreement.json` with controller
+menus=true and virtual_gamepad=true. Its explicit INFO checks select09811c →
+098154 →1778d0. Do not use absolute-pointer SDL actions, disable controller menus,
+or attempt F5 while the forced greeting remains open; retained failures document
+those fixture errors. The cold road course is `ilend-cold-follow-road.json`.
 
 Reusable exact rendered producers, loaded-section proofs, standalone verified
 archives and all primary/failed cases are under

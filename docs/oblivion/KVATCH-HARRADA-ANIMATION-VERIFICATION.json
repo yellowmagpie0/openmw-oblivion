@@ -1,0 +1,169 @@
+{
+  "status": "Feature implemented and verified through four real-content runtime cases and component gates. Full sanitizer engine integration remains required after the newly requested Windows merge; phantom damage and further quest progression remain open.",
+  "tested_parent": "7f4c95fba1ea9d1c12c3206898ee7533fb6063e5",
+  "production_source_sha256": {
+    "apps/openmw/mwmechanics/oblivionai.cpp": "21abea8a76d067c293eb9b6039c2fce5079b89d8a0a0b951f174514f6ef2f618",
+    "apps/openmw/mwworld/obliviondynamicreference.cpp": "b76c599182b7218a302de68aa99ad4e235d1bc2d160f677ef571b9a572a3f3f2",
+    "apps/openmw/mwworld/oblivionlevelled.cpp": "fd8f94e044b70522569b17befca8b87f0812d81ea5f8f1711267f93dff8cd827",
+    "apps/openmw/mwworld/oblivionlevelled.hpp": "5258813c00671462dd3cda656199aa63b7e192d812000285645f2fdcaad82a9f",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "9aec304b22c2c950e78270f4eb3468f07cda93141ae8fae5c76fe2799c7931ea",
+    "apps/openmw/mwworld/worldimp.cpp": "fd14693b5ee6b9e0dfff6f79bb158ed78220f3c5e751a78da3bec6627b236d7c",
+    "apps/openmw/mwworld/worldimp.hpp": "eed66120d7428be2e219964caacc93eea8fd6169e019bb86cd42ab827093f042",
+    "apps/openmw/mwworld/oblivionspawn.hpp": "36c10bd9ab36c16541913cc7162cc1c917eb424fc10616558c02f31332d64df5",
+    "apps/openmw/mwdialogue/dialoguemanagerimp.cpp": "7c535eb82550ad2c6cd7326693fd2654214d4886aadc3c60b2ea11bb6e720661",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "9883ea691ed18fc2807e1e55123fe9fa9b466e612977d19824607d38769806eb",
+    "apps/openmw/mwclass/esm4interactive.hpp": "80ae67d9d7527a6ef59213c47e1c80648b8824623ae65f833c65041ec0c517d9",
+    "components/nifosg/controller.cpp": "dc2954d7c6356bf34e324c04038ae9e3d2b12ca448ea950183cc46cd350860f5",
+    "components/nifosg/controller.hpp": "60382f39d107cbfda05ad10c10b3e031c8e6bad976d1084382318c33059f89a9",
+    "components/nifosg/nifloader.cpp": "5e5fa2fd43e70c3a502f4555b2b4c34e6d65779ed40903f5b5d869bd125a2148"
+  },
+  "implementation": [
+    "Native Flora opts into the existing mechanics animation manager.",
+    "Embedded float tracks retain their interpolator IDs and bind to the corresponding NiMorphData frame name. Each morph slot gets an independent sequence interpolator.",
+    "Embedded morph tracks use the existing multiplexed animation clock; the legacy direct controller remains the fallback. No new saved fields or schema."
+  ],
+  "contract": "KVATCH-HARRADA-ANIMATION-CONTRACT.json",
+  "oracle": "KVATCH-HARRADA-ANIMATION-ORACLE.json",
+  "runtime": [
+    {
+      "case": "build/oblivion-compat/kvatch-harrada/normal-original-harrada-morph-01",
+      "passed": true,
+      "phase": "attack",
+      "sanitized": false,
+      "input_sha256": "becc73807be4b5e52f63579085380745c9c12d1ef6d1f2d7fe90e1d265890b93",
+      "save_sha256": "2af1a0ccbcabf515665041fec4be69fcc744e1b2737191c04f0173fd427ac469",
+      "binary_sha256": "c222fa623c178e0ce2baa876c6a8b9c0508cc1ed771a63cbfe549a6dc29af391",
+      "loaded_animation_phase": null,
+      "saved_animation_phase": 0.09600000083446503,
+      "saved_script_timer": 1.9359999969601631,
+      "bound_morph_controllers": 12,
+      "independent_channels_per_controller": 3,
+      "quest_stage": 25,
+      "player_health": 104.54000806808472,
+      "earned_ownership_preserved": true,
+      "active_animation_continuity": true,
+      "scope": "Visible original Harrada animation and active-phase persistence; no phantom damage/pushback acceptance."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-harrada/normal-original-harrada-morph-cold-01",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": false,
+      "input_sha256": "2af1a0ccbcabf515665041fec4be69fcc744e1b2737191c04f0173fd427ac469",
+      "save_sha256": "3229196a195cd3fb407a96cb4e9bb87ea8c807a8c381cdbfc0ac7bb18320e873",
+      "binary_sha256": "c222fa623c178e0ce2baa876c6a8b9c0508cc1ed771a63cbfe549a6dc29af391",
+      "loaded_animation_phase": 0.09600000083446503,
+      "saved_animation_phase": 0.3450000286102295,
+      "saved_script_timer": 1.7699999883770943,
+      "bound_morph_controllers": 12,
+      "independent_channels_per_controller": 3,
+      "quest_stage": 25,
+      "player_health": 104.54000806808472,
+      "earned_ownership_preserved": true,
+      "active_animation_continuity": true,
+      "scope": "Visible original Harrada animation and active-phase persistence; no phantom damage/pushback acceptance."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-harrada/sanitized-original-harrada-morph-01",
+      "passed": true,
+      "phase": "attack",
+      "sanitized": true,
+      "input_sha256": "becc73807be4b5e52f63579085380745c9c12d1ef6d1f2d7fe90e1d265890b93",
+      "save_sha256": "a1e7e807bd257f10f82e5f0c3eaed1ca47d1542ea2336724174b18671a04d50e",
+      "binary_sha256": "b79521102a9948767c195086d83b8e1d673fb255b82ddc09d6d235c11f6fa49e",
+      "loaded_animation_phase": null,
+      "saved_animation_phase": 0.24900001287460327,
+      "saved_script_timer": 1.8339999914169312,
+      "bound_morph_controllers": 12,
+      "independent_channels_per_controller": 3,
+      "quest_stage": 25,
+      "player_health": 104.54000806808472,
+      "earned_ownership_preserved": true,
+      "active_animation_continuity": true,
+      "scope": "Visible original Harrada animation and active-phase persistence; no phantom damage/pushback acceptance."
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-harrada/sanitized-original-harrada-morph-cold-02",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": true,
+      "input_sha256": "a1e7e807bd257f10f82e5f0c3eaed1ca47d1542ea2336724174b18671a04d50e",
+      "save_sha256": "e2ef4b136fe16e07fcee9f1961fc15b4c3431332f6503f2e37076521a3aba732",
+      "binary_sha256": "b79521102a9948767c195086d83b8e1d673fb255b82ddc09d6d235c11f6fa49e",
+      "loaded_animation_phase": 0.24900001287460327,
+      "saved_animation_phase": 0.49800002574920654,
+      "saved_script_timer": 1.6679999828338623,
+      "bound_morph_controllers": 12,
+      "independent_channels_per_controller": 3,
+      "quest_stage": 25,
+      "player_health": 104.54000806808472,
+      "earned_ownership_preserved": true,
+      "active_animation_continuity": true,
+      "scope": "Visible original Harrada animation and active-phase persistence; no phantom damage/pushback acceptance."
+    }
+  ],
+  "visual_review": "All four primary normal/SAN attack and cold captures manually reviewed. Real vines visibly move; image hash inequality alone is only structural evidence.",
+  "gates": {
+    "normal": {
+      "path": "build/oblivion-compat/kvatch-harrada/normal-integration-01",
+      "components": 3310,
+      "engine": 2310,
+      "python": 621,
+      "source": {
+        "head": "7f4c95fba1ea9d1c12c3206898ee7533fb6063e5",
+        "source_fingerprint": "08b55716ae5a0930ae5601b16363bfb762ef8fc8e6dd4a4230aef672eb551567"
+      },
+      "binary_sha256": {
+        "components": "3e4e19303df0bfec706d839879e958a624c9014edabc11967fa165c2d918cdb9",
+        "engine": "618a148b8c95f18058a3c1a9c3f0243cdf67603e0a46ac43a0970384a2d7997d",
+        "python": null
+      }
+    },
+    "sanitized_components": {
+      "path": "build/oblivion-compat/kvatch-harrada/sanitized-components-01",
+      "executed": 3310,
+      "source": {
+        "head": "7f4c95fba1ea9d1c12c3206898ee7533fb6063e5",
+        "source_fingerprint": "08b55716ae5a0930ae5601b16363bfb762ef8fc8e6dd4a4230aef672eb551567"
+      },
+      "binary_sha256": "8f707fcf072efca120dfd873a0e7a5b017e5a6a69bdd029fcfa2aa9733efe595",
+      "leak_check": true
+    },
+    "sanitized_engine": {
+      "status": "Deferred to combined-source integration after the new Windows merge request.",
+      "required": "Full exact engine inventory, normal and sanitizer, on merged source before continuing content work.",
+      "interrupted_build": "build/oblivion-compat/kvatch-harrada/sanitized-engine-rest-01",
+      "sequencing_evidence": "build/oblivion-compat/kvatch-harrada/integration-sequencing-change.json"
+    }
+  },
+  "artifacts": [
+    {
+      "mode": "normal",
+      "sha256": "c222fa623c178e0ce2baa876c6a8b9c0508cc1ed771a63cbfe549a6dc29af391",
+      "producer": "build/oblivion-compat/kvatch-harrada/normal-producer-04.json",
+      "archive": "build/oblivion-compat/kvatch-harrada/normal-complete-producer-archive-04.json",
+      "loaded_section_proof": "build/oblivion-compat/kvatch-harrada/normal-allocated-section-proof-04.json"
+    },
+    {
+      "mode": "sanitized",
+      "sha256": "b79521102a9948767c195086d83b8e1d673fb255b82ddc09d6d235c11f6fa49e",
+      "producer": "build/oblivion-compat/kvatch-harrada/sanitized-producer-04.json",
+      "archive": "build/oblivion-compat/kvatch-harrada/sanitized-complete-producer-archive-04.json",
+      "loaded_section_proof": "build/oblivion-compat/kvatch-harrada/sanitized-allocated-section-proof-04.json"
+    }
+  ],
+  "artifact_scope": "Rendered producer04 is a separate debug-stripped image: every ELF loaded section and entry matches completed full producer03. Exact tested hashes have verified standalone zstd archives. Rendered SAN uses leak0/halt with actual environment and loaded ASan/UBSan libraries captured; unit SAN uses leak1.",
+  "retained_failures": [
+    "SANcold01 was killed by the kernel OOM handler during concurrent large engine-test compilation (kernel-oom.log and terminal-process-observation.json retained). Cold02 runs after all regression jobs finish, using the same unchanged producer and manifest.",
+    "Original flora baseline repeatedly returns played=false because it lacks mechanics animation admission.",
+    "Class-only candidates01/02 return played=true but do not bind the named morph channels. They are not accepted as visible animation.",
+    "Early prototype saves finish the short0.6667second clip. Final primary courses save immediately after an authored attack, before taking later-cycle visual captures.",
+    "First inspector compile lookup found no niftest entry in compile_commands.json. Existing niftest CMake flags/link inputs built the original-record inspector."
+  ],
+  "scope_limits": [
+    "Original raw model/script inspection is independent of the renderer binding; no original live-game visual probe or new native arithmetic parity claim.",
+    "Fresh full components run because NifOsg changed. No unchanged Windows component evidence substitutes for these gates.",
+    "Harrada phantom actor contacts, damage and pushback are separate. No full tower/interior/main-quest acceptance.",
+    "Normal Ilend agreement and cold physical following are earned route provenance, not newly claimed full companion/SAN acceptance."
+  ]
+}

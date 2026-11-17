@@ -278,6 +278,8 @@ namespace NifOsg
     {
     public:
         GeomMorpherController(const Nif::NiGeomMorpherController* ctrl);
+        GeomMorpherController(const Nif::NiGeomMorpherController* ctrl,
+            std::vector<std::vector<FloatInterpolator::SequenceSegment>> tracks);
         GeomMorpherController();
         GeomMorpherController(const GeomMorpherController& copy, const osg::CopyOp& copyop);
 

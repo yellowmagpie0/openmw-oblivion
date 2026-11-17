@@ -1,0 +1,37 @@
+{
+  "status": "Feature verified: four real normal/SAN animation save/cold courses, normal full integration and full sanitizer components. Broad sanitizer engine integration deliberately deferred to the requested new Windows merge and remains required.",
+  "parent": "7f4c95fba1",
+  "chunk": "Scripted native flora animation playback and active-animation cold continuity for actual Harrada068733.",
+  "source": {
+    "path": "build/oblivion-compat/kvatch-ilend/normal-original-ilend-follow-cold-road-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "becc73807be4b5e52f63579085380745c9c12d1ef6d1f2d7fe90e1d265890b93",
+    "provenance": "Earned health104.54, original Ilend help reply/stage25 and cold physical following. No stat/quest/target injection."
+  },
+  "content": {
+    "reference": "068733",
+    "base": "07b7cd",
+    "script": "066707",
+    "model": "meshes/oblivion/plants/harradauprightattack.nif",
+    "model_sha256": "4feaf4deef6ffecaf4066eae2e55b60b45b158b5ed34a2b63ff346e22a2ede63",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+  },
+  "observed_failure": {
+    "case": "build/oblivion-compat/kvatch-harrada/normal-original-harrada-baseline-01",
+    "finding": "Player reaches87units; original script requests forward every2seconds, but Objects::playAnimationGroup cannot find the flora and PlayGroup reports played=false. Health remains104.54. Case fails waiting for played=true."
+  },
+  "independent_asset_evidence": {
+    "path": "build/oblivion-compat/kvatch-harrada/asset-inspection.txt",
+    "finding": "Original BSA asset has embedded Forward sequence and NiGeomMorpherController blocks; collision uses bhkSimpleShapePhantom/bhkSPCollisionObject, not the existing multibody ACTI trap path."
+  },
+  "acceptance": [
+    "Original proximity script drives actual Forward playback with no injected PlayGroup. Observe the plant visibly moving through the attack, rather than accepting only a true return value.",
+    "Normal/SAN actual attack/save and fresh own-save cold continuation retain active animation timing and original script timer, without replay/reset before the next authored2second cycle. Preserve earned inventory/quest/follower ownership.",
+    "Use appropriate focused/runtime and integration gates, exact producer provenance and durable archives. Commit locally before expanding into contact damage."
+  ],
+  "limits": [
+    "Damage, phantom actor contacts and pushback remain separate; no hazard-damage acceptance from animation alone.",
+    "No full tower/interior/main-quest acceptance. No new save schema or numerical rule proposed."
+  ],
+  "required_dependency": "Bind each embedded float track by ControlledBlock interpolatorId to NiMorphData frame name, preserving independent slots and the multiplexed sequence clock. Legacy direct morph interpolation remains the fallback.",
+  "integration_note": "NifOsg component code now changes: require fresh full normal/SAN components as well as affected engine/Python gates. Do not reuse unchanged Windows component coverage for this new implementation."
+}

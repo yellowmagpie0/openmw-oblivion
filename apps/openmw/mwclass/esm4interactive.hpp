@@ -290,6 +290,7 @@ namespace MWClass
         ESM4Flora();
 
     public:
+        bool useAnim() const override { return true; }
         std::unique_ptr<MWWorld::Action> activate(
             const MWWorld::Ptr& ptr, const MWWorld::Ptr& actor) const override;
     };

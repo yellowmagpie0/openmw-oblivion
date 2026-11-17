@@ -367,6 +367,7 @@ namespace NifOsg
             float mSourceStart{ 0.f };
             float mSourceStop{ 0.f };
             const Nif::NiInterpolator* mInterpolator{ nullptr };
+            std::string mInterpolatorId;
         };
 
         std::vector<EmbeddedSequence> mEmbeddedSequences;
@@ -381,7 +382,8 @@ namespace NifOsg
         // This is used to queue look-at controllers whose target nodes may not have been created yet.
         mutable std::vector<std::pair<unsigned int, osg::ref_ptr<LookAtController>>> mLookAtQueue;
 
-        std::vector<FloatInterpolator::SequenceSegment> getEmbeddedFloatTracks(unsigned int controller) const
+        std::vector<FloatInterpolator::SequenceSegment> getEmbeddedFloatTracks(
+            unsigned int controller, std::string_view interpolatorId = {}) const
         {
             std::vector<FloatInterpolator::SequenceSegment> result;
             const auto found = mEmbeddedControllerTracks.find(controller);
@@ -389,6 +391,8 @@ namespace NifOsg
                 return result;
             for (const EmbeddedTrack& track : found->second)
             {
+                if (!interpolatorId.empty() && track.mInterpolatorId != interpolatorId)
+                    continue;
                 if (track.mInterpolator->mRecordType != Nif::RC_NiFloatInterpolator)
                     continue;
                 const auto* value = static_cast<const Nif::NiFloatInterpolator*>(track.mInterpolator);
@@ -459,7 +463,7 @@ namespace NifOsg
                     {
                         mEmbeddedControllerTracks[block.mController->mRecordIndex].push_back({ timeline.mTimelineStart,
                             timeline.mTimelineStop, sequence->mStartTime, sequence->mStopTime,
-                            block.mInterpolator.getPtr() });
+                            block.mInterpolator.getPtr(), block.mInterpolatorId });
                     }
                 }
             }
@@ -2487,8 +2491,34 @@ namespace NifOsg
                                                       morphs[i].mVertices.data()),
                             0.f);
 
-                    osg::ref_ptr<GeomMorpherController> morphctrl = new GeomMorpherController(nimorphctrl);
-                    setupController(ctrl.getPtr(), morphctrl, animflags);
+                    // TES4 sequences bind each morph by its frame name. A
+                    // shared morpher controller can own several independent
+                    // scalar channels; never combine them into one track.
+                    std::vector<std::vector<FloatInterpolator::SequenceSegment>> morphTracks;
+                    unsigned int embeddedChannels = 0;
+                    for (const auto& morph : morphs)
+                    {
+                        auto tracks = morph.mKeyFrames && !morph.mKeyFrames->mFrameName.empty()
+                            ? getEmbeddedFloatTracks(nimorphctrl->mRecordIndex, morph.mKeyFrames->mFrameName)
+                            : std::vector<FloatInterpolator::SequenceSegment>{};
+                        embeddedChannels += !tracks.empty();
+                        morphTracks.push_back(std::move(tracks));
+                    }
+                    osg::ref_ptr<GeomMorpherController> morphctrl;
+                    if (embeddedChannels != 0)
+                    {
+                        morphctrl = new GeomMorpherController(nimorphctrl, std::move(morphTracks));
+                        // Embedded tracks already use the multiplexed sequence
+                        // clock, rather than the placeholder blend controller's
+                        // local time range.
+                        Log(Debug::Verbose) << "NIF embedded morph tracks: model=" << mFilename
+                            << " controller=" << nimorphctrl->mRecordIndex << " channels=" << embeddedChannels;
+                    }
+                    else
+                    {
+                        morphctrl = new GeomMorpherController(nimorphctrl);
+                        setupController(ctrl.getPtr(), morphctrl, animflags);
+                    }
                     morphGeom->setUpdateCallback(morphctrl);
 
                     drawable = morphGeom;

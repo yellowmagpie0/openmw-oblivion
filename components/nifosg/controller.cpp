@@ -521,6 +521,16 @@ namespace NifOsg
         }
     }
 
+    GeomMorpherController::GeomMorpherController(const Nif::NiGeomMorpherController* ctrl,
+        std::vector<std::vector<FloatInterpolator::SequenceSegment>> tracks)
+        : GeomMorpherController(ctrl)
+    {
+        mKeyFrames.resize(tracks.size());
+        for (std::size_t i = 0; i < tracks.size(); ++i)
+            if (!tracks[i].empty())
+                mKeyFrames[i] = FloatInterpolator(std::move(tracks[i]));
+    }
+
     void GeomMorpherController::operator()(SceneUtil::MorphGeometry* node, osg::NodeVisitor* nv)
     {
         if (hasInput())
