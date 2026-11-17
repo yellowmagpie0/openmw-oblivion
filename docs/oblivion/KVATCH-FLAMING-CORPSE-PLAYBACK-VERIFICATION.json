@@ -1,0 +1,375 @@
+{
+  "status": "Accepted bounded corpse-owned particle PMS playback and genuine own-save cold continuation in normal and ASan/UBSan games. Full upper-corridor/main-quest course remains open.",
+  "tested_parent": "ae516f9de50eb7ce038ea2edddee0b8bc83fca9f",
+  "source_sha256": {
+    "apps/openmw/CMakeLists.txt": "f32b991a48cee49d9ae37012caacccdc6a8755dc948a9a8c7b63bdb65f79f327",
+    "apps/openmw/mwrender/oblivioneffectshader.cpp": "626ce10f96d7247d723151255d9b673c2d0b4fcdf6801ceeb8e4c25403aa5a2d",
+    "apps/openmw/mwrender/oblivioneffectshader.hpp": "2aa0178d1bd7af3cbd171eb5cae9074dbf31bb97c767e65b66acb9354e7135ad",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "ee06437843aa0e8c90373fcea761b3df50ddbf2d11c885e2bc9d3ea5d81741a4",
+    "apps/openmw/mwworld/oblivionscriptmanager.hpp": "db61d4200efde6a1f011182705adb7cb15cd1a83b80c848ac46088fe968f6cdc",
+    "apps/openmw_tests/CMakeLists.txt": "35f41c099c04b1e570f4a0ed13deba53d7be9a09632dfc0309e257b90c5e1b1c",
+    "apps/openmw_tests/mwrender/testoblivioneffectshader.cpp": "174c2e15ca8f17584a1809fc403123ef301e157759a3a38f3be77397585eb7a4",
+    "scripts/verify_kvatch_flaming_corpse.py": "2894294e9e94b51d614d97a3c9701e86f6b1804c8de33550569880ba3c2d041c",
+    "scripts/data/oblivion_compat/original_kvatch_flaming_corpse_entry.json": "0901175fa59efa8aa71d5c5c43cf437ac119a07af28b9f477822ef516dacf44a",
+    "scripts/data/oblivion_compat/original_kvatch_flaming_corpse_entry_sanitized.json": "526feeffb0d87dd1c82326f1807921268449f9731995b44d64ea037931bbbebd",
+    "scripts/data/oblivion_compat/original_kvatch_flaming_corpse_cold.json": "7ed7a6ec40de6da950e3b99f4bc66375d2d9aaededcc50dfbd3bcd7c7eefccd8",
+    "scripts/data/oblivion_compat/original_kvatch_flaming_corpse_cold_sanitized.json": "578584bb49a03bb177db75d6fb6eda81826e4f3cfa0c985229c6918c26d19a6c"
+  },
+  "evidence_root": "build/oblivion-compat/kvatch-flaming-corpse/playback",
+  "native_oracle": "KVATCH-FLAMING-CORPSE-ORACLE.json",
+  "typed_data_dependency": "KVATCH-EFFECT-SHADER-DATA-VERIFICATION.json",
+  "implementation": [
+    "PMS/PlayMagicShaderVisuals and SMS/StopMagicShaderVisuals on reference owner; null-local qualifier keeps the established executing-reference fallback.",
+    "Particle-only rigid-surface EFSH: area-weighted actual mesh triangles, authored texture/blend/depth/birth/motion/size/color/alpha; existing unlit RGBA shader and effect/particle traversal masks.",
+    "Reference-owned stable shader identity plus elapsed/duration through existing generic native save codec106. Validate pairs and winning shader before replacement; ephemeral owner index participates in retained-runtime swap.",
+    "World-clock simulation pauses with menus, one emitter per model/shader, full world transform handling; cold models reconstruct cosmetic cloud without initializer replay.",
+    "One-time discarded-emitter cleanup after in-process replacement, including Player; saved timer updates never materialize inactive cells."
+  ],
+  "limits": [
+    "Membrane shaders and rig/morph surfaces explicitly rejected; this chunk covers the actual rigid hanging corpse.",
+    "Cosmetic area density, emission RNG and restarted individual particle positions approximate original appearance. Authored motion/envelopes and gameplay/save ownership retained.",
+    "Finite timers supported; precise native finite-duration fade-out behavior is not independently accepted by this indefinite-effect course.",
+    "Cold static camera is a declared visual diagnostic. Player remains at earned entrance; upper-corridor travel and full main quest remain open."
+  ],
+  "focused_checks": {
+    "path": "normal-focused-06/verification.json",
+    "executed": 6,
+    "passed": true
+  },
+  "original_mesh_header_audit": {
+    "scope": "Original mesh header/block-type audit only; not full NIF decoding or runtime rendering acceptance. Extracted read-only with build/bsatool from original Oblivion - Meshes.bsa. Proprietary mesh stays ignored.",
+    "asset": "meshes/dungeons/misc/hangingcorpse03.nif",
+    "sha256": "d60485deef0779da5b4ff2880395123e8722e2427d95aa33eef4de688778a671",
+    "base": "content:oblivion.esm:0bf1b9",
+    "editor_id": "HangingCorpse03CONTAINER",
+    "version": "0x14000004",
+    "endianness": 1,
+    "user_version": 11,
+    "bethesda_version": 11,
+    "records": 39,
+    "record_types": {
+      "NiNode": 1,
+      "BSXFlags": 1,
+      "NiStringExtraData": 1,
+      "bhkConvexVerticesShape": 1,
+      "bhkRigidBodyT": 1,
+      "bhkCollisionObject": 1,
+      "NiTriStrips": 6,
+      "NiBinaryExtraData": 6,
+      "NiMaterialProperty": 6,
+      "NiVertexColorProperty": 1,
+      "NiTexturingProperty": 4,
+      "NiSourceTexture": 4,
+      "NiTriStripsData": 6
+    },
+    "rigid_surface_suitable": true
+  },
+  "remaining": [
+    "Resume ordinary movement through original Corridors of Dark Salvation from earned entrance, choose next discrete work from observed failure.",
+    "Upper corridor/tower ascent, Sigil Stone, gate closure and full main-quest acceptance remain open."
+  ],
+  "passed": true,
+  "tested_source": {
+    "head": "ae516f9de50eb7ce038ea2edddee0b8bc83fca9f",
+    "source_fingerprint": "aa03ce3c6e56e9098fb0b5fe740e26ebb740dd1abc91c5df1a94dcfb03173390"
+  },
+  "normal_engine": {
+    "path": "build/oblivion-compat/kvatch-flaming-corpse/playback/normal-engine-02/verification.json",
+    "executed": 2324,
+    "passed": true
+  },
+  "sanitized_engine": {
+    "path": "build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-full-coverage-02.json",
+    "executed": 2324,
+    "groups": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-core-02",
+        "executed": 2072
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-workers-0-02",
+        "executed": 84
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-workers-1-02",
+        "executed": 84
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-workers-2-02",
+        "executed": 84
+      }
+    ],
+    "passed": true
+  },
+  "reused_checks": {
+    "proof": "build/oblivion-compat/kvatch-flaming-corpse/playback/test-only-evidence-reuse-02.json",
+    "proof_sha256": "e8750d0accf24b6a64b12a105cbe754a8aff05f66b5e8cd4af2a495977cf202c",
+    "normal_components": 3319,
+    "sanitized_components": 3319,
+    "python": 623,
+    "note": "Only the untracked clock-test assertion changed after original full gate. Reconstructing its old bytes reproduces the entire original source fingerprint; all other sources, component binaries/caches and Python log are verified unchanged. Initial SAN core01 overall FAILED one engine assertion; only its independently passing component mode is reused."
+  },
+  "runtime_cases": {
+    "normal-entry-dev-01": {
+      "audit": "build/oblivion-compat/kvatch-flaming-corpse/playback/normal-entry-dev-01/flame-audit.json",
+      "audit_sha256": "18e36989a80f3efcf555317ed47b2f9d85a40714f683251514cd2611a4f51bae",
+      "result": {
+        "passed": true,
+        "phase": "entry",
+        "sanitized": false,
+        "source_sha256": "4088d33c8172b40a798fc877b1aca3e5b3d2fead7c8db00a1aed98b56a84a429",
+        "save_sha256": "a10212f11a65f9b33ee395d96e545f4f68b8a481857bd12895207d585ee1475f",
+        "binary_sha256": "252591f59fb0d174dd74229438bbbddfca2e7046c9fd938c2fe94039d210a0c8",
+        "shader_owner": "content:oblivion.esm:06bc4e",
+        "shader": "content:oblivion.esm:0852fe",
+        "saved_duration": -1,
+        "elapsed": 5.998000260442495,
+        "corpse_locals": [
+          null,
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 90
+          }
+        ],
+        "live_renderer": {
+          "owner": "content:oblivion.esm:06bc4e",
+          "shader": "content:oblivion.esm:0852fe",
+          "instances": 1,
+          "particles": 48,
+          "surface_triangles": 2812
+        },
+        "health": 91.16800880432129,
+        "player_pose": [
+          1521.658935546875,
+          -1574.09423828125,
+          1514.02734375,
+          0.0,
+          0.0,
+          3.112391710281372
+        ],
+        "ilend_pose": [
+          1386.658935546875,
+          -1574.09423828125,
+          1514.0748291015625,
+          0.0,
+          0.0,
+          2.5545642375946045
+        ],
+        "shader_report_sha256": "23d2c859d9cd9fd54e9040668eb1c8f1bc625c94bcb29a09a72f99781d284e5d",
+        "scope": "Original natural corpse PMS at earned Dark Salvation entry and/or genuine own-save cold continuation. Cold camera is a declared visual diagnostic; Player stays at earned entrance. No upper-corridor travel, individual particle/RNG parity or complete main-quest acceptance."
+      }
+    },
+    "normal-cold-dev-03": {
+      "audit": "build/oblivion-compat/kvatch-flaming-corpse/playback/normal-cold-dev-03/flame-audit.json",
+      "audit_sha256": "466ed51c2dc7218a9720dc33ffc88c3858d8783a6e8f768018ea8bfdb81de780",
+      "result": {
+        "passed": true,
+        "phase": "cold",
+        "sanitized": false,
+        "source_sha256": "a10212f11a65f9b33ee395d96e545f4f68b8a481857bd12895207d585ee1475f",
+        "save_sha256": "bc28de80e02aaec89aa425ce0d9804c719e6fee59847ea236478401b14acf27d",
+        "binary_sha256": "252591f59fb0d174dd74229438bbbddfca2e7046c9fd938c2fe94039d210a0c8",
+        "shader_owner": "content:oblivion.esm:06bc4e",
+        "shader": "content:oblivion.esm:0852fe",
+        "saved_duration": -1,
+        "elapsed": 13.057000566273928,
+        "corpse_locals": [
+          null,
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 90
+          }
+        ],
+        "live_renderer": {
+          "owner": "content:oblivion.esm:06bc4e",
+          "shader": "content:oblivion.esm:0852fe",
+          "instances": 1,
+          "particles": 44,
+          "surface_triangles": 2812
+        },
+        "health": 91.16800880432129,
+        "player_pose": [
+          1521.658935546875,
+          -1574.09423828125,
+          1514.02734375,
+          0.0,
+          0.0,
+          3.112391710281372
+        ],
+        "ilend_pose": [
+          1386.658935546875,
+          -1574.09423828125,
+          1514.0748291015625,
+          0.0,
+          0.0,
+          2.5545642375946045
+        ],
+        "shader_report_sha256": "0ae001d5294965fb6d69c2b7010e3c75a529971ec97c8161e2bc3e9d926f4ef0",
+        "scope": "Original natural corpse PMS at earned Dark Salvation entry and/or genuine own-save cold continuation. Cold camera is a declared visual diagnostic; Player stays at earned entrance. No upper-corridor travel, individual particle/RNG parity or complete main-quest acceptance."
+      }
+    },
+    "sanitized-entry-01": {
+      "audit": "build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-entry-01/flame-audit.json",
+      "audit_sha256": "7c2ac9de0167f7576d93e82d39a68f3df6e34c5b4b668a66dc041a5c8998fe1f",
+      "result": {
+        "passed": true,
+        "phase": "entry",
+        "sanitized": true,
+        "source_sha256": "4088d33c8172b40a798fc877b1aca3e5b3d2fead7c8db00a1aed98b56a84a429",
+        "save_sha256": "75b50156a30db84bd9309c94a851212452848b494ab32ceb1db60c568229e98a",
+        "binary_sha256": "018189ce40d479e5f4b024a4a3dab59a6e4f81f2337d8b4cf3af90ac0ccd9a8c",
+        "shader_owner": "content:oblivion.esm:06bc4e",
+        "shader": "content:oblivion.esm:0852fe",
+        "saved_duration": -1,
+        "elapsed": 6.308000326156616,
+        "corpse_locals": [
+          null,
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 90
+          }
+        ],
+        "live_renderer": {
+          "owner": "content:oblivion.esm:06bc4e",
+          "shader": "content:oblivion.esm:0852fe",
+          "instances": 1,
+          "particles": 45,
+          "surface_triangles": 2812
+        },
+        "health": 91.16800880432129,
+        "player_pose": [
+          1521.658935546875,
+          -1574.09423828125,
+          1514.02734375,
+          0.0,
+          0.0,
+          3.112391710281372
+        ],
+        "ilend_pose": [
+          1386.658935546875,
+          -1574.09423828125,
+          1514.0748291015625,
+          0.0,
+          0.0,
+          2.583718776702881
+        ],
+        "shader_report_sha256": "05b5a0ec544e0259504aaafe3cf55ca2278b9dfd3e3a6b2159f72e86e948b1ab",
+        "scope": "Original natural corpse PMS at earned Dark Salvation entry and/or genuine own-save cold continuation. Cold camera is a declared visual diagnostic; Player stays at earned entrance. No upper-corridor travel, individual particle/RNG parity or complete main-quest acceptance."
+      }
+    },
+    "sanitized-cold-01": {
+      "audit": "build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-cold-01/flame-audit.json",
+      "audit_sha256": "ab2393e0baea20a93ec583a87f6d318cf70ce205f5d0ca53a5ae54ee6523ff58",
+      "result": {
+        "passed": true,
+        "phase": "cold",
+        "sanitized": true,
+        "source_sha256": "75b50156a30db84bd9309c94a851212452848b494ab32ceb1db60c568229e98a",
+        "save_sha256": "784fece62a87f929bca6cbf5681651426235e0d0bbc534a3b25306f4ae610d06",
+        "binary_sha256": "018189ce40d479e5f4b024a4a3dab59a6e4f81f2337d8b4cf3af90ac0ccd9a8c",
+        "shader_owner": "content:oblivion.esm:06bc4e",
+        "shader": "content:oblivion.esm:0852fe",
+        "saved_duration": -1,
+        "elapsed": 13.446000695228577,
+        "corpse_locals": [
+          null,
+          {
+            "type": "number",
+            "value": 1
+          },
+          {
+            "type": "number",
+            "value": 90
+          }
+        ],
+        "live_renderer": {
+          "owner": "content:oblivion.esm:06bc4e",
+          "shader": "content:oblivion.esm:0852fe",
+          "instances": 1,
+          "particles": 45,
+          "surface_triangles": 2812
+        },
+        "health": 91.16800880432129,
+        "player_pose": [
+          1521.658935546875,
+          -1574.09423828125,
+          1514.02734375,
+          0.0,
+          0.0,
+          3.112391710281372
+        ],
+        "ilend_pose": [
+          1386.658935546875,
+          -1574.09423828125,
+          1514.0748291015625,
+          0.0,
+          0.0,
+          2.583718776702881
+        ],
+        "shader_report_sha256": "05b5a0ec544e0259504aaafe3cf55ca2278b9dfd3e3a6b2159f72e86e948b1ab",
+        "scope": "Original natural corpse PMS at earned Dark Salvation entry and/or genuine own-save cold continuation. Cold camera is a declared visual diagnostic; Player stays at earned entrance. No upper-corridor travel, individual particle/RNG parity or complete main-quest acceptance."
+      }
+    }
+  },
+  "producers": {
+    "normal": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/normal-candidate-01/openmw",
+      "sha256": "252591f59fb0d174dd74229438bbbddfca2e7046c9fd938c2fe94039d210a0c8",
+      "unstripped_sha256": "aebc7dd4506c75143d1331a965ef0fc2795774e91eba44eeae6d59764b5ad0d0",
+      "resources": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/normal-resources-01",
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/normal-candidate-01/openmw.zst",
+      "archive_sha256": "47e6e400a1fffa0d8dd7a846ed766d8e58310eedc282a1cafce2bf9c7f8ec310",
+      "archive_decoded_sha256": "252591f59fb0d174dd74229438bbbddfca2e7046c9fd938c2fe94039d210a0c8",
+      "debug_strip_allocated_sections_and_entry_unchanged": true,
+      "full_metadata": "build/oblivion-compat/kvatch-flaming-corpse/playback/normal-producer-01.json"
+    },
+    "sanitized": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-candidate-01/openmw",
+      "sha256": "018189ce40d479e5f4b024a4a3dab59a6e4f81f2337d8b4cf3af90ac0ccd9a8c",
+      "unstripped_sha256": "9d6d96331cd5360ae3bdcd3cc57b16bb19434f56c400f6fb11052340d7157c08",
+      "resources": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-resources-01",
+      "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-candidate-01/openmw.zst",
+      "archive_sha256": "99fd4c58d13f52a8c4737fb347b16519ad35abb5ca427d8bdcb1b8171f928ea7",
+      "archive_decoded_sha256": "018189ce40d479e5f4b024a4a3dab59a6e4f81f2337d8b4cf3af90ac0ccd9a8c",
+      "debug_strip_allocated_sections_and_entry_unchanged": true,
+      "full_metadata": "build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-producer-01.json"
+    }
+  },
+  "normal_integration_binding": "build/oblivion-compat/kvatch-flaming-corpse/playback/normal-integrated-producer-02.json",
+  "visual_reviews": [
+    "build/oblivion-compat/kvatch-flaming-corpse/playback/manual-normal-visual-review-01.json",
+    "build/oblivion-compat/kvatch-flaming-corpse/playback/manual-sanitized-visual-review-01.json"
+  ],
+  "save_schema": 106,
+  "sanitizer_options": {
+    "unit": "ASAN detect_leaks=1:halt_on_error=1; UBSAN halt_on_error=1:print_stacktrace=1",
+    "rendered": "ASAN detect_leaks=0:halt_on_error=1; UBSAN halt_on_error=1:print_stacktrace=1; first LD_PRELOAD libasan, actual process environment/libraries captured"
+  },
+  "test_correction": {
+    "failed_run": "build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-core-01/verification.json",
+    "failure": "Clock test followed pool slot0 after its randomly short-lived particle expired; replacement correctly restarted at age0.0167.",
+    "fix": "Follow a live particle with more than0.15s remaining before the0.1s resume. Keep original fire lifetime variation and production RNG unchanged.",
+    "focused_sanitized": "build/oblivion-compat/kvatch-flaming-corpse/playback/sanitized-focused-01/verification.json",
+    "final_full_normal": "normal-engine-02 all2324 pass",
+    "final_full_sanitized": "sanitized-core-02 plus workers0/1/2 all2324 pass; exact disjoint inventory union"
+  },
+  "retained_attempts": [
+    "dev-build-{01,02,03}: enum/fixture/API compile corrections; dev02 obsolete old-header TU explicitly stopped, not passed evidence",
+    "normal-focused-01: fixture lacked shader path; focused02: fixture lacked default shader/light/shadow defines; focused03: incorrect include name; all retained, final focused06 passed6",
+    "normal-cold-dev-02: unsupported wait action rejected during manifest validation, no game launched; corrected to supported sleep and both manifests validated",
+    "sanitized-core-01:2071/2072 engine cases passed, clock assertion failed; original report retained and not represented as an engine pass"
+  ],
+  "documentation_note": "Final receipt/current handoff completed after source freeze. Production source hashes match actual immutable normal/SAN runtime producers. Final test/checker/replay-manifest hashes recorded separately; full gates link tested parent and exact dirty-source fingerprint."
+}

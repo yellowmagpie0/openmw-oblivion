@@ -5,52 +5,40 @@ Gate → Blood Feast/Rending Halls → original tower ascent. Full Sigil Stone,
 gate closure and main-quest acceptance remain open. Choose work from actual
 content failures; keep the current bounded deliverable ahead of adjacent gaps.
 
-**Current gameplay blocker: original corpse flame playback in Dark Salvation.**
-Entry through Blood Feast door01d580 reaches Corridors of Dark Salvation085e4f
-and Ilend follows, but original FlamingCorpseSCRIPT0c47ae calls unsupported PMS
-on decorative corpse06bc4e when its original roll reaches90. Failed entry01 is
-diagnostic; its initializer already ran and cannot establish successful playback.
-[Contract](KVATCH-FLAMING-CORPSE-CONTRACT.json).
+**Accepted chunk: persistent original corpse flames at Dark Salvation entry.**
+Normal/SAN ordinary ramp/Space through Blood Feast01d580 and Ilend arrival pass.
+Original FlamingCorpseSCRIPT0c47ae keeps myself null/init1/lucky90 and issues one
+PMS on corpse06bc4e. Authored fire particles emit from2,812 actual mesh triangles.
+Fresh own-save processes restore one live emitter and visibly animated flames
+without another PMS, preserving health91.168, Player/Ilend life, both earned
+Dremora kills, inventory/ownership, quests/topics/reactions and codec106.
+[Playback verification](KVATCH-FLAMING-CORPSE-PLAYBACK-VERIFICATION.json),
+[original expectations](KVATCH-FLAMING-CORPSE-ORACLE.json),
+[typed EFSH dependency](KVATCH-EFFECT-SHADER-DATA-VERIFICATION.json).
 
-**Accepted dependency: typed original effect-shader data.**
-EFSH now has typed engine-store/esmtool support for original96/224-byte layouts,
-raw payload preservation and explicit absent legacy particle data. All102
-original shaders match independent raw decoding across2,116 field groups in
-normal/SAN tools. All official files parse without unsupported record families.
-Full components3,319 and engine2,318 pass in both builds; Python623 passes.
-SAN engine coverage is2066+84+84+84 disjoint cases, checked against the complete
-inventory. Normal/SAN earned-save boots and genuine own-save cold processes
-retain health91.168, Player/Ilend life, both Dremora corpses and Ilend killers,
-follow1778d1, inventory/ownership, quests/topics/reactions and codec/live state.
-Schema106 unchanged. Unit leak1, rendered leak0. Immutable producer archives,
-loaded-section proofs and exact evidence are linked in
-[verification](KVATCH-EFFECT-SHADER-DATA-VERIFICATION.json).
-This accepts ingestion; actual fork flame playback remains unimplemented.
-Evidence root: `build/oblivion-compat/kvatch-flaming-corpse`.
+Full engine2,324 passes normal/SAN; SAN exact union2072+84+84+84. Components3,319
+in each build and Python623 pass/reuse with exact test-only source proof. Six new
+renderer/save-validation checks pass. A flaky pool-slot clock assertion was fixed
+without changing production behavior; its failed run is retained. Unit leak1,
+rendered leak0. Immutable producer archives/loaded-section proofs are recorded.
+Limits: particle-only rigid surfaces; membrane and rig/morph effects rejected.
+Cosmetic density/RNG and individual cold particles approximate native appearance.
+Static upstairs cameras are declared visual diagnostics; Player remains at the
+entrance. Upper-corridor traversal and full gate/quest completion remain open.
 
-**Next action:** implement actual corpse-owned PMS surface particles using the
-authored fire shader0852fe, then verify original entry and own-save continuation
-in normal/SAN games. The data dependency is finished; keep sequencing on this
-visible effect before selecting another content failure.
-Independent [native checks](KVATCH-FLAMING-CORPSE-ORACLE.json) establish the caller:
-the uninitialized `myself` local falls back to the executing corpse. Omitted
-duration is-1. Original surface flames persist in a fresh original process with
-init1/lucky52 and no shader reissue. The actual fire shader disables membrane
-and authors particle texture/motion/color/lifetime. Original probes restored the
-isolated prefix exactly; their direct shader commands are visual diagnostics,
-not original main-quest completion or natural-roll acceptance.
+**Next action:** resume ordinary movement through original Corridors of Dark
+Salvation from the earned entrance; choose the next discrete implementation
+from an actual course failure. Do not repeat resolved native/data/shader checks.
+Evidence/controller state: `build/oblivion-compat/kvatch-flaming-corpse/playback`.
 
-Healthy primary entry replay source:
-`build/oblivion-compat/kvatch-rending-halls/normal-upper-dremora-defense-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `4088d33c8172b40a798fc877b1aca3e5b3d2fead7c8db00a1aed98b56a84a429`.
-Player[-735.799011,-21.811663,619.107971], pitch-0.263672/yaw2.803508;
-Ilend[-657.051819,-46.695877,642.995117], alive on follow1778d1.
-Player health91.168: one recorded3.372-damage hit before Ilend killed093ee1;
-earlier093ede is also dead with Ilend as killer. Player has weapon ready.
-Use ordinary movement/Space recipe `original_kvatch_dark_salvation_entry.json`.
-Keep the failed entry01 and interrupted surveys out of primary continuations.
-The accepted loader-only cold saves are linked in the verification receipt;
-they preserve this same earned location and do not exercise PMS.
+Primary normal continuation (no static-camera staging):
+`build/oblivion-compat/kvatch-flaming-corpse/playback/normal-entry-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `a10212f11a65f9b33ee395d96e545f4f68b8a481857bd12895207d585ee1475f`.
+Player[1521.658936,-1574.094238,1514.027344], yaw3.112392/pitch0;
+Ilend[1386.658936,-1574.094238,1514.074829], alive on follow1778d1.
+Cell085e4f, last transition01d580, shader0852fe indefinite on corpse06bc4e.
+SAN entry source/own-save cold and earlier4088 pre-entry fallback are linked in
+the receipt/contract. Keep failed entry/case attempts out of primary continuations.
 
 Course progression and earlier accepted fixes:
 

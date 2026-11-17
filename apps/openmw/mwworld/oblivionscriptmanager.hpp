@@ -6,6 +6,7 @@
 #include <components/obscript/vm.hpp>
 
 #include <filesystem>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <optional>
@@ -221,6 +222,7 @@ namespace MWWorld
         std::vector<std::string> mTrace;
         std::vector<ScheduledEvent> mScheduledEvents;
         std::filesystem::path mReportPath;
+        std::filesystem::path mShaderReportPath;
         std::uint64_t mSequence = 0;
         std::uint32_t mDepth = 0;
         double mElapsed = 0;
@@ -228,6 +230,12 @@ namespace MWWorld
         std::size_t mCompilationFailures = 0;
         std::map<std::string, std::uint64_t, std::less<>> mCommandCounts;
         std::set<ESM::FormKey> mSuppressedActivations;
+        // Ephemeral index into reference-owned, saveable shader state. Never
+        // borrow pointers into the replaceable runtime reference vector.
+        std::set<ESM::FormKey> mShaderOwners;
+        bool mShaderSceneReset = false;
+        void updateEffectShaders(double seconds);
+        void writeEffectShaderReport(std::ostream& out) const;
         RetainedRuntime::Data* mRetainedRuntime = nullptr;
         void requireMutableRuntime() const;
 

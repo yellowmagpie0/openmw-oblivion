@@ -1,5 +1,5 @@
 {
-  "status": "Typed EFSH data dependency accepted in normal/SAN builds, original-record audits and earned-save boot/own-save cold checks. Actual fork PMS playback and original Dark Salvation entry acceptance remain open.",
+  "status": "Bounded corpse-owned particle PMS playback accepted in normal/SAN original entry and genuine own-save cold continuation; full main-quest course remains open.",
   "target": "Original Corridors of Dark Salvation FlamingCorpseSCRIPT0c47ae on decorative corpses06bc4d/06bc4e; fire shader0852fe.",
   "bounded_dependency": "Decode both original TES4 EFSH DATA layouts, expose typed store and esmtool semantics, compare every field group against the hash-identified original master. This is ingestion only, not a replacement for visual PMS implementation.",
   "native_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
@@ -60,9 +60,6 @@
     "Compare all102 original shader records with independent raw-byte decoding, and review broad official file parsing."
   ],
   "remaining_gameplay_acceptance": [
-    "Implement actual PMS dispatch on the executing corpse, with original omitted duration -1; native caller, appearance and own-save persistence expectations are established.",
-    "Render authored fire particles on the actual corpse; do not silence the command or substitute a generic glow.",
-    "Retain effect ownership/lifetime through normal/SAN original entry and genuine own-save cold processes.",
     "Continue original main-quest course after the shader chunk; tower ascent and gate closure remain open."
   ],
   "reference_schema": "https://github.com/TES5Edit/TES5Edit/blob/542c7d2f056a5eee7d8f2b2b6ec6b376bb508737/Core/wbDefinitionsTES4.pas#L2088",
@@ -70,5 +67,17 @@
   "data_verifier": "scripts/verify_tes4_effect_shaders.py",
   "entry_manifest": "scripts/data/oblivion_compat/original_kvatch_dark_salvation_entry.json",
   "native_oracle": "KVATCH-FLAMING-CORPSE-ORACLE.json",
-  "data_dependency_verification": "KVATCH-EFFECT-SHADER-DATA-VERIFICATION.json"
+  "data_dependency_verification": "KVATCH-EFFECT-SHADER-DATA-VERIFICATION.json",
+  "playback_verification": "KVATCH-FLAMING-CORPSE-PLAYBACK-VERIFICATION.json",
+  "completed_gameplay_acceptance": [
+    "Implement actual PMS dispatch on the executing corpse, with original omitted duration -1; native caller, appearance and own-save persistence expectations are established.",
+    "Render authored fire particles on the actual corpse; do not silence the command or substitute a generic glow.",
+    "Retain effect ownership/lifetime through normal/SAN original entry and genuine own-save cold processes."
+  ],
+  "playback_limits": [
+    "Membrane shaders and rig/morph surfaces explicitly rejected; this chunk covers the actual rigid hanging corpse.",
+    "Cosmetic area density, emission RNG and restarted individual particle positions approximate original appearance. Authored motion/envelopes and gameplay/save ownership retained.",
+    "Finite timers supported; precise native finite-duration fade-out behavior is not independently accepted by this indefinite-effect course.",
+    "Cold static camera is a declared visual diagnostic. Player remains at earned entrance; upper-corridor travel and full main quest remain open."
+  ]
 }

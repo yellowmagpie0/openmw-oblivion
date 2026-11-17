@@ -11,6 +11,7 @@
 #include <components/esm4/dropplacement.hpp>
 #include <components/esm4/skilltraining.hpp>
 #include <components/esm4/loadclas.hpp>
+#include <components/esm4/loadefsh.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadskil.hpp>
 
@@ -89,6 +90,7 @@
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
 #include "../mwrender/renderingmanager.hpp"
+#include "../mwrender/oblivioneffectshader.hpp"
 #include "../mwsound/sound.hpp"
 #include "action.hpp"
 #include "class.hpp"
@@ -626,6 +628,8 @@ namespace MWWorld
     {
         if (const char* report = std::getenv("OPENMW_OBSCRIPT_REPORT"))
             mReportPath = report;
+        if (const char* report = std::getenv("OPENMW_OBLIVION_SHADER_REPORT"))
+            mShaderReportPath = report;
         const char* path = std::getenv("OPENMW_OBSCRIPT_EVENTS");
         if (path == nullptr || *path == '\0')
             return;
@@ -671,6 +675,8 @@ namespace MWWorld
         decltype(OblivionScriptManager::mDepth) mDepth{};
         decltype(OblivionScriptManager::mElapsed) mElapsed{};
         decltype(OblivionScriptManager::mSuppressedActivations) mSuppressedActivations{};
+        decltype(OblivionScriptManager::mShaderOwners) mShaderOwners{};
+        bool mShaderSceneReset = false;
         bool mDetached = false;
         bool mRetainedSelected = false;
         std::uint64_t mExpectedSequence;
@@ -707,6 +713,8 @@ namespace MWWorld
             swap(mDepth, owner.mDepth);
             swap(mElapsed, owner.mElapsed);
             swap(mSuppressedActivations, owner.mSuppressedActivations);
+            swap(mShaderOwners, owner.mShaderOwners);
+            swap(mShaderSceneReset, owner.mShaderSceneReset);
         }
     };
     OblivionScriptManager::~OblivionScriptManager()
@@ -805,6 +813,8 @@ namespace MWWorld
         requireMutableRuntime();
         mItemTransferIdentity.reset();
         mNativeSpeech.clear();
+        mShaderOwners.clear();
+        mShaderSceneReset = true;
         mMessageBoxOwner = {};
         mDiagnosedVoiceTopics.clear();
         mInstances.clear();
@@ -1354,6 +1364,7 @@ namespace MWWorld
         // borrowed view before use, just like the low-process AI batch.
         const MWMechanics::OblivionSavedReferenceIndex references(mWorld.mOblivionRuntimeState->mReferences);
         const ScopedReferenceQueries queries(*this, references);
+        updateEffectShaders(std::max(0.0, secondsPassed));
         mWorld.mLastOblivionScriptSeconds = secondsPassed;
         mElapsed += secondsPassed;
         for (auto speech = mNativeSpeech.begin(); speech != mNativeSpeech.end();)
@@ -1619,6 +1630,113 @@ namespace MWWorld
         }
     }
 
+    namespace
+    {
+        constexpr std::string_view ShaderAge = "obscript.shader.age.";
+        constexpr std::string_view ShaderDuration = "obscript.shader.duration.";
+
+        Ptr liveShaderOwner(World& world, const ESM::FormKeyResolver& resolver, const ESM::FormKey& key)
+        {
+            if (key == ESM::FormKey::dynamic("player", 1)) return world.getPlayerPtr();
+            if (key.isDynamic()) return world.getWorldModel().getDynamicNativePtr(key);
+            const auto id = resolver.toFormId(key);
+            // A visual/timer update must not materialize inactive saved cells.
+            return id ? world.getWorldModel().getPtr(*id) : Ptr{};
+        }
+
+        // Validate before publishing a save replacement. Both fields are
+        // required: neither an orphan timer nor a malformed shader can make a
+        // restored runtime fail later during its first scene update.
+        void validateShaderState(const ESM4::RuntimeReferenceState& state, const ESMStore& store)
+        {
+            for (const auto& [name, value] : state.mCustomState)
+            {
+                const bool age = name.starts_with(ShaderAge);
+                if (!age && !name.starts_with(ShaderDuration)) continue;
+                const auto suffix = std::string_view(name).substr(age ? ShaderAge.size() : ShaderDuration.size());
+                const auto key = ESM::FormKey::deserialize(suffix);
+                const auto* record = store.search<ESM4::EffectShader>(key);
+                const auto* number = std::get_if<double>(&value);
+                if (key.serialize() != suffix || !record || !number || !std::isfinite(*number)
+                    || (age ? *number < 0 : (*number < 0 && *number != -1)))
+                    throw std::invalid_argument("Invalid saved TES4 effect shader state: " + name);
+                MWRender::validateOblivionParticleShader(*record);
+                if (!state.mCustomState.contains(std::string(age ? ShaderDuration : ShaderAge) + std::string(suffix)))
+                    throw std::invalid_argument("Unpaired saved TES4 effect shader state: " + name);
+            }
+        }
+    }
+
+    void OblivionScriptManager::updateEffectShaders(double seconds)
+    {
+        if (mShaderSceneReset && mWorld.mRendering && mWorld.mWorldScene)
+        {
+            // A direct/in-process restore may reuse an existing model. Clear
+            // discarded visual instances once, outside the no-throw restore
+            // commit, before reconstructing the incoming reference state.
+            for (CellStore* cell : mWorld.mWorldScene->getActiveCells())
+                cell->forEach([&](const Ptr& ptr) {
+                    if (auto* animation = mWorld.mRendering->getAnimation(ptr))
+                        if (auto* model = animation->getObjectRoot())
+                            MWRender::clearOblivionParticleShaders(*model);
+                    return true;
+                });
+            if (const Ptr player = mWorld.getPlayerPtr(); !player.isEmpty())
+                if (auto* animation = mWorld.mRendering->getAnimation(player))
+                    if (auto* model = animation->getObjectRoot())
+                        MWRender::clearOblivionParticleShaders(*model);
+            mShaderSceneReset = false;
+        }
+        for (auto owner = mShaderOwners.begin(); owner != mShaderOwners.end();)
+        {
+            auto* state = referenceState(*owner);
+            if (!state) { owner = mShaderOwners.erase(owner); continue; }
+            const Ptr ptr = liveShaderOwner(mWorld, mResolver, *owner);
+            auto* animation = ptr.isEmpty() || !mWorld.mRendering
+                ? nullptr : mWorld.mRendering->getAnimation(ptr);
+            auto* model = animation ? animation->getObjectRoot() : nullptr;
+            bool active = false;
+            for (auto entry = state->mCustomState.begin(); entry != state->mCustomState.end();)
+            {
+                if (!entry->first.starts_with(ShaderAge)) { ++entry; continue; }
+                const auto suffix = entry->first.substr(ShaderAge.size());
+                auto duration = state->mCustomState.find(std::string(ShaderDuration) + suffix);
+                double& remaining = std::get<double>(duration->second);
+                if (remaining >= 0) remaining = std::max(0.0, remaining - seconds);
+                if (remaining == 0)
+                {
+                    if (model) MWRender::removeOblivionParticleShader(*model, suffix);
+                    state->mCustomState.erase(duration);
+                    entry = state->mCustomState.erase(entry);
+                    continue;
+                }
+                double& elapsed = std::get<double>(entry->second);
+                elapsed += seconds;
+                if (model && ptr.getRefData().isEnabled() && !ptr.mRef->isDeleted())
+                    MWRender::advanceOblivionParticleShader(*model, suffix,
+                        *mStore.search<ESM4::EffectShader>(ESM::FormKey::deserialize(suffix)),
+                        *mWorld.mRendering->getResourceSystem(), elapsed, seconds);
+                else if (model) MWRender::removeOblivionParticleShader(*model, suffix);
+                active = true;
+                ++entry;
+            }
+            if (active) ++owner;
+            else owner = mShaderOwners.erase(owner);
+        }
+        if (!mShaderReportPath.empty())
+        {
+            const std::filesystem::path temporary = mShaderReportPath.string() + ".tmp";
+            {
+                std::ofstream out(temporary);
+                out << "{\"effect_shaders\":[";
+                writeEffectShaderReport(out);
+                out << "]}";
+            }
+            std::error_code error;
+            std::filesystem::rename(temporary, mShaderReportPath, error);
+        }
+    }
+
     const ESM4::RuntimeReferenceState* OblivionScriptManager::referenceState(const ESM::FormKey& key) const
     {
         if (mWorld.mOblivionRuntimeState && sReferenceQueries.mOwner == this && sReferenceQueries.mIndex
@@ -1830,6 +1948,40 @@ namespace MWWorld
             return played;
         };
 
+        if (name == "pms" || name == "playmagicshadervisuals"
+            || name == "sms" || name == "stopmagicshadervisuals")
+        {
+            const auto shader = keyFromValue(argument(0));
+            const auto* record = shader ? mStore.search<ESM4::EffectShader>(*shader) : nullptr;
+            if (!record) throw std::runtime_error("Native magic shader requires a winning EFSH");
+            auto* state = referenceState(objectKey());
+            if (!state) throw std::runtime_error("Native magic shader requires a persistent reference");
+            const auto suffix = shader->serialize();
+            const bool stop = name == "sms" || name == "stopmagicshadervisuals";
+            if (stop)
+            {
+                state->mCustomState.erase(std::string(ShaderAge) + suffix);
+                state->mCustomState.erase(std::string(ShaderDuration) + suffix);
+            }
+            else
+            {
+                MWRender::validateOblivionParticleShader(*record);
+                const double duration = arguments.size() < 2 ? -1 : ObScript::asNumber(argument(1));
+                if (!std::isfinite(duration) || (duration < 0 && duration != -1))
+                    throw std::runtime_error("Native magic shader requires duration -1 or nonnegative seconds");
+                state->mCustomState[std::string(ShaderAge) + suffix] = 0.0;
+                state->mCustomState[std::string(ShaderDuration) + suffix] = duration;
+                mShaderOwners.insert(ESM4::runtimeReferenceKey(objectKey()));
+            }
+            // Reissuing PMS restarts this shader without accumulating emitters.
+            const Ptr ptr = objectPtr();
+            if (!ptr.isEmpty() && mWorld.mRendering)
+                if (auto* animation = mWorld.mRendering->getAnimation(ptr))
+                    if (auto* model = animation->getObjectRoot())
+                        MWRender::removeOblivionParticleShader(*model, suffix);
+            trace(name + " reference=" + objectKey().serialize() + " shader=" + suffix);
+            return std::int64_t(0);
+        }
         if (name == "look" || name == "stoplook")
         {
             const Ptr actor = objectPtr();
@@ -3727,6 +3879,7 @@ namespace MWWorld
         std::map<InstanceKey, Instance> mInstances;
         std::map<ESM::FormKey, ESM4::RuntimeQuestState> mQuests;
         std::set<ESM::FormKey> mSpokenDialogueInfos;
+        std::set<ESM::FormKey> mShaderOwners;
         std::vector<std::string> mTrace;
         std::string mMessage;
         std::uint64_t mSequence;
@@ -3750,6 +3903,8 @@ namespace MWWorld
         target.mInstances.swap(mImpl->mInstances);
         target.mQuests.swap(mImpl->mQuests);
         target.mSpokenDialogueInfos.swap(mImpl->mSpokenDialogueInfos);
+        target.mShaderOwners.swap(mImpl->mShaderOwners);
+        target.mShaderSceneReset = true;
         target.mTrace.swap(mImpl->mTrace);
         target.mSequence = mImpl->mSequence;
         target.mNativeSpeech.clear();
@@ -3767,6 +3922,13 @@ namespace MWWorld
         auto plan = std::make_unique<PreparedRestore::Impl>();
         plan->mTarget = this;
         plan->mSequence = state.mScriptEventSequence;
+        for (const auto& reference : state.mReferences)
+        {
+            validateShaderState(reference, mStore);
+            if (std::any_of(reference.mCustomState.begin(), reference.mCustomState.end(),
+                    [](const auto& entry) { return entry.first.starts_with(ShaderAge); }))
+                plan->mShaderOwners.insert(reference.mKey);
+        }
         if (state.mVersion < 64 && !state.mSpokenDialogueInfos.empty())
             throw std::invalid_argument("Spoken dialogue history requires runtime schema64");
         for (const auto& info : state.mSpokenDialogueInfos)
@@ -3963,6 +4125,29 @@ namespace MWWorld
         trace("acceptance-event command=" + kind);
     }
 
+    void OblivionScriptManager::writeEffectShaderReport(std::ostream& report) const
+    {
+        std::size_t index = 0;
+        for (const auto& owner : mShaderOwners)
+        {
+            const auto* state = referenceState(owner);
+            if (!state) continue;
+            const Ptr ptr = liveShaderOwner(mWorld, mResolver, owner);
+            const auto* animation = ptr.isEmpty() || !mWorld.mRendering ? nullptr : mWorld.mRendering->getAnimation(ptr);
+            const auto* model = animation ? animation->getObjectRoot() : nullptr;
+            for (const auto& [name, value] : state->mCustomState)
+            {
+                if (!name.starts_with(ShaderAge)) continue;
+                const auto suffix = std::string_view(name).substr(ShaderAge.size());
+                const auto stats = model ? MWRender::inspectOblivionParticleShader(*model, suffix)
+                                         : MWRender::OblivionParticleShaderStats{};
+                report << (index++ ? "," : "") << "{\"owner\":\"" << jsonEscape(owner.serialize())
+                    << "\",\"shader\":\"" << jsonEscape(suffix) << "\",\"instances\":" << stats.mInstances
+                    << ",\"particles\":" << stats.mParticles << ",\"surface_triangles\":" << stats.mSurfaceTriangles << '}';
+            }
+        }
+    }
+
     void OblivionScriptManager::writeRuntimeReport() const
     {
         if (mReportPath.empty())
@@ -3989,6 +4174,8 @@ namespace MWWorld
         report << "},\"trace\":[";
         for (std::size_t i = 0; i < mTrace.size(); ++i)
             report << (i ? "," : "") << '"' << jsonEscape(mTrace[i]) << '"';
+        report << "],\"effect_shaders\":[";
+        writeEffectShaderReport(report);
         report << "],\"runtime_state\":" << mWorld.captureOblivionRuntimeState().canonicalJson() << '}';
 
         const std::filesystem::path temporary = mReportPath.string() + ".tmp";

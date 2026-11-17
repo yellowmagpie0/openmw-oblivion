@@ -55,6 +55,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwrender/testoblivionarrowgeometry.cpp
     mwrender/testobliviondropplacement.cpp
     mwrender/testoblivionattachment.cpp
+    mwrender/testoblivioneffectshader.cpp
     mwrender/testpreparedobjects.cpp
     mwrender/testruntimeviewer.cpp
 
