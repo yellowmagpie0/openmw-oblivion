@@ -460,7 +460,16 @@ namespace NifBullet
             bodyTransform.setTrans(osg::Vec3f(rigidBody.mInfo.mTranslation.x(), rigidBody.mInfo.mTranslation.y(),
                                        rigidBody.mInfo.mTranslation.z())
                 * mHavokScale);
-            transform = bodyTransform * transform;
+            if (args.mAnimated)
+            {
+                // Animation replaces the outer node transform. Keep the
+                // body-local pose inside it, as with simple shape phantoms.
+                auto bodyShape = std::make_unique<btCompoundShape>();
+                bodyShape->addChildShape(matrixToBullet(bodyTransform), shape.release());
+                shape = std::move(bodyShape);
+            }
+            else
+                transform = bodyTransform * transform;
         }
         else if (const auto* phantom = dynamic_cast<const Nif::bhkSimpleShapePhantom*>(&collision->mBody.get()))
         {

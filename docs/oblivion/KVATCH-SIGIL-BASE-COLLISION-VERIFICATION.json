@@ -1,0 +1,471 @@
+{
+  "status": "Accepted bounded animated Sigil base collision offset; no full tower/gate/main-quest acceptance.",
+  "tested_parent": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+  "contract": "KVATCH-SIGIL-BASE-COLLISION-CONTRACT.json",
+  "oracle": "KVATCH-SIGIL-BASE-COLLISION-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/kvatch-blood-feast",
+  "implementation": "Keep animated bhkRigidBodyT body-local pose inside the node child shape so Object animation can replace its outer node transform. Unanimated bodies retain their existing flattened placement. Solid body/layer and reference/quest/save schema remain unchanged.",
+  "checks": {
+    "passed": true,
+    "checks": {
+      "focused-01": {
+        "results": {
+          "components": {
+            "executed": 54,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "TestBulletNifLoader.*",
+            "binary_sha256": "10ecba454b9338c6e62e3e0e91316c9426ed59d5015e84bf4e111065010283b9",
+            "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+            "xml_sha256": "bf1565935e02a0c8ac5374ef96753175c4f69f5543cab2a18d809bf78dab41f8",
+            "inventory_sha256": "e4d3e134e4f6c681a5d5bde4daed8afc1d48efba9203329098f2d64fffce1b7a",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+          "source_fingerprint": "eb02a59008779f94b50b9696a5255e75d1a7a2bf2d6d5383974299960c021d3d"
+        },
+        "verification_sha256": "41cf6423962b85c6a8112b1af3e8e8118df7fb097a8c8b08c7b506099547518a"
+      },
+      "sanitized-focused-01": {
+        "results": {
+          "components": {
+            "executed": 54,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "TestBulletNifLoader.*",
+            "binary_sha256": "31a252b6f91d45d8274f5287d4410399b5b88020568a100ab5fa69d23d4d62f6",
+            "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+            "xml_sha256": "7c702bf532432cbe32dce94d4db39e1da053103fbeeb0b5726daaed196e5e7da",
+            "inventory_sha256": "15314a42afe02b7b0cd9dc46ff57e32d762f4a54820aaacb6c03527d2037489a",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+          "source_fingerprint": "8056d9739d36f4145174b814d7cc30c9610c4e9d4d4e26bbb492e28207735ab4"
+        },
+        "verification_sha256": "78de6485f8087621a9f854e2694f678e7711a46c83dd8cd7939915a17881dcbc"
+      },
+      "normal-integration-01": {
+        "results": {
+          "components": {
+            "executed": 3315,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "10ecba454b9338c6e62e3e0e91316c9426ed59d5015e84bf4e111065010283b9",
+            "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+            "xml_sha256": "ebfa05f015baa9407e02a7630511939fe0b5ac2e3577bb18596021aed82458e5",
+            "inventory_sha256": "88b4c5559f3c6e888dcad9aa79db4f21c602c2c5a914fa5cfe0b0f20b6d50161",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 2317,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c4e20dae2281cd9add1b20e02c9a29fb7394969b92b245178c40f24a9dd8ac24",
+            "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+            "xml_sha256": "e114ea10509b5cd6d821da40a7dcf29ff66a1c7d45116195482ff1c9914969ac",
+            "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+          "source_fingerprint": "8056d9739d36f4145174b814d7cc30c9610c4e9d4d4e26bbb492e28207735ab4"
+        },
+        "verification_sha256": "16c7be06e72c485a0bf0c351717111c778b2a2c9e5f35bace54305fe0d78b8fd"
+      },
+      "sanitized-components-final-01": {
+        "results": {
+          "components": {
+            "executed": 3315,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "31a252b6f91d45d8274f5287d4410399b5b88020568a100ab5fa69d23d4d62f6",
+            "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+            "xml_sha256": "d83d8219defdb57a03de7c85cd2f9def8b8167c40b809470b89c04b79e499a56",
+            "inventory_sha256": "4824ea3f155a6b870697594386f0d4a59fe5ec4ed01d938e686ef3a04c541d54",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+          "source_fingerprint": "7a9b17889bc3374f471fbebac3990feb847a70f87495630914cafdf70a466c08"
+        },
+        "verification_sha256": "a56245ba12b67734c8bbc463f98432b2eff76c8fd6199dc06826ff55d9dce927"
+      },
+      "sanitized-engine-rest-final-01": {
+        "results": {
+          "engine": {
+            "executed": 2065,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*-WorkerCounts/*",
+            "binary_sha256": "521f6d86f4da3452a4f2156ad02201cef7d8627cc6867ef869d784c7c2e08beb",
+            "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+            "xml_sha256": "11b8e29c14b426d5e0e95dc0e669ec5c5cf64c5798dea57d405ec5ffff00a893",
+            "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+          "source_fingerprint": "7a9b17889bc3374f471fbebac3990feb847a70f87495630914cafdf70a466c08"
+        },
+        "verification_sha256": "6a45a0dfefcfd0caf869a413dda1979adb1e3f6a2931bd18618326c1478ff73f"
+      },
+      "sanitized-engine-workers-0-final-01": {
+        "results": {
+          "engine": {
+            "executed": 84,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/0",
+            "binary_sha256": "521f6d86f4da3452a4f2156ad02201cef7d8627cc6867ef869d784c7c2e08beb",
+            "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+            "xml_sha256": "3e6cf96459c06bf655c2342f7863812dd0c36363b26caa7f8a7c48c2fe509b67",
+            "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+          "source_fingerprint": "7a9b17889bc3374f471fbebac3990feb847a70f87495630914cafdf70a466c08"
+        },
+        "verification_sha256": "da06f78d76017a473b3ba40a9f188bf1dd91fe640c1021f75815e1e067b7c3ae"
+      },
+      "sanitized-engine-workers-1-final-01": {
+        "results": {
+          "engine": {
+            "executed": 84,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/1",
+            "binary_sha256": "521f6d86f4da3452a4f2156ad02201cef7d8627cc6867ef869d784c7c2e08beb",
+            "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+            "xml_sha256": "780dec4fe817216a72264db9f896724632dc7e93f57eca59a148bfaa93e7f8cd",
+            "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+          "source_fingerprint": "7a9b17889bc3374f471fbebac3990feb847a70f87495630914cafdf70a466c08"
+        },
+        "verification_sha256": "a8b20c7e756689310192240b45dba3ba5b70bbbaa5c729751016511acc4b4890"
+      },
+      "sanitized-engine-workers-2-final-01": {
+        "results": {
+          "engine": {
+            "executed": 84,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "WorkerCounts/*/2",
+            "binary_sha256": "521f6d86f4da3452a4f2156ad02201cef7d8627cc6867ef869d784c7c2e08beb",
+            "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+            "xml_sha256": "fdbaa4b09fbb969c6a1cff6cc9f9d52f265ca59986e639521477cbd3ec05c9bb",
+            "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source": {
+          "head": "1846f5b322a9cea1d98c5e2fb16edda8836dfa36",
+          "source_fingerprint": "7a9b17889bc3374f471fbebac3990feb847a70f87495630914cafdf70a466c08"
+        },
+        "verification_sha256": "5a18099b529055770729e2646fe24f5bb505fd605e6c3d8657cc16753e705860"
+      }
+    },
+    "sanitized_engine_disjoint_union": 2317,
+    "runtime": [
+      {
+        "case": "normal-sigil-traversal-01",
+        "passed": true,
+        "cold": false,
+        "sanitized": false,
+        "input_sha256": "0ef83548fc42e0af066380a7a45ea87d7c413fc823d58ce8087fe5dcfaca7a2a",
+        "save_sha256": "1dbca7253250bfde8aa71c7e90d7caa83e161dbf17b5e6eb26861851f61ea12f",
+        "binary_sha256": "43718b653b6e34ebe8db0114458d5b170b8e15016530a2cf8212dd83d5d5d306",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          -1264.1856689453125,
+          3.386669874191284,
+          -248.3416748046875,
+          0.546875,
+          0.0,
+          -1.369140625
+        ],
+        "ilend_position": [
+          -1016.89208984375,
+          -59.58979034423828,
+          -233.72103881835938,
+          0.0,
+          0.0,
+          -1.3132991790771484
+        ],
+        "separation": 255.60499174145426,
+        "sigil_reference_retained": true,
+        "scope": "Actual original Blood Feast floor lane and lower Rending Halls doorway, genuine own-save continuation and unchanged owned state. No door entry or full tower/gate completion."
+      },
+      {
+        "case": "normal-sigil-cold-01",
+        "passed": true,
+        "cold": true,
+        "sanitized": false,
+        "input_sha256": "1dbca7253250bfde8aa71c7e90d7caa83e161dbf17b5e6eb26861851f61ea12f",
+        "save_sha256": "418fa21bb6ebc3569676f73fef39efcc4b7737452239da46f674c906e7427115",
+        "binary_sha256": "43718b653b6e34ebe8db0114458d5b170b8e15016530a2cf8212dd83d5d5d306",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          -1264.1856689453125,
+          3.386669874191284,
+          -248.3416748046875,
+          0.546875,
+          0.0,
+          -1.369140625
+        ],
+        "ilend_position": [
+          -1077.3660888671875,
+          -16.018938064575195,
+          -228.36587524414062,
+          0.0,
+          0.0,
+          -1.480355978012085
+        ],
+        "separation": 188.88400061445972,
+        "sigil_reference_retained": true,
+        "scope": "Actual original Blood Feast floor lane and lower Rending Halls doorway, genuine own-save continuation and unchanged owned state. No door entry or full tower/gate completion."
+      },
+      {
+        "case": "sanitized-sigil-traversal-01",
+        "passed": true,
+        "cold": false,
+        "sanitized": true,
+        "input_sha256": "0ef83548fc42e0af066380a7a45ea87d7c413fc823d58ce8087fe5dcfaca7a2a",
+        "save_sha256": "22cc53b0e0c7e5546364acaafb9fd02ed3efa87d3ad24da00e6012abd9ec5c24",
+        "binary_sha256": "db6b01460e2a8c32359b779c658f2826d2820070a09052328fea02b071b9cd81",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          -1240.5023193359375,
+          -1.5989699363708496,
+          -247.59996032714844,
+          0.537109375,
+          0.0,
+          -1.427734375
+        ],
+        "ilend_position": [
+          -987.5669555664062,
+          -69.60285186767578,
+          -243.6027069091797,
+          0.0,
+          0.0,
+          -1.2416788339614868
+        ],
+        "separation": 261.9480945489763,
+        "sigil_reference_retained": true,
+        "scope": "Actual original Blood Feast floor lane and lower Rending Halls doorway, genuine own-save continuation and unchanged owned state. No door entry or full tower/gate completion."
+      },
+      {
+        "case": "sanitized-sigil-cold-01",
+        "passed": true,
+        "cold": true,
+        "sanitized": true,
+        "input_sha256": "22cc53b0e0c7e5546364acaafb9fd02ed3efa87d3ad24da00e6012abd9ec5c24",
+        "save_sha256": "cad672c16711ade92cbb9a0e58d2c0595a86097f0d044889113afede5c64ebf8",
+        "binary_sha256": "db6b01460e2a8c32359b779c658f2826d2820070a09052328fea02b071b9cd81",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          -1240.5023193359375,
+          -1.5989699363708496,
+          -247.59996032714844,
+          0.537109375,
+          0.0,
+          -1.427734375
+        ],
+        "ilend_position": [
+          -1047.8392333984375,
+          -22.30411720275879,
+          -230.533203125,
+          0.0,
+          0.0,
+          -1.499119758605957
+        ],
+        "separation": 194.52260024912377,
+        "sigil_reference_retained": true,
+        "scope": "Actual original Blood Feast floor lane and lower Rending Halls doorway, genuine own-save continuation and unchanged owned state. No door entry or full tower/gate completion."
+      }
+    ],
+    "reused_python": {
+      "receipt": "KVATCH-HARRADA-CONTACT-VERIFICATION.json",
+      "accepted_commit": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+      "result": {
+        "executed": 623,
+        "passed": true,
+        "log_sha256": "760f89f44b32586230664996cd79f1c0cc866522553246185cdab7cee800e076"
+      },
+      "reason": "Python code/codec/unit inputs and their fixed fixture inputs unchanged; new replay/audit syntax checked and actual cases audited."
+    },
+    "observed_sanitizer_components": {
+      "pid": 2190643,
+      "start_ticks": 42646744,
+      "observed_utc": "2026-11-17T11:19:22.034387+00:00",
+      "cmdline": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+        "--gtest_filter=*",
+        "--gtest_repeat=1",
+        "--gtest_shuffle=0",
+        "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-blood-feast/sanitized-components-final-01/components.xml",
+        ""
+      ],
+      "executable": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+      "binary_sha256": "31a252b6f91d45d8274f5287d4410399b5b88020568a100ab5fa69d23d4d62f6",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "SDL_VIDEODRIVER": "x11",
+        "SDL_AUDIODRIVER": "dummy",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+        "TMPDIR": null
+      },
+      "sanitizer_maps": [
+        "7fa8f6a00000-7fa8f6a53000 r-xp 00000000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7fa8f6a53000-7fa8f6a73000 r--p 00053000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7fa8f6a73000-7fa8f6a75000 r--p 00073000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7fa8f6a75000-7fa8f6a78000 rw-p 00075000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7fa8ff400000-7fa8ff552000 r-xp 00000000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7fa8ff552000-7fa8ff5c8000 r--p 00152000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7fa8ff5c8000-7fa8ff5cd000 r--p 001c8000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7fa8ff5cd000-7fa8ff5d0000 rw-p 001cd000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0"
+      ]
+    },
+    "observed_sanitizer_engine": {
+      "pid": 2191033,
+      "start_ticks": 42660849,
+      "observed_utc": "2026-11-17T11:21:47.091681+00:00",
+      "cmdline": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+        "--gtest_filter=*-WorkerCounts/*",
+        "--gtest_repeat=1",
+        "--gtest_shuffle=0",
+        "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-blood-feast/sanitized-engine-rest-final-01/engine.xml",
+        ""
+      ],
+      "executable": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+      "binary_sha256": "521f6d86f4da3452a4f2156ad02201cef7d8627cc6867ef869d784c7c2e08beb",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "SDL_VIDEODRIVER": "x11",
+        "SDL_AUDIODRIVER": "dummy",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+        "TMPDIR": null
+      },
+      "sanitizer_maps": [
+        "7f33a1600000-7f33a1653000 r-xp 00000000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7f33a1653000-7f33a1673000 r--p 00053000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7f33a1673000-7f33a1675000 r--p 00073000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7f33a1675000-7f33a1678000 rw-p 00075000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7f33ab600000-7f33ab752000 r-xp 00000000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7f33ab752000-7f33ab7c8000 r--p 00152000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7f33ab7c8000-7f33ab7cd000 r--p 001c8000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7f33ab7cd000-7f33ab7d0000 rw-p 001cd000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0"
+      ]
+    },
+    "source_note": "Normal full gates precede public replay/audit and probe wording edits only. Production C++ and unit source hashes match both immutable game producers."
+  },
+  "visual_review": {
+    "passed": true,
+    "captures": [
+      "normal-sigil-traversal-01/original-blood-feast-left-door.png",
+      "normal-sigil-cold-01/original-sigil-base-cold.png",
+      "sanitized-sigil-traversal-01/original-blood-feast-left-door.png",
+      "sanitized-sigil-cold-01/original-sigil-base-cold.png"
+    ],
+    "observation": "All four manually reviewed captures show the original Door to Rending Halls prompt at the actual lower left doorway. The ray/position/owned-state assertions are separate runtime evidence; no door entry or full tower completion claim."
+  },
+  "fidelity": "Independent original normal movement crosses the fork-blocked plane from Y-760 to-461.99 at X-475, Health80 unchanged. Fork retains the authored box below the floor and reaches the actual Rending Halls door on normal input. No exact native arithmetic or all-model claim.",
+  "retained_attempts": [
+    "normal-survey-01: helper default bounds had no matching navmesh; actual native profile succeeds in survey02.",
+    "normal-left-floor-walk-01: complete route blocked by the misplaced Sigil box.",
+    "normal-left-floor-walk-02: surface-only partial path endpoint reached; owned state verified, not doorway arrival.",
+    "normal-outer-floor-arc-01: wider route still blocked.",
+    "normal-outer-floor-arc-02: diagnostic stop timer counted turning before movement; no engine-failure attribution.",
+    "normal-outer-floor-arc-03: corrected diagnostic reaches the real blocker; six rays identify ACTI0c48e4 and genuine F5 retained.",
+    "Normal cold postprocessing audit was interrupted during artifact work; rerun on the same completed case passed."
+  ],
+  "sanitizers": "ASan/UBSan halt on errors. Unit leak1, rendered leak0; observed environments and loaded instrumentation retained.",
+  "scope_limits": [
+    "No navigation rewrite, deletion or non-solid reclassification of the original body.",
+    "Default embedded Idle runs after loading; no new default-idle phase persistence claim.",
+    "Doorway reached and named by the original Door to Rending Halls prompt; door entry, full tower ascent, Sigil Stone and gate closure remain open."
+  ]
+}

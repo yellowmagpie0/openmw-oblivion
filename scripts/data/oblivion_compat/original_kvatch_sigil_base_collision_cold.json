@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "name": "Original Sigil base own-save cold: floor collision survives five seconds of automatic animation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal elapsed=0;local reported=false\nreturn {{engineHandlers={{onFrame=function(dt)\n if core.isWorldPaused() or reported then return end\n elapsed=elapsed+dt;if elapsed<5 then return end\n assert(not types.Actor.isDead(self),'Player died on Sigil base continuation')\n assert(self.cell.id==core.getFormId('Oblivion.esm',0x1d0c8),'Wrong tower cell')\n assert((self.position-util.vector3(-1312,0,-240)):length()<160,'Actual lower doorway not retained')\n local found=false\n for _,obj in ipairs(nearby.actors) do\n  if obj.id=='0x1098138' then\n   assert(not types.Actor.isDead(obj),'Ilend died on continuation')\n   assert((obj.position-self.position):length()<400,'Ilend did not retain bounded follow');found=true\n  end\n end\n assert(found,'Ilend is absent')\n local ray=nearby.castRay(util.vector3(-475,-760,-200),util.vector3(-475,-450,-200),{{collisionType=nearby.COLLISION_TYPE.World+nearby.COLLISION_TYPE.Door+nearby.COLLISION_TYPE.HeightMap}})\n assert(not ray.hit or not ray.hitObject or ray.hitObject.id~='0x10c48e4','Sigil base offset is lost after fresh-process animation')\n local floor=nearby.castRay(self.position+util.vector3(0,0,32),self.position-util.vector3(0,0,64),{{collisionType=nearby.COLLISION_TYPE.World+nearby.COLLISION_TYPE.Door+nearby.COLLISION_TYPE.HeightMap}})\n assert(floor.hit and floor.hitNormal.z>.6,'Doorway has no walkable support')\n local gap=self.position.z-floor.hitPos.z;assert(gap>=-.1 and gap<48,'Player is not supported by the floor')\n reported=true;print('BloodFeast cold collision verified position='..tostring(self.position)..' health='..types.Actor.stats.dynamic.health(self).current)\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetFactionReaction content:oblivion.esm:0224d7 content:oblivion.esm:01dbcd\nat 1 command content:oblivion.esm:0224d8 GetStage\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "BloodFeast cold collision verified",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-sigil-base-cold.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 2400,
+  "expected_exit": 0,
+  "expected_log": [
+    "BloodFeast cold collision verified",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Failed to save game",
+    "Unsupported ObScript command",
+    "M7 ObScript diagnostic",
+    "M15 state observation failed",
+    "failed to render",
+    "TES4 AI update failed",
+    "Native spawned actor inventory construction is incomplete",
+    "Objects::playAnimationGroup: Unable to find FormId:0x107b7cd"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-sigil-base-cold",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

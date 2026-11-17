@@ -5,52 +5,39 @@ Gate → original interior/road/tower progression. Full gate closure and main-qu
 acceptance remain open. Choose the next bounded chunk from an observed gameplay
 failure; keep unrelated dependencies and exact numeric parity outside its scope.
 
-**Latest completed chunk: occupied follower door arrival.**
-The earned Player entered original Tower Portal0220a0 into The Blood Feast01d0c8.
-Ilend's native follow package1778d1 now clears the occupied arrival using bounded
-floor-supported capsule/scene queries. Original-game idle separation was about144
-units; the fork's safe placement here is135units. No exact search/offset claim.
-Normal/SAN real crossing and genuine own-save cold continuations pass: one logical
-transition on entry, none on restart; Player/Ilend remain alive and inventory,
-quests, topics, reactions and position ownership persist. Schema106 is unchanged.
-Full normal/SAN engine2,317 pass; unchanged components3,314/Python623 results are
-reused with their original provenance. Rendered sanitizer leak0; unit leak1.
-[Contract](KVATCH-FOLLOWER-DOOR-ARRIVAL-CONTRACT.json),
-[native oracle](KVATCH-FOLLOWER-DOOR-ARRIVAL-ORACLE.json),
-[verification](KVATCH-FOLLOWER-DOOR-ARRIVAL-VERIFICATION.json).
-Evidence: `build/oblivion-compat/kvatch-follower-door`.
+**Latest completed chunk: animated Sigil base collision offset.**
+Ordinary traversal of The Blood Feast now passes original ACTI0c48e4/base0c48e3
+and reaches the lower left Rending Halls doorway01d126. Its body32 remains solid
+layer1; the authored body-local translation/rotation now survives animated node
+updates instead of producing an invisible wall across the floor at y=-600.
+Original normal movement independently crosses this plane (Y-760 to-461.99 at
+X-475, Health80 unchanged); prefix/pristine restoration and clean exit pass.
+Normal/SAN actual traversal and genuine own-save cold cases preserve Player/
+Ilend life, Health94.54, earned inventory, MS48stage25, topics/reactions and the
+unchanged Sigil reference. Normal/SAN components3,315 and engine2,317 pass;
+Python623 reused with original provenance. No new schema; default Idle remains
+ordinary automatic animation, without a new saved-phase claim.
+[Contract](KVATCH-SIGIL-BASE-COLLISION-CONTRACT.json),
+[native oracle](KVATCH-SIGIL-BASE-COLLISION-ORACLE.json),
+[verification](KVATCH-SIGIL-BASE-COLLISION-VERIFICATION.json).
+Evidence: `build/oblivion-compat/kvatch-blood-feast`.
 
-**Previous completed chunk: original Harrada phantom contacts.**
-Original plant068733 now damages through its actual non-solid phantom body182,
-using the shared native trap Health/life/push authority. Authored settings are
-5damage/750pushback, noncontinuous, no rigid-body minimum-speed gate. No proximity
-damage or new save schema; schema106 retains typed FLOR contact ownership and
-validates the saved body against its winning model. TrapUpdate stays a no-op.
-Push uses actor collision center minus contact point as a reasonable approximation
-to the original model-height midpoint; no exact native trajectory claim.
+Earlier accepted fixes: [occupied follower door arrival](KVATCH-FOLLOWER-DOOR-ARRIVAL-VERIFICATION.json)
+keeps Ilend clear of Player after the original Tower Portal; [Harrada phantom
+contacts](KVATCH-HARRADA-CONTACT-VERIFICATION.json) retain native geometry,
+damage/push and save ownership. Their full original evidence remains linked.
 
-Normal approach and separation/re-entry pass. Genuine F5 captures an active latch
-and pending push; normal/SAN own-save cold processes preserve both, advance the
-push timer, clear the latch on separation and never replay damage. Earned
-inventory, quest25, topics, reactions and Player/Ilend life persist. Invalid saved
-body181 is rejected before world publication. All required captures were reviewed.
-Normal components3,314/engine2,313/Python623 and sanitizer components3,314/
-engine2,313 pass; sanitizer engine coverage is the full disjoint inventory.
-Unit sanitizer leak detection is enabled; rendered sanitizer cases use leak0.
-[Contract](KVATCH-HARRADA-CONTACT-CONTRACT.json),
-[original-game/executable/model oracle](KVATCH-HARRADA-CONTACT-ORACLE.json),
-[verification and source/artifact provenance](KVATCH-HARRADA-CONTACT-VERIFICATION.json).
-Evidence: `build/oblivion-compat/kvatch-harrada-contact`.
-
-**Next action:** continue ordinary input through The Blood Feast and choose the
-next bounded implementation from an observed gameplay blocker. Start from:
-`build/oblivion-compat/kvatch-follower-door/normal-cold-03/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `0ef83548fc42e0af066380a7a45ea87d7c413fc823d58ce8087fe5dcfaca7a2a`.
-Player health94.54, Ilend alive on original follow, MS48stage25. Player at
-[0,-1480,-156.043976], Ilend[-95.459412,-1384.540527,-186.001907].
-Original preportal/entry/overlap checkpoints and provenance remain in the arrival
-contract; the old completed-overlap diagnostic save is not a repaired-save claim.
-No tower-interior completion, Sigil Stone or gate closure is claimed.
+**Next action:** use ordinary Space on the already faced, named original
+Door to Rending Halls, then continue that original cell to the next observed
+bounded gameplay failure. Healthy primary continuation:
+`build/oblivion-compat/kvatch-blood-feast/normal-sigil-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `418fa21bb6ebc3569676f73fef39efcc4b7737452239da46f674c906e7427115`.
+Player[-1264.185669,3.386670,-248.341675], pitch0.546875/yaw-1.369141;
+Ilend[-1077.366089,-16.018938,-228.365875], gap189, alive on follow1778d1.
+Original door01d126 leads to01d118 in CELL01d0c7 (Rending Halls).
+No Rending Halls entry, tower ascent, Sigil Stone or gate closure is claimed yet.
+Earlier arrival/partial-floor checkpoints and diagnostic failures remain in the
+linked contracts and evidence; partial path completion is not doorway arrival.
 
 For healthy road replays, the earlier earned source remains:
 `build/oblivion-compat/kvatch-ilend/normal-original-ilend-follow-cold-road-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

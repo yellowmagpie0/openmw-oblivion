@@ -1,0 +1,64 @@
+{
+  "status": "Accepted: original-content normal/SAN floor traversal to actual Rending Halls doorway and genuine own-save cold continuations; full integration gates pass.",
+  "chunk": "Preserve body-local bhkRigidBodyT transforms when animated collision updates replace node placement.",
+  "observation": {
+    "case": "build/oblivion-compat/kvatch-blood-feast/normal-outer-floor-arc-03",
+    "player": [
+      -474.7408752441406,
+      -629.6868286132812,
+      -243.6025848388672
+    ],
+    "blocking_reference": "0c48e4",
+    "base": "0c48e3",
+    "model": "meshes/oblivion/sigil/sigillighttowerbase.nif",
+    "ray_plane_y": -600.0072631835938,
+    "ray_heights": [
+      5,
+      20,
+      40,
+      66,
+      100,
+      130
+    ]
+  },
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "model_sha256": "6c4167fdaee8a26d787789faa031b689824011834dd2932b1f72540f8ac85e42",
+    "node": 30,
+    "body": 32,
+    "shape": 31,
+    "layer": 1,
+    "response": 1,
+    "motion": 7,
+    "body_translation_havok": [
+      -7.14384,
+      0,
+      -32.0223
+    ],
+    "box_half_extents_havok": [
+      78.5822,
+      85.726,
+      14.2877
+    ],
+    "reference_position": [
+      0,
+      0,
+      -208
+    ],
+    "script": null
+  },
+  "hypothesis": "Initial rigid-body T transform is flattened into the animated node transform and lost when Object::animateCollisionShapes replaces it. Original body offset should remain relative to the animated node.",
+  "independent_probe": "build/oblivion-compat/kvatch-blood-feast/original-01/probe-plan.json",
+  "acceptance": [
+    "Independent original-game probe establishes correct behavior before implementing.",
+    "Cross the previously blocked floor route using ordinary input and reach the actual left Rending Halls doorway; preserve Player/Ilend life and owned state.",
+    "Genuine normal/SAN own-save fresh-process continuation retains corrected collision placement after automatic animation updates.",
+    "Focused loader/animation checks, then affected normal/SAN component and engine integration gates."
+  ],
+  "scope_limits": [
+    "No generic navigation rewrite or fixture partial-path completion claim.",
+    "No non-solid classification for this solid layer1 body.",
+    "No full tower, gate closure or main-quest acceptance."
+  ],
+  "oracle": "KVATCH-SIGIL-BASE-COLLISION-ORACLE.json"
+}

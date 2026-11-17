@@ -1245,6 +1245,73 @@ namespace
         EXPECT_EQ(mLoader.getBethesdaCollisionStats().mUnsupportedShapes, 0);
     }
 
+    TEST_F(TestBulletNifLoader, oblivion_rigid_body_local_pose_survives_animated_node_updates_and_instance_scaling)
+    {
+        constexpr float havokScale = 10.f / 1.42875f;
+        constexpr double quarterTurn = 1.5707963267948966;
+        for (const bool animated : {false, true})
+        {
+            SCOPED_TRACE(animated);
+            Nif::bhkCollisionObject collision;
+            Nif::bhkRigidBody body;
+            Nif::bhkBoxShape box;
+            collision.mRecordType = Nif::RC_bhkCollisionObject;
+            collision.mBody = Nif::bhkWorldObjectPtr(&body);
+            body.mRecordType = Nif::RC_bhkRigidBodyT;
+            body.mShape = Nif::bhkShapePtr(&box);
+            body.mInfo.mTranslation = osg::Vec4f(1, 2, -3, 0);
+            body.mInfo.mRotation = osg::Quat(quarterTurn, osg::Vec3f(0, 1, 0));
+            box.mRecordType = Nif::RC_bhkBoxShape;
+            box.mExtents = osg::Vec3f(1, 2, 3);
+            mNiIntegerExtraData.mData = 2;
+            mNiIntegerExtraData.mRecordType = Nif::RC_BSXFlags;
+            mNiNode.mExtraList = Nif::ExtraList{Nif::ExtraPtr(&mNiIntegerExtraData)};
+            mNiNode.mRecordIndex = 10;
+            mNiNode.mCollision = Nif::NiCollisionObjectPtr(&collision);
+            mNiNode.mTransform.mTranslation = osg::Vec3f(10, 20, 30);
+            Nif::NIFFile file(animated ? xtestNif : testNif);
+            file.mRoots.push_back(&mNiNode);
+            file.mVersion = Nif::NIFFile::VER_OB;
+            file.mBethVersion = 11;
+            const auto source = mLoader.load(file);
+            ASSERT_NE(source->mCollisionShape, nullptr);
+            auto instance = Resource::makeInstance(source);
+            auto untouched = Resource::makeInstance(source);
+            const auto check = [](const btCollisionShape& shape, btVector3 center, btVector3 halfExtents) {
+                btVector3 min, max;
+                shape.getAabb(btTransform::getIdentity(), min, max);
+                for (int axis = 0; axis < 3; ++axis)
+                {
+                    EXPECT_NEAR((min[axis] + max[axis]) / 2, center[axis], .001);
+                    EXPECT_NEAR((max[axis] - min[axis]) / 2, halfExtents[axis], .001);
+                }
+            };
+            const btVector3 originalCenter = btVector3(10, 20, 30) + btVector3(1, 2, -3) * havokScale;
+            const btVector3 originalExtents = btVector3(3, 2, 1) * havokScale;
+            check(*instance->mCollisionShape, originalCenter, originalExtents);
+            auto center = originalCenter;
+            auto extents = originalExtents;
+            if (animated)
+            {
+                ASSERT_EQ(instance->mAnimatedShapes, (std::map<int, int>{{10, 0}}));
+                auto& compound = static_cast<btCompoundShape&>(*instance->mCollisionShape);
+                // Apply the same node replacement used by Object animation.
+                // The retained body rotation turns X/Z; the new node turns X/Y.
+                compound.updateChildTransform(0,
+                    btTransform(btQuaternion(btVector3(0, 0, 1), quarterTurn), btVector3(100, 200, 300)));
+                center = btVector3(100, 200, 300) + btVector3(-2, 1, -3) * havokScale;
+                extents = btVector3(2, 3, 1) * havokScale;
+                check(compound, center, extents);
+            }
+            else
+                EXPECT_TRUE(instance->mAnimatedShapes.empty());
+            instance->setLocalScaling(btVector3(2, 2, 2));
+            check(*instance->mCollisionShape, center * 2, extents * 2);
+            check(*source->mCollisionShape, originalCenter, originalExtents);
+            check(*untouched->mCollisionShape, originalCenter, originalExtents);
+        }
+    }
+
     TEST_F(TestBulletNifLoader, oblivion_phantom_is_separate_from_solid_collision_and_instances)
     {
         Nif::bhkCollisionObject collision;

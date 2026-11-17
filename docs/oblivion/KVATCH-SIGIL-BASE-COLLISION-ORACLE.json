@@ -1,0 +1,87 @@
+{
+  "status": "Scoped original-game expectation established; fork implementation acceptance pending.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "model_sha256": "6c4167fdaee8a26d787789faa031b689824011834dd2932b1f72540f8ac85e42",
+  "reference": "0c48e4",
+  "base": "0c48e3",
+  "model": "meshes/oblivion/sigil/sigillighttowerbase.nif",
+  "model_records": "build/oblivion-compat/kvatch-blood-feast/model-records-02.txt",
+  "model_animation": "build/oblivion-compat/kvatch-blood-feast/model-animation.txt",
+  "binding": {
+    "node": 30,
+    "node_name": "SigilLightTowerBase NonAccum",
+    "body": 32,
+    "shape": 31,
+    "layer": 1,
+    "response": 1,
+    "motion": 7,
+    "node_translation": [
+      0,
+      0,
+      0
+    ],
+    "body_translation_havok": [
+      -7.14384,
+      0,
+      -32.0223
+    ],
+    "reference_position": [
+      0,
+      0,
+      -208
+    ]
+  },
+  "diagnostic_boundary": "Player COC/pose writes are declared diagnostic staging. No stats, quest changes, edits to other references, godmode or collision changes. Combat AI disabled; ordinary AI and collision remain enabled. No F5.",
+  "probe_plan": "build/oblivion-compat/kvatch-blood-feast/original-01/probe-plan.json",
+  "observations": {
+    "reference_enabled": true,
+    "reference_z": -208,
+    "cell_match": 1,
+    "before": {
+      "position": [
+        -475,
+        -760,
+        -246.7
+      ],
+      "health": 80
+    },
+    "normal_input": "W held2.5s after console closed; released before observation",
+    "after": {
+      "position": [
+        -475,
+        -461.99,
+        -246.7
+      ],
+      "health": 80
+    },
+    "criterion": "Y greater than-580 at comparable X crosses the fork blocking plane-600",
+    "passed": true
+  },
+  "captures": [
+    "08-original-reference.png",
+    "11-before-walk-values.png",
+    "12-after-native-walk-view.png",
+    "13-after-native-walk-values.png"
+  ],
+  "process_epoch": {
+    "pid": 2177456,
+    "start_ticks": 42450852,
+    "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+    "window_id": 37748739,
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "mapped_original_exe": [
+      "00400000-00401000 r-xp 00000000 00:25 2071952                            /home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe"
+    ]
+  },
+  "cleanup": {
+    "wrapper_exit": 0,
+    "launcher_exit": 0,
+    "restoration": {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    }
+  },
+  "expected_behavior": "The active original Sigil base does not obstruct this floor lane. Retain its authored solid body-local offset across animated node updates; do not delete/reclassify the solid body.",
+  "limits": "One scoped original floor-lane probe and model audit; no all-model or exact native transform arithmetic claim."
+}
