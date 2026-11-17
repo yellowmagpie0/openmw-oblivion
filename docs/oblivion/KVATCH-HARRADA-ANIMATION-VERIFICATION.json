@@ -1,5 +1,5 @@
 {
-  "status": "Feature implemented and verified through four real-content runtime cases, full normal/component/Python gates and full sanitizer engine coverage. Newly requested Windows performance merge remains pending publication; phantom damage and further quest progression remain open.",
+  "status": "Feature implemented and verified through real-content attack/restart courses and full normal/sanitizer gates. The subsequent Windows performance merge is verified separately; phantom damage and further quest progression remain open.",
   "tested_parent": "7f4c95fba1ea9d1c12c3206898ee7533fb6063e5",
   "production_source_sha256": {
     "apps/openmw/mwmechanics/oblivionai.cpp": "21abea8a76d067c293eb9b6039c2fce5079b89d8a0a0b951f174514f6ef2f618",
@@ -182,5 +182,6 @@
     "Fresh full components run because NifOsg changed. No unchanged Windows component evidence substitutes for these gates.",
     "Harrada phantom actor contacts, damage and pushback are separate. No full tower/interior/main-quest acceptance.",
     "Normal Ilend agreement and cold physical following are earned route provenance, not newly claimed full companion/SAN acceptance."
-  ]
+  ],
+  "subsequent_merge_verification": "WINDOWS-PERFORMANCE-MERGE-VERIFICATION.json"
 }

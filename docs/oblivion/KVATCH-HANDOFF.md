@@ -5,7 +5,7 @@ Gate → original interior progression. Entry and cold interior continuity now
 pass; further interior progression and full main-quest acceptance remain open.
 Choose subsequent chunks from observed gameplay failures.
 
-**Latest accepted chunk: native TrapUpdate compatibility and actual gate entry.**
+**Earlier gate-entry dependency: native TrapUpdate compatibility.**
 The original command0x110c points to a complete success no-op at00977c50.
 Recognizing it removes Harrada script066707's unsupported-command abort without
 adding damage, state or a save schema. Actual normal/SAN movement and activation
@@ -33,17 +33,29 @@ on commit 3efcb765c0; this is premerge evidence.
 [original asset inspection](KVATCH-HARRADA-ANIMATION-ORACLE.json),
 [feature checkpoint](KVATCH-HARRADA-ANIMATION-VERIFICATION.json).
 
-**Immediate next action: NEW Windows performance merge requested by the user.**
-After this feature commit, fetch latest GitHub `origin/codex/windows-native-dev`
-and merge its new work. The earlier53509962 integration does not satisfy this
-new request. Both published GitHub heads were still at 7f4c95fba1 after this
-checkpoint, already included locally; no new performance commits were available.
-The initially deferred sanitizer engine gate now passes on 3efcb765c0 after a
-verified cache relocation resolved compiler OOM. Evidence:
-`build/oblivion-compat/windows-performance-merge-02/sanitized-engine-union.json`.
-This is premerge evidence. Once new commits are published, run combined-source
-checks and affected real runtime courses before continuing content work. Keep
-all changes local; no push.
+**Latest integration checkpoint: new Windows performance merge verified.**
+Fetched Windows commit `c8fdfc22a8` and merged cleanly as `d4a1665868`.
+Normal components3,313/engine2,313/Python621 and sanitizer components3,313/
+engine2,313 pass on that combined source; unit sanitizer leak detection is enabled.
+Six real-content courses pass: two normal Harrada reloads, sanitizer attack and
+own-save restart, and normal/SAN Ilend following. Earned ownership, quest25,
+topics, reactions and health persist. All animation captures were manually
+reviewed. [Merge receipt](WINDOWS-PERFORMANCE-MERGE-VERIFICATION.json),
+[upstream Windows performance provenance](KVATCH-PERFORMANCE-HANDOFF.md).
+Local timing is a single Linux course comparison, not a Windows FPS measurement.
+Evidence: `build/oblivion-compat/windows-performance-merge-03`.
+Keep all changes local; no push.
+
+**Next bounded content chunk:** investigate original Harrada actor contact damage
+and pushback. First observe actual contact in an isolated original-game probe;
+then reproduce the discrepancy on the earned interior route before implementing
+only the required contact path. Do not substitute proximity damage. Visible
+animation and restart gaps are closed; phantom contact and progression onward
+through the tower/first gate remain open. Reassess scope if the contact dependency
+expands beyond this single original hazard.
+
+Evidence: `build/oblivion-compat/windows-performance-merge-03`.
+The earlier53509962 integration is historical. Keep all changes local; no push.
 
 Evidence: `build/oblivion-compat/kvatch-harrada`. Final rendered producer04 and
 resources03 cover14 relevant source files; class-only01/02 are not animation
@@ -58,8 +70,8 @@ For replaying approach from a healthy earned source, use the road checkpoint
 below. Phantom actor contact damage/pushback remains separate: the model uses
 bhkSimpleShapePhantom/SPCollisionObject, excluded from the existing multibody
 ACTI trap path. Verify original actual contact behavior before implementing it;
-never substitute proximity damage. Do not start that chunk before the merge and
-combined integration are verified.
+never substitute proximity damage. The merge and combined integration are now verified; original contact behavior
+still requires independent evidence before implementation.
 
 **Latest earned route checkpoint (normal baseline only):** original Ilend reply
 1778d0 advances MS48 to25, evaluates package1778d1 and saves. A fresh process then
@@ -120,7 +132,7 @@ Keep this inventory separate from Chorrol/Vilverin; never use diagnostic
 count3/missing-creature saves as legitimate spawn continuations.
 
 [Chorrol throne work](CHORROL-THRONE-SEAT-HANDOFF.md) is complete at4d63f80e20;
-Countess work is deferred. The requested Windows integration is already merged:
+Countess work is deferred. The earlier Windows integration is historical:
 [receipt](WINDOWS-MERGE-VERIFICATION.json), including unchanged3,310-per-mode
 component provenance. Do not repeat that merge or call these slices complete
 Kvatch/main-quest acceptance. Preserve earlier durable producer archive anchors.

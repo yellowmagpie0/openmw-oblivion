@@ -1,0 +1,240 @@
+{
+  "status": "Passed scoped merged-source integration. Further Kvatch interior/tower/main-quest progression remains open.",
+  "merge_commit": "d4a1665868e5b5e0bbc0aababe998eb6861cd2be",
+  "windows_tip": "c8fdfc22a8cac0f6ee38bfecc5c2a3e8b447e5cb",
+  "local_parent": "98ece4e793",
+  "merge_conflicts": false,
+  "upstream_handoff": "KVATCH-PERFORMANCE-HANDOFF.md",
+  "source": {
+    "head": "d4a1665868e5b5e0bbc0aababe998eb6861cd2be",
+    "source_fingerprint": "657f495f279df73e4fe2097fd663241fe9ccc03c3f4b6e29f43c5facc546ed74"
+  },
+  "production_source_sha256": {
+    "apps/openmw/mwmechanics/oblivionai.cpp": "34b001e563941bea4663b0d8369198d277bac250b44ff24df91cd5bbd84f186b",
+    "apps/openmw/mwworld/obliviondynamicreference.cpp": "b76c599182b7218a302de68aa99ad4e235d1bc2d160f677ef571b9a572a3f3f2",
+    "apps/openmw/mwworld/oblivionlevelled.cpp": "fd8f94e044b70522569b17befca8b87f0812d81ea5f8f1711267f93dff8cd827",
+    "apps/openmw/mwworld/oblivionlevelled.hpp": "5258813c00671462dd3cda656199aa63b7e192d812000285645f2fdcaad82a9f",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "9aec304b22c2c950e78270f4eb3468f07cda93141ae8fae5c76fe2799c7931ea",
+    "apps/openmw/mwworld/worldimp.cpp": "a0f8839609189f9adbba8614a7a86eae7d9cec49fbf3f09f05c791ed086b8616",
+    "apps/openmw/mwworld/worldimp.hpp": "eed66120d7428be2e219964caacc93eea8fd6169e019bb86cd42ab827093f042",
+    "apps/openmw/mwworld/oblivionspawn.hpp": "36c10bd9ab36c16541913cc7162cc1c917eb424fc10616558c02f31332d64df5",
+    "apps/openmw/mwdialogue/dialoguemanagerimp.cpp": "7c535eb82550ad2c6cd7326693fd2654214d4886aadc3c60b2ea11bb6e720661",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "9883ea691ed18fc2807e1e55123fe9fa9b466e612977d19824607d38769806eb",
+    "apps/openmw/mwclass/esm4interactive.hpp": "80ae67d9d7527a6ef59213c47e1c80648b8824623ae65f833c65041ec0c517d9",
+    "components/nifosg/controller.cpp": "dc2954d7c6356bf34e324c04038ae9e3d2b12ca448ea950183cc46cd350860f5",
+    "components/nifosg/controller.hpp": "60382f39d107cbfda05ad10c10b3e031c8e6bad976d1084382318c33059f89a9",
+    "components/nifosg/nifloader.cpp": "5e5fa2fd43e70c3a502f4555b2b4c34e6d65779ed40903f5b5d869bd125a2148",
+    "apps/components_tests/esm/formkey.cpp": "3fd15e6e209ca14e03cacc63568bbcafcd519fef5db4935a6893bba8a46a6412",
+    "apps/components_tests/sceneutil/nifscenetraversal.cpp": "c352586cadc8df568ea35d4804b5f8a46f5253d8d7b719fef2a76a3ef28492b2",
+    "apps/openmw/mwmechanics/oblivionai.hpp": "8aa61b6f1c3091f555dd752cff5d67258528728b93ecb5bedf1045bd64878f65",
+    "apps/openmw/mwrender/runtimeviewer.cpp": "45c39722056854493b8c4bf981c813a73b5b1190870db8f9806ce74d441c1c43",
+    "apps/openmw/mwrender/runtimeviewer.hpp": "0bc45ef4e683053ba33116bb448cd52d6a899aaf837856cec9fc62c7c708c54e",
+    "apps/openmw_tests/mwrender/testruntimeviewer.cpp": "881ce070f3344a92f96c572c32e703fff6cc6946193a997ee1988c1d35ef80b0",
+    "apps/openmw_tests/mwworld/testobliviondialogue.cpp": "5f9ff6806d8b86450f93dc1aee15f97cca901f46ceb97653d6175c22c06e4f5b",
+    "components/esm/formkey.cpp": "0ebb5c76c929063a62397d31734a5fa7b8d2d3ced7e08ac86fddce341668f196",
+    "components/esm4/pathgriddata.cpp": "65260fd30d174293aa12067d2acbc2b0e92c579c1b444e228cf99f72b9fdb13c",
+    "components/sceneutil/nifscenetraversal.cpp": "45ec01a89352a80fae0b6a51f8e3712fbabc9a3cffcf91e5e9bbf64b4e5cdaab"
+  },
+  "changes": [
+    "Door planning uses connected pathgrid regions and actual XTEL landings; access checks remain current per query.",
+    "Windows defaults to vertex buffers when no explicit backend preference is supplied. Other platforms retain their defaults.",
+    "Native scene traversal avoids redundant validation; plugin identities and saved-reference lookups avoid repeated work.",
+    "Local named Harrada morph animation remains integrated."
+  ],
+  "gates": {
+    "normal": {
+      "path": "build/oblivion-compat/windows-performance-merge-03/normal-integration-01/verification.json",
+      "components": 3313,
+      "engine": 2313,
+      "python": 621,
+      "binary_sha256": {
+        "components": "3f2b7ae69f3b627f6f8e268cf518eeabdfaf571c9fc0d7d1e76f7facd6a770be",
+        "engine": "4cf8909dbbb09f3c01a7b86d13a556ea0a1500aa86fc25dd8d02f879b8e93b54",
+        "python": null
+      }
+    },
+    "sanitized_components": {
+      "path": "build/oblivion-compat/windows-performance-merge-03/sanitized-components-01/verification.json",
+      "executed": 3313,
+      "binary_sha256": "c9cbcdb747d578489c585cfd56cb33b0a457e4ecbed6d885817edd45b3acadbe",
+      "leak_check": true,
+      "observed_process": "build/oblivion-compat/windows-performance-merge-03/observed-sanitized-components-tests.json"
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/windows-performance-merge-03/sanitized-engine-union.json",
+      "executed": 2313,
+      "partition_counts": [
+        2061,
+        84,
+        84,
+        84
+      ],
+      "disjoint": true,
+      "binary_sha256": "19a74e3ce9d697f63c205db7116ba9f69309ba38b6b8d5c46c395cce0b1da791",
+      "inventory_sha256": "c65681738e2f58be13bcaf0b9e9d39329db7d884132b0ef5aad9ca54d338a457",
+      "leak_check": true,
+      "observed_process": "build/oblivion-compat/windows-performance-merge-03/observed-sanitized-openmw-tests.json"
+    }
+  },
+  "runtime": [
+    {
+      "case": "build/oblivion-compat/windows-performance-merge-03/normal-after-merge-harrada-cold-01",
+      "audit": "build/oblivion-compat/windows-performance-merge-03/normal-after-merge-harrada-cold-01/harrada-animation-audit.json",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": false,
+      "input_sha256": "2af1a0ccbcabf515665041fec4be69fcc744e1b2737191c04f0173fd427ac469",
+      "save_sha256": "74b5850af052cb5100016d6ab35a46640c0610bf18cf77789d8c843ab7580bdf",
+      "binary_sha256": "a74a2470368d9316c054551fc1037884b722f9e15655dd74a7f4f51329657c15",
+      "loaded_animation_phase": 0.09600000083446503,
+      "saved_animation_phase": 0.3450000286102295,
+      "saved_script_timer": 1.7699999883770943,
+      "bound_morph_controllers": 12,
+      "independent_channels_per_controller": 3,
+      "quest_stage": 25,
+      "player_health": 104.54000806808472,
+      "earned_ownership_preserved": true,
+      "active_animation_continuity": true,
+      "scope": "Visible original Harrada animation and active-phase persistence; no phantom damage/pushback acceptance."
+    },
+    {
+      "case": "build/oblivion-compat/windows-performance-merge-03/normal-after-merge-own-save-cold-01",
+      "audit": "build/oblivion-compat/windows-performance-merge-03/normal-after-merge-own-save-cold-01/harrada-animation-audit.json",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": false,
+      "input_sha256": "74b5850af052cb5100016d6ab35a46640c0610bf18cf77789d8c843ab7580bdf",
+      "save_sha256": "92e221aee0e57c5c35793f7aa4a13be895ba95b162775464684bfa86d9868374",
+      "binary_sha256": "a74a2470368d9316c054551fc1037884b722f9e15655dd74a7f4f51329657c15",
+      "loaded_animation_phase": 0.3450000286102295,
+      "saved_animation_phase": 0.5940000414848328,
+      "saved_script_timer": 1.6039999797940254,
+      "bound_morph_controllers": 12,
+      "independent_channels_per_controller": 3,
+      "quest_stage": 25,
+      "player_health": 104.54000806808472,
+      "earned_ownership_preserved": true,
+      "active_animation_continuity": true,
+      "scope": "Visible original Harrada animation and active-phase persistence; no phantom damage/pushback acceptance."
+    },
+    {
+      "case": "build/oblivion-compat/windows-performance-merge-03/normal-after-merge-ilend-follow-01",
+      "audit": "build/oblivion-compat/windows-performance-merge-03/normal-after-merge-ilend-follow-01/ilend-follow-audit.json",
+      "passed": true,
+      "input_sha256": "f592b8aa95295e3762f7eb6d607ceaa466770ef0c903f71d10f57d4190cd5f4b",
+      "save_sha256": "03875300656b9545eb84efd31b1941629982375a9fe6afdb8389a75ceab0d0f5",
+      "binary_sha256": "a74a2470368d9316c054551fc1037884b722f9e15655dd74a7f4f51329657c15",
+      "sanitized": false,
+      "player_moved": 1062.0592840951892,
+      "ilend_moved": 697.8283637085049,
+      "final_gap": 266.90922643222075,
+      "quest_stage": 25,
+      "scope": "Existing original follow package, physical movement, earned ownership and cold-load continuity; no full quest completion claim."
+    },
+    {
+      "case": "build/oblivion-compat/windows-performance-merge-03/sanitized-after-merge-harrada-attack-01",
+      "audit": "build/oblivion-compat/windows-performance-merge-03/sanitized-after-merge-harrada-attack-01/harrada-animation-audit.json",
+      "passed": true,
+      "phase": "attack",
+      "sanitized": true,
+      "input_sha256": "becc73807be4b5e52f63579085380745c9c12d1ef6d1f2d7fe90e1d265890b93",
+      "save_sha256": "4fd949f3c1c32c7368429efc25ffb6347d2ea3bad52abc7ee35353b9105ea072",
+      "binary_sha256": "f07620fd015fb4083a68555a9619a996290b953745512ff766d6cad72c621f09",
+      "loaded_animation_phase": null,
+      "saved_animation_phase": 0.24900001287460327,
+      "saved_script_timer": 1.8339999914169312,
+      "bound_morph_controllers": 12,
+      "independent_channels_per_controller": 3,
+      "quest_stage": 25,
+      "player_health": 104.54000806808472,
+      "earned_ownership_preserved": true,
+      "active_animation_continuity": true,
+      "scope": "Visible original Harrada animation and active-phase persistence; no phantom damage/pushback acceptance."
+    },
+    {
+      "case": "build/oblivion-compat/windows-performance-merge-03/sanitized-after-merge-harrada-cold-01",
+      "audit": "build/oblivion-compat/windows-performance-merge-03/sanitized-after-merge-harrada-cold-01/harrada-animation-audit.json",
+      "passed": true,
+      "phase": "cold",
+      "sanitized": true,
+      "input_sha256": "4fd949f3c1c32c7368429efc25ffb6347d2ea3bad52abc7ee35353b9105ea072",
+      "save_sha256": "86a31c23d2f3e7f84df939d7b9bfc25eca21eb8ea8d028a17286e08d4c25d007",
+      "binary_sha256": "f07620fd015fb4083a68555a9619a996290b953745512ff766d6cad72c621f09",
+      "loaded_animation_phase": 0.24900001287460327,
+      "saved_animation_phase": 0.49800002574920654,
+      "saved_script_timer": 1.6679999828338623,
+      "bound_morph_controllers": 12,
+      "independent_channels_per_controller": 3,
+      "quest_stage": 25,
+      "player_health": 104.54000806808472,
+      "earned_ownership_preserved": true,
+      "active_animation_continuity": true,
+      "scope": "Visible original Harrada animation and active-phase persistence; no phantom damage/pushback acceptance."
+    },
+    {
+      "case": "build/oblivion-compat/windows-performance-merge-03/sanitized-after-merge-ilend-follow-01",
+      "audit": "build/oblivion-compat/windows-performance-merge-03/sanitized-after-merge-ilend-follow-01/ilend-follow-audit.json",
+      "passed": true,
+      "input_sha256": "f592b8aa95295e3762f7eb6d607ceaa466770ef0c903f71d10f57d4190cd5f4b",
+      "save_sha256": "070bfa5d46f1c0f753fd22ab2e6e9cfa66450a5ae61dad880d3057fc6c6af9b5",
+      "binary_sha256": "f07620fd015fb4083a68555a9619a996290b953745512ff766d6cad72c621f09",
+      "sanitized": true,
+      "player_moved": 1062.0592840951892,
+      "ilend_moved": 697.7433926624225,
+      "final_gap": 266.99528363468363,
+      "quest_stage": 25,
+      "scope": "Existing original follow package, physical movement, earned ownership and cold-load continuity; no full quest completion claim."
+    }
+  ],
+  "visual_review": "build/oblivion-compat/windows-performance-merge-03/visual-review.json",
+  "artifacts": [
+    {
+      "mode": "normal",
+      "binary_sha256": "a74a2470368d9316c054551fc1037884b722f9e15655dd74a7f4f51329657c15",
+      "producer": "build/oblivion-compat/windows-performance-merge-03/normal-producer-04.json",
+      "archive": "build/oblivion-compat/windows-performance-merge-03/normal-complete-producer-archive-04.json",
+      "loaded_section_proof": "build/oblivion-compat/windows-performance-merge-03/normal-allocated-section-proof-04.json",
+      "resources": "build/oblivion-compat/windows-performance-merge-03/normal-resources-dev-03"
+    },
+    {
+      "mode": "sanitized",
+      "binary_sha256": "f07620fd015fb4083a68555a9619a996290b953745512ff766d6cad72c621f09",
+      "producer": "build/oblivion-compat/windows-performance-merge-03/sanitized-producer-04.json",
+      "archive": "build/oblivion-compat/windows-performance-merge-03/sanitized-complete-producer-archive-04.json",
+      "loaded_section_proof": "build/oblivion-compat/windows-performance-merge-03/sanitized-allocated-section-proof-04.json",
+      "resources": "build/oblivion-compat/windows-performance-merge-03/sanitized-resources-dev-03"
+    }
+  ],
+  "performance_comparison": {
+    "before": {
+      "case": "build/oblivion-compat/windows-performance-merge-02/normal-before-merge-harrada-cold-01",
+      "scenario_seconds": 63.027209,
+      "wrapper_seconds": 64.683658020047,
+      "input_sha256": "2af1a0ccbcabf515665041fec4be69fcc744e1b2737191c04f0173fd427ac469",
+      "save_sha256": "3229196a195cd3fb407a96cb4e9bb87ea8c807a8c381cdbfc0ac7bb18320e873",
+      "binary_sha256": "c222fa623c178e0ce2baa876c6a8b9c0508cc1ed771a63cbfe549a6dc29af391",
+      "scope": "One controlled current-code cold course with no compiler/render contention. Descriptive elapsed time only; compare same save/manifest/environment after actual performance merge."
+    },
+    "after": {
+      "case": "build/oblivion-compat/windows-performance-merge-03/normal-after-merge-harrada-cold-01",
+      "scenario_seconds": 65.947765,
+      "input_sha256": "2af1a0ccbcabf515665041fec4be69fcc744e1b2737191c04f0173fd427ac469",
+      "save_sha256": "74b5850af052cb5100016d6ab35a46640c0610bf18cf77789d8c843ab7580bdf",
+      "binary_sha256": "a74a2470368d9316c054551fc1037884b722f9e15655dd74a7f4f51329657c15",
+      "wrapper_seconds": 67.55638963903766
+    },
+    "same_manifest": true,
+    "same_input_save": true,
+    "scope": "Single whole-course elapsed comparison, no compiler/render contention; not an FPS benchmark or proof of Windows driver performance. Windows VBO default is platform-specific; upstream Windows runtime provenance remains in KVATCH-PERFORMANCE-HANDOFF.md."
+  },
+  "retained_fixture_correction": "The initial coordinator used an incorrect Ilend source-directory name. It was interrupted while waiting for the normal build; no course ran from that path. Corrected to the existing hash-identified earned agreement save. Original coordinator logs retained.",
+  "scope_limits": [
+    "Local verification uses Linux/GCC and software Mesa for sanitizer rendering. Windows driver timing and the Windows-only default policy have upstream provenance in the linked handoff; they were not remeasured here.",
+    "Single matched whole-course timing is descriptive, not an FPS benchmark.",
+    "Rendered sanitizer courses disable leak detection and halt on sanitizer errors; unit sanitizer processes enable leak detection.",
+    "Ilend follows through resident interior space. The disconnected offscreen door-routing regression is established by engine tests and the separately documented upstream Windows replay, not a new claim about this resident route.",
+    "Existing missing-resource/missing-local-script warnings remain. The local-script warning also appears in the premerge control and accepted earlier sanitizer course.",
+    "Documentation is updated after verification; production/test C++ hashes remain as tested. No push or publication.",
+    "Harrada phantom contact damage/pushback and full quest acceptance remain unimplemented/unverified."
+  ]
+}
