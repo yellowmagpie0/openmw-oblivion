@@ -26,10 +26,37 @@ Cosmetic density/RNG and individual cold particles approximate native appearance
 Static upstairs cameras are declared visual diagnostics; Player remains at the
 entrance. Upper-corridor traversal and full gate/quest completion remain open.
 
-**Next action:** resume ordinary movement through original Corridors of Dark
-Salvation from the earned entrance; choose the next discrete implementation
-from an actual course failure. Do not repeat resolved native/data/shader checks.
-Evidence/controller state: `build/oblivion-compat/kvatch-flaming-corpse/playback`.
+**Current chunk: let an idle follower yield to its followed Player on the bridge.**
+Ordinary west exit085fa5 now reaches original world01d0bc, physical cell021072
+(grid0,3), with Ilend safely following. New real bridge crossing stalls at
+Player[1260.15,15542.00,4388.96] against Ilend[1271.46,15484.54,4390.02].
+Ilend peacefully waits on Follow1778d1 targeting Player; the collision loop
+unconditionally excludes that target even when idle yielding is admitted.
+[Bounded contract](KVATCH-BRIDGE-FOLLOWER-YIELD-CONTRACT.json).
+Accepted: existing idle-yield policy now considers the followed target.
+Normal/SAN ordinary bridge passage and own-save fresh-process continuation pass;
+each advances over500 units with both lives/health and Follow1778d1 preserved.
+Player remains on bridge; earned kills/inventory/quests/topics/reactions and
+inactive corpse shader state persist. Full engine2,324 in each build and Python623
+pass. [Verification](KVATCH-BRIDGE-FOLLOWER-YIELD-VERIFICATION.json).
+Next required action: freshly fetch/merge Windows branch after this local chunk,
+verify integration, then continue bridge toward Reapers Sprawl. Primary normal
+continuation is `build/oblivion-compat/kvatch-bridge-yield/normal-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `471a051ed339039f33e8d253a2129b0157adbad3f61c3196a559f576eeaea234`.
+Player[2026.40,14842.78,4373.65]; Ilend[1839.58,15004.74,4373.65].
+Remaining: rest of bridge, guardian/key encounter, locked hall, tower/Sigil/gate.
+
+Bridge source (actual input/codec/live/earned-state audit passed):
+`build/oblivion-compat/kvatch-dark-salvation/normal-route-survey-05/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `0ffb72a796bb60c9204e529985958e3355c1245f565f091917aa0d991868c792`.
+Player[1176,15580,4386.40], Ilend[1271.46,15484.54,4390.02], health91.168.
+This is normal forward preparation; next case provides genuine own-save cold.
+Required Sigil Keep Key093ef5 is on guardian0878d5 in Reapers Sprawl033b5e;
+current level100 door085f69 is correctly keyed, not a lock-bypass defect.
+Windows branch refreshed after4fda: pinned c8fdfc22a8 already ancestor; no delta.
+Survey observer identity/protocol failures are retained and excluded from primary
+continuations. Record audits distinguish persistent storage cell01e897 from
+actual exterior cell021072/world01d0bc.
 
 Primary normal continuation (no static-camera staging):
 `build/oblivion-compat/kvatch-flaming-corpse/playback/normal-entry-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

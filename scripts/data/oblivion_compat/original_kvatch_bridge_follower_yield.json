@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "name": "Original Kvatch bridge: ordinary500-unit advance past idle Ilend, preserve follower/life/physical bridge; own-save continuation repeats another500 units",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal elapsed=0;local period=0;local path=nil;local index=2;local done=false\nlocal doneReason=nil\nlocal origin=nil;local direction=nil\nlocal lastIndex=0;local best=math.huge;local stalled=0;local arrived=0\nlocal goal=util.vector3(3533.3357,13487.126,4385.3179)\nlocal function stop(reason,health)\n done=true;doneReason=reason;print('DarkRoute checkpoint='..reason..' position='..tostring(self.position)..' health='..health)\n for _,obj in ipairs(nearby.actors) do print('DarkRoute actor '..obj.id..' base='..obj.recordId..' dead='..tostring(types.Actor.isDead(obj))..' '..tostring(obj.position)) end\n print('DarkRoute choice=done')\nend\nreturn {{engineHandlers={{onFrame=function(dt)\n if core.isWorldPaused() then return end\n assert(not types.Actor.isDead(self),'Player died during original Dark Salvation ascent')\n assert(self.cell.isExterior and self.cell.worldSpaceId==core.getFormId('Oblivion.esm',0x1d0bc),'Unexpected bridge worldspace')\n if done then print('DarkRoute checkpoint='..doneReason..' position='..tostring(self.position));return end\n elapsed=elapsed+dt;period=period+dt;if elapsed<2 or period<.2 then return end;period=0\n local health=types.Actor.stats.dynamic.health(self).current\n if not path then\n  local status,points=nearby.findPath(self.position,goal,{{agentBounds=types.Actor.getPathfindingAgentBounds(self),includeFlags=nearby.NAVIGATOR_FLAGS.Walk+nearby.NAVIGATOR_FLAGS.OpenDoor+nearby.NAVIGATOR_FLAGS.UsePathgrid,destinationTolerance=90}})\n  if status~=nearby.FIND_PATH_STATUS.Success or #points<2 then print('DarkRoute waiting path '..tostring(status));return end\n  path=points;origin=self.position\n  local v=util.vector3(goal.x-origin.x,goal.y-origin.y,0);direction=v/v:length()\n  print('BridgeYield origin='..tostring(origin))\n  print('DarkRoute path selected count='..#points)\n  for i,p in ipairs(path) do print('DarkRoute point '..i..' '..tostring(p)) end\n end\n if health<91.0 then stop('injured',health);return end\n local ally=nil\n for _,obj in ipairs(nearby.actors) do if obj.id=='0x1098138' then ally=obj end end\n if not ally or types.Actor.isDead(ally) then stop('lost',health);return end\n local advance=self.position-origin\n local progress=advance.x*direction.x+advance.y*direction.y\n local lateral=math.abs(advance.x*direction.y-advance.y*direction.x)\n if progress>=500 then\n  local delta=ally.position-self.position\n  if (ally.position-self.position):length()>400 or math.abs(delta.z)>64 or math.abs(advance.z)>64 or lateral>100 then stop('lost',health);return end\n  print('BridgeYield clear progress='..progress..' lateral='..lateral..' ally='..tostring(ally.position))\n  stop('clear',health);return\n end\n for _,obj in ipairs(nearby.actors) do\n  if obj.id~=self.id and obj.id~='0x1098138' and not types.Actor.isDead(obj) and (obj.position-self.position):length()<650 then stop('actor',health);return end\n end\n while index<#path and (path[index]-self.position):length()<65 do index=index+1 end\n assert(index<=#path,'Path endpoint reached without actual door approach')\n local distance=(path[index]-self.position):length()\n if index~=lastIndex then lastIndex=index;best=math.huge;stalled=0 end\n if distance<best-2 then best=distance;stalled=0 end\n local point=camera.getViewTransform():apply(path[index]+util.vector3(0,0,65))\n local ax=math.atan2(point.x,-point.z);local ay=-math.atan2(point.y,math.sqrt(point.x*point.x+point.z*point.z))\n if math.abs(ax)<.12 then stalled=stalled+.2 end\n if stalled>4 then stop('stalled',health);return end\n print(string.format('DarkRoute aim x=%d y=%d index=%d distance=%.2f position=%s health=%.3f',math.max(-80,math.min(80,math.floor(ax*256+.5))),math.max(-40,math.min(40,math.floor(ay*256+.5))),index,distance,tostring(self.position),health))\n print('DarkRoute choice='..(math.abs(ax)<.12 and 'move' or 'turn'))\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetFactionReaction content:oblivion.esm:0224d7 content:oblivion.esm:01dbcd\nat 1 command content:oblivion.esm:0224d8 GetStage\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "DarkRoute path selected",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
+    },
+    {
+      "type": "repeat_until_log",
+      "pattern": "DarkRoute checkpoint=(clear|actor|injured|stalled|lost)",
+      "after_start": false,
+      "maximum_iterations": 500,
+      "timeout_seconds": 300,
+      "abort_on_failure": true,
+      "actions": [
+        {
+          "type": "branch_on_log",
+          "pattern": "DarkRoute choice=(?P<choice>move|turn|done)",
+          "timeout_seconds": 30,
+          "cases": {
+            "move": [
+              {
+                "type": "mouse_move",
+                "x": 0,
+                "y": 0,
+                "from_log": {
+                  "path": "process.log",
+                  "pattern": "DarkRoute aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+                }
+              },
+              {
+                "type": "key_down",
+                "value": "w"
+              }
+            ],
+            "turn": [
+              {
+                "type": "key_up",
+                "value": "w"
+              },
+              {
+                "type": "mouse_move",
+                "x": 0,
+                "y": 0,
+                "from_log": {
+                  "path": "process.log",
+                  "pattern": "DarkRoute aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+                }
+              }
+            ],
+            "done": [
+              {
+                "type": "key_up",
+                "value": "w"
+              }
+            ]
+          }
+        }
+      ],
+      "cleanup_actions": [
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "key_up",
+          "value": "Shift_L"
+        },
+        {
+          "type": "screenshot",
+          "name": "original-bridge-yield-checkpoint.png",
+          "minimum_entropy": 0.02
+        }
+      ]
+    },
+    {
+      "type": "branch_on_log",
+      "pattern": "DarkRoute checkpoint=(?P<choice>clear|actor|injured|stalled|lost)",
+      "timeout_seconds": 360,
+      "cases": {
+        "clear": [
+          {
+            "type": "key_hold",
+            "value": "F5",
+            "seconds": 0.02
+          },
+          {
+            "type": "wait_log",
+            "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+            "path": "events.jsonl",
+            "timeout_seconds": 180,
+            "abort_on_failure": true
+          }
+        ],
+        "actor": [],
+        "injured": [],
+        "stalled": [],
+        "lost": []
+      }
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 2400,
+  "expected_exit": 0,
+  "expected_log": [
+    "DarkRoute checkpoint=clear",
+    "BridgeYield clear progress=",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Failed to save game",
+    "Unsupported ObScript command",
+    "M7 ObScript diagnostic",
+    "M15 state observation failed",
+    "failed to render",
+    "TES4 AI update failed",
+    "Native spawned actor inventory construction is incomplete",
+    "Objects::playAnimationGroup: Unable to find FormId:0x107b7cd",
+    "DarkRoute checkpoint=(?:actor|injured|stalled|lost)"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-kvatch-bridge-follower-yield",
+    "OPENMW_M15_EPOCH": "1",
+    "OPENMW_OBLIVION_SHADER_REPORT": "{output}/effect-shaders.json"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

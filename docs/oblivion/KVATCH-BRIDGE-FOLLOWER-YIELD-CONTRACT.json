@@ -1,0 +1,61 @@
+{
+  "status": "Accepted: normal/SAN original bridge clearance and own-save fresh-process continuation; full course remains open.",
+  "target": "Player can pass peaceful waiting Ilend on the original narrow Kvatch bridge toward Reapers Sprawl while retaining native Follow package/target and physical collisions.",
+  "source": {
+    "save": "build/oblivion-compat/kvatch-dark-salvation/normal-route-survey-05/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "0ffb72a796bb60c9204e529985958e3355c1245f565f091917aa0d991868c792",
+    "world": "content:oblivion.esm:01d0bc",
+    "cell": "content:oblivion.esm:021072",
+    "player_pose": [
+      1176,
+      15580,
+      4386.400390625,
+      0,
+      0,
+      2.272771120071411
+    ],
+    "ilend_pose": [
+      1271.45947265625,
+      15484.541015625,
+      4390.01513671875,
+      0,
+      0,
+      -0.8223235011100769
+    ],
+    "health": 91.16800880432129
+  },
+  "observed_failure": {
+    "case": "build/oblivion-compat/kvatch-dark-salvation/normal-bridge-crossing-01",
+    "case_passes_as_diagnostic": true,
+    "forward_acceptance": false,
+    "player_pose": [
+      1260.1527099609375,
+      15542.00390625,
+      4388.95751953125
+    ],
+    "ilend_pose": [
+      1271.45947265625,
+      15484.541015625,
+      4390.01513671875
+    ],
+    "ilend_phase": 6,
+    "ilend_package": "content:oblivion.esm:1778d1",
+    "ilend_target": "dynamic:player:0000000000000001",
+    "combat_controller": null
+  },
+  "independent_expectation": [
+    "Existing documented NPCs give way setting: standing NPCs give way to moving actors; default true (docs/source/reference/modding/settings/game.rst).",
+    "Existing reviewed waiting Follow/Accompany yield policy and previous real sewer course: SEWER-FOLLOWER-YIELD-VERIFICATION.json. This fixes collision-coordinator wiring, not a new native numeric rule.",
+    "Original bridge/door/world/guardian/key records and real saved Follow state audited under kvatch-dark-salvation; no actor-ID special case in production code."
+  ],
+  "implementation": "Allow existing proactive idle yielding to consider the followed actor too. Preserve moving-follow target exemption and existing combat/restraint/action-reservation checks.",
+  "acceptance": [
+    "Replay same ordinary input on original bridge from earned own save; Player advances at least500 units toward original Reapers Sprawl door after passing Ilend.",
+    "Player/Ilend alive and health preserved, follower within400 and64 vertical, Player stays within100 lateral/64 vertical of physical bridge origin. Original follow package/target, earned kills, inventory/ownership, quests/topics and inactive corpse effect state persist.",
+    "Fresh own-save process advances another500 units, normal/SAN; correct codec/live snapshots and distinct epochs.",
+    "Appropriate focused/full normal/SAN engine verification, source/binary provenance, manual visuals; local commit only."
+  ],
+  "remaining_course": "Rest of bridge, Reapers Sprawl guardian/key, locked hall, tower ascent/Sigil/gate closure remain open.",
+  "native_precision": "No new original-executable instruction or exact steering/rounding claim. Reuse original content identity and established runtime yield policy; acceptance is reasonable physical passage/state correctness.",
+  "verification": "KVATCH-BRIDGE-FOLLOWER-YIELD-VERIFICATION.json"
+}

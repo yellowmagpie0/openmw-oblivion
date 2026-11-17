@@ -1537,7 +1537,11 @@ namespace MWMechanics
                 const MWWorld::Ptr& otherPtr = otherCached.mPtr;
                 if (otherPtr == ptr || otherPtr == currentTarget)
                     continue;
-                if (!nativeCombatTarget && nativeState != nullptr && nativeState->mPhase != ESM4::PackagePhase::Complete
+                // Moving followers must be able to approach their target.
+                // A waiting follower giving way must also consider that
+                // target, otherwise it can permanently block the player.
+                if (!nativeCombatTarget && !shouldGiveWay && nativeState != nullptr
+                    && nativeState->mPhase != ESM4::PackagePhase::Complete
                     && !nativeState->mTarget.isNull()
                     && ((otherPtr == player
                             && nativeState->mTarget == ESM::FormKey::dynamic("player", 1))
