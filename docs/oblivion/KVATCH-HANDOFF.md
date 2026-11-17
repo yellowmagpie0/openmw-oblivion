@@ -34,17 +34,26 @@ restored active animation phase0.344333 and advanced to1.0 with the passage clea
 [Door preparation](KVATCH-RENDING-HALLS-DOOR-PREPARATION.json) records normal-only
 evidence and editable recipes; no new engine implementation or SAN opening claim.
 
-**Next action:** exercise the original Dremora093ede encounter after ordinary movement
-through that open door and choose the next chunk from an observed blocker. Current verified
-continuation:
-`build/oblivion-compat/kvatch-rending-halls/normal-after-first-door-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `9adaafb125b6dff4264ccf6e71f9bbb87bcff0ae95d374b1618bd71cc0813928`.
-Player[1273.624512,1318.130737,522.225403], pitch0.34375/yaw1.403126;
-Ilend[1023.820007,1290.287354,521.749390], alive on follow1778d1, health94.54.
-Enemy093ede approached from[1878.60327,1803.11877,523.48566]; stopped within650. The first door record
-pivot[1024,1276,768] is offset from its physical leaf near X780; do not use pivot
-distance as the physical approach requirement. Use actual actor pathfinding bounds.
-Full Hall traversal, tower ascent, Sigil Stone and gate closure remain open.
+**Further normal preparation:** Ilend defeated original Dremora093ede while Player
+used defensive input. Ordinary Space used exit093edf → Blood Feast01d104. Actual
+restarts retained the corpse/killer, earned state and follow1778d1; arrival gap135.
+The next ramp is walkable up to the next live enemy approach. [Upper-exit preparation](KVATCH-RENDING-HALLS-UPPER-EXIT-PREPARATION.json)
+records the bounded normal-only checks and retained replay/controller failures.
+
+**Next action:** complete the encounter with original Dremora093ee1 on the upper
+Blood Feast ramp, then approach original door01d580 (or paired01d581) and choose
+implementation work from the next actual blocker. Current verified continuation:
+`build/oblivion-compat/kvatch-rending-halls/normal-upper-ramp-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `149dd6e02f7595a45e3642ad0be1c85a735995a064d83fca8f8360fef58a5ffc`.
+Player[-735.799011,-21.811663,619.107971], pitch-0.132813/yaw-3.092958;
+Ilend[-669.116028,157.601517,514.519653], alive on follow1778d1;
+Player health94.54. Enemy093ee1 approached from[-345.963562,-603.153503,755.162170].
+Use actual actor pathfinding bounds and keep the final path point active until a
+physical checkpoint: navmesh endpoint tolerance need not equal record-root range.
+Do not use normal-dremora-fight-01 (extra friendly hits) or the interrupted
+normal-upper-survey-01 as primary continuations. Normal defensive recipe avoids
+attacks after the target dies. Player currently has weapon ready; do not blindly
+toggle F on the next replay. Full tower ascent, Sigil Stone and gate closure remain open.
 
 For healthy road replays, the earlier earned source remains:
 `build/oblivion-compat/kvatch-ilend/normal-original-ilend-follow-cold-road-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

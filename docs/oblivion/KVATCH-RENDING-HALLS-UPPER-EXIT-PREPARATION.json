@@ -1,0 +1,178 @@
+{
+  "passed": true,
+  "scope": "Normal-only original-content forward preparation with unchanged game implementation. Existing Ilend combat and upper exit work; no new engine rules, SAN runtime or full ascent acceptance.",
+  "implementation_commit": "cfc559499c",
+  "producer": "KVATCH-UNLINKED-DOOR-PATHPOINTS-VERIFICATION.json",
+  "evidence_root": "build/oblivion-compat/kvatch-rending-halls",
+  "defense": {
+    "passed": true,
+    "input_sha256": "9adaafb125b6dff4264ccf6e71f9bbb87bcff0ae95d374b1618bd71cc0813928",
+    "save_sha256": "c6bc527e2f741ed49be8693f1661e8526f1857adb4b4924a47ba96ca0dd881ed",
+    "player_health": 94.54000854492188,
+    "player_pose": [
+      1273.62451171875,
+      1318.1307373046875,
+      522.2254028320312,
+      0.201171875,
+      0.0,
+      1.145313024520874
+    ],
+    "ilend_pose": [
+      1323.50244140625,
+      1404.4510498046875,
+      513.0000610351562,
+      0.0,
+      0.0,
+      1.4756462574005127
+    ],
+    "enemy_life": {
+      "actor": "content:oblivion.esm:093ede",
+      "base": "content:oblivion.esm:092da0",
+      "phase": 1,
+      "recovery_remaining": 0.0,
+      "killer": "content:oblivion.esm:098138"
+    },
+    "scope": "Normal forward preparation only: existing Ilend defense kills original Dremora; no new combat implementation acceptance."
+  },
+  "upper_exit": {
+    "case": "normal-upper-exit-01",
+    "baseline": {
+      "passed": true,
+      "input_sha256": "01aa652f1c969ec32725fa681eef4e3acfdb34a7ef34c164895034c8dc287e60",
+      "save_sha256": "be28c14eeacb0f8a42f86cc4435b599e0afa5186442fbda85bbbbcf512afac3f",
+      "health": 94.54000854492188,
+      "pose": [
+        -500.0,
+        720.0,
+        436.67529296875,
+        0.0,
+        0.0,
+        2.7331957817077637
+      ],
+      "player_moved": 1608.133848780805,
+      "ilend_pose": [
+        -365.0,
+        720.0,
+        436.6753234863281,
+        0.0,
+        0.0,
+        1.2670358419418335
+      ],
+      "gap": 135.00000000000344,
+      "scope": "Normal-input earned road baseline only; no tower door/ascent or new implementation acceptance."
+    },
+    "restart_and_ownership": {
+      "passed": true,
+      "source_sha256": "01aa652f1c969ec32725fa681eef4e3acfdb34a7ef34c164895034c8dc287e60",
+      "save_sha256": "be28c14eeacb0f8a42f86cc4435b599e0afa5186442fbda85bbbbcf512afac3f",
+      "binary_sha256": "e1fb23bf4a19a076f1cfd3f5303dad0894674923de97b53914250d5af92ca1ba",
+      "enemy_life": {
+        "actor": "content:oblivion.esm:093ede",
+        "base": "content:oblivion.esm:092da0",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:098138"
+      },
+      "cell": "content:oblivion.esm:01d0c8",
+      "player_pose": [
+        -500.0,
+        720.0,
+        436.67529296875,
+        0.0,
+        0.0,
+        2.7331957817077637
+      ],
+      "scope": "Normal forward course only; terminal original Dremora and follower package preserved through actual process restart and upper Blood Feast transition. Combine with road-audit for earned-state invariants."
+    }
+  },
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "native_exit_records": {
+    "source": "093edf in Rending Halls01d0c7",
+    "destination": "01d104 in Blood Feast01d0c8",
+    "raw_audit": "build/oblivion-compat/kvatch-rending-halls/exit-door-records.json",
+    "raw_destination_audit": "build/oblivion-compat/kvatch-rending-halls/exit-destinations.json"
+  },
+  "retained_attempts": [
+    {
+      "case": "normal-dremora-fight-01",
+      "reason": "Ilend killed target, but attack cadence continued and hit Ilend. Replaced with defensive-input replay from same pre-encounter source."
+    },
+    {
+      "case": "normal-upper-exit-approach-01",
+      "reason": "Observer advanced past final path point before door-distance condition. Retained failed scenario; corrected final-point following passes in approach02."
+    },
+    {
+      "case": "normal-upper-survey-01",
+      "reason": "Actual scenario passed and game exited0; outer driver exited143 before receipt. Diagnostic route information only; not a primary save or completed restart acceptance."
+    }
+  ],
+  "visual_review": [
+    "normal-dremora-defense-01/original-rending-dremora-checkpoint.png",
+    "normal-upper-exit-approach-02/original-rending-approach-checkpoint.png",
+    "normal-upper-exit-01/original-upper-blood-feast-arrival.png",
+    "normal-upper-ramp-approach-01/original-rending-approach-checkpoint.png"
+  ],
+  "verifiers": [
+    "scripts/verify_kvatch_rending_defense.py",
+    "scripts/verify_kvatch_rending_forward.py"
+  ],
+  "baseline_verifier": "build/oblivion-compat/kvatch-tower/audit-road.py",
+  "upper_ramp": {
+    "case": "normal-upper-ramp-approach-01",
+    "restart": {
+      "passed": true,
+      "source_sha256": "be28c14eeacb0f8a42f86cc4435b599e0afa5186442fbda85bbbbcf512afac3f",
+      "save_sha256": "149dd6e02f7595a45e3642ad0be1c85a735995a064d83fca8f8360fef58a5ffc",
+      "binary_sha256": "e1fb23bf4a19a076f1cfd3f5303dad0894674923de97b53914250d5af92ca1ba",
+      "enemy_life": {
+        "actor": "content:oblivion.esm:093ede",
+        "base": "content:oblivion.esm:092da0",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:098138"
+      },
+      "cell": "content:oblivion.esm:01d0c8",
+      "player_pose": [
+        -735.7990112304688,
+        -21.811662673950195,
+        619.1079711914062,
+        -0.1328125,
+        0.0,
+        -3.0929582118988037
+      ],
+      "scope": "Normal forward course only; terminal original Dremora and follower package preserved through actual process restart and upper Blood Feast transition. Combine with road-audit for earned-state invariants."
+    },
+    "checkpoint": "Next original Dremora093ee1 within650; neither second encounter nor whole ramp completion claimed.",
+    "baseline": {
+      "passed": true,
+      "input_sha256": "be28c14eeacb0f8a42f86cc4435b599e0afa5186442fbda85bbbbcf512afac3f",
+      "save_sha256": "149dd6e02f7595a45e3642ad0be1c85a735995a064d83fca8f8360fef58a5ffc",
+      "health": 94.54000854492188,
+      "pose": [
+        -735.7990112304688,
+        -21.811662673950195,
+        619.1079711914062,
+        -0.1328125,
+        0.0,
+        -3.0929582118988037
+      ],
+      "player_moved": 799.4794548078446,
+      "ilend_pose": [
+        -669.1160278320312,
+        157.6015167236328,
+        514.5196533203125,
+        0.0,
+        0.0,
+        -2.785092830657959
+      ],
+      "gap": 218.11562404277817,
+      "scope": "Normal-input earned road baseline only; no tower door/ascent or new implementation acceptance."
+    }
+  },
+  "replay_sources": [
+    "scripts/data/oblivion_compat/original_kvatch_rending_dremora_defense.json",
+    "scripts/data/oblivion_compat/original_kvatch_rending_upper_exit_approach.json",
+    "scripts/data/oblivion_compat/original_kvatch_rending_upper_exit.json",
+    "scripts/data/oblivion_compat/original_kvatch_rending_upper_ramp_approach.json"
+  ]
+}
