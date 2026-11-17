@@ -22,6 +22,7 @@
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
+#include <components/esm/defs.hpp>
 
 namespace ESM4
 {
@@ -2143,8 +2144,18 @@ namespace ESM4
         if (mVersion < 9 && !mNativeActorValues.empty())
             throw std::runtime_error("TES4 runtime-state versions before 9 cannot contain native actor values");
         std::map<ESM::FormKey, ESM::FormKey> actorBases;
+        std::set<ESM::FormKey> floraTrapOwners;
         for (const auto& reference : mReferences)
+        {
             actorBases.emplace(reference.mKey, reference.mBase);
+            if (!mNativeTrapContacts.empty() && reference.mEnabled && !reference.mDeleted)
+            {
+                const auto type = reference.mCustomState.find("record_type");
+                const auto* value = type == reference.mCustomState.end()
+                    ? nullptr : std::get_if<std::int64_t>(&type->second);
+                if (value && *value == ESM::REC_FLOR4) floraTrapOwners.insert(reference.mKey);
+            }
+        }
         checkSize(mIgnoreFriendlyHits.size(), "ignore-friendly-hits map");
         if (mVersion < 65 && !mIgnoreFriendlyHits.empty())
             throw std::runtime_error("Reference friendly-hit flags require runtime schema65");
@@ -2514,9 +2525,15 @@ namespace ESM4
         for (const auto& contact : mNativeTrapContacts)
         {
             const auto graph = mNativeAnimatedReferences.find(contact.mReference);
-            if (graph == mNativeAnimatedReferences.end() || contact.mActor.isNull()
+            const bool flora = floraTrapOwners.contains(contact.mReference)
+                && contact.mReference != mPlayer.mReference && !nativeActors.contains(contact.mReference);
+            if ((graph == mNativeAnimatedReferences.end() && !flora)
+                || contact.mActor.isNull()
                 || (contact.mActor != mPlayer.mReference && !nativeActors.contains(contact.mActor)))
                 throw std::runtime_error("Dangling trap contact owner or actor");
+            // Static flora phantoms have no movable-body snapshot. The world
+            // admission layer verifies the winning FLOR model and body record.
+            if (graph == mNativeAnimatedReferences.end()) continue;
             const auto& bodies = graph->second.mBodies;
             const auto body = std::find_if(bodies.begin(), bodies.end(), [&](const auto& candidate) {
                 return candidate.mRecord == contact.mBodyRecord;

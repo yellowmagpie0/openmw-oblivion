@@ -1,0 +1,39 @@
+{
+  "status": "Accepted: original-content normal/sanitizer hit, separation/re-entry, genuine own-save continuation and full integration gates pass. Full gate/tower/main-quest remains open.",
+  "chunk": "Actual noncontinuous native flora phantom contacts for original Harrada068733 on the earned Kvatch interior route.",
+  "oracle": "KVATCH-HARRADA-CONTACT-ORACLE.json",
+  "source_checkpoint": {
+    "path": "build/oblivion-compat/kvatch-ilend/normal-original-ilend-follow-cold-road-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "becc73807be4b5e52f63579085380745c9c12d1ef6d1f2d7fe90e1d265890b93",
+    "health": 104.54000806808472,
+    "quest_stage": 25,
+    "ilend_alive": true
+  },
+  "implementation_boundary": [
+    "Retain the authored phantom body identity/layer with each actual Bullet trigger child; no distance-only damage.",
+    "Collect native flora phantom/actor contacts under the existing physics substep barrier and publish through the shared trap Health/life/knockback authority.",
+    "Use actor collision-center minus contact point as a reasonable approximation of the original actor/model-height midpoint push direction. The non-rigid branch has no rigid-body minimum-speed gate.",
+    "Keep existing ACTI movable-body validation. Extend the existing version86+ contact wire format to typed FLOR owners, with winning-model phantom/body admission; runtime schema106 remains unchanged.",
+    "TrapUpdate stays the independently verified native no-op."
+  ],
+  "acceptance": [
+    "Real normal-input approach to the original plant from the earned source; actual collision impact reduces Player health and produces an outward push with the authored settings.",
+    "Far/no-contact control and separation/re-entry exercise the original geometry and contact lifecycle, with normal AI enabled.",
+    "Genuine F5 and fresh-process continuation preserve Health, contact ownership and pending push without replaying the saved impact.",
+    "Retain earned inventory, quest25, topics and faction reactions; Player and Ilend remain alive.",
+    "Reject a saved phantom contact whose body is absent from its winning model before world publication.",
+    "Focused checks during development; full normal/sanitizer integration and real-content restart cases at the checkpoint."
+  ],
+  "tolerances": {
+    "unresisted_first_hit_health_delta": {
+      "expected": 5,
+      "absolute_tolerance": 0.1
+    },
+    "push": "Nonzero/outward response and persistent owned timer; no exact native trajectory or arithmetic parity required."
+  },
+  "remaining_outside_chunk": [
+    "Full tower/first-gate/main-quest completion.",
+    "Continuous hazards and unencountered static ACTI phantom traps.",
+    "Exact corpse impulse and every actor/entry-angle interaction."
+  ]
+}

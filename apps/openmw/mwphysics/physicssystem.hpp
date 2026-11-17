@@ -214,6 +214,8 @@ namespace MWPhysics
         // cannot start damage before the surfaces actually touch.
         bool mTouching = false;
         osg::Vec3f mPoint, mIncomingVelocity;
+        // For a phantom the vector is actor center minus contact point, not speed.
+        bool mPhantom = false;
     };
 
     struct AnimatedReferenceContactStep

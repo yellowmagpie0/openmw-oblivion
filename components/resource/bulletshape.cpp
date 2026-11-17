@@ -119,6 +119,7 @@ namespace Resource
         , mCollisionBox(other.mCollisionBox)
         , mAnimatedShapes(other.mAnimatedShapes)
         , mAnimatedTriggerShapes(other.mAnimatedTriggerShapes)
+        , mTriggerBodies(other.mTriggerBodies)
         , mFileName(other.mFileName)
         , mFileHash(other.mFileHash)
         , mVisualCollisionType(other.mVisualCollisionType)

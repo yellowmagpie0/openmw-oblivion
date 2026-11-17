@@ -475,8 +475,12 @@ namespace NifBullet
             shape = std::move(bodyShape);
         }
 
-        addCollisionShape(std::move(shape), transform, args.mAnimated ? node.mRecordIndex : -1,
-            dynamic_cast<const Nif::bhkPhantom*>(&collision->mBody.get()) != nullptr);
+        const bool trigger = dynamic_cast<const Nif::bhkPhantom*>(&collision->mBody.get()) != nullptr;
+        const int child = mTriggerCompoundShape ? mTriggerCompoundShape->getNumChildShapes() : 0;
+        addCollisionShape(std::move(shape), transform, args.mAnimated ? node.mRecordIndex : -1, trigger);
+        if (trigger)
+            mShape->mTriggerBodies.emplace(child, Resource::BulletShape::TriggerBody{
+                static_cast<std::uint32_t>(collision->mBody->mRecordIndex), static_cast<std::uint8_t>(layer & 0x3f)});
     }
 
     std::unique_ptr<btCollisionShape> BulletNifLoader::makeBethesdaShape(const Nif::bhkShape& shape)

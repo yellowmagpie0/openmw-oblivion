@@ -509,6 +509,7 @@ namespace MWPhysics
             mTriggers.emplace(ptr.mRef, std::move(trigger));
             shapeInstance->mTriggerCollisionShape.reset();
             shapeInstance->mAnimatedTriggerShapes.clear();
+            shapeInstance->mTriggerBodies.clear();
         }
         if (!shapeInstance->mCollisionShape)
             return;

@@ -7,6 +7,7 @@
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
+#include <components/esm/defs.hpp>
 
 #include <gtest/gtest.h>
 
@@ -6571,6 +6572,37 @@ TEST(ESM4RuntimeState, TrapContactOwnershipRoundTripAndLegacyAbsence)
     EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
     invalid.mNativeTrapContacts.clear();
     EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(invalid.serializeBinary()).mNativeTrapContacts.empty());
+}
+
+TEST(ESM4RuntimeState, FloraPhantomContactsRetainTypedOwnersWithoutInventedMovableBodies)
+{
+    auto state = makeState();
+    state.mVersion = 86;
+    auto& reference = state.mReferences.front();
+    reference.mEnabled = true;
+    reference.mCustomState["record_type"] = std::int64_t(ESM::REC_FLOR4);
+    state.mNativeTrapContacts.insert({reference.mKey, 182, state.mPlayer.mReference});
+    const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_EQ(restored.mNativeTrapContacts, state.mNativeTrapContacts);
+    EXPECT_TRUE(restored.mNativeAnimatedReferences.empty());
+    for (unsigned fault = 0; fault != 6; ++fault)
+    {
+        SCOPED_TRACE(fault);
+        auto invalid = state;
+        auto& owner = invalid.mReferences.front();
+        if (fault == 0) owner.mCustomState.erase("record_type");
+        if (fault == 1) owner.mCustomState["record_type"] = std::int64_t(ESM::REC_ACTI4);
+        if (fault == 2) owner.mEnabled = false;
+        if (fault == 3) owner.mDeleted = true;
+        if (fault == 4) invalid.mReferences.clear();
+        if (fault == 5)
+        {
+            invalid.mNativeTrapContacts.clear();
+            invalid.mNativeTrapContacts.insert({owner.mKey, 182, ESM::FormKey::content("Oblivion.esm", 999)});
+        }
+        EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    }
+    // Body identity against the winning model is a world-admission check.
 }
 
 TEST(ESM4RuntimeState, NativeSpellCastRetainsReleaseBoundaryAndRejectsDanglingOwner)

@@ -5181,6 +5181,35 @@ class TrapContact86Tests(unittest.TestCase):
         state["native_trap_contacts"] = []
         self.assertNotIn("native_trap_contacts", state_io.decode_payload(state_io.encode_payload(state)))
 
+    def test_flora_phantom_owner_roundtrip_without_movable_graph(self):
+        state = self.make_state()
+        reference = state["native_trap_contacts"][0]["reference"]
+        owner = next(r for r in state["references"] if r["key"] == reference)
+        owner["enabled"] = True
+        owner["custom_state"]["record_type"] = int.from_bytes(b"FLOR", "little") | 0x00800000
+        state["native_animated_references"] = []
+        wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(restored["native_trap_contacts"], state["native_trap_contacts"])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        for field, value in (("enabled", False), ("deleted", True)):
+            invalid = copy.deepcopy(state)
+            next(r for r in invalid["references"] if r["key"] == reference)[field] = value
+            with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(invalid)
+        owner["custom_state"]["record_type"] = int.from_bytes(b"ACTI", "little") | 0x00800000
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
+    def test_flora_metadata_does_not_relax_existing_movable_body_checks(self):
+        state = self.make_state()
+        reference = state["native_trap_contacts"][0]["reference"]
+        next(r for r in state["references"] if r["key"] == reference)["custom_state"]["record_type"] = (
+            int.from_bytes(b"FLOR", "little") | 0x00800000)
+        state["native_trap_contacts"][0]["body_record"] = 999
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
     def test_rejects_dangling_duplicate_and_invalid_contact(self):
         edits = [lambda s: s["native_trap_contacts"][0].update(reference="content:oblivion.esm:000999"),
                  lambda s: s["native_trap_contacts"][0].update(actor="content:oblivion.esm:000999"),

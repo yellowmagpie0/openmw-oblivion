@@ -1,0 +1,150 @@
+{
+  "status": "Scoped original contact evidence established; fork implementation/runtime acceptance pending.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "reference": "068733",
+  "base": "07b7cd",
+  "script": "066707",
+  "model": "meshes/oblivion/plants/harradauprightattack.nif",
+  "model_sha256": "4feaf4deef6ffecaf4066eae2e55b60b45b158b5ed34a2b63ff346e22a2ede63",
+  "model_binding": {
+    "node": 179,
+    "node_name": "rockbase",
+    "collision_object": 183,
+    "phantom_body": 182,
+    "shape": 181,
+    "layer": 14,
+    "convex_vertices": 12
+  },
+  "raw_model_inspection": "build/oblivion-compat/kvatch-harrada-contact/phantom-records.txt",
+  "independent_inspector": "build/oblivion-compat/kvatch-harrada-contact/inspect-phantom.cpp",
+  "original_probe": "build/oblivion-compat/kvatch-harrada-contact/original-02/native-contact-observations.json",
+  "diagnostic_boundary": "Native console confirms All Combat AI processing is Off before world placement. Original plant animation/scripts and Player collision physics continue. No health/quest/trap-local writes, god mode or collision disabling. This is an isolated diagnostic, not a normal-AI campaign course.",
+  "difficulty": {
+    "iDifficultyLevel": 50,
+    "fDifficulty": 0.0
+  },
+  "live_script_locals": {
+    "self": "00068733",
+    "initialized": 1,
+    "fTrapDamage": 5.0,
+    "fTrapPushBack": 750.0,
+    "fTrapMinVelocity": 0.0,
+    "bTrapContinuous": 0,
+    "attack": 0
+  },
+  "observations": [
+    {
+      "label": "far-baseline",
+      "health": 80,
+      "position": [
+        -1043.25,
+        2230.81,
+        74.64
+      ],
+      "distance": 366.84
+    },
+    {
+      "label": "far-10second-control",
+      "health": 80,
+      "position": [
+        -1043.25,
+        2230.81,
+        74.64
+      ],
+      "distance": 366.84
+    },
+    {
+      "label": "approach-within-trigger",
+      "health": 80,
+      "position": [
+        -1169.37,
+        2246.95,
+        59.97
+      ],
+      "distance": 243.82
+    },
+    {
+      "label": "stationary-trigger-zone",
+      "health": 80,
+      "position": [
+        -1169.37,
+        2247.02,
+        60.24
+      ],
+      "distance": 243.93
+    },
+    {
+      "label": "first-closer-hit",
+      "health": 75,
+      "position": [
+        -1237.71,
+        2263.62,
+        50.7
+      ],
+      "distance": 180.71
+    },
+    {
+      "label": "after-first-hit-10second-rest",
+      "health": 75,
+      "position": [
+        -1237.71,
+        2263.62,
+        50.7
+      ],
+      "distance": 180.71
+    },
+    {
+      "label": "back-away",
+      "health": 75,
+      "position": [
+        -1124.45,
+        2282.28,
+        52.9
+      ],
+      "distance": 287.52
+    },
+    {
+      "label": "normal-movement-reentry",
+      "health": 70,
+      "position": [
+        -1241.57,
+        2385.16,
+        27.44
+      ],
+      "distance": 225.3
+    }
+  ],
+  "visual_review": "Reviewed native screenshots, sampled near-trigger recording and re-entry contact sheet. Re-entry includes a visible abrupt camera jolt and lateral movement. No quantitative conversion of pushback750 into velocity or displacement is established.",
+  "static_instruction_inspection": {
+    "image_metadata": "build/oblivion-compat/kvatch-harrada-contact/original-exe.json",
+    "private_disassembly": "build/oblivion-compat/kvatch-harrada-contact/trap-handler-verified.txt",
+    "handler": "005eccd0",
+    "findings": [
+      "Non-entity branch5ecf10..5ed0c4 bypasses the rigid-body speed test at5ecf44..5ecf88.",
+      "First noncontinuous contact uses its stored point at5ecf19. The push vector subtracts that point from actor position plus half model height (5ed035..5ed0b7; height helper5e0660; constanta2faa0=0.5).",
+      "Shared noncontinuous controller push remains capped at1000, duration0.5; prior sewer-trap provenance applies to that shared setter."
+    ],
+    "scope": "Static branch inspection and live original observations; no new emulator execution or bit-identical impulse claim."
+  },
+  "cleanup": {
+    "restoration": {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    },
+    "native_wrapper_exit_code": 0,
+    "launcher_exit_code": 0,
+    "outer_tool_session_exit_code": 143,
+    "native_process_absent": true
+  },
+  "retained_failures": [
+    "Original01: unloaded temporary reference lookup and ambient creature/landing damage made the measurements inconclusive; exact prefix restoration passed.",
+    "Original02 first video encoder unavailable; native input/state observation completed, then FFV1 recording passed.",
+    "Initial PE metadata command used the repository scripts directory instead of the skill scripts directory. Corrected hash verification and full relevant handler disassembly were rerun before interpretation."
+  ],
+  "limits": [
+    "Combat AI is disabled only in the isolated original diagnostic. Fork earned-course acceptance must retain normal AI.",
+    "Sampled distances are observations, not collision radii or implementation constants.",
+    "Exact pushback units, every approach angle, corpses and continuous traps are not established here."
+  ]
+}

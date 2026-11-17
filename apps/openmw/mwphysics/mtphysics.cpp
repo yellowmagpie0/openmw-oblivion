@@ -15,6 +15,8 @@
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletCollision/CollisionShapes/btCompoundShape.h>
+#include <BulletCollision/NarrowPhaseCollision/btPersistentManifold.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LinearMath/btThreads.h>
@@ -29,6 +31,7 @@
 #include <components/nifbullet/ragdollbonepose.hpp>
 #include <components/nifbullet/nativedynamicsworld.hpp>
 #include <components/settings/values.hpp>
+#include <components/resource/bulletshape.hpp>
 #include <components/esm4/physicalframe.hpp>
 
 #include "../mwmechanics/actorutil.hpp"
@@ -662,6 +665,72 @@ namespace MWPhysics
                         if (point.getDistance() <= 0) break;
                     }
                 }
+            }
+        }
+        // Native flora uses non-solid phantom geometry, rather than a released
+        // rigid-body graph. Query its actual child shapes under this same
+        // substep barrier so contacts share the existing ownership/latch path.
+        struct PhantomContacts final : btCollisionWorld::ContactResultCallback
+        {
+            const Object& mOwner;
+            const Resource::BulletShape::TriggerBody& mBody;
+            const btCollisionObject& mVolume;
+            AnimatedReferenceContactStep& mStep;
+
+            PhantomContacts(const Object& owner, const Resource::BulletShape::TriggerBody& body,
+                const btCollisionObject& volume, AnimatedReferenceContactStep& step)
+                : mOwner(owner), mBody(body), mVolume(volume), mStep(step)
+            {
+                m_collisionFilterGroup = CollisionType_World;
+                m_collisionFilterMask = CollisionType_Actor;
+                m_closestDistanceThreshold = gContactBreakingThreshold;
+            }
+
+            btScalar addSingleResult(btManifoldPoint& point, const btCollisionObjectWrapper* a, int, int,
+                const btCollisionObjectWrapper* b, int, int) override
+            {
+                if (point.getDistance() > m_closestDistanceThreshold) return 0;
+                const bool first = a->getCollisionObject() == &mVolume;
+                const auto* other = first ? b->getCollisionObject() : a->getCollisionObject();
+                const auto* holder = static_cast<const PtrHolder*>(other->getUserPointer());
+                if (!holder) return 0;
+                const auto actor = holder->getPtr();
+                if (actor.isEmpty() || !actor.getClass().isActor()) return 0;
+                const bool touching = point.getDistance() <= 0;
+                const auto position = first ? point.getPositionWorldOnA() : point.getPositionWorldOnB();
+                const auto direction = other->getWorldTransform().getOrigin() - position;
+                const auto found = std::find_if(mStep.mContacts.begin(), mStep.mContacts.end(), [&](const auto& c) {
+                    return c.mReference == mOwner.getPtr() && c.mActor == actor && c.mBodyRecord == mBody.mRecord;
+                });
+                if (found == mStep.mContacts.end())
+                    mStep.mContacts.push_back({mOwner.getPtr(), actor, mBody.mRecord, mBody.mLayer, touching,
+                        Misc::Convert::toOsg(position), Misc::Convert::toOsg(direction), true});
+                else if (touching && !found->mTouching)
+                {
+                    found->mTouching = true;
+                    found->mPoint = Misc::Convert::toOsg(position);
+                    found->mIncomingVelocity = Misc::Convert::toOsg(direction);
+                }
+                return 0;
+            }
+        };
+        for (const auto* owner : mFloraPhantoms)
+        {
+            const auto* instance = owner->getShapeInstance();
+            const auto* shape = instance->mCollisionShape.get();
+            if (!shape || !shape->isCompound())
+                throw std::logic_error("native flora phantom has no compound shape");
+            const auto& compound = static_cast<const btCompoundShape&>(*shape);
+            for (const auto& [child, body] : instance->mTriggerBodies)
+            {
+                if (body.mLayer != 14 && body.mLayer != 16) continue;
+                if (child < 0 || child >= compound.getNumChildShapes())
+                    throw std::logic_error("native flora phantom child disappeared");
+                btCollisionObject volume;
+                volume.setCollisionShape(const_cast<btCollisionShape*>(compound.getChildShape(child)));
+                volume.setWorldTransform(owner->getCollisionObject()->getWorldTransform() * compound.getChildTransform(child));
+                PhantomContacts callback(*owner, body, volume, step);
+                ContactTestWrapper::contactTest(mCollisionWorld, &volume, callback);
             }
         }
         mAnimatedReferenceContacts.push_back(std::move(step));
@@ -2521,8 +2590,14 @@ namespace MWPhysics
     {
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         const auto [entry, inserted] = mCollisionObjects.insert(collisionObject);
+        const auto* holder = static_cast<const PtrHolder*>(collisionObject->getUserPointer());
+        const auto* object = dynamic_cast<const Object*>(holder);
+        bool insertedPhantom = false;
         try
         {
+            if (object && object->getPtr().getType() == ESM::REC_FLOR4
+                && !object->getShapeInstance()->mTriggerBodies.empty())
+                insertedPhantom = mFloraPhantoms.insert(object).second;
             mCollisionWorld->addCollisionObject(collisionObject, collisionFilterGroup, collisionFilterMask);
         }
         catch (...)
@@ -2530,6 +2605,7 @@ namespace MWPhysics
             // Bullet may have published its array/proxy before a C++ exception.
             // Roll back under the same world lock before exposing failure.
             mCollisionWorld->removeCollisionObject(collisionObject);
+            if (insertedPhantom) mFloraPhantoms.erase(object);
             if (inserted)
                 mCollisionObjects.erase(entry);
             throw;
@@ -2540,7 +2616,10 @@ namespace MWPhysics
     {
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         if (const auto* holder = static_cast<const PtrHolder*>(collisionObject->getUserPointer()))
+        {
             discardAnimatedReferenceContacts(holder->getPtr());
+            if (const auto* object = dynamic_cast<const Object*>(holder)) mFloraPhantoms.erase(object);
+        }
         mCollisionObjects.erase(collisionObject);
         mCollisionWorld->removeCollisionObject(collisionObject);
     }

@@ -1,0 +1,279 @@
+{
+  "status": "Accepted bounded Harrada contact chunk; full gate/tower/main-quest course remains open.",
+  "tested_parent": "9886ce4475e33edfc68d767f27352fbc835cbcc7",
+  "oracle": "KVATCH-HARRADA-CONTACT-ORACLE.json",
+  "contract": "KVATCH-HARRADA-CONTACT-CONTRACT.json",
+  "evidence_root": "build/oblivion-compat/kvatch-harrada-contact",
+  "checks": {
+    "passed": true,
+    "normal": {
+      "components": {
+        "executed": 3314,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "e4192327e084f4f4a2027c2f96acfa150b6d33fbff7deafb7d328c290f660468",
+        "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+        "xml_sha256": "f92d63f4faa349760b2bccdb934d6599553b66d3dd68a4389b0b8542fb94ac64",
+        "inventory_sha256": "112f2337381a115f77c7f29902d61668216ece2aff931653e28dec63537759a5",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "engine": {
+        "executed": 2313,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "0fb821affcd62568ed3b1c6193090a3b8729031135c4bd8335d81c1322cc90e4",
+        "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+        "xml_sha256": "3bdf193d610e7c795d5a4fb8fa915c412da50a5fae194ea5bc5623c24157bdd4",
+        "inventory_sha256": "c65681738e2f58be13bcaf0b9e9d39329db7d884132b0ef5aad9ca54d338a457",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "python": {
+        "executed": 623,
+        "passed": true,
+        "log_sha256": "760f89f44b32586230664996cd79f1c0cc866522553246185cdab7cee800e076"
+      }
+    },
+    "normal_source": {
+      "head": "9886ce4475e33edfc68d767f27352fbc835cbcc7",
+      "source_fingerprint": "65f3c9c6d376e1054031dc0f541d57370f1b43720dfa2edd4b9b3d0d09eb54d0"
+    },
+    "sanitized": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-harrada-contact/sanitized-components-01",
+        "mode": "components",
+        "count": 3314,
+        "sha256": "149be2b806c371a1f67701e239e1dba7a014c35ad828bccc6e0a72740b999dae"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-harrada-contact/sanitized-engine-rest-01",
+        "mode": "engine",
+        "count": 2061,
+        "sha256": "d583e7a97abfee7d98b6fccde3cb314317f9679470f68be7cb79f0e485bf3f3b"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-harrada-contact/sanitized-engine-workers-0-01",
+        "mode": "engine",
+        "count": 84,
+        "sha256": "d583e7a97abfee7d98b6fccde3cb314317f9679470f68be7cb79f0e485bf3f3b"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-harrada-contact/sanitized-engine-workers-1-01",
+        "mode": "engine",
+        "count": 84,
+        "sha256": "d583e7a97abfee7d98b6fccde3cb314317f9679470f68be7cb79f0e485bf3f3b"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-harrada-contact/sanitized-engine-workers-2-01",
+        "mode": "engine",
+        "count": 84,
+        "sha256": "d583e7a97abfee7d98b6fccde3cb314317f9679470f68be7cb79f0e485bf3f3b"
+      }
+    ],
+    "sanitized_source": {
+      "head": "9886ce4475e33edfc68d767f27352fbc835cbcc7",
+      "source_fingerprint": "ae5de2ca28c3b8b863022733f0b68afd6c30fa09a0ff39083fe25f239a3d896d"
+    },
+    "sanitized_engine_disjoint_union": 2313,
+    "scope": "Original Harrada geometry/contact lifecycle, damage, push and genuine own-save continuation; full gate/tower/main quest remains open."
+  },
+  "normal_source_note": "Normal gates precede sanitizer-only replay/preload variants, the outward-response audit assertion and handoff edits. Production C++ and codec/test sources remain identical, verified against both game producer source maps.",
+  "runtime": [
+    {
+      "case": "normal-contact-probe-01",
+      "passed": true,
+      "sanitized": false,
+      "cold": false,
+      "input_sha256": "becc73807be4b5e52f63579085380745c9c12d1ef6d1f2d7fe90e1d265890b93",
+      "save_sha256": "3624e190025568b48af2a04254abbe5e46f1ac3a4482f61ddf4d12a5ffc5bd89",
+      "binary_sha256": "ab66d8f72cb8dc3a329671ade3a28728ce34515da8c08edbda5d861e8d9551c7",
+      "health_before": 104.54000806808472,
+      "health_after": 99.54000854492188,
+      "player_impacts": 1,
+      "pending_push": [
+        {
+          "actor": "dynamic:player:0000000000000001",
+          "acceleration": [
+            104.00838470458984,
+            58.62432861328125,
+            -177.97866821289062
+          ],
+          "remaining": 0.349700003862381
+        }
+      ],
+      "saved_contacts": [],
+      "moved": 1213.6691309991113
+    },
+    {
+      "case": "normal-contact-reentry-02",
+      "passed": true,
+      "sanitized": false,
+      "cold": false,
+      "input_sha256": "3624e190025568b48af2a04254abbe5e46f1ac3a4482f61ddf4d12a5ffc5bd89",
+      "save_sha256": "c99a911331af127e8023ac97fce61a250d23a0dc0bafa15b84e874ab73dbc6d2",
+      "binary_sha256": "ab66d8f72cb8dc3a329671ade3a28728ce34515da8c08edbda5d861e8d9551c7",
+      "health_before": 99.54000854492188,
+      "health_after": 94.54000854492188,
+      "player_impacts": 1,
+      "pending_push": [
+        {
+          "actor": "dynamic:player:0000000000000001",
+          "acceleration": [
+            97.94173431396484,
+            55.20487594604492,
+            -182.45767211914062
+          ],
+          "remaining": 0.4499000012874603
+        }
+      ],
+      "saved_contacts": [
+        {
+          "reference": "content:oblivion.esm:068733",
+          "body_record": 182,
+          "actor": "dynamic:player:0000000000000001"
+        }
+      ],
+      "moved": 25.529720890836696
+    },
+    {
+      "case": "normal-contact-cold-02",
+      "passed": true,
+      "sanitized": false,
+      "cold": true,
+      "input_sha256": "3624e190025568b48af2a04254abbe5e46f1ac3a4482f61ddf4d12a5ffc5bd89",
+      "save_sha256": "1151f54180e164da01cc57d0f7a08c59f79c5a6f70a8939dc3d95aaefdc62929",
+      "binary_sha256": "ab66d8f72cb8dc3a329671ade3a28728ce34515da8c08edbda5d861e8d9551c7",
+      "health_before": 99.54000854492188,
+      "health_after": 99.54000854492188,
+      "player_impacts": 0,
+      "pending_push": [
+        {
+          "actor": "dynamic:player:0000000000000001",
+          "acceleration": [
+            104.00838470458984,
+            58.62432861328125,
+            -177.97866821289062
+          ],
+          "remaining": 0.24950000643730164
+        }
+      ],
+      "saved_contacts": [],
+      "moved": 25.78837681669222
+    },
+    {
+      "case": "normal-contact-cold-03",
+      "passed": true,
+      "sanitized": false,
+      "cold": true,
+      "input_sha256": "c99a911331af127e8023ac97fce61a250d23a0dc0bafa15b84e874ab73dbc6d2",
+      "save_sha256": "86b90aaa38f97666732d0566b963df50647ca9f9fba5b5ff1c794fab9c4da54c",
+      "binary_sha256": "ab66d8f72cb8dc3a329671ade3a28728ce34515da8c08edbda5d861e8d9551c7",
+      "health_before": 94.54000854492188,
+      "health_after": 94.54000854492188,
+      "player_impacts": 0,
+      "pending_push": [
+        {
+          "actor": "dynamic:player:0000000000000001",
+          "acceleration": [
+            97.94173431396484,
+            55.20487594604492,
+            -182.45767211914062
+          ],
+          "remaining": 0.39980000257492065
+        }
+      ],
+      "saved_contacts": [],
+      "moved": 17.08065539870911
+    },
+    {
+      "case": "sanitized-contact-reentry-03",
+      "passed": true,
+      "sanitized": true,
+      "cold": false,
+      "input_sha256": "3624e190025568b48af2a04254abbe5e46f1ac3a4482f61ddf4d12a5ffc5bd89",
+      "save_sha256": "70f0c69edacc286b1c051cc5341398fe425bfb5f9fe4e10875601a9008d05a89",
+      "binary_sha256": "820b1997cc95f850c451aef4fab4b6b557ee403aada5bf0929c977486b259312",
+      "health_before": 99.54000854492188,
+      "health_after": 94.54000854492188,
+      "player_impacts": 1,
+      "pending_push": [
+        {
+          "actor": "dynamic:player:0000000000000001",
+          "acceleration": [
+            102.63594055175781,
+            57.850765228271484,
+            -179.0254669189453
+          ],
+          "remaining": 0.39980000257492065
+        }
+      ],
+      "saved_contacts": [
+        {
+          "reference": "content:oblivion.esm:068733",
+          "body_record": 182,
+          "actor": "dynamic:player:0000000000000001"
+        }
+      ],
+      "moved": 8.326565163653301
+    },
+    {
+      "case": "sanitized-contact-cold-03",
+      "passed": true,
+      "sanitized": true,
+      "cold": true,
+      "input_sha256": "70f0c69edacc286b1c051cc5341398fe425bfb5f9fe4e10875601a9008d05a89",
+      "save_sha256": "6ded32b3390182b88c781ccb77207ad01ef9679e6f92054e493e42ad6a2dfb4a",
+      "binary_sha256": "820b1997cc95f850c451aef4fab4b6b557ee403aada5bf0929c977486b259312",
+      "health_before": 94.54000854492188,
+      "health_after": 94.54000854492188,
+      "player_impacts": 0,
+      "pending_push": [
+        {
+          "actor": "dynamic:player:0000000000000001",
+          "acceleration": [
+            102.63594055175781,
+            57.850765228271484,
+            -179.0254669189453
+          ],
+          "remaining": 0.349700003862381
+        }
+      ],
+      "saved_contacts": [],
+      "moved": 15.829130047566835
+    }
+  ],
+  "runtime_sanitizers": "ASan/UBSan halt on errors; rendered processes use detect_leaks=0. Unit processes use detect_leaks=1; observed environments and loaded instrumentation retained.",
+  "visual_review": "Reviewed normal initial hit pair, re-entry pair and both cold captures; sanitizer re-entry pair and own-save cold capture.",
+  "negative_save": {
+    "case": "normal-reject-body-01",
+    "scope": "Deliberately injected invalid contact body181 in a private copy; diagnostic only.",
+    "result": "Rejected phantom trap contact has no matching bound body; run-start/run-end only, no load-complete publication."
+  },
+  "retained_failures": [
+    "original-01: original-game setup/ambient combat contamination; no attributed hit acceptance.",
+    "normal-contact-cold-01 and normal-contact-reentry-01: preliminary gameplay without complete live-process receipts; accepted retries retained separately.",
+    "sanitized-contact-reentry-01: ASan preload order failed before loading; driver terminated after retaining the error.",
+    "sanitized-contact-reentry-02: fixed wall-time backoff did not reach the far control; no damage or sanitizer error. Retry03 observes position."
+  ],
+  "fidelity": "Actual original phantom geometry and noncontinuous contact lifecycle. Push uses actor collision center minus contact point as an approximation to the native actor/model-height midpoint; no exact trajectory or arithmetic parity claim.",
+  "outside_chunk": [
+    "Continuous hazards and unencountered static ACTI phantom traps.",
+    "Exact corpse impulse and every actor/entry-angle interaction.",
+    "Tower progression, Sigil Stone and full Kvatch/main-quest acceptance."
+  ]
+}

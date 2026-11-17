@@ -12,6 +12,7 @@
 #include "../mwphysics/oblivionragdoll.hpp"
 #include "../mwrender/animation.hpp"
 #include <components/esm4/loadacti.hpp>
+#include <components/esm4/loadflor.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <components/esm4/trapdamage.hpp>
@@ -21,6 +22,8 @@
 #include <components/nifbullet/actorragdoll.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/resource/niffilemanager.hpp>
+#include <components/resource/bulletshapemanager.hpp>
+#include <components/resource/bulletshape.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/detournavigator/navigator.hpp>
 #include <algorithm>
@@ -202,12 +205,16 @@ namespace MWWorld
                 if (!contact.mTouching) continue;
                 overlaps.insert(key);
                 const ESM4::TrapImpactSettings settings{static_cast<float>(variable("fTrapDamage")),
-                    static_cast<float>(variable("fLevelledDamage")), static_cast<float>(variable("fTrapMinVelocity"))};
+                    static_cast<float>(variable("fLevelledDamage")),
+                    contact.mPhantom ? 0.f : static_cast<float>(variable("fTrapMinVelocity"))};
                 const auto resistanceValue = contact.mLayer == 16 ? 67 : 65;
                 const float resistance = player ? mOblivionCombat->getPlayerValue(resistanceValue)
                     : mOblivionCombat->getNonPlayerValue(actor, resistanceValue);
                 const auto level = static_cast<std::uint32_t>(std::max(0, actor.getClass().getCreatureStats(actor).getLevel()));
-                const float damage = ESM4::trapImpactDamage(settings, level, contact.mIncomingVelocity.length(), resistance);
+                // The original non-rigid branch uses contact geometry for its
+                // push direction and does not apply the rigid-body speed gate.
+                const float speed = contact.mPhantom ? 0.f : contact.mIncomingVelocity.length();
+                const float damage = ESM4::trapImpactDamage(settings, level, speed, resistance);
                 const float pushback = static_cast<float>(variable("fTrapPushBack"));
                 // Allocate the latch before Health publication, and roll it
                 // back if the native transaction rejects the impact. Earlier
@@ -235,8 +242,8 @@ namespace MWWorld
                 if (changed)
                     Log(Debug::Info) << "TES4 trap impact: reference=" << key.mReference.serialize()
                         << " body=" << key.mBodyRecord << " actor=" << key.mActor.serialize()
-                        << " speed=" << contact.mIncomingVelocity.length() << " damage=" << damage
-                        << " pushback=" << pushback;
+                        << " speed=" << speed << " damage=" << damage
+                        << " pushback=" << pushback << (contact.mPhantom ? " kind=phantom" : "");
             }
             previous.swap(overlaps);
         }
@@ -247,6 +254,16 @@ namespace MWWorld
         state.mNativeAnimatedReferences = mOblivionAnimatedReferenceStates
             ? *mOblivionAnimatedReferenceStates : NativeAnimatedReferenceStates{};
         if (!mPhysics) return;
+        std::erase_if(state.mNativeTrapContacts, [&](const auto& contact) {
+            if (state.mNativeAnimatedReferences.contains(contact.mReference)) return false;
+            const auto reference = std::find_if(state.mReferences.begin(), state.mReferences.end(),
+                [&](const auto& ref) { return ref.mKey == contact.mReference; });
+            if (reference == state.mReferences.end()) return false;
+            const auto type = reference->mCustomState.find("record_type");
+            const auto* value = type == reference->mCustomState.end()
+                ? nullptr : std::get_if<std::int64_t>(&type->second);
+            return value && *value == ESM::REC_FLOR4 && (reference->mDeleted || !reference->mEnabled);
+        });
         for (const auto& ptr : mPhysics->animatedReferenceOwners())
         {
             const auto key = ptr.getCellRef().getFormKey();
@@ -265,6 +282,24 @@ namespace MWWorld
 
     void World::validateOblivionAnimatedReferenceState(const ESM4::RuntimeState& state) const
     {
+        for (const auto& contact : state.mNativeTrapContacts)
+        {
+            if (state.mNativeAnimatedReferences.contains(contact.mReference)) continue;
+            const auto reference = std::find_if(state.mReferences.begin(), state.mReferences.end(),
+                [&](const auto& ref) { return ref.mKey == contact.mReference; });
+            const auto* flora = reference == state.mReferences.end() ? nullptr
+                : mStore.get<ESM4::Flora>().search(reference->mBase);
+            if (!flora || (flora->mFlags & ESM4::Rec_Deleted) || flora->mModel.empty() || !mPhysics)
+                throw std::runtime_error("phantom trap contact has no winning FLOR model");
+            const auto model = Misc::ResourceHelpers::correctActorModelPath(
+                Misc::ResourceHelpers::correctMeshPath(flora->mModel.getNormalized()), mResourceSystem->getVFS());
+            const auto shape = mPhysics->getShapeManager()->getShape(model);
+            if (!shape || std::none_of(shape->mTriggerBodies.begin(), shape->mTriggerBodies.end(), [&](const auto& body) {
+                    return body.second.mRecord == contact.mBodyRecord
+                        && (body.second.mLayer == 14 || body.second.mLayer == 16);
+                }))
+                throw std::runtime_error("phantom trap contact has no matching bound body");
+        }
         for (const auto& [key, snapshot] : state.mNativeAnimatedReferences)
         {
             const auto* base = mStore.get<ESM4::Activator>().search(snapshot.mBase);

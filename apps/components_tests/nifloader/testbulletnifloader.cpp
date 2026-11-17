@@ -209,7 +209,8 @@ namespace Resource
             && compareObjects(lhs.mAvoidCollisionShape.get(), rhs.mAvoidCollisionShape.get())
             && compareObjects(lhs.mTriggerCollisionShape.get(), rhs.mTriggerCollisionShape.get())
             && lhs.mCollisionBox == rhs.mCollisionBox && lhs.mVisualCollisionType == rhs.mVisualCollisionType
-            && lhs.mAnimatedShapes == rhs.mAnimatedShapes && lhs.mAnimatedTriggerShapes == rhs.mAnimatedTriggerShapes;
+            && lhs.mAnimatedShapes == rhs.mAnimatedShapes && lhs.mAnimatedTriggerShapes == rhs.mAnimatedTriggerShapes
+            && lhs.mTriggerBodies == rhs.mTriggerBodies;
     }
 
     static std::ostream& operator<<(std::ostream& stream, Resource::VisualCollisionType value)
@@ -1252,6 +1253,8 @@ namespace
         collision.mRecordType = Nif::RC_bhkCollisionObject;
         collision.mBody = Nif::bhkWorldObjectPtr(&phantom);
         phantom.mRecordType = Nif::RC_bhkSimpleShapePhantom;
+        phantom.mRecordIndex = 56;
+        phantom.mHavokFilter.mLayer = 14;
         phantom.mShape = Nif::bhkShapePtr(&box);
         phantom.mTransform.makeTranslate(1.f, 2.f, 3.f);
         box.mRecordType = Nif::RC_bhkBoxShape;
@@ -1269,6 +1272,8 @@ namespace
         EXPECT_EQ(result->mCollisionShape, nullptr);
         EXPECT_EQ(result->mAvoidCollisionShape, nullptr);
         ASSERT_NE(result->mTriggerCollisionShape, nullptr);
+        EXPECT_EQ(result->mTriggerBodies,
+            (std::map<int, Resource::BulletShape::TriggerBody>{{0, {56, 14}}}));
         const auto& compound = static_cast<const btCompoundShape&>(*result->mTriggerCollisionShape);
         ASSERT_EQ(compound.getNumChildShapes(), 1);
         constexpr float havokScale = 10.f / 1.42875f;
@@ -1278,6 +1283,7 @@ namespace
         EXPECT_TRUE(isNear(bodyCompound.getChildTransform(0).getOrigin(), btVector3(1.f, 2.f, 3.f) * havokScale));
 
         auto instance = Resource::makeInstance(result);
+        EXPECT_EQ(instance->mTriggerBodies, result->mTriggerBodies);
         ASSERT_NE(instance->mTriggerCollisionShape, nullptr);
         EXPECT_NE(instance->mTriggerCollisionShape.get(), result->mTriggerCollisionShape.get());
         instance->setLocalScaling(btVector3(1.3f, 1.3f, 1.3f));
@@ -1288,6 +1294,7 @@ namespace
         mNiNode.mCollision = Nif::NiCollisionObjectPtr(nullptr);
         const auto empty = mLoader.load(file);
         EXPECT_EQ(empty->mTriggerCollisionShape, nullptr);
+        EXPECT_TRUE(empty->mTriggerBodies.empty());
     }
 
     TEST_F(TestBulletNifLoader, oblivion_mixed_phantom_and_solid_keep_separate_animation_indices)

@@ -2,6 +2,7 @@
 #define OPENMW_COMPONENTS_RESOURCE_BULLETSHAPE_H
 
 #include <map>
+#include <cstdint>
 #include <memory>
 
 #include <osg/Object>
@@ -44,6 +45,12 @@ namespace Resource
 
     struct BulletShape : public osg::Object
     {
+        struct TriggerBody
+        {
+            std::uint32_t mRecord = 0;
+            std::uint8_t mLayer = 0;
+            friend bool operator==(const TriggerBody&, const TriggerBody&) = default;
+        };
         CollisionShapePtr mCollisionShape;
         CollisionShapePtr mAvoidCollisionShape;
         // Bethesda phantoms are overlap volumes, never solid/navigation input.
@@ -59,6 +66,8 @@ namespace Resource
         // we store the node's record index mapped to the child index of the shape in the btCompoundShape.
         std::map<int, int> mAnimatedShapes;
         std::map<int, int> mAnimatedTriggerShapes;
+        // Compound child -> original phantom identity, independent of animation.
+        std::map<int, TriggerBody> mTriggerBodies;
 
         VFS::Path::Normalized mFileName;
         std::string mFileHash;
