@@ -20,6 +20,13 @@ namespace MWRender
             bool mParked = false;
         };
     public:
+        RuntimeViewer();
+
+        // Modern Windows drivers can spend most of a frame replaying legacy
+        // display lists. Keep geometry resident while respecting an explicit
+        // backend choice. Select before graphics contexts are realized.
+        static void preferVertexBuffers(osg::DisplaySettings& settings);
+
         class Bindings
         {
             friend class RuntimeViewer;

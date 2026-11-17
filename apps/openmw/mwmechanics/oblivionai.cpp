@@ -489,7 +489,7 @@ namespace MWMechanics
 
         void swap(OblivionAiService& owner) noexcept
         {
-            owner.mStreetCellIndexValid = false;
+            owner.mDoorRegionIndexValid = false;
             mActors.swap(owner.mActors);
             mPackageWaiting.swap(owner.mPackageWaiting);
             mDetection.swap(owner.mDetectionVectors);
@@ -636,7 +636,7 @@ namespace MWMechanics
         mPendingPackageDone.restore({});
         mActors.clear();
         mPackageWaiting.clear();
-        mStreetCellIndexValid = false;
+        mDoorRegionIndexValid = false;
         mDetectionVectors.clear();
         flushDiagnosticCounters();
         mNextEvaluationGeneration = 1;
@@ -741,83 +741,155 @@ namespace MWMechanics
         return result;
     }
 
-    void OblivionAiService::ensureStreetCellIndex()
+    void OblivionAiService::ensureDoorRegionIndex()
     {
-        if (mStreetQueryBatch && mStreetCellIndexValid) return;
+        if (mDoorQueryBatch && mDoorRegionIndexValid) return;
         const auto& service = mWorld.mStore.getOblivionPathgridService();
-        if (mStreetCellIndexValid && std::equal(service.graphs().begin(), service.graphs().end(),
-                mStreetGraphGenerations.begin(), mStreetGraphGenerations.end(),
+        if (mDoorRegionIndexValid && std::equal(service.graphs().begin(), service.graphs().end(),
+                mDoorGraphGenerations.begin(), mDoorGraphGenerations.end(),
                 [](const auto& graph, const auto& saved) {
                     return graph.first == saved.first && graph.second.generation() == saved.second;
                 }))
             return;
-        mStreetCellIndexValid = false;
-        mIncomingStreetCells.clear();
-        mOutgoingStreetCells.clear();
-        mReachableStreetCells.clear();
-        mStreetReachabilityOwners.clear();
-        mStreetGraphGenerations.clear();
-        for (const auto& [_, graph] : service.graphs())
+        mDoorRegionIndexValid = false;
+        mDoorGraphGenerations.clear();
+        mDoorNodeRegions.clear();
+        mDoorRegions.clear();
+        mDoorEndpoints.clear();
+        const auto invalid = std::numeric_limits<std::size_t>::max();
+        std::map<ESM::FormKey, std::size_t> offsets;
+        std::vector<ESM4::PathgridNodeKey> nodes;
+        std::vector<bool> enabled;
+        for (const auto& [key, graph] : service.graphs())
         {
-            mStreetGraphGenerations.emplace(graph.pathgridKey(), graph.generation());
-            const auto* sourceCell = mWorld.mStore.get<ESM4::Cell>().search(graph.cellKey());
-            if (!sourceCell || !sourceCell->isExterior())
-                continue;
+            mDoorGraphGenerations.emplace(key, graph.generation());
+            offsets.emplace(key, nodes.size());
+            mDoorNodeRegions[key].resize(graph.nodeCount(), invalid);
+            for (std::uint32_t i = 0; i < graph.nodeCount(); ++i)
+            {
+                nodes.push_back({key, i});
+                enabled.push_back(graph.isEnabled(i));
+            }
+        }
+        std::vector<std::vector<std::size_t>> outgoing(nodes.size()), incoming(nodes.size());
+        const auto addEdge = [&](std::size_t from, std::size_t to) {
+            if (enabled[from] && enabled[to])
+            {
+                outgoing[from].push_back(to);
+                incoming[to].push_back(from);
+            }
+        };
+        for (const auto& [key, graph] : service.graphs())
+        {
+            const auto offset = offsets.at(key);
+            for (const auto& [from, to] : graph.localEdges())
+                addEdge(offset + from, offset + to);
             for (const auto& link : graph.foreignLinks())
             {
-                if (!link.mDestination || link.mAmbiguous || !graph.isEnabled(link.mSourceNode))
-                    continue;
-                const auto* destinationGraph = service.graph(link.mDestination->mPathgrid);
-                if (!destinationGraph || !destinationGraph->isEnabled(link.mDestination->mNode))
-                    continue;
-                const auto* targetCell = mWorld.mStore.get<ESM4::Cell>().search(destinationGraph->cellKey());
-                if (targetCell && targetCell->isExterior() && sourceCell->mParent == targetCell->mParent
-                    && graph.cellKey() != destinationGraph->cellKey())
+                if (link.mAmbiguous || !link.mDestination) continue;
+                const auto* destination = service.graph(link.mDestination->mPathgrid);
+                if (!destination || !destination->contains(link.mDestination->mNode)) continue;
+                // PGRL door edges still require live authorization/activation.
+                // Only walking edges belong in a zero-teleport region.
+                const bool needsDoor = std::any_of(graph.objectLinks().begin(), graph.objectLinks().end(),
+                    [&](const auto& object) {
+                        return object.mKind == ESM4::PathgridObjectKind::Door
+                            && std::find(object.mNodes.begin(), object.mNodes.end(), link.mSourceNode)
+                                != object.mNodes.end();
+                    });
+                if (!needsDoor)
+                    addEdge(offset + link.mSourceNode,
+                        offsets.at(link.mDestination->mPathgrid) + link.mDestination->mNode);
+            }
+        }
+        // Iterative Kosaraju keeps one-way edges directed and avoids recursion
+        // through a content-sized exterior network. The condensation graph is
+        // derived only from enabled native nodes, never from saved actor poses.
+        std::vector<bool> visited(nodes.size(), false);
+        std::vector<std::size_t> order;
+        std::vector<std::pair<std::size_t, std::size_t>> stack;
+        for (std::size_t root = 0; root < nodes.size(); ++root)
+        {
+            if (!enabled[root] || visited[root]) continue;
+            visited[root] = true;
+            stack.emplace_back(root, 0);
+            while (!stack.empty())
+            {
+                auto& [node, next] = stack.back();
+                if (next == outgoing[node].size())
                 {
-                    mIncomingStreetCells[destinationGraph->cellKey()].insert(graph.cellKey());
-                    mOutgoingStreetCells[graph.cellKey()].insert(destinationGraph->cellKey());
+                    order.push_back(node);
+                    stack.pop_back();
+                    continue;
+                }
+                const auto to = outgoing[node][next++];
+                if (!visited[to])
+                {
+                    visited[to] = true;
+                    stack.emplace_back(to, 0);
                 }
             }
         }
-        mStreetCellIndexValid = true;
-    }
-
-    const std::set<ESM::FormKey>& OblivionAiService::reachableStreetCells(const ESM::FormKey& origin)
-    {
-        if (const auto found = mReachableStreetCells.find(origin); found != mReachableStreetCells.end())
-            return *found->second;
-        auto cells = std::make_shared<StreetCells>();
-        cells->insert(origin);
-        std::vector<ESM::FormKey> pending{origin};
-        while (!pending.empty())
+        std::vector<std::size_t> regions(nodes.size(), invalid), pending;
+        for (auto it = order.rbegin(); it != order.rend(); ++it)
         {
-            const auto cell = pending.back();
-            pending.pop_back();
-            if (const auto streets = mOutgoingStreetCells.find(cell); streets != mOutgoingStreetCells.end())
-                for (const auto& successor : streets->second)
-                    if (cells->insert(successor).second) pending.push_back(successor);
+            if (regions[*it] != invalid) continue;
+            const auto region = mDoorRegions.size();
+            mDoorRegions.emplace_back();
+            regions[*it] = region;
+            pending.push_back(*it);
+            while (!pending.empty())
+            {
+                const auto node = pending.back(); pending.pop_back();
+                mDoorNodeRegions.at(nodes[node].mPathgrid)[nodes[node].mNode] = region;
+                for (const auto from : incoming[node])
+                    if (regions[from] == invalid)
+                    {
+                        regions[from] = region;
+                        pending.push_back(from);
+                    }
+            }
         }
-        // Every cell in the origin's strongly connected component has the
-        // same forward closure. Share it without treating one-way links as
-        // bidirectional. Large exterior networks are built once per topology.
-        StreetCells component{origin};
-        pending.push_back(origin);
-        while (!pending.empty())
+        for (std::size_t from = 0; from < nodes.size(); ++from)
+            for (const auto to : outgoing[from])
+                if (regions[from] != regions[to])
+                {
+                    mDoorRegions[regions[from]].mOutgoingWalk.push_back(regions[to]);
+                    mDoorRegions[regions[to]].mIncomingWalk.push_back(regions[from]);
+                }
+        for (auto& region : mDoorRegions)
+            for (auto* edges : {&region.mIncomingWalk, &region.mOutgoingWalk})
+            {
+                std::sort(edges->begin(), edges->end());
+                edges->erase(std::unique(edges->begin(), edges->end()), edges->end());
+            }
+        mDoorEndpoints.resize(mUnloadedLocations.size());
+        for (std::size_t i = 0; i < mUnloadedLocations.size(); ++i)
         {
-            const auto cell = pending.back();
-            pending.pop_back();
-            if (const auto incoming = mIncomingStreetCells.find(cell); incoming != mIncomingStreetCells.end())
-                for (const auto& predecessor : incoming->second)
-                    if (cells->contains(predecessor) && component.insert(predecessor).second)
-                        pending.push_back(predecessor);
+            const auto& door = mUnloadedLocations[i];
+            if (door.mType != ESM::REC_DOOR4 || door.mTeleportDoor.isNull()) continue;
+            const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
+            if (marker == mUnloadedLocationByReference.end()) continue;
+            const auto* source = service.graphForCell(door.mCell);
+            const auto* destination = service.graphForCell(mUnloadedLocations[marker->second].mCell);
+            if (!source || !destination) continue;
+            const auto from = service.nearestEnabledNode(source->pathgridKey(),
+                {door.mPosition.x(), door.mPosition.y(), door.mPosition.z()}, 4096.f);
+            const auto to = service.nearestEnabledNode(destination->pathgridKey(),
+                {door.mTeleportPosition.x(), door.mTeleportPosition.y(), door.mTeleportPosition.z()}, 4096.f);
+            if (!from || !to) continue;
+            mDoorEndpoints[i] = std::pair{*from, *to};
+            const auto fromRegion = mDoorNodeRegions.at(from->mPathgrid)[from->mNode];
+            const auto toRegion = mDoorNodeRegions.at(to->mPathgrid)[to->mNode];
+            mDoorRegions[fromRegion].mOutgoingDoors.push_back(i);
+            mDoorRegions[toRegion].mIncomingDoors.push_back(i);
         }
-        for (const auto& cell : component) mReachableStreetCells.emplace(cell, cells);
-        if (cells->size() > 1) mStreetReachabilityOwners.push_back(cells);
-        return *cells;
+        mDoorRegionIndexValid = true;
     }
 
     void OblivionAiService::buildUnloadedLocationIndex()
     {
+        mDoorRegionIndexValid = false;
         mUnloadedLocations.clear();
         mUnloadedLocationByReference.clear();
         mUnloadedLocationsByBase.clear();
@@ -3822,341 +3894,128 @@ namespace MWMechanics
     bool OblivionAiService::prepareDoorRoute(LiveActor& live, const ESM4::PathgridNodeKey& start,
         const ESM::FormKey& destinationCell, const MWWorld::Ptr* actor)
     {
-        if (destinationCell.isNull())
+        const auto& service = mWorld.mStore.getOblivionPathgridService();
+        const auto* source = service.graph(start.mPathgrid);
+        const auto* destination = service.graphForCell(destinationCell);
+        if (!source || source->cellKey() != live.mState.mCell || !source->contains(start.mNode)
+            || !source->isEnabled(start.mNode) || !destination || !live.mDestination)
         {
-            live.mLastRouteFailure = "door-route-missing-cell";
+            live.mLastRouteFailure = "door-route-invalid-endpoint";
             return false;
         }
-
-        const ESM4::PathgridService& service = mWorld.mStore.getOblivionPathgridService();
-        const ESM4::PathgridGraph* sourceGraph = service.graph(start.mPathgrid);
-        if (sourceGraph == nullptr || sourceGraph->cellKey() != live.mState.mCell
-            || !sourceGraph->contains(start.mNode) || !sourceGraph->isEnabled(start.mNode))
-        {
-            live.mLastRouteFailure = "door-route-invalid-source-node";
-            return false;
-        }
-
-        const bool sameCell = destinationCell == live.mState.mCell;
-        const auto finalNode = sameCell && live.mDestination
-            ? service.nearestEnabledNode(sourceGraph->pathgridKey(),
-                {live.mDestination->x(), live.mDestination->y(), live.mDestination->z()}, 4096.f)
-            : std::nullopt;
-        if (sameCell && !finalNode)
+        const auto goal = service.nearestEnabledNode(destination->pathgridKey(),
+            {live.mDestination->x(), live.mDestination->y(), live.mDestination->z()}, 4096.f);
+        if (!goal)
         {
             live.mLastRouteFailure = "door-route-missing-destination-node";
             return false;
         }
-
-        // Resolve a shortest coarse route backwards from the requested cell.
-        // A native package destination may be behind several interiors (for
-        // example, an actor house -> city exterior -> another house). The
-        // current segment still ends at one real source-side door; the next
-        // segment is rebuilt after the paired marker commits the intermediate
-        // cell. This keeps every boundary an actual XTEL edge.
-        std::map<ESM::FormKey, std::size_t> remainingHops;
-        // Streets can cross CELL boundaries between two teleport doors.
-        // Follow resolved, directed PGRI edges backwards at zero door cost;
-        // the eventual node route still validates the complete approach.
-        ensureStreetCellIndex();
-        // Bound the derived cache between plans. References into it remain
-        // stable throughout this plan, including when another origin is added.
-        if (mStreetReachabilityOwners.size() > 64)
-        {
-            mReachableStreetCells.clear();
-            mStreetReachabilityOwners.clear();
-        }
-        const auto& sourceStreetCells = reachableStreetCells(live.mState.mCell);
-        // No game callbacks or door mutations run inside a route query.
-        // Reuse values only for this plan; the next actor/plan reads them anew.
+        ensureDoorRegionIndex();
+        const auto regionFor = [&](const ESM4::PathgridNodeKey& node) {
+            return mDoorNodeRegions.at(node.mPathgrid).at(node.mNode);
+        };
+        const auto startRegion = regionFor(start);
+        const auto goalRegion = regionFor(*goal);
+        const auto invalid = std::numeric_limits<std::size_t>::max();
+        std::vector<std::size_t> remaining(mDoorRegions.size(), invalid);
+        std::deque<std::pair<std::size_t, std::size_t>> pending{{goalRegion, 0}};
+        remaining[goalRegion] = 0;
         DoorStateCache doorStates;
-        // An interior can reach an exterior street frontier through its own
-        // exit. Without this frontier, every offscreen room-to-room plan walks
-        // backwards through all Tamriel streets and thousands of other doors.
-        // Validate that first exit now; retain it as the actual next XTEL leg.
-        std::map<ESM::FormKey, const std::set<ESM::FormKey>*> exitStreetCells;
-        bool reachableSourceDoor = false;
-        if (!sameCell)
-            if (const auto exits = mUnloadedDoorsByCell.find(live.mState.mCell);
-                exits != mUnloadedDoorsByCell.end())
-                for (const auto index : exits->second)
-                {
-                    const auto& door = mUnloadedLocations[index];
-                    if (door.mTeleportDoor.isNull()
-                        || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
-                        continue;
-                    bool locked = false;
-                    if (!canUseUnloadedDoor(live, door, locked, actor, &doorStates)) continue;
-                    const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
-                    if (marker == mUnloadedLocationByReference.end()) continue;
-                    const auto& landing = mUnloadedLocations[marker->second];
-                    if (landing.mCell.isNull() || !currentDoorState(landing, &doorStates).mAvailable)
-                        continue;
-                    const auto node = service.nearestEnabledNode(sourceGraph->pathgridKey(),
-                        {door.mPosition.x(), door.mPosition.y(), door.mPosition.z()}, 4096.f);
-                    if (node && service.route(start, *node))
-                    {
-                        // Include same-cell teleports: they may bridge a
-                        // disconnected component that has its own outward exit.
-                        reachableSourceDoor = true;
-                        if (!sourceStreetCells.contains(landing.mCell) && !exitStreetCells.contains(landing.mCell))
-                            exitStreetCells.emplace(landing.mCell, &reachableStreetCells(landing.mCell));
-                    }
-                }
-        if (!sameCell && sourceStreetCells.size() == 1 && !reachableSourceDoor)
+        const auto available = [&](std::size_t index) {
+            const auto& door = mUnloadedLocations[index];
+            if (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f)
+                return false;
+            bool locked = false;
+            return canUseUnloadedDoor(live, door, locked, actor, &doorStates);
+        };
+        const auto relax = [&](std::size_t region, std::size_t hops, bool walking) {
+            if (remaining[region] <= hops) return;
+            remaining[region] = hops;
+            if (walking) pending.emplace_front(region, hops);
+            else pending.emplace_back(region, hops);
+        };
+        // Reverse 0-1 search across actual directed walking regions and XTEL
+        // landings. A CELL can contain multiple disconnected regions: treating
+        // them as one invents through-routes and makes actors bounce between
+        // the entrance they just used and a room with no reachable onward exit.
+        while (!pending.empty())
         {
-            live.mLastRouteFailure = "door-route-no-accessible-exit";
+            const auto [region, hops] = pending.front(); pending.pop_front();
+            if (remaining[region] != hops || hops > remaining[startRegion]) continue;
+            for (const auto from : mDoorRegions[region].mIncomingWalk)
+                relax(from, hops, true);
+            for (const auto index : mDoorRegions[region].mIncomingDoors)
+                if (available(index))
+                    relax(regionFor(mDoorEndpoints[index]->first), hops + 1, false);
+        }
+        if (remaining[startRegion] == invalid || remaining[startRegion] == 0)
+        {
+            live.mLastRouteFailure = "door-route-no-connected-exit";
             return false;
         }
-        std::deque<ESM::FormKey> pendingCells;
-        remainingHops.emplace(destinationCell, 0);
-        pendingCells.push_back(destinationCell);
-        // A same-cell bridge has exactly one XTEL whose marker lands here.
-        // Its source may be across a PGRI street, but other teleport chains
-        // cannot satisfy that rule and need no reverse-world search.
-        if (sameCell)
-            if (const auto incoming = mUnloadedDoorsByDestinationCell.find(destinationCell);
-                incoming != mUnloadedDoorsByDestinationCell.end())
-                for (const auto index : incoming->second)
-                    remainingHops.try_emplace(mUnloadedLocations[index].mCell, 1);
-        const auto relaxCell = [&](const ESM::FormKey& cell, std::size_t distance, bool street) {
-            const auto [it, inserted] = remainingHops.emplace(cell, distance);
-            if (!inserted && it->second <= distance)
-                return;
-            it->second = distance;
-            if (street) pendingCells.push_front(cell);
-            else pendingCells.push_back(cell);
-        };
-        std::size_t reverseDoors = 0;
-        std::size_t reverseLocked = 0;
-        std::optional<std::size_t> exitDistance;
-        while (!sameCell && !pendingCells.empty())
+        // Enumerate only exits approachable without another teleport, including
+        // exits across directed PGRI streets. Evaluate equal-hop candidates by
+        // the real approach cost, regardless of which CELL owns the door.
+        std::vector<bool> visited(mDoorRegions.size(), false);
+        std::vector<std::size_t> walking{startRegion};
+        visited[startRegion] = true;
+        std::vector<std::pair<float, std::size_t>> candidates;
+        const auto point = source->worldPoint(start.mNode);
+        const osg::Vec3f origin(point.mX, point.mY, point.mZ);
+        while (!walking.empty())
         {
-            const ESM::FormKey cell = pendingCells.front();
-            pendingCells.pop_front();
-            const std::size_t distance = remainingHops.at(cell);
-            // Once a validated current-cell exit reaches the destination,
-            // longer reverse branches cannot improve the next door. Finish
-            // all equal-distance frontiers for deterministic alternative exits.
-            if (exitDistance && distance > *exitDistance)
-                continue;
-            // This frontier is already approachable without another door.
-            // Expanding it backwards would search unrelated doors across the
-            // entire continent. Keep same-cell component-bridging door plans.
-            if (!sameCell && sourceStreetCells.contains(cell))
-                continue;
-            bool reachedExit = false;
-            for (const auto& [landing, streets] : exitStreetCells)
-                if (streets->contains(cell))
-                {
-                    const auto recordDistance = [&](const ESM::FormKey& key, std::size_t hops) {
-                        const auto [it, inserted] = remainingHops.emplace(key, hops);
-                        if (!inserted) it->second = std::min(it->second, hops);
-                    };
-                    recordDistance(landing, distance);
-                    recordDistance(live.mState.mCell, distance + 1);
-                    exitDistance = exitDistance ? std::min(*exitDistance, distance) : distance;
-                    reachedExit = true;
-                }
-            if (reachedExit) continue;
-            if (const auto streets = mIncomingStreetCells.find(cell); streets != mIncomingStreetCells.end())
-                for (const auto& predecessor : streets->second)
-                    relaxCell(predecessor, distance, true);
-            const auto incoming = mUnloadedDoorsByDestinationCell.find(cell);
-            if (incoming == mUnloadedDoorsByDestinationCell.end())
-                continue;
-            for (const std::size_t index : incoming->second)
+            const auto region = walking.back(); walking.pop_back();
+            for (const auto index : mDoorRegions[region].mOutgoingDoors)
             {
-                const UnloadedLocation& door = mUnloadedLocations[index];
-                ++reverseDoors;
-                if (door.mType != ESM::REC_DOOR4 || door.mCell.isNull()
-                    || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
-                    continue;
-                bool locked = false;
-                if (!canUseUnloadedDoor(live, door, locked, actor, &doorStates))
+                const auto landing = regionFor(mDoorEndpoints[index]->second);
+                if (remaining[landing] == invalid || remaining[landing] + 1 != remaining[startRegion]
+                    || !available(index)) continue;
+                const auto& node = mDoorEndpoints[index]->first;
+                const auto approach = service.graph(node.mPathgrid)->worldPoint(node.mNode);
+                candidates.emplace_back((osg::Vec3f(approach.mX, approach.mY, approach.mZ) - origin).length(), index);
+            }
+            for (const auto to : mDoorRegions[region].mOutgoingWalk)
+                if (!visited[to])
                 {
-                    reverseLocked += locked ? 1 : 0;
-                    continue;
+                    visited[to] = true;
+                    walking.push_back(to);
                 }
-                relaxCell(door.mCell, distance + 1, false);
+        }
+        std::sort(candidates.begin(), candidates.end());
+        std::optional<ESM4::PathgridRoute> bestRoute;
+        std::size_t bestDoor = invalid;
+        float bestCost = std::numeric_limits<float>::max();
+        osg::Vec3f bestApproach;
+        for (const auto& [lowerBound, index] : candidates)
+        {
+            if (lowerBound > bestCost + 1.f) break;
+            const auto& door = mUnloadedLocations[index];
+            const auto& node = mDoorEndpoints[index]->first;
+            const auto route = service.route(start, node);
+            if (!route) continue;
+            const auto point = service.graph(node.mPathgrid)->worldPoint(node.mNode);
+            const osg::Vec3f approach(point.mX, point.mY, point.mZ);
+            const float cost = route.mRoute->mCost + (approach - door.mPosition).length();
+            if (!bestRoute || cost < bestCost
+                || (cost == bestCost && door.mReference < mUnloadedLocations[bestDoor].mReference))
+            {
+                bestRoute = *route.mRoute;
+                bestDoor = index;
+                bestCost = cost;
+                bestApproach = approach;
             }
         }
-
-        std::optional<ESM4::PathgridRoute> bestRoute;
-        std::optional<ESM::FormKey> bestDoor;
-        osg::Vec3f bestDoorPosition;
-        std::size_t bestHopCount = std::numeric_limits<std::size_t>::max();
-        float bestCost = std::numeric_limits<float>::max();
-        std::size_t sourceDoorCount = 0;
-        std::size_t sourceUsableCount = 0;
-        std::size_t sourceReachableCellCount = 0;
-        std::size_t sourceNodeCount = 0;
-        std::size_t sourceRouteCount = 0;
-        std::size_t sourceLockedCount = 0;
-        const auto considerDoorCell = [&](const ESM::FormKey& candidateCell) {
-            // A door need not be in the actor's current cell. Exterior PGRI
-            // edges can lead across several cells before the first XTEL edge.
-            // Native pathgrid routing determines whether a candidate door
-            // source is reachable without teleporting.
-            if (remainingHops.find(candidateCell) == remainingHops.end())
-                return;
-            const auto sourceDoors = mUnloadedDoorsByCell.find(candidateCell);
-            if (sourceDoors == mUnloadedDoorsByCell.end())
-                return;
-            for (const std::size_t index : sourceDoors->second)
-            {
-                const UnloadedLocation& door = mUnloadedLocations[index];
-                ++sourceDoorCount;
-                if (door.mType != ESM::REC_DOOR4 || door.mTeleportDoor.isNull()
-                    || (door.mReference == live.mState.mLastTransitionDoor && live.mState.mDoorCooldown > 0.f))
-                    continue;
-                bool locked = false;
-                if (!canUseUnloadedDoor(live, door, locked, actor, &doorStates))
-                {
-                    sourceLockedCount += locked ? 1 : 0;
-                    continue;
-                }
-                ++sourceUsableCount;
-
-                const auto destination = mUnloadedLocationByReference.find(door.mTeleportDoor);
-                if (destination == mUnloadedLocationByReference.end())
-                    continue;
-                const UnloadedLocation& marker = mUnloadedLocations[destination->second];
-                if (marker.mCell.isNull() || !currentDoorState(marker, &doorStates).mAvailable)
-                    continue;
-                // A same-cell bridge must land back in that cell. Reject
-                // other doors before routing to them, rather than after an
-                // otherwise pointless search across the exterior world.
-                if (sameCell && marker.mCell != destinationCell)
-                    continue;
-                const auto remaining = remainingHops.find(marker.mCell);
-                if (remaining == remainingHops.end())
-                    continue;
-                if (bestRoute && remaining->second + 1 > bestHopCount)
-                    continue;
-                ++sourceReachableCellCount;
-
-                const ESM4::PathgridGraph* doorGraph = service.graphForCell(door.mCell);
-                const auto doorNode = doorGraph
-                    ? service.nearestEnabledNode(doorGraph->pathgridKey(),
-                          { door.mPosition.x(), door.mPosition.y(), door.mPosition.z() }, 4096.f)
-                    : std::nullopt;
-                if (!doorNode)
-                    continue;
-                ++sourceNodeCount;
-                const ESM4::PathgridPoint doorPoint = doorGraph->worldPoint(doorNode->mNode);
-                const osg::Vec3f approach(doorPoint.mX, doorPoint.mY, doorPoint.mZ);
-                const auto sourcePoint = sourceGraph->worldPoint(start.mNode);
-                const float approachOffset = (approach - door.mPosition).length();
-                // Every path costs at least its straight-line distance. Once
-                // a usable exit is known, distant equal-hop doors cannot win.
-                // Avoid an A* across Tamriel for each of those candidates.
-                const float lowerBound = (approach
-                    - osg::Vec3f(sourcePoint.mX, sourcePoint.mY, sourcePoint.mZ)).length() + approachOffset;
-                if (bestRoute && remaining->second + 1 == bestHopCount && lowerBound > bestCost + 1.f)
-                    continue;
-                const ESM4::PathgridRouteResult route = service.route(start, *doorNode);
-                if (!route)
-                {
-                    logEvent("door-candidate-unreachable", live, "door=" + door.mReference.serialize()
-                        + " start=" + start.mPathgrid.serialize() + "/" + std::to_string(start.mNode)
-                        + " destination=" + doorNode->mPathgrid.serialize() + "/"
-                        + std::to_string(doorNode->mNode) + " failure=" + route.mDiagnostic);
-                    continue;
-                }
-                ++sourceRouteCount;
-
-                float exitCost = 0.f;
-                if (sameCell)
-                {
-                    // XTEL can bridge disconnected components of one CELL.
-                    // Prefer a landing connected to the requested destination.
-                    // An intermediate component can also make progress (the
-                    // tutorial's exit is above the room floor). Never choose
-                    // an unresolved landing in our source component or a
-                    // return edge that increases the remaining distance.
-                    const auto exitNode = service.nearestEnabledNode(sourceGraph->pathgridKey(),
-                        {door.mTeleportPosition.x(), door.mTeleportPosition.y(), door.mTeleportPosition.z()}, 4096.f);
-                    if (!exitNode) continue;
-                    const auto exitRoute = service.route(*exitNode, *finalNode);
-                    if (exitRoute) exitCost = exitRoute.mRoute->mCost;
-                    else
-                    {
-                        const auto sourceToExit = service.route(start, *exitNode);
-                        const osg::Vec3f origin = actor ? actor->getRefData().getPosition().asVec3()
-                                                     : live.mState.mLastValidPosition.asVec3();
-                        if (sourceToExit || distanceSquared(door.mTeleportPosition, *live.mDestination)
-                            >= distanceSquared(origin, *live.mDestination)) continue;
-                        exitCost = (door.mTeleportPosition - *live.mDestination).length();
-                    }
-                }
-                const float cost = route.mRoute->mCost + exitCost + approachOffset;
-                const std::size_t hopCount = remaining->second + 1;
-                if (!bestRoute || hopCount < bestHopCount
-                    || (hopCount == bestHopCount
-                        && (cost < bestCost || (cost == bestCost && door.mReference < *bestDoor))))
-                {
-                    bestHopCount = hopCount;
-                    bestCost = cost;
-                    bestDoor = door.mReference;
-                    // The reachable PGRD approach is at the actor's feet;
-                    // a door model origin can be above activation height.
-                    bestDoorPosition = approach;
-                    bestRoute = *route.mRoute;
-                }
-            }
-        };
-
-        // Nearly every interior route begins with a resident-cell door. Keep
-        // that common path cheap; search other door-source cells only when no
-        // current-cell edge reaches the destination through the door graph.
-        considerDoorCell(live.mState.mCell);
         if (!bestRoute)
         {
-            std::vector<std::tuple<std::size_t, float, ESM::FormKey>> candidates;
-            const auto point = sourceGraph->worldPoint(start.mNode);
-            const osg::Vec3f origin(point.mX, point.mY, point.mZ);
-            for (const auto& [candidateCell, hops] : remainingHops)
-                if (candidateCell != live.mState.mCell)
-                {
-                    float nearest = std::numeric_limits<float>::max();
-                    if (const auto doors = mUnloadedDoorsByCell.find(candidateCell);
-                        doors != mUnloadedDoorsByCell.end())
-                        for (const auto index : doors->second)
-                            nearest = std::min(nearest,
-                                distanceSquared(origin, mUnloadedLocations[index].mPosition));
-                    candidates.emplace_back(hops, nearest, candidateCell);
-                }
-            std::sort(candidates.begin(), candidates.end());
-            for (const auto& [hops, nearest, candidateCell] : candidates)
-            {
-                if (bestRoute && hops > bestHopCount)
-                    break;
-                considerDoorCell(candidateCell);
-            }
-        }
-
-        if (!bestRoute || !bestDoor)
-        {
-            std::ostringstream diagnostic;
-            diagnostic << "door-route-unavailable source_doors=" << sourceDoorCount
-                       << " source_usable=" << sourceUsableCount
-                       << " source_locked=" << sourceLockedCount
-                       << " source_reaching_destination=" << sourceReachableCellCount
-                       << " source_nodes=" << sourceNodeCount
-                       << " source_routes=" << sourceRouteCount
-                       << " reverse_cells=" << remainingHops.size()
-                       << " reverse_doors=" << reverseDoors
-                       << " reverse_locked=" << reverseLocked;
-            live.mLastRouteFailure = diagnostic.str();
+            live.mLastRouteFailure = "door-route-no-reachable-approach";
             return false;
         }
         live.mRoute = std::move(bestRoute->mNodes);
         live.mRouteCursor = live.mRoute.size() > 1 ? 1 : live.mRoute.size();
         live.mForeignRouteTarget.reset();
-        live.mRouteDoor = *bestDoor;
-        live.mRouteDoorPosition = bestDoorPosition;
-        live.mState.mDoor = *bestDoor;
+        live.mRouteDoor = mUnloadedLocations[bestDoor].mReference;
+        live.mRouteDoorPosition = bestApproach;
+        live.mState.mDoor = *live.mRouteDoor;
         live.mState.mPathgrid = live.mRoute.front().mPathgrid;
         live.mState.mPathNode = live.mRoute.front().mNode;
         live.mState.mRouteGeneration = bestRoute->mGeneration;
@@ -5119,14 +4978,14 @@ namespace MWMechanics
             return;
         // Package callbacks run after this pass. Check graph generations once
         // for the batch; overlay APIs still invalidate the index immediately.
-        ensureStreetCellIndex();
-        struct ResetStreetBatch
+        ensureDoorRegionIndex();
+        struct ResetDoorBatch
         {
             bool& mSlot;
             bool mPrevious;
-            ~ResetStreetBatch() { mSlot = mPrevious; }
-        } streetBatch{mStreetQueryBatch, mStreetQueryBatch};
-        mStreetQueryBatch = true;
+            ~ResetDoorBatch() { mSlot = mPrevious; }
+        } doorBatch{mDoorQueryBatch, mDoorQueryBatch};
+        mDoorQueryBatch = true;
         // Callbacks are queued, but package door actions can still insert saved
         // references. Refresh the borrowed index at actor/step boundaries when
         // the backing vector changes; in-place state edits remain visible.
@@ -7929,7 +7788,7 @@ namespace MWMechanics
 
     void OblivionAiService::invalidateOverlayRoutes(const std::set<ESM::FormKey>& changedPathgrids)
     {
-        mStreetCellIndexValid = false;
+        mDoorRegionIndexValid = false;
         for (auto& [_, live] : mActors)
         {
             if (!oblivionRouteAffectedByOverlay(
@@ -8400,7 +8259,7 @@ namespace MWMechanics
         for (const auto& [actor, door] : mImpl->mCollisionExceptions)
             target.mWorld.mPhysics->setIgnoreCollision(actor, door, false);
         mImpl->mPathgrids->commit();
-        target.mStreetCellIndexValid = false;
+        target.mDoorRegionIndexValid = false;
         target.mActors.swap(mImpl->mActors);
         target.mPackageWaiting.swap(mImpl->mPackageWaiting);
         target.mDetectionVectors.swap(mImpl->mDetection);

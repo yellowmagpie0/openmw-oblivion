@@ -275,21 +275,23 @@ namespace MWMechanics
         std::map<ESM::FormKey, std::size_t> mUnloadedLocationByReference;
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedLocationsByBase;
         std::map<std::uint32_t, std::vector<std::size_t>> mUnloadedLocationsByType;
-        // Directed coarse XTEL edges. The reverse index lets a route build
-        // find a shortest sequence of real door transitions without scanning
-        // every placed reference for every actor.
+        // Package door policies address both the source and destination CELL.
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByCell;
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByDestinationCell;
-        // Derived street topology is shared by route plans and rebuilt after
-        // graph/overlay changes; it is not part of saved actor state.
-        bool mStreetCellIndexValid = false;
-        bool mStreetQueryBatch = false;
-        std::map<ESM::FormKey, std::uint64_t> mStreetGraphGenerations;
-        std::map<ESM::FormKey, std::set<ESM::FormKey>> mIncomingStreetCells;
-        std::map<ESM::FormKey, std::set<ESM::FormKey>> mOutgoingStreetCells;
-        using StreetCells = std::set<ESM::FormKey>;
-        std::map<ESM::FormKey, std::shared_ptr<const StreetCells>> mReachableStreetCells;
-        std::vector<std::shared_ptr<const StreetCells>> mStreetReachabilityOwners;
+        // Strongly connected walking regions preserve disconnected components
+        // inside one CELL. Directed PGRI edges and XTEL landings connect these
+        // regions. Only topology is cached; access is checked for each plan.
+        struct DoorRegion
+        {
+            std::vector<std::size_t> mIncomingWalk, mOutgoingWalk;
+            std::vector<std::size_t> mIncomingDoors, mOutgoingDoors;
+        };
+        bool mDoorRegionIndexValid = false;
+        bool mDoorQueryBatch = false;
+        std::map<ESM::FormKey, std::uint64_t> mDoorGraphGenerations;
+        std::map<ESM::FormKey, std::vector<std::size_t>> mDoorNodeRegions;
+        std::vector<DoorRegion> mDoorRegions;
+        std::vector<std::optional<std::pair<ESM4::PathgridNodeKey, ESM4::PathgridNodeKey>>> mDoorEndpoints;
         mutable std::map<std::pair<ESM::FormKey, ESM::FormKey>, ESM4::RuntimeDetectionVector> mDetectionVectors;
         mutable std::map<std::string, std::uint64_t> mDiagnosticCounters;
         mutable std::uint64_t mNextEvaluationGeneration = 1;
@@ -323,8 +325,7 @@ namespace MWMechanics
         OblivionDoorState currentDoorState(const UnloadedLocation& door, DoorStateCache* cache = nullptr) const;
         bool doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor = nullptr) const;
         void buildUnloadedLocationIndex();
-        void ensureStreetCellIndex();
-        const std::set<ESM::FormKey>& reachableStreetCells(const ESM::FormKey& origin);
+        void ensureDoorRegionIndex();
         void seedActors();
         void seedActors(std::map<ESM::FormKey, LiveActor>& actors);
         std::vector<ESM4::PackageCandidate> basePackages(const ESM::FormKey& base) const;

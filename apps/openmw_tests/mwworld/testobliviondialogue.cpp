@@ -2551,7 +2551,8 @@ TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChange
 
 namespace
 {
-    std::string sameCellTeleportRecords(bool reachableExit, bool foreignCell = false, bool lockedOwner = false)
+    std::string sameCellTeleportRecords(bool reachableExit, bool foreignCell = false, bool lockedOwner = false,
+        const std::string& sourceExtra = {})
     {
         const auto group = [](unsigned kind, const std::string& data, unsigned label = 0xb04) {
             return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
@@ -2603,7 +2604,7 @@ namespace
         }
         return record(ESM4::REC_DOOR, 0xd00, sub(ESM::fourCC("EDID"), std::string("TestTeleportDoor\0",17)))
             + group(6, group(9, placed(0xd01,0xd00,128,160,0xd02,reachableExit ? 1024 : 0)
-                + (foreignCell ? std::string{} : destination) + pathgrid)) + foreign + package;
+                + sourceExtra + (foreignCell ? std::string{} : destination) + pathgrid)) + foreign + package;
     }
 }
 
@@ -3601,6 +3602,102 @@ TEST(OblivionTutorialDoor, ForeignCellTeleportUsesFloorApproachAndFinishesOnlyAt
         EXPECT_EQ(complete.mPendingPackageDone.front().mPackage,key(0xd05));
         EXPECT_NEAR(ai.state(actor)->mLastValidPosition.pos[0],1280,64);
     }
+}
+
+TEST(OblivionTutorialDoor, DisconnectedOnwardExitDoesNotCreateAnAbstractDoorLoop)
+{
+    MWClass::ESM4Door::registerSelf();
+    for (const bool shifted : {false, true})
+        for (const unsigned directions : {0u, 1u, 2u, 3u})
+        {
+            const bool connected = (directions & 1u) != 0;
+            SCOPED_TRACE(shifted);
+            SCOPED_TRACE(directions);
+            const auto group = [](unsigned kind, unsigned label, const std::string& data) {
+                return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
+                    + bytes(label) + bytes(kind) + bytes(0u) + data;
+            };
+            const auto placed = [](unsigned id, unsigned base, float x, unsigned target = 0, float landing = 0) {
+                auto data = sub(ESM::fourCC("NAME"), bytes(base))
+                    + sub(ESM::fourCC("DATA"), bytes(std::array<float,6>{x,0,0,0,0,0}));
+                if (target) data += sub(ESM::fourCC("XTEL"), bytes(target)
+                    + bytes(std::array<float,6>{landing,0,0,0,0,0}));
+                return record(ESM4::REC_REFR, id, data);
+            };
+            // A -> B -> C looks connected at CELL granularity. Both B's
+            // onward exit and A's direct exit to C are in disconnected
+            // components. Cell-only plans therefore alternate A -> B -> A;
+            // each room appears to offer a route through the other one.
+            auto extra = sameCellTeleportRecords(true, true, false, placed(0xd14,0xd00,512,0xd15,4096));
+            extra += group(6, 0xd06, group(9, 0xd06, placed(0xd10,0xd00,2048,0xd11,4096)));
+            extra += group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xd16,
+                sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior}))));
+            extra += group(6, 0xd16, group(9, 0xd16,
+                placed(0xd11,0xd00,4096,0xd10,2048) + placed(0xd13,0xb00,4224)
+                + placed(0xd15,0xd00,4096,0xd14,512)));
+            SwitchFixture f(shifted, false, extra, 14, false);
+            auto& world = f.mFixture.mWorld;
+            auto& store = world.getStore();
+            ASSERT_EQ(store.search<ESM4::Reference>(key(0xd14))->mParent,
+                store.search<ESM4::Cell>(key(0xb04))->mId);
+            auto package = *store.search<ESM4::AIPackage>(key(0xd05));
+            package.mLocationData.mReferenceKey = key(0xd13);
+            store.getWritable<ESM4::AIPackage>().insertStatic(package, key(0xd05));
+            auto middle = *store.search<ESM4::Pathgrid>(key(0xd07));
+            middle.mData = 3;
+            middle.mNodes.push_back({2048,0,0,0,0,0});
+            if (directions & 1u)
+                middle.mLinks.push_back({1,2});
+            if (directions & 2u)
+                middle.mLinks.push_back({2,1});
+            ESM4::Pathgrid goal{};
+            goal.mFormKey = key(0xd17); goal.mData = 2;
+            goal.mNodes = {{4096,0,0,1,0,0},{4224,0,0,1,0,0}};
+            goal.mLinks = {{0,1},{1,0}};
+            auto& paths = store.getOblivionPathgridService();
+            auto origin = *store.search<ESM4::Pathgrid>(key(0xd04));
+            origin.mData = 3;
+            origin.mNodes.push_back({512,0,0,0,0,0});
+            paths.registerPathgrid(origin,key(0xb04));
+            paths.registerPathgrid(middle,key(0xd06));
+            paths.registerPathgrid(goal,key(0xd16));
+            ASSERT_FALSE(paths.route({key(0xd04),0},{key(0xd04),2}));
+            ASSERT_EQ(bool(paths.route({key(0xd07),0},{key(0xd07),2})),connected);
+            auto& ai = *world.getOblivionAiService();
+            const auto actor = key(0xa00);
+            ASSERT_TRUE(ai.addScriptPackage(f.mActor,key(0xd05)));
+            ASSERT_EQ(ai.state(actor)->mCell,key(0xb04));
+            ASSERT_FLOAT_EQ(ai.state(actor)->mLastValidPosition.pos[0],0.f);
+            world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+            for (int i = 0; i < 256; ++i) ai.updateUnloaded(.25f);
+            if (connected)
+            {
+                EXPECT_EQ(ai.state(actor)->mCell,key(0xd16));
+                EXPECT_EQ(ai.state(actor)->mTransitionGeneration,2u);
+                EXPECT_EQ(f.capture().mPendingPackageDone.size(),1u);
+            }
+            else
+            {
+                EXPECT_EQ(ai.state(actor)->mCell,key(0xb04));
+                EXPECT_EQ(ai.state(actor)->mTransitionGeneration,0u);
+                EXPECT_EQ(ai.state(actor)->mPhase,ESM4::PackagePhase::Stalled);
+                EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+                ai.restore(ESM4::RuntimeState::deserializeBinary(f.capture().serializeBinary()));
+                for (int i = 0; i < 32; ++i) ai.updateUnloaded(.25f);
+                EXPECT_EQ(ai.state(actor)->mTransitionGeneration,0u);
+                // Rebuilding the topology after a graph change must
+                // admit the now usable onward path, without a new service.
+                middle.mLinks.push_back({1,2});
+                middle.mLinks.push_back({2,1});
+                paths.registerPathgrid(middle,key(0xd06));
+                world.getWorldModel().registerPtr(f.mActor);
+                ASSERT_TRUE(ai.addScriptPackage(f.mActor,key(0xd05)));
+                world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+                for (int i = 0; i < 256; ++i) ai.updateUnloaded(.25f);
+                EXPECT_EQ(ai.state(actor)->mCell,key(0xd16));
+                EXPECT_EQ(ai.state(actor)->mTransitionGeneration,2u);
+            }
+        }
 }
 
 TEST(OblivionTutorialDoor, AbstractRouteCannotLeaveADisabledOrLockedOnlyExitAcrossRestore)

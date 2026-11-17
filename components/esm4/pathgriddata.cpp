@@ -457,6 +457,11 @@ namespace ESM4
                 mCells.erase(oldCellIt);
         }
         PathgridGraph graph(definition, cell, transform);
+        // A replacement is a topology change even when it has the same key,
+        // node count and no overlays. Retire routes and derived connectivity
+        // built from the previous winning graph.
+        if (graphIt != mGraphs.end())
+            graph.mGeneration = graphIt->second.generation() + 1;
         ESM::Pathgrid navigatorPathgrid = makeNavigatorPathgrid(graph);
         mGraphs.insert_or_assign(definition.mFormKey, std::move(graph));
         mNavigatorPathgrids.insert_or_assign(definition.mFormKey, std::move(navigatorPathgrid));
