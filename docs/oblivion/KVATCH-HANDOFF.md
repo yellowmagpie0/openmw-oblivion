@@ -39,8 +39,10 @@ each advances over500 units with both lives/health and Follow1778d1 preserved.
 Player remains on bridge; earned kills/inventory/quests/topics/reactions and
 inactive corpse shader state persist. Full engine2,324 in each build and Python623
 pass. [Verification](KVATCH-BRIDGE-FOLLOWER-YIELD-VERIFICATION.json).
-Next required action: freshly fetch/merge Windows branch after this local chunk,
-verify integration, then continue bridge toward Reapers Sprawl. Primary normal
+Windows branch freshly fetched afterc54a184bb9: GitHub head remainsc8fdfc22a8,
+already merged; no source/build delta. Remote heads independently listed.
+Evidence: `build/oblivion-compat/kvatch-bridge-yield/windows-refresh-after-chunk-01.json`.
+Next: continue bridge toward Reapers Sprawl. Primary normal
 continuation is `build/oblivion-compat/kvatch-bridge-yield/normal-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
 SHA256 `471a051ed339039f33e8d253a2129b0157adbad3f61c3196a559f576eeaea234`.
 Player[2026.40,14842.78,4373.65]; Ilend[1839.58,15004.74,4373.65].
