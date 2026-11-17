@@ -5,39 +5,40 @@ Gate → original interior/road/tower progression. Full gate closure and main-qu
 acceptance remain open. Choose the next bounded chunk from an observed gameplay
 failure; keep unrelated dependencies and exact numeric parity outside its scope.
 
-**Latest completed chunk: animated Sigil base collision offset.**
-Ordinary traversal of The Blood Feast now passes original ACTI0c48e4/base0c48e3
-and reaches the lower left Rending Halls doorway01d126. Its body32 remains solid
-layer1; the authored body-local translation/rotation now survives animated node
-updates instead of producing an invisible wall across the floor at y=-600.
-Original normal movement independently crosses this plane (Y-760 to-461.99 at
-X-475, Health80 unchanged); prefix/pristine restoration and clean exit pass.
-Normal/SAN actual traversal and genuine own-save cold cases preserve Player/
-Ilend life, Health94.54, earned inventory, MS48stage25, topics/reactions and the
-unchanged Sigil reference. Normal/SAN components3,315 and engine2,317 pass;
-Python623 reused with original provenance. No new schema; default Idle remains
-ordinary automatic animation, without a new saved-phase claim.
-[Contract](KVATCH-SIGIL-BASE-COLLISION-CONTRACT.json),
-[native oracle](KVATCH-SIGIL-BASE-COLLISION-ORACLE.json),
-[verification](KVATCH-SIGIL-BASE-COLLISION-VERIFICATION.json).
-Evidence: `build/oblivion-compat/kvatch-blood-feast`.
+**Latest completed chunk: optional path-point commands on unlinked Hall doors.**
+Normal Space entered original Rending Halls01d0c7 through door01d126. Original
+script005162 on refs01d119/093ee0 now finishes Open0/init1, matching independent
+native SV observations. Raw master scan confirms neither door has a PGRL link.
+Missing links cause no changes through the existing authority; native AI/null
+context checks remain and real linked-node mutation code is unchanged.
+Normal/SAN entry each records two initialization no-ops, unchanged path overlays,
+one Ilend transition and clear arrival; genuine own-save cold processes retain
+both initialized locals with no repeated no-op/transition/clearance. Health94.54,
+Player/Ilend life and earned ownership, quests25, topics/reactions persist.
+Full normal/SAN engine2,317 pass; unchanged components3,315/Python623 are reused
+with original provenance. Unit leak1, rendered leak0. No schema change.
+[Contract](KVATCH-UNLINKED-DOOR-PATHPOINTS-CONTRACT.json),
+[native oracle](KVATCH-UNLINKED-DOOR-PATHPOINTS-ORACLE.json),
+[verification](KVATCH-UNLINKED-DOOR-PATHPOINTS-VERIFICATION.json).
+Evidence: `build/oblivion-compat/kvatch-rending-halls`.
 
-Earlier accepted fixes: [occupied follower door arrival](KVATCH-FOLLOWER-DOOR-ARRIVAL-VERIFICATION.json)
-keeps Ilend clear of Player after the original Tower Portal; [Harrada phantom
-contacts](KVATCH-HARRADA-CONTACT-VERIFICATION.json) retain native geometry,
-damage/push and save ownership. Their full original evidence remains linked.
+Earlier accepted fixes: [animated Sigil base collision offset](KVATCH-SIGIL-BASE-COLLISION-VERIFICATION.json)
+clears the original Blood Feast floor while retaining its solid body;
+[occupied follower door arrival](KVATCH-FOLLOWER-DOOR-ARRIVAL-VERIFICATION.json)
+and [Harrada phantom contacts](KVATCH-HARRADA-CONTACT-VERIFICATION.json)
+retain their original linked evidence and bounded acceptance.
 
-**Next action:** use ordinary Space on the already faced, named original
-Door to Rending Halls, then continue that original cell to the next observed
-bounded gameplay failure. Healthy primary continuation:
-`build/oblivion-compat/kvatch-blood-feast/normal-sigil-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `418fa21bb6ebc3569676f73fef39efcc4b7737452239da46f674c906e7427115`.
-Player[-1264.185669,3.386670,-248.341675], pitch0.546875/yaw-1.369141;
-Ilend[-1077.366089,-16.018938,-228.365875], gap189, alive on follow1778d1.
-Original door01d126 leads to01d118 in CELL01d0c7 (Rending Halls).
-No Rending Halls entry, tower ascent, Sigil Stone or gate closure is claimed yet.
-Earlier arrival/partial-floor checkpoints and diagnostic failures remain in the
-linked contracts and evidence; partial path completion is not doorway arrival.
+**Next action:** continue ordinary movement through original Rending Halls,
+including the actual animated doors, and pick the next bounded chunk from an
+observed gameplay blocker. Healthy accepted primary continuation:
+`build/oblivion-compat/kvatch-rending-halls/normal-cold-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `1b9cd53b0a8eee23a62916e8a76f685def1080b41ad7ab54eb7b8cd0331c10d1`.
+Player[12.505771,-384.081940,9.699608], pitch0/yaw-0.4249995;
+Ilend[-122.494232,-384.081940,9.640244], gap135, alive on follow1778d1.
+Both Hall doors have Open0/init1; no PGRL overlay changes. The old failed entry
+save (init0 with diagnostics) remains diagnostic and is not the replay source.
+Full Hall traversal, physical upper-door opening, tower ascent, Sigil Stone and
+gate closure remain open.
 
 For healthy road replays, the earlier earned source remains:
 `build/oblivion-compat/kvatch-ilend/normal-original-ilend-follow-cold-road-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

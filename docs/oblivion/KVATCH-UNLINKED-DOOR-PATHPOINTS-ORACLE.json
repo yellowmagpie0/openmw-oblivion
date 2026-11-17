@@ -1,0 +1,63 @@
+{
+  "status": "Scoped original-game expectation established; candidate implementation acceptance pending.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "script": "005162",
+  "base": "0182e8",
+  "cell": "01d0c7",
+  "content_audit": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "targets": [
+      "01d119",
+      "093ee0"
+    ],
+    "counts": {
+      "pathgrids": 8228,
+      "object_links": 480
+    },
+    "matches": []
+  },
+  "native_probe": "build/oblivion-compat/kvatch-rending-halls/original-01/probe-plan.json",
+  "boundary": "Isolated original script-state diagnostic. Pristine prison source; COC to original Rending Halls is declared Player staging. Combat AI off; ordinary AI, script execution and collision enabled. No stats, quest variables, target-reference edits, collision changes or F5.",
+  "observed": {
+    "cell_match": 1,
+    "references": [
+      {
+        "reference": "01d119",
+        "disabled": 0,
+        "Open": 0,
+        "init": 1
+      },
+      {
+        "reference": "093ee0",
+        "disabled": 0,
+        "Open": 0,
+        "init": 1
+      }
+    ],
+    "captures": [
+      "07-first-door-locals.png",
+      "08-second-door-locals.png"
+    ]
+  },
+  "expected_behavior": "DisableLinkedPathPoints with no PGRL binding does not abort this original initializer; it proceeds to init1. Absence of links produces no node mutations.",
+  "limits": "Observed initialization, not physical door activation or native numeric command return values.",
+  "process_epoch": {
+    "pid": 2197877,
+    "start_ticks": 42774474,
+    "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+    "window_id": 37748739,
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "mapped_original_exe": [
+      "00400000-00401000 r-xp 00000000 00:25 2071952                            /home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe"
+    ]
+  },
+  "cleanup": {
+    "wrapper_exit": 0,
+    "launcher_exit": 0,
+    "restoration": {
+      "restored": true,
+      "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    }
+  }
+}

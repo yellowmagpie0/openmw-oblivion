@@ -3312,8 +3312,11 @@ namespace MWWorld
         {
             const bool enabled = name == "enablelinkedpathpoints";
             const ESM::FormKey object = objectKey();
-            if (oblivionAi() == nullptr || !oblivionAi()->hasLinkedPathPoints(object))
-                throw ObScript::RuntimeError("OBSV109", "Linked path-point command requires a linked PGRL object", name);
+            if (oblivionAi() == nullptr || object.isNull())
+                throw ObScript::RuntimeError("OBSV109", "Linked path-point command requires a native object context", name);
+            // The original shared Citadel Hall door script also runs on
+            // references without PGRL links. Nothing changes in that case,
+            // but its initializer and activation statements must continue.
             const bool changed = oblivionAi()->setLinkedPathPoints(object, enabled);
             trace(name + " object=" + object.serialize() + " changed=" + (changed ? "true" : "false"));
             return std::int64_t(changed);

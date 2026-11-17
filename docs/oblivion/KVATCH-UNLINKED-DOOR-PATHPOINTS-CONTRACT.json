@@ -1,0 +1,55 @@
+{
+  "status": "Accepted: original unlinked door initialization, no-error normal/SAN entry and genuine own-save continuation pass; full engine gates pass, unchanged component/Python evidence reused with provenance.",
+  "chunk": "Optional linked-path-point commands on real Citadel Hall animated doors with no PGRL object links.",
+  "script": "005162",
+  "base": "0182e8",
+  "references": [
+    "01d119",
+    "093ee0"
+  ],
+  "cell": "01d0c7",
+  "pathgrid": "01d131",
+  "original_global_audit": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "targets": [
+      "01d119",
+      "093ee0"
+    ],
+    "counts": {
+      "pathgrids": 8228,
+      "object_links": 480
+    },
+    "matches": []
+  },
+  "baseline": {
+    "case": "build/oblivion-compat/kvatch-rending-halls/normal-entry-01",
+    "game_exit": 0,
+    "scenario_passed": false,
+    "actions_complete": true,
+    "diagnostics": 200,
+    "diagnostic": "DisableLinkedPathPoints requires a linked PGRL object",
+    "locals": {
+      "Open": 0,
+      "init": 0
+    },
+    "player_cell": "01d0c7",
+    "follower_gap": 135,
+    "health": 94.54
+  },
+  "healthy_primary_source": {
+    "path": "build/oblivion-compat/kvatch-blood-feast/normal-sigil-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "418fa21bb6ebc3569676f73fef39efcc4b7737452239da46f674c906e7427115"
+  },
+  "native_probe": "build/oblivion-compat/kvatch-rending-halls/original-01/probe-plan.json",
+  "acceptance": [
+    "Independent original-game script state establishes behavior when these original refs have no PGRL links.",
+    "Normal original door entry must have no ObScript diagnostics; both original door initializers finish and preserve owned state.",
+    "Real linked PGRL mutations retain their existing authority; do not fabricate links or suppress diagnostics globally.",
+    "Normal/SAN genuine own-save cold continuations preserve initialized locals and navigation overlay ownership without repeated initialization."
+  ],
+  "scope_limits": [
+    "No full Rending Halls traversal or gate/main-quest completion.",
+    "The diagnostic entry save is not an accepted continuation; replay from the healthy Blood Feast doorway."
+  ],
+  "oracle": "KVATCH-UNLINKED-DOOR-PATHPOINTS-ORACLE.json"
+}

@@ -1,0 +1,27 @@
+{
+  "kind": "Original-game script-state diagnostic, not earned campaign evidence",
+  "question": "Do the original unlinked Citadel Hall animated door scripts finish GameMode initialization without PGRL links?",
+  "source": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S2/original-06/compat/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Saves/quicksave.ess",
+    "sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "reason": "Isolated original script-state diagnostic. Pristine prison source; COC to original Rending Halls is declared Player staging. Combat AI off; ordinary AI, script execution and collision enabled. No stats, quest variables, target-reference edits, collision changes or F5.",
+    "plugins": [
+      {
+        "name": "Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+      }
+    ]
+  },
+  "setup": [
+    "Load pristine source, tcai off, coc OblivionMqKvatchCitadelHall01.",
+    "Allow ordinary unpaused GameMode processing before inspecting either original door."
+  ],
+  "measurements": [
+    "Select original refs01d119 and093ee0; read GetDisabled and ShowVars.",
+    "Native init=1 with Open=0 establishes that the unlinked DisableLinkedPathPoints statement does not abort the following assignment.",
+    "Do not implement silent no-op behavior from fork output alone; retain any contradictory original observation."
+  ],
+  "cleanup": "qqq from console, record wrapper/launcher exits and exact prefix/pristine restoration.",
+  "oracle": "KVATCH-UNLINKED-DOOR-PATHPOINTS-ORACLE.json",
+  "observed_status": "Both original enabled doors finish init1/Open0; wrapper/launcher exit0 and exact restoration pass."
+}

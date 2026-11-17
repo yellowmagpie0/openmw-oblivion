@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "name": "Original unlinked Citadel Hall doors: own-save cold initialization and clear follower",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal nearby=require('openmw.nearby')\nlocal util=require('openmw.util')\nlocal period=0;local joined=nil;local elapsed=0;local reported=false\nreturn {{engineHandlers={{onFrame=function(dt)\n if core.isWorldPaused() then return end\n assert(not types.Actor.isDead(self),'Player died at original Rending Halls door')\n elapsed=elapsed+dt;period=period+dt;if period<.2 then return end;period=0\n if self.cell.id~=core.getFormId('Oblivion.esm',0x1d0c7) then\n  print('RendingHall portal control ready position='..tostring(self.position));return\n end\n if not reported then print('RendingHall entered Rending Halls');reported=true end\n for _,obj in ipairs(nearby.actors) do\n  if obj.id=='0x1098138' then\n   assert(not types.Actor.isDead(obj),'Ilend died at the door')\n   if not joined then joined=elapsed end\n   local delta=obj.position-self.position\n   local horizontal=math.sqrt(delta.x*delta.x+delta.y*delta.y)\n   local a=types.Actor.getPathfindingAgentBounds(self).halfExtents\n   local b=types.Actor.getPathfindingAgentBounds(obj).halfExtents\n   local minimum=math.max(a.x,a.y)+math.max(b.x,b.y)\n   print(string.format('RendingHall follower gap=%.3f minimum=%.3f player=%s ilend=%s health=%.3f',horizontal,minimum,tostring(self.position),tostring(obj.position),types.Actor.stats.dynamic.health(self).current))\n   if elapsed-joined>=5 then\n    assert(horizontal>minimum+.1,'Follower remains inside Player envelope')\n    assert(horizontal<400 and math.abs(delta.z)<64,'Follower arrival is not bounded near the original landing')\n    local ground=nearby.castRay(obj.position+util.vector3(0,0,32),obj.position-util.vector3(0,0,64),{{collisionType=nearby.COLLISION_TYPE.World+nearby.COLLISION_TYPE.Door+nearby.COLLISION_TYPE.HeightMap}})\n    assert(ground.hit and ground.hitNormal.z>.6,'Follower arrival has no walkable support')\n    local gap=obj.position.z-ground.hitPos.z\n    assert(gap>=-.1 and gap<48,'Follower is embedded in or floating above the floor')\n    print('RendingHall follower clearance verified')\n   end\n  end\n end\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetFactionReaction content:oblivion.esm:0224d7 content:oblivion.esm:01dbcd\nat 1 command content:oblivion.esm:0224d8 GetStage\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "RendingHall follower clearance verified",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "original-rending-halls-cold.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 2400,
+  "expected_exit": 0,
+  "expected_log": [
+    "RendingHall entered Rending Halls",
+    "RendingHall follower clearance verified",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Failed to save game",
+    "Unsupported ObScript command",
+    "M7 ObScript diagnostic",
+    "M15 state observation failed",
+    "failed to render",
+    "TES4 AI update failed",
+    "Native spawned actor inventory construction is incomplete",
+    "Objects::playAnimationGroup: Unable to find FormId:0x107b7cd"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-rending-halls-entry",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

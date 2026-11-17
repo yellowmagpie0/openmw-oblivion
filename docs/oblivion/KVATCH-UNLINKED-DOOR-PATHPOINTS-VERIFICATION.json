@@ -1,0 +1,416 @@
+{
+  "status": "Accepted bounded original unlinked Hall-door initialization; full Hall/tower/gate/main-quest acceptance remains open.",
+  "tested_parent": "92f1cd8a3d71fb09c8985bf967d2c2ffd761ad28",
+  "contract": "KVATCH-UNLINKED-DOOR-PATHPOINTS-CONTRACT.json",
+  "oracle": "KVATCH-UNLINKED-DOOR-PATHPOINTS-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/kvatch-rending-halls",
+  "implementation": "Missing PGRL links produce no changes and allow the original script to continue through the existing setLinkedPathPoints authority. Native AI/null-object context checks remain; actual linked-node mutation code is unchanged.",
+  "checks": {
+    "passed": true,
+    "checks": {
+      "normal-engine-final-01": {
+        "result": {
+          "executed": 2317,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6e985f61a1b4816fc4be477af3296e335cf1ca9b3c06b9e0645c7f8b91104808",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "913d2560b4f6baafc3669c86540e4da61e4c99701c78d0cb99b813d53bf28c78",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "92f1cd8a3d71fb09c8985bf967d2c2ffd761ad28",
+          "source_fingerprint": "f91ce63488d8f644feebbdff9c0d36b170da2988da9efc8ae4764f3caff35f79"
+        },
+        "verification_sha256": "95bf21f8ef0eda4669d2fded2f3e860d91938efb39ac09af128dc078d0ffb122"
+      },
+      "sanitized-engine-rest-final-01": {
+        "result": {
+          "executed": 2065,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "223794615e4d80ba863a218097271f9dc55828abaa7f094dcb6e063193cf840d",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "91796352c5d3241747fcd6e6e3ddeb53c0d0c6f95a4acbcb1033121e0858b67f",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "92f1cd8a3d71fb09c8985bf967d2c2ffd761ad28",
+          "source_fingerprint": "345a4cf9be8ab020bfe44a2bebd99f400cdc0b5ba4892ade45068e0f732de968"
+        },
+        "verification_sha256": "113e397e085f0e8a5641a2abe2cf58344f48068af0ae59049e1158088e9d177d"
+      },
+      "sanitized-engine-workers-0-final-01": {
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "223794615e4d80ba863a218097271f9dc55828abaa7f094dcb6e063193cf840d",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "db3a77091872b35a93ac862049e0d245ea7fef42b261afde9efe82a81debde8d",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "92f1cd8a3d71fb09c8985bf967d2c2ffd761ad28",
+          "source_fingerprint": "345a4cf9be8ab020bfe44a2bebd99f400cdc0b5ba4892ade45068e0f732de968"
+        },
+        "verification_sha256": "b3642baf9cd81ed2e8d053618eb545453fab5dd1d2cc7f2ea07f58bbd9741e8b"
+      },
+      "sanitized-engine-workers-1-final-01": {
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "223794615e4d80ba863a218097271f9dc55828abaa7f094dcb6e063193cf840d",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "563888deb13d5b130e3947bbbd49756114e094349f1b03ea807245468d530b42",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "92f1cd8a3d71fb09c8985bf967d2c2ffd761ad28",
+          "source_fingerprint": "345a4cf9be8ab020bfe44a2bebd99f400cdc0b5ba4892ade45068e0f732de968"
+        },
+        "verification_sha256": "68505c2d7fe164712a888c15a868046240d80a0f1aeb32d7f71c4db0ded9c60a"
+      },
+      "sanitized-engine-workers-2-final-01": {
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "223794615e4d80ba863a218097271f9dc55828abaa7f094dcb6e063193cf840d",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "423a63fb7e539aa569c951158bf049a721ba04a59a8971f55d5e441e0923d0d6",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "92f1cd8a3d71fb09c8985bf967d2c2ffd761ad28",
+          "source_fingerprint": "345a4cf9be8ab020bfe44a2bebd99f400cdc0b5ba4892ade45068e0f732de968"
+        },
+        "verification_sha256": "d65eb6eab90870b4ecf9e5eb78e20218f2580082ef3f1fb16a17e4326db1a8ac"
+      }
+    },
+    "sanitized_engine_disjoint_union": 2317,
+    "runtime": [
+      {
+        "case": "normal-entry-02",
+        "passed": true,
+        "cold": false,
+        "sanitized": false,
+        "input_sha256": "418fa21bb6ebc3569676f73fef39efcc4b7737452239da46f674c906e7427115",
+        "save_sha256": "afbd99a84fa31c29b1e9f3beaa6c52ee7c5577b6efde842711b732e12741f109",
+        "binary_sha256": "e1fb23bf4a19a076f1cfd3f5303dad0894674923de97b53914250d5af92ca1ba",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          12.505770683288574,
+          -384.0819396972656,
+          9.699607849121094,
+          0.0,
+          0.0,
+          -0.424999475479126
+        ],
+        "ilend_position": [
+          -122.49423217773438,
+          -384.0819396972656,
+          9.640243530273438,
+          0.0,
+          0.0,
+          -1.480355978012085
+        ],
+        "horizontal_separation": 135.00000286102295,
+        "door_transitions": 1,
+        "arrival_clearances": 1,
+        "door_initializer_states": {
+          "content:oblivion.esm:01d119": [
+            0,
+            1
+          ],
+          "content:oblivion.esm:093ee0": [
+            0,
+            1
+          ]
+        },
+        "path_points_unchanged": true,
+        "missing_link_noops": 2,
+        "scope": "Actual original Rending Halls entry, two unlinked original door initializers and genuine own-save continuation. No full Hall/tower/gate completion."
+      },
+      {
+        "case": "normal-cold-02",
+        "passed": true,
+        "cold": true,
+        "sanitized": false,
+        "input_sha256": "afbd99a84fa31c29b1e9f3beaa6c52ee7c5577b6efde842711b732e12741f109",
+        "save_sha256": "1b9cd53b0a8eee23a62916e8a76f685def1080b41ad7ab54eb7b8cd0331c10d1",
+        "binary_sha256": "e1fb23bf4a19a076f1cfd3f5303dad0894674923de97b53914250d5af92ca1ba",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          12.505770683288574,
+          -384.0819396972656,
+          9.699607849121094,
+          0.0,
+          0.0,
+          -0.424999475479126
+        ],
+        "ilend_position": [
+          -122.49423217773438,
+          -384.0819396972656,
+          9.640243530273438,
+          0.0,
+          0.0,
+          -1.480355978012085
+        ],
+        "horizontal_separation": 135.00000286102295,
+        "door_transitions": 0,
+        "arrival_clearances": 0,
+        "door_initializer_states": {
+          "content:oblivion.esm:01d119": [
+            0,
+            1
+          ],
+          "content:oblivion.esm:093ee0": [
+            0,
+            1
+          ]
+        },
+        "path_points_unchanged": true,
+        "missing_link_noops": 0,
+        "scope": "Actual original Rending Halls entry, two unlinked original door initializers and genuine own-save continuation. No full Hall/tower/gate completion."
+      },
+      {
+        "case": "sanitized-entry-02",
+        "passed": true,
+        "cold": false,
+        "sanitized": true,
+        "input_sha256": "418fa21bb6ebc3569676f73fef39efcc4b7737452239da46f674c906e7427115",
+        "save_sha256": "19640e2f099507be13e5961768731d9f9cfd4ac28fae7683b71ccca000360900",
+        "binary_sha256": "9379f13d598df080092fb03235e0c1983496325603bebe1b2dde47c1526fd207",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          12.505770683288574,
+          -384.0819396972656,
+          9.699607849121094,
+          0.0,
+          0.0,
+          -0.424999475479126
+        ],
+        "ilend_position": [
+          -122.49423217773438,
+          -384.0819396972656,
+          9.640243530273438,
+          0.0,
+          0.0,
+          -1.480355978012085
+        ],
+        "horizontal_separation": 135.00000286102295,
+        "door_transitions": 1,
+        "arrival_clearances": 1,
+        "door_initializer_states": {
+          "content:oblivion.esm:01d119": [
+            0,
+            1
+          ],
+          "content:oblivion.esm:093ee0": [
+            0,
+            1
+          ]
+        },
+        "path_points_unchanged": true,
+        "missing_link_noops": 2,
+        "scope": "Actual original Rending Halls entry, two unlinked original door initializers and genuine own-save continuation. No full Hall/tower/gate completion."
+      },
+      {
+        "case": "sanitized-cold-02",
+        "passed": true,
+        "cold": true,
+        "sanitized": true,
+        "input_sha256": "19640e2f099507be13e5961768731d9f9cfd4ac28fae7683b71ccca000360900",
+        "save_sha256": "dc6598fb2d6ba6c50f72dbdf634a68c235b7235b3caa6c461ae33a32c736b962",
+        "binary_sha256": "9379f13d598df080092fb03235e0c1983496325603bebe1b2dde47c1526fd207",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          12.505770683288574,
+          -384.0819396972656,
+          9.699607849121094,
+          0.0,
+          0.0,
+          -0.424999475479126
+        ],
+        "ilend_position": [
+          -122.49423217773438,
+          -384.0819396972656,
+          9.640243530273438,
+          0.0,
+          0.0,
+          -1.480355978012085
+        ],
+        "horizontal_separation": 135.00000286102295,
+        "door_transitions": 0,
+        "arrival_clearances": 0,
+        "door_initializer_states": {
+          "content:oblivion.esm:01d119": [
+            0,
+            1
+          ],
+          "content:oblivion.esm:093ee0": [
+            0,
+            1
+          ]
+        },
+        "path_points_unchanged": true,
+        "missing_link_noops": 0,
+        "scope": "Actual original Rending Halls entry, two unlinked original door initializers and genuine own-save continuation. No full Hall/tower/gate completion."
+      }
+    ],
+    "reused": {
+      "receipt": "KVATCH-SIGIL-BASE-COLLISION-VERIFICATION.json",
+      "accepted_commit": "92f1cd8a3d71fb09c8985bf967d2c2ffd761ad28",
+      "normal_components": {
+        "executed": 3315,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "10ecba454b9338c6e62e3e0e91316c9426ed59d5015e84bf4e111065010283b9",
+        "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+        "xml_sha256": "ebfa05f015baa9407e02a7630511939fe0b5ac2e3577bb18596021aed82458e5",
+        "inventory_sha256": "88b4c5559f3c6e888dcad9aa79db4f21c602c2c5a914fa5cfe0b0f20b6d50161",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitized_components": {
+        "executed": 3315,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "31a252b6f91d45d8274f5287d4410399b5b88020568a100ab5fa69d23d4d62f6",
+        "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+        "xml_sha256": "d83d8219defdb57a03de7c85cd2f9def8b8167c40b809470b89c04b79e499a56",
+        "inventory_sha256": "4824ea3f155a6b870697594386f0d4a59fe5ec4ed01d938e686ef3a04c541d54",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "python": {
+        "receipt": "KVATCH-HARRADA-CONTACT-VERIFICATION.json",
+        "accepted_commit": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+        "result": {
+          "executed": 623,
+          "passed": true,
+          "log_sha256": "760f89f44b32586230664996cd79f1c0cc866522553246185cdab7cee800e076"
+        },
+        "reason": "Python code/codec/unit inputs and their fixed fixture inputs unchanged; new replay/audit syntax checked and actual cases audited."
+      },
+      "reason": "Only game-side ObScript host changed. Component/codec/Python unit and fixed fixture inputs unchanged; new actual replay/auditor syntax and runtime assertions exercised."
+    },
+    "observed_sanitizer_units": {
+      "pid": 2209511,
+      "start_ticks": 43000536,
+      "observed_utc": "2026-11-17T12:18:23.675981+00:00",
+      "cmdline": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+        "--gtest_filter=*-WorkerCounts/*",
+        "--gtest_repeat=1",
+        "--gtest_shuffle=0",
+        "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-rending-halls/sanitized-engine-rest-final-01/engine.xml",
+        ""
+      ],
+      "executable": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+      "binary_sha256": "223794615e4d80ba863a218097271f9dc55828abaa7f094dcb6e063193cf840d",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "SDL_VIDEODRIVER": "x11",
+        "SDL_AUDIODRIVER": "dummy",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+        "TMPDIR": null
+      },
+      "sanitizer_maps": [
+        "7f588a600000-7f588a653000 r-xp 00000000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7f588a653000-7f588a673000 r--p 00053000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7f588a673000-7f588a675000 r--p 00073000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7f588a675000-7f588a678000 rw-p 00075000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7f5894600000-7f5894752000 r-xp 00000000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7f5894752000-7f58947c8000 r--p 00152000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7f58947c8000-7f58947cd000 r--p 001c8000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7f58947cd000-7f58947d0000 rw-p 001cd000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0"
+      ]
+    },
+    "source_note": "Normal gate precedes an auditor-only source-state memory release and loaded Player-position assertion. All four retained runtime cases were freshly re-audited; production/C++ unit inputs match both immutable game source maps. Later handoff/receipt wording changes no production inputs."
+  },
+  "visual_review": {
+    "passed": true,
+    "captures": [
+      "normal-entry-02/original-rending-halls-entry.png",
+      "normal-cold-02/original-rending-halls-cold.png",
+      "sanitized-entry-02/original-rending-halls-entry.png",
+      "sanitized-cold-02/original-rending-halls-cold.png"
+    ],
+    "observation": "All four captures manually reviewed: actual Rending Halls entrance view is clear and normally rendered. Script-local values, no-op counts, overlay ownership and body separation are separate live/save assertions, not inferred from these images."
+  },
+  "native_expectation": "Both original enabled Citadel Hall doors have Open0/init1 despite no PGRL link anywhere in the master. Fork now completes their initializer with exactly one no-op each; own-save cold processes retain init1 without replay.",
+  "content": "Master-only original refs01d119/093ee0, base0182e8, script005162 in Rending Halls01d0c7. Raw scan covers8,228 original PGRD records and480 PGRL entries, with no target matches.",
+  "retained_failure": "normal-entry-01: normal entry/follow/F5 completed and owned-state baseline passed, but200 ObScript diagnostics left both initializers at0; game exit0/scenario failed. Preserved and not used as the primary accepted continuation.",
+  "audit_note": "Sanitizer cold controller was interrupted after clean game exit. Audit now releases unused source state before large live comparisons; all four retained cases re-audited with the same semantic assertions and an additional loaded Player-position check.",
+  "primary_regression": "The original script and genuine normal/SAN entry/cold cases exercise the fix; no synthetic PGRL data or scripted local writes added.",
+  "sanitizers": "ASan/UBSan halt on errors; rendered leak0 and unit leak1. Full engine inventory is the disjoint union of all four sanitizer selections.",
+  "scope_limits": [
+    "Native observation and new runtime acceptance cover initialization; physical opening/closing of these upper Hall doors remains part of the forward gameplay course.",
+    "The native observation establishes statement continuation; numeric command return values are outside this chunk.",
+    "No fake PGRL links, overlay fabrication, blanket diagnostic suppression, new schema or full Hall/gate completion."
+  ]
+}
