@@ -5,7 +5,22 @@ Gate → original interior/road/tower progression. Full gate closure and main-qu
 acceptance remain open. Choose the next bounded chunk from an observed gameplay
 failure; keep unrelated dependencies and exact numeric parity outside its scope.
 
-**Latest completed chunk: original Harrada phantom contacts.**
+**Latest completed chunk: occupied follower door arrival.**
+The earned Player entered original Tower Portal0220a0 into The Blood Feast01d0c8.
+Ilend's native follow package1778d1 now clears the occupied arrival using bounded
+floor-supported capsule/scene queries. Original-game idle separation was about144
+units; the fork's safe placement here is135units. No exact search/offset claim.
+Normal/SAN real crossing and genuine own-save cold continuations pass: one logical
+transition on entry, none on restart; Player/Ilend remain alive and inventory,
+quests, topics, reactions and position ownership persist. Schema106 is unchanged.
+Full normal/SAN engine2,317 pass; unchanged components3,314/Python623 results are
+reused with their original provenance. Rendered sanitizer leak0; unit leak1.
+[Contract](KVATCH-FOLLOWER-DOOR-ARRIVAL-CONTRACT.json),
+[native oracle](KVATCH-FOLLOWER-DOOR-ARRIVAL-ORACLE.json),
+[verification](KVATCH-FOLLOWER-DOOR-ARRIVAL-VERIFICATION.json).
+Evidence: `build/oblivion-compat/kvatch-follower-door`.
+
+**Previous completed chunk: original Harrada phantom contacts.**
 Original plant068733 now damages through its actual non-solid phantom body182,
 using the shared native trap Health/life/push authority. Authored settings are
 5damage/750pushback, noncontinuous, no rigid-body minimum-speed gate. No proximity
@@ -27,14 +42,15 @@ Unit sanitizer leak detection is enabled; rendered sanitizer cases use leak0.
 [verification and source/artifact provenance](KVATCH-HARRADA-CONTACT-VERIFICATION.json).
 Evidence: `build/oblivion-compat/kvatch-harrada-contact`.
 
-**Next action:** continue normal-input road/tower exploration from the genuine
-normal own-save continuation:
-`build/oblivion-compat/kvatch-harrada-contact/normal-contact-cold-03/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `86b90aaa38f97666732d0566b963df50647ca9f9fba5b5ff1c794fab9c4da54c`.
-Player health94.54, Ilend alive, quest25. Pending push is legitimate saved state.
-Find the next discrete missing behavior through this original course. Continuous
-hazards, static ACTI phantoms, exact corpse impulse and other entry angles remain
-outside the Harrada acceptance; do not expand them without a course requirement.
+**Next action:** continue ordinary input through The Blood Feast and choose the
+next bounded implementation from an observed gameplay blocker. Start from:
+`build/oblivion-compat/kvatch-follower-door/normal-cold-03/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `0ef83548fc42e0af066380a7a45ea87d7c413fc823d58ce8087fe5dcfaca7a2a`.
+Player health94.54, Ilend alive on original follow, MS48stage25. Player at
+[0,-1480,-156.043976], Ilend[-95.459412,-1384.540527,-186.001907].
+Original preportal/entry/overlap checkpoints and provenance remain in the arrival
+contract; the old completed-overlap diagnostic save is not a repaired-save claim.
+No tower-interior completion, Sigil Stone or gate closure is claimed.
 
 For healthy road replays, the earlier earned source remains:
 `build/oblivion-compat/kvatch-ilend/normal-original-ilend-follow-cold-road-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

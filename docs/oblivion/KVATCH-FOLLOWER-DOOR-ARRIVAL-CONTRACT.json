@@ -1,0 +1,44 @@
+{
+  "status": "Accepted bounded original-content normal/SAN portal, idle and genuine own-save fresh-process continuation; full tower/main-quest acceptance remains open.",
+  "chunk": "Original Ilend follow package1778d1 crossing main Tower Portal0220a0 into The Blood Feast01d0c8 while Player occupies its XTEL landing.",
+  "observation": "A genuine earned entry and fresh-process continuation leave Player and Ilend at exactly (0,-1480,-156.043975830078125) for over five unpaused seconds; the overlap is saved and clips the first-person camera.",
+  "evidence_root": "build/oblivion-compat/kvatch-tower",
+  "baseline_cases": [
+    "normal-main-tower-entry-02",
+    "normal-follower-idle-01"
+  ],
+  "native_question": "Does original Ilend following through this same door clear the occupied landing during idle? Verify the actual native package and retain declared diagnostic staging.",
+  "native_probe": "build/oblivion-compat/kvatch-follower-door/original-01",
+  "implementation_boundary": [
+    "Independent native evidence confirms original Ilend clears this occupied portal landing; exact native offset and search sequence are outside acceptance.",
+    "If warranted, resolve occupied door arrival with actual actor/scene clearance; preserve the original XTEL pair and normal follow package.",
+    "Retain position/state ownership, earned inventory, quest progress, Player/Ilend life and genuine save/reload continuity.",
+    "No generic crowd AI rewrite, exact native landing sequence or unrelated route repair."
+  ],
+  "acceptance": [
+    "Original real door crossing from the earned pre-portal save; Player and Ilend remain alive and preserve owned state.",
+    "Required native-consistent arrival behavior persists during idle and through a fresh-process genuine save/reload.",
+    "Any clearance change must respect actual floor/walls/actors and avoid duplicate door effects.",
+    "Focused implementation checks and appropriate integration gates; reuse unchanged prior evidence with its provenance."
+  ],
+  "earned_checkpoints": {
+    "normal-authored-tower-approach-01": {
+      "path": "build/oblivion-compat/kvatch-tower/normal-authored-tower-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "8cdb161b00a1aff32304bdb3a95ff453d7d36931a3fabddcf5365fc9a6213d3d"
+    },
+    "normal-main-tower-entry-02": {
+      "path": "build/oblivion-compat/kvatch-tower/normal-main-tower-entry-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "33396924584a88ac4c31f54dd1f729a4b3fcc2f5806f7745c6c8256290f48fb4"
+    },
+    "normal-follower-idle-01": {
+      "path": "build/oblivion-compat/kvatch-tower/normal-follower-idle-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "8184e848f494a88039cdf8b81516cb3a8e448f85a78ce1b77e31a40fd6d3ff6f"
+    }
+  },
+  "oracle": "KVATCH-FOLLOWER-DOOR-ARRIVAL-ORACLE.json",
+  "implementation": [
+    "Actor-only occupancy check preserves an unoccupied authored arrival. Occupied arrivals search bounded floor-supported candidates using the native NPC capsule, endpoint contacts and a static sweep.",
+    "No safe candidate defers physical realization without replaying logical door use. Successful placement and saved reference/AI/movement positions retain common ownership.",
+    "No schema change; no generic crowd or creature follower claim."
+  ]
+}

@@ -1,4 +1,5 @@
 #include "physicssystem.hpp"
+#include "actorplacement.hpp"
 #include <components/nifbullet/ragdollbonepose.hpp>
 #include <components/esm4/physicalframe.hpp>
 
@@ -1778,6 +1779,14 @@ namespace MWPhysics
         mWaterCollisionObject->setCollisionShape(mWaterCollisionShape.get());
         mTaskScheduler->addCollisionObject(
             mWaterCollisionObject.get(), CollisionType_Water, CollisionType_Actor | CollisionType_Projectile);
+    }
+
+    bool PhysicsSystem::isActorPlacementClear(const MWWorld::ConstPtr& actor, const osg::Vec3f& fromFeet,
+        const osg::Vec3f& toFeet, const osg::Vec3f& halfExtents, bool actorsOnly)
+    {
+        const auto* body = getActor(actor);
+        return MWPhysics::isActorPlacementClear(*mTaskScheduler,
+            body ? body->getCollisionObject() : nullptr, fromFeet, toFeet, halfExtents, actorsOnly);
     }
 
     bool PhysicsSystem::isAreaOccupiedByOtherActor(

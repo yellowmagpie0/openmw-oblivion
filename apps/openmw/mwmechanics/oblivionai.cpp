@@ -70,6 +70,7 @@
 #include "../mwbase/windowmanager.hpp"
 #include "../mwgui/mode.hpp"
 #include "../mwphysics/physicssystem.hpp"
+#include "../mwphysics/movementsolver.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/scene.hpp"
 #include "../mwworld/containerstore.hpp"
@@ -113,6 +114,56 @@ namespace MWMechanics
         // through that approach and release once clear of the doorway.
         constexpr float sPhysicalDoorReleaseDistance = 2.f * sDoorLookAheadDistance;
         constexpr float sMaximumFrameCatchup = 8.f * sFixedStep;
+
+        osg::Vec3f doorArrivalBounds(MWWorld::World& world, MWPhysics::PhysicsSystem& physics,
+            const MWWorld::Ptr& actor)
+        {
+            const auto resident = physics.getHalfExtents(actor);
+            if (resident.length2() > 0) return resident;
+            // Native multipart NPC movement uses these profile bounds, not
+            // the skeleton's animation envelope. Match Actor::updateScale.
+            auto bounds = world.getPathfindingAgentBounds(actor).mHalfExtents;
+            bounds.x() = bounds.y() = std::max(bounds.x(), bounds.y());
+            const float scale = actor.getCellRef().getScale();
+            osg::Vec3f scaled(scale, scale, scale);
+            actor.getClass().adjustScale(actor, scaled, false);
+            return osg::componentMultiply(bounds, scaled);
+        }
+
+        float doorArrivalBound(const osg::Vec3f& bounds)
+        {
+            return 4.f * std::max({bounds.x(), bounds.y(), bounds.z()}) + 128.f;
+        }
+
+        std::optional<osg::Vec3f> clearDoorArrival(MWPhysics::PhysicsSystem& physics,
+            const MWWorld::Ptr& actor, const osg::Vec3f& authored, const osg::Vec3f& bounds)
+        {
+            // Preserve an unoccupied authored marker exactly. This is not a
+            // general correction of old markers embedded in scene geometry.
+            if (physics.isActorPlacementClear(actor, authored, authored, bounds, true)) return authored;
+            const float radius = 2.f * std::max({bounds.x(), bounds.y(), bounds.z()}) + 2.f;
+            constexpr float diagonal = .70710678f;
+            const std::array<osg::Vec3f, 8> directions{{
+                {-1, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, -1, 0},
+                {-diagonal, diagonal, 0}, {diagonal, diagonal, 0},
+                {-diagonal, -diagonal, 0}, {diagonal, -diagonal, 0}}};
+            const int staticMask = MWPhysics::CollisionType_World | MWPhysics::CollisionType_Door
+                | MWPhysics::CollisionType_HeightMap;
+            const float bound = doorArrivalBound(bounds);
+            for (float ring : {1.f, 1.5f, 2.f})
+                for (const auto& direction : directions)
+                {
+                    auto candidate = authored + direction * (radius * ring);
+                    const auto ground = physics.castRay(candidate + osg::Vec3f(0, 0, 64),
+                        candidate - osg::Vec3f(0, 0, 128), staticMask);
+                    if (!ground.mHit || !MWPhysics::isWalkableSlope(ground.mHitNormal)) continue;
+                    // The normal movement solver owns final floor settling.
+                    candidate.z() = ground.mHitPos.z() + 20.f;
+                    if ((candidate - authored).length2() > bound * bound) continue;
+                    if (physics.isActorPlacementClear(actor, authored, candidate, bounds)) return candidate;
+                }
+            return std::nullopt;
+        }
 
         bool placedActivator(const MWWorld::Ptr& target)
         {
@@ -5626,9 +5677,17 @@ namespace MWMechanics
             {
                 const auto& door = mUnloadedLocations[source->second];
                 const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
+                const bool authored = distanceSquared(abstractPosition, door.mTeleportPosition) <= 128.f * 128.f;
+                // A saved, already realized clearance position is owned by
+                // the resident reference. Do not mistake it for a new warp.
+                const float bound = actor.getClass().isNpc() && mWorld.mPhysics
+                    ? doorArrivalBound(doorArrivalBounds(mWorld, *mWorld.mPhysics, actor)) : 128.f;
+                const bool resident = currentCell == live.mState.mCell
+                    && distanceSquared(abstractPosition, actor.getRefData().getPosition().asVec3()) <= 1.f
+                    && distanceSquared(abstractPosition, door.mTeleportPosition) <= bound * bound;
                 doorLanding = door.mType == ESM::REC_DOOR4 && marker != mUnloadedLocationByReference.end()
                     && mUnloadedLocations[marker->second].mCell == live.mState.mCell
-                    && distanceSquared(abstractPosition, door.mTeleportPosition) <= 128.f * 128.f;
+                    && (authored || resident);
             }
 
         if (valid && !doorLanding)
@@ -5718,7 +5777,27 @@ namespace MWMechanics
             if (!destinationId)
                 throw std::runtime_error("abstract destination cell is not a native cell");
             MWWorld::CellStore& destinationCell = mWorld.mWorldModel.getCell(ESM::RefId(*destinationId));
-            const MWWorld::Ptr moved = mWorld.moveObject(actor, &destinationCell, abstractPosition, true, false);
+            auto position = abstractPosition;
+            if (doorLanding && actor.getClass().isNpc() && mWorld.mPhysics
+                && mWorld.mWorldScene->isCellActive(destinationCell))
+            {
+                const auto clear = clearDoorArrival(*mWorld.mPhysics, actor, abstractPosition,
+                    doorArrivalBounds(mWorld, *mWorld.mPhysics, actor));
+                if (!clear)
+                {
+                    // The logical door use has already committed. Preserve
+                    // that ownership and retry realization without replaying it.
+                    live.mPendingRealization = true;
+                    live.mState.mDoorCooldown = std::max(live.mState.mDoorCooldown, 2.f);
+                    logEvent("low-process-reconcile-failed", live, "occupied-door-landing");
+                    return false;
+                }
+                position = *clear;
+                if (distanceSquared(position, abstractPosition) > 1.f)
+                    logEvent("door-arrival-clearance", live,
+                        "door=" + live.mState.mLastTransitionDoor.serialize());
+            }
+            const MWWorld::Ptr moved = mWorld.moveObject(actor, &destinationCell, position, true, false);
             if (moved.isEmpty())
                 throw std::runtime_error("moveObject returned an empty actor pointer");
             live.mState.mLastValidPosition = moved.getRefData().getPosition();

@@ -45,6 +45,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwphysics/testprojectilesweep.cpp
     mwphysics/testtrigger.cpp
     mwphysics/testactorbounds.cpp
+    mwphysics/testactorplacement.cpp
     mwphysics/testactorragdoll.cpp
     mwphysics/testoblivionragdoll.cpp
 

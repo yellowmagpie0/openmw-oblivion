@@ -621,6 +621,9 @@ namespace MWPhysics
         std::vector<MWWorld::Ptr> getTriggerActors(const MWWorld::ConstPtr& ptr) const;
         osg::Vec3f traceDown(const MWWorld::Ptr& ptr, const osg::Vec3f& position, float maxHeight);
 
+        bool isActorPlacementClear(const MWWorld::ConstPtr& actor, const osg::Vec3f& fromFeet,
+            const osg::Vec3f& toFeet, const osg::Vec3f& halfExtents, bool actorsOnly = false);
+
         /// @param ignore Optional, a list of Ptr to ignore in the list of results. targets are actors to filter for,
         /// ignoring all other actors.
         RayCastingResult castRay(const osg::Vec3f& from, const osg::Vec3f& to,

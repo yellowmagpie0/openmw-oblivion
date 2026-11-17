@@ -1,0 +1,25 @@
+{
+  "kind": "Editable isolated original-game behavioral probe; not an OpenMW scenario manifest.",
+  "oracle": "KVATCH-FOLLOWER-DOOR-ARRIVAL-ORACLE.json",
+  "source": "Pristine original prison quicksave67d927ca\u2026; isolated prefix and only hash-identified Oblivion.esm. Back up and restore exact documents/plugin inputs. Never F5.",
+  "setup": [
+    "Load pristine source through the actual game UI. Open console.",
+    "tcai (verify All Combat AI processing is Off); player.getav health; setstage MS48 25; getstage MS48.",
+    "cow OblivionMQKvatch 0 3; allow loading and inspect console state before further input.",
+    "Set Player pose: x575.03668, y14876.20508, z2285.06372; angleX -7.60916, angleZ -23.61204.",
+    "prid 00098138; moveto player. Inspect whether console closed before continuing.",
+    "Set MS48.inOblivion to1 (explicit diagnostic quest-context setup); selected Ilend pose x624.29724,y14652.31348,z2180.34595.",
+    "evp; GetIsCurrentPackage 001778d1 must return1; GetStageDone MS48 25 must return1."
+  ],
+  "measurement": [
+    "Close console, permit normal AI/collision; capture the actual Tower Portal.",
+    "Press normal Space to activate portal0220a0. Wait for actual Blood Feast scene. No movement input.",
+    "Select Ilend with prid00098138. Query GetIsCurrentPackage001778d1 and GetInCellOblivionMqKvatchCitadel; require1.",
+    "Read selected Ilend GetPos x/y/z and Player.GetPos x/y/z, retain console images.",
+    "Close console for at least6 additional unpaused seconds with no movement. Reopen, repeat package/cell/position queries and visual capture."
+  ],
+  "expectation": "Native arrives clear of the occupied Player and remains separated. Actual observed XY gap144.143 is provenance, not an exact placement or random-sequence requirement.",
+  "cleanup": "Exit through qqq. Require native wrapper and launcher exit0; verify exact prefix/plugin restoration and unchanged pristine save hash.",
+  "retained_failures": "Missing inOblivion context selected Travel; editor-name package lookup failed. Successful cases use inOblivion1 and numeric001778d1.",
+  "evidence": "build/oblivion-compat/kvatch-follower-door/original-01"
+}

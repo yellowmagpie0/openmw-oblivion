@@ -1,0 +1,377 @@
+{
+  "status": "Accepted bounded occupied native-NPC follower door arrival; tower, gate closure and full main-quest course remain open.",
+  "tested_parent": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+  "contract": "KVATCH-FOLLOWER-DOOR-ARRIVAL-CONTRACT.json",
+  "oracle": "KVATCH-FOLLOWER-DOOR-ARRIVAL-ORACLE.json",
+  "evidence_root": "build/oblivion-compat/kvatch-follower-door",
+  "verification": {
+    "passed": true,
+    "checks": {
+      "focused-03": {
+        "result": {
+          "executed": 4,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorPlacementTest.*",
+          "binary_sha256": "614f4467416188bd6509550b19f4f25bb0cd457a02764904b83cbc5e7b1b7004",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "5a638a938fbde884c2948cfb3be938873ca4a94d3a30bc406bff8ea9e26c2a8f",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+          "source_fingerprint": "0cf9a17bdc25180aba0db64c570d6d2be9aad0742d97396e0d404d5d2d0282b9"
+        },
+        "verification_sha256": "907ce5eddc7120de4847e872e7706e42379b0c8c42f4f2751cd5fa875f2fc30e"
+      },
+      "normal-engine-final-01": {
+        "result": {
+          "executed": 2317,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "614f4467416188bd6509550b19f4f25bb0cd457a02764904b83cbc5e7b1b7004",
+          "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+          "xml_sha256": "bce95ee9bee39c73e94cac39c2af528f2f0d49f2b5186ccaaf62cf24062c435c",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+          "source_fingerprint": "7a5b384d95fd12623d90fb01678e23ee8a5a2d7307112278a14e8c9099f05f72"
+        },
+        "verification_sha256": "c0f74a395fb5eb45528987349efd8e6e7132bd132f7570437176dba149ec2ebe"
+      },
+      "sanitized-engine-rest-final-01": {
+        "result": {
+          "executed": 2065,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*-WorkerCounts/*",
+          "binary_sha256": "5d1f5f14a985dd57886408d80bcc95967c35520b35bf12a5a299990f1e63dda8",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "e810f297f3d042ae175b83c57e9308deaadbf275c518db02e4dd20b16762c393",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+          "source_fingerprint": "7a5b384d95fd12623d90fb01678e23ee8a5a2d7307112278a14e8c9099f05f72"
+        },
+        "verification_sha256": "0034ee89d4f6c682bc25c7e24ca6cdb762c6e1791eeeccdaf2540b91dce8019f"
+      },
+      "sanitized-engine-workers-0-final-01": {
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/0",
+          "binary_sha256": "5d1f5f14a985dd57886408d80bcc95967c35520b35bf12a5a299990f1e63dda8",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "296b28d2957ab6974634253e236d17650ce0e0673ac72425081e82a376eda363",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+          "source_fingerprint": "7a5b384d95fd12623d90fb01678e23ee8a5a2d7307112278a14e8c9099f05f72"
+        },
+        "verification_sha256": "8289e7b9a51d2c57a99c3da28a17976fb8bb18b40b6343af21423df6a0afb780"
+      },
+      "sanitized-engine-workers-1-final-01": {
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/1",
+          "binary_sha256": "5d1f5f14a985dd57886408d80bcc95967c35520b35bf12a5a299990f1e63dda8",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "fbf656b036193f23f72cbc1d5c30a76ff9fb4211e5064e9ba4d166a20f0fd2b0",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+          "source_fingerprint": "7a5b384d95fd12623d90fb01678e23ee8a5a2d7307112278a14e8c9099f05f72"
+        },
+        "verification_sha256": "a65c493d547d6c90c9f58a6d518bf145bf5ee5a88a7bd74bbd6c6e1a2c83120c"
+      },
+      "sanitized-engine-workers-2-final-01": {
+        "result": {
+          "executed": 84,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/*/2",
+          "binary_sha256": "5d1f5f14a985dd57886408d80bcc95967c35520b35bf12a5a299990f1e63dda8",
+          "cache_sha256": "f9787b5956437c8dc51d7d0872d002c6c7e6bfc8cd03e4f9889aa62a7de96564",
+          "xml_sha256": "9deb299d6c3f097d438c9aaa315499403ff241ec564136d6f2bb937ea5b73a27",
+          "inventory_sha256": "78187f121424ebe8124c3997bcf3f7b0073518074485fd54f69a074dab5aab15",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "source": {
+          "head": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+          "source_fingerprint": "7a5b384d95fd12623d90fb01678e23ee8a5a2d7307112278a14e8c9099f05f72"
+        },
+        "verification_sha256": "074f61de88232f84a50fe058289d8022c0ff1007537559f4ea679d9c83a056c6"
+      }
+    },
+    "sanitized_engine_disjoint_union": 2317,
+    "runtime": [
+      {
+        "case": "normal-arrival-03",
+        "passed": true,
+        "cold": false,
+        "sanitized": false,
+        "input_sha256": "8cdb161b00a1aff32304bdb3a95ff453d7d36931a3fabddcf5365fc9a6213d3d",
+        "save_sha256": "39f384dc964d3b07f61de65b865d76951f3518057c71d3948b9a31537037c066",
+        "binary_sha256": "66ee9e25b0dbd2de905eb545c6f56f336f153e81cbc0ee3355387c0f6f0603c6",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          0.0,
+          -1480.0,
+          -156.04397583007812,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ilend_position": [
+          -95.45941162109375,
+          -1384.54052734375,
+          -186.0019073486328,
+          0.0,
+          0.0,
+          -0.1552598923444748
+        ],
+        "horizontal_separation": 135.0000377290864,
+        "door_transitions": 1,
+        "arrival_clearances": 1,
+        "scope": "Actual original Tower Portal and Ilend follow arrival, owned position and own-save continuation; no full tower/quest completion."
+      },
+      {
+        "case": "normal-cold-03",
+        "passed": true,
+        "cold": true,
+        "sanitized": false,
+        "input_sha256": "39f384dc964d3b07f61de65b865d76951f3518057c71d3948b9a31537037c066",
+        "save_sha256": "0ef83548fc42e0af066380a7a45ea87d7c413fc823d58ce8087fe5dcfaca7a2a",
+        "binary_sha256": "66ee9e25b0dbd2de905eb545c6f56f336f153e81cbc0ee3355387c0f6f0603c6",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          0.0,
+          -1480.0,
+          -156.04397583007812,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ilend_position": [
+          -95.45941162109375,
+          -1384.54052734375,
+          -186.0019073486328,
+          0.0,
+          0.0,
+          -0.1552598923444748
+        ],
+        "horizontal_separation": 135.0000377290864,
+        "door_transitions": 0,
+        "arrival_clearances": 0,
+        "scope": "Actual original Tower Portal and Ilend follow arrival, owned position and own-save continuation; no full tower/quest completion."
+      },
+      {
+        "case": "sanitized-arrival-03",
+        "passed": true,
+        "cold": false,
+        "sanitized": true,
+        "input_sha256": "8cdb161b00a1aff32304bdb3a95ff453d7d36931a3fabddcf5365fc9a6213d3d",
+        "save_sha256": "b5ac8c948bd4272813e2fe4edf0f9ba737722dee44558eb25f32057cce5ac7eb",
+        "binary_sha256": "37d2141ef6ddebad725a5b74c572cc2bc294d58734b76735b5b3c31fd9cc9505",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          0.0,
+          -1480.0,
+          -156.04397583007812,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ilend_position": [
+          -95.45941162109375,
+          -1384.54052734375,
+          -186.0019073486328,
+          0.0,
+          0.0,
+          -0.1552598923444748
+        ],
+        "horizontal_separation": 135.0000377290864,
+        "door_transitions": 1,
+        "arrival_clearances": 1,
+        "scope": "Actual original Tower Portal and Ilend follow arrival, owned position and own-save continuation; no full tower/quest completion."
+      },
+      {
+        "case": "sanitized-cold-03",
+        "passed": true,
+        "cold": true,
+        "sanitized": true,
+        "input_sha256": "b5ac8c948bd4272813e2fe4edf0f9ba737722dee44558eb25f32057cce5ac7eb",
+        "save_sha256": "42b21c822eebfb4ba7d18fd14a99f1b0c77fbafdb079a3458dd782c55b594a67",
+        "binary_sha256": "37d2141ef6ddebad725a5b74c572cc2bc294d58734b76735b5b3c31fd9cc9505",
+        "player_health": 94.54000854492188,
+        "player_position": [
+          0.0,
+          -1480.0,
+          -156.04397583007812,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ilend_position": [
+          -95.45941162109375,
+          -1384.54052734375,
+          -186.0019073486328,
+          0.0,
+          0.0,
+          -0.1552598923444748
+        ],
+        "horizontal_separation": 135.0000377290864,
+        "door_transitions": 0,
+        "arrival_clearances": 0,
+        "scope": "Actual original Tower Portal and Ilend follow arrival, owned position and own-save continuation; no full tower/quest completion."
+      }
+    ],
+    "reused": {
+      "receipt": "KVATCH-HARRADA-CONTACT-VERIFICATION.json",
+      "accepted_commit": "0bcf17b6c24e097aee480e53a7546413e61388f6",
+      "reason": "No component library, component tests, codec or Python unit inputs changed. Game-only placement helper/AI wiring is covered by fresh full normal/sanitizer engine gates.",
+      "normal_components": {
+        "executed": 3314,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "e4192327e084f4f4a2027c2f96acfa150b6d33fbff7deafb7d328c290f660468",
+        "cache_sha256": "c283b62e306825b46ef3dedaf59f5950b707c0e2aabb2521c1f6cffbd389f374",
+        "xml_sha256": "f92d63f4faa349760b2bccdb934d6599553b66d3dd68a4389b0b8542fb94ac64",
+        "inventory_sha256": "112f2337381a115f77c7f29902d61668216ece2aff931653e28dec63537759a5",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "normal_python": {
+        "executed": 623,
+        "passed": true,
+        "log_sha256": "760f89f44b32586230664996cd79f1c0cc866522553246185cdab7cee800e076"
+      },
+      "sanitized_components": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-harrada-contact/sanitized-components-01",
+        "mode": "components",
+        "count": 3314,
+        "sha256": "149be2b806c371a1f67701e239e1dba7a014c35ad828bccc6e0a72740b999dae"
+      }
+    },
+    "observed_sanitizer_units": {
+      "pid": 2169433,
+      "start_ticks": 42240824,
+      "observed_utc": "2026-11-17T10:11:46.453035+00:00",
+      "cmdline": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+        "--gtest_filter=*-WorkerCounts/*",
+        "--gtest_repeat=1",
+        "--gtest_shuffle=0",
+        "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-follower-door/sanitized-engine-rest-final-01/engine.xml",
+        ""
+      ],
+      "executable": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+      "binary_sha256": "5d1f5f14a985dd57886408d80bcc95967c35520b35bf12a5a299990f1e63dda8",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+        "SDL_VIDEODRIVER": "x11",
+        "SDL_AUDIODRIVER": "dummy",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+        "TMPDIR": null
+      },
+      "sanitizer_maps": [
+        "7fe31e000000-7fe31e053000 r-xp 00000000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7fe31e053000-7fe31e073000 r--p 00053000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7fe31e073000-7fe31e075000 r--p 00073000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7fe31e075000-7fe31e078000 rw-p 00075000 00:25 2202830                    /usr/lib64/libubsan.so.1.0.0",
+        "7fe328000000-7fe328152000 r-xp 00000000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7fe328152000-7fe3281c8000 r--p 00152000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7fe3281c8000-7fe3281cd000 r--p 001c8000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0",
+        "7fe3281cd000-7fe3281d0000 rw-p 001cd000 00:25 2202826                    /usr/lib64/libasan.so.8.0.0"
+      ]
+    }
+  },
+  "visual_review": {
+    "passed": true,
+    "captures": [
+      "normal-arrival-03/original-follower-arrival-clear.png",
+      "normal-cold-03/original-follower-cold-clear.png",
+      "sanitized-arrival-03/original-follower-arrival-clear.png",
+      "sanitized-cold-03/original-follower-cold-clear.png"
+    ],
+    "observation": "Ilend stands beside the entrance, Player camera is clear and both actors are supported by the actual portal floor. Entry and cold views manually inspected; no full tower progression claim."
+  },
+  "implementation": "Preserve unoccupied authored marker; bounded floor-supported NPC capsule endpoint and static-sweep queries clear occupied arrivals. No safe candidate defers realization without replaying committed logical door use. Existing schema106 retains reference/AI/movement ownership.",
+  "fidelity": "Original game independently retains roughly144units separation. Fork uses a bounded safe search and observed135unit separation here; no exact native offset/search/RNG claim.",
+  "retained_attempts": [
+    "normal-arrival-01: overly conservative box envelope deferred all candidates. Real geometry diagnosis retained; corrected to the existing native NPC movement capsule.",
+    "normal-arrival-02: successful intermediate capsule implementation, before final actor-only occupancy guard.",
+    "normal-clearance-diagnostic-01: read-only actual scene/bounds/floor diagnosis; not primary gameplay acceptance.",
+    "Pre-build normal controller was interrupted before creating a producer; restarted. Final normal controller interrupted after clean cold process exit; same case audit rerun passed."
+  ],
+  "scope_limits": [
+    "Only active-destination native NPC abstract door arrivals are changed; no generic crowd or creature-follower completion.",
+    "No automatic repair claim for preexisting completed-overlap saves.",
+    "No full tower, Sigil Stone, gate closure or main-quest acceptance."
+  ],
+  "sanitizers": "ASan/UBSan halt on errors; rendered leak0, unit leak1, observed instrumentation and environments retained. All four disjoint engine selections cover the complete2317 inventory."
+}

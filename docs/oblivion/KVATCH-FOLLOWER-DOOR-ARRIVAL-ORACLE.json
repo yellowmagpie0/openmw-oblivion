@@ -1,0 +1,77 @@
+{
+  "status": "Scoped original-game expectation established; not candidate implementation acceptance.",
+  "question": "Does original Ilend following through original Tower Portal0220a0 remain co-located with an idle Player at its occupied XTEL landing in The Blood Feast?",
+  "identity": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "process": {
+      "pid": 2129951,
+      "start_ticks": 41441895,
+      "boot_id": "712320da-040d-4ff1-bd7c-bba4567f5842",
+      "window_id": 37748739,
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "mapped_original_exe": [
+        "00400000-00401000 r-xp 00000000 00:25 2071952                            /home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe"
+      ]
+    }
+  },
+  "boundary": {
+    "plugins": [
+      "Oblivion.esm"
+    ],
+    "setup": "Pristine prison source, native MS48 stage25 plus inOblivion=1 and explicit exterior Player/Ilend poses are diagnostic setup, not earned campaign progress. The flag is independently defined by original quest script and required by original package.",
+    "combat_ai": "Explicit tcai Off to exclude ambient attacks; ordinary AI and collision remain enabled.",
+    "no_stat_writes": true,
+    "no_f5": true
+  },
+  "verification": {
+    "package": "001778d1 MS48IlendFollowPlayer",
+    "get_is_current_package": 1,
+    "get_stage_done_25": 1,
+    "entered_cell": "01d0c8 OblivionMqKvatchCitadel (The Blood Feast)",
+    "get_in_cell": 1,
+    "activation": "Normal Space on original portal0220a0; original XTEL pair01d0e3.",
+    "first_player_position": [
+      0.17,
+      -1479.26,
+      -159.67
+    ],
+    "first_ilend_position": [
+      -138.19,
+      -1438.84,
+      -157.71
+    ],
+    "additional_unpaused_idle_seconds": 6,
+    "second_player_position": [
+      0.17,
+      -1479.26,
+      -159.67
+    ],
+    "second_ilend_position": [
+      -138.19,
+      -1438.84,
+      -157.71
+    ],
+    "horizontal_distance": 144.14321350656783,
+    "visual": "Arrival and post-idle views are clear; console captures15/18 verify package and cell,16/19 verify positions."
+  },
+  "expected_behavior": "The arriving follower clears an occupied landing and remains separated while idle. Keep approximate clearance geometry and state ownership; do not require this exact offset or native search/random sequence.",
+  "retained_setup_failures": [
+    "Before setting the independently defined inOblivion flag, Ilend selected Travel; not a valid follow comparison.",
+    "Native console rejected the package editor name; the successful verification used numeric form ID001778d1."
+  ],
+  "restoration": {
+    "restored": true,
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "game_exit": {
+    "exit_code": 0,
+    "observed_by_parent": true
+  },
+  "launcher_exit": {
+    "exit_code": 0
+  },
+  "evidence_root": "build/oblivion-compat/kvatch-follower-door/original-01",
+  "editable_probe": "KVATCH-FOLLOWER-DOOR-ARRIVAL-NATIVE-PROBE.json"
+}
