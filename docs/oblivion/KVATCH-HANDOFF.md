@@ -26,7 +26,9 @@ sequence clock. Original plant068733 visibly attacks. Four real normal/SAN
 attack/save and own-save cold courses pass: normal phase0.096→0.345; SAN
 phase0.249→0.498, with no scripted attack replay before resave. Inventory,
 quest stage25, Player health and Ilend life state persist. No new save schema.
-Normal components3,310/engine2,310/Python621 and SANcomponents3,310 pass.
+Normal components3,310/engine2,310/Python621 and SANcomponents3,310/engine2,310
+pass. The sanitizer engine check covers the full disjoint inventory with leak detection enabled
+on commit 3efcb765c0; this is premerge evidence.
 [Contract](KVATCH-HARRADA-ANIMATION-CONTRACT.json),
 [original asset inspection](KVATCH-HARRADA-ANIMATION-ORACLE.json),
 [feature checkpoint](KVATCH-HARRADA-ANIMATION-VERIFICATION.json).
@@ -34,10 +36,14 @@ Normal components3,310/engine2,310/Python621 and SANcomponents3,310 pass.
 **Immediate next action: NEW Windows performance merge requested by the user.**
 After this feature commit, fetch latest GitHub `origin/codex/windows-native-dev`
 and merge its new work. The earlier53509962 integration does not satisfy this
-new request. Full sanitizer engine integration was deliberately deferred to the
-combined-source checkpoint; run fresh combined-source engine/component/Python
-checks and affected real runtime courses before continuing any content work.
-Do not report that deferred gate as passed. Keep all changes local; no push.
+new request. Both published GitHub heads were still at 7f4c95fba1 after this
+checkpoint, already included locally; no new performance commits were available.
+The initially deferred sanitizer engine gate now passes on 3efcb765c0 after a
+verified cache relocation resolved compiler OOM. Evidence:
+`build/oblivion-compat/windows-performance-merge-02/sanitized-engine-union.json`.
+This is premerge evidence. Once new commits are published, run combined-source
+checks and affected real runtime courses before continuing content work. Keep
+all changes local; no push.
 
 Evidence: `build/oblivion-compat/kvatch-harrada`. Final rendered producer04 and
 resources03 cover14 relevant source files; class-only01/02 are not animation

@@ -1,5 +1,5 @@
 {
-  "status": "Feature implemented and verified through four real-content runtime cases and component gates. Full sanitizer engine integration remains required after the newly requested Windows merge; phantom damage and further quest progression remain open.",
+  "status": "Feature implemented and verified through four real-content runtime cases, full normal/component/Python gates and full sanitizer engine coverage. Newly requested Windows performance merge remains pending publication; phantom damage and further quest progression remain open.",
   "tested_parent": "7f4c95fba1ea9d1c12c3206898ee7533fb6063e5",
   "production_source_sha256": {
     "apps/openmw/mwmechanics/oblivionai.cpp": "21abea8a76d067c293eb9b6039c2fce5079b89d8a0a0b951f174514f6ef2f618",
@@ -130,10 +130,26 @@
       "leak_check": true
     },
     "sanitized_engine": {
-      "status": "Deferred to combined-source integration after the new Windows merge request.",
-      "required": "Full exact engine inventory, normal and sanitizer, on merged source before continuing content work.",
-      "interrupted_build": "build/oblivion-compat/kvatch-harrada/sanitized-engine-rest-01",
-      "sequencing_evidence": "build/oblivion-compat/kvatch-harrada/integration-sequencing-change.json"
+      "status": "Passed on committed Harrada source before the new Windows performance merge. This is not merged-source acceptance.",
+      "path": "build/oblivion-compat/windows-performance-merge-02/sanitized-engine-union.json",
+      "executed": 2310,
+      "binary_sha256": "c31e0302cdcf0b5e69627aecf9c2d8ae376ce736befe14be89c2592e181c4805",
+      "inventory_sha256": "ad4a91792b0d2e2a10c6289e40d0fd2c51b7116b2bafdf95f41a245b6c8e2e05",
+      "source": {
+        "head": "3efcb765c0b3c7ea387edc9eb782022f240fa271",
+        "source_fingerprint": "b093e7b0100c9b670c2f2c57d8b9358910b506fd04ef565313f63a156a6659fa"
+      },
+      "partition_counts": [
+        2058,
+        84,
+        84,
+        84
+      ],
+      "disjoint": true,
+      "leak_check": true,
+      "observed_process": "build/oblivion-compat/windows-performance-merge-02/observed-sanitized-engine-process-retry.json",
+      "original_sequencing_evidence": "build/oblivion-compat/kvatch-harrada/integration-sequencing-change.json",
+      "merged_source_requirement": "After new Windows commits arrive, build and verify combined source and affected real runtime courses before continuing content work."
     }
   },
   "artifacts": [
@@ -158,7 +174,8 @@
     "Original flora baseline repeatedly returns played=false because it lacks mechanics animation admission.",
     "Class-only candidates01/02 return played=true but do not bind the named morph channels. They are not accepted as visible animation.",
     "Early prototype saves finish the short0.6667second clip. Final primary courses save immediately after an authored attack, before taking later-cycle visual captures.",
-    "First inspector compile lookup found no niftest entry in compile_commands.json. Existing niftest CMake flags/link inputs built the original-record inspector."
+    "First inspector compile lookup found no niftest entry in compile_commands.json. Existing niftest CMake flags/link inputs built the original-record inspector.",
+    "Premerge sanitizer engine attempt windows-performance-merge-02/sanitized-engine-rest-01 was kernel-OOM-killed while compiling the large test translation unit. All seven task-owned shared-memory object caches were copied to disk, hash-verified and replaced by path-preserving symlinks (cache-relocation.json). Retry rest-02 and worker partitions passed; original failure and kernel log retained."
   ],
   "scope_limits": [
     "Original raw model/script inspection is independent of the renderer binding; no original live-game visual probe or new native arithmetic parity claim.",
