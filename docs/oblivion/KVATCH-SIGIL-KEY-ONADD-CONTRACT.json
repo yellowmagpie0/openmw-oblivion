@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "status": "Open: real original key transfer reproduces missing inventory OnAdd; no implementation yet.",
+  "target": "Original Sigil Keep Key093ef5 transferred from earned keeper corpse to Player runs OnAdd Player once, advances MS48 from30 to40 and retains item-specific script identity through save/load.",
+  "original_content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "records": [
+      {
+        "type": "SCPT",
+        "id": "1896b8",
+        "payload_sha256": "30f2c58b5dccbe7ef4caaa47084305d9618d293bc77bcee16f14c8871b8b1191",
+        "editor_id": "MS48OblivionSigilKeySCRIPT",
+        "source_sha256": "bd8768123b062e19560a8b817d8bf9d1bfe55bb86ee17f78a82e7789d063c205"
+      },
+      {
+        "type": "NPC_",
+        "id": "093ef0",
+        "payload_sha256": "6c970d1cb641005cefaa5c2ff339b973d10a869a2188697cf4db0f4f343cd936",
+        "editor_id": "MS48OblivionSigilKeeper",
+        "script": "1778c7",
+        "key_count": 1
+      },
+      {
+        "type": "KEYM",
+        "id": "093ef5",
+        "payload_sha256": "97c2ce9a69f894466ec8900413877c0ab826d19e659bb05e6e4d74d53404f249",
+        "editor_id": "MS48OblivionSigilKey",
+        "script": "1896b8"
+      }
+    ],
+    "expectation": "Original singleton key on guardian. Its stateless OnAdd Player program advances MS48 to40 when current stage is at least30. Menien original greeting earns30 first; source control flow independently audited."
+  },
+  "existing_evidence": [
+    "SCRIPTED-CLUB-DROP-ORACLE.json",
+    "NIRNROOT-PICKUP-ORACLE.json"
+  ],
+  "evidence_boundary": "Independent original key/script/guardian records establish this content contract. Reuse existing Player OnAdd identity/event evidence; no fresh original-game key probe, numerical instruction oracle or exact arithmetic claim.",
+  "source": {
+    "save": "build/oblivion-compat/kvatch-reapers-sprawl/normal-menien-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "1d43364570acdd339100169b51afb5b1ef6b99ae5042c36357b6f61b6a37517b",
+    "stage": 30,
+    "player_health": 90.05781936645508,
+    "ilend_health": 5.855072021484375
+  },
+  "observed_failure": {
+    "case": "build/oblivion-compat/kvatch-reapers-sprawl/normal-key-loot-10",
+    "structural_transfer": true,
+    "player_key_count": 1,
+    "guardian_inventory_empty": true,
+    "script_owner": null,
+    "stage": 30,
+    "expected_stage": 40,
+    "diagnostic": "build/oblivion-compat/kvatch-reapers-sprawl/normal-key-loot-10/key-event-diagnostic-audit.json",
+    "manifest": "scripts/data/oblivion_compat/original_kvatch_reapers_sigil_key_loot_diagnostic.json"
+  },
+  "implementation_plan": [
+    "Wire native scripted container-to-Player transfer through an item identity/publication path; OnAdd executes after source removal and destination insertion, with Player action reference and actual item self.",
+    "Reuse reviewed native inventory-script identity and transfer APIs; preserve source/destination ownership, conditions/counts, callback safety, existing quest-item restrictions and TES3 paths. Avoid key-ID special cases.",
+    "Initially bound support to the actual stateless singleton OnAdd contract needed by this key; expand only if required. Record other scripted stack/local-state transfer gaps separately.",
+    "Same original ordinary input must earn40 normal/SAN; fresh own-save process retains key/script owner/quest stage without OnAdd replay. Validate inventory/lives/earned state and appropriate affected/full engine gates before local commit."
+  ],
+  "remaining_course": "Keyed level100 hall door085f69, tower ascent, Sigil Stone/gate closure and full main-quest acceptance remain open."
+}

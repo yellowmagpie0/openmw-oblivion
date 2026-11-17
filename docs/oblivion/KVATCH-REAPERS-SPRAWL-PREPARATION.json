@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "status": "Normal original Reapers Sprawl forward preparation passed; key OnAdd and remaining course open.",
+  "new_engine_implementation": false,
+  "producer": "build/oblivion-compat/kvatch-bridge-yield/normal-producer-01.json",
+  "prior_implementation_acceptance": "KVATCH-BRIDGE-FOLLOWER-YIELD-VERIFICATION.json",
+  "remaining_bridge_arrival": "build/oblivion-compat/kvatch-dark-salvation/normal-bridge-crossing-02/reapers-arrival-audit.json",
+  "cases": [
+    {
+      "case": "build/oblivion-compat/kvatch-reapers-sprawl/normal-keeper-greeting-02",
+      "phase": "greeting",
+      "audit": {
+        "passed": true,
+        "phase": "greeting",
+        "source_sha256": "c300a744e947d510f5f5adef445841566897fee18bd2e127c0be510d0b5240cb",
+        "save_sha256": "7486305be11bf8deab969ba8e4cca966c7e512b5a18c6a53b5a713d816955669",
+        "binary_sha256": "589624e0f64c9d063b067d05c583f05539b9081142538bbd323456ffaff7dc46",
+        "cell": "content:oblivion.esm:033b5e",
+        "player_pose": [
+          284.6667175292969,
+          47.65048599243164,
+          1785.2593994140625,
+          -0.189453125,
+          0.0,
+          -0.021483659744262695
+        ],
+        "ilend_pose": [
+          227.49790954589844,
+          -164.03909301757812,
+          1608.409912109375,
+          0.0,
+          0.0,
+          0.7481135725975037
+        ],
+        "player_health": 91.16800880432129,
+        "ilend_health": 9.571414947509766,
+        "guardian_life": {
+          "actor": "content:oblivion.esm:0878d5",
+          "base": "content:oblivion.esm:093ef0",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:0224d8",
+          "stage": 25,
+          "running": true,
+          "completed_stages": [
+            5,
+            8,
+            10,
+            20,
+            25
+          ]
+        },
+        "scope": "Normal forward preparation using existing implementations; no new C++ or sanitizer/keyed-door/full-course acceptance."
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-reapers-sprawl/normal-keeper-defense-01",
+      "phase": "defense",
+      "audit": {
+        "passed": true,
+        "phase": "defense",
+        "source_sha256": "7486305be11bf8deab969ba8e4cca966c7e512b5a18c6a53b5a713d816955669",
+        "save_sha256": "b10fa1ec3a521b528b34b991741caaa23b565b9953ec292768d73f9801e30eee",
+        "binary_sha256": "589624e0f64c9d063b067d05c583f05539b9081142538bbd323456ffaff7dc46",
+        "cell": "content:oblivion.esm:033b5e",
+        "player_pose": [
+          284.6667175292969,
+          47.65048599243164,
+          1785.2593994140625,
+          -0.15625,
+          0.0,
+          0.046875715255737305
+        ],
+        "ilend_pose": [
+          388.16534423828125,
+          38.43098449707031,
+          1756.1588134765625,
+          0.0,
+          0.0,
+          -0.7584599256515503
+        ],
+        "player_health": 90.05781936645508,
+        "ilend_health": 5.855072021484375,
+        "guardian_life": {
+          "actor": "content:oblivion.esm:0878d5",
+          "base": "content:oblivion.esm:093ef0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:0224d8",
+          "stage": 25,
+          "running": true,
+          "completed_stages": [
+            5,
+            8,
+            10,
+            20,
+            25
+          ]
+        },
+        "scope": "Normal forward preparation using existing implementations; no new C++ or sanitizer/keyed-door/full-course acceptance."
+      }
+    },
+    {
+      "case": "build/oblivion-compat/kvatch-reapers-sprawl/normal-menien-approach-01",
+      "phase": "menien",
+      "audit": {
+        "passed": true,
+        "phase": "menien",
+        "source_sha256": "b10fa1ec3a521b528b34b991741caaa23b565b9953ec292768d73f9801e30eee",
+        "save_sha256": "1d43364570acdd339100169b51afb5b1ef6b99ae5042c36357b6f61b6a37517b",
+        "binary_sha256": "589624e0f64c9d063b067d05c583f05539b9081142538bbd323456ffaff7dc46",
+        "cell": "content:oblivion.esm:033b5e",
+        "player_pose": [
+          -3.07993221282959,
+          109.3891830444336,
+          2001.013916015625,
+          0.22265625,
+          0.0,
+          3.1308422088623047
+        ],
+        "ilend_pose": [
+          79.42375183105469,
+          232.15264892578125,
+          2014.192626953125,
+          0.0,
+          0.0,
+          -1.4977295398712158
+        ],
+        "player_health": 90.05781936645508,
+        "ilend_health": 5.855072021484375,
+        "guardian_life": {
+          "actor": "content:oblivion.esm:0878d5",
+          "base": "content:oblivion.esm:093ef0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        },
+        "quest": {
+          "quest": "content:oblivion.esm:0224d8",
+          "stage": 30,
+          "running": true,
+          "completed_stages": [
+            5,
+            8,
+            10,
+            20,
+            25,
+            30
+          ]
+        },
+        "scope": "Normal forward preparation using existing implementations; no new C++ or sanitizer/keyed-door/full-course acceptance."
+      }
+    }
+  ],
+  "independent_original_audits": [
+    "build/oblivion-compat/kvatch-reapers-sprawl/original-cell-audit-01.json",
+    "build/oblivion-compat/kvatch-reapers-sprawl/original-menien-dialogue-01.json",
+    "build/oblivion-compat/kvatch-reapers-sprawl/original-key-event-contract-01.json"
+  ],
+  "visual_review": "build/oblivion-compat/kvatch-reapers-sprawl/manual-preparation-visual-review-01.json",
+  "next_contract": "KVATCH-SIGIL-KEY-ONADD-CONTRACT.json",
+  "limits": "Normal preparation using previously accepted engine; no new C++, SAN encounter/key, key event, locked hall, Sigil/gate or full quest acceptance. Failed loot01\u201309 are retained diagnostics and excluded from primary continuations;10 is a structural transfer success and a semantic OnAdd failure.",
+  "next": "Implement native Player container transfer OnAdd from stage30 source; do not continue from diagnostic key-without-event save."
+}

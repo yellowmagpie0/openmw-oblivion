@@ -1,73 +1,53 @@
 # Kvatch main-quest course — current handoff
 
-Target: outside Kvatch's main gates → original Savlian encounter → first Oblivion
-Gate → Blood Feast/Rending Halls → original tower ascent. Full Sigil Stone,
-gate closure and main-quest acceptance remain open. Choose work from actual
-content failures; keep the current bounded deliverable ahead of adjacent gaps.
+Target: outside Kvatch → Savlian → first gate → Blood Feast/Rending Halls →
+Dark Salvation → Reapers Sprawl → Sigil Keep/key → Sigil Stone/gate closure.
+Full gate and main-quest acceptance remain open. Choose implementation from the
+next observed original-content failure; finish each bounded chunk first.
 
-**Accepted chunk: persistent original corpse flames at Dark Salvation entry.**
-Normal/SAN ordinary ramp/Space through Blood Feast01d580 and Ilend arrival pass.
-Original FlamingCorpseSCRIPT0c47ae keeps myself null/init1/lucky90 and issues one
-PMS on corpse06bc4e. Authored fire particles emit from2,812 actual mesh triangles.
-Fresh own-save processes restore one live emitter and visibly animated flames
-without another PMS, preserving health91.168, Player/Ilend life, both earned
-Dremora kills, inventory/ownership, quests/topics/reactions and codec106.
-[Playback verification](KVATCH-FLAMING-CORPSE-PLAYBACK-VERIFICATION.json),
-[original expectations](KVATCH-FLAMING-CORPSE-ORACLE.json),
-[typed EFSH dependency](KVATCH-EFFECT-SHADER-DATA-VERIFICATION.json).
+**Accepted implementation: waiting followers yield to their followed Player.**
+Commitc54a184bb9 fixes the collision coordinator's own-target exemption for idle
+yielding. Same original bridge save passes ordinary500-unit passage and another500
+after own-save restart, normal/SAN; both lives/health, native Follow1778d1 and
+earned state persist. Full engine2,324 in each build and Python623 pass.
+[Verification](KVATCH-BRIDGE-FOLLOWER-YIELD-VERIFICATION.json).
 
-Full engine2,324 passes normal/SAN; SAN exact union2072+84+84+84. Components3,319
-in each build and Python623 pass/reuse with exact test-only source proof. Six new
-renderer/save-validation checks pass. A flaky pool-slot clock assertion was fixed
-without changing production behavior; its failed run is retained. Unit leak1,
-rendered leak0. Immutable producer archives/loaded-section proofs are recorded.
-Limits: particle-only rigid surfaces; membrane and rig/morph effects rejected.
-Cosmetic density/RNG and individual cold particles approximate native appearance.
-Static upstairs cameras are declared visual diagnostics; Player remains at the
-entrance. Upper-corridor traversal and full gate/quest completion remain open.
+Windows branch freshly fetched after that chunk: remote remainsc8fdfc22a8,
+already merged; GitHub remote heads independently listed, no source/build delta.
+`build/oblivion-compat/kvatch-bridge-yield/windows-refresh-after-chunk-01.json`.
 
-**Current chunk: let an idle follower yield to its followed Player on the bridge.**
-Ordinary west exit085fa5 now reaches original world01d0bc, physical cell021072
-(grid0,3), with Ilend safely following. New real bridge crossing stalls at
-Player[1260.15,15542.00,4388.96] against Ilend[1271.46,15484.54,4390.02].
-Ilend peacefully waits on Follow1778d1 targeting Player; the collision loop
-unconditionally excludes that target even when idle yielding is admitted.
-[Bounded contract](KVATCH-BRIDGE-FOLLOWER-YIELD-CONTRACT.json).
-Accepted: existing idle-yield policy now considers the followed target.
-Normal/SAN ordinary bridge passage and own-save fresh-process continuation pass;
-each advances over500 units with both lives/health and Follow1778d1 preserved.
-Player remains on bridge; earned kills/inventory/quests/topics/reactions and
-inactive corpse shader state persist. Full engine2,324 in each build and Python623
-pass. [Verification](KVATCH-BRIDGE-FOLLOWER-YIELD-VERIFICATION.json).
-Windows branch freshly fetched afterc54a184bb9: GitHub head remainsc8fdfc22a8,
-already merged; no source/build delta. Remote heads independently listed.
-Evidence: `build/oblivion-compat/kvatch-bridge-yield/windows-refresh-after-chunk-01.json`.
-Next: continue bridge toward Reapers Sprawl. Primary normal
-continuation is `build/oblivion-compat/kvatch-bridge-yield/normal-cold-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `471a051ed339039f33e8d253a2129b0157adbad3f61c3196a559f576eeaea234`.
-Player[2026.40,14842.78,4373.65]; Ilend[1839.58,15004.74,4373.65].
-Remaining: rest of bridge, guardian/key encounter, locked hall, tower/Sigil/gate.
+**Current bounded chunk: native inventory OnAdd after container-to-Player transfer.**
+Normal original bridge remainder/door, keeper forced greeting/combat and Menien
+Activate pass. Ilend earns keeper kill; Player90.0578, Ilend5.8551 remain alive.
+Menien INFO089938 earns MS48stage30. [Preparation](KVATCH-REAPERS-SPRAWL-PREPARATION.json).
+Real key loot10 succeeds structurally (Player key1, corpse empty) but keepsstage30
+and has no inventory script owner. Original KEY093ef5/script1896b8 requires40.
+[Current contract and implementation plan](KVATCH-SIGIL-KEY-ONADD-CONTRACT.json).
+No new implementation yet. Next: native publication/identity and one OnAdd Player
+notification after source debit/destination insertion; normal/SAN and own-save
+cold, affected/full engine gates. Reuse existing singleton OnAdd identity evidence.
 
-Bridge source (actual input/codec/live/earned-state audit passed):
-`build/oblivion-compat/kvatch-dark-salvation/normal-route-survey-05/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `0ffb72a796bb60c9204e529985958e3355c1245f565f091917aa0d991868c792`.
-Player[1176,15580,4386.40], Ilend[1271.46,15484.54,4390.02], health91.168.
-This is normal forward preparation; next case provides genuine own-save cold.
-Required Sigil Keep Key093ef5 is on guardian0878d5 in Reapers Sprawl033b5e;
-current level100 door085f69 is correctly keyed, not a lock-bypass defect.
-Windows branch refreshed after4fda: pinned c8fdfc22a8 already ancestor; no delta.
-Survey observer identity/protocol failures are retained and excluded from primary
-continuations. Record audits distinguish persistent storage cell01e897 from
-actual exterior cell021072/world01d0bc.
+Current audited pre-loot source (use this, not the failed-event result):
+`build/oblivion-compat/kvatch-reapers-sprawl/normal-menien-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `1d43364570acdd339100169b51afb5b1ef6b99ae5042c36357b6f61b6a37517b`.
+Player[-3.08,109.39,2001.01]; Ilend[79.42,232.15,2014.19], Follow1778d1.
+Ordinary loot manifest uses actual rendered corpse rays and reachable navmesh
+floor, fresh in-range central hit(<145; profile activation150), Activate/UI X.
+Attempts01–09 retain camera/range/replay-protocol failures;10 reproduces the real
+event gap with exact saved/live/codec/binary/process provenance. Evidence:
+`build/oblivion-compat/kvatch-reapers-sprawl`. No rendered game currently running.
 
-Primary normal continuation (no static-camera staging):
-`build/oblivion-compat/kvatch-flaming-corpse/playback/normal-entry-dev-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `a10212f11a65f9b33ee395d96e545f4f68b8a481857bd12895207d585ee1475f`.
-Player[1521.658936,-1574.094238,1514.027344], yaw3.112392/pitch0;
-Ilend[1386.658936,-1574.094238,1514.074829], alive on follow1778d1.
-Cell085e4f, last transition01d580, shader0852fe indefinite on corpse06bc4e.
-SAN entry source/own-save cold and earlier4088 pre-entry fallback are linked in
-the receipt/contract. Keep failed entry/case attempts out of primary continuations.
+Remaining: key event/40, keyed level100 hall door085f69, tower ascent/Sigil Stone,
+gate closure/full quest acceptance. Preserve low-health Ilend; expand recovery
+only if needed for the next deliverable. No SAN encounter/key acceptance claimed.
+
+Prior source checkpoints and acceptance:
+
+- [Persistent original corpse flames: normal/SAN/cold, rigid particle-only scope](KVATCH-FLAMING-CORPSE-PLAYBACK-VERIFICATION.json).
+- [Original flame expectations](KVATCH-FLAMING-CORPSE-ORACLE.json) and [typed EFSH dependency](KVATCH-EFFECT-SHADER-DATA-VERIFICATION.json).
+- Normal bridge departure save/audit and full remaining bridge/door arrival audit:
+  `build/oblivion-compat/kvatch-dark-salvation/normal-route-survey-05/bridge-audit.json`,
+  `build/oblivion-compat/kvatch-dark-salvation/normal-bridge-crossing-02/reapers-arrival-audit.json`.
 
 Course progression and earlier accepted fixes:
 
