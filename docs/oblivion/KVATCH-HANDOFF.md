@@ -28,17 +28,23 @@ clears the original Blood Feast floor while retaining its solid body;
 and [Harrada phantom contacts](KVATCH-HARRADA-CONTACT-VERIFICATION.json)
 retain their original linked evidence and bounded acceptance.
 
-**Next action:** continue ordinary movement through original Rending Halls,
-including the actual animated doors, and pick the next bounded chunk from an
-observed gameplay blocker. Healthy accepted primary continuation:
-`build/oblivion-compat/kvatch-rending-halls/normal-cold-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-SHA256 `1b9cd53b0a8eee23a62916e8a76f685def1080b41ad7ab54eb7b8cd0331c10d1`.
-Player[12.505771,-384.081940,9.699608], pitch0/yaw-0.4249995;
-Ilend[-122.494232,-384.081940,9.640244], gap135, alive on follow1778d1.
-Both Hall doors have Open0/init1; no PGRL overlay changes. The old failed entry
-save (init0 with diagnostics) remains diagnostic and is not the replay source.
-Full Hall traversal, physical upper-door opening, tower ascent, Sigil Stone and
-gate closure remain open.
+**Forward preparation:** normal movement reached the first physical Hall door093ee0;
+Space opened it with original script Open1/init1. Its own-save cold process
+restored active animation phase0.344333 and advanced to1.0 with the passage clear.
+[Door preparation](KVATCH-RENDING-HALLS-DOOR-PREPARATION.json) records normal-only
+evidence and editable recipes; no new engine implementation or SAN opening claim.
+
+**Next action:** exercise the original Dremora093ede encounter after ordinary movement
+through that open door and choose the next chunk from an observed blocker. Current verified
+continuation:
+`build/oblivion-compat/kvatch-rending-halls/normal-after-first-door-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+SHA256 `9adaafb125b6dff4264ccf6e71f9bbb87bcff0ae95d374b1618bd71cc0813928`.
+Player[1273.624512,1318.130737,522.225403], pitch0.34375/yaw1.403126;
+Ilend[1023.820007,1290.287354,521.749390], alive on follow1778d1, health94.54.
+Enemy093ede approached from[1878.60327,1803.11877,523.48566]; stopped within650. The first door record
+pivot[1024,1276,768] is offset from its physical leaf near X780; do not use pivot
+distance as the physical approach requirement. Use actual actor pathfinding bounds.
+Full Hall traversal, tower ascent, Sigil Stone and gate closure remain open.
 
 For healthy road replays, the earlier earned source remains:
 `build/oblivion-compat/kvatch-ilend/normal-original-ilend-follow-cold-road-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,

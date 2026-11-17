@@ -1,0 +1,102 @@
+{
+  "passed": true,
+  "scope": "Normal-only forward course preparation with unchanged accepted game binary. No new implementation, sanitizer physical opening or full Rending Halls completion claim.",
+  "implementation_commit": "cfc559499c",
+  "reused_producer": "KVATCH-UNLINKED-DOOR-PATHPOINTS-VERIFICATION.json",
+  "evidence_root": "build/oblivion-compat/kvatch-rending-halls",
+  "approach": {
+    "case": "normal-animated-door-approach-01",
+    "checkpoint": "Actual closed leaf reached by ordinary movement; stopped on collision. Door root is offset from the physical leaf.",
+    "save_sha256": "ce522cdf5f03a1d51bdb9d3542173d66d695822a706ec4fa6405c6102c257cef"
+  },
+  "cases": {
+    "normal-animated-door-open-01": {
+      "passed": true,
+      "cold": false,
+      "input_sha256": "ce522cdf5f03a1d51bdb9d3542173d66d695822a706ec4fa6405c6102c257cef",
+      "save_sha256": "93038e0c80485fa6c34157d4d9dfd9d1bbc16c3c19b4c3c919545541c9c12edc",
+      "binary_sha256": "e1fb23bf4a19a076f1cfd3f5303dad0894674923de97b53914250d5af92ca1ba",
+      "health": 94.54000854492188,
+      "player_position": [
+        751.70703125,
+        1267.8682861328125,
+        514.9663696289062,
+        0.447265625,
+        0.0,
+        1.514453649520874
+      ],
+      "phase": 0.344333291053772,
+      "loaded_phase": null,
+      "activation_noops": 1,
+      "scope": "Normal-only forward course: original physical door opening and active-phase own-save continuation. No sanitizer physical-opening or full Hall completion claim."
+    },
+    "normal-animated-door-open-cold-01": {
+      "passed": true,
+      "cold": true,
+      "input_sha256": "93038e0c80485fa6c34157d4d9dfd9d1bbc16c3c19b4c3c919545541c9c12edc",
+      "save_sha256": "4de66220943535ab843aa334c0eded99b6dae691c935377c23d51702647988bb",
+      "binary_sha256": "e1fb23bf4a19a076f1cfd3f5303dad0894674923de97b53914250d5af92ca1ba",
+      "health": 94.54000854492188,
+      "player_position": [
+        751.70703125,
+        1267.8682861328125,
+        514.9663696289062,
+        0.447265625,
+        0.0,
+        1.514453649520874
+      ],
+      "phase": 1.0,
+      "loaded_phase": 0.344333291053772,
+      "activation_noops": 0,
+      "scope": "Normal-only forward course: original physical door opening and active-phase own-save continuation. No sanitizer physical-opening or full Hall completion claim."
+    }
+  },
+  "visual_review": [
+    "original-rending-approach-checkpoint.png",
+    "original-hall-door-before.png",
+    "original-hall-door-after.png",
+    "original-hall-door-cold.png"
+  ],
+  "acceptance": [
+    "Ordinary Space activates original093ee0 and script005162; Open1/init1.",
+    "Physical ray hits original closed leaf before activation and clears after animation.",
+    "Fresh own-save process restores active phase0.344333 then advances to1.0, passage clear.",
+    "Health94.54, Player/Ilend life, earned inventory, quests/topics/reactions and path overlays retained."
+  ],
+  "verifier": "scripts/verify_kvatch_rending_physical_door.py",
+  "manifests": [
+    "scripts/data/oblivion_compat/original_kvatch_rending_door_approach.json",
+    "scripts/data/oblivion_compat/original_kvatch_rending_door_open.json",
+    "scripts/data/oblivion_compat/original_kvatch_rending_door_open_cold.json"
+  ],
+  "through_open_door": {
+    "case": "normal-after-first-door-01",
+    "baseline_audit": {
+      "passed": true,
+      "input_sha256": "4de66220943535ab843aa334c0eded99b6dae691c935377c23d51702647988bb",
+      "save_sha256": "9adaafb125b6dff4264ccf6e71f9bbb87bcff0ae95d374b1618bd71cc0813928",
+      "health": 94.54000854492188,
+      "pose": [
+        1273.62451171875,
+        1318.1307373046875,
+        522.2254028320312,
+        0.34375,
+        0.0,
+        1.403125524520874
+      ],
+      "player_moved": 524.3823642912653,
+      "ilend_pose": [
+        1023.8200073242188,
+        1290.287353515625,
+        521.7493896484375,
+        0.0,
+        0.0,
+        1.4913591146469116
+      ],
+      "gap": 251.35188685421355,
+      "scope": "Normal-input earned road baseline only; no tower door/ascent or new implementation acceptance."
+    },
+    "observed_checkpoint": "Live original Dremora093ede within650; no combat completion claim.",
+    "visual_review": "original-rending-approach-checkpoint.png; corridor and approaching Dremora visible."
+  }
+}
