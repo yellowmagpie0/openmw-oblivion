@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "name": "Original earned upper Blood Feast save: typed EFSH ingestion boot and genuine F5, no shader playback claim (sanitizers)",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata-local=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.5\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal types=require('openmw.types')\nlocal nearby=require('openmw.nearby')\nlocal elapsed=0;local done=false\nreturn {{engineHandlers={{onFrame=function(dt)\n if core.isWorldPaused() or done then return end\n elapsed=elapsed+dt;if elapsed<2 then return end\n assert(not types.Actor.isDead(self),'Player died during ingestion boot')\n assert(self.cell.id==core.getFormId('Oblivion.esm',0x1d0c8),'Ingestion source is not upper Blood Feast')\n local ally=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x98138))\n assert(ally and ally:isValid() and not types.Actor.isDead(ally),'Ilend is not alive at ingestion boot')\n local enemy=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x93ee1))\n assert(enemy and enemy:isValid() and types.Actor.isDead(enemy),'Earned second Dremora death was not restored')\n done=true;print('ShaderLoader earned source ready')\nend}}}}\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command dynamic:player:0000000000000001 GetFactionReaction content:oblivion.esm:0224d7 content:oblivion.esm:01dbcd\nat 1 command content:oblivion.esm:0224d8 GetStage\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"load-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 900,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "ShaderLoader earned source ready",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "screenshot",
+      "name": "original-upper-blood-feast-ingestion-boot.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key_hold",
+      "value": "F5",
+      "seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\"\\s*:\\s*\"save-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 2400,
+  "expected_exit": 0,
+  "expected_log": [
+    "ShaderLoader earned source ready",
+    "Writing saved game"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Failed to save game",
+    "Unsupported ObScript command",
+    "M7 ObScript diagnostic",
+    "M15 state observation failed",
+    "failed to render",
+    "TES4 AI update failed",
+    "Native spawned actor inventory construction is incomplete",
+    "Objects::playAnimationGroup: Unable to find FormId:0x107b7cd"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead",
+    "Failed to load 'meshes/landscape/miscbutterfly02\\.nif': Unsupported NiPathInterpolator banking or flip-avoidance flags, using marker_error instead"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_M15_EVENTS": "{output}/events.jsonl",
+    "OPENMW_M15_RUN_ID": "original-efsh-ingestion-earned-boot",
+    "OPENMW_M15_EPOCH": "1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "sdl_input_timeout_seconds": 180,
+  "virtual_gamepad": false,
+  "sdl_xvfb_input": true
+}

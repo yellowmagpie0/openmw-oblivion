@@ -1,0 +1,296 @@
+{
+  "passed": true,
+  "scope": "Accepted typed EFSH data dependency only. Fork PMS surface particle playback and original Dark Salvation entry/restart acceptance remain open.",
+  "tested_parent": "17c7328f6ed8f8d6bf0ff116e60d84adac1d9cd1",
+  "tested_source": {
+    "head": "17c7328f6ed8f8d6bf0ff116e60d84adac1d9cd1",
+    "source_fingerprint": "6f9b21d5874e4da99af0c0b55c9240e62e07da82dc301c16a974751161bf399c"
+  },
+  "implementation_inputs_sha256": {
+    "components/esm4/loadefsh.cpp": "45e9bb495ef853d8626b97406b90fee98c05d95ef791290240854bee04544130",
+    "components/esm4/loadefsh.hpp": "9f99f3ada6fb982c82ed08b0dc1f09a8f6b419fb78fc79b16e62f062b6421891",
+    "components/esm4/records.hpp": "a0424d61f1e57c28ec20cfeec1d1b68a0d4ea5be82bfee4f1bc04fc628102168",
+    "components/CMakeLists.txt": "5e3b9fd21216da0046750448b4db1c82c51cee3ea362b7df78d9aa6301a311fe",
+    "apps/openmw/mwworld/esmstore.cpp": "266397aa7eea01ea218c989f2476f8f1c97355347ff1a3690033e6984dd3f1c0",
+    "apps/openmw/mwworld/esmstore.hpp": "df4abcb94113f87fdbf91f30218b9f2c801554b0e2b5ff887c9416b4d67c3f17",
+    "apps/openmw/mwworld/store.cpp": "5111b5dc4de1e2d30b3d829692d720a359640e72eeab90406202dc66265219ee",
+    "apps/esmtool/tes4.cpp": "3dda4e2c702f670428c355cbec82a385a4899d41f699caf241ef79b61bc3dd1c",
+    "apps/components_tests/esm4/testloadefsh.cpp": "6410274ae947e9025ae0da4d995fc37e6e08e3bfd7afa52a41702bd1d1ed1ddb",
+    "apps/components_tests/CMakeLists.txt": "fa7918368b4b2fbe4f76dc5a53e7d28a1635765cf0c703ac7fc8b767fe6a0a0c",
+    "apps/openmw_tests/mwworld/teststore.cpp": "dce5062def9c3b7f05778341761612a4793ab881bbff7db1479470068dbd8cdc"
+  },
+  "normal_gates": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/normal-gates-02",
+    "components": 3319,
+    "engine": 2318,
+    "python": 623
+  },
+  "sanitized_gates": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/sanitized-gates-01",
+    "components": 3319,
+    "engine_full": {
+      "passed": true,
+      "executed": 2318,
+      "groups": [
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/sanitized-gates-01",
+          "executed": 2066
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/sanitized-engine-workers-0-01",
+          "executed": 84
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/sanitized-engine-workers-1-01",
+          "executed": 84
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/sanitized-engine-workers-2-01",
+          "executed": 84
+        }
+      ],
+      "components": {
+        "executed": 3319,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*"
+      },
+      "binary_sha256": "4e35a24cf1e122ceed74f57c3a4c787bf074806e7522ca322469aff99c4f1419",
+      "source": {
+        "head": "17c7328f6ed8f8d6bf0ff116e60d84adac1d9cd1",
+        "source_fingerprint": "6f9b21d5874e4da99af0c0b55c9240e62e07da82dc301c16a974751161bf399c"
+      }
+    },
+    "unit_environment": "M15-NATURAL-RECOVERY-VERIFICATION.json sanitizer_engine_environment; leak1/halt on errors",
+    "runtime_environment": "ASan/UBSan halt; rendered leak0; actual process environment captured per case"
+  },
+  "original_master": {
+    "normal": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/original-master-dev-01/verification.json",
+    "sanitized": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/original-master-sanitized-01/verification.json",
+    "records": 102,
+    "field_groups": 2116,
+    "data_sizes": {
+      "96": 2,
+      "224": 100
+    }
+  },
+  "official_parse": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/official-parse-normal-01/verification.json",
+  "runtime": {
+    "normal-loader-boot-01": {
+      "passed": true,
+      "mode": "normal",
+      "source_sha256": "4088d33c8172b40a798fc877b1aca3e5b3d2fead7c8db00a1aed98b56a84a429",
+      "save_sha256": "f1ff8c54461ef33e513171f6948407dfce4ca259562a9f790af7c554ece3eed9",
+      "binary_sha256": "4e09d21e552a24e213ae266176b265f457fa7e2ceeaf09a8dc3f3dd49360c5e7",
+      "health": 91.16800880432129,
+      "player_pose": [
+        -735.7990112304688,
+        -21.811662673950195,
+        619.1079711914062,
+        -0.263671875,
+        0.0,
+        2.8035082817077637
+      ],
+      "ilend_pose": [
+        -657.0518188476562,
+        -46.69587707519531,
+        642.9951171875,
+        0.0,
+        0.0,
+        -3.0913279056549072
+      ],
+      "corpses": {
+        "content:oblivion.esm:093ede": {
+          "actor": "content:oblivion.esm:093ede",
+          "base": "content:oblivion.esm:092da0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        },
+        "content:oblivion.esm:093ee1": {
+          "actor": "content:oblivion.esm:093ee1",
+          "base": "content:oblivion.esm:092da0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        }
+      },
+      "earned_state_codec_live_and_restart_checks": "cc11ef6a01d4afd5cdf9deff2675093ccc0fb0315920f437d9ecfd8526c2d898",
+      "scope": "Typed EFSH ingestion on an earned save and own-save cold continuation only. No shader playback, new door traversal or full course acceptance."
+    },
+    "normal-loader-cold-01": {
+      "passed": true,
+      "mode": "normal",
+      "source_sha256": "f1ff8c54461ef33e513171f6948407dfce4ca259562a9f790af7c554ece3eed9",
+      "save_sha256": "4adac3df215c0892b56a37eb8829bb1068017f2c879776f37196f9fcce292bb1",
+      "binary_sha256": "4e09d21e552a24e213ae266176b265f457fa7e2ceeaf09a8dc3f3dd49360c5e7",
+      "health": 91.16800880432129,
+      "player_pose": [
+        -735.7990112304688,
+        -21.811662673950195,
+        619.1079711914062,
+        -0.263671875,
+        0.0,
+        2.8035082817077637
+      ],
+      "ilend_pose": [
+        -657.0518188476562,
+        -46.69587707519531,
+        642.9951171875,
+        0.0,
+        0.0,
+        -3.0913279056549072
+      ],
+      "corpses": {
+        "content:oblivion.esm:093ede": {
+          "actor": "content:oblivion.esm:093ede",
+          "base": "content:oblivion.esm:092da0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        },
+        "content:oblivion.esm:093ee1": {
+          "actor": "content:oblivion.esm:093ee1",
+          "base": "content:oblivion.esm:092da0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        }
+      },
+      "earned_state_codec_live_and_restart_checks": "f8022482b6d216b1e00906a9c3d00f4abf638308813b8d3d15ac068a96a0f661",
+      "scope": "Typed EFSH ingestion on an earned save and own-save cold continuation only. No shader playback, new door traversal or full course acceptance."
+    },
+    "sanitized-loader-boot-01": {
+      "passed": true,
+      "mode": "sanitized",
+      "source_sha256": "4088d33c8172b40a798fc877b1aca3e5b3d2fead7c8db00a1aed98b56a84a429",
+      "save_sha256": "2a0de1568385a00dba8205112dfc9d155a2dd6230ba47360daee3f0f2286bc74",
+      "binary_sha256": "6d832cd38ffb27a3a3528695e41fcb96a8af90c0a4ece8051a885ed4ad5bbc49",
+      "health": 91.16800880432129,
+      "player_pose": [
+        -735.7990112304688,
+        -21.811662673950195,
+        619.1079711914062,
+        -0.263671875,
+        0.0,
+        2.8035082817077637
+      ],
+      "ilend_pose": [
+        -657.0518188476562,
+        -46.69587707519531,
+        642.9951171875,
+        0.0,
+        0.0,
+        -3.0913279056549072
+      ],
+      "corpses": {
+        "content:oblivion.esm:093ede": {
+          "actor": "content:oblivion.esm:093ede",
+          "base": "content:oblivion.esm:092da0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        },
+        "content:oblivion.esm:093ee1": {
+          "actor": "content:oblivion.esm:093ee1",
+          "base": "content:oblivion.esm:092da0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        }
+      },
+      "earned_state_codec_live_and_restart_checks": "28ccfde95e5e9732b2dd631f27ebf8c2e21706f95c88a04daf114c4684878fcc",
+      "scope": "Typed EFSH ingestion on an earned save and own-save cold continuation only. No shader playback, new door traversal or full course acceptance."
+    },
+    "sanitized-loader-cold-01": {
+      "passed": true,
+      "mode": "sanitized",
+      "source_sha256": "2a0de1568385a00dba8205112dfc9d155a2dd6230ba47360daee3f0f2286bc74",
+      "save_sha256": "4f524568f0cec5bc6eb02cee37e02f360f113008891b9f1b4a6ee0722562e0fa",
+      "binary_sha256": "6d832cd38ffb27a3a3528695e41fcb96a8af90c0a4ece8051a885ed4ad5bbc49",
+      "health": 91.16800880432129,
+      "player_pose": [
+        -735.7990112304688,
+        -21.811662673950195,
+        619.1079711914062,
+        -0.263671875,
+        0.0,
+        2.8035082817077637
+      ],
+      "ilend_pose": [
+        -657.0518188476562,
+        -46.69587707519531,
+        642.9951171875,
+        0.0,
+        0.0,
+        -3.0913279056549072
+      ],
+      "corpses": {
+        "content:oblivion.esm:093ede": {
+          "actor": "content:oblivion.esm:093ede",
+          "base": "content:oblivion.esm:092da0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        },
+        "content:oblivion.esm:093ee1": {
+          "actor": "content:oblivion.esm:093ee1",
+          "base": "content:oblivion.esm:092da0",
+          "phase": 1,
+          "recovery_remaining": 0.0,
+          "killer": "content:oblivion.esm:098138"
+        }
+      },
+      "earned_state_codec_live_and_restart_checks": "e1b592ff8b20f8dc196a0652a8614f0550ff6e8a4025a93c14c442e879ffce13",
+      "scope": "Typed EFSH ingestion on an earned save and own-save cold continuation only. No shader playback, new door traversal or full course acceptance."
+    }
+  },
+  "images": {
+    "normal": {
+      "binary_sha256": "4e09d21e552a24e213ae266176b265f457fa7e2ceeaf09a8dc3f3dd49360c5e7",
+      "producer": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/normal-producer-02.json",
+      "allocated_section_proof": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/normal-allocated-section-proof-02.json",
+      "archive": {
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/candidate-assets/normal-dev-02/openmw.zst",
+        "archive_sha256": "d5932952c641b14b2f1edf576dd1fb5aa869bea109405a4d55a47049ab5e7422",
+        "decoded_sha256": "4e09d21e552a24e213ae266176b265f457fa7e2ceeaf09a8dc3f3dd49360c5e7",
+        "decoded_size": 69396896,
+        "verified": true,
+        "codec": "Standalone zstd level6; debug-stripped producer, no delta dependencies."
+      }
+    },
+    "sanitized": {
+      "binary_sha256": "6d832cd38ffb27a3a3528695e41fcb96a8af90c0a4ece8051a885ed4ad5bbc49",
+      "producer": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/sanitized-producer-02.json",
+      "allocated_section_proof": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/sanitized-allocated-section-proof-02.json",
+      "archive": {
+        "archive": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/candidate-assets/sanitized-dev-02/openmw.zst",
+        "archive_sha256": "d6f58f644246d99bd12cb3405014dbbf4cd968903fa36200e53796572236583e",
+        "decoded_sha256": "6d832cd38ffb27a3a3528695e41fcb96a8af90c0a4ece8051a885ed4ad5bbc49",
+        "decoded_size": 1062964376,
+        "verified": true,
+        "codec": "Standalone zstd level6; debug-stripped producer, no delta dependencies."
+      }
+    }
+  },
+  "native_expectation": "KVATCH-FLAMING-CORPSE-ORACLE.json",
+  "runtime_checker": "scripts/verify_kvatch_effect_shader_ingestion.py",
+  "runtime_checker_sha256": "eeefe61bba9f370e470055dd3ee6824abaee797a4a73385f1173c5ee08452333",
+  "retained_interruption": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/kvatch-flaming-corpse/normal-wrapper-interruption-01.json",
+  "remaining": [
+    "Implement actual corpse-owned PMS surface particles using authored data.",
+    "Preserve -1 lifetime and effect ownership through normal/SAN original entry and own-save cold continuation.",
+    "Continue real course; full gate/main-quest acceptance remains open."
+  ],
+  "runtime_visual_review": {
+    "reviewed": true,
+    "captures": [
+      "build/oblivion-compat/kvatch-flaming-corpse/normal-loader-boot-01/original-upper-blood-feast-ingestion-boot.png",
+      "build/oblivion-compat/kvatch-flaming-corpse/normal-loader-cold-01/original-upper-blood-feast-ingestion-boot.png",
+      "build/oblivion-compat/kvatch-flaming-corpse/sanitized-loader-boot-01/original-upper-blood-feast-ingestion-boot.png",
+      "build/oblivion-compat/kvatch-flaming-corpse/sanitized-loader-cold-01/original-upper-blood-feast-ingestion-boot.png"
+    ],
+    "scope": "Earned upper Blood Feast scene, Player/Ilend and original corpse remain visible. No PMS flame rendering claim."
+  }
+}

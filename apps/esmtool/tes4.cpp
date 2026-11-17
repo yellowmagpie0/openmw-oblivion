@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <sstream>
 
@@ -212,6 +213,58 @@ namespace EsmTool
                 std::cout << "\n  MerchantContainer: " << value.mMerchantContainerKey.serialize();
             if constexpr (ESM4::HasEditorId<T>)
                 std::cout << "\n  EditorId: " << value.mEditorId;
+            if constexpr (std::is_same_v<T, ESM4::EffectShader>)
+            {
+                if (value.mData)
+                {
+                    const auto& s = *value.mData;
+                    std::ostringstream out;
+                    out << std::setprecision(std::numeric_limits<float>::max_digits10)
+                        << "\n  EffectShader: flags=" << unsigned(s.mFlags)
+                        << " size=" << (s.mParticles ? 224 : 96)
+                        << " fillTexture=" << std::quoted(value.mFillTexture)
+                        << " particleTexture=" << std::quoted(value.mParticleTexture);
+                    const auto list = [&](std::string_view name, const auto& values) {
+                        out << "\n  EffectShader" << name << ": ";
+                        bool first = true;
+                        for (const auto& v : values)
+                        {
+                            if (!first) out << ',';
+                            out << +v;
+                            first = false;
+                        }
+                    };
+                    const auto envelope = [&](std::string_view name, const auto& e) {
+                        list(std::string(name) + "Color", e.mColor);
+                        list(std::string(name) + "Alpha", std::array{ e.mFadeIn, e.mFullTime, e.mFadeOut,
+                            e.mPersistentRatio, e.mPulseAmplitude, e.mPulseFrequency });
+                    };
+                    list("MembraneBlend", std::array{ s.mSourceBlend, s.mBlendOperation, s.mZTest, s.mDestinationBlend });
+                    envelope("Fill", s.mFill);
+                    list("TextureSpeed", s.mTextureSpeed);
+                    list("EdgeFalloff", std::array{ s.mEdgeFalloff });
+                    envelope("Edge", s.mEdge);
+                    list("FullAlpha", std::array{ s.mFillFullAlpha, s.mEdgeFullAlpha });
+                    if (s.mParticles)
+                    {
+                        const auto& p = *s.mParticles;
+                        list("ParticleBlend", std::array{ p.mSourceBlend, p.mBlendOperation, p.mZTest, p.mDestinationBlend });
+                        list("Birth", std::array{ p.mBirthRampUp, p.mBirthFullTime, p.mBirthRampDown,
+                            p.mBirthFullRatio, p.mBirthPersistentRatio });
+                        list("Lifetime", std::array{ p.mLifetime, p.mLifetimeVariation });
+                        list("NormalMotion", std::array{ p.mNormalSpeed, p.mNormalAcceleration });
+                        list("Velocity", p.mVelocity);
+                        list("Acceleration", p.mAcceleration);
+                        list("Scale", p.mScale);
+                        list("ScaleTime", p.mScaleTime);
+                        for (std::size_t i = 0; i < p.mColor.size(); ++i)
+                            list("ParticleColor" + std::to_string(i), p.mColor[i]);
+                        list("ParticleAlpha", p.mAlpha);
+                        list("ColorTime", p.mColorTime);
+                    }
+                    std::cout << out.str();
+                }
+            }
             if constexpr (std::is_same_v<T, ESM4::Quest>)
             {
                 std::cout << "\n  QuestDialogueForm: " << reader.getFormKeyFromHeader().serialize()
@@ -656,7 +709,10 @@ namespace EsmTool
                 case ESM4::REC_ECZN:
                     break;
                 case ESM4::REC_EFSH:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    if (!reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f))
+                        readTypedRecord<ESM4::EffectShader>(params, reader);
+                    else
+                        readTypedRecord<ESM4::RawRecord>(params, reader);
                     return true;
                 case ESM4::REC_ENCH:
                     if (!reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f))

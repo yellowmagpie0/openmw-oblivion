@@ -1,0 +1,37 @@
+{
+  "kind": "Isolated original executable diagnostic plan; not a fork replay manifest",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "isolation": "Back up exact prefix documents/plugin list, master-only; restore both after each probe. Preserve proprietary captures/saves only under ignored build evidence.",
+  "first_process": [
+    "Load a disposable copy of the pristine prison save.",
+    "Console tcai, then coc OblivionMqKvatchCitadelHall02; COC closes the console.",
+    "Reopen console, prid 06bc4e, sv; untouched locals were myself0/init1/luckyNumber52. Also inspect06bc4d (roll57).",
+    "Stage Player view: setpos x -350, setpos y273.661, setangle z90; ordinary R/D and mouse expose corpse around pillar.",
+    "Select 06bc4e, pms 000852fe with duration omitted; numeric FormID required in original runtime console.",
+    "Close console, observe animated surface flames, save a separate named OpenMWPmsProbe (not F5), retain its hash and copy outside prefix before cleanup.",
+    "Quit and prove exact prefix restoration."
+  ],
+  "cold_process": [
+    "Start a fresh original process from that retained named save copied to an isolated load name.",
+    "Observe flames before any shader call. Toggle combat AI off promptly; it does not persist from the first process.",
+    "prid06bc4e, sv; expect same completed initializer and roll52, so no natural shader retrigger.",
+    "Quit, prove distinct process epochs, game exit0 and exact prefix restoration."
+  ],
+  "limits": [
+    "First editor-ID console call did not compile; corrected FormID call reports shader applied.",
+    "First outer launcher wrapper was interrupted143; its surviving game parent captured game exit0 and exact restoration. Cold detached supervisor and game both exit0.",
+    "Cold original combat AI restarted before it was toggled off; Player took incidental attacks and the low-health tutorial appeared. Native scope is shader persistence, not Player health or combat fidelity."
+  ],
+  "expected": {
+    "shader_owner": "06bc4e",
+    "duration": -1,
+    "appearance": "Animated fire particles on corpse surface",
+    "saved_effect_restored": true
+  },
+  "exact_input_logs": [
+    "build/oblivion-compat/kvatch-flaming-corpse/original-01/input-log.jsonl",
+    "build/oblivion-compat/kvatch-flaming-corpse/original-cold-01/input-log.jsonl"
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "status": "Independent native expectation established; fork PMS playback remains unimplemented.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "content": {
+    "cell": "085e4f",
+    "script": "0c47ae",
+    "reference": "06bc4e",
+    "shader": "0852fe",
+    "shader_editor_id": "effectFireDamage"
+  },
+  "caller": {
+    "opcode": "0x1123",
+    "alias": "pms",
+    "prefix": "0x516830",
+    "runner_fallback": [
+      "0x517519",
+      "0x517532"
+    ],
+    "null_reference_local_index": 1,
+    "effective_target": "executing corpse",
+    "boundary_stubs": [
+      "reference-variable lookup: index1, form null, varIdx1"
+    ],
+    "scope": "Original reference-prefix resolution and real caller fallback instructions only, with reference-variable lookup stub supplying audited local metadata. No full shader handler, actual-game visual or save/restart claim."
+  },
+  "visual": {
+    "appearance": "Visible animated flames on original corpse surface",
+    "omitted_duration": -1,
+    "persists_through_fresh_process": true,
+    "original_locals": {
+      "myself": null,
+      "init": 1,
+      "luckyNumber": 52
+    },
+    "source_save_sha256": "c6ec9febe1c2a21a3817373142c1d1eb8354a539821ad21298f18d2f97d5cf26"
+  },
+  "probe_scope": "Isolated original visual-effect diagnostic only, with direct selected-reference numeric PMS and a separate named save. No native main-quest course or natural >=90 branch acceptance claim.",
+  "game_exit_codes": [
+    0,
+    0
+  ],
+  "prefix_restored": [
+    true,
+    true
+  ],
+  "retained_limitations": [
+    "First editor-ID console call did not compile; corrected FormID call reports shader applied.",
+    "First outer launcher wrapper was interrupted143; its surviving game parent captured game exit0 and exact restoration. Cold detached supervisor and game both exit0.",
+    "Cold original combat AI restarted before it was toggled off; Player took incidental attacks and the low-health tutorial appeared. Native scope is shader persistence, not Player health or combat fidelity."
+  ],
+  "evidence_root": "build/oblivion-compat/kvatch-flaming-corpse",
+  "instruction_receipt": "build/oblivion-compat/kvatch-flaming-corpse/native-pms-caller.json",
+  "visual_receipt": "build/oblivion-compat/kvatch-flaming-corpse/native-visual-observations-01.json",
+  "editable_probe_plan": "scripts/data/oblivion_compat/original_native_flaming_corpse_probe.json",
+  "remaining": [
+    "Actual fork playback from healthy earned entry source, normal and SAN.",
+    "Render authored surface particles; retain owner and lifetime through genuine own-save cold processes.",
+    "No full gate/main-quest acceptance from this diagnostic probe."
+  ]
+}

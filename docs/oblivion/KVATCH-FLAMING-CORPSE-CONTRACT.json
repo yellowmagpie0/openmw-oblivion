@@ -1,0 +1,74 @@
+{
+  "status": "Typed EFSH data dependency accepted in normal/SAN builds, original-record audits and earned-save boot/own-save cold checks. Actual fork PMS playback and original Dark Salvation entry acceptance remain open.",
+  "target": "Original Corridors of Dark Salvation FlamingCorpseSCRIPT0c47ae on decorative corpses06bc4d/06bc4e; fire shader0852fe.",
+  "bounded_dependency": "Decode both original TES4 EFSH DATA layouts, expose typed store and esmtool semantics, compare every field group against the hash-identified original master. This is ingestion only, not a replacement for visual PMS implementation.",
+  "native_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "gameplay_source": {
+    "path": "build/oblivion-compat/kvatch-rending-halls/normal-upper-dremora-defense-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "sha256": "4088d33c8172b40a798fc877b1aca3e5b3d2fead7c8db00a1aed98b56a84a429",
+    "defense_audit": {
+      "passed": true,
+      "input_sha256": "149dd6e02f7595a45e3642ad0be1c85a735995a064d83fca8f8360fef58a5ffc",
+      "save_sha256": "4088d33c8172b40a798fc877b1aca3e5b3d2fead7c8db00a1aed98b56a84a429",
+      "player_health": 91.16800880432129,
+      "player_pose": [
+        -735.7990112304688,
+        -21.811662673950195,
+        619.1079711914062,
+        -0.263671875,
+        0.0,
+        2.8035082817077637
+      ],
+      "ilend_pose": [
+        -657.0518188476562,
+        -46.69587707519531,
+        642.9951171875,
+        0.0,
+        0.0,
+        -3.0913279056549072
+      ],
+      "enemy_life": {
+        "actor": "content:oblivion.esm:093ee1",
+        "base": "content:oblivion.esm:092da0",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:098138"
+      },
+      "scope": "Normal forward preparation only: existing Ilend defense kills original upper Blood Feast Dremora; no new combat implementation acceptance."
+    }
+  },
+  "observed_failure": {
+    "case": "build/oblivion-compat/kvatch-rending-halls/normal-dark-salvation-entry-01",
+    "game_exit": 0,
+    "scenario_passed": false,
+    "actions_complete": true,
+    "diagnostic": "Unsupported ObScript command pms",
+    "script": "0c47ae",
+    "context": "06bc4e",
+    "locals": {
+      "myself": null,
+      "init": 1,
+      "luckyNumber": 90
+    },
+    "actual_entry_and_Ilend_arrival_observed": true,
+    "not_an_accepted_continuation": true
+  },
+  "data_acceptance": [
+    "Both original layouts:100 records with224 bytes and2 with96 bytes; no invented particle defaults for short records.",
+    "Preserve raw subrecords and authored padding, original textures, blend modes, alpha envelopes and signed particle motion.",
+    "Normal/SAN component checks and real store master-order, override, tombstone checks; link openmw and esmtool.",
+    "Compare all102 original shader records with independent raw-byte decoding, and review broad official file parsing."
+  ],
+  "remaining_gameplay_acceptance": [
+    "Implement actual PMS dispatch on the executing corpse, with original omitted duration -1; native caller, appearance and own-save persistence expectations are established.",
+    "Render authored fire particles on the actual corpse; do not silence the command or substitute a generic glow.",
+    "Retain effect ownership/lifetime through normal/SAN original entry and genuine own-save cold processes.",
+    "Continue original main-quest course after the shader chunk; tower ascent and gate closure remain open."
+  ],
+  "reference_schema": "https://github.com/TES5Edit/TES5Edit/blob/542c7d2f056a5eee7d8f2b2b6ec6b376bb508737/Core/wbDefinitionsTES4.pas#L2088",
+  "raw_native_evidence": "build/oblivion-compat/kvatch-rending-halls/all-effect-shaders.json",
+  "data_verifier": "scripts/verify_tes4_effect_shaders.py",
+  "entry_manifest": "scripts/data/oblivion_compat/original_kvatch_dark_salvation_entry.json",
+  "native_oracle": "KVATCH-FLAMING-CORPSE-ORACLE.json",
+  "data_dependency_verification": "KVATCH-EFFECT-SHADER-DATA-VERIFICATION.json"
+}
