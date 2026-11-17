@@ -1304,6 +1304,39 @@ namespace
         binding.update(mStamp, 42, callbacks);
     }
 
+    TEST_F(NifSceneTraversalTest, CollisionAndProjectionCallbacksRejectHierarchyEditsBeforeChildControllers)
+    {
+        for (unsigned source = 0; source < 3; ++source)
+        {
+            SCOPED_TRACE(source);
+            Binding binding(*mRoot);
+            unsigned children = 0;
+            mChild->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++children; }));
+            Binding::Callbacks callbacks;
+            const auto detach = [&](const Node& node) {
+                if (&node == mRoot) mRoot->removeChild(mChild);
+            };
+            if (source == 0)
+                callbacks.mCollision = [&](const Node& node, const auto&) {
+                    detach(node);
+                    return Binding::CollisionResult{};
+                };
+            else if (source == 1)
+                callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+                    detach(node);
+                    return {};
+                };
+            else
+                callbacks.mProjected = [&](Node& node, const auto&, auto) { detach(node); };
+            EXPECT_THROW(binding.update(mStamp, 42, callbacks), std::invalid_argument);
+            EXPECT_EQ(children, 0u);
+            mRoot->addChild(mChild);
+            EXPECT_NO_THROW(binding.update(mStamp, 42));
+            EXPECT_EQ(children, 1u);
+            EXPECT_TRUE(binding.retire());
+        }
+    }
+
     TEST_F(NifSceneTraversalTest, PlacementMutationOutsideReferenceUpdateRejectsBeforeMoreChildren)
     {
         osg::ref_ptr<osg::MatrixTransform> placement = new osg::MatrixTransform;

@@ -2771,10 +2771,7 @@ namespace MWWorld
             return id ? mWorldModel.getPtr(*id) : Ptr{};
         };
         const auto saved = [&](const ESM::FormKey& key) -> const ESM4::RuntimeReferenceState* {
-            if (mOblivionRuntimeState)
-                for (const auto& reference : mOblivionRuntimeState->mReferences)
-                    if (reference.mKey == key) return &reference;
-            return nullptr;
+            return findOblivionSavedReference(key);
         };
         ESM::FormKey owner;
         const auto sourcePtr = resident(source);

@@ -383,10 +383,13 @@ namespace SceneUtil
                     callbacks.mCollisionUpdate(node, *world);
                     require(valid(), "NIF collision update changed the bound hierarchy");
                 }
-                collision.mFlags = callbacks.mCollisionFlags ? callbacks.mCollisionFlags(node) : std::nullopt;
+                if (callbacks.mCollisionFlags)
+                {
+                    collision.mFlags = callbacks.mCollisionFlags(node);
+                    require(valid(), "NIF collision provider changed the bound hierarchy");
+                }
             }
             auto flags = collision.mFlags;
-            require(valid(), "NIF collision provider changed the bound hierarchy");
             const bool pending = flags && (*flags & 0x40);
             require(!pending || bool(callbacks.mCollision) || bool(callbacks.mFirstSynchronization),
                 "missing pending NIF first synchronization");
@@ -500,8 +503,11 @@ namespace SceneUtil
         {
             const auto flags = mCallbacks.mNodeFlags ? mCallbacks.mNodeFlags(node)
                 : *mBinding.mNodes[mBinding.mIndices.at(&node)].mSelectiveFlags;
-            require(mBinding.valid(), "NIF update policy changed the bound hierarchy");
-            mBinding.requirePlacement(mPlacement);
+            if (mCallbacks.mNodeFlags)
+            {
+                require(mBinding.valid(), "NIF update policy changed the bound hierarchy");
+                mBinding.requirePlacement(mPlacement);
+            }
             return flags;
         }
         void visit(osg::Node& node)
@@ -527,6 +533,7 @@ namespace SceneUtil
                 }
                 mRunProperties = flags & 8;
             }
+            bool dispatchedControllers = false;
             if (mUpdateControllers)
             {
                 struct Restore
@@ -538,19 +545,33 @@ namespace SceneUtil
                 mRunningControllers = true;
                 setTraversalMode(TRAVERSE_NONE);
                 if (mRunProperties && !(mRootPropertiesUpdated && &node == mBinding.mRoot.get()))
+                {
+                    dispatchedControllers = node.getStateSet() && node.getStateSet()->requiresUpdateTraversal();
                     handle_callbacks(node.getStateSet());
+                }
                 // Native47C930 reads the node's controller list after property
                 // controllers; a property callback may replace that list.
                 osg::ref_ptr<osg::Callback> currentCallback(node.getUpdateCallback());
-                if (currentCallback) currentCallback->run(&node, this);
+                if (currentCallback)
+                {
+                    dispatchedControllers = true;
+                    currentCallback->run(&node, this);
+                }
             }
-            require(mBinding.valid(), "NIF controller changed the bound hierarchy");
-            mBinding.requirePlacement(mPlacement);
+            // Each hierarchy check walks the whole rig. Keep checks after
+            // callback work, without repeating them between internal operations
+            // or on nodes that dispatched no controllers.
+            if (dispatchedControllers)
+            {
+                require(mBinding.valid(), "NIF controller changed the bound hierarchy");
+                mBinding.requirePlacement(mPlacement);
+            }
             if (found != mBinding.mIndices.end()
                 && (mMode == Mode::Full || (nodeFlags(static_cast<NifOsg::MatrixTransform&>(node)) & 4)))
             {
                 const auto projection = mBinding.project(found->second, mCallbacks, mPlacement.mWorld, getNodePath());
-                require(mBinding.valid(), "NIF publisher changed the bound hierarchy");
+                if (mCallbacks.mProjected)
+                    require(mBinding.valid(), "NIF publisher changed the bound hierarchy");
                 mBinding.requirePlacement(mPlacement);
                 if (found->second == 0 && mCallbacks.mReferenceUpdate)
                 {
@@ -568,8 +589,6 @@ namespace SceneUtil
                     mPlacement = std::move(placement);
                 }
             }
-            require(mBinding.valid(), "NIF publisher changed the bound hierarchy");
-            mBinding.requirePlacement(mPlacement);
             traverse(node);
         }
         void apply(osg::Node& node) override { visit(node); }

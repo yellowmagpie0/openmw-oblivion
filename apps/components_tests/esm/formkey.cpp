@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <limits>
 #include <map>
 #include <numeric>
@@ -38,6 +39,44 @@ namespace
         EXPECT_EQ(key.localId(), 0x1234);
         EXPECT_EQ(key.serialize(), "content:oblivion.esm:001234");
         EXPECT_EQ(ESM::FormKey::deserialize(key.serialize()), key);
+    }
+
+    TEST(FormKeyTest, simplePluginNamesRetainFilesystemNormalizationSemantics)
+    {
+        // The platform parser is the reference for the new basename fast path,
+        // including inputs that must retain the general path/encoding behavior.
+        for (const std::string name : {"Oblivion.ESM", "Knights - My Mod (v2).ESP", ".Hidden.ESM",
+                 "A..B.ESP", ".", "..", "Data/Oblivion.ESM", "Data\\Oblivion.ESM",
+                 "DLC\xc3\xa9.ESP", "", "Data/", "bad:name.ESP", "C:Oblivion.ESM"})
+        {
+            SCOPED_TRACE(name);
+            auto expected = std::filesystem::path(name).filename().generic_string();
+            if (expected.empty() || expected.find(':') != std::string::npos)
+                EXPECT_THROW(ESM::normalizePluginName(name), std::invalid_argument);
+            else
+            {
+                for (char& c : expected)
+                    if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+                EXPECT_EQ(ESM::normalizePluginName(name), expected);
+            }
+        }
+    }
+
+    TEST(FormKeyTest, resolverAcceptsCanonicalAndExternallyAssembledPluginNames)
+    {
+        const ESM::FormKeyResolver first({"Oblivion.esm", "Knights.esp"});
+        const ESM::FormKeyResolver shifted({"Knights.esp", "Oblivion.esm"});
+        auto key = ESM::FormKey::content("Oblivion.esm", 0x42);
+        for (const auto name : {"oblivion.esm", "Oblivion.ESM", "Data/OBLIVION.ESM"})
+        {
+            key.mNamespace = name;
+            EXPECT_EQ(first.toFormId(key), (ESM::FormId{0x42, 0}));
+            EXPECT_EQ(shifted.toFormId(key), (ESM::FormId{0x42, 1}));
+        }
+        key.mNamespace = "Data/Missing.esp";
+        EXPECT_FALSE(first.toFormId(key));
+        key.mNamespace = "bad:name.esp";
+        EXPECT_THROW(first.toFormId(key), std::invalid_argument);
     }
 
     TEST(FormKeyTest, dynamicIdentityRoundTrips)

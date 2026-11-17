@@ -186,7 +186,14 @@ namespace ESM
 
     std::string normalizePluginName(std::string_view value)
     {
-        std::string result = std::filesystem::path(value).filename().generic_string();
+        // Runtime identities overwhelmingly contain an ASCII basename already.
+        // On Windows a filesystem::path round trip converts through UTF-16 in
+        // both directions, even for every repeated "oblivion.esm" lookup.
+        // Keep filesystem semantics for paths, drive prefixes and other encodings.
+        const bool basename = value.find_first_of("/\\:") == std::string_view::npos
+            && std::all_of(value.begin(), value.end(), [](unsigned char c) { return c >= 0x20 && c < 0x7f; });
+        std::string result = basename ? std::string(value)
+            : std::filesystem::path(value).filename().generic_string();
         if (result.empty())
             throw std::invalid_argument("Content plugin name must be non-empty");
         std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) {
@@ -293,7 +300,11 @@ namespace ESM
             return FormId{};
         if (value.isContent())
         {
-            const auto it = mContentFileIndices.find(normalizePluginName(value.mNamespace));
+            // Canonical keys can use the normalized load-order index directly.
+            // Preserve normalization for externally assembled keys as well.
+            auto it = mContentFileIndices.find(value.mNamespace);
+            if (it == mContentFileIndices.end())
+                it = mContentFileIndices.find(normalizePluginName(value.mNamespace));
             if (it == mContentFileIndices.end())
                 return std::nullopt;
             return FormId{ value.localId(), static_cast<std::int32_t>(it->second) };

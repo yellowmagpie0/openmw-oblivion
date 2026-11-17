@@ -1,9 +1,24 @@
 #include "runtimeviewer.hpp"
 
+#include <cstdlib>
 #include <stdexcept>
 
 namespace MWRender
 {
+    RuntimeViewer::RuntimeViewer()
+    {
+#ifdef _WIN32
+        if (std::getenv("OSG_VERTEX_BUFFER_HINT") == nullptr)
+            preferVertexBuffers(*osg::DisplaySettings::instance());
+#endif
+    }
+
+    void RuntimeViewer::preferVertexBuffers(osg::DisplaySettings& settings)
+    {
+        if (settings.getVertexBufferHint() == osg::DisplaySettings::NO_PREFERENCE)
+            settings.setVertexBufferHint(osg::DisplaySettings::VERTEX_BUFFER_OBJECT);
+    }
+
     void RuntimeViewer::prepareSceneData(osg::Node* node)
     {
         if (areThreadsRunning())

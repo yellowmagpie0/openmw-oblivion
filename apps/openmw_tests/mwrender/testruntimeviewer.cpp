@@ -9,9 +9,78 @@
 #include <gtest/gtest.h>
 #include <osg/Group>
 #include <osgViewer/GraphicsWindow>
+#include <osg/Geometry>
+#include <osg/RenderInfo>
+#include <array>
 
 namespace
 {
+    TEST(RuntimeVertexBuffers, ExplicitBackendChoicesArePreserved)
+    {
+        for (const auto hint : {osg::DisplaySettings::NO_PREFERENCE,
+                 osg::DisplaySettings::VERTEX_BUFFER_OBJECT, osg::DisplaySettings::VERTEX_ARRAY_OBJECT})
+        {
+            osg::ref_ptr<osg::DisplaySettings> settings = new osg::DisplaySettings;
+            settings->setVertexBufferHint(hint);
+            MWRender::RuntimeViewer::preferVertexBuffers(*settings);
+            EXPECT_EQ(settings->getVertexBufferHint(), hint == osg::DisplaySettings::NO_PREFERENCE
+                ? osg::DisplaySettings::VERTEX_BUFFER_OBJECT : hint);
+        }
+    }
+
+    TEST(RuntimeVertexBuffers, ForcedBuffersPreserveRenderedGeometry)
+    {
+        ASSERT_EQ(SDL_InitSubSystem(SDL_INIT_VIDEO), 0) << SDL_GetError();
+        struct QuitVideo { ~QuitVideo() { SDL_QuitSubSystem(SDL_INIT_VIDEO); } } quitVideo;
+        std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window(
+            SDL_CreateWindow("Vertex buffer regression", 0, 0, 32, 32, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN),
+            SDL_DestroyWindow);
+        ASSERT_TRUE(window) << SDL_GetError();
+        osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+        traits->width = traits->height = 32;
+        traits->inheritedWindowData = new SDLUtil::GraphicsWindowSDL2::WindowData(window.get());
+        osg::ref_ptr<SDLUtil::GraphicsWindowSDL2> context = new SDLUtil::GraphicsWindowSDL2(traits, SDLUtil::Disabled);
+        ASSERT_TRUE(context->valid() && context->realize() && context->makeCurrent());
+        osg::ref_ptr<osg::Geometry> geometry = osg::createTexturedQuadGeometry(
+            osg::Vec3(-1,-1,0), osg::Vec3(2,0,0), osg::Vec3(0,2,0));
+        geometry->setUseDisplayList(true);
+        osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array;
+        colors->push_back(osg::Vec4(.25f,.5f,.75f,1.f));
+        geometry->setColorArray(colors, osg::Array::BIND_OVERALL);
+        const auto contextId = context->getState()->getContextID();
+        const auto draw = [&](bool buffers) {
+            osg::ref_ptr<osg::DisplaySettings> settings = new osg::DisplaySettings;
+            settings->setVertexBufferHint(osg::DisplaySettings::NO_PREFERENCE);
+            if (buffers) MWRender::RuntimeViewer::preferVertexBuffers(*settings);
+            osg::ref_ptr<osg::State> state = new osg::State;
+            state->setContextID(contextId);
+            state->setGraphicsContext(context);
+            state->setDisplaySettings(settings);
+            state->initializeExtensionProcs();
+            EXPECT_EQ(state->useVertexBufferObject(false), buffers);
+            glViewport(0,0,32,32);
+            glClearColor(0,0,0,1);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            state->applyMode(GL_LIGHTING, false);
+            state->applyMode(GL_DEPTH_TEST, false);
+            state->applyProjectionMatrix(new osg::RefMatrix(osg::Matrix::identity()));
+            state->applyModelViewMatrix(new osg::RefMatrix(osg::Matrix::identity()));
+            osg::RenderInfo info(state, nullptr);
+            geometry->draw(info);
+            std::array<unsigned char, 32 * 32 * 4> pixels{};
+            glReadPixels(0, 0, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+            EXPECT_EQ(glGetError(), unsigned(GL_NO_ERROR));
+            return pixels;
+        };
+        const auto legacy = draw(false);
+        const auto buffered = draw(true);
+        EXPECT_GT(legacy[0], 0);
+        EXPECT_EQ(buffered, legacy);
+        ASSERT_TRUE(geometry->getVertexArray()->getVertexBufferObject());
+        EXPECT_TRUE(geometry->getVertexArray()->getVertexBufferObject()->getGLBufferObject(contextId));
+        geometry->releaseGLObjects(context->getState());
+    }
+
     struct ResizeCallback : osg::GraphicsContext::ResizedCallback
     {
         int mCalls = 0;

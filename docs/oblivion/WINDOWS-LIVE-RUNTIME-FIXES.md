@@ -2,15 +2,14 @@
 
 ## Current handoff
 
-Target: responsive tutorial play using the player's existing saved game, with
-working armor UI and native skill progression. The bounded routing/reference
-lookup performance chunk and both recurring error repairs are verified. The
-saved game remains slow; this is not a completed performance course. The
-effect-owner and recovered-arrow scan chunks are also verified: final autosave
-performance is 17.9–18.6 FPS, versus the original 7.3–7.4 FPS. Remaining cost
-includes low-process AI routing and physics-worker waits; smooth gameplay is
-still an acceptance gap. Next: a bounded AI-routing/physics investigation,
-using the final CPU sample below. Broader tutorial gates remain in
+The current performance checkpoint is [the Kvatch handoff](KVATCH-PERFORMANCE-HANDOFF.md).
+The offscreen door-loop repair raised the matched staged plane replay from
+1.1 FPS to 13.1–13.6 FPS. The rendering/lookup follow-up now reaches 21 FPS,
+reducing drawing from about 57 to 9.6 ms/frame without reducing graphics quality.
+Overall smooth gameplay remains open because mechanics/physics still limit FPS.
+This document retains the earlier
+tutorial-save, armor UI, skill progression, effect-owner and recovered-arrow
+evidence with its original provenance. Broader tutorial gates remain in
 [the tutorial handoff](TUTORIAL-PLAYABLE-CHUNK-HANDOFF.md).
 
 ## Performance chunk
