@@ -1246,6 +1246,14 @@ namespace MWGui
 
         mRuntime->mDragAndDrop->onFrame();
 
+        mRuntime->mQuestObjectiveRefresh -= frameDuration;
+        if (mRuntime->mQuestObjectiveRefresh <= 0.f)
+        {
+            mRuntime->mQuestObjectiveRefresh = 0.2f;
+            const auto objective = MWWorld::getOblivionQuestObjective(*MWBase::Environment::get().getWorld());
+            mRuntime->mHud->setQuestObjective(objective);
+            mRuntime->mMap->setQuestObjective(objective);
+        }
         mRuntime->mHud->onFrame(frameDuration);
 
         mRuntime->mPostProcessorHud->onFrame(frameDuration);

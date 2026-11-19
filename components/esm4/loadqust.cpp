@@ -26,6 +26,7 @@
 */
 #include "loadqust.hpp"
 
+#include <array>
 #include <cstring>
 #include <limits>
 #include <stdexcept>
@@ -45,6 +46,9 @@ void ESM4::Quest::load(ESM4::Reader& reader)
     std::optional<std::uint32_t> currentEntry;
     std::uint32_t nextEntry = 0;
     bool dialogueScope = true;
+    const bool tes4 = !reader.hasFormVersion();
+    Target* target = nullptr;
+    JournalEntry* journal = nullptr;
     const auto finishScript = [&]() {
         if (scriptStarted)
             mResultScripts.push_back(std::move(currentScript));
@@ -112,9 +116,17 @@ void ESM4::Quest::load(ESM4::Reader& reader)
                     std::memcpy(&cond, data.data(), data.size());
                     reader.recordCurrentSubRecordFormIds(data);
                     mTargetConditions.push_back(cond);
-                    if (!reader.hasFormVersion() && dialogueScope)
-                        mDialogueConditions.push_back(decodePackageCondition(data,
-                            [&reader](ESM::FormId raw) { return reader.resolveRawFormId(raw); }));
+                    if (tes4)
+                    {
+                        auto condition = decodePackageCondition(
+                            data, [&reader](ESM::FormId raw) { return reader.resolveRawFormId(raw); });
+                        if (target)
+                            target->mConditions.push_back(std::move(condition));
+                        else if (journal)
+                            journal->mConditions.push_back(std::move(condition));
+                        else if (dialogueScope)
+                            mDialogueConditions.push_back(std::move(condition));
+                    }
                 }
                 else if (subHdr.dataSize == 28)
                 {
@@ -174,6 +186,8 @@ void ESM4::Quest::load(ESM4::Reader& reader)
             case ESM::fourCC("INDX"):
             {
                 finishScript();
+                target = nullptr;
+                journal = nullptr;
                 std::uint32_t value = 0;
                 if (subHdr.dataSize == sizeof(std::uint16_t))
                 {
@@ -195,7 +209,18 @@ void ESM4::Quest::load(ESM4::Reader& reader)
             case ESM::fourCC("QSDT"):
                 finishScript();
                 currentEntry = nextEntry++;
-                reader.skipSubRecordData();
+                target = nullptr;
+                if (tes4 && currentStage)
+                {
+                    if (subHdr.dataSize != 1)
+                        reader.fail("Invalid TES4 QSDT payload size");
+                    journal = &mJournalEntries.emplace_back();
+                    journal->mStage = *currentStage;
+                    if (!reader.getExact(journal->mFlags))
+                        reader.fail("Truncated TES4 QSDT");
+                }
+                else
+                    reader.skipSubRecordData();
                 break;
             case ESM::fourCC("SLSD"):
             {
@@ -225,7 +250,27 @@ void ESM4::Quest::load(ESM4::Reader& reader)
                 break;
             }
             case ESM::fourCC("CNAM"):
+                if (!journal)
+                    reader.skipSubRecordData();
+                else if (!reader.getZString(journal->mText))
+                    reader.fail("Truncated TES4 quest journal text");
+                break;
             case ESM::fourCC("QSTA"):
+                finishScript();
+                journal = nullptr;
+                if (tes4)
+                {
+                    if (subHdr.dataSize != 8)
+                        reader.fail("Invalid TES4 QSTA payload size");
+                    target = &mTargets.emplace_back();
+                    std::array<std::uint8_t, 4> flags{};
+                    if (!reader.getFormKey(target->mReference) || !reader.get(flags.data(), flags.size()))
+                        reader.fail("Truncated TES4 quest target");
+                    target->mFlags = flags.front();
+                }
+                else
+                    reader.skipSubRecordData();
+                break;
             case ESM::fourCC("NNAM"): // FO3
             case ESM::fourCC("QOBJ"): // FO3
             case ESM::fourCC("NAM0"): // FO3

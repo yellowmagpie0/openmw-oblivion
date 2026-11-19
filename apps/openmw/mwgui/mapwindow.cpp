@@ -12,6 +12,7 @@
 #include <MyGUI_RenderManager.h>
 #include <MyGUI_RotatingSkin.h>
 #include <MyGUI_ScrollView.h>
+#include <MyGUI_TextBox.h>
 #include <MyGUI_TextIterator.h>
 #include <MyGUI_Window.h>
 
@@ -633,6 +634,7 @@ namespace MWGui
 
     void LocalMapBase::onFrame(float dt)
     {
+        updateLocalQuestMarker();
         updateInteriorViewport();
         if (mNeedDoorMarkersUpdate)
         {
@@ -649,6 +651,42 @@ namespace MWGui
         }
 
         updateRequiredMaps();
+    }
+
+    void LocalMapBase::setLocalQuestMarker(const std::optional<MWWorld::QuestMarker>& marker)
+    {
+        mLocalQuestMarker = marker;
+        if (marker && !mLocalQuestPin)
+        {
+            mLocalQuestPin = mLocalMap->createWidget<MyGUI::TextBox>("SandText", {}, MyGUI::Align::Default);
+            mLocalQuestPin->setDepth(Local_MarkerAboveFogLayer);
+            mLocalQuestPin->setNeedMouseFocus(false);
+            mLocalQuestPin->setTextAlign(MyGUI::Align::Center);
+            mLocalQuestPin->setTextColour({ 1.f, 0.8f, 0.25f });
+            mLocalQuestPin->setTextShadowColour(MyGUI::Colour::Black);
+            mLocalQuestPin->setTextShadow(true);
+            mLocalQuestPin->setFontHeight(18);
+            mLocalQuestPin->setCaption("!");
+        }
+        updateLocalQuestMarker();
+    }
+
+    void LocalMapBase::updateLocalQuestMarker()
+    {
+        if (!mLocalQuestPin)
+            return;
+        mLocalQuestPin->setVisible(false);
+        if (!mLocalQuestMarker || !mActiveCell || mLocalQuestMarker->mSpace != mActiveCell->getWorldSpace())
+            return;
+        const auto& position = mLocalQuestMarker->mPosition;
+        MarkerUserData data(mLocalMapRender);
+        const auto coord = getMarkerCoordinates(position.x(), position.y(), data, 20);
+        const auto canvas = mLocalMap->getCanvasSize();
+        if (coord.left + 10 < 0 || coord.top + 10 < 0 || coord.left + 10 >= canvas.width
+            || coord.top + 10 >= canvas.height)
+            return;
+        mLocalQuestPin->setCoord(coord);
+        mLocalQuestPin->setVisible(true);
     }
 
     bool widgetCropped(MyGUI::Widget* widget, MyGUI::Widget* cropTo)
@@ -883,6 +921,8 @@ namespace MWGui
 
         getWidget(mButton, "WorldButton");
         mButton->eventMouseButtonClick += MyGUI::newDelegate(this, &MapWindow::onWorldButtonClicked);
+        getWidget(mQuestObjectiveButton, "QuestObjectiveButton");
+        mQuestObjectiveButton->eventMouseButtonClick += MyGUI::newDelegate(this, &MapWindow::onShowQuestObjective);
 
         const bool global = Settings::map().mGlobal;
 
@@ -1296,6 +1336,91 @@ namespace MWGui
     {
         LocalMapBase::onFrame(dt);
         NoDrop::onFrame(dt);
+        updateGlobalQuestMarker();
+    }
+
+    void MapWindow::setQuestObjective(const std::optional<MWWorld::QuestObjective>& objective)
+    {
+        std::optional<MWWorld::QuestMarker> local;
+        mGlobalQuestMarker.reset();
+        const bool hasObjective = objective.has_value();
+        mQuestObjectiveButton->setVisible(hasObjective && isVisible()
+            && MWBase::Environment::get().getWindowManager()->getMode() != GM_None);
+        if (hasObjective)
+        {
+            mQuestObjectiveButton->setUserString("Caption_Text",
+                objective->mText.empty() ? objective->mTitle : objective->mText);
+            for (const auto& destination : objective->mDestinations)
+            {
+                if (!local)
+                    local = destination.mNearby;
+                if (!mGlobalQuestMarker)
+                    mGlobalQuestMarker = destination.mWorldMap;
+            }
+        }
+        if (mGlobalQuestMarker && !mGlobalQuestPin)
+        {
+            mGlobalQuestPin = mGlobalMap->createWidget<MyGUI::TextBox>("SandText", {}, MyGUI::Align::Default);
+            mGlobalQuestPin->setDepth(Global_MarkerLayer);
+            mGlobalQuestPin->setNeedMouseFocus(false);
+            mGlobalQuestPin->setTextAlign(MyGUI::Align::Center);
+            mGlobalQuestPin->setTextColour({ 1.f, 0.8f, 0.25f });
+            mGlobalQuestPin->setTextShadowColour(MyGUI::Colour::Black);
+            mGlobalQuestPin->setTextShadow(true);
+            mGlobalQuestPin->setFontHeight(18);
+            mGlobalQuestPin->setCaption("!");
+        }
+        setLocalQuestMarker(local);
+        updateGlobalQuestMarker();
+
+        const std::string action = mGlobalQuestMarker || local ? "#{Interface:ShowObjective}" : "";
+        if (Settings::gui().mControllerMenus && mControllerButtons.mA != action)
+        {
+            mControllerButtons.mA = action;
+            MWBase::Environment::get().getWindowManager()->updateControllerButtonsOverlay();
+        }
+    }
+
+    void MapWindow::updateGlobalQuestMarker()
+    {
+        if (!mGlobalQuestPin)
+            return;
+        mGlobalQuestPin->setVisible(false);
+        if (!mGlobalQuestMarker || !mGlobalMapTexture)
+            return;
+        const auto& worlds = MWBase::Environment::get().getESMStore()->get<ESM4::World>();
+        const auto mapSpace = MWWorld::resolveWorldspaceInheritance(
+            worlds, mGlobalQuestMarker->mSpace, ESM4::World::UseFlag_Map);
+        if (mapSpace != mGlobalMapRender->getWorldspace())
+            return;
+        const auto& position = mGlobalQuestMarker->mPosition;
+        float x, y;
+        worldPosToGlobalMapImageSpace(position.x(), position.y(), x, y);
+        const auto canvas = mGlobalMap->getCanvasSize();
+        if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height)
+            return;
+        mGlobalQuestPin->setCoord(static_cast<int>(x) - 10, static_cast<int>(y) - 10, 20, 20);
+        mGlobalQuestPin->setVisible(true);
+    }
+
+    void MapWindow::onShowQuestObjective(MyGUI::Widget*)
+    {
+        ensureGlobalMapLoaded();
+        updateGlobalQuestMarker();
+        updateLocalQuestMarker();
+        const bool useLocal = mLocalQuestPin && mLocalQuestPin->getVisible()
+            && mActiveCell && !mActiveCell->isExterior();
+        const bool useGlobal = !useLocal && mGlobalQuestPin && mGlobalQuestPin->getVisible();
+        if (!useGlobal && (!mLocalQuestPin || !mLocalQuestPin->getVisible()))
+            return;
+        if (Settings::map().mGlobal != useGlobal)
+            onWorldButtonClicked(mButton);
+        auto* map = useGlobal ? mGlobalMap : mLocalMap;
+        const auto* pin = useGlobal ? mGlobalQuestPin : mLocalQuestPin;
+        const auto position = pin->getPosition() + MyGUI::IntPoint{ 10, 10 };
+        const auto view = map->getSize();
+        map->setViewOffset({ view.width / 2 - position.left, view.height / 2 - position.top });
+        mNeedDoorMarkersUpdate = true;
     }
 
     void MapWindow::setGlobalMapMarkerTooltip(MyGUI::Widget* markerWidget, int x, int y)
@@ -1482,6 +1607,7 @@ namespace MWGui
 
     void MapWindow::clear()
     {
+        setQuestObjective(std::nullopt);
         mMarkers.clear();
 
         mGlobalMapRender->clear();
@@ -1570,6 +1696,8 @@ namespace MWGui
     {
         if (arg.button == SDL_CONTROLLER_BUTTON_B)
             MWBase::Environment::get().getWindowManager()->exitCurrentGuiMode();
+        else if (arg.button == SDL_CONTROLLER_BUTTON_A && !mControllerButtons.mA.empty())
+            onShowQuestObjective(mQuestObjectiveButton);
         else if (arg.button == SDL_CONTROLLER_BUTTON_X)
         {
             onWorldButtonClicked(mButton);

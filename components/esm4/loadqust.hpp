@@ -54,6 +54,23 @@ namespace ESM4
 
     struct Quest
     {
+        struct Target
+        {
+            ESM::FormKey mReference;
+            std::uint8_t mFlags = 0;
+            std::vector<PackageCondition> mConditions;
+        };
+
+        struct JournalEntry
+        {
+            static constexpr std::uint8_t CompleteQuest = 0x01;
+
+            std::uint16_t mStage = 0;
+            std::uint8_t mFlags = 0;
+            std::string mText;
+            std::vector<PackageCondition> mConditions;
+        };
+
         // NOTE: these values are for TES4
         enum QuestFlags
         {
@@ -71,12 +88,14 @@ namespace ESM4
         std::string mFileName; // texture file
         ESM::FormId mQuestScript;
 
-        QuestData mData;
+        QuestData mData{};
 
         std::vector<TargetCondition> mTargetConditions;
         // TES4 quest-level eligibility, excluding stage/log/target conditions.
         // Keep the legacy raw sequence above and resolve canonical FormKeys here.
         std::vector<PackageCondition> mDialogueConditions;
+        std::vector<Target> mTargets;
+        std::vector<JournalEntry> mJournalEntries;
 
         std::vector<ScriptDefinition> mResultScripts;
 

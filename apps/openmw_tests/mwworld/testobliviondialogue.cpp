@@ -2608,6 +2608,76 @@ namespace
     }
 }
 
+TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
+{
+    ESM4::AIPackage::CTDA atStage{};
+    atStage.fnIndex = 58;
+    atStage.param1 = 0xe00;
+    atStage.compValue = 10.f;
+    const auto target = [&](std::uint32_t reference, float stage) {
+        auto condition = atStage;
+        condition.compValue = stage;
+        return sub(ESM::fourCC("QSTA"), bytes(reference) + bytes(0u))
+            + sub(ESM::fourCC("CTDA"), bytes(condition));
+    };
+    const auto quest = record(ESM4::REC_QUST, 0xe00,
+        sub(ESM::fourCC("EDID"), std::string("FixtureDelivery\0", 16))
+        + sub(ESM::fourCC("FULL"), std::string("Deliver the parcel\0", 19))
+        + sub(ESM::fourCC("DATA"), std::string{0, 50})
+        + sub(ESM::fourCC("INDX"), bytes(std::uint16_t{10}))
+        + sub(ESM::fourCC("QSDT"), std::string(1, '\0'))
+        + sub(ESM::fourCC("CNAM"), std::string("Find the recipient.\0", 20))
+        + sub(ESM::fourCC("INDX"), bytes(std::uint16_t{30}))
+        + sub(ESM::fourCC("QSDT"), std::string(1, '\1'))
+        + target(0xd03, 10.f) + target(0xb01, 20.f));
+
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        MWClass::ESM4Door::registerSelf();
+        SwitchFixture fixture(shifted, false, sameCellTeleportRecords(true, true) + quest, 9, false);
+        auto& world = fixture.mFixture.mWorld;
+        auto& scripts = *world.getOblivionScriptManager();
+        const auto* definition = world.getStore().search<ESM4::Quest>(key(0xe00));
+        ASSERT_NE(definition, nullptr);
+        ASSERT_EQ(definition->mTargets.size(), 2u);
+        EXPECT_EQ(definition->mTargets[0].mReference, key(0xd03));
+        EXPECT_EQ(definition->mTargets[1].mReference, key(0xb01));
+        EXPECT_TRUE(definition->mDialogueConditions.empty());
+        ASSERT_EQ(definition->mJournalEntries.size(), 2u);
+        EXPECT_FALSE(MWWorld::getOblivionQuestObjective(world));
+
+        scripts.setStage(key(0xe00), 10);
+        ESM4::RuntimeState saved;
+        scripts.capture(saved);
+        const auto objective = MWWorld::getOblivionQuestObjective(world);
+        ASSERT_TRUE(objective);
+        EXPECT_EQ(objective->mTitle, "Deliver the parcel");
+        EXPECT_EQ(objective->mText, "Find the recipient.");
+        ASSERT_EQ(objective->mDestinations.size(), 1u);
+        ASSERT_TRUE(objective->mDestinations[0].mNearby);
+        EXPECT_FLOAT_EQ(objective->mDestinations[0].mNearby->mPosition.x(), 128.f);
+
+        scripts.restore(saved);
+        const auto formId = ESM::FormKeyResolver(world.getContentFiles()).toFormId(key(0xd06));
+        ASSERT_TRUE(formId);
+        world.getPlayer().setCell(&world.getWorldModel().getCell(ESM::RefId(*formId)));
+        const auto inside = MWWorld::getOblivionQuestObjective(world);
+        ASSERT_TRUE(inside);
+        ASSERT_EQ(inside->mDestinations.size(), 1u);
+        ASSERT_TRUE(inside->mDestinations[0].mNearby);
+        EXPECT_FLOAT_EQ(inside->mDestinations[0].mNearby->mPosition.x(), 1280.f);
+
+        ESM4::RuntimeState after;
+        scripts.capture(after);
+        EXPECT_EQ(saved.mQuests, after.mQuests);
+
+        scripts.setStage(key(0xe00), 30);
+        ASSERT_TRUE(scripts.findQuestState(key(0xe00))->mRunning);
+        EXPECT_FALSE(MWWorld::getOblivionQuestObjective(world));
+    }
+}
+
 TEST(OblivionTutorialDoor, SameCellTeleportBridgesComponentsAndRestartsBeforeDoorWithoutEarlyCompletion)
 {
     for (bool shifted : {false,true}) for (bool reachableExit : {false,true})

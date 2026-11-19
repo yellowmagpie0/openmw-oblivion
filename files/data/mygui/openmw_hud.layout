@@ -2,6 +2,17 @@
 
 <MyGUI type="Layout">
     <Widget type="Widget" layer="HUD" position="0 0 300 200" name="_Main" align="Stretch">
+        <Widget type="Widget" skin="HUD_Box_NoTransp" position="-45 12 390 32" align="Center Top" name="QuestObjective">
+            <Property key="Visible" value="false"/>
+            <Property key="NeedMouse" value="false"/>
+            <Widget type="ImageBox" skin="RotatingSkin" position="0 0 32 32" name="QuestBearing">
+                <Property key="ImageTexture" value="textures\compass.dds"/>
+                <Property key="NeedMouse" value="false"/>
+            </Widget>
+            <Widget type="TextBox" skin="SandText" position="36 3 354 26" name="QuestObjectiveText">
+                <Property key="NeedMouse" value="false"/>
+            </Widget>
+        </Widget>
         <!-- Energy bars -->
         <Widget type="ProgressBar" skin="MW_EnergyBar_Yellow" position="12 132 65 12" align="Left Bottom" name="EnemyHealth">
             <Property key="Visible" value="false"/>

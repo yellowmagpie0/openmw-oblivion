@@ -483,6 +483,7 @@ namespace MWGui
             CustomMarkerCollection mCustomMarkers;
             HUD* mHud = nullptr;
             MapWindow* mMap = nullptr;
+            float mQuestObjectiveRefresh = 0.f;
             std::unique_ptr<MWRender::LocalMap> mLocalMapRender;
             std::unique_ptr<ToolTips> mToolTips;
             StatsWindow* mStatsWindow = nullptr;

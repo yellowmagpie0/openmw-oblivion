@@ -53,6 +53,7 @@ namespace MWGui
         void setMouseEmulationCursorPosition(int left, int top);
 
         void onFrame(float dt) override;
+        void setQuestObjective(const std::optional<MWWorld::QuestObjective>& objective);
 
         void setCellName(const std::string& cellName);
 
@@ -81,6 +82,10 @@ namespace MWGui
         MyGUI::ImageBox* mMouseEmulationCursor = nullptr;
         MyGUI::TextBox* mCellNameBox = nullptr;
         MyGUI::TextBox* mWeaponSpellBox = nullptr;
+        MyGUI::Widget* mQuestObjective = nullptr;
+        MyGUI::TextBox* mQuestObjectiveText = nullptr;
+        MyGUI::ImageBox* mQuestBearing = nullptr;
+        std::optional<MWWorld::QuestMarker> mQuestBearingMarker;
         MyGUI::Widget *mDrowningBar = nullptr, *mDrowningFrame = nullptr, *mDrowningFlash = nullptr;
         DragAndDrop* mDragAndDrop;
         std::string mCellName;

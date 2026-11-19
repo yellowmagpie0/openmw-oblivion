@@ -5,6 +5,7 @@
 #include <MyGUI_InputManager.h>
 #include <MyGUI_ProgressBar.h>
 #include <MyGUI_RenderManager.h>
+#include <MyGUI_RotatingSkin.h>
 #include <MyGUI_ScrollView.h>
 
 #include <components/esm3/loadgmst.hpp>
@@ -98,6 +99,9 @@ namespace MWGui
         getWidget(mWeaponSpellBox, "WeaponSpellName");
 
         getWidget(mCrosshair, "Crosshair");
+        getWidget(mQuestObjective, "QuestObjective");
+        getWidget(mQuestObjectiveText, "QuestObjectiveText");
+        getWidget(mQuestBearing, "QuestBearing");
         getWidget(mMouseEmulationCursor, "MouseEmulationCursor");
 
         mLocalMapZoom = 0.5f;
@@ -314,6 +318,22 @@ namespace MWGui
     {
         LocalMapBase::onFrame(dt);
 
+        bool bearingVisible = false;
+        if (mQuestBearingMarker && mActiveCell && mQuestBearingMarker->mSpace == mActiveCell->getWorldSpace())
+        {
+            const auto player = MWBase::Environment::get().getWorld()->getPlayerPtr();
+            const auto& position = player.getRefData().getPosition();
+            const auto offset = mQuestBearingMarker->mPosition - position.asVec3();
+            bearingVisible = offset.x() * offset.x() + offset.y() * offset.y() > 1.f;
+            if (bearingVisible)
+            {
+                auto* rotation = mQuestBearing->getSubWidgetMain()->castType<MyGUI::RotatingSkin>();
+                rotation->setCenter({ 16, 16 });
+                rotation->setAngle(std::atan2(offset.x(), offset.y()) - position.rot[2]);
+            }
+        }
+        mQuestBearing->setVisible(bearingVisible);
+
         mCellNameTimer -= dt;
         mWeaponSpellTimer -= dt;
         if (mCellNameTimer < 0)
@@ -347,6 +367,25 @@ namespace MWGui
 
             mDrowningFlash->setAlpha(intensity);
         }
+    }
+
+    void HUD::setQuestObjective(const std::optional<MWWorld::QuestObjective>& objective)
+    {
+        mQuestBearingMarker.reset();
+        mQuestObjective->setVisible(objective.has_value());
+        if (objective)
+        {
+            std::string caption = objective->mTitle;
+            if (!objective->mDestinations.empty())
+            {
+                const auto& destination = objective->mDestinations.front();
+                mQuestBearingMarker = destination.mNearby;
+                if (!destination.mLabel.empty())
+                    caption += " - " + destination.mLabel;
+            }
+            mQuestObjectiveText->setCaption(caption);
+        }
+        setLocalQuestMarker(mQuestBearingMarker);
     }
 
     void HUD::setSelectedSpell(const ESM::RefId& spellId, int successChancePercent)
@@ -659,6 +698,7 @@ namespace MWGui
 
     void HUD::clear()
     {
+        setQuestObjective(std::nullopt);
         mEnemyActor = {};
         mEnemyHealthTimer = -1;
 

@@ -12,6 +12,7 @@
 #include <MyGUI_ITexture.h>
 
 #include "windowpinnablebase.hpp"
+#include "../mwworld/oblivionquestguidance.hpp"
 
 #include <components/esm3/custommarkerstate.hpp>
 #include <components/misc/constants.hpp>
@@ -89,6 +90,7 @@ namespace MWGui
         void setPlayerPos(int cellX, int cellY, const float nx, const float ny);
 
         void onFrame(float dt);
+        void setLocalQuestMarker(const std::optional<MWWorld::QuestMarker>& marker);
 
         bool toggleFogOfWar();
 
@@ -127,6 +129,9 @@ namespace MWGui
         bool mFogOfWarToggled = true;
         bool mFogOfWarEnabled;
         bool mNeedDoorMarkersUpdate = false;
+        MyGUI::TextBox* mLocalQuestPin = nullptr;
+        std::optional<MWWorld::QuestMarker> mLocalQuestMarker;
+        void updateLocalQuestMarker();
 
         // Stores markers that were placed by a player. May be shared between multiple map views.
         CustomMarkerCollection& mCustomMarkers;
@@ -260,6 +265,7 @@ namespace MWGui
 
         void setGlobalMapPlayerPosition(float worldX, float worldY);
         void setGlobalMapPlayerDir(const float x, const float y);
+        void setQuestObjective(const std::optional<MWWorld::QuestObjective>& objective);
 
         void ensureGlobalMapLoaded();
 
@@ -288,6 +294,8 @@ namespace MWGui
         void onDragStart(MyGUI::Widget* sender, int left, int top, MyGUI::MouseButton id);
         void onMouseDrag(MyGUI::Widget* sender, int left, int top, MyGUI::MouseButton id);
         void onWorldButtonClicked(MyGUI::Widget* sender);
+        void onShowQuestObjective(MyGUI::Widget* sender);
+        void updateGlobalQuestMarker();
         void onMapDoubleClicked(MyGUI::Widget* sender);
         void onMapZoomed(MyGUI::Widget* sender, int rel);
         void zoomOnCursor(float speedDiff);
@@ -317,6 +325,9 @@ namespace MWGui
         MyGUI::ImageBox* mPlayerArrowLocal;
         MyGUI::ImageBox* mPlayerArrowGlobal;
         MyGUI::Button* mButton;
+        MyGUI::Button* mQuestObjectiveButton = nullptr;
+        MyGUI::TextBox* mGlobalQuestPin = nullptr;
+        std::optional<MWWorld::QuestMarker> mGlobalQuestMarker;
         MyGUI::IntPoint mLastDragPos;
 
         MyGUI::IntCoord mLastScrollWindowCoordinates;

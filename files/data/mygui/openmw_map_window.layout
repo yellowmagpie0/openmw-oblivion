@@ -34,5 +34,12 @@
             <Property key="NeedKey" value="false"/>
         </Widget>
 
+        <Widget type="AutoSizedButton" skin="MW_Button" position="6 233 104 22" align="Bottom Left" name="QuestObjectiveButton">
+            <Property key="Visible" value="false"/>
+            <Property key="Caption" value="#{Interface:ShowObjective}"/>
+            <Property key="ExpandDirection" value="Right"/>
+            <UserString key="ToolTipType" value="Layout"/>
+            <UserString key="ToolTipLayout" value="TextToolTip"/>
+        </Widget>
     </Widget>
 </MyGUI>
