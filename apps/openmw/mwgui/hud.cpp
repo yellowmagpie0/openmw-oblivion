@@ -30,10 +30,12 @@
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
+#include "../mwrender/camera.hpp"
 
 #include "draganddrop.hpp"
 #include "inventorywindow.hpp"
 #include "itemwidget.hpp"
+#include "questbearing.hpp"
 #include "spellicons.hpp"
 #include "worlditemmodel.hpp"
 
@@ -102,6 +104,8 @@ namespace MWGui
         getWidget(mQuestObjective, "QuestObjective");
         getWidget(mQuestObjectiveText, "QuestObjectiveText");
         getWidget(mQuestBearing, "QuestBearing");
+        getWidget(mQuestDistance, "QuestDistance");
+        mQuestBearing->getSubWidgetMain()->castType<MyGUI::RotatingSkin>()->setCenter({ 16, 16 });
         getWidget(mMouseEmulationCursor, "MouseEmulationCursor");
 
         mLocalMapZoom = 0.5f;
@@ -319,20 +323,33 @@ namespace MWGui
         LocalMapBase::onFrame(dt);
 
         bool bearingVisible = false;
-        if (mQuestBearingMarker && mActiveCell && mQuestBearingMarker->mSpace == mActiveCell->getWorldSpace())
+        bool distanceVisible = false;
+        if (mQuestBearingMarker)
         {
-            const auto player = MWBase::Environment::get().getWorld()->getPlayerPtr();
-            const auto& position = player.getRefData().getPosition();
-            const auto offset = mQuestBearingMarker->mPosition - position.asVec3();
-            bearingVisible = offset.x() * offset.x() + offset.y() * offset.y() > 1.f;
-            if (bearingVisible)
+            auto& world = *MWBase::Environment::get().getWorld();
+            const auto player = world.getPlayerPtr();
+            if (!player.isEmpty() && player.isInCell()
+                && mQuestBearingMarker->mSpace == player.getCell()->getCell()->getWorldSpace())
             {
-                auto* rotation = mQuestBearing->getSubWidgetMain()->castType<MyGUI::RotatingSkin>();
-                rotation->setCenter({ 16, 16 });
-                rotation->setAngle(std::atan2(offset.x(), offset.y()) - position.rot[2]);
+                const auto& position = player.getRefData().getPosition();
+                const auto offset = mQuestBearingMarker->mPosition - position.asVec3();
+                const osg::Vec2f horizontal{ offset.x(), offset.y() };
+                const auto forward = world.getCamera()->getOrient() * osg::Vec3f(0.f, 1.f, 0.f);
+                auto bearing = questBearing(horizontal, { forward.x(), forward.y() });
+                if (!bearing && forward.x() * forward.x() + forward.y() * forward.y() <= 1e-6f)
+                    bearing = questBearing(horizontal, { std::sin(position.rot[2]), std::cos(position.rot[2]) });
+
+                distanceVisible = true;
+                mQuestDistance->setCaption(questDistance(horizontal));
+                if (bearing)
+                {
+                    mQuestBearing->getSubWidgetMain()->castType<MyGUI::RotatingSkin>()->setAngle(*bearing);
+                    bearingVisible = true;
+                }
             }
         }
         mQuestBearing->setVisible(bearingVisible);
+        mQuestDistance->setVisible(distanceVisible);
 
         mCellNameTimer -= dt;
         mWeaponSpellTimer -= dt;

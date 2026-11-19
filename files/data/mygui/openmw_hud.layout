@@ -6,11 +6,16 @@
             <Property key="Visible" value="false"/>
             <Property key="NeedMouse" value="false"/>
             <Widget type="ImageBox" skin="RotatingSkin" position="0 0 32 32" name="QuestBearing">
-                <Property key="ImageTexture" value="textures\compass.dds"/>
+                <Property key="ImageTexture" value="textures\omw\quest_direction.png"/>
                 <Property key="NeedMouse" value="false"/>
             </Widget>
-            <Widget type="TextBox" skin="SandText" position="36 3 354 26" name="QuestObjectiveText">
+            <Widget type="TextBox" skin="SandText" position="36 3 270 26" name="QuestObjectiveText">
                 <Property key="NeedMouse" value="false"/>
+            </Widget>
+            <Widget type="TextBox" skin="SandText" position="309 3 72 26" name="QuestDistance">
+                <Property key="TextAlign" value="Right Bottom"/>
+                <Property key="NeedMouse" value="false"/>
+                <Property key="Visible" value="false"/>
             </Widget>
         </Widget>
         <!-- Energy bars -->

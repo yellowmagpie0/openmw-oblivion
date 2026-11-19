@@ -85,6 +85,7 @@ namespace MWGui
         MyGUI::Widget* mQuestObjective = nullptr;
         MyGUI::TextBox* mQuestObjectiveText = nullptr;
         MyGUI::ImageBox* mQuestBearing = nullptr;
+        MyGUI::TextBox* mQuestDistance = nullptr;
         std::optional<MWWorld::QuestMarker> mQuestBearingMarker;
         MyGUI::Widget *mDrowningBar = nullptr, *mDrowningFrame = nullptr, *mDrowningFlash = nullptr;
         DragAndDrop* mDragAndDrop;

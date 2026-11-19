@@ -40,6 +40,7 @@ set(BUILTIN_DATA_FILES
     textures/omw_xbox_button_lt.dds
     textures/omw_xbox_button_rb.dds
     textures/omw_xbox_button_rt.dds
+    textures/omw/quest_direction.png
     textures/omw/water_nm.png
 
     fonts/DejaVuFontLicense.txt

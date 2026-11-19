@@ -61,6 +61,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwrender/testruntimeviewer.cpp
 
     mwgui/tooltips.cpp
+    mwgui/questbearing.cpp
     mwgui/weightedsearch.cpp
 
     mwlua/teststatscache.cpp
