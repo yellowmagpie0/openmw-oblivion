@@ -1,15 +1,26 @@
 #include "oblivionworldfixture.hpp"
 
+#include "apps/openmw/mwclass/npc.hpp"
+#include "apps/openmw/mwworld/player.hpp"
 #include "apps/openmw/mwlua/luamanagerimp.hpp"
 #include "apps/openmw/mwsound/soundmanagerimp.hpp"
 
+#include <components/esm3/esmreader.hpp>
+#include <components/esm3/esmwriter.hpp>
+#include <components/esm3/loadnpc.hpp>
+#include <components/esm3/loadrace.hpp>
+#include <components/esm4/loadcell.hpp>
+#include <components/esm4/runtimestate.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/files/collections.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
 
+#include <gtest/gtest.h>
+
 #include <array>
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -94,6 +105,60 @@ namespace TestingOpenMW
             content.push_back("second.esm");
         }
         mWorld.loadData(files, content, {}, nullptr, &listener);
+    }
+
+    void readNativeSnapshot(NativeWorldFixture& fixture, const ESM4::RuntimeState& state)
+    {
+        ESM::ESMWriter writer;
+        auto stream = std::make_unique<std::stringstream>();
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        writer.save(*stream);
+        writer.startRecord(ESM::REC_T4ST);
+        state.save(writer);
+        writer.endRecord(ESM::REC_T4ST);
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "native-marker-fixture");
+        ASSERT_EQ(reader.getRecName(), ESM::REC_T4ST);
+        reader.getRecHeader();
+        fixture.mWorld.readRecord(reader, ESM::REC_T4ST);
+    }
+
+    void prepareNativeSnapshotPlayer(NativeWorldFixture& fixture, const ESM4::RuntimeState& state)
+    {
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        if (world.getPlayerPtr().isEmpty())
+            world.setupPlayer();
+        auto& store = world.getStore();
+        ESM::Race race{};
+        race.blank();
+        race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+        if (!store.get<ESM::Race>().search(race.mId))
+            store.getWritable<ESM::Race>().insertStatic(race);
+        if (!world.getPlayerPtr().get<ESM::NPC>()->mBase->mRace.getIf<ESM::FormId>())
+        {
+            auto player = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+            player.mRace = race.mId;
+            auto metadata = store.preparePlayerRecord(player);
+            world.getPlayer().set(metadata.commit());
+        }
+        const ESM::FormKeyResolver resolver({"headless.esm"});
+        const auto prepareCell = [&](const ESM::FormKey& key) {
+            if (store.get<ESM4::Cell>().search(key))
+                return;
+            const auto id = resolver.toFormId(key);
+            if (!id)
+                throw std::runtime_error("snapshot fixture requires a native cell");
+            ESM4::Cell cell{};
+            cell.mId = ESM::RefId(*id);
+            cell.mFormKey = key;
+            cell.mCellFlags = ESM4::CELL_Interior;
+            cell.mEditorId = "AcceptedSnapshotFixture";
+            store.getWritable<ESM4::Cell>().insertStatic(cell, key);
+        };
+        prepareCell(state.mPlayer.mCell);
+        for (const auto& reference : state.mReferences)
+            prepareCell(reference.mCell);
     }
 
     NativeWorldFixture::~NativeWorldFixture() = default;

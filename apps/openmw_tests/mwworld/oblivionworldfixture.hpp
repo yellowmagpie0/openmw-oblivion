@@ -37,6 +37,9 @@ namespace TestingOpenMW
             const std::string& extraRecords = {}, std::uint32_t extraRecordCount = 0);
         ~NativeWorldFixture();
     };
+
+    void readNativeSnapshot(NativeWorldFixture& fixture, const ESM4::RuntimeState& state);
+    void prepareNativeSnapshotPlayer(NativeWorldFixture& fixture, const ESM4::RuntimeState& state);
 }
 
 #endif

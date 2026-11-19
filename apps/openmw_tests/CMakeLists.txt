@@ -15,6 +15,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwworld/testduration.cpp
     mwworld/testfailedaction.cpp
     mwworld/testoblivionactorstats.cpp
+    mwworld/testoblivionenvironmentalfire.cpp
     mwworld/testoblivionworld.cpp
     mwworld/oblivionworldfixture.cpp
     mwworld/testoblivionparalysis.cpp
