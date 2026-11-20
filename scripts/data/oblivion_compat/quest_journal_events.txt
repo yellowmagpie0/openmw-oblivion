@@ -1,0 +1,10 @@
+# Run against an earned post-sewer save with Oblivion.esm and DLCBattlehornCastle.esp.
+# The timed driver isolates journal capture on original records and result scripts.
+at 2 setstage MS45 10
+at 2 dialogue content:oblivion.esm:028210 0 content:oblivion.esm:0234fd
+at 2 setstage MS48 8
+at 2 setstage MS48 10
+at 2 setstage DLCBattlehornCastle 30
+at 2 setstage DLCBattlehornCastle 40
+at 2 setstage DLCBattlehornCastle 50
+at 2 setstage DLCBattlehornCastle 60

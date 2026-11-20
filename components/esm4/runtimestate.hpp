@@ -79,7 +79,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 106;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 107;
 
     // v106: one Player-owned forward chair lifecycle. Clip clocks are independent
     // of actor locomotion; cold loading never replays entry or marker selection.
@@ -221,12 +221,23 @@ namespace ESM4
         friend bool operator==(const RuntimeScriptInstance&, const RuntimeScriptInstance&) = default;
     };
 
+    struct RuntimeQuestJournalStage
+    {
+        std::int32_t mStage = 0;
+        // Indices within the authored stage, including entries without notes.
+        std::vector<std::uint32_t> mEntries;
+        bool mUnresolved = false;
+
+        friend bool operator==(const RuntimeQuestJournalStage&, const RuntimeQuestJournalStage&) = default;
+    };
+
     struct RuntimeQuestState
     {
         ESM::FormKey mQuest;
         std::int32_t mStage = 0;
         bool mRunning = false;
         std::vector<std::int32_t> mCompletedStages;
+        std::vector<RuntimeQuestJournalStage> mJournal;
 
         friend bool operator==(const RuntimeQuestState&, const RuntimeQuestState&) = default;
     };

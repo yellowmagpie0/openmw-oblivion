@@ -1,4 +1,5 @@
 #include "oblivionscriptmanager.hpp"
+#include "oblivionquestguidance.hpp"
 
 #include <components/esm4/cellcondition.hpp>
 #include "oblivionactorstats.hpp"
@@ -693,6 +694,7 @@ namespace MWWorld
             {
                 quest.mStage = 0;
                 quest.mCompletedStages.clear();
+                quest.mJournal.clear();
                 if (const auto* record = owner.mStore.search<ESM4::Quest>(quest.mQuest))
                     quest.mRunning = (record->mData.flags & ESM4::Quest::Flag_StartGameEnabled) != 0;
             }
@@ -823,6 +825,7 @@ namespace MWWorld
         {
             quest.mStage = 0;
             quest.mCompletedStages.clear();
+            quest.mJournal.clear();
             if (const ESM4::Quest* record = mStore.search<ESM4::Quest>(quest.mQuest))
                 quest.mRunning = (record->mData.flags & ESM4::Quest::Flag_StartGameEnabled) != 0;
         }
@@ -929,6 +932,41 @@ namespace MWWorld
     {
         const auto found = mQuests.find(quest);
         return found == mQuests.end() ? nullptr : &found->second;
+    }
+
+    std::vector<OblivionScriptManager::QuestStageSource> OblivionScriptManager::findQuestStageSources(
+        const ESM::FormKey& quest) const
+    {
+        std::vector<QuestStageSource> result;
+        for (const auto& [unit, program] : mProgramsByUnit)
+            for (const auto& entry : program->mEntryPoints)
+                for (std::size_t i = 2; i < entry.mCode.size(); ++i)
+                {
+                    const auto& call = entry.mCode[i];
+                    if (call.mOpcode != ObScript::OpCode::Call || call.mText != "setstage"
+                        || call.mArgumentCount != (call.mMemberCall ? 1u : 2u))
+                        continue;
+                    const auto& target = entry.mCode[i - 2];
+                    if (target.mOpcode != ObScript::OpCode::LoadReference
+                        || mStore.findEsm4FormKey(target.mText) != quest)
+                        continue;
+                    const auto& argument = entry.mCode[i - 1];
+                    if (argument.mOpcode != ObScript::OpCode::PushInteger
+                        && argument.mOpcode != ObScript::OpCode::LoadLocal)
+                        continue;
+                    const auto stage = argument.mOpcode == ObScript::OpCode::PushInteger
+                        ? std::optional<int>(boundedCount(argument.mInteger))
+                        : std::nullopt;
+                    auto& source = result.emplace_back(
+                        QuestStageSource{ program->mUnit, entry.mEvent, call.mLocation.mLine, stage, {} });
+                    for (std::size_t j = 0; j < i; ++j)
+                    {
+                        const auto& guard = entry.mCode[j];
+                        if (guard.mOpcode == ObScript::OpCode::JumpIfFalse && i < guard.mIndex)
+                            source.mGuardLines.push_back(guard.mLocation.mLine);
+                    }
+                }
+        return result;
     }
 
     std::optional<double> OblivionScriptManager::scriptVariable(
@@ -1463,6 +1501,10 @@ namespace MWWorld
         const auto* definition = mStore.search<ESM4::Quest>(quest);
         if (completed && (!definition || !(definition->mData.flags & ESM4::Quest::Flag_AllowRepeatStages)))
             return;
+        if (definition)
+            if (auto update = captureOblivionJournalStage(mWorld, *this, *definition, stage);
+                update && std::ranges::find(state.mJournal, *update) == state.mJournal.end())
+                state.mJournal.push_back(std::move(*update));
         if (const auto programs = mQuestResults.find(quest); programs != mQuestResults.end())
             for (const auto& program : programs->second)
                 if (program->mUnit.mStage && *program->mUnit.mStage == stage)

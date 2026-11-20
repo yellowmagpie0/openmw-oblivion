@@ -208,6 +208,7 @@ set(BUILTIN_DATA_FILES
     mygui/openmw_inventory_tabs.layout
     mygui/openmw_inventory_window.layout
     mygui/openmw_journal.layout
+    mygui/openmw_oblivion_journal.layout
     mygui/openmw_journal.skin.xml
     mygui/openmw_layers.xml
     mygui/openmw_lua.xml

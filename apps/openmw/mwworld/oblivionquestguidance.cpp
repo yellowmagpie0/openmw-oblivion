@@ -2,13 +2,16 @@
 
 #include <algorithm>
 #include <deque>
+#include <map>
 #include <set>
+#include <sstream>
 #include <tuple>
 
 #include <components/esm4/aiconditions.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadqust.hpp>
+#include <components/esm4/loadscpt.hpp>
 
 #include "../mwmechanics/oblivionai.hpp"
 
@@ -127,58 +130,351 @@ namespace MWMechanics
 
 namespace MWWorld
 {
-    std::optional<QuestObjective> getOblivionQuestObjective(MWBase::World& world)
+    namespace
     {
-        if (world.getGameProfile() != ESM::GameProfile::Oblivion)
-            return std::nullopt;
-        const auto* native = dynamic_cast<const World*>(&world);
-        const auto* scripts = native ? native->getOblivionScriptManager() : nullptr;
-        const auto* ai = native ? native->getOblivionAiService() : nullptr;
-        const auto player = world.getPlayerPtr();
-        if (!scripts || !ai || player.isEmpty() || !player.isInCell())
-            return std::nullopt;
+        const World* getNativeWorld(const MWBase::World& world)
+        {
+            return world.getGameProfile() == ESM::GameProfile::Oblivion ? dynamic_cast<const World*>(&world) : nullptr;
+        }
 
-        const auto& store = world.getStore();
-        ESM4::NativeConditionEvaluationContext context;
-        context.mHasActor = true;
-        context.mResolveGlobal = [&](const ESM::FormKey& key) -> std::optional<double> {
+        std::optional<double> questConditionGlobal(const MWBase::World& world, const ESM::FormKey& key)
+        {
+            const auto& store = world.getStore();
             if (const auto* global = store.search<ESM4::GlobalVariable>(key))
                 return world.getGlobalFloat(GlobalVariableName(global->mEditorId));
             return std::nullopt;
-        };
-        context.mResolve = [&](const ESM4::PackageCondition& condition, ESM4::ConditionSubject subject, bool) {
-            using Value = ESM4::ConditionValue;
-            const auto& key = condition.mParameter1.mReferenceKey;
-            switch (condition.mFunction)
-            {
-                case 56: // GetQuestRunning
-                case 58: // GetStage
-                case 59: // GetStageDone
+        }
+
+        ESM4::NativeConditionEvaluationContext questConditionContext(
+            const MWBase::World& world, const OblivionScriptManager& scripts)
+        {
+            ESM4::NativeConditionEvaluationContext context;
+            const auto player = world.getPlayerConstPtr();
+            context.mHasActor = !player.isEmpty() && player.isInCell();
+            context.mResolveGlobal = [&world](const ESM::FormKey& key) { return questConditionGlobal(world, key); };
+            context.mResolve = [&world, &scripts, player](
+                                   const ESM4::PackageCondition& condition, ESM4::ConditionSubject subject, bool) {
+                using Value = ESM4::ConditionValue;
+                const auto& key = condition.mParameter1.mReferenceKey;
+                switch (condition.mFunction)
                 {
-                    const auto* state = scripts->findQuestState(key);
-                    if (condition.mFunction == 56)
-                        return Value::value(state && state->mRunning);
-                    if (condition.mFunction == 58)
-                        return Value::value(state ? state->mStage : 0);
-                    return Value::value(state && std::ranges::binary_search(
-                        state->mCompletedStages, condition.mParameter2.mNumber));
+                    case 56: // GetQuestRunning
+                    case 58: // GetStage
+                    case 59: // GetStageDone
+                    {
+                        const auto* state = scripts.findQuestState(key);
+                        if (condition.mFunction == 56)
+                            return Value::value(state && state->mRunning);
+                        if (condition.mFunction == 58)
+                            return Value::value(state ? state->mStage : 0);
+                        return Value::value(state
+                            && std::ranges::binary_search(state->mCompletedStages, condition.mParameter2.mNumber));
+                    }
+                    case 74: // GetGlobalValue
+                        if (const auto value = questConditionGlobal(world, key))
+                            return Value::value(*value);
+                        return Value::missing();
+                    case 53: // GetScriptVariable
+                    case 79: // GetQuestVariable
+                        if (const auto value = condition.mFunction == 53
+                                ? scripts.scriptVariable(key, condition.mParameter2.mNumber)
+                                : scripts.questVariable(key, condition.mParameter2.mNumber))
+                            return Value::value(*value);
+                        return Value::missing();
+                    case 67: // GetInCell
+                        if (subject == ESM4::ConditionSubject::Self && !player.isEmpty() && player.isInCell())
+                            if (const auto* cell = world.getStore().search<ESM4::Cell>(key))
+                                return Value::value(player.getCell()->getCell()->getId() == ESM::RefId(cell->mId));
+                        return Value::missing();
+                    default:
+                        return Value::unsupported();
                 }
-                case 74: // GetGlobalValue
-                    if (const auto value = context.mResolveGlobal(key))
-                        return Value::value(*value);
-                    return Value::missing();
-                case 79: // GetQuestVariable
-                    if (const auto value = scripts->questVariable(key, condition.mParameter2.mNumber))
-                        return Value::value(*value);
-                    return Value::missing();
-                case 67: // GetInCell
-                    if (subject == ESM4::ConditionSubject::Self)
-                        if (const auto* cell = store.search<ESM4::Cell>(key))
-                            return Value::value(player.getCell()->getCell()->getId() == ESM::RefId(cell->mId));
-                    return Value::missing();
-                default: return Value::unsupported();
+            };
+            return context;
+        }
+
+        bool reached(const ESM4::RuntimeQuestState& state, int stage)
+        {
+            return std::ranges::binary_search(state.mCompletedStages, stage);
+        }
+
+        void appendNote(OblivionJournalQuest& row, const ESM4::Quest::JournalEntry& entry)
+        {
+            row.mFinished |= (entry.mFlags & ESM4::Quest::JournalEntry::CompleteQuest) != 0;
+            if (!entry.mText.empty() && std::ranges::none_of(row.mSteps, [&](const auto& step) {
+                    return step.mStage == entry.mStage && step.mText == entry.mText;
+                }))
+                row.mSteps.push_back({ entry.mStage, entry.mText });
+        }
+
+        OblivionJournalQuest projectQuest(const ESM4::Quest& quest, const ESM4::RuntimeQuestState& state,
+            const ESM4::NativeConditionEvaluationContext& context)
+        {
+            OblivionJournalQuest row{ quest.mFormKey, quest.mQuestName, {} };
+            std::map<int, std::vector<const ESM4::Quest::JournalEntry*>> byStage;
+            for (const auto& entry : quest.mJournalEntries)
+                if (reached(state, entry.mStage))
+                    byStage[entry.mStage].push_back(&entry);
+
+            std::set<int> captured;
+            for (const auto& update : state.mJournal)
+                captured.insert(update.mStage);
+            // Stages recorded before the journal existed precede new events.
+            // Historical conditions may have changed since SetStage.
+            for (const auto& [stage, entries] : byStage)
+            {
+                if (captured.contains(stage))
+                    continue;
+                for (const auto* entry : entries)
+                {
+                    if (entry->mConditions.empty())
+                    {
+                        appendNote(row, *entry);
+                        continue;
+                    }
+                    row.mIncompleteHistory
+                        |= !entry->mText.empty() || (entry->mFlags & ESM4::Quest::JournalEntry::CompleteQuest) != 0;
+                    if (entry->mFlags & ESM4::Quest::JournalEntry::CompleteQuest)
+                        row.mFinished |= ESM4::evaluateNativeConditions(entry->mConditions, context)
+                            == ESM4::ConditionResult::True;
+                }
             }
-        };
+            for (const auto& update : state.mJournal)
+            {
+                row.mIncompleteHistory |= update.mUnresolved;
+                const auto entries = byStage.find(update.mStage);
+                for (const auto ordinal : update.mEntries)
+                {
+                    if (entries == byStage.end() || ordinal >= entries->second.size())
+                        row.mIncompleteHistory = true;
+                    else
+                        appendNote(row, *entries->second[ordinal]);
+                }
+            }
+            return row;
+        }
+
+        std::string conditionParameter(const ESM4::ConditionParameter& parameter)
+        {
+            return parameter.mIsFormId ? parameter.mReferenceKey.serialize() : std::to_string(parameter.mNumber);
+        }
+
+        void describeConditions(std::ostringstream& out, std::span<const ESM4::PackageCondition> conditions,
+            const ESM4::NativeConditionEvaluationContext& context)
+        {
+            for (const auto& condition : conditions)
+            {
+                out << "    " << ESM4::conditionFunctionName(condition.mFunction) << '('
+                    << conditionParameter(condition.mParameter1) << ", " << conditionParameter(condition.mParameter2)
+                    << ") " << ESM4::conditionOperatorName(condition.mOperator) << ' ';
+                if (condition.mUseGlobal)
+                    out << condition.mComparisonGlobalKey.serialize();
+                else
+                    out << condition.mComparisonValue;
+                if (condition.mRunOnTarget)
+                    out << " [target]";
+                switch (condition.mFunction)
+                {
+                    case 53:
+                    case 56:
+                    case 58:
+                    case 59:
+                    case 74:
+                    case 79:
+                    {
+                        auto standalone = condition;
+                        standalone.mOr = false;
+                        const auto result = ESM4::evaluateNativeConditions({ &standalone, 1 }, context);
+                        if (result == ESM4::ConditionResult::True)
+                            out << " [met now]";
+                        else if (result == ESM4::ConditionResult::False)
+                            out << " [unmet now]";
+                        break;
+                    }
+                }
+                out << (condition.mOr ? " OR\n" : "\n");
+            }
+        }
+
+        const ESM4::ScriptDefinition* findResult(
+            std::span<const ESM4::ScriptDefinition> definitions, std::uint32_t ordinal)
+        {
+            for (const auto& definition : definitions)
+                if (definition.hasPayload() && ordinal-- == 0)
+                    return &definition;
+            return nullptr;
+        }
+
+        void describeScriptGuards(
+            std::ostringstream& out, const ESM4::ScriptDefinition* definition, std::span<const std::uint32_t> guards)
+        {
+            if (!definition || guards.empty())
+                return;
+            std::istringstream source(definition->scriptSource);
+            std::string line;
+            std::uint32_t number = 0;
+            for (const auto guard : guards)
+            {
+                while (number < guard && std::getline(source, line))
+                    ++number;
+                if (number != guard)
+                    break;
+                const auto first = line.find_first_not_of(" \t");
+                const auto last = line.find_last_not_of(" \t\r");
+                if (first != std::string::npos && last != std::string::npos && first <= last)
+                    out << "    Script guard: " << line.substr(first, last - first + 1) << '\n';
+            }
+        }
+    }
+
+    std::optional<ESM4::RuntimeQuestJournalStage> captureOblivionJournalStage(
+        World& world, const OblivionScriptManager& scripts, const ESM4::Quest& quest, int stage)
+    {
+        if (quest.mQuestName.empty())
+            return std::nullopt;
+        const auto context = questConditionContext(world, scripts);
+        const auto* ai = world.getOblivionAiService();
+        const auto player = world.getPlayerPtr();
+        ESM4::RuntimeQuestJournalStage update;
+        update.mStage = stage;
+        std::uint32_t ordinal = 0;
+        bool hasJournalEntry = false;
+        for (const auto& entry : quest.mJournalEntries)
+        {
+            if (entry.mStage != stage)
+                continue;
+            const auto index = ordinal++;
+            if (entry.mText.empty() && !(entry.mFlags & ESM4::Quest::JournalEntry::CompleteQuest))
+                continue;
+            hasJournalEntry = true;
+            auto result = ESM4::evaluateNativeConditions(entry.mConditions, context);
+            if (result != ESM4::ConditionResult::True && result != ESM4::ConditionResult::False && ai)
+                result = ai->evaluateNativeIdleConditions(player, entry.mConditions, {});
+            if (result == ESM4::ConditionResult::True)
+                update.mEntries.push_back(index);
+            else if (result != ESM4::ConditionResult::False)
+                update.mUnresolved = true;
+        }
+        if (!hasJournalEntry)
+            return std::nullopt;
+        return update;
+    }
+
+    std::vector<OblivionJournalQuest> getOblivionJournal(const MWBase::World& world)
+    {
+        std::vector<OblivionJournalQuest> result;
+        const auto* native = getNativeWorld(world);
+        const auto* scripts = native ? native->getOblivionScriptManager() : nullptr;
+        if (!scripts)
+            return result;
+
+        const auto context = questConditionContext(world, *scripts);
+        for (const auto& quest : world.getStore().get<ESM4::Quest>())
+        {
+            const auto* state = scripts->findQuestState(quest.mFormKey);
+            if (!state || quest.mQuestName.empty() || state->mCompletedStages.empty())
+                continue;
+
+            auto row = projectQuest(quest, *state, context);
+            if (row.mSteps.empty() && !row.mIncompleteHistory && !row.mFinished && quest.mTargets.empty())
+                continue;
+            result.push_back(std::move(row));
+        }
+        std::ranges::sort(result,
+            [](const auto& a, const auto& b) { return std::tie(a.mTitle, a.mQuest) < std::tie(b.mTitle, b.mQuest); });
+        return result;
+    }
+
+    std::string getOblivionJournalDebug(const MWBase::World& world, const ESM::FormKey& key)
+    {
+        const auto* native = getNativeWorld(world);
+        const auto* scripts = native ? native->getOblivionScriptManager() : nullptr;
+        const auto& store = world.getStore();
+        const auto* quest = scripts ? store.search<ESM4::Quest>(key) : nullptr;
+        const auto* state = quest ? scripts->findQuestState(key) : nullptr;
+        if (!state)
+            return {};
+
+        const auto context = questConditionContext(world, *scripts);
+        std::ostringstream out;
+        out << "DEBUG — quest spoilers\n"
+            << quest->mEditorId << " (" << key.serialize() << ")\nCurrent stage " << state->mStage << " | Quest script "
+            << (state->mRunning ? "running" : "stopped") << "\nReached stages";
+        for (const int stage : state->mCompletedStages)
+            out << ' ' << stage;
+        out << "\n\nPossible progression sources\n"
+               "Static calls can be conditional. Indirect calls may be unresolved.\n";
+        bool foundSource = false;
+        for (const auto& source : scripts->findQuestStageSources(key))
+        {
+            if (source.mStage && reached(*state, *source.mStage))
+                continue;
+            foundSource = true;
+            if (source.mStage)
+                out << "Stage " << *source.mStage;
+            else
+                out << "Dynamic stage";
+            out << " — " << ObScript::toString(source.mUnit.mContext) << ' ' << source.mUnit.mOwner.serialize();
+            if (source.mUnit.mStage)
+                out << " stage " << *source.mUnit.mStage;
+            if (source.mUnit.mStageEntry)
+                out << " entry " << *source.mUnit.mStageEntry;
+            out << " / " << source.mEvent << " / line " << source.mLine << '\n';
+            const ESM4::ScriptDefinition* definition = nullptr;
+            if (source.mUnit.mContext == ObScript::ExecutionContext::DialogueResult)
+            {
+                if (const auto* info = store.search<ESM4::DialogInfo>(source.mUnit.mOwner))
+                {
+                    if (!info->mResponses.empty())
+                        out << "    “" << info->mResponses.front().mText << "”\n";
+                    describeConditions(out, info->mCanonicalConditions, context);
+                    definition = findResult(info->mResultScripts, source.mUnit.mOrdinal);
+                }
+            }
+            else if (source.mUnit.mContext == ObScript::ExecutionContext::QuestResult)
+            {
+                if (const auto* owner = store.search<ESM4::Quest>(source.mUnit.mOwner))
+                    definition = findResult(owner->mResultScripts, source.mUnit.mOrdinal);
+            }
+            else if (const auto* script = store.search<ESM4::Script>(source.mUnit.mOwner))
+                definition = &script->mScript;
+            describeScriptGuards(out, definition, source.mGuardLines);
+        }
+        if (!foundSource)
+            out << "Progression source unresolved.\n";
+        out << "\nUnreached authored stages\n";
+        bool foundStage = false;
+        for (const auto& entry : quest->mJournalEntries)
+        {
+            if (reached(*state, entry.mStage))
+                continue;
+            foundStage = true;
+            out << "Stage " << entry.mStage;
+            if (entry.mFlags & ESM4::Quest::JournalEntry::CompleteQuest)
+                out << " [completion]";
+            if (!entry.mText.empty())
+                out << " — " << entry.mText;
+            out << '\n';
+            describeConditions(out, entry.mConditions, context);
+        }
+        if (!foundStage)
+            out << "None.\n";
+        return out.str();
+    }
+
+    std::optional<QuestObjective> getOblivionQuestObjective(MWBase::World& world, const ESM::FormKey& tracked)
+    {
+        const auto* native = getNativeWorld(world);
+        const auto* scripts = native ? native->getOblivionScriptManager() : nullptr;
+        const auto* ai = native ? native->getOblivionAiService() : nullptr;
+        if (!scripts || !ai)
+            return std::nullopt;
+        const auto player = world.getPlayerPtr();
+        if (player.isEmpty() || !player.isInCell())
+            return std::nullopt;
+
+        const auto& store = world.getStore();
+        const auto context = questConditionContext(world, *scripts);
         const auto eligible = [&](std::span<const ESM4::PackageCondition> conditions) {
             return ESM4::evaluateNativeConditions(conditions, context) == ESM4::ConditionResult::True;
         };
@@ -188,26 +484,16 @@ namespace MWWorld
         for (const auto& quest : store.get<ESM4::Quest>())
         {
             const auto* state = scripts->findQuestState(quest.mFormKey);
-            if (!state || !state->mRunning || quest.mQuestName.empty())
+            const bool manual = tracked == quest.mFormKey && !tracked.isNull();
+            if (!state || (!manual && !state->mRunning) || quest.mQuestName.empty())
                 continue;
 
-            QuestObjective candidate{ quest.mFormKey, quest.mQuestName, {}, {} };
-            const ESM4::Quest::JournalEntry* journal = nullptr;
-            bool complete = false;
-            for (const auto& entry : quest.mJournalEntries)
-            {
-                if (!std::ranges::binary_search(state->mCompletedStages, entry.mStage)
-                    || !eligible(entry.mConditions))
-                    continue;
-                if (entry.mFlags & ESM4::Quest::JournalEntry::CompleteQuest)
-                    complete = true;
-                if (!entry.mText.empty() && (!journal || entry.mStage >= journal->mStage))
-                    journal = &entry;
-            }
-            if (complete)
+            auto journal = projectQuest(quest, *state, context);
+            if (journal.mFinished)
                 continue;
-            if (journal)
-                candidate.mText = journal->mText;
+            QuestObjective candidate{ quest.mFormKey, std::move(journal.mTitle), {}, {} };
+            if (!journal.mSteps.empty())
+                candidate.mText = std::move(journal.mSteps.back().mText);
             for (const auto& target : quest.mTargets)
             {
                 if (!eligible(target.mConditions))
@@ -216,6 +502,8 @@ namespace MWWorld
                 if (destination.mNearby || destination.mWorldMap)
                     candidate.mDestinations.push_back(std::move(destination));
             }
+            if (manual)
+                return candidate;
             if (candidate.mText.empty() && candidate.mDestinations.empty())
                 continue;
             const auto score = std::tuple{ !candidate.mDestinations.empty(), unsigned(quest.mData.priority) };

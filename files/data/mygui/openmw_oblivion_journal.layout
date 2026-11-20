@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout">
+    <Widget type="Window" skin="MW_DialogNoTransp" layer="Windows" position="0 0 800 520" align="Center" name="_Main">
+        <Property key="Visible" value="false"/>
+        <Widget type="TextBox" skin="SandText" position="14 8 380 24" name="JournalHeading">
+            <Property key="Caption" value="#{Interface:QuestJournal}"/>
+        </Widget>
+        <Widget type="Button" skin="MW_Button" position="14 42 104 28" name="ActiveQuests">
+            <Property key="Caption" value="#{Interface:QuestJournalActive}"/>
+        </Widget>
+        <Widget type="Button" skin="MW_Button" position="126 42 104 28" name="FinishedQuests">
+            <Property key="Caption" value="#{Interface:QuestJournalFinished}"/>
+        </Widget>
+        <Widget type="ListBox" skin="MW_List" position="14 82 252 386" align="Top Left VStretch" name="QuestList"/>
+        <Widget type="TextBox" skin="SandText" position="286 82 500 28" align="Top Left HStretch" name="QuestTitle">
+            <Property key="TextAlign" value="Left VCenter"/>
+        </Widget>
+        <Widget type="EditBox" skin="MW_TextBoxEdit" position="286 118 500 350" align="Top Left HStretch" name="QuestNotes">
+            <Property key="MultiLine" value="true"/>
+            <Property key="WordWrap" value="true"/>
+            <Property key="VisibleVScroll" value="true"/>
+        </Widget>
+        <Widget type="EditBox" skin="MW_TextBoxEditWithBorder" position="286 300 500 168" align="Top Left HStretch" name="QuestDebug">
+            <Property key="Visible" value="false"/>
+            <Property key="MultiLine" value="true"/>
+            <Property key="WordWrap" value="true"/>
+            <Property key="VisibleVScroll" value="true"/>
+        </Widget>
+        <Widget type="Button" skin="MW_Button" position="14 478 216 28" align="Bottom Left" name="ShowDebug">
+            <Property key="Caption" value="#{Interface:QuestJournalDebug}"/>
+        </Widget>
+        <Widget type="Button" skin="MW_Button" position="286 478 126 28" align="Bottom Left" name="TrackQuest">
+            <Property key="Caption" value="#{Interface:QuestJournalTrack}"/>
+        </Widget>
+        <Widget type="Button" skin="MW_Button" position="690 42 96 28" align="Top Right" name="Close">
+            <Property key="Caption" value="#{Interface:QuestJournalClose}"/>
+        </Widget>
+    </Widget>
+</MyGUI>

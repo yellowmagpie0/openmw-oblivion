@@ -3035,6 +3035,17 @@ namespace ESM4
                 || std::adjacent_find(quest.mCompletedStages.begin(), quest.mCompletedStages.end())
                     != quest.mCompletedStages.end())
                 throw std::runtime_error("TES4 runtime-state completed quest stages are not sorted and unique");
+            checkSize(quest.mJournal.size(), "quest journal");
+            if (mVersion < 107 && !quest.mJournal.empty())
+                throw std::runtime_error("TES4 runtime-state quest journal requires version 107");
+            for (const auto& update : quest.mJournal)
+            {
+                checkSize(update.mEntries.size(), "quest journal entries");
+                if (!std::ranges::binary_search(quest.mCompletedStages, update.mStage)
+                    || !std::ranges::is_sorted(update.mEntries)
+                    || std::ranges::adjacent_find(update.mEntries) != update.mEntries.end())
+                    throw std::runtime_error("Invalid TES4 runtime-state quest journal update");
+            }
         }
 
         if (mVersion >= 5)
@@ -3356,6 +3367,18 @@ namespace ESM4
                 writer.integer<std::uint32_t>(static_cast<std::uint32_t>(quest.mCompletedStages.size()));
                 for (const std::int32_t stage : quest.mCompletedStages)
                     writer.integer(stage);
+                if (mVersion >= 107)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(quest.mJournal.size()));
+                    for (const auto& update : quest.mJournal)
+                    {
+                        writer.integer(update.mStage);
+                        writer.integer<std::uint8_t>(update.mUnresolved);
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(update.mEntries.size()));
+                        for (const auto entry : update.mEntries)
+                            writer.integer(entry);
+                    }
+                }
             }
         }
 
@@ -4588,6 +4611,24 @@ namespace ESM4
                 quest.mCompletedStages.reserve(completedCount);
                 for (std::uint32_t j = 0; j < completedCount; ++j)
                     quest.mCompletedStages.push_back(reader.integer<std::int32_t>());
+                if (result.mVersion >= 107)
+                {
+                    const auto updateCount = reader.count();
+                    quest.mJournal.reserve(updateCount);
+                    for (std::uint32_t j = 0; j < updateCount; ++j)
+                    {
+                        auto& update = quest.mJournal.emplace_back();
+                        update.mStage = reader.integer<std::int32_t>();
+                        const auto unresolved = reader.integer<std::uint8_t>();
+                        if (unresolved > 1)
+                            throw std::runtime_error("Invalid TES4 runtime-state quest journal flag");
+                        update.mUnresolved = unresolved != 0;
+                        const auto entryCount = reader.count();
+                        update.mEntries.reserve(entryCount);
+                        for (std::uint32_t k = 0; k < entryCount; ++k)
+                            update.mEntries.push_back(reader.integer<std::uint32_t>());
+                    }
+                }
                 result.mQuests.push_back(std::move(quest));
             }
         }
@@ -6203,7 +6244,22 @@ namespace ESM4
                    << ",\"completed_stages\":[";
             for (std::size_t j = 0; j < quest.mCompletedStages.size(); ++j)
                 stream << (j ? "," : "") << quest.mCompletedStages[j];
-            stream << "]}";
+            stream << ']';
+            if (mVersion >= 107 && !quest.mJournal.empty())
+            {
+                stream << ",\"journal\":[";
+                for (std::size_t j = 0; j < quest.mJournal.size(); ++j)
+                {
+                    const auto& update = quest.mJournal[j];
+                    stream << (j ? "," : "") << "{\"stage\":" << update.mStage
+                           << ",\"unresolved\":" << (update.mUnresolved ? "true" : "false") << ",\"entries\":[";
+                    for (std::size_t k = 0; k < update.mEntries.size(); ++k)
+                        stream << (k ? "," : "") << update.mEntries[k];
+                    stream << "]}";
+                }
+                stream << ']';
+            }
+            stream << '}';
         }
         stream << "]";
         if (mVersion >= 5)

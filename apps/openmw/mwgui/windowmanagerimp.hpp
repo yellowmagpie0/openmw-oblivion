@@ -91,6 +91,7 @@ namespace MWGui
 {
     class HUD;
     class MapWindow;
+    class OblivionJournalWindow;
     class MainMenu;
     class StatsWindow;
     class InventoryWindow;
@@ -483,6 +484,7 @@ namespace MWGui
             CustomMarkerCollection mCustomMarkers;
             HUD* mHud = nullptr;
             MapWindow* mMap = nullptr;
+            OblivionJournalWindow* mOblivionJournal = nullptr;
             float mQuestObjectiveRefresh = 0.f;
             std::unique_ptr<MWRender::LocalMap> mLocalMapRender;
             std::unique_ptr<ToolTips> mToolTips;

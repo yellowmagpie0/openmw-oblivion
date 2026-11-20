@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 106
+CURRENT_VERSION = 107
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -2717,9 +2717,22 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise ValueError
             # encode_payload canonicalizes this list, while decode_payload
             # rejects a non-canonical wire representation just like C++.
-            [int(value) for value in completed]
+            stages = {int(value) for value in completed}
         except (TypeError, ValueError, OverflowError) as error:
             raise RuntimeStateError("Invalid TES4 runtime-state quest stages") from error
+        journal = quest.get("journal", [])
+        if not isinstance(journal, list) or len(journal) > MAX_COLLECTION or (version < 107 and journal):
+            raise RuntimeStateError("Invalid TES4 runtime-state quest journal")
+        for update in journal:
+            if not isinstance(update, dict) or set(update) != {"stage", "entries", "unresolved"}:
+                raise RuntimeStateError("Invalid TES4 runtime-state quest journal update")
+            entries = update["entries"]
+            if (type(update["stage"]) is not int or update["stage"] not in stages
+                    or type(update["unresolved"]) is not bool
+                    or not isinstance(entries, list) or len(entries) > MAX_COLLECTION
+                    or any(type(entry) is not int or not 0 <= entry <= 0xFFFFFFFF for entry in entries)
+                    or entries != sorted(set(entries))):
+                raise RuntimeStateError("Invalid TES4 runtime-state quest journal update")
 
     if version >= 5:
         try:
@@ -3078,9 +3091,21 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             completed = [reader.unpack("<i") for _ in range(reader.count())]
             if completed != sorted(set(completed)):
                 raise RuntimeStateError("TES4 completed quest stages are not sorted and unique")
-            result["quests"].append({
+            state_ = {
                 "quest": quest, "stage": stage, "running": bool(running), "completed_stages": completed,
-            })
+            }
+            if version >= 107:
+                journal = []
+                for _ in range(reader.count()):
+                    update_stage = reader.unpack("<i")
+                    unresolved = reader.unpack("<B")
+                    if unresolved > 1:
+                        raise RuntimeStateError("Invalid TES4 runtime-state quest journal flag")
+                    entries = [reader.unpack("<I") for _ in range(reader.count())]
+                    journal.append({"stage": update_stage, "entries": entries, "unresolved": bool(unresolved)})
+                if journal:
+                    state_["journal"] = journal
+            result["quests"].append(state_)
     if version >= 5:
         result["ai_rng_state"] = reader.unpack("<Q")
         result["actor_ai"] = [_read_actor_ai(reader, version) for _ in range(reader.count())]
@@ -4005,6 +4030,15 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<I", len(completed))
             for stage in completed:
                 writer.pack("<i", stage)
+            if version >= 107:
+                journal = quest.get("journal", [])
+                writer.pack("<I", len(journal))
+                for update in journal:
+                    writer.pack("<i", update["stage"])
+                    writer.pack("<B", update["unresolved"])
+                    writer.pack("<I", len(update["entries"]))
+                    for entry in update["entries"]:
+                        writer.pack("<I", entry)
     if version >= 5:
         _validate_ai(state)
         rng_state = int(state.get("ai_rng_state", 1))

@@ -15,8 +15,16 @@ namespace MWBase
     class World;
 }
 
+namespace ESM4
+{
+    struct Quest;
+    struct RuntimeQuestJournalStage;
+}
+
 namespace MWWorld
 {
+    class World;
+    class OblivionScriptManager;
     struct QuestMarker
     {
         ESM::RefId mSpace;
@@ -38,7 +46,26 @@ namespace MWWorld
         std::vector<QuestDestination> mDestinations;
     };
 
-    std::optional<QuestObjective> getOblivionQuestObjective(MWBase::World& world);
+    struct OblivionJournalStep
+    {
+        int mStage;
+        std::string mText;
+    };
+
+    struct OblivionJournalQuest
+    {
+        ESM::FormKey mQuest;
+        std::string mTitle;
+        std::vector<OblivionJournalStep> mSteps;
+        bool mFinished = false;
+        bool mIncompleteHistory = false;
+    };
+
+    std::vector<OblivionJournalQuest> getOblivionJournal(const MWBase::World& world);
+    std::string getOblivionJournalDebug(const MWBase::World& world, const ESM::FormKey& quest);
+    std::optional<QuestObjective> getOblivionQuestObjective(MWBase::World& world, const ESM::FormKey& tracked = {});
+    std::optional<ESM4::RuntimeQuestJournalStage> captureOblivionJournalStage(
+        World& world, const OblivionScriptManager& scripts, const ESM4::Quest& quest, int stage);
 }
 
 #endif

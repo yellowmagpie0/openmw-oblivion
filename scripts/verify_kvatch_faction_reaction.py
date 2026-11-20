@@ -43,7 +43,7 @@ def main():
     target = root / 'userdata/saves/Bendu_Olo/Quicksave.omwsave'
     assert sha(source) == driver['input_sha256']
     before, after = runtime.load_save(source), runtime.load_save(target)
-    assert after['schema_version'] == 106
+    assert after['schema_version'] >= 106
     assert runtime.encode_payload(after) == runtime._find_runtime_record(target.read_bytes())[3]
     assert inventory(before) == inventory(after)
     assert known_topics(source) == known_topics(target)

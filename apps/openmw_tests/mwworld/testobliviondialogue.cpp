@@ -2646,6 +2646,7 @@ TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
         EXPECT_TRUE(definition->mDialogueConditions.empty());
         ASSERT_EQ(definition->mJournalEntries.size(), 2u);
         EXPECT_FALSE(MWWorld::getOblivionQuestObjective(world));
+        EXPECT_TRUE(MWWorld::getOblivionJournal(world).empty());
 
         scripts.setStage(key(0xe00), 10);
         ESM4::RuntimeState saved;
@@ -2657,6 +2658,14 @@ TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
         ASSERT_EQ(objective->mDestinations.size(), 1u);
         ASSERT_TRUE(objective->mDestinations[0].mNearby);
         EXPECT_FLOAT_EQ(objective->mDestinations[0].mNearby->mPosition.x(), 128.f);
+        const auto active = MWWorld::getOblivionJournal(world);
+        ASSERT_EQ(active.size(), 1u);
+        EXPECT_FALSE(active.front().mFinished);
+        ASSERT_EQ(active.front().mSteps.size(), 1u);
+        EXPECT_EQ(active.front().mSteps.front().mText, "Find the recipient.");
+        const auto debug = MWWorld::getOblivionJournalDebug(world, key(0xe00));
+        EXPECT_NE(debug.find("Current stage 10"), std::string::npos);
+        EXPECT_NE(debug.find("Stage 30 [completion]"), std::string::npos);
 
         scripts.restore(saved);
         const auto formId = ESM::FormKeyResolver(world.getContentFiles()).toFormId(key(0xd06));
@@ -2671,11 +2680,79 @@ TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
         ESM4::RuntimeState after;
         scripts.capture(after);
         EXPECT_EQ(saved.mQuests, after.mQuests);
+        const auto restored = MWWorld::getOblivionJournal(world);
+        ASSERT_EQ(restored.size(), 1u);
+        EXPECT_EQ(restored.front().mSteps.front().mText, "Find the recipient.");
 
         scripts.setStage(key(0xe00), 30);
         ASSERT_TRUE(scripts.findQuestState(key(0xe00))->mRunning);
-        EXPECT_FALSE(MWWorld::getOblivionQuestObjective(world));
+        EXPECT_FALSE(MWWorld::getOblivionQuestObjective(world, key(0xe00)));
+        const auto finished = MWWorld::getOblivionJournal(world);
+        ASSERT_EQ(finished.size(), 1u);
+        EXPECT_TRUE(finished.front().mFinished);
+        ASSERT_EQ(finished.front().mSteps.size(), 1u);
     }
+}
+
+TEST(OblivionQuestGuidance, JournalKeepsEarnedBranchAndOrderAcrossSaveAndRestore)
+{
+    ESM4::AIPackage::CTDA condition{};
+    condition.fnIndex = 58;
+    condition.param1 = 0xe00;
+    condition.compValue = 20.f;
+    const auto stage = [](std::uint16_t number) { return sub(ESM::fourCC("INDX"), bytes(number)); };
+    const auto entry = [](std::string text) {
+        return sub(ESM::fourCC("QSDT"), std::string(1, '\0'))
+            + sub(ESM::fourCC("CNAM"), text + '\0');
+    };
+    const auto quest = record(ESM4::REC_QUST, 0xe00,
+        sub(ESM::fourCC("EDID"), std::string("BranchingQuest\0", 15))
+        + sub(ESM::fourCC("FULL"), std::string("Branching quest\0", 16))
+        + sub(ESM::fourCC("DATA"), std::string{0, 50})
+        + stage(10) + entry("An earned step.")
+        + stage(20) + entry("A conditional branch.") + sub(ESM::fourCC("CTDA"), bytes(condition))
+        + stage(30) + entry("An unreached step.")
+        + stage(40) + sub(ESM::fourCC("QSDT"), std::string(1, '\0')));
+    SwitchFixture fixture(false, false, quest, 9, false);
+    auto& world = fixture.mFixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    scripts.setStage(key(0xe00), 20);
+    scripts.setStage(key(0xe00), 10);
+    scripts.setStage(key(0xe00), 10);
+    scripts.setStage(key(0xe00), 40);
+
+    auto saved = world.captureOblivionRuntimeState();
+    scripts.clear();
+    scripts.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+
+    const auto journal = MWWorld::getOblivionJournal(world);
+    ASSERT_EQ(journal.size(), 1u);
+    EXPECT_FALSE(journal.front().mIncompleteHistory);
+    ASSERT_EQ(journal.front().mSteps.size(), 2u);
+    EXPECT_EQ(journal.front().mSteps[0].mText, "A conditional branch.");
+    EXPECT_EQ(journal.front().mSteps[1].mText, "An earned step.");
+    const auto debug = MWWorld::getOblivionJournalDebug(world, key(0xe00));
+    EXPECT_NE(debug.find("Reached stages 10 20 40"), std::string::npos);
+    EXPECT_NE(debug.find("Stage 30"), std::string::npos);
+    EXPECT_NE(debug.find("An unreached step."), std::string::npos);
+
+    for (auto& savedQuest : saved.mQuests)
+        savedQuest.mJournal.clear();
+    saved.mVersion = 106;
+    scripts.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    const auto legacy = MWWorld::getOblivionJournal(world);
+    ASSERT_EQ(legacy.size(), 1u);
+    EXPECT_TRUE(legacy.front().mIncompleteHistory);
+    ASSERT_EQ(legacy.front().mSteps.size(), 1u);
+    EXPECT_EQ(legacy.front().mSteps.front().mText, "An earned step.");
+
+    auto overridden = *world.getStore().search<ESM4::Quest>(key(0xe00));
+    overridden.mJournalEntries.front().mText = "The winning record's note.";
+    world.getStore().getWritable<ESM4::Quest>().insertStatic(overridden, key(0xe00));
+    const auto current = MWWorld::getOblivionJournal(world);
+    ASSERT_EQ(current.size(), 1u);
+    ASSERT_EQ(current.front().mSteps.size(), 1u);
+    EXPECT_EQ(current.front().mSteps.front().mText, "The winning record's note.");
 }
 
 TEST(OblivionTutorialDoor, SameCellTeleportBridgesComponentsAndRestartsBeforeDoorWithoutEarlyCompletion)

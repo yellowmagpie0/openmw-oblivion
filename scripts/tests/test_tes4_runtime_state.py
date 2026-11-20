@@ -5474,6 +5474,34 @@ class PackageWaiting91Tests(unittest.TestCase):
             state_io.encode_payload(state)
 
 
+class QuestJournalStateTests(unittest.TestCase):
+    def test_earned_entry_identity_and_order_round_trip(self):
+        state = make_state()
+        state.update(schema_version=107, ai_rng_state=1)
+        quest = {
+            "quest": "content:oblivion.esm:027815",
+            "stage": 100,
+            "running": False,
+            "completed_stages": [60, 100],
+            "journal": [
+                {"stage": 100, "entries": [2], "unresolved": False},
+                {"stage": 60, "entries": [], "unresolved": True},
+            ],
+        }
+        state["quests"] = [quest]
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["quests"], [quest])
+        for bad in ({"stage": 90}, {"entries": [2, 2]}, {"entries": [2, 1]}, {"unresolved": 1}):
+            invalid = copy.deepcopy(state)
+            invalid["quests"][0]["journal"][0].update(bad)
+            with self.subTest(bad=bad), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(invalid)
+        state["schema_version"] = 106
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        del quest["journal"]
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["quests"], [quest])
+
+
 class PlayerFurnitureStateTests(unittest.TestCase):
     def make_seated(self):
         state = make_state(); state["schema_version"] = 106; state["ai_rng_state"] = 1

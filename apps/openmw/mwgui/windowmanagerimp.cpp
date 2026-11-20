@@ -106,6 +106,7 @@
 #include "jailscreen.hpp"
 #include "journalviewmodel.hpp"
 #include "journalwindow.hpp"
+#include "oblivionjournalwindow.hpp"
 #include "keyboardnavigation.hpp"
 #include "levelupdialog.hpp"
 #include "loadingscreen.hpp"
@@ -506,11 +507,21 @@ namespace MWGui
         mRuntime->mWindows.push_back(std::move(console));
         trackWindow(mRuntime->mConsole, makeConsoleWindowSettingValues());
 
-        constexpr VFS::Path::NormalizedView menubookOptionsOverTexture("textures/tx_menubook_options_over.dds");
-        const bool questList = mResourceSystem->getVFS()->exists(menubookOptionsOverTexture);
-        auto journal = JournalWindow::create(JournalViewModel::create(), questList, mEncoding);
-        mRuntime->mGuiModeStates[GM_Journal] = GuiModeState(journal.get());
-        mRuntime->mWindows.push_back(std::move(journal));
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            auto journal = std::make_unique<OblivionJournalWindow>();
+            mRuntime->mOblivionJournal = journal.get();
+            mRuntime->mGuiModeStates[GM_Journal] = GuiModeState(journal.get());
+            mRuntime->mWindows.push_back(std::move(journal));
+        }
+        else
+        {
+            constexpr VFS::Path::NormalizedView menubookOptionsOverTexture("textures/tx_menubook_options_over.dds");
+            const bool questList = mResourceSystem->getVFS()->exists(menubookOptionsOverTexture);
+            auto journal = JournalWindow::create(JournalViewModel::create(), questList, mEncoding);
+            mRuntime->mGuiModeStates[GM_Journal] = GuiModeState(journal.get());
+            mRuntime->mWindows.push_back(std::move(journal));
+        }
 
         mRuntime->mMessageBoxManager = std::make_unique<MessageBoxManager>(
             mStore->get<ESM::GameSetting>().find("fMessageTimePerChar")->mValue.getFloat());
@@ -1250,7 +1261,12 @@ namespace MWGui
         if (mRuntime->mQuestObjectiveRefresh <= 0.f)
         {
             mRuntime->mQuestObjectiveRefresh = 0.2f;
-            const auto objective = MWWorld::getOblivionQuestObjective(*MWBase::Environment::get().getWorld());
+            auto& world = *MWBase::Environment::get().getWorld();
+            auto* journal = mRuntime->mOblivionJournal;
+            const auto objective = MWWorld::getOblivionQuestObjective(
+                world, journal ? journal->trackedQuest() : ESM::FormKey{});
+            if (journal)
+                journal->checkTrackedQuest(objective);
             mRuntime->mHud->setQuestObjective(objective);
             mRuntime->mMap->setQuestObjective(objective);
         }
