@@ -2694,6 +2694,39 @@ TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
     }
 }
 
+TEST(OblivionQuestGuidance, SwitchesTargetsUsingAnAuthoredCellCondition)
+{
+    const auto target = [](unsigned reference, float inCell) {
+        ESM4::AIPackage::CTDA condition{};
+        condition.fnIndex = ESM4::FUN_GetInCellParam;
+        condition.compValue = inCell;
+        condition.param1 = 0xb04;
+        condition.param2 = 0xa00;
+        return sub(ESM::fourCC("QSTA"), bytes(reference) + bytes(0u))
+            + sub(ESM::fourCC("CTDA"), bytes(condition));
+    };
+    const auto quest = record(ESM4::REC_QUST, 0xe00,
+        sub(ESM::fourCC("FULL"), std::string("Find the guide\0", 15))
+        + sub(ESM::fourCC("DATA"), std::string{0, 50})
+        + target(0xb02, 1.f) + target(0xd03, 0.f));
+
+    MWClass::ESM4Door::registerSelf();
+    SwitchFixture fixture(true, false, sameCellTeleportRecords(true, true) + quest, 9, false);
+    auto& world = fixture.mFixture.mWorld;
+    world.getOblivionScriptManager()->setStage(key(0xe00), 10);
+    const auto expectMarker = [&](float x) {
+        const auto objective = MWWorld::getOblivionQuestObjective(world, key(0xe00));
+        ASSERT_TRUE(objective);
+        ASSERT_EQ(objective->mDestinations.size(), 1u);
+        ASSERT_TRUE(objective->mDestinations.front().mNearby);
+        EXPECT_FLOAT_EQ(objective->mDestinations.front().mNearby->mPosition.x(), x);
+    };
+    expectMarker(0.f);
+    const ESM::FormKeyResolver ids(world.getContentFiles());
+    world.getPlayer().setCell(&world.getWorldModel().getCell(ESM::RefId(*ids.toFormId(key(0xd06)))));
+    expectMarker(1280.f);
+}
+
 TEST(OblivionQuestGuidance, TracesThroughACityWorldspaceToTheApproachGate)
 {
     const auto group = [](unsigned kind, unsigned label, const std::string& data) {

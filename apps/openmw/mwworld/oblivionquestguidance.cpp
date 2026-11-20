@@ -13,7 +13,9 @@
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadscpt.hpp>
 #include <components/esm4/loadwrld.hpp>
+#include <components/esm4/runtimereferences.hpp>
 
+#include "../mwbase/environment.hpp"
 #include "../mwmechanics/oblivionai.hpp"
 
 #include "class.hpp"
@@ -250,6 +252,36 @@ namespace MWWorld
                             if (const auto* cell = world.getStore().search<ESM4::Cell>(key))
                                 return Value::value(player.getCell()->getCell()->getId() == ESM::RefId(cell->mId));
                         return Value::missing();
+                    case ESM4::FUN_GetInCellParam:
+                    {
+                        if (subject != ESM4::ConditionSubject::Self || player.isEmpty() || !player.isInCell())
+                            return Value::missing();
+                        const auto* cell = world.getStore().search<ESM4::Cell>(key);
+                        if (!cell)
+                            return Value::missing();
+                        if (player.getCell()->getCell()->getId() != cell->mId)
+                            return Value::value(false);
+
+                        const auto actor = ESM4::runtimeReferenceKey(condition.mParameter2.mReferenceKey);
+                        if (actor == ESM::FormKey::dynamic("player", 1))
+                            return Value::value(true);
+                        if (const auto actorId = ESM::FormKeyResolver(world.getContentFiles()).toFormId(actor))
+                        {
+                            const auto ptr = MWBase::Environment::get().getWorldModel()->getPtr(*actorId);
+                            if (!ptr.isEmpty() && ptr.isInCell())
+                                return Value::value(ptr.getCell()->getCell()->getId() == cell->mId);
+                        }
+                        if (const auto* native = getNativeWorld(world))
+                            if (const auto* ai = native->getOblivionAiService())
+                                if (const auto* state = ai->state(actor))
+                                {
+                                    const auto& actorCell
+                                        = state->mLastValidCell.isNull() ? state->mCell : state->mLastValidCell;
+                                    if (!actorCell.isNull())
+                                        return Value::value(actorCell == key);
+                                }
+                        return Value::missing();
+                    }
                     default:
                         return Value::unsupported();
                 }
@@ -345,6 +377,7 @@ namespace MWWorld
                     case 59:
                     case 74:
                     case 79:
+                    case ESM4::FUN_GetInCellParam:
                     {
                         auto standalone = condition;
                         standalone.mOr = false;
