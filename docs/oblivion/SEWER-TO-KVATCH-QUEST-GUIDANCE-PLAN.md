@@ -4,6 +4,8 @@ Build a general TES4 quest tracker as a bounded M18 delivery for the existing Op
 
 ## Current implementation
 
+Routes now trace back through linked exterior worldspaces. The installed master places Martin's chapel door in the Kvatch Entrance worldspace and connects it to Tamriel through the outer city gate. The same resolver can guide a player out of an unrelated interior before switching to the outdoor approach. Five focused Windows tests passed, including the exit, exterior approach and city-door transitions in a synthetic quest. Original record inspection established the Kvatch connections, while the continuous gameplay course remains open. Local test evidence is in `build-windows/checks-e0afafabf93b47d19eff3bc1fbde1cc8`.
+
 The first travel-marker slice reads TES4 targets and journal entries, resolves the target or its accessible entrance from existing world connections, and presents the objective on the HUD, minimap and map. The map's **Show objective** action centers the marker, and its mouse tooltip displays the authored journal entry. Automatic selection currently prefers a resolvable target, then uses authored quest priority and stable form identity. The compact quest picker and native active-quest update order are later work.
 
 The Windows evidence at `build-windows/checks-c588cc239cbc49c395ca86c9f80f8e30` verified 3,317 component tests and 2,321 engine tests at source fingerprint `57151052fec5cb564fbe26f86777943e67b0594263834e0852a777301955cd4f`. Four particle texture tests were excluded after the full run reproduced a missing PPM reader in the Windows dependency bundle. The focused Windows Python command passed 209 tests. `esmtool` loaded all 390 original quest records.

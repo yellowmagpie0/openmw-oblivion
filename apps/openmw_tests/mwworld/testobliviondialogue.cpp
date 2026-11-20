@@ -2694,6 +2694,61 @@ TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
     }
 }
 
+TEST(OblivionQuestGuidance, TracesThroughACityWorldspaceToTheApproachGate)
+{
+    const auto group = [](unsigned kind, unsigned label, const std::string& data) {
+        return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
+            + bytes(label) + bytes(kind) + bytes(0u) + data;
+    };
+    const auto door = [](unsigned id, float x, unsigned destination) {
+        return record(ESM4::REC_REFR, id, sub(ESM::fourCC("NAME"), bytes(0xd00u))
+            + sub(ESM::fourCC("DATA"), bytes(std::array<float, 6>{ x, 0, 0, 0, 0, 0 }))
+            + sub(ESM::fourCC("XTEL"), bytes(destination) + bytes(std::array<float, 6>{})));
+    };
+    const auto exterior = [&](unsigned world, unsigned cell, unsigned parent, const std::string& doors) {
+        const auto cellRecord = record(ESM4::REC_CELL, cell,
+            sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ 0 }))
+            + sub(ESM::fourCC("XCLC"), bytes(std::array<std::int32_t, 2>{})));
+        auto data = sub(ESM::fourCC("DATA"), std::string(1, '\0'));
+        if (parent)
+            data += sub(ESM::fourCC("WNAM"), bytes(parent));
+        return record(ESM4::REC_WRLD, world, data)
+            + group(1, world, group(4, 0, group(5, 0, cellRecord + group(6, cell, group(9, cell, doors)))));
+    };
+    const auto worlds = group(0, ESM4::REC_WRLD,
+        exterior(0xe20, 0xe21, 0, door(0xe22, 90.f, 0xe32))
+        + exterior(0xe30, 0xe31, 0xe20, door(0xe32, 170.f, 0xe22) + door(0xe33, 250.f, 0xd02)));
+    const auto room = group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xe50,
+        sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior})))
+        + group(6, 0xe50, group(9, 0xe50, door(0xe51, 40.f, 0xe22))));
+    const auto quest = record(ESM4::REC_QUST, 0xe40,
+        sub(ESM::fourCC("FULL"), std::string("Find the recipient\0", 19))
+        + sub(ESM::fourCC("DATA"), std::string{0, 50})
+        + sub(ESM::fourCC("QSTA"), bytes(0xd03u) + bytes(0u)));
+
+    MWClass::ESM4Door::registerSelf();
+    SwitchFixture fixture(false, false, sameCellTeleportRecords(true, true) + worlds + room + quest, 18, false);
+    auto& world = fixture.mFixture.mWorld;
+    world.getOblivionScriptManager()->setStage(key(0xe40), 10);
+    const ESM::FormKeyResolver ids(world.getContentFiles());
+    const auto checkMarker = [&](unsigned cell, unsigned space, float x, unsigned mapSpace, float mapX) {
+        world.getPlayer().setCell(&world.getWorldModel().getCell(ESM::RefId(*ids.toFormId(key(cell)))));
+        const auto objective = MWWorld::getOblivionQuestObjective(world, key(0xe40));
+        ASSERT_TRUE(objective);
+        ASSERT_EQ(objective->mDestinations.size(), 1u);
+        const auto& destination = objective->mDestinations.front();
+        ASSERT_TRUE(destination.mNearby);
+        ASSERT_TRUE(destination.mWorldMap);
+        EXPECT_EQ(destination.mNearby->mSpace, ESM::RefId(*ids.toFormId(key(space))));
+        EXPECT_EQ(destination.mWorldMap->mSpace, ESM::RefId(*ids.toFormId(key(mapSpace))));
+        EXPECT_FLOAT_EQ(destination.mNearby->mPosition.x(), x);
+        EXPECT_FLOAT_EQ(destination.mWorldMap->mPosition.x(), mapX);
+    };
+    checkMarker(0xe50, 0xe50, 40.f, 0xe20, 90.f);
+    checkMarker(0xe21, 0xe20, 90.f, 0xe20, 90.f);
+    checkMarker(0xe31, 0xe30, 250.f, 0xe30, 250.f);
+}
+
 TEST(OblivionQuestGuidance, JournalKeepsEarnedBranchAndOrderAcrossSaveAndRestore)
 {
     ESM4::AIPackage::CTDA condition{};

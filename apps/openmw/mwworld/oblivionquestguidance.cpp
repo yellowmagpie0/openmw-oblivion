@@ -12,12 +12,14 @@
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadscpt.hpp>
+#include <components/esm4/loadwrld.hpp>
 
 #include "../mwmechanics/oblivionai.hpp"
 
 #include "class.hpp"
 #include "oblivionscriptmanager.hpp"
 #include "worldimp.hpp"
+#include "worldspaceutils.hpp"
 
 namespace
 {
@@ -83,16 +85,31 @@ namespace MWMechanics
         const auto* playerCell = player.getCell()->getCell();
         const ESM::RefId playerSpace = playerCell->getWorldSpace();
         const ESM::RefId targetSpace = mapSpace(*targetCell);
+        ESM::RefId preferredExterior = playerCell->isExterior() ? playerSpace : ESM::RefId{};
+        const auto setExterior = [&](const MWWorld::QuestMarker& marker) {
+            if (preferredExterior.empty())
+                preferredExterior = MWWorld::resolveWorldspaceInheritance(
+                    store.get<ESM4::World>(), marker.mSpace, ESM4::World::UseFlag_Map);
+            if (!result.mWorldMap
+                || (marker.mSpace == preferredExterior && result.mWorldMap->mSpace != preferredExterior))
+                result.mWorldMap = marker;
+        };
+        const auto doorMarker = [&](const UnloadedLocation& door, ESM::RefId space) {
+            auto doorPosition = door.mPosition;
+            if (const auto resident = loadedPtrFor(door.mReference); !resident.isEmpty())
+                doorPosition = resident.getRefData().getPosition().asVec3();
+            return MWWorld::QuestMarker{ space, doorPosition };
+        };
         if (playerSpace == targetSpace)
             result.mNearby = MWWorld::QuestMarker{ targetSpace, position };
         if (targetCell->isExterior())
-            result.mWorldMap = MWWorld::QuestMarker{ targetSpace, position };
+            setExterior({ targetSpace, position });
 
         // Walk the existing incoming XTEL index back from the target. This
         // preserves one-way links, and does not materialize other cells.
         std::deque<ESM::FormKey> pending{ cellKey };
         std::set<ESM::FormKey> visited{ cellKey };
-        while (!pending.empty() && !(result.mNearby && result.mWorldMap))
+        while (!pending.empty())
         {
             const auto incoming = mUnloadedDoorsByDestinationCell.find(pending.front());
             pending.pop_front();
@@ -109,19 +126,66 @@ namespace MWMechanics
                     continue;
 
                 const auto space = mapSpace(*source);
-                auto doorPosition = door.mPosition;
-                if (const auto resident = loadedPtrFor(door.mReference); !resident.isEmpty())
-                    doorPosition = resident.getRefData().getPosition().asVec3();
-                const MWWorld::QuestMarker marker{ space, doorPosition };
+                const auto marker = doorMarker(door, space);
                 if (!result.mNearby && space == playerSpace)
                     result.mNearby = marker;
-                if (source->isExterior() && !result.mWorldMap)
-                    result.mWorldMap = marker;
-                if (!source->isExterior())
+                if (source->isExterior())
+                    setExterior(marker);
+                // A city exterior can be a separate worldspace reached through
+                // another teleport door. Keep tracing back to the player's map.
+                if (!source->isExterior() || space != playerSpace)
                 {
                     visited.insert(door.mCell);
                     pending.push_back(door.mCell);
                 }
+            }
+            if (result.mNearby && result.mWorldMap && result.mWorldMap->mSpace == preferredExterior)
+                break;
+        }
+
+        // An interior on the far side of the map is a separate walk to the
+        // exterior. Find the first usable door on that leg.
+        if (playerCell->isExterior() || result.mNearby || !result.mWorldMap)
+            return result;
+        const auto* origin = store.get<ESM4::Cell>().search(playerCell->getId());
+        if (!origin)
+            return result;
+        std::deque<std::pair<ESM::FormKey, std::optional<MWWorld::QuestMarker>>> exits{
+            { origin->mFormKey, std::nullopt }
+        };
+        visited = { origin->mFormKey };
+        while (!exits.empty())
+        {
+            auto [cell, first] = std::move(exits.front());
+            exits.pop_front();
+            const auto outgoing = mUnloadedDoorsByCell.find(cell);
+            if (outgoing == mUnloadedDoorsByCell.end())
+                continue;
+            for (const auto index : outgoing->second)
+            {
+                const auto& door = mUnloadedLocations[index];
+                const auto landing = mUnloadedLocationByReference.find(door.mTeleportDoor);
+                if (landing == mUnloadedLocationByReference.end())
+                    continue;
+                const auto& next = mUnloadedLocations[landing->second].mCell;
+                if (visited.contains(next))
+                    continue;
+                const auto* destination = store.search<ESM4::Cell>(next);
+                const auto state = currentDoorState(door);
+                if (!destination || !state.mAvailable || state.mLocked)
+                    continue;
+                const auto step = first ? *first : doorMarker(door, playerSpace);
+                if (destination->isExterior())
+                {
+                    if (mapSpace(*destination) == result.mWorldMap->mSpace)
+                    {
+                        result.mNearby = step;
+                        return result;
+                    }
+                    continue;
+                }
+                visited.insert(next);
+                exits.emplace_back(next, step);
             }
         }
         return result;
