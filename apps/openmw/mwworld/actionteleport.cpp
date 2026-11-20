@@ -56,7 +56,12 @@ namespace MWWorld
         if (actor == world->getPlayerPtr())
         {
             world->getPlayer().setTeleported(true);
-            world->changeToCell(mCellId, mPosition, true);
+            // A native interior can have multiple landings sharing the same
+            // horizontal coordinates. Keep the authored height for same-cell
+            // teleports instead of tracing down through the entire tower.
+            const bool sameOblivionInterior = world->getGameProfile() == ESM::GameProfile::Oblivion
+                && actor.isInCell() && !actor.getCell()->isExterior() && actor.getCell()->getCell()->getId() == mCellId;
+            world->changeToCell(mCellId, mPosition, !sameOblivionInterior);
             teleported = world->getPlayerPtr();
         }
         else

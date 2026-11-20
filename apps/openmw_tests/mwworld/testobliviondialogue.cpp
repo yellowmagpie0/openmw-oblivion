@@ -45,6 +45,7 @@
 #include <components/esm4/loadclas.hpp>
 #include <components/esm4/loadcsty.hpp>
 #include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadefsh.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadskil.hpp>
@@ -1980,6 +1981,26 @@ TEST(OblivionTutorialAction, DefaultPlayerActivationInsideOnActivateDoesNotReent
         EXPECT_EQ(f.calls(), 1);
         EXPECT_EQ(defaultActions, 2);
     }
+}
+
+TEST(OblivionTutorialAction, UnsupportedMembraneVisualsDoNotBlockDefaultActivation)
+{
+    TestingOpenMW::InventoryWindowManager windows;
+    int defaultActions = 0;
+    windows.mMessageCallback = [&](std::string_view, MWGui::ShowInDialogueMode) { ++defaultActions; };
+    const auto shader = record(ESM4::REC_EFSH, 0xe00,
+        sub(ESM::fourCC("EDID"), std::string("TestMembrane\0", 13))
+        + sub(ESM::fourCC("DATA"), bytes(std::uint32_t{ESM4::EffectShaderData::NoParticles})
+            + std::string(220, '\0')));
+    SwitchFixture fixture(true, false, shader, 1, false, {},
+        "scn TestSwitchScript\nref user\nref selfRef\nbegin onActivate\n"
+        "set user to GetActionRef\nset selfRef to GetSelf\n"
+        "user.pms TestMembrane\nselfRef.pms TestMembrane\nActivate\nend\n");
+    auto& world = fixture.mFixture.mWorld;
+    fixture.mFixture.mEnvironment.setWindowManager(windows);
+    world.initializePhysics(new osg::Group);
+    fixture.mSwitch.getClass().activate(fixture.mSwitch, world.getPlayerPtr())->execute(world.getPlayerPtr());
+    EXPECT_EQ(defaultActions, 1);
 }
 
 TEST(OblivionTutorialAction, PlacedSwitchUsesActualActorAndCommitsOnceAfterIteration)

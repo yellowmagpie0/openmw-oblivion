@@ -1996,6 +1996,10 @@ namespace MWWorld
             const auto shader = keyFromValue(argument(0));
             const auto* record = shader ? mStore.search<ESM4::EffectShader>(*shader) : nullptr;
             if (!record) throw std::runtime_error("Native magic shader requires a winning EFSH");
+            // Membrane visuals are not implemented. A visual command must
+            // still let the script reach subsequent gameplay commands.
+            if (record->mData && !(record->mData->mFlags & ESM4::EffectShaderData::NoMembrane))
+                return std::int64_t(0);
             auto* state = referenceState(objectKey());
             if (!state) throw std::runtime_error("Native magic shader requires a persistent reference");
             const auto suffix = shader->serialize();

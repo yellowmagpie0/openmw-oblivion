@@ -5,6 +5,15 @@ Dark Salvation → Reapers Sprawl → Sigil Keep/key → Sigil Stone/gate closur
 Full gate and main-quest acceptance remain open. Choose implementation from the
 next observed original-content failure; finish each bounded chunk first.
 
+The Runed Portal in The Blood Feast now completes its activation when the
+authored membrane effect is unsupported. Same-cell Oblivion player teleports
+use the authored landing height. A Windows runtime probe staged a copy of an
+earned stage 40 save at the lower portal and exercised both original portals.
+The player moved from Z 3007.27 to 4297.67, settled at 4290.30, then returned to
+3006.12. Evidence is in `build-windows/runed-portal-probe/openmw.log` and
+`build-windows/checks-e6fc16e7ae884fd79d43833315fc227d`. The visual effect and
+the continued route to the Sigil Stone remain open.
+
 **Accepted implementation: waiting followers yield to their followed Player.**
 Commitc54a184bb9 fixes the collision coordinator's own-target exemption for idle
 yielding. Same original bridge save passes ordinary500-unit passage and another500
