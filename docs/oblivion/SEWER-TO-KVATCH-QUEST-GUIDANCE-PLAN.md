@@ -4,6 +4,8 @@ Build a general TES4 quest tracker as a bounded M18 delivery for the existing Op
 
 ## Current implementation
 
+Quest routes now include locked teleport doors when the player carries their authored key. The reported siege stage 40 save held the Sigil Keep Key, and the installed master assigns it to the doors to Sigillum Sanguis. The regression checks that acquiring and removing a key changes the marker without opening the door. Nineteen focused Windows tests passed in `build-windows/checks-5179c8913a3a400d9faf860276cb06c0`. The route to the stone still needs a gameplay check.
+
 The Kvatch plane marker now evaluates the authored `GetInCellParam` predicates, including the original Player reference alias. At siege stage 20 the installed master uses complementary predicates to switch between the tower approach and Menien inside Reapers Sprawl. The reporter's save was at that stage in the main tower. Six focused Windows tests passed, including a regression that switches targets when the player changes cells. The in-game course through the plane remains open. Local evidence is in `build-windows/checks-a909b4547323415293e9e4bc7a62ed60`.
 
 Routes now trace back through linked exterior worldspaces. The installed master places Martin's chapel door in the Kvatch Entrance worldspace and connects it to Tamriel through the outer city gate. The same resolver can guide a player out of an unrelated interior before switching to the outdoor approach. Five focused Windows tests passed, including the exit, exterior approach and city-door transitions in a synthetic quest. Original record inspection established the Kvatch connections, while the continuous gameplay course remains open. Local test evidence is in `build-windows/checks-e0afafabf93b47d19eff3bc1fbde1cc8`.

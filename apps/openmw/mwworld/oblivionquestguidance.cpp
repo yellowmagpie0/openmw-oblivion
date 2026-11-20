@@ -102,6 +102,11 @@ namespace MWMechanics
                 doorPosition = resident.getRefData().getPosition().asVec3();
             return MWWorld::QuestMarker{ space, doorPosition };
         };
+        const auto canUseDoor = [&](const UnloadedLocation& door) {
+            const auto state = currentDoorState(door);
+            return state.mAvailable
+                && (!state.mLocked || mWorld.oblivionPlayerHasItem(state.mKey));
+        };
         if (playerSpace == targetSpace)
             result.mNearby = MWWorld::QuestMarker{ targetSpace, position };
         if (targetCell->isExterior())
@@ -123,8 +128,7 @@ namespace MWMechanics
                 if (visited.contains(door.mCell))
                     continue;
                 const auto* source = store.search<ESM4::Cell>(door.mCell);
-                const auto doorState = currentDoorState(door);
-                if (!source || !doorState.mAvailable || doorState.mLocked)
+                if (!source || !canUseDoor(door))
                     continue;
 
                 const auto space = mapSpace(*source);
@@ -173,8 +177,7 @@ namespace MWMechanics
                 if (visited.contains(next))
                     continue;
                 const auto* destination = store.search<ESM4::Cell>(next);
-                const auto state = currentDoorState(door);
-                if (!destination || !state.mAvailable || state.mLocked)
+                if (!destination || !canUseDoor(door))
                     continue;
                 const auto step = first ? *first : doorMarker(door, playerSpace);
                 if (destination->isExterior())

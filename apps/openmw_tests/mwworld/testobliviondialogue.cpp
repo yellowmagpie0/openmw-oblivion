@@ -2552,7 +2552,7 @@ TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChange
 namespace
 {
     std::string sameCellTeleportRecords(bool reachableExit, bool foreignCell = false, bool lockedOwner = false,
-        const std::string& sourceExtra = {})
+        const std::string& sourceExtra = {}, unsigned sourceLockKey = 0)
     {
         const auto group = [](unsigned kind, const std::string& data, unsigned label = 0xb04) {
             return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
@@ -2565,11 +2565,11 @@ namespace
             auto data = sub(ESM::fourCC("NAME"), bytes(base))
                 + sub(ESM::fourCC("DATA"), bytes(position));
             if (target) data += sub(ESM::fourCC("XTEL"), bytes(target) + bytes(arrival));
-            if (lockedOwner && id == 0xd01)
+            if ((lockedOwner || sourceLockKey) && id == 0xd01)
             {
-                std::string lock(12,'\0');
-                lock[0] = 64;
-                data += sub(ESM::fourCC("XLOC"),lock) + sub(ESM::fourCC("XOWN"),bytes(0x800u));
+                data += sub(ESM::fourCC("XLOC"), bytes(64u) + bytes(sourceLockKey) + bytes(0u));
+                if (lockedOwner)
+                    data += sub(ESM::fourCC("XOWN"), bytes(0x800u));
             }
             return record(ESM4::REC_REFR, id, data);
         };
@@ -2692,6 +2692,28 @@ TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
         EXPECT_TRUE(finished.front().mFinished);
         ASSERT_EQ(finished.front().mSteps.size(), 1u);
     }
+}
+
+TEST(OblivionQuestGuidance, RoutesThroughALockedDoorWhenThePlayerHasItsKey)
+{
+    MWClass::ESM4Door::registerSelf();
+    MWClass::Miscellaneous::registerSelf();
+    const auto keyRecord = record(ESM::fourCC("KEYM"), 0xd08,
+        sub(ESM::fourCC("EDID"), std::string("TestDoorKey\0", 12))
+        + sub(ESM::fourCC("FULL"), std::string("Door Key\0", 9)));
+    SwitchFixture fixture(true, false, sameCellTeleportRecords(true, true, false, {}, 0xd08) + keyRecord, 9, false);
+    auto& world = fixture.mFixture.mWorld;
+    const auto& ai = *world.getOblivionAiService();
+    const auto target = key(0xd03);
+    EXPECT_FALSE(ai.questDestination(target, world.getPlayerPtr()).mNearby);
+
+    ASSERT_EQ(world.oblivionChangePlayerInventory(key(0xd08), 1, {}, false), 1);
+    const auto destination = ai.questDestination(target, world.getPlayerPtr());
+    ASSERT_TRUE(destination.mNearby);
+    EXPECT_FLOAT_EQ(destination.mNearby->mPosition.x(), 128.f);
+
+    ASSERT_EQ(world.oblivionChangePlayerInventory(key(0xd08), -1, {}, false), 1);
+    EXPECT_FALSE(ai.questDestination(target, world.getPlayerPtr()).mNearby);
 }
 
 TEST(OblivionQuestGuidance, SwitchesTargetsUsingAnAuthoredCellCondition)
