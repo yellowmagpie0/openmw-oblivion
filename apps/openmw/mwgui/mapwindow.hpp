@@ -255,6 +255,7 @@ namespace MWGui
         void setVisible(bool visible) override;
 
         void renderGlobalMap();
+        bool travelNearObjective(bool repeat);
 
         /// adds the marker to the global map
         /// @param name The ESM::Cell::mName
@@ -325,10 +326,18 @@ namespace MWGui
         MyGUI::ImageBox* mPlayerArrowLocal;
         MyGUI::ImageBox* mPlayerArrowGlobal;
         MyGUI::Button* mButton;
+        MyGUI::Button* mQuestTravelButton = nullptr;
+        MyGUI::Widget* objectiveTravelMarker() const;
+        void onQuestTravel(MyGUI::Widget*);
         MyGUI::Button* mQuestObjectiveButton = nullptr;
         MyGUI::TextBox* mGlobalQuestPin = nullptr;
         std::optional<MWWorld::QuestMarker> mGlobalQuestMarker;
         MyGUI::IntPoint mLastDragPos;
+        MyGUI::IntPoint mDragStartPos;
+        bool mMapDragged = false;
+        ESM::FormId mTravelMarker;
+        void onNativeMarkerClicked(MyGUI::Widget* sender);
+        void onTravelConfirmed();
 
         MyGUI::IntCoord mLastScrollWindowCoordinates;
 

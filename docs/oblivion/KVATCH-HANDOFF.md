@@ -1,6 +1,17 @@
 # Kvatch main-quest course — current handoff
 
-**Resume outside Kvatch with Martin following.** Load
+**Weynon travel checkpoint.** On the world map the player chose Travel (T)
+and confirmed Weynon Priory with Enter. After 14.26 game hours the player
+and Martin landed 135 units apart in Tamriel cell 00f32b. Martin retained his
+follow package and player target. Compare the departure below with
+`build-windows/sigil-martin-map05/user/saves/Bendu_Olo/Quicksave.omwsave`
+using `scripts/verify_weynon_map_travel.py`. The arrival ran MQ04 stage 7.
+Do not accept the encounter from this save: recruiting Martin had stopped
+one of the two stage-5 results on SetDoorDefaultOpen before enabling the
+attackers. Replay from the pre-recruitment chapel checkpoint after fixing it.
+Eronor's ordinary shepherd greeting was observed in `sigil-martin-eronor01`.
+
+**Departure outside Kvatch with Martin following.** Load
 `build-windows/sigil-martin-exit01/user/saves/Bendu_Olo/Quicksave.omwsave`.
 Martin's package 01e8d8 followed the player out of the chapel through 02a297
 and out of the city through 07214f. Cold reload `sigil-martin-roadstart01`

@@ -30,6 +30,8 @@
 #include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
 
+#include "../mwworld/oblivionmaptravel.hpp"
+#include "../mwworld/worldimp.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/player.hpp"
@@ -921,6 +923,8 @@ namespace MWGui
 
         getWidget(mButton, "WorldButton");
         mButton->eventMouseButtonClick += MyGUI::newDelegate(this, &MapWindow::onWorldButtonClicked);
+        getWidget(mQuestTravelButton, "QuestTravelButton");
+        mQuestTravelButton->eventMouseButtonClick += MyGUI::newDelegate(this, &MapWindow::onQuestTravel);
         getWidget(mQuestObjectiveButton, "QuestObjectiveButton");
         mQuestObjectiveButton->eventMouseButtonClick += MyGUI::newDelegate(this, &MapWindow::onShowQuestObjective);
 
@@ -1250,11 +1254,13 @@ namespace MWGui
         if (!ESM::isEsm4Ext(mapWorldspace))
             return;
 
+        auto& world = static_cast<MWWorld::World&>(*MWBase::Environment::get().getWorld());
         for (const ESM4::Reference& ref : store.get<ESM4::Reference>())
         {
             constexpr std::uint8_t visibleOnMap = 0x01;
             if (!ref.mIsMapMarker || !(ref.mMapMarkerFlags & visibleOnMap)
-                || (ref.mFlags & (ESM4::Rec_Deleted | ESM4::Rec_Disabled)) || ref.mFullName.empty())
+                || (ref.mFlags & ESM4::Rec_Deleted) || ref.mFullName.empty()
+                || !world.getOblivionReferenceEnabled(ref.mFormKey).value_or(!(ref.mFlags & ESM4::Rec_Disabled)))
                 continue;
 
             const ESM4::Cell* cell = store.get<ESM4::Cell>().search(ref.mParent);
@@ -1279,11 +1285,87 @@ namespace MWGui
             if (Settings::map().mAllowZooming)
                 widget->eventMouseWheel += MyGUI::newDelegate(this, &MapWindow::onMapZoomed);
             widget->eventMouseButtonPressed += MyGUI::newDelegate(this, &MapWindow::onDragStart);
+            widget->setUserString("TravelEnabled", ref.mMapMarkerFlags & 2 ? "true" : "false");
+            widget->setUserData(ref.mId);
+            widget->eventMouseButtonClick += MyGUI::newDelegate(this, &MapWindow::onNativeMarkerClicked);
             mNativeGlobalMapMarkers.push_back({ position, widget });
         }
 
         Log(Debug::Info) << "M9 native global map created " << mNativeGlobalMapMarkers.size()
                          << " initially visible map markers";
+    }
+
+    MyGUI::Widget* MapWindow::objectiveTravelMarker() const
+    {
+        if (!mGlobalQuestMarker || !Settings::map().mGlobal || mGlobalQuestMarker->mSpace != mGlobalMapRender->getWorldspace())
+            return nullptr;
+        // Only offer a discovered destination within one exterior cell of the objective.
+        float closest = 4096.f * 4096.f;
+        MyGUI::Widget* result = nullptr;
+        for (const auto& entry : mNativeGlobalMapMarkers)
+        {
+            const auto distance = (entry.position - osg::Vec2f(mGlobalQuestMarker->mPosition.x(),
+                mGlobalQuestMarker->mPosition.y())).length2();
+            if (distance <= closest && entry.widget->getUserString("TravelEnabled") == "true")
+            {
+                closest = distance;
+                result = entry.widget;
+            }
+        }
+        return result;
+    }
+
+    void MapWindow::onQuestTravel(MyGUI::Widget*)
+    {
+        travelNearObjective(false);
+    }
+
+    bool MapWindow::travelNearObjective(bool repeat)
+    {
+        if (!isVisible() || !mQuestTravelButton->getVisible())
+            return false;
+        auto* marker = objectiveTravelMarker();
+        if (!marker)
+            return false;
+        if (!repeat)
+        {
+            mMapDragged = false;
+            onNativeMarkerClicked(marker);
+        }
+        return true;
+    }
+
+    void MapWindow::onNativeMarkerClicked(MyGUI::Widget* sender)
+    {
+        if (mMapDragged)
+            return;
+        mTravelMarker = *sender->getUserData<ESM::FormId>();
+        const auto& marker = *MWBase::Environment::get().getESMStore()->get<ESM4::Reference>().find(mTravelMarker);
+        auto windows = MWBase::Environment::get().getWindowManager();
+        if (!(marker.mMapMarkerFlags & 2))
+        {
+            windows->messageBox("You have not discovered this location yet.");
+            return;
+        }
+        auto* dialog = windows->getConfirmationDialog();
+        dialog->askForConfirmation("Fast travel to " + marker.mFullName + "?");
+        dialog->eventCancelClicked.clear();
+        dialog->eventOkClicked.clear();
+        dialog->eventOkClicked += MyGUI::newDelegate(this, &MapWindow::onTravelConfirmed);
+    }
+
+    void MapWindow::onTravelConfirmed()
+    {
+        auto& env = MWBase::Environment::get();
+        auto& world = static_cast<MWWorld::World&>(*env.getWorld());
+        const auto* marker = world.getStore().get<ESM4::Reference>().search(mTravelMarker);
+        if (!marker)
+            return;
+        const auto reason = MWWorld::travelToOblivionMapMarker(world, *marker);
+        if (reason.empty())
+            env.getWindowManager()->exitCurrentGuiMode();
+        else
+            env.getWindowManager()->messageBox(std::string(reason));
     }
 
     void MapWindow::addVisitedLocation(const std::string& name, int x, int y)
@@ -1337,6 +1419,11 @@ namespace MWGui
         LocalMapBase::onFrame(dt);
         NoDrop::onFrame(dt);
         updateGlobalQuestMarker();
+        auto* destination = isVisible() && mQuestObjectiveButton->getVisible() ? objectiveTravelMarker() : nullptr;
+        mQuestTravelButton->setVisible(destination != nullptr);
+        if (destination)
+            mQuestTravelButton->setUserString("Caption_TextOneLine",
+                "Fast travel to " + std::string(destination->getUserString("Caption_TextOneLine")));
     }
 
     void MapWindow::setQuestObjective(const std::optional<MWWorld::QuestObjective>& objective)
@@ -1481,7 +1568,8 @@ namespace MWGui
     {
         if (id != MyGUI::MouseButton::Left)
             return;
-        mLastDragPos = MyGUI::IntPoint(left, top);
+        mDragStartPos = mLastDragPos = MyGUI::IntPoint(left, top);
+        mMapDragged = false;
     }
 
     void MapWindow::onMouseDrag(MyGUI::Widget* /*sender*/, int left, int top, MyGUI::MouseButton id)
@@ -1489,6 +1577,7 @@ namespace MWGui
         if (id != MyGUI::MouseButton::Left)
             return;
 
+        mMapDragged |= std::abs(left - mDragStartPos.left) > 3 || std::abs(top - mDragStartPos.top) > 3;
         MyGUI::IntPoint diff = MyGUI::IntPoint(left, top) - mLastDragPos;
 
         if (!Settings::map().mGlobal)
@@ -1536,7 +1625,8 @@ namespace MWGui
     void MapWindow::onOpen()
     {
         ensureGlobalMapLoaded();
-
+        if (ESM::isEsm4Ext(mGlobalMapRender->getWorldspace()))
+            createNativeMapMarkers();
         globalMapUpdatePlayer();
     }
 
@@ -1619,9 +1709,7 @@ namespace MWGui
             MyGUI::Gui::getInstance().destroyWidget(widgetPair.first.widget);
         mGlobalMapMarkers.clear();
         mGlobalMapMarkersByName.clear();
-        for (const MapMarkerType& marker : mNativeGlobalMapMarkers)
-            MyGUI::Gui::getInstance().destroyWidget(marker.widget);
-        mNativeGlobalMapMarkers.clear();
+        // Initially visible native markers belong to the loaded worldspace and survive a save change.
     }
 
     void MapWindow::write(ESM::ESMWriter& writer, Loading::Listener& progress)

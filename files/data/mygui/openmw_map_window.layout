@@ -28,6 +28,13 @@
             <Widget type="Button" skin="" position_real="0 0 1 1" name="EventBoxGlobal" align="Stretch"/>
         </Widget>
 
+        <Widget type="Button" skin="MW_Button" position="194 4 84 22" align="Top Right" name="QuestTravelButton">
+            <Property key="Caption" value="Travel (T)"/>
+            <Property key="Visible" value="false"/>
+            <UserString key="ToolTipType" value="Layout"/>
+            <UserString key="ToolTipLayout" value="TextToolTipOneLine"/>
+        </Widget>
+
         <!-- World button -->
         <Widget type="AutoSizedButton" skin="MW_Button" position="213 233 61 22" align="Bottom Right" name="WorldButton">
             <Property key="ExpandDirection" value="Left"/>

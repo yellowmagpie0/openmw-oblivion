@@ -17,6 +17,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwworld/testoblivionactorstats.cpp
     mwworld/testoblivionenvironmentalfire.cpp
     mwworld/testoblivionworld.cpp
+    mwworld/testoblivionmaptravel.cpp
     mwworld/oblivionworldfixture.cpp
     mwworld/testoblivionparalysis.cpp
     mwworld/testoblivionskilltraining.cpp
