@@ -96,6 +96,10 @@ namespace MWMechanics
             return *resident;
         if (saved != nullptr)
         {
+            if (const auto it = saved->mCustomState.find("obscript.door_default_open"); it != saved->mCustomState.end())
+                if (const auto* open = std::get_if<bool>(&it->second))
+                    authored.mOpen = *open;
+
             authored.mAvailable = saved->mEnabled && !saved->mDeleted;
             authored.mLocked = saved->mLockLevel > 0;
             if (const auto locked = saved->mCustomState.find("locked"); locked != saved->mCustomState.end())

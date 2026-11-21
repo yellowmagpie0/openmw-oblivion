@@ -1,5 +1,13 @@
 # Kvatch main-quest course — current handoff
 
+**Replayed recruitment with the priory encounter initialized.**
+`build-windows/sigil-weynon01-recruit/user/saves/Bendu_Olo/Quicksave.omwsave`
+has both Weynon secret-door defaults set open (02c6e6, 02c6e7) and all five
+authored Mythic Dawn attackers enabled. MQ04 stage 5 ran both result entries
+when the player recruited Martin again. The door and map gate run passed
+14/14 (`weynon-door-tests.log`). Use the `weynon01` saves for the attack.
+The earlier travel investigation below explains the difference.
+
 **Weynon travel checkpoint.** On the world map the player chose Travel (T)
 and confirmed Weynon Priory with Enter. After 14.26 game hours the player
 and Martin landed 135 units apart in Tamriel cell 00f32b. Martin retained his

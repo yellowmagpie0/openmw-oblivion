@@ -2643,6 +2643,24 @@ namespace MWWorld
             return name == "getlocked" ? ObScript::Value(std::int64_t(ptr.getCellRef().isLocked()))
                                         : ObScript::Value(std::int64_t(ptr.getCellRef().getLockLevel()));
         }
+        if (name == "getdefaultopen" || name == "setdoordefaultopen")
+        {
+            const auto key = objectKey();
+            const auto* ref = mStore.search<ESM4::Reference>(key);
+            if (!ref || !mStore.get<ESM4::Door>().search(ref->mBaseObj))
+                throw ObScript::RuntimeError("OBSV110", "Door default requires a native TES4 door", name);
+            if (name == "setdoordefaultopen")
+            {
+                if (auto* saved = referenceState(key))
+                    saved->mCustomState["obscript.door_default_open"] = ObScript::asBoolean(argument(0));
+                return std::int64_t(0);
+            }
+            if (const auto* saved = std::as_const(*this).referenceState(key))
+                if (const auto it = saved->mCustomState.find("obscript.door_default_open"); it != saved->mCustomState.end())
+                    if (const auto* value = std::get_if<bool>(&it->second))
+                        return std::int64_t(*value);
+            return std::int64_t(ref->mOpenByDefault);
+        }
         if (name == "getopenstate")
         {
             const Ptr ptr = objectPtr();

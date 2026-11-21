@@ -2419,6 +2419,26 @@ namespace
     };
 }
 
+TEST(OblivionTutorialDoor, ScriptDefaultOpenOverridesAuthoredDefaultIndependentlyOfCurrentPose)
+{
+    AnimatedDoorFixture fixture(true);
+    auto& world = fixture.mFixture.mWorld;
+    auto* scripts = world.getOblivionScriptManager();
+    ObScript::RuntimeContext context;
+    context.mSelf = key(0xc01);
+    const auto query = [&] { return ObScript::asInteger(scripts->call("GetDefaultOpen", {}, {}, context, {})); };
+    EXPECT_EQ(query(), 1);
+    const auto pose = fixture.query();
+    scripts->call("SetDoorDefaultOpen", {}, { std::int64_t(0) }, context, {});
+    EXPECT_EQ(query(), 0);
+    EXPECT_EQ(fixture.query(), pose);
+    const auto saved = world.captureOblivionRuntimeState();
+    const auto ref = std::find_if(saved.mReferences.begin(), saved.mReferences.end(),
+        [&](const auto& r) { return r.mKey == context.mSelf; });
+    ASSERT_NE(ref, saved.mReferences.end());
+    EXPECT_FALSE(std::get<bool>(ref->mCustomState.at("obscript.door_default_open")));
+}
+
 TEST(OblivionTutorialDoor, RestoredAnimationOwnerReportsDoorTransitionAndEndpointWithoutReferenceRotation)
 {
     AnimatedDoorFixture f;
